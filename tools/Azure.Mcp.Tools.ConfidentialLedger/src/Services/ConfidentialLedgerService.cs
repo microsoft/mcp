@@ -51,7 +51,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
         var response = operation.GetRawResponse();
 
-        return new AppendEntryResult
+        return new()
         {
             TransactionId = operation.Id,
             State = operation.HasCompleted ? "Committed" : "Pending"

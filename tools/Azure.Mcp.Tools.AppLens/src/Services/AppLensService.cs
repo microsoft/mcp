@@ -92,44 +92,36 @@ public class AppLensService(
 
     private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
     {
-        try
+        // Get Azure credential using BaseAzureService
+        var credential = await GetCredential(tenantId, cancellationToken);
+
+        // Get ARM token
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext([GetManagementImpersonationEndpoint()]),
+            cancellationToken);
+
+        // Call the AppLens token endpoint
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            GetAppLensTokenEndpoint(resourceId));
+
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+
+        var client = _httpClientFactory.CreateClient();
+        using var response = await client.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
         {
-            // Get Azure credential using BaseAzureService
-            var credential = await GetCredential(tenantId, cancellationToken);
-
-            // Get ARM token
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext([GetManagementImpersonationEndpoint()]),
-                cancellationToken);
-
-            // Call the AppLens token endpoint
-            using var request = new HttpRequestMessage(HttpMethod.Get,
-                GetAppLensTokenEndpoint(resourceId));
-
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
-
-            var client = _httpClientFactory.CreateClient();
-            using var response = await client.SendAsync(request, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
-                }
-                return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
+                return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
             }
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            var appLensSession = ParseGetTokenResponse(content);
-
-            return new SuccessfulAppLensSessionResult(appLensSession with { ResourceId = resourceId });
+            return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create AppLens sessions.");
-            throw;
-        }
+
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        var appLensSession = ParseGetTokenResponse(content);
+
+        return new SuccessfulAppLensSessionResult(appLensSession with { ResourceId = resourceId });
     }
 
     /// <summary>

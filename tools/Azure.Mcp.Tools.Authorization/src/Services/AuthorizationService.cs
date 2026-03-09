@@ -27,24 +27,16 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(scope), scope));
 
-        try
-        {
-            var scopeId = new ResourceIdentifier(scope!);
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Authorization/roleAssignments",
-                null, // all resource groups
-                subscription,
-                retryPolicy,
-                ConvertToRoleAssignmentModel,
-                "authorizationresources",
-                additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving role assignments for scope '{Scope}' and tenant '{Tenant}'", scope, tenantId);
-            throw;
-        }
+        var scopeId = new ResourceIdentifier(scope!);
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.Authorization/roleAssignments",
+            null, // all resource groups
+            subscription,
+            retryPolicy,
+            ConvertToRoleAssignmentModel,
+            "authorizationresources",
+            additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>

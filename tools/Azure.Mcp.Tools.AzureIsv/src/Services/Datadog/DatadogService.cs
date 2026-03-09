@@ -16,31 +16,23 @@ public partial class DatadogService(ITenantService tenantService, ILogger<Datado
 
     public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource, CancellationToken cancellationToken = default)
     {
-        try
+        var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null, armClientOptions: null, cancellationToken);
+
+        var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
+
+        ResourceIdentifier id = new(resourceId);
+        var datadogMonitorResource = armClient.GetDatadogMonitorResource(id);
+        var monitoredResources = datadogMonitorResource.GetMonitoredResources(cancellationToken);
+
+        var resourceList = new List<string>();
+        foreach (var resource in monitoredResources)
         {
-            var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
-            var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null, armClientOptions: null, cancellationToken);
-
-            var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
-
-            ResourceIdentifier id = new(resourceId);
-            var datadogMonitorResource = armClient.GetDatadogMonitorResource(id);
-            var monitoredResources = datadogMonitorResource.GetMonitoredResources(cancellationToken);
-
-            var resourceList = new List<string>();
-            foreach (var resource in monitoredResources)
-            {
-                var resourceIdSegments = resource.Id.ToString().Split('/');
-                var lastSegment = resourceIdSegments[^1];
-                resourceList.Add(lastSegment);
-            }
-
-            return resourceList;
+            var resourceIdSegments = resource.Id.ToString().Split('/');
+            var lastSegment = resourceIdSegments[^1];
+            resourceList.Add(lastSegment);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing monitored resources.");
-            throw;
-        }
+
+        return resourceList;
     }
 }

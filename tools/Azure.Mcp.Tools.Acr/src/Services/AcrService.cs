@@ -27,23 +27,15 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var registries = await ExecuteResourceQueryAsync(
-                "Microsoft.ContainerRegistry/registries",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToAcrRegistryInfoModel,
-                cancellationToken: cancellationToken);
+        var registries = await ExecuteResourceQueryAsync(
+            "Microsoft.ContainerRegistry/registries",
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToAcrRegistryInfoModel,
+            cancellationToken: cancellationToken);
 
-            return registries;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing Container Registries for subscription '{Subscription}'", subscription);
-            throw;
-        }
+        return registries;
     }
 
     private async Task<AcrRegistryInfo> GetRegistry(
@@ -54,31 +46,22 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateRequiredParameters((nameof(registry), registry));
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(registry), registry));
 
-        try
-        {
-            var registrie = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.ContainerRegistry/registries",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToAcrRegistryInfoModel,
-                additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
-                cancellationToken: cancellationToken);
+        var registrie = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.ContainerRegistry/registries",
+            resourceGroup: resourceGroup,
+            subscription: subscription,
+            retryPolicy: retryPolicy,
+            converter: ConvertToAcrRegistryInfoModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
+            cancellationToken: cancellationToken);
 
-            if (registrie == null)
-            {
-                throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
-            }
-            return registrie;
-        }
-        catch (Exception ex)
+        if (registrie == null)
         {
-            _logger.LogError(ex, "Error retrieving Container Registry '{Registry}' for subscription '{Subscription}'", registry, subscription);
-            throw;
+            throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
         }
+        return registrie;
     }
 
     private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -96,24 +79,16 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
-        try
+        var repoNames = new List<string>();
+        await foreach (var repo in client.GetRepositoryNamesAsync(cancellationToken))
         {
-            var repoNames = new List<string>();
-            await foreach (var repo in client.GetRepositoryNamesAsync(cancellationToken))
+            if (!string.IsNullOrWhiteSpace(repo))
             {
-                if (!string.IsNullOrWhiteSpace(repo))
-                {
-                    repoNames.Add(repo);
-                }
+                repoNames.Add(repo);
             }
+        }
 
-            return repoNames;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list repositories for registry '{RegistryName}' at '{LoginServer}'", reg.Name, reg.LoginServer);
-            throw;
-        }
+        return repoNames;
     }
 
     public async Task<Dictionary<string, List<string>>> ListRegistryRepositories(
@@ -161,13 +136,11 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         var containerRegistryData = Models.ContainerRegistryData.FromJson(item)
             ?? throw new InvalidOperationException("Failed to parse Container Registry data");
 
-        return new AcrRegistryInfo
-        (
+        return new AcrRegistryInfo(
             containerRegistryData.ResourceName ?? string.Empty,
             containerRegistryData.Location,
             containerRegistryData.Properties?.LoginServer,
             containerRegistryData.Sku?.Name,
-            containerRegistryData.Sku?.Tier
-        );
+            containerRegistryData.Sku?.Tier);
     }
 }

@@ -28,52 +28,42 @@ public sealed class FileSharesService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var fileShares = new List<FileShareInfo>();
+
+        if (!string.IsNullOrEmpty(resourceGroup))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-
-            var fileShares = new List<FileShareInfo>();
-
-            if (!string.IsNullOrEmpty(resourceGroup))
+            ResourceGroupResource resourceGroupResource;
+            try
             {
-                ResourceGroupResource resourceGroupResource;
-                try
-                {
-                    var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    resourceGroupResource = response.Value;
-                }
-                catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning(reqEx,
-                        "Resource group not found when listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                        resourceGroup, subscription);
-                    return [];
-                }
-
-                var collection = resourceGroupResource.GetFileShares();
-                await foreach (var fileShareResource in collection.WithCancellation(cancellationToken))
-                {
-                    fileShares.Add(FileShareInfo.FromResource(fileShareResource));
-                }
+                var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                resourceGroupResource = response.Value;
             }
-            else
+            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
             {
-                await foreach (var fileShareResource in subscriptionResource.GetFileSharesAsync(cancellationToken))
-                {
-                    fileShares.Add(FileShareInfo.FromResource(fileShareResource));
-                }
+                _logger.LogWarning(reqEx,
+                    "Resource group not found when listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                    resourceGroup, subscription);
+                return [];
             }
 
-            return fileShares;
+            var collection = resourceGroupResource.GetFileShares();
+            await foreach (var fileShareResource in collection.WithCancellation(cancellationToken))
+            {
+                fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+            }
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex,
-                "Error listing file shares. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                resourceGroup, subscription);
-            throw;
+            await foreach (var fileShareResource in subscriptionResource.GetFileSharesAsync(cancellationToken))
+            {
+                fileShares.Add(FileShareInfo.FromResource(fileShareResource));
+            }
         }
+
+        return fileShares;
     }
 
     public async Task<FileShareInfo> GetFileShareAsync(
@@ -104,13 +94,6 @@ public sealed class FileSharesService(
                 fileShareName, resourceGroup, subscription);
             throw new KeyNotFoundException($"File share '{fileShareName}' not found in resource group '{resourceGroup}'.");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                fileShareName, resourceGroup, subscription);
-            throw;
-        }
     }
 
     public async Task<FileShareInfo> CreateOrUpdateFileShareAsync(
@@ -139,80 +122,70 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(location), location));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareData = new FileShareData(new(location))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            Properties = new()
+        };
 
-            var fileShareData = new FileShareData(new(location))
-            {
-                Properties = new()
-            };
+        // Populate properties from parameters
+        if (!string.IsNullOrEmpty(mountName))
+            fileShareData.Properties.MountName = mountName;
 
-            // Populate properties from parameters
-            if (!string.IsNullOrEmpty(mountName))
-                fileShareData.Properties.MountName = mountName;
+        if (!string.IsNullOrEmpty(mediaTier))
+            fileShareData.Properties.MediaTier = new(mediaTier);
 
-            if (!string.IsNullOrEmpty(mediaTier))
-                fileShareData.Properties.MediaTier = new(mediaTier);
+        if (!string.IsNullOrEmpty(redundancy))
+            fileShareData.Properties.Redundancy = new(redundancy);
 
-            if (!string.IsNullOrEmpty(redundancy))
-                fileShareData.Properties.Redundancy = new(redundancy);
+        if (!string.IsNullOrEmpty(protocol))
+            fileShareData.Properties.Protocol = new(protocol);
 
-            if (!string.IsNullOrEmpty(protocol))
-                fileShareData.Properties.Protocol = new(protocol);
+        if (provisionedStorageInGiB.HasValue)
+            fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
 
-            if (provisionedStorageInGiB.HasValue)
-                fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+        if (provisionedIOPerSec.HasValue)
+            fileShareData.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
 
-            if (provisionedIOPerSec.HasValue)
-                fileShareData.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+        if (provisionedThroughputMiBPerSec.HasValue)
+            fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
 
-            if (provisionedThroughputMiBPerSec.HasValue)
-                fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+            fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
 
-            if (!string.IsNullOrEmpty(publicNetworkAccess))
-                fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+        if (!string.IsNullOrEmpty(nfsRootSquash))
+            fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
 
-            if (!string.IsNullOrEmpty(nfsRootSquash))
-                fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
-
-            if (allowedSubnets != null && allowedSubnets.Length > 0)
-            {
-                foreach (var subnet in allowedSubnets)
-                {
-                    fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
-                }
-            }
-
-            if (tags != null && tags.Count > 0)
-            {
-                foreach (var tag in tags)
-                {
-                    fileShareData.Tags.Add(tag.Key, tag.Value);
-                }
-            }
-
-            var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                fileShareName,
-                fileShareData,
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
-                fileShareName, resourceGroup, location);
-
-            return FileShareInfo.FromResource(operation.Value);
-        }
-        catch (Exception ex)
+        if (allowedSubnets != null && allowedSubnets.Length > 0)
         {
-            _logger.LogError(ex,
-                "Error creating or updating file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                fileShareName, resourceGroup, subscription);
-            throw;
+            foreach (var subnet in allowedSubnets)
+            {
+                fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
+            }
         }
+
+        if (tags != null && tags.Count > 0)
+        {
+            foreach (var tag in tags)
+            {
+                fileShareData.Tags.Add(tag.Key, tag.Value);
+            }
+        }
+
+        var operation = await resourceGroupResource.Value.GetFileShares().CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            fileShareName,
+            fileShareData,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully created or updated file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+            fileShareName, resourceGroup, location);
+
+        return FileShareInfo.FromResource(operation.Value);
     }
 
     public async Task<FileShareInfo> PatchFileShareAsync(
@@ -235,74 +208,64 @@ public sealed class FileSharesService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(fileShareName), fileShareName));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        // Create a patch object with only the properties to update
+        var patch = new ResourceManager.FileShares.Models.FileSharePatch();
+
+        // Set properties that are explicitly provided
+        if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
+            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            patch.Properties = new();
 
-            // Create a patch object with only the properties to update
-            var patch = new ResourceManager.FileShares.Models.FileSharePatch();
-
-            // Set properties that are explicitly provided
-            if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
-                !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
+            if (provisionedStorageInGiB.HasValue)
             {
-                patch.Properties = new();
-
-                if (provisionedStorageInGiB.HasValue)
-                {
-                    patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
-                }
-
-                if (provisionedIOPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
-                }
-
-                if (provisionedThroughputMiBPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
-                }
+                patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
             }
 
-            if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
+            if (provisionedIOPerSec.HasValue)
             {
-                patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+                patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
             }
 
-            if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
+            if (provisionedThroughputMiBPerSec.HasValue)
             {
-                patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+                patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
             }
-
-            if (tags is { Count: > 0 })
-            {
-                foreach (var tag in tags)
-                {
-                    patch.Tags.Add(tag.Key, tag.Value);
-                }
-            }
-
-            // Get the file share resource to update
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-
-            // Use UpdateAsync to patch the file share
-            var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-
-            return FileShareInfo.FromResource(operation.Value);
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
         {
-            _logger.LogError(ex,
-                "Error patching file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                fileShareName, resourceGroup, subscription);
-            throw;
+            patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
         }
+
+        if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
+        {
+            patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+        }
+
+        if (tags is { Count: > 0 })
+        {
+            foreach (var tag in tags)
+            {
+                patch.Tags.Add(tag.Key, tag.Value);
+            }
+        }
+
+        // Get the file share resource to update
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+        // Use UpdateAsync to patch the file share
+        var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully patched file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            fileShareName, resourceGroup);
+
+        return FileShareInfo.FromResource(operation.Value);
     }
 
     public async Task DeleteFileShareAsync(
@@ -338,13 +301,6 @@ public sealed class FileSharesService(
                 fileShareName, resourceGroup);
             // Idempotent delete - don't throw on not found
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting file share. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-            throw;
-        }
     }
 
     public async Task<FileShareNameAvailabilityResult> CheckNameAvailabilityAsync(
@@ -360,32 +316,24 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(location), location));
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
-            {
-                Name = fileShareName,
-                Type = "Microsoft.FileShares/fileShares"
-            };
-            var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(new(location), content, cancellationToken);
+            Name = fileShareName,
+            Type = "Microsoft.FileShares/fileShares"
+        };
+        var response = await subscriptionResource.CheckFileShareNameAvailabilityAsync(new(location), content, cancellationToken);
 
-            var result = response.Value;
+        var result = response.Value;
 
-            _logger.LogInformation(
-                "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
-                fileShareName, result.IsNameAvailable);
+        _logger.LogInformation(
+            "File share name availability checked. FileShare: {FileShareName}, IsAvailable: {IsAvailable}",
+            fileShareName, result.IsNameAvailable);
 
-            return new(
-                result.IsNameAvailable ?? false,
-                result.Reason?.ToString(),
-                result.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking file share name availability for '{FileShareName}'", fileShareName);
-            throw;
-        }
+        return new(
+            result.IsNameAvailable ?? false,
+            result.Reason?.ToString(),
+            result.Message);
     }
 
     public async Task<FileShareSnapshotInfo> CreateSnapshotAsync(
@@ -404,48 +352,38 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotName), snapshotName));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        var snapshotData = new FileShareSnapshotData
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            Properties = new()
+        };
 
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
-
-            var snapshotData = new FileShareSnapshotData
+        // Populate metadata if provided
+        if (metadata != null && metadata.Count > 0)
+        {
+            foreach (var kvp in metadata)
             {
-                Properties = new()
-            };
-
-            // Populate metadata if provided
-            if (metadata != null && metadata.Count > 0)
-            {
-                foreach (var kvp in metadata)
-                {
-                    snapshotData.Properties.Metadata[kvp.Key] = kvp.Value;
-                }
+                snapshotData.Properties.Metadata[kvp.Key] = kvp.Value;
             }
-
-            var operation = await snapshotCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
-                snapshotName,
-                snapshotData,
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully created snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotName, fileShareName, resourceGroup);
-
-            return FileShareSnapshotInfo.FromResource(operation.Value);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error creating snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotName, fileShareName, resourceGroup);
-            throw;
-        }
+
+        var operation = await snapshotCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            snapshotName,
+            snapshotData,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully created snapshot. Snapshot: {SnapshotName}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            snapshotName, fileShareName, resourceGroup);
+
+        return FileShareSnapshotInfo.FromResource(operation.Value);
     }
 
     public async Task<FileShareSnapshotInfo> GetSnapshotAsync(
@@ -463,40 +401,23 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotId), snapshotId));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
-
-            await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
+            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
+                snapshotResource.Data.Id.ToString().Contains(snapshotId, StringComparison.OrdinalIgnoreCase))
             {
-                if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
-                    snapshotResource.Data.Id.ToString().Contains(snapshotId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return FileShareSnapshotInfo.FromResource(snapshotResource);
-                }
+                return FileShareSnapshotInfo.FromResource(snapshotResource);
             }
+        }
 
-            throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
-        }
-        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning(reqEx,
-                "Snapshot not found. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-            throw;
-        }
+        throw new KeyNotFoundException($"Snapshot '{snapshotId}' not found for file share '{fileShareName}' in resource group '{resourceGroup}'.");
     }
 
     public async Task<List<FileShareSnapshotInfo>> ListSnapshotsAsync(
@@ -536,13 +457,6 @@ public sealed class FileSharesService(
                 fileShareName, resourceGroup);
             return [];
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error listing snapshots. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                fileShareName, resourceGroup);
-            throw;
-        }
     }
 
     public async Task<FileShareSnapshotInfo> PatchSnapshotAsync(
@@ -561,55 +475,38 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotId), snapshotId));
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+        var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
+
+        // Get the existing snapshot
+        var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
+
+        // Create a patch object with only the properties to update
+        var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();
+
+        if (metadata is { Count: > 0 })
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-            var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
-
-            // Get the existing snapshot
-            var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
-
-            // Create a patch object with only the properties to update
-            var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();
-
-            if (metadata is { Count: > 0 })
+            foreach (var kvp in metadata)
             {
-                foreach (var kvp in metadata)
-                {
-                    patch.FileShareSnapshotUpdateMetadata.Add(kvp.Key, kvp.Value);
-                }
+                patch.FileShareSnapshotUpdateMetadata.Add(kvp.Key, kvp.Value);
             }
-
-            // Use UpdateAsync to patch the snapshot
-            var operation = await existingSnapshot.Value.UpdateAsync(
-                WaitUntil.Completed,
-                patch,
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-
-            return FileShareSnapshotInfo.FromResource(operation.Value);
         }
-        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning(reqEx,
-                "Snapshot not found for update. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error updating snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-            throw;
-        }
+
+        // Use UpdateAsync to patch the snapshot
+        var operation = await existingSnapshot.Value.UpdateAsync(
+            WaitUntil.Completed,
+            patch,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully updated snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
+            snapshotId, fileShareName, resourceGroup);
+
+        return FileShareSnapshotInfo.FromResource(operation.Value);
     }
 
     public async Task DeleteSnapshotAsync(
@@ -651,13 +548,6 @@ public sealed class FileSharesService(
                 snapshotId, fileShareName, resourceGroup);
             // Idempotent delete - don't throw on not found
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error deleting snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
-                snapshotId, fileShareName, resourceGroup);
-            throw;
-        }
     }
 
     public async Task<FileShareLimitsResult> GetLimitsAsync(
@@ -671,48 +561,38 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
+
+        var output = response.Value.Properties;
+
+        _logger.LogInformation(
+            "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
+            output.Limits.MaxFileShares, subscription, location);
+
+        return new()
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
-
-            var output = response.Value.Properties;
-
-            _logger.LogInformation(
-                "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
-                output.Limits.MaxFileShares, subscription, location);
-
-            return new()
+            Limits = new()
             {
-                Limits = new()
-                {
-                    MaxFileShares = output.Limits.MaxFileShares,
-                    MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
-                    MaxFileShareSubnets = output.Limits.MaxFileShareSubnets,
-                    MaxFileSharePrivateEndpointConnections = output.Limits.MaxFileSharePrivateEndpointConnections,
-                    MinProvisionedStorageGiB = output.Limits.MinProvisionedStorageGiB,
-                    MaxProvisionedStorageGiB = output.Limits.MaxProvisionedStorageGiB,
-                    MinProvisionedIOPerSec = output.Limits.MinProvisionedIOPerSec,
-                    MaxProvisionedIOPerSec = output.Limits.MaxProvisionedIOPerSec,
-                    MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
-                    MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
-                },
-                ProvisioningConstants = new()
-                {
-                    BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
-                    ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
-                    BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
-                    ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting limits. Subscription: {Subscription}, Location: {Location}",
-                subscription, location);
-            throw;
-        }
+                MaxFileShares = output.Limits.MaxFileShares,
+                MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
+                MaxFileShareSubnets = output.Limits.MaxFileShareSubnets,
+                MaxFileSharePrivateEndpointConnections = output.Limits.MaxFileSharePrivateEndpointConnections,
+                MinProvisionedStorageGiB = output.Limits.MinProvisionedStorageGiB,
+                MaxProvisionedStorageGiB = output.Limits.MaxProvisionedStorageGiB,
+                MinProvisionedIOPerSec = output.Limits.MinProvisionedIOPerSec,
+                MaxProvisionedIOPerSec = output.Limits.MaxProvisionedIOPerSec,
+                MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
+                MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
+            },
+            ProvisioningConstants = new()
+            {
+                BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
+                ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
+                BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
+                ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
+            }
+        };
     }
 
     public async Task<FileShareUsageDataResult> GetUsageDataAsync(
@@ -726,32 +606,22 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
+
+        var output = response.Value.Properties;
+
+        _logger.LogInformation(
+            "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
+            output.LiveSharesFileShareCount, subscription, location);
+
+        return new()
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
-
-            var output = response.Value.Properties;
-
-            _logger.LogInformation(
-                "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
-                output.LiveSharesFileShareCount, subscription, location);
-
-            return new()
+            LiveShares = new()
             {
-                LiveShares = new()
-                {
-                    FileShareCount = output.LiveSharesFileShareCount ?? 0
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting usage data. Subscription: {Subscription}, Location: {Location}",
-                subscription, location);
-            throw;
-        }
+                FileShareCount = output.LiveSharesFileShareCount ?? 0
+            }
+        };
     }
 
     public async Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
@@ -767,31 +637,21 @@ public sealed class FileSharesService(
             (nameof(location), location),
             (nameof(provisionedStorageGiB), provisionedStorageGiB.ToString()));
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
+
+        var output = response.Value.Properties;
+
+        _logger.LogInformation(
+            "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
+            provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
+
+        return new()
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
-
-            var output = response.Value.Properties;
-
-            _logger.LogInformation(
-                "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
-                provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
-
-            return new()
-            {
-                ProvisionedIOPerSec = output.ProvisionedIOPerSec,
-                ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
-                AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting provisioning recommendation. StorageGiB: {Storage}, Subscription: {Subscription}, Location: {Location}",
-                provisionedStorageGiB, subscription, location);
-            throw;
-        }
+            ProvisionedIOPerSec = output.ProvisionedIOPerSec,
+            ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
+            AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
+        };
     }
 }
 

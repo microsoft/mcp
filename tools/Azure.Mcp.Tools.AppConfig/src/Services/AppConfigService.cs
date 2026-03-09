@@ -31,21 +31,13 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.AppConfiguration/configurationStores",
-                resourceGroup: null, // all resource groups
-                subscription,
-                retryPolicy,
-                ConvertToAppConfigurationAccountModel,
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving App Configuration stores for subscription '{Subscription}'", subscription);
-            throw;
-        }
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.AppConfiguration/configurationStores",
+            resourceGroup: null, // all resource groups
+            subscription,
+            retryPolicy,
+            ConvertToAppConfigurationAccountModel,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<List<KeyValueSetting>> GetKeyValues(
@@ -93,7 +85,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             Value = setting.Value,
             Label = setting.Label ?? string.Empty,
             ContentType = setting.ContentType ?? string.Empty,
-            ETag = new ETag { Value = setting.ETag.ToString() },
+            ETag = new() { Value = setting.ETag.ToString() },
             LastModified = setting.LastModified,
             Locked = setting.IsReadOnly
         });
@@ -203,28 +195,20 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var account = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.AppConfiguration/configurationStores",
-                resourceGroup: null, // all resource groups
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToAppConfigurationAccountModel,
-                additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
-                cancellationToken: cancellationToken);
+        var account = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.AppConfiguration/configurationStores",
+            resourceGroup: null, // all resource groups
+            subscription: subscription,
+            retryPolicy: retryPolicy,
+            converter: ConvertToAppConfigurationAccountModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
+            cancellationToken: cancellationToken);
 
-            if (account == null)
-            {
-                throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
-            }
-            return account;
-        }
-        catch (Exception ex)
+        if (account == null)
         {
-            _logger.LogError(ex, "Error retrieving App Configuration store '{StoreName}' for subscription '{Subscription}'", accountName, subscriptionIdentifier);
-            throw;
+            throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
         }
+        return account;
     }
 
     /// <summary>

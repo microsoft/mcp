@@ -102,11 +102,11 @@ public class ComputeService(
             cancellationToken);
 
         // Build VM data
-        var vmData = new VirtualMachineData(new AzureLocation(location))
+        var vmData = new VirtualMachineData(new(location))
         {
             HardwareProfile = new()
             {
-                VmSize = new VirtualMachineSizeType(effectiveVmSize)
+                VmSize = new(effectiveVmSize)
             },
             StorageProfile = new()
             {
@@ -114,7 +114,7 @@ public class ComputeService(
                 {
                     Name = $"{vmName}-osdisk",
                     Caching = CachingType.ReadWrite,
-                    ManagedDisk = new VirtualMachineManagedDisk(),
+                    ManagedDisk = new(),
                     DiskSizeGB = effectiveOsDiskSizeGb
                 },
                 ImageReference = new()
@@ -201,7 +201,7 @@ public class ComputeService(
         // Create the VM
         var vmCollection = resourceGroupResource.GetVirtualMachines();
         var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             vmName,
             vmData,
             cancellationToken);
@@ -334,7 +334,7 @@ public class ComputeService(
             }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 nsgName,
                 nsgData,
                 cancellationToken);
@@ -365,7 +365,7 @@ public class ComputeService(
             });
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
@@ -401,7 +401,7 @@ public class ComputeService(
                 };
 
                 var pipOperation = await pipCollection.CreateOrUpdateAsync(
-                    Azure.WaitUntil.Completed,
+                    WaitUntil.Completed,
                     pipName,
                     pipData,
                     cancellationToken);
@@ -432,7 +432,7 @@ public class ComputeService(
         nicData.IPConfigurations.Add(ipConfig);
 
         var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             nicName,
             nicData,
             cancellationToken);
@@ -731,7 +731,7 @@ public class ComputeService(
             cancellationToken);
 
         // Build VMSS data using Flexible orchestration mode (default since Nov 2023)
-        var vmssData = new VirtualMachineScaleSetData(new AzureLocation(location))
+        var vmssData = new VirtualMachineScaleSetData(new(location))
         {
             Sku = new()
             {
@@ -841,7 +841,7 @@ public class ComputeService(
         // Create the VMSS
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             vmssName,
             vmssData,
             cancellationToken);
@@ -952,7 +952,7 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmssResource.UpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
             vmssResource = updateOperation.Value;
@@ -1001,7 +1001,7 @@ public class ComputeService(
 
         if (vmSize != null)
         {
-            patch.HardwareProfile = new() { VmSize = new VirtualMachineSizeType(vmSize) };
+            patch.HardwareProfile = new() { VmSize = new(vmSize) };
             needsUpdate = true;
         }
 
@@ -1043,7 +1043,7 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmResource.UpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
             vmResource = updateOperation.Value;
@@ -1141,7 +1141,7 @@ public class ComputeService(
             };
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
@@ -1165,7 +1165,7 @@ public class ComputeService(
             };
 
             var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 subnetName,
                 subnetData,
                 cancellationToken);
@@ -1177,7 +1177,7 @@ public class ComputeService(
 
     private static VmInfo MapToVmInfo(VirtualMachineData data)
     {
-        return new VmInfo(
+        return new(
             Name: data.Name,
             Id: data.Id?.ToString(),
             Location: data.Location.Name,

@@ -145,41 +145,33 @@ public class FoundryExtensionsService(
         ValidateRequiredParameters((nameof(endpoint), endpoint));
         ValidateProjectEndpoint(endpoint);
 
-        try
-        {
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var indexesClient = projectClient.GetIndexesClient();
+        var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+        var indexesClient = projectClient.GetIndexesClient();
 
-            var indexes = new List<KnowledgeIndexInformation>();
-            await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        var indexes = new List<KnowledgeIndexInformation>();
+        await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        {
+            // Determine the type based on the actual type of the index
+            string indexType = index switch
             {
-                // Determine the type based on the actual type of the index
-                string indexType = index switch
-                {
-                    AzureAISearchIndex => "AzureAISearchIndex",
-                    ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                    CosmosDBIndex => "CosmosDBIndex",
-                    _ => index.GetType().Name
-                };
+                AzureAISearchIndex => "AzureAISearchIndex",
+                ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+                CosmosDBIndex => "CosmosDBIndex",
+                _ => index.GetType().Name
+            };
 
-                indexes.Add(new()
-                {
-                    Type = indexType,
-                    Id = index.Id,
-                    Name = index.Name,
-                    Version = index.Version,
-                    Description = index.Description,
-                    Tags = index.Tags?.ToDictionary()
-                });
-            }
+            indexes.Add(new()
+            {
+                Type = indexType,
+                Id = index.Id,
+                Name = index.Name,
+                Version = index.Version,
+                Description = index.Description,
+                Tags = index.Tags?.ToDictionary()
+            });
+        }
 
-            return indexes;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list knowledge indexes.");
-            throw;
-        }
+        return indexes;
     }
 
     public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
@@ -194,45 +186,37 @@ public class FoundryExtensionsService(
             (nameof(indexName), indexName));
         ValidateProjectEndpoint(endpoint);
 
-        try
+        var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+        var indexesClient = projectClient.GetIndexesClient();
+
+        // Find the index by name using async enumerable
+        var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
+            .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+
+        if (index == null)
         {
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var indexesClient = projectClient.GetIndexesClient();
-
-            // Find the index by name using async enumerable
-            var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
-                .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
-            if (index == null)
-            {
-                throw new Exception($"Knowledge index '{indexName}' not found.");
-            }
-
-            // Map the SDK index to our AOT-safe schema type
-            string indexType = index switch
-            {
-                AzureAISearchIndex => "AzureAISearchIndex",
-                ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                CosmosDBIndex => "CosmosDBIndex",
-                _ => index.GetType().Name
-            };
-
-            return new()
-            {
-                Type = indexType,
-                Id = index.Id,
-                Name = index.Name,
-                Version = index.Version,
-                Description = index.Description,
-                Tags = index.Tags?.ToDictionary()
-            };
+            throw new Exception($"Knowledge index '{indexName}' not found.");
         }
-        catch (Exception ex)
+
+        // Map the SDK index to our AOT-safe schema type
+        string indexType = index switch
         {
-            _logger.LogError(ex, "Failed to get knowledge index schema.");
-            throw;
-        }
+            AzureAISearchIndex => "AzureAISearchIndex",
+            ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+            CosmosDBIndex => "CosmosDBIndex",
+            _ => index.GetType().Name
+        };
+
+        return new()
+        {
+            Type = indexType,
+            Id = index.Id,
+            Name = index.Name,
+            Version = index.Version,
+            Description = index.Description,
+            Tags = index.Tags?.ToDictionary()
+        };
     }
 
     public async Task<CompletionResult> CreateCompletionAsync(
@@ -682,46 +666,38 @@ public class FoundryExtensionsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
+        ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+
+        var resources = new List<AiResourceInformation>();
+
+        // Get Cognitive Services accounts
+        if (string.IsNullOrEmpty(resourceGroup))
         {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            var resources = new List<AiResourceInformation>();
-
-            // Get Cognitive Services accounts
-            if (string.IsNullOrEmpty(resourceGroup))
+            // List all AI resources in the subscription
+            await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
             {
-                // List all AI resources in the subscription
-                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
+                var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                resources.Add(resourceInfo);
+            }
+        }
+        else
+        {
+            // List AI resources in specific resource group - use resource group scope for better performance
+            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
+            await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                resources.Add(resourceInfo);
+                if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                    resources.Add(resourceInfo);
+                    var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                    resources.Add(retrieved);
                 }
             }
-            else
-            {
-                // List AI resources in specific resource group - use resource group scope for better performance
-                var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
-                await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                    resources.Add(resourceInfo);
-                    if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                        resources.Add(retrieved);
-                    }
-                }
-            }
+        }
 
-            return resources;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list AI resources.");
-            throw;
-        }
+        return resources;
     }
 
     public async Task<AiResourceInformation> GetAiResourceAsync(
@@ -737,30 +713,22 @@ public class FoundryExtensionsService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        try
+        ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
+
+        if (rgResource?.Value == null)
         {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
-
-            if (rgResource?.Value == null)
-            {
-                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-            }
-
-            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
-            if (account?.Value == null)
-            {
-                throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
-            }
-
-            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
+            throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
-        catch (Exception ex)
+
+        var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
+        if (account?.Value == null)
         {
-            _logger.LogError(ex, "Failed to get AI resource.");
-            throw;
+            throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
         }
+
+        return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
     }
 
     public async Task<ThreadListResult> ListThreads(
@@ -776,26 +744,19 @@ public class FoundryExtensionsService(
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
         var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
         List<ThreadItem> threads = [];
-        try
-        {
-            await foreach (var thread in threadsIterator.WithCancellation(cancellationToken))
-            {
-                threads.Add(new()
-                {
-                    ThreadId = thread.Id
-                });
-            }
 
-            return new ThreadListResult()
-            {
-                Threads = [.. threads]
-            };
-        }
-        catch (Exception ex)
+        await foreach (var thread in threadsIterator.WithCancellation(cancellationToken))
         {
-            _logger.LogError(ex, "Failed to list threads.");
-            throw;
+            threads.Add(new()
+            {
+                ThreadId = thread.Id
+            });
         }
+
+        return new()
+        {
+            Threads = [.. threads]
+        };
     }
 
     public async Task<ThreadCreateResult> CreateThread(
@@ -811,23 +772,16 @@ public class FoundryExtensionsService(
         ValidateProjectEndpoint(projectEndpoint);
 
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        try
-        {
-            PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
-                [new(MessageRole.User, userMessage)],
-                cancellationToken: cancellationToken);
 
-            return new()
-            {
-                ThreadId = thread.Id,
-                ProjectEndpoint = projectEndpoint
-            };
-        }
-        catch (Exception ex)
+        PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
+            [new(MessageRole.User, userMessage)],
+            cancellationToken: cancellationToken);
+
+        return new()
         {
-            _logger.LogError(ex, "Failed to create thread.");
-            throw;
-        }
+            ThreadId = thread.Id,
+            ProjectEndpoint = projectEndpoint
+        };
     }
 
     public async Task<ThreadGetMessagesResult> GetMessages(
@@ -844,26 +798,19 @@ public class FoundryExtensionsService(
         ValidateProjectEndpoint(projectEndpoint);
 
         var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        try
+
+        List<PersistentThreadMessage> messages = [];
+        var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
+        await foreach (var message in messagesIterator.WithCancellation(cancellationToken))
         {
-            List<PersistentThreadMessage> messages = [];
-            var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
-            await foreach (var message in messagesIterator.WithCancellation(cancellationToken))
-            {
-                messages.Add(message);
-            }
-            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = [.. ConvertMessages(messages)];
-            return new()
-            {
-                ThreadId = threadId,
-                Messages = convertedMessages
-            };
+            messages.Add(message);
         }
-        catch (Exception ex)
+        List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = [.. ConvertMessages(messages)];
+        return new()
         {
-            _logger.LogError(ex, "Failed to get messages for thread {ThreadId}.", threadId);
-            throw;
-        }
+            ThreadId = threadId,
+            Messages = convertedMessages
+        };
     }
 
     public AgentsGetSdkCodeSampleResult GetSdkCodeSample(string programmingLanguage)

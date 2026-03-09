@@ -46,22 +46,14 @@ public class ApplicationInsightsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            List<JsonNode> results = [];
-            var components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
+        List<JsonNode> results = [];
+        var components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
 
-            var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
-            results.AddRange(insights);
+        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
+        results.AddRange(insights);
 
-            // Return all results for this resource group (outer method enforces global max)
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Application Insights Code Optimization Recommendations");
-            throw;
-        }
+        // Return all results for this resource group (outer method enforces global max)
+        return results;
     }
 
     private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(

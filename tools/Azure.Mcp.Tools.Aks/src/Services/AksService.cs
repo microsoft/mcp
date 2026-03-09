@@ -60,47 +60,39 @@ public sealed class AksService(
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-            try
+            var clusters = new List<Cluster>();
+            if (string.IsNullOrEmpty(resourceGroup))
             {
-                var clusters = new List<Cluster>();
-                if (string.IsNullOrEmpty(resourceGroup))
-                {
 
-                    await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync(cancellationToken))
+                await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync(cancellationToken))
+                {
+                    if (cluster?.Data != null)
                     {
-                        if (cluster?.Data != null)
-                        {
-                            clusters.Add(ConvertToClusterModel(cluster));
-                        }
+                        clusters.Add(ConvertToClusterModel(cluster));
                     }
                 }
-                else
+            }
+            else
+            {
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                if (resourceGroupResource?.Value == null)
                 {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    if (resourceGroupResource?.Value == null)
-                    {
-                        return clusters;
-                    }
-
-                    await foreach (var cluster in resourceGroupResource.Value.GetContainerServiceManagedClusters().GetAllAsync(cancellationToken))
-                    {
-                        if (cluster?.Data != null)
-                        {
-                            clusters.Add(ConvertToClusterModel(cluster));
-                        }
-                    }
+                    return clusters;
                 }
 
-                // Cache the results
-                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
+                await foreach (var cluster in resourceGroupResource.Value.GetContainerServiceManagedClusters().GetAllAsync(cancellationToken))
+                {
+                    if (cluster?.Data != null)
+                    {
+                        clusters.Add(ConvertToClusterModel(cluster));
+                    }
+                }
+            }
 
-                return clusters;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving AKS clusters for subscription '{Subscription}'", subscription);
-                throw;
-            }
+            // Cache the results
+            await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
+
+            return clusters;
         }
         else
         {
@@ -119,37 +111,28 @@ public sealed class AksService(
             }
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            try
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+
+            if (resourceGroupResource?.Value == null)
             {
-                var resourceGroupResource = await subscriptionResource
-                    .GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-                if (resourceGroupResource?.Value == null)
-                {
-                    return [];
-                }
-
-                var clusterResource = await resourceGroupResource.Value
-                    .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName, cancellationToken);
-
-                if (clusterResource?.Value?.Data == null)
-                {
-                    return [];
-                }
-
-                var clusters = new List<Cluster>() { ConvertToClusterModel(clusterResource.Value) };
-
-                // Cache the result
-                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
-
-                return clusters;
+                return [];
             }
-            catch (Exception ex)
+
+            var clusterResource = await resourceGroupResource.Value
+                .GetContainerServiceManagedClusters()
+                .GetAsync(clusterName, cancellationToken);
+
+            if (clusterResource?.Value?.Data == null)
             {
-                _logger.LogError(ex, "Error retrieving AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", clusterName, resourceGroup, subscription);
-                throw;
+                return [];
             }
+
+            var clusters = new List<Cluster>() { ConvertToClusterModel(clusterResource.Value) };
+
+            // Cache the result
+            await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
+
+            return clusters;
         }
     }
 
@@ -182,44 +165,36 @@ public sealed class AksService(
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-            try
+            var nodePools = new List<NodePool>();
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (resourceGroupResource?.Value == null)
             {
-                var nodePools = new List<NodePool>();
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (resourceGroupResource?.Value == null)
-                {
-                    return nodePools;
-                }
-
-                var clusterResource = await resourceGroupResource.Value
-                    .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName, cancellationToken);
-
-                if (clusterResource?.Value == null)
-                {
-                    return nodePools;
-                }
-
-                await foreach (var agentPool in clusterResource.Value
-                                    .GetContainerServiceAgentPools()
-                                    .GetAllAsync(cancellationToken))
-                {
-                    if (agentPool?.Data != null)
-                    {
-                        nodePools.Add(ConvertToNodePoolModel(agentPool));
-                    }
-                }
-
-                // Cache the results
-                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
-
                 return nodePools;
             }
-            catch (Exception ex)
+
+            var clusterResource = await resourceGroupResource.Value
+                .GetContainerServiceManagedClusters()
+                .GetAsync(clusterName, cancellationToken);
+
+            if (clusterResource?.Value == null)
             {
-                _logger.LogError(ex, "Error retrieving node pools for AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", clusterName, resourceGroup, subscription);
-                throw;
+                return nodePools;
             }
+
+            await foreach (var agentPool in clusterResource.Value
+                                .GetContainerServiceAgentPools()
+                                .GetAllAsync(cancellationToken))
+            {
+                if (agentPool?.Data != null)
+                {
+                    nodePools.Add(ConvertToNodePoolModel(agentPool));
+                }
+            }
+
+            // Cache the results
+            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
+
+            return nodePools;
         }
         else
         {
@@ -236,45 +211,36 @@ public sealed class AksService(
             }
 
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            try
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (resourceGroupResource?.Value == null)
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (resourceGroupResource?.Value == null)
-                {
-                    return [];
-                }
-
-                var clusterResource = await resourceGroupResource.Value
-                    .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName, cancellationToken);
-
-                if (clusterResource?.Value == null)
-                {
-                    return [];
-                }
-
-                var agentPoolResource = await clusterResource.Value
-                    .GetContainerServiceAgentPools()
-                    .GetAsync(nodePoolName, cancellationToken);
-
-                if (agentPoolResource?.Value?.Data == null)
-                {
-                    return [];
-                }
-
-                var nodePools = new List<NodePool>() { ConvertToNodePoolModel(agentPoolResource.Value) };
-
-                // Cache the result
-                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
-
-                return nodePools;
+                return [];
             }
-            catch (Exception ex)
+
+            var clusterResource = await resourceGroupResource.Value
+                .GetContainerServiceManagedClusters()
+                .GetAsync(clusterName, cancellationToken);
+
+            if (clusterResource?.Value == null)
             {
-                _logger.LogError(ex, "Error retrieving node pool '{NodePoolName}' for AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'", nodePoolName, clusterName, resourceGroup, subscription);
-                throw;
+                return [];
             }
+
+            var agentPoolResource = await clusterResource.Value
+                .GetContainerServiceAgentPools()
+                .GetAsync(nodePoolName, cancellationToken);
+
+            if (agentPoolResource?.Value?.Data == null)
+            {
+                return [];
+            }
+
+            var nodePools = new List<NodePool>() { ConvertToNodePoolModel(agentPoolResource.Value) };
+
+            // Cache the result
+            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
+
+            return nodePools;
         }
     }
 

@@ -37,6 +37,6 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
         var credential = await GetCredential(cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Transport = new HttpClientTransport(TenantService.GetClient());
-        return new LogsQueryClient(credential, options);
+        return new(credential, options);
     }
 }

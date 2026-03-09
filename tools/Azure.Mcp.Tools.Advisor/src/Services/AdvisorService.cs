@@ -22,24 +22,14 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Advisor/recommendations",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToAdvisorRecommendationModel,
-                tableName: "advisorresources",
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
-                subscription, resourceGroup);
-            throw;
-        }
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.Advisor/recommendations",
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToAdvisorRecommendationModel,
+            tableName: "advisorresources",
+            cancellationToken: cancellationToken);
     }
 
     private static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
@@ -50,7 +40,6 @@ public class AdvisorService(ISubscriptionService subscriptionService, ITenantSer
         return new(
             ResourceId: advisorRecommendation.Properties?.ResourceMetadata?.ResourceId ?? "Unknown",
             RecommendationText: advisorRecommendation.Properties?.ShortDescription?.Problem ?? "Unknown",
-            Category: advisorRecommendation.Properties?.Category ?? "Unknown"
-        );
+            Category: advisorRecommendation.Properties?.Category ?? "Unknown");
     }
 }

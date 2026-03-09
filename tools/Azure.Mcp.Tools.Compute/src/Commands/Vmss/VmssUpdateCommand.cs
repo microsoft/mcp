@@ -65,7 +65,7 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
         {
             // Custom validation: At least one update property must be specified
             if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name)) &&
-                !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Capacity.Name).HasValue &&
+                !commandResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.Capacity.Name).HasValue &&
                 string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
                 !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.Overprovision.Name).HasValue &&
                 !commandResult.GetValueOrDefault<bool?>(ComputeOptionDefinitions.EnableAutoOsUpgrade.Name).HasValue &&

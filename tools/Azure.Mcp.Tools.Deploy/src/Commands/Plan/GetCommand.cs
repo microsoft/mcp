@@ -73,7 +73,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
         try
         {
-            byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(options.ProjectName));
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(options.ProjectName));
             context.Activity?.AddTag(DeployTelemetryTags.ProjectName, Convert.ToHexStringLower(bytes));
             context.Activity?
                     .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)

@@ -40,9 +40,8 @@ internal class CliInstallService(IHttpClientFactory httpClientFactory) : ICliIns
         using HttpRequestMessage requestMessage = new()
         {
             Method = HttpMethod.Get,
-            RequestUri = new Uri(instructionsUrl)
+            RequestUri = new(instructionsUrl)
         };
-        HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
-        return responseMessage;
+        return await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
     }
 }

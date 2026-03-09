@@ -78,18 +78,12 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
             case AuthMethod.Key:
                 var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
-                cosmosClient = new CosmosClient(
-                    GetCosmosBaseUri(accountName),
-                    keys.Value.PrimaryMasterKey,
-                    clientOptions);
+                cosmosClient = new(GetCosmosBaseUri(accountName), keys.Value.PrimaryMasterKey, clientOptions);
                 break;
 
             case AuthMethod.Credential:
             default:
-                cosmosClient = new CosmosClient(
-                    GetCosmosBaseUri(accountName),
-                    await GetCredential(cancellationToken),
-                    clientOptions);
+                cosmosClient = new(GetCosmosBaseUri(accountName), await GetCredential(tenant, cancellationToken), clientOptions);
                 break;
         }
 
