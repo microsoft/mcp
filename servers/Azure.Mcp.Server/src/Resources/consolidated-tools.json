@@ -147,6 +147,73 @@
       ]
     },
     {
+      "name": "manage_azure_documentdb_connections",
+      "description": "Manage Azure DocumentDB connection sessions. Connect to or disconnect from Azure Cosmos DB for MongoDB (vCore) instances using connection information for subsequent DocumentDB operations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_connection_connect",
+        "documentdb_connection_disconnect"
+      ]
+    },
+    {
+      "name": "get_azure_documentdb_connection_status",
+      "description": "Get the current Azure DocumentDB connection status and connection details for Azure Cosmos DB for MongoDB (vCore) sessions.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_connection_get_connection_status"
+      ]
+    },
+    {
       "name": "create_azure_sql_databases_and_servers",
       "description": "Create new Azure SQL databases and SQL servers with configurable performance tiers and settings.",
       "toolMetadata": {

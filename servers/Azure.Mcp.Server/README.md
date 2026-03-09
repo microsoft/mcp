@@ -957,6 +957,12 @@ Example prompts that generate Azure CLI commands:
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
 
+### 🗄️ Azure DocumentDB (with MongoDB compatibility)
+
+* "Connect to my DocumentDB instance"
+* "Disconnect from DocumentDB"
+* "Show me the DocumentDB connection status"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
