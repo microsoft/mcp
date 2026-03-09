@@ -60,9 +60,7 @@ public static class McpServerElicitationExtensions
     /// <param name="server">The MCP server instance.</param>
     /// <returns>True if the client supports elicitation, false otherwise.</returns>
     public static bool SupportsElicitation(this McpServer server)
-    {
-        return server?.ClientCapabilities?.Elicitation != null;
-    }
+        => server?.ClientCapabilities?.Elicitation != null;
 
     /// <summary>
     /// Checks if elicitation should be triggered for a tool based on its metadata.
@@ -81,10 +79,17 @@ public static class McpServerElicitationExtensions
         // Check if the metadata indicates this is a secret/sensitive tool
         if (toolMetadata is JsonObject jsonMetadata)
         {
-            return jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
-                   secretValue is JsonValue jsonValue &&
-                   jsonValue.TryGetValue(out bool isSecret) &&
-                   isSecret;
+            var secret = jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
+                secretValue is JsonValue jsonValue &&
+                jsonValue.TryGetValue(out bool isSecret) &&
+                isSecret;
+
+            var elicitationRequired = jsonMetadata.TryGetPropertyValue("ElicitationRequired", out var elicitationValue) &&
+                elicitationValue is JsonValue elicitationJsonValue &&
+                elicitationJsonValue.TryGetValue(out bool isElicitationRequired) &&
+                isElicitationRequired;
+
+            return secret || elicitationRequired;
         }
 
         return false;

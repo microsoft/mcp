@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Metadata;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Custom JSON converter for <see cref="ToolMetadata"/> that handles serialization and deserialization
@@ -35,7 +33,8 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             GetMetadata("openWorld", true),
             GetMetadata("readOnly", false),
             GetMetadata("secret", false),
-            GetMetadata("localRequired", false)
+            GetMetadata("localRequired", false),
+            GetMetadata("elicitationRequired", false)
         );
     }
 
@@ -55,6 +54,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         WriteMetadata("readOnly", value.ReadOnlyProperty);
         WriteMetadata("secret", value.SecretProperty);
         WriteMetadata("localRequired", value.LocalRequiredProperty);
+        WriteMetadata("elicitationRequired", value.ElicitationRequiredProperty);
 
         writer.WriteEndObject();
     }
