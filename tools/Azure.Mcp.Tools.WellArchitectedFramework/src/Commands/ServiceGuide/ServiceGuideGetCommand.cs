@@ -184,12 +184,24 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         if (string.IsNullOrWhiteSpace(serviceGuideUrl))
         {
             return $"Azure Well-Architected Framework guidance for '{serviceName}' service is not available. " +
-                "Use lowercase with hyphens for the service name. " +
-                "Please try again with a different variation of the service name or visit the following URL for guidance on supported services: " +
-                "https://learn.microsoft.com/azure/well-architected/service-guides";
+                "Please use lowercase with hyphens for the service name or try a different variation of the service name. " +
+                $"Supported services include: {GetAllServiceNamesAsCommaSeparatedList()}. " +
+                "Or visit the following URL for guidance on supported services: https://learn.microsoft.com/azure/well-architected/service-guides";
         }
 
         return $"For detailed Azure Well-Architected Framework guidance on {serviceName} service, " +
             $"please refer to the markdown file at this url: {serviceGuideUrl}";
     }
+
+    private static string GetAllServiceNamesAsCommaSeparatedList()
+    {
+        if (s_serviceGuidesCache == null || s_serviceGuidesCache.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Join(", ", s_serviceGuidesCache.Keys);
+    }
+
+    
 }

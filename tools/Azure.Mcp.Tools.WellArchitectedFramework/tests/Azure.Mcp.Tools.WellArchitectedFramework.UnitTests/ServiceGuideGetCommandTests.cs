@@ -124,6 +124,7 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result[0]);
+        Assert.Contains("Supported services include:", result[0]);
         Assert.Contains("https://learn.microsoft.com/azure/well-architected/service-guides", result[0]);
     }
 
