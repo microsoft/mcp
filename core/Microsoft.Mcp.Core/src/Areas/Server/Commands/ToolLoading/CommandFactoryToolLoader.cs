@@ -149,7 +149,7 @@ public sealed class CommandFactoryToolLoader(
 
         // Check if this tool requires elicitation for sensitive data
         var metadata = command.Metadata;
-        if (metadata.Secret)
+        if (metadata.Secret || command.ElicitationRequired)
         {
             var elicitationResult = await HandleSecretElicitationAsync(
                 request,

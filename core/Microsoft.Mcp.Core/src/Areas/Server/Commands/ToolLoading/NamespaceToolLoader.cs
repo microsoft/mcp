@@ -335,7 +335,7 @@ public sealed class NamespaceToolLoader(
 
             // Check if this tool requires elicitation for sensitive data
             var metadata = cmd.Metadata;
-            if (metadata.Secret)
+            if (metadata.Secret || cmd.ElicitationRequired)
             {
                 var elicitationResult = await HandleSecretElicitationAsync(
                     request,

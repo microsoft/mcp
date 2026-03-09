@@ -31,6 +31,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     public abstract string Description { get; }
     public abstract string Title { get; }
     public abstract ToolMetadata Metadata { get; }
+    public virtual bool ElicitationRequired => Metadata.Secret;
 
     protected virtual void RegisterOptions(Command command)
     {

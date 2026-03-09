@@ -41,6 +41,12 @@ public interface IBaseCommand
     /// </summary>
     ToolMetadata Metadata { get; }
 
+    /// <summary> Gets a value indicating whether elicitation is required for this command.
+    /// If <see langword="true"/>, the MCP client should prompt the user for additional information before executing the command.
+    /// This is typically used for commands that require sensitive information (Metadata.Secret = true) or have other characteristics that necessitate user confirmation or input.
+    /// </summary>
+    bool ElicitationRequired { get; }
+
     /// <summary>
     /// Gets the command definition
     /// </summary>
