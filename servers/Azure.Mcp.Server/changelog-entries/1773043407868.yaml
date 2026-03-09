@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "MCP tools for managing Azure DocumentDB (with MongoDB compatibility) connection"

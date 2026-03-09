@@ -1497,6 +1497,26 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure DocumentDB (with MongoDB compatibility) Operations
+
+```bash
+# Connection Management
+
+# Connect to an Azure Cosmos DB for MongoDB (vCore) instance
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb connection toggle --action connect --connection-string <connection-string> \
+                                    [--test-connection <true|false>]
+
+# Disconnect from the current DocumentDB instance
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb connection toggle --action disconnect
+
+
+# Get the current DocumentDB connection status and details
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb connection get connection status
+```
+
 ### Azure Event Grid Operations
 
 ```bash

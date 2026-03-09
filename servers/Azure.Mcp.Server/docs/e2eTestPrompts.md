@@ -314,6 +314,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure DocumentDB (with MongoDB compatibility)
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| documentdb_connection_toggle | Connect to my DocumentDB instance using <connection-string> |
+| documentdb_connection_toggle | Close the DocumentDB connection |
+| documentdb_connection_get_connection_status | Show me the DocumentDB connection status |
+| documentdb_connection_get_connection_status | Is DocumentDB connected? |
+
 ## Azure Event Grid
 
 | Tool Name | Test Prompt |

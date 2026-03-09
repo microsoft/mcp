@@ -166,6 +166,12 @@
 # ServiceLabel: %tools-Docker
 # ServiceOwners:                       @conniey @microsoft/azure-mcp
 
+# PRLabel: %tools-DocumentDb
+/tools/Azure.Mcp.Tools.DocumentDb/     @xingfan-git @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DocumentDb
+# ServiceOwners:                       @xingfan-git
+
 # ServiceLabel: %tools-Eclipse
 # ServiceOwners:                       @srnagar @microsoft/azure-mcp
 

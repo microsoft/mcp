@@ -387,6 +387,14 @@ function Get-ServerDetails {
             $version.PrereleaseNumber = $BuildId
         }
 
+        # Check if this server depends on MongoDB.Driver (incompatible with IL trimming)
+        $projectContent = Get-Content $serverProject.FullName -Raw
+        $hasMongoDbDependency = $projectContent -match 'tools.+Azure\..+\.csproj'
+
+        if ($hasMongoDbDependency) {
+            Write-Host "Server $serverName depends on DocumentDb (with MongoDB.Driver) - trimming will be disabled" -ForegroundColor Yellow
+        }
+
         # Calculate VSIX version based on server version
         $vsixVersion = $null
         $vsixIsPrerelease = $false
@@ -473,7 +481,8 @@ function Get-ServerDetails {
                         architecture = $arch
                         extension = $os.extension
                         native = $false
-                        trimmed = $true
+                        # Disable trimming for servers with MongoDB.Driver dependency (uses extensive reflection)
+                        trimmed = !$hasMongoDbDependency
                     }
                 }
             }
