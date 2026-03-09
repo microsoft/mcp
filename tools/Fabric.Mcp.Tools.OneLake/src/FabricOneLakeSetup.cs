@@ -87,7 +87,7 @@ public class FabricOneLakeSetup : IAreaSetup
         var uploadFile = serviceProvider.GetRequiredService<BlobPutCommand>();
         fabricOneLake.AddCommand(uploadFile.Name, uploadFile);
 
-        var deleteFile = serviceProvider.GetRequiredService<BlobDeleteCommand>();
+        var deleteFile = serviceProvider.GetRequiredService<FileDeleteCommand>();
         fabricOneLake.AddCommand(deleteFile.Name, deleteFile);
 
         var createDirectory = serviceProvider.GetRequiredService<DirectoryCreateCommand>();

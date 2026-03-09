@@ -245,6 +245,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
 | `onelake_download_file` | Downloads a OneLake file. |
 | `onelake_upload_file` | Uploads a file to OneLake storage. |
+| `onelake_delete_file` | Deletes a file from OneLake storage. |
 | `onelake_create_directory` | Creates a directory via the DFS endpoint. |
 | `onelake_delete_directory` | Deletes a directory (optionally recursive). |
 | `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
