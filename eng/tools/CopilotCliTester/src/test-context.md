@@ -5,9 +5,24 @@
 1. **ALWAYS use the most specific MCP tool available.**
 
 2. **NEVER use these alternatives when an MCP tool exists:**
-   - Do NOT use `powershell` or `read_powershell` for Azure operations
-   - Do NOT use `skill` or built-in skills
    - Do NOT use `ask_user` — it is not available
+
+**MCP NAMESPACE TOOL NAVIGATION:**
+MCP tools are organized as hierarchical namespace routers. Each namespace tool contains multiple sub-commands.
+
+- To discover sub-commands inside a namespace, call it with `"learn": true`.
+- To execute a specific sub-command, call with `"command": "<command_name>"` and `"parameters": { ... }`.
+- **Read each namespace tool's description carefully** to determine which namespace is relevant to the user's request.
+- If the first namespace you try doesn't have the right sub-command, explore other namespace tools.
+- When a tool response mentions or references another tool/command by name, **always follow through** and call that tool too.
+- **Do NOT stop** after getting general best practices if a more specific tool exists — always look for the most targeted command.
+
+**CRITICAL — HANDLING LEARN RESPONSES:**
+When you call an MCP namespace tool and get back a list of available commands (a "learn" response), you MUST:
+1. Parse the response to find the correct `"name"` field for the sub-command you need.
+2. **Immediately call the tool again** with `"command": "<exact_name_from_response>"` and the required `"parameters"`.
+3. **NEVER skip this step.** Getting a learn response means you have NOT yet executed the command — you must call again.
+4. **Do NOT read workspace files, use skills, or generate answers from existing files** as a substitute for calling the MCP tool.
 
 **Default Values:**
 Use these values unless the prompt explicitly specifies otherwise. Do NOT spend time discovering subscriptions, resource groups, or locations.

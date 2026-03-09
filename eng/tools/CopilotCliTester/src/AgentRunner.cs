@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Data;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using CopilotCliTester.Models;
 using GitHub.Copilot.SDK;
@@ -28,7 +28,37 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     [GeneratedRegex(@"(?:password|secret|token|api[_-]?key)\s*[:=]\s*[""']?[^\s""',]{6,}", RegexOptions.IgnoreCase)]
     private static partial Regex SecretKeyValuePattern();
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    private readonly CopilotClient _client;
+    public AgentRunner(CopilotClient client)
+    {
+        _client = client;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _client.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Creates a shared CopilotClient that should be reused across all test runs.
+    /// One CLI process instead of one-per-prompt avoids file handle exhaustion (EMFILE).
+    /// </summary>
+    public static CopilotClient CreateSharedClient(bool debug = false)
+    {
+        var workspace = CreateTempWorkspace("mcp-test-");
+        var cliArgs = new List<string> { "--yolo", "--allow-all-tools", "--allow-all-paths" };
+        if (debug)
+        {
+            cliArgs.Add("--log-dir");
+            cliArgs.Add(Path.Combine(DefaultReportDir, "copilot-logs"));
+        }
+
+        return new CopilotClient(new CopilotClientOptions
+        {
+            CliArgs = [.. cliArgs],
+            Cwd = workspace,
+        });
+    }
 
     public async Task<AgentMetadata> RunAsync(AgentRunConfig config, CancellationToken cancellationToken = default)
     {
@@ -36,23 +66,12 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         var isComplete = false;
         AgentMetadata? metadata = null;
 
+        // Snapshot azmcp processes before session creation so we can kill leaked ones after
+        // var preSessionPids = GetAzmcpProcessIds();
+
         try
         {
             var debug = config.Debug ?? !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG"));
-
-            // Use --yolo to auto-approve all tool permissions (non-interactive mode)
-            var cliArgs = new List<string> { "--yolo", "--allow-all-tools", "--allow-all-paths" };
-            if (debug)
-            {
-                cliArgs.Add("--log-dir");
-                cliArgs.Add(Path.Combine(DefaultReportDir, "copilot-logs"));
-            }
-
-            await using var client = new CopilotClient(new CopilotClientOptions
-            {
-                CliArgs = [.. cliArgs],
-                Cwd = workspace,
-            });
 
             SystemMessageConfig? systemMessage = null;
             if (config.SystemPrompt is not null)
@@ -66,7 +85,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 };
             }
 
-            await using var session = await client.CreateSessionAsync(new SessionConfig
+            var session = await _client.CreateSessionAsync(new SessionConfig
             {
                 Model = config.Model ?? "claude-sonnet-4.5",
                 Streaming = true,
@@ -76,66 +95,97 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                     ["azure"] = new McpLocalServerConfig
                     {
                         Type = "stdio",
-                        Command = "npx",
-                        Args = ["-y", "@azure/mcp", "server", "start"],
-                        // Args = ["-y", "@azure/mcp", "server", "start", "--mode", "all"],
+                        Command = @"C:\Users\anannyapatra\mcp-main-noChange\mcp\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe",
+                        Args = ["server", "start", "--mode", "all"],
                         Tools = ["*"]
                     },
                 },
+                // McpServers = BuildMcpServersConfig(config.McpServerUrl),
                 SystemMessage = systemMessage
             }, cancellationToken);
 
-            metadata = new AgentMetadata();
-
-            var idleTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            session.On(ev =>
-            {
-                if (isComplete) return;
-
-                if (TryMapEvent(ev, out var mapped))
-                {
-                    if (debug)
-                        Console.WriteLine($"--- Session event: {mapped.Type}");
-
-                    if (mapped.Type == "session.idle")
-                    {
-                        isComplete = true;
-                        idleTcs.TrySetResult();
-                        return;
-                    }
-
-                    metadata.Events.Add(mapped);
-
-                    if (config.ShouldEarlyTerminate is not null && config.ShouldEarlyTerminate(metadata))
-                    {
-                        isComplete = true;
-                        idleTcs.TrySetResult();
-                        _ = session.AbortAsync();
-                        return;
-                    }
-                }
-                else if (debug)
-                {
-                    Console.WriteLine($"--- Unmapped event: {ev.GetType().Name}");
-                }
-            });
-
-            await session.SendAsync(new MessageOptions { Prompt = config.Prompt }, cancellationToken);
-
-            // Wait for idle, caller controls timeout via cancellationToken
             try
             {
-                await idleTcs.Task.WaitAsync(cancellationToken);
+                metadata = new AgentMetadata();
+
+                var idleTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                session.On(ev =>
+                {
+                    if (isComplete) return;
+
+                    if (TryMapEvent(ev, out var mapped))
+                    {
+                        if (debug)
+                            Console.WriteLine($"--- Session event: {mapped.Type}");
+
+                        if (mapped.Type == "session.idle")
+                        {
+                            isComplete = true;
+                            idleTcs.TrySetResult();
+                            return;
+                        }
+
+                        metadata.Events.Add(mapped);
+
+                        if (config.ShouldEarlyTerminate is not null && config.ShouldEarlyTerminate(metadata))
+                        {
+                            isComplete = true;
+                            idleTcs.TrySetResult();
+                            return;
+                        }
+                    }
+                    else if (debug)
+                    {
+                        Console.WriteLine($"--- Unmapped event: {ev.GetType().Name}");
+                    }
+                });
+
+                await session.SendAsync(new MessageOptions { Prompt = config.Prompt }, cancellationToken);
+
+                // Wait for idle, caller controls timeout via cancellationToken
+                try
+                {
+                    await idleTcs.Task.WaitAsync(cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    isComplete = true;
+                }
+
+                WriteMarkdownReport(config, metadata);
+
+                return metadata;
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            finally
             {
-                isComplete = true;
+                try
+                {
+                    await session.AbortAsync(CancellationToken.None);
+                }
+                catch
+                {
+                    // Best-effort; continue to disposal
+                }
+
+                // Wait for process to actually terminate after abort signal as AbortAsync may only signal termination without waiting for exit.
+                await Task.Delay(500, CancellationToken.None);
+
+                // Dispose the session after aborting
+                try
+                {
+                    await session.DisposeAsync();
+                }
+                catch
+                {
+                    // Best-effort; ignore disposal errors
+                }
+
+                // Kill any azmcp.exe processes that were spawned during this session
+                // and survived the abort/dispose. This is a safety net because the SDK
+                // doesn't always reliably terminate child stdio processes.
+                // KillLeakedAzmcpProcesses(preSessionPids);
             }
-
-            WriteMarkdownReport(config, metadata);
-
-            return metadata;
         }
         catch (Exception ex)
         {
@@ -158,17 +208,21 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         finally
         {
             // Clean up workspace, ignore failures, OS will clean `temp` eventually
-            try
+            for(int i=0;i <3; i++)
             {
-                if (Directory.Exists(workspace))
+                try
                 {
-                    await Task.Delay(500, CancellationToken.None);  
-                    Directory.Delete(workspace, recursive: true);
+                    if (Directory.Exists(workspace))
+                    {
+                        await Task.Delay(500 * (i+1), CancellationToken.None);  
+                        Directory.Delete(workspace, recursive: true);
+                    }
+                    break;
+                } 
+                catch
+                {
+                    // Ignore cleanup failures 
                 }
-            }
-            catch
-            {
-                // Ignore cleanup failures 
             }
         }
     }
@@ -304,6 +358,47 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         return dir;
     }
 
+    /// <summary>
+    /// Builds the MCP servers configuration based on whether an HTTP URL is provided.
+    /// If a URL is provided, uses HTTP transport to connect to a shared server.
+    /// Otherwise, spawns a new stdio process per session.
+    /// </summary>
+    // private static Dictionary<string, object> BuildMcpServersConfig(string? httpServerUrl)
+    // {
+    //     if (!string.IsNullOrEmpty(httpServerUrl))
+    //     {
+    //         // The MCP server exposes SSE at /sse endpoint
+    //         // Ensure URL ends with /sse for SSE transport
+    //         var sseUrl = httpServerUrl.TrimEnd('/');
+    //         if (!sseUrl.EndsWith("/sse", StringComparison.OrdinalIgnoreCase))
+    //         {
+    //             sseUrl += "/sse";
+    //         }
+            
+    //         return new Dictionary<string, object>
+    //         {
+    //             ["azure"] = new Dictionary<string, object>
+    //             {
+    //                 ["type"] = "sse",
+    //                 ["url"] = sseUrl,
+    //                 ["tools"] = new List<string> { "*" }
+    //             }
+    //         };
+    //     }
+
+    //     // stdio mode unchanged
+    //     return new Dictionary<string, object>
+    //     {
+    //         ["azure"] = new McpLocalServerConfig
+    //         {
+    //             Type = "stdio",
+    //             Command = "npx",
+    //             Args = ["-y", "@azure/mcp", "server", "start"],
+    //             Tools = ["*"]
+    //         }
+    //     };
+    // }
+
     private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)
     {
         // Session idle
@@ -427,5 +522,86 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "... (truncated)";
+
+    /// <summary>
+    /// Returns the set of currently running azmcp.exe process IDs.
+    /// </summary>
+    // private static HashSet<int> GetAzmcpProcessIds()
+    // {
+    //     try
+    //     {
+    //         return Process.GetProcessesByName("azmcp")
+    //             .Select(p => { using (p) return p.Id; })
+    //             .ToHashSet();
+    //     }
+    //     catch
+    //     {
+    //         return [];
+    //     }
+    // }
+
+    /// <summary>
+    /// Kills azmcp.exe processes that were spawned after the pre-session snapshot.
+    /// This catches processes leaked by the SDK when session.AbortAsync/DisposeAsync
+    /// fails to terminate the child stdio process.
+    /// </summary>
+    // private static void KillLeakedAzmcpProcesses(HashSet<int> preSessionPids)
+    // {
+    //     try
+    //     {
+    //         foreach (var process in Process.GetProcessesByName("azmcp"))
+    //         {
+    //             using (process)
+    //             {
+    //                 if (!preSessionPids.Contains(process.Id))
+    //                 {
+    //                     try
+    //                     {
+    //                         process.Kill(entireProcessTree: true);
+    //                         process.WaitForExit(3000);
+    //                     }
+    //                     catch
+    //                     {
+    //                         // Process may have already exited
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     catch
+    //     {
+    //         // Ignore errors during cleanup
+    //     }
+    // }
+
+    /// <summary>
+    /// Kills all running azmcp.exe processes. Used as a final safety net
+    /// at program exit to ensure no orphaned processes remain.
+    /// </summary>
+    // public static void KillAllAzmcpProcesses()
+    // {
+    //     try
+    //     {
+    //         foreach (var process in Process.GetProcessesByName("azmcp"))
+    //         {
+    //             using (process)
+    //             {
+    //                 try
+    //                 {
+    //                     process.Kill(entireProcessTree: true);
+    //                     process.WaitForExit(3000);
+    //                 }
+    //                 catch
+    //                 {
+    //                     // Process may have already exited
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     catch
+    //     {
+    //         // Ignore errors during cleanup
+    //     }
+    // }
 
 }
