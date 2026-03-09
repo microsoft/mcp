@@ -10,7 +10,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
 
-public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture serverFixture)
+    : RecordedCommandTestsBase(output, fixture, serverFixture)
 {
     protected override RecordingOptions? RecordingOptions => new()
     {

@@ -1512,7 +1512,7 @@ azmcp documentdb connection connect --connection-string <connection-string> \
 azmcp documentdb connection disconnect
 
 # Get the current DocumentDB connection status and details
-azmcp documentdb connection status
+azmcp documentdb connection get_connection_status
 ```
 
 ### Azure Event Grid Operations

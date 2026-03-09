@@ -176,6 +176,7 @@
     <Project Path="../../tools/Azure.Mcp.Tools.DocumentDb/src/Azure.Mcp.Tools.DocumentDb.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DocumentDb/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DocumentDb/tests/Azure.Mcp.Tools.DocumentDb.LiveTests/Azure.Mcp.Tools.DocumentDb.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.DocumentDb/tests/Azure.Mcp.Tools.DocumentDb.UnitTests/Azure.Mcp.Tools.DocumentDb.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />

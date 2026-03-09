@@ -386,10 +386,10 @@ function Get-ServerDetails {
             $version.PrereleaseLabel = 'alpha'
             $version.PrereleaseNumber = $BuildId
         }
-        
+
         # Check if this server depends on MongoDB.Driver (incompatible with IL trimming)
         $projectContent = Get-Content $serverProject.FullName -Raw
-        $hasMongoDbDependency = $projectContent -match 'tools.+Azure\..+\.csproj'
+        $hasMongoDbDependency = $projectContent -match 'ProjectReference\s+Include=".*tools[\\/].*Azure\.Mcp\.Tools\.DocumentDb\.csproj"'
 
         if ($hasMongoDbDependency) {
             Write-Host "Server $serverName depends on DocumentDb (with MongoDB.Driver) - trimming will be disabled" -ForegroundColor Yellow
