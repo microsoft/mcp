@@ -40,12 +40,11 @@ public class DocumentDbSetup : IAreaSetup
             "Connection session commands for opening, closing, reconnecting, and checking the active DocumentDB connection.");
         documentDb.AddSubGroup(connection);
 
-        connection.AddCommand(
-            serviceProvider.GetRequiredService<ConnectionToggleCommand>().Name,
-            serviceProvider.GetRequiredService<ConnectionToggleCommand>());
-        connection.AddCommand(
-            serviceProvider.GetRequiredService<GetConnectionStatusCommand>().Name,
-            serviceProvider.GetRequiredService<GetConnectionStatusCommand>());
+        var connectionToggleCommand = serviceProvider.GetRequiredService<ConnectionToggleCommand>();
+        var getConnectionStatusCommand = serviceProvider.GetRequiredService<GetConnectionStatusCommand>();
+
+        connection.AddCommand(connectionToggleCommand.Name, connectionToggleCommand);
+        connection.AddCommand(getConnectionStatusCommand.Name, getConnectionStatusCommand);
 
         return documentDb;
     }

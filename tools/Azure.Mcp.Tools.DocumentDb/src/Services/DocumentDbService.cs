@@ -8,17 +8,12 @@ using MongoDB.Driver;
 
 namespace Azure.Mcp.Tools.DocumentDb.Services;
 
-public class DocumentDbService : IDocumentDbService
+public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbService
 {
-    private readonly ILogger<DocumentDbService> _logger;
+    private readonly ILogger<DocumentDbService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private MongoClient? _client;
     private string? _connectionString;
     private bool _disposed;
-
-    public DocumentDbService(ILogger<DocumentDbService> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Helper method to convert BsonDocument to JSON string for serialization

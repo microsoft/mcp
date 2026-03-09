@@ -1514,7 +1514,7 @@ azmcp documentdb connection toggle --action disconnect
 
 # Get the current DocumentDB connection status and details
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb connection get connection status
+azmcp documentdb connection get_connection_status
 ```
 
 ### Azure Event Grid Operations
