@@ -122,18 +122,22 @@ public static class PipelineGenerationUtil
     /// </summary>
     private static PipelineTemplateParameters CreatePipelineParameters(GuidanceGetOptions options)
     {
-        options.PipelinePlatform ??= Models.PipelinePlatform.GitHubActions;
-        options.DeployOption ??= Models.DeployOption.DeployOnly;
+        var normalizedOptions = new GuidanceGetOptions
+        {
+            IsAZDProject = options.IsAZDProject,
+            PipelinePlatform = options.PipelinePlatform ?? Models.PipelinePlatform.GitHubActions,
+            DeployOption = options.DeployOption ?? Models.DeployOption.DeployOnly
+        };
 
         return new PipelineTemplateParameters
         {
-            DeploymentTool = options.IsAZDProject ? "AZD" : "Azure CLI",
-            PipelinePlatform = options.PipelinePlatform.ToString(),
-            PrerequisiteChecksPrompt = GeneratePrerequisiteChecksPrompt(options),
-            PipelineFilePrompt = GeneratePipelineFilePrompts(options),
-            SetupMethodPrompt = GenerateSetUpMethodPrompts(options),
-            AzureAuthConfigPrompt = GenerateAzureAuthConfigPrompt(options),
-            EnvironmentSetupPrompt = GenerateEnvironmentSetupPrompt(options)
+            DeploymentTool = normalizedOptions.IsAZDProject ? "AZD" : "Azure CLI",
+            PipelinePlatform = normalizedOptions.PipelinePlatform,
+            PrerequisiteChecksPrompt = GeneratePrerequisiteChecksPrompt(normalizedOptions),
+            PipelineFilePrompt = GeneratePipelineFilePrompts(normalizedOptions),
+            SetupMethodPrompt = GenerateSetUpMethodPrompts(normalizedOptions),
+            AzureAuthConfigPrompt = GenerateAzureAuthConfigPrompt(normalizedOptions),
+            EnvironmentSetupPrompt = GenerateEnvironmentSetupPrompt(normalizedOptions)
         };
     }
 }
