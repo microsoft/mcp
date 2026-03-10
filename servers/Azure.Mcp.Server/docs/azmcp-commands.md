@@ -1549,8 +1549,7 @@ azmcp functions language list
 
 # Get project initialization files for a new Azure Functions app including host.json, local.settings.json, and language-specific files
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp functions project get --language <language> \
-                            [--runtime-version <runtime-version>]
+azmcp functions project get --language <language>
 
 # List all available function templates for a language or get the complete source code for a specific template
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
