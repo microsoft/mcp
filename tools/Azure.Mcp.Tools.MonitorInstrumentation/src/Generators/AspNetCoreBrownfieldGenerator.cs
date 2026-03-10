@@ -152,31 +152,46 @@ public class AspNetCoreBrownfieldGenerator : IGenerator
 
     private static bool HasCodeChanges(BrownfieldFindings? findings)
     {
-        if (findings == null) return false;
+        if (findings == null)
+            return false;
 
         var opts = findings.ServiceOptions;
         if (opts != null)
         {
             // Check for removed properties
-            if (opts.InstrumentationKey != null) return true;
-            if (opts.EnableAdaptiveSampling != null) return true;
-            if (opts.DeveloperMode != null) return true;
-            if (opts.EndpointAddress != null) return true;
-            if (opts.EnableHeartbeat != null) return true;
-            if (opts.EnableDebugLogger != null) return true;
-            if (opts.RequestCollectionOptions != null) return true;
-            if (opts.DependencyCollectionOptions != null) return true;
+            if (opts.InstrumentationKey != null)
+                return true;
+            if (opts.EnableAdaptiveSampling != null)
+                return true;
+            if (opts.DeveloperMode != null)
+                return true;
+            if (opts.EndpointAddress != null)
+                return true;
+            if (opts.EnableHeartbeat != null)
+                return true;
+            if (opts.EnableDebugLogger != null)
+                return true;
+            if (opts.RequestCollectionOptions != null)
+                return true;
+            if (opts.DependencyCollectionOptions != null)
+                return true;
 
             // Check for removed extension methods
-            if (opts.UseApplicationInsights == true) return true;
-            if (opts.AddTelemetryProcessor == true) return true;
-            if (opts.ConfigureTelemetryModule == true) return true;
+            if (opts.UseApplicationInsights == true)
+                return true;
+            if (opts.AddTelemetryProcessor == true)
+                return true;
+            if (opts.ConfigureTelemetryModule == true)
+                return true;
         }
 
-        if (findings.Initializers is { Found: true }) return true;
-        if (findings.Processors is { Found: true }) return true;
+        if (findings.Initializers is { Found: true })
+            return true;
+        if (findings.Processors is { Found: true })
+            return true;
         // TelemetryClient still works in 3.x — no code changes needed
-        if (findings.Sampling is { HasCustomSampling: true }) return true;
+        if (findings.Sampling is { HasCustomSampling: true })
+            return true;
 
         return false;
     }
