@@ -116,8 +116,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         try
         {
-            // Perform a lightweight operation to validate the client
-            await client.ReadAccountAsync();
+            // Perform a lightweight operation to validate the client.
+            // ReadAccountAsync has no CancellationToken overload, so using WaitAsync to apply the cancellation token.
+            await client.ReadAccountAsync().WaitAsync(cancellationToken);
         }
         catch (CosmosException ex)
         {
@@ -380,7 +381,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         {
             try
             {
-                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
+                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: _hostApplicationLifetime.ApplicationStopping);
                 client?.Dispose();
             }
             catch (Exception ex)

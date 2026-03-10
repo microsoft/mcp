@@ -147,7 +147,7 @@ public class LoadTestingService(
         var credential = await GetCredential(tenant, cancellationToken);
         var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
-        var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId);
+        var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
         {
             throw new Exception($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
@@ -251,7 +251,8 @@ public class LoadTestingService(
             0,
             testRunId,
             requestContent,
-            oldTestRunId: oldTestRunId);
+            oldTestRunId: oldTestRunId,
+            context: new RequestContext { CancellationToken = cancellationToken });
 
         if (loadTestRunResponse == null)
         {
@@ -288,7 +289,7 @@ public class LoadTestingService(
         var credential = await GetCredential(tenant, cancellationToken);
         var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
-        var loadTestResponse = await loadTestClient.GetTestAsync(testId);
+        var loadTestResponse = await loadTestClient.GetTestAsync(testId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
             throw new Exception($"Failed to retrieve Azure Load Test: {loadTestResponse}");
@@ -353,7 +354,7 @@ public class LoadTestingService(
             }
         };
 
-        var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)));
+        var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)), new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
             throw new Exception($"Failed to create Azure Load Test: {loadTestResponse}");
