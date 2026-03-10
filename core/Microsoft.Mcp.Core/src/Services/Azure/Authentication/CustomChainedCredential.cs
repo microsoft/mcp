@@ -175,7 +175,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
         if (shouldAddBrowserFallback)
         {
-            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+            // Wrap in SafeTokenCredential so that MsalCachePersistenceException
+            // (libsecret missing / no keyring daemon in Docker/headless environments)
+            // is converted to CredentialUnavailableException, allowing the chain to
+            // continue rather than propagating an unhandled exception.
+            creds.Add(new SafeTokenCredential(CreateBrowserCredential(tenantId, authRecord), "InteractiveBrowserCredential"));
         }
 
         return new ChainedTokenCredential([.. creds]);
