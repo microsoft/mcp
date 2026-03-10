@@ -44,6 +44,9 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
+            SkillTelemetryCommand.ConfigureServices = ConfigureServices;
+            SkillTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
+
             ServiceCollection services = new();
 
             ConfigureServices(services);

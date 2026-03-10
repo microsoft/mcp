@@ -26,6 +26,7 @@ public sealed class ServerSetup : IAreaSetup
     {
         services.AddSingleton<ServiceStartCommand>();
         services.AddSingleton<ServiceInfoCommand>();
+        services.AddSingleton<SkillTelemetryCommand>();
     }
 
     /// <summary>
@@ -44,6 +45,9 @@ public sealed class ServerSetup : IAreaSetup
 
         var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
         mcpServer.AddCommand(infoCommand.Name, infoCommand);
+
+        var skillTelemetryCommand = serviceProvider.GetRequiredService<SkillTelemetryCommand>();
+        mcpServer.AddCommand(skillTelemetryCommand.Name, skillTelemetryCommand);
 
         return mcpServer;
     }
