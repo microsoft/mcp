@@ -1263,12 +1263,12 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 ```bash
 # List Azure Container Apps in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp containerapps containerapp list --subscription <subscription>
+azmcp containerapps list --subscription <subscription>
 
 # List Azure Container Apps in a specific resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp containerapps containerapp list --subscription <subscription> \
-                                      [--resource-group <resource-group>]
+azmcp containerapps list --subscription <subscription> \
+                         [--resource-group <resource-group>]
 ```
 
 ### Azure Container Registry (ACR) Operations
