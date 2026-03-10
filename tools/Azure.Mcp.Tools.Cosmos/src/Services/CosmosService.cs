@@ -10,12 +10,11 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger, IHostApplicationLifetime hostApplicationLifetime)
+public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger)
     : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
@@ -23,7 +22,6 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime ?? throw new ArgumentNullException(nameof(hostApplicationLifetime));
     private const string CacheGroup = "cosmos";
     private const string CosmosClientsCacheKeyPrefix = "clients_";
     private const string CosmosDatabasesCacheKeyPrefix = "databases_";
@@ -124,7 +122,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         {
             throw new Exception($"Failed to validate CosmosClient: {ex.StatusCode} - {ex.Message}", ex);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             throw new Exception($"Unexpected error while validating CosmosClient: {ex.Message}", ex);
         }
@@ -359,13 +357,20 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         }
     }
 
+    private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
+
     private async ValueTask DisposeAsyncCore()
     {
+        // Use a bounded timeout so disposal can never hang indefinitely.
+        // We do not use CancellationToken.None (unbounded) nor any IHostApplicationLifetime
+        // token (already cancelled by the time DisposeAsync runs).
+        using var cts = new CancellationTokenSource(s_disposeTimeout);
+
         IEnumerable<string> keys;
         try
         {
             // Get all cached client keys
-            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, _hostApplicationLifetime.ApplicationStopping);
+            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, cts.Token);
         }
         catch (Exception ex)
         {
@@ -381,7 +386,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         {
             try
             {
-                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: _hostApplicationLifetime.ApplicationStopping);
+                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: cts.Token);
                 client?.Dispose();
             }
             catch (Exception ex)
