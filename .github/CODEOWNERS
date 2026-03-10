@@ -364,6 +364,12 @@
 # ServiceLabel: %tools-VSIX
 # ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
 
+# PRLabel: %tools-WellArchitectedFramework
+/tools/Azure.Mcp.Tools.WellArchitectedFramework/   @skakara @arunrab @microsoft/azure-mcp
+
+# ServiceLabel: %tools-WellArchitectedFramework
+# ServiceOwners:                       @skakara @arunrab
+
 # PRLabel: %tools-Workbooks
 /tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp
 

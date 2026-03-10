@@ -3161,6 +3161,14 @@ azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
 ```
 
+### Azure Well-Architected Framework Operations
+
+```bash
+# Get Azure Well-Architected Framework guidance for a specific Azure service, including architectural best practices and design patterns.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp wellarchitectedframework serviceguide get --service <service-name>
+```
+
 ### Azure Workbooks Operations
 
 ```bash
