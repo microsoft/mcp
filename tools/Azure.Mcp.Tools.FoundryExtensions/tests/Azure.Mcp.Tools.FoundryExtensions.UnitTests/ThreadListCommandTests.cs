@@ -24,7 +24,6 @@ public class ThreadListCommandTests
         _foundryService = Substitute.For<IFoundryExtensionsService>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -33,7 +32,7 @@ public class ThreadListCommandTests
     [InlineData("", FoundryExtensionsOptionDefinitions.Endpoint)]
     public async Task ExecuteAsync_Fails_WhenMissingRequiredParameter(string argsString, string missingArgName)
     {
-        var command = new ThreadListCommand();
+        var command = new ThreadListCommand(_foundryService);
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -63,7 +62,7 @@ public class ThreadListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var command = new ThreadListCommand();
+        var command = new ThreadListCommand(_foundryService);
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);

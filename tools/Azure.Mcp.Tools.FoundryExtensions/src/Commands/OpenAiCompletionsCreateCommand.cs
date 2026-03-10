@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiCompletionsCreateOptions>
+public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Create OpenAI Completion";
 
     public override string Id => "e5f6a7b8-5678-9abc-ef01-234567890123";
@@ -77,7 +79,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
             var result = await foundryService.CreateCompletionAsync(
                 options.ResourceName!,
                 options.DeploymentName!,

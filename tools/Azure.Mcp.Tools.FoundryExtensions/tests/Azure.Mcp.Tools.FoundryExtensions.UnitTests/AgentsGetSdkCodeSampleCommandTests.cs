@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
+using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,27 +16,20 @@ namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 public class AgentsGetSdkCodeSampleCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IFoundryExtensionsService _foundryService;
 
     public AgentsGetSdkCodeSampleCommandTests()
     {
-        var collection = new ServiceCollection();
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        var tenantService = Substitute.For<ITenantService>();
-        collection.AddSingleton(httpClientFactory);
-        collection.AddSingleton(subscriptionService);
-        collection.AddSingleton(tenantService);
-        collection.AddSingleton<IFoundryExtensionsService, FoundryExtensionsService>();
+        _foundryService = Substitute.For<IFoundryExtensionsService>();
 
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
     }
 
     [Theory]
     [InlineData("", FoundryExtensionsOptionDefinitions.ProgrammingLanguage)]
     public async Task ExecuteAsync_Fails_WhenMissingRequiredParameter(string argsString, string missingArgName)
     {
-        var command = new AgentsGetSdkSampleCommand();
+        var command = new AgentsGetSdkSampleCommand(_foundryService);
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -54,7 +46,10 @@ public class AgentsGetSdkCodeSampleCommandTests
 
     public async Task ExecuteAsync_ReturnsSdkCodeSample(string programmingLanguage)
     {
-        var command = new AgentsGetSdkSampleCommand();
+        _foundryService.GetSdkCodeSample(Arg.Any<string>())
+            .Returns(new AgentsGetSdkCodeSampleResult { CodeSampleText = "sample code" });
+
+        var command = new AgentsGetSdkSampleCommand(_foundryService);
         var args = command.GetCommand().Parse(["--programming-language", programmingLanguage]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);

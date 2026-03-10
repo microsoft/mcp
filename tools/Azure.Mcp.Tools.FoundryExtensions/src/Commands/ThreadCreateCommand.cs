@@ -11,8 +11,10 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
+public sealed class ThreadCreateCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<ThreadCreateOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Create Microsoft Foundry Thread";
 
     public override string Id => "c9d0e1f2-9012-def0-2345-678901234567";
@@ -64,9 +66,7 @@ public sealed class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
-
-            var result = await service.CreateThread(
+            var result = await _foundryExtensionsService.CreateThread(
                 options.Endpoint!,
                 options.UserMessage!,
                 options.Tenant,

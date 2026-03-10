@@ -11,8 +11,10 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
+public sealed class ThreadGetMessagesCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<ThreadGetMessagesOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Get Microsoft Foundry Thread Messages";
 
     public override string Id => "d0e1f2a3-0123-ef01-3456-789012345678";
@@ -64,9 +66,7 @@ public sealed class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOp
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
-
-            var result = await service.GetMessages(
+            var result = await _foundryExtensionsService.GetMessages(
                 options.Endpoint!,
                 options.ThreadId!,
                 options.Tenant,
