@@ -29,7 +29,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = true,
         ReadOnly = true,
         LocalRequired = true,

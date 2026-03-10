@@ -30,7 +30,7 @@ public sealed class SubmitBrownfieldAnalysisCommand(ILogger<SubmitBrownfieldAnal
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = true,
         ReadOnly = true,
         LocalRequired = true,

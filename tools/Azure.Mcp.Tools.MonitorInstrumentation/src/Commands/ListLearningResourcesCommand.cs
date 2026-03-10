@@ -29,8 +29,8 @@ public sealed class ListLearningResourcesCommand(ILogger<ListLearningResourcesCo
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
+        Idempotent = false,
+        OpenWorld = true,
         ReadOnly = true,
         LocalRequired = true,
         Secret = false
