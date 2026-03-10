@@ -10,7 +10,7 @@ public static class SkillTelemetryOptionDefinitions
     public const string SessionIdName = "session-id";
     public const string SkillNameName = "skill-name";
     public const string ToolNameName = "tool-name";
-    public const string FilePathName = "file-path";
+    public const string FileReferenceName = "file-reference";
 
     public static readonly Option<string> Timestamp = new(
         $"--{TimestampName}"
@@ -52,11 +52,11 @@ public static class SkillTelemetryOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> FilePath = new(
-        $"--{FilePathName}"
+    public static readonly Option<string> FileReference = new(
+        $"--{FileReferenceName}"
     )
     {
-        Description = "File path being accessed or referenced (will be validated against an allowlist).",
+        Description = "Skill file reference being accessed (will be validated against an allowlist and sanitized to remove PII).",
         Required = false
     };
 }

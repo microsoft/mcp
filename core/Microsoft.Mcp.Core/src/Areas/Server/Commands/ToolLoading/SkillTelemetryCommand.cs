@@ -3,14 +3,13 @@
 
 using System.Diagnostics;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -23,7 +22,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
-public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
+public sealed class SkillTelemetryCommand : BaseCommand<SkillTelemetryOptions>
 {
     private const string CommandTitle = "Publish Skill Telemetry";
 
@@ -63,71 +62,16 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
     /// </summary>
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
-    private static HashSet<string>? _allowedSkillPaths;
-    private static readonly object _allowListLock = new();
-
-    /// <summary>
-    /// Gets the allowlist of skill-relative file paths that are permitted for telemetry.
-    /// Only events with file paths matching these exact paths will be logged (with PII stripped).
-    /// Loaded from allowed-skill-paths.json embedded resource.
-    /// Format: skill-name\references\file.md
-    /// </summary>
-    private static HashSet<string> AllowedSkillPaths
-    {
-        get
-        {
-            if (_allowedSkillPaths == null)
-            {
-                lock (_allowListLock)
-                {
-                    _allowedSkillPaths ??= LoadAllowedSkillPaths();
-                }
-            }
-            return _allowedSkillPaths;
-        }
-    }
-
-    /// <summary>
-    /// Loads allowed skill paths from the embedded JSON configuration file.
-    /// </summary>
-    /// <returns>A HashSet of allowed skill-relative paths, or an empty set if loading fails.</returns>
-    private static HashSet<string> LoadAllowedSkillPaths()
-    {
-        try
-        {
-            var assembly = typeof(SkillTelemetryCommand).Assembly;
-            var resourceName = "Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading.allowed-skill-paths.json";
-
-            var json = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
-            using var jsonDocument = JsonDocument.Parse(json);
-            var paths = new List<string>();
-            
-            foreach (var element in jsonDocument.RootElement.EnumerateArray())
-            {
-                var path = element.GetString();
-                if (path != null)
-                {
-                    paths.Add(path);
-                }
-            }
-
-            return new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase);
-        }
-        catch (Exception)
-        {
-            // Return empty set if loading fails (fail-closed for security)
-            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        }
-    }
-
     /// <summary>
     /// Checks if a skill-relative path is allowed based on the exact path allowlist.
     /// </summary>
     /// <param name="skillRelativePath">The skill-relative path to check.</param>
+    /// <param name="allowlistProvider">The provider that supplies the allowed file references.</param>
     /// <returns>True if the path is in the allowlist, false otherwise.</returns>
-    private static bool IsPathAllowed(string skillRelativePath)
+    private static bool IsPathAllowed(string skillRelativePath, ISkillFileReferenceAllowlistProvider allowlistProvider)
     {
-        return AllowedSkillPaths.Contains(skillRelativePath);
+        var allowedPaths = allowlistProvider.GetAllowedPaths();
+        return allowedPaths.Contains(skillRelativePath);
     }
 
     /// <summary>
@@ -148,19 +92,16 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
         // Normalize path separators to backslash
         var normalizedPath = fullPath.Replace("/", @"\");
 
-        // Look for common skill directory patterns
-        var skillMarkers = new[] { @"\skills\", @"\azure-skills\azure\skills\" };
-        
-        foreach (var marker in skillMarkers)
+        // Look for the azure-skills directory pattern
+        const string skillMarker = @"\azure-skills\azure\skills\";
+
+        var markerIndex = normalizedPath.IndexOf(skillMarker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex >= 0)
         {
-            var markerIndex = normalizedPath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-            if (markerIndex >= 0)
-            {
-                // Extract everything after the marker
-                var startIndex = markerIndex + marker.Length;
-                skillRelativePath = normalizedPath.Substring(startIndex);
-                return true;
-            }
+            // Extract everything after the marker
+            var startIndex = markerIndex + skillMarker.Length;
+            skillRelativePath = normalizedPath[startIndex..];
+            return true;
         }
 
         return false;
@@ -173,7 +114,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
         command.Options.Add(SkillTelemetryOptionDefinitions.SessionId);
         command.Options.Add(SkillTelemetryOptionDefinitions.SkillName);
         command.Options.Add(SkillTelemetryOptionDefinitions.ToolName);
-        command.Options.Add(SkillTelemetryOptionDefinitions.FilePath);
+        command.Options.Add(SkillTelemetryOptionDefinitions.FileReference);
     }
 
     protected override SkillTelemetryOptions BindOptions(ParseResult parseResult)
@@ -185,7 +126,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
             SessionId = parseResult.GetValueOrDefault<string?>(SkillTelemetryOptionDefinitions.SessionId.Name),
             SkillName = parseResult.GetValueOrDefault<string?>(SkillTelemetryOptionDefinitions.SkillName.Name),
             ToolName = parseResult.GetValueOrDefault<string?>(SkillTelemetryOptionDefinitions.ToolName.Name),
-            FilePath = parseResult.GetValueOrDefault<string?>(SkillTelemetryOptionDefinitions.FilePath.Name)
+            FileReference = parseResult.GetValueOrDefault<string?>(SkillTelemetryOptionDefinitions.FileReference.Name)
         };
     }
 
@@ -210,32 +151,35 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
 
         try
         {
-            // Validate and sanitize file path if provided
-            if (!string.IsNullOrWhiteSpace(options.FilePath))
+            // Create host early so we can access services for validation
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
+
+            // Validate and sanitize file reference if provided
+            if (!string.IsNullOrWhiteSpace(options.FileReference))
             {
                 // Extract skill-relative path, removing PII
-                if (!TryExtractSkillRelativePath(options.FilePath, out var skillRelativePath))
+                if (!TryExtractSkillRelativePath(options.FileReference, out var skillRelativePath))
                 {
                     context.Response.Status = HttpStatusCode.BadRequest;
-                    context.Response.Message = "Could not extract skill-relative path from file path. Path must contain a skill directory marker.";
+                    context.Response.Message = "Could not extract skill-relative path from file reference. Path must contain a skill directory marker.";
                     return context.Response;
                 }
 
                 // Validate against allowlist
-                if (!IsPathAllowed(skillRelativePath!))
+                var allowlistProvider = host.Services.GetRequiredService<ISkillFileReferenceAllowlistProvider>();
+                if (!IsPathAllowed(skillRelativePath!, allowlistProvider))
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
-                    context.Response.Message = $"Skill path '{skillRelativePath}' is not in the allowlist and will not be logged.";
+                    context.Response.Message = $"Skill file reference '{skillRelativePath}' is not in the allowlist and will not be logged.";
                     return context.Response;
                 }
 
                 // Store the sanitized path (PII removed) for telemetry
-                options.FilePath = skillRelativePath;
+                options.FileReference = skillRelativePath;
             }
 
-            // Create host and initialize telemetry service
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
+            // Start host and log telemetry
             await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
@@ -256,7 +200,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
 
     /// <summary>
     /// Logs skill telemetry by creating an activity and adding relevant tags.
-    /// Only non-empty fields are added as tags. File paths should already be sanitized
+    /// Only non-empty fields are added as tags. File references should already be sanitized
     /// (PII removed) before calling this method.
     /// </summary>
     /// <param name="telemetryService">The telemetry service used to create and track activities.</param>
@@ -264,10 +208,10 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
     internal static void LogSkillTelemetry(ITelemetryService telemetryService, SkillTelemetryOptions options)
     {
         using var activity = telemetryService.StartActivity(ActivityName.SkillsExecuted);
-        
+
         if (activity != null)
         {
-            // Add all fields as tags (FilePath has already been sanitized - PII removed in ExecuteAsync)
+            // Add all fields as tags (FileReference has already been sanitized - PII removed in ExecuteAsync)
             var tags = new (string Key, string? Value)[]
             {
                 ("Skills_EventType", options.EventType),
@@ -275,7 +219,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
                 ("Skills_SkillName", options.SkillName),
                 ("Skills_ToolName", options.ToolName),
                 ("Skills_Timestamp", options.Timestamp),
-                ("Skills_FilePath", options.FilePath)
+                ("Skills_FileReference", options.FileReference)
             };
 
             foreach (var (key, value) in tags)
@@ -285,7 +229,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
                     activity.AddTag(key, value);
                 }
             }
-            
+
             activity.SetStatus(ActivityStatusCode.Ok);
         }
     }
@@ -354,7 +298,7 @@ public sealed class SkillTelemetryCommand: BaseCommand<SkillTelemetryOptions>
 
                 // Allow custom service configuration
                 ConfigureServices(services);
-                
+
                 // Register full Azure MCP Server services (works because SkillTelemetryOptions inherits from ServiceStartOptions)
                 services.AddAzureMcpServer(options);
             })

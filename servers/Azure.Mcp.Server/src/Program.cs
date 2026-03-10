@@ -18,6 +18,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -245,6 +246,9 @@ internal class Program
 
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
+
+        services.AddSingleton<ISkillFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourceSkillFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-skill-file-references.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

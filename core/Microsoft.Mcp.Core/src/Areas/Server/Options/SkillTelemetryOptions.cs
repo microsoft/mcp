@@ -42,9 +42,10 @@ public class SkillTelemetryOptions : ServiceStartOptions
     public string? ToolName { get; set; }
 
     /// <summary>
-    /// Gets or sets the file path being accessed or referenced.
+    /// Gets or sets the file reference being accessed.
     /// This will be validated against an allowlist before telemetry is emitted.
+    /// After validation, this contains the skill-relative path with PII removed.
     /// </summary>
-    [JsonPropertyName("filePath")]
-    public string? FilePath { get; set; }
+    [JsonPropertyName("fileReference")]
+    public string? FileReference { get; set; }
 }
