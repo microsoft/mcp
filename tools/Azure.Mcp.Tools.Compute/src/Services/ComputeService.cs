@@ -8,13 +8,11 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Utilities;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
@@ -104,22 +102,22 @@ public class ComputeService(
             cancellationToken);
 
         // Build VM data
-        var vmData = new VirtualMachineData(new AzureLocation(location))
+        var vmData = new VirtualMachineData(new(location))
         {
-            HardwareProfile = new VirtualMachineHardwareProfile
+            HardwareProfile = new()
             {
-                VmSize = new VirtualMachineSizeType(effectiveVmSize)
+                VmSize = new(effectiveVmSize)
             },
-            StorageProfile = new VirtualMachineStorageProfile
+            StorageProfile = new()
             {
-                OSDisk = new VirtualMachineOSDisk(DiskCreateOptionType.FromImage)
+                OSDisk = new(DiskCreateOptionType.FromImage)
                 {
                     Name = $"{vmName}-osdisk",
                     Caching = CachingType.ReadWrite,
-                    ManagedDisk = new VirtualMachineManagedDisk(),
+                    ManagedDisk = new(),
                     DiskSizeGB = effectiveOsDiskSizeGb
                 },
-                ImageReference = new ImageReference
+                ImageReference = new()
                 {
                     Publisher = publisher,
                     Offer = offer,
@@ -127,16 +125,16 @@ public class ComputeService(
                     Version = version
                 }
             },
-            OSProfile = new VirtualMachineOSProfile
+            OSProfile = new()
             {
                 ComputerName = vmName,
                 AdminUsername = adminUsername
             },
-            NetworkProfile = new VirtualMachineNetworkProfile
+            NetworkProfile = new()
             {
                 NetworkInterfaces =
                 {
-                    new VirtualMachineNetworkInterfaceReference
+                    new()
                     {
                         Id = nicId,
                         Primary = true
@@ -148,14 +146,14 @@ public class ComputeService(
         // Set disk type only if explicitly specified; otherwise let Azure choose based on VM size
         if (effectiveOsDiskType != null)
         {
-            vmData.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new StorageAccountType(effectiveOsDiskType);
+            vmData.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new(effectiveOsDiskType);
         }
 
         // Configure authentication based on OS type
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase))
         {
             vmData.OSProfile.AdminPassword = adminPassword;
-            vmData.OSProfile.WindowsConfiguration = new WindowsConfiguration
+            vmData.OSProfile.WindowsConfiguration = new()
             {
                 ProvisionVmAgent = true,
                 EnableAutomaticUpdates = true
@@ -164,7 +162,7 @@ public class ComputeService(
         else
         {
             // For Linux VMs, configure SSH key if provided, otherwise allow Azure AD SSH login
-            vmData.OSProfile.LinuxConfiguration = new LinuxConfiguration
+            vmData.OSProfile.LinuxConfiguration = new()
             {
                 DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword)
             };
@@ -177,7 +175,7 @@ public class ComputeService(
                     ? File.ReadAllText(sshPublicKey).Trim()
                     : sshPublicKey;
 
-                vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new SshPublicKeyConfiguration
+                vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
                     Path = $"/home/{adminUsername}/.ssh/authorized_keys",
                     KeyData = resolvedSshKey
@@ -203,7 +201,7 @@ public class ComputeService(
         // Create the VM
         var vmCollection = resourceGroupResource.GetVirtualMachines();
         var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             vmName,
             vmData,
             cancellationToken);
@@ -216,7 +214,7 @@ public class ComputeService(
             nicId,
             cancellationToken);
 
-        return new VmCreateResult(
+        return new(
             Name: createdVm.Data.Name,
             Id: createdVm.Data.Id?.ToString(),
             Location: createdVm.Data.Location.Name,
@@ -286,7 +284,7 @@ public class ComputeService(
         {
             var nsgData = new NetworkSecurityGroupData
             {
-                Location = new AzureLocation(location)
+                Location = new(location)
             };
 
             // Add appropriate security rule based on OS type
@@ -301,7 +299,7 @@ public class ComputeService(
                     _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
                 }
 
-                nsgData.SecurityRules.Add(new SecurityRuleData
+                nsgData.SecurityRules.Add(new()
                 {
                     Name = "AllowRDP",
                     Priority = 1000,
@@ -321,7 +319,7 @@ public class ComputeService(
                     _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
                 }
 
-                nsgData.SecurityRules.Add(new SecurityRuleData
+                nsgData.SecurityRules.Add(new()
                 {
                     Name = "AllowSSH",
                     Priority = 1000,
@@ -336,7 +334,7 @@ public class ComputeService(
             }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 nsgName,
                 nsgData,
                 cancellationToken);
@@ -356,18 +354,18 @@ public class ComputeService(
         {
             var vnetData = new VirtualNetworkData
             {
-                Location = new AzureLocation(location)
+                Location = new(location)
             };
             vnetData.AddressPrefixes.Add("10.0.0.0/16");
-            vnetData.Subnets.Add(new SubnetData
+            vnetData.Subnets.Add(new()
             {
                 Name = subnetName,
                 AddressPrefix = "10.0.0.0/24",
-                NetworkSecurityGroup = new NetworkSecurityGroupData { Id = nsgResource.Id }
+                NetworkSecurityGroup = new() { Id = nsgResource.Id }
             });
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
@@ -394,16 +392,16 @@ public class ComputeService(
             {
                 var pipData = new PublicIPAddressData
                 {
-                    Location = new AzureLocation(location),
+                    Location = new(location),
                     PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
-                    Sku = new PublicIPAddressSku
+                    Sku = new()
                     {
                         Name = PublicIPAddressSkuName.Standard
                     }
                 };
 
                 var pipOperation = await pipCollection.CreateOrUpdateAsync(
-                    Azure.WaitUntil.Completed,
+                    WaitUntil.Completed,
                     pipName,
                     pipData,
                     cancellationToken);
@@ -415,7 +413,7 @@ public class ComputeService(
         var nicCollection = resourceGroup.GetNetworkInterfaces();
         var nicData = new NetworkInterfaceData
         {
-            Location = new AzureLocation(location)
+            Location = new(location)
         };
 
         var ipConfig = new NetworkInterfaceIPConfigurationData
@@ -423,18 +421,18 @@ public class ComputeService(
             Name = "ipconfig1",
             Primary = true,
             PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
-            Subnet = new SubnetData { Id = subnetResource.Value.Id }
+            Subnet = new() { Id = subnetResource.Value.Id }
         };
 
         if (publicIpResource != null)
         {
-            ipConfig.PublicIPAddress = new PublicIPAddressData { Id = publicIpResource.Id };
+            ipConfig.PublicIPAddress = new() { Id = publicIpResource.Id };
         }
 
         nicData.IPConfigurations.Add(ipConfig);
 
         var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             nicName,
             nicData,
             cancellationToken);
@@ -733,30 +731,30 @@ public class ComputeService(
             cancellationToken);
 
         // Build VMSS data using Flexible orchestration mode (default since Nov 2023)
-        var vmssData = new VirtualMachineScaleSetData(new AzureLocation(location))
+        var vmssData = new VirtualMachineScaleSetData(new(location))
         {
-            Sku = new ComputeSku
+            Sku = new()
             {
                 Name = effectiveVmSize,
                 Tier = "Standard",
                 Capacity = effectiveInstanceCount
             },
-            UpgradePolicy = new VirtualMachineScaleSetUpgradePolicy
+            UpgradePolicy = new()
             {
                 Mode = effectiveUpgradePolicy
             },
             Overprovision = false,
-            VirtualMachineProfile = new VirtualMachineScaleSetVmProfile
+            VirtualMachineProfile = new()
             {
-                StorageProfile = new VirtualMachineScaleSetStorageProfile
+                StorageProfile = new()
                 {
-                    OSDisk = new VirtualMachineScaleSetOSDisk(DiskCreateOptionType.FromImage)
+                    OSDisk = new(DiskCreateOptionType.FromImage)
                     {
                         Caching = CachingType.ReadWrite,
-                        ManagedDisk = new VirtualMachineScaleSetManagedDisk(),
+                        ManagedDisk = new(),
                         DiskSizeGB = effectiveOsDiskSizeGb
                     },
-                    ImageReference = new ImageReference
+                    ImageReference = new()
                     {
                         Publisher = publisher,
                         Offer = offer,
@@ -764,22 +762,22 @@ public class ComputeService(
                         Version = version
                     }
                 },
-                OSProfile = new VirtualMachineScaleSetOSProfile
+                OSProfile = new()
                 {
                     // VMSS computer name prefix - Azure appends instance number
                     ComputerNamePrefix = vmssName.Length > 9 ? vmssName[..9] : vmssName,
                     AdminUsername = adminUsername
                 },
-                NetworkProfile = new VirtualMachineScaleSetNetworkProfile
+                NetworkProfile = new()
                 {
                     NetworkInterfaceConfigurations =
                     {
-                        new VirtualMachineScaleSetNetworkConfiguration($"{vmssName}-nic")
+                        new($"{vmssName}-nic")
                         {
                             Primary = true,
                             IPConfigurations =
                             {
-                                new VirtualMachineScaleSetIPConfiguration($"{vmssName}-ipconfig")
+                                new($"{vmssName}-ipconfig")
                                 {
                                     Primary = true,
                                     SubnetId = subnetId
@@ -794,14 +792,14 @@ public class ComputeService(
         // Set disk type only if explicitly specified; otherwise let Azure choose based on VM size
         if (effectiveOsDiskType != null)
         {
-            vmssData.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new StorageAccountType(effectiveOsDiskType);
+            vmssData.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.StorageAccountType = new(effectiveOsDiskType);
         }
 
         // Configure authentication based on OS type
         if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase))
         {
             vmssData.VirtualMachineProfile.OSProfile.AdminPassword = adminPassword;
-            vmssData.VirtualMachineProfile.OSProfile.WindowsConfiguration = new WindowsConfiguration
+            vmssData.VirtualMachineProfile.OSProfile.WindowsConfiguration = new()
             {
                 ProvisionVmAgent = true,
                 EnableAutomaticUpdates = true
@@ -809,7 +807,7 @@ public class ComputeService(
         }
         else
         {
-            vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration = new LinuxConfiguration
+            vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration = new()
             {
                 DisablePasswordAuthentication = string.IsNullOrEmpty(adminPassword)
             };
@@ -820,7 +818,7 @@ public class ComputeService(
                     ? File.ReadAllText(sshPublicKey).Trim()
                     : sshPublicKey;
 
-                vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new SshPublicKeyConfiguration
+                vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
                     Path = $"/home/{adminUsername}/.ssh/authorized_keys",
                     KeyData = resolvedSshKey
@@ -843,14 +841,14 @@ public class ComputeService(
         // Create the VMSS
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            Azure.WaitUntil.Completed,
+            WaitUntil.Completed,
             vmssName,
             vmssData,
             cancellationToken);
 
         var createdVmss = vmssOperation.Value;
 
-        return new VmssCreateResult(
+        return new(
             Name: createdVmss.Data.Name,
             Id: createdVmss.Data.Id?.ToString(),
             Location: createdVmss.Data.Location.Name,
@@ -896,7 +894,7 @@ public class ComputeService(
 
         if (vmSize != null || capacity.HasValue)
         {
-            patch.Sku = new ComputeSku
+            patch.Sku = new()
             {
                 Name = vmSize ?? vmssResource.Data.Sku?.Name,
                 Tier = vmssResource.Data.Sku?.Tier,
@@ -907,14 +905,14 @@ public class ComputeService(
 
         if (upgradePolicy != null || enableAutoOsUpgrade.HasValue)
         {
-            patch.UpgradePolicy = new VirtualMachineScaleSetUpgradePolicy
+            patch.UpgradePolicy = new()
             {
                 Mode = upgradePolicy != null ? ParseUpgradePolicy(upgradePolicy) : vmssResource.Data.UpgradePolicy?.Mode
             };
 
             if (enableAutoOsUpgrade.HasValue)
             {
-                patch.UpgradePolicy.AutomaticOSUpgradePolicy = new AutomaticOSUpgradePolicy
+                patch.UpgradePolicy.AutomaticOSUpgradePolicy = new()
                 {
                     EnableAutomaticOSUpgrade = enableAutoOsUpgrade.Value
                 };
@@ -931,7 +929,7 @@ public class ComputeService(
 
         if (scaleInPolicy != null)
         {
-            patch.ScaleInPolicy = new ScaleInPolicy();
+            patch.ScaleInPolicy = new();
             patch.ScaleInPolicy.Rules.Add(ParseScaleInPolicy(scaleInPolicy));
             needsUpdate = true;
         }
@@ -954,13 +952,13 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmssResource.UpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
             vmssResource = updateOperation.Value;
         }
 
-        return new VmssUpdateResult(
+        return new(
             Name: vmssResource.Data.Name,
             Id: vmssResource.Data.Id?.ToString(),
             Location: vmssResource.Data.Location.Name,
@@ -1003,7 +1001,7 @@ public class ComputeService(
 
         if (vmSize != null)
         {
-            patch.HardwareProfile = new VirtualMachineHardwareProfile { VmSize = new VirtualMachineSizeType(vmSize) };
+            patch.HardwareProfile = new() { VmSize = new(vmSize) };
             needsUpdate = true;
         }
 
@@ -1017,7 +1015,7 @@ public class ComputeService(
         {
             var enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
                           bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase);
-            patch.BootDiagnostics = new BootDiagnostics { Enabled = enabled };
+            patch.BootDiagnostics = new() { Enabled = enabled };
             needsUpdate = true;
         }
 
@@ -1045,7 +1043,7 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmResource.UpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 patch,
                 cancellationToken: cancellationToken);
             vmResource = updateOperation.Value;
@@ -1067,7 +1065,7 @@ public class ComputeService(
             _logger.LogDebug(ex, "Could not retrieve instance view for VM {VmName}", vmResource.Data.Name);
         }
 
-        return new VmUpdateResult(
+        return new(
             Name: vmResource.Data.Name,
             Id: vmResource.Data.Id?.ToString(),
             Location: vmResource.Data.Location.Name,
@@ -1130,11 +1128,11 @@ public class ComputeService(
         {
             var vnetData = new VirtualNetworkData
             {
-                Location = new AzureLocation(location),
+                Location = new(location),
                 AddressPrefixes = { "10.0.0.0/16" },
                 Subnets =
                 {
-                    new SubnetData
+                    new()
                     {
                         Name = subnetName,
                         AddressPrefix = "10.0.0.0/24"
@@ -1143,7 +1141,7 @@ public class ComputeService(
             };
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 vnetName,
                 vnetData,
                 cancellationToken);
@@ -1167,7 +1165,7 @@ public class ComputeService(
             };
 
             var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 subnetName,
                 subnetData,
                 cancellationToken);
@@ -1179,7 +1177,7 @@ public class ComputeService(
 
     private static VmInfo MapToVmInfo(VirtualMachineData data)
     {
-        return new VmInfo(
+        return new(
             Name: data.Name,
             Id: data.Id?.ToString(),
             Location: data.Location.Name,
@@ -1203,11 +1201,11 @@ public class ComputeService(
             ?.Code?.Split('/')
             .LastOrDefault();
 
-        return new VmInstanceView(
+        return new(
             Name: vmName,
             PowerState: powerState,
             ProvisioningState: provisioningState,
-            VmAgent: instanceView.VmAgent != null ? new VmAgentInfo(
+            VmAgent: instanceView.VmAgent != null ? new(
                 VmAgentVersion: instanceView.VmAgent.VmAgentVersion,
                 Statuses: instanceView.VmAgent.Statuses?.Select(s => MapToStatusInfo(s)).ToList()
             ) : null,
@@ -1227,7 +1225,7 @@ public class ComputeService(
 
     private static StatusInfo MapToStatusInfo(InstanceViewStatus status)
     {
-        return new StatusInfo(
+        return new(
             Code: status.Code,
             Level: status.Level?.ToString(),
             DisplayStatus: status.DisplayStatus,
@@ -1238,11 +1236,11 @@ public class ComputeService(
 
     private static VmssInfo MapToVmssInfo(VirtualMachineScaleSetData data)
     {
-        return new VmssInfo(
+        return new(
             Name: data.Name,
             Id: data.Id?.ToString(),
             Location: data.Location.Name,
-            Sku: data.Sku != null ? new VmssSkuInfo(
+            Sku: data.Sku != null ? new(
                 Name: data.Sku.Name,
                 Tier: data.Sku.Tier,
                 Capacity: data.Sku.Capacity
@@ -1257,7 +1255,7 @@ public class ComputeService(
 
     private static VmssVmInfo MapToVmssVmInfo(VirtualMachineScaleSetVmData data)
     {
-        return new VmssVmInfo(
+        return new(
             InstanceId: data.InstanceId,
             Name: data.Name,
             Id: data.Id?.ToString(),
@@ -1330,14 +1328,15 @@ public class ComputeService(
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to list disks: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to list disks.");
+            throw;
         }
     }
 
     private static DiskInfo ConvertToDiskModel(ManagedDiskResource diskResource, string resourceGroup)
     {
         var disk = diskResource.Data;
-        return new DiskInfo
+        return new()
         {
             Name = disk.Name,
             Id = disk.Id?.ToString(),

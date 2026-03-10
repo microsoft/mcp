@@ -902,6 +902,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
 | virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
+## Azure Well-Architected Framework
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service |
+| wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? |
+| wellarchitectedframework_serviceguide_get | Show me the best practices for virtual machines |
+| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB |
+
 ## Azure Workbooks
 
 | Tool Name | Test Prompt |
