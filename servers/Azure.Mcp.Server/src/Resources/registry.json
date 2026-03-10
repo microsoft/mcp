@@ -17,6 +17,7 @@
             "url": "https://mcp.ai.azure.com",
             "title": "Microsoft Foundry MCP",
             "description": "MCP server with tools to read, create, modify resources such as Models, Agents and Evaluation workflows in Microsoft Foundry platform.",
+            "toolPrefix": "foundry_",
             "oauthScopes": ["https://mcp.ai.azure.com/Foundry.Mcp.Tools"]
         }
     }
