@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure Compute VM create/update and VMSS create/update."
