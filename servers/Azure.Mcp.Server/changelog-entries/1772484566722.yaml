@@ -1,0 +1,4 @@
+pr: 1901
+changes:
+  - section: "Other Changes"
+    description: "Authorization: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
