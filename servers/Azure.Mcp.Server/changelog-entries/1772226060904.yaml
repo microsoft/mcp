@@ -1,4 +1,0 @@
-pr: 1881
-changes:
-  - section: "Other Changes"
-    description: "Acr: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
