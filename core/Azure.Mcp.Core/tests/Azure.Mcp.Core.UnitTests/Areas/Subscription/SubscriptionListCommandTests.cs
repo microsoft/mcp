@@ -5,7 +5,6 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -57,6 +56,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var args = _commandDefinition.Parse("");
 
@@ -96,6 +96,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Is<string>(x => x == tenantId), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         // Act
         var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -116,6 +117,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var args = _commandDefinition.Parse("");
 
@@ -158,6 +160,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         // Act
         var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -172,7 +175,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithDefaultSubscriptionEnvVar_MarksDefaultSubscription()
+    public async Task ExecuteAsync_WithDefaultSubscription_MarksDefaultSubscription()
     {
         // Arrange
         var expectedSubscriptions = new List<SubscriptionData>
@@ -184,8 +187,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
-
-        EnvironmentHelpers.SetAzureSubscriptionId("sub2");
+        _subscriptionService.GetDefaultSubscriptionId().Returns("sub2");
 
         var args = _commandDefinition.Parse("");
 
@@ -213,7 +215,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithNoDefaultSubscriptionEnvVar_AllSubscriptionsNotDefault()
+    public async Task ExecuteAsync_WithNoDefaultSubscription_AllSubscriptionsNotDefault()
     {
         // Arrange
         var expectedSubscriptions = new List<SubscriptionData>
@@ -225,9 +227,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
-
-        // Ensure no default subscription is set
-        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var args = _commandDefinition.Parse("");
 

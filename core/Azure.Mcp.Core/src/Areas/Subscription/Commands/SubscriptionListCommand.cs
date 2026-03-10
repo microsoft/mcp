@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas.Subscription.Models;
 using Azure.Mcp.Core.Areas.Subscription.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Description =>
         "List all Azure subscriptions for the current account. Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription. " +
-        "The isDefault field indicates the subscription set via AZURE_SUBSCRIPTION_ID environment variable. " +
+        "The isDefault field indicates the user's default subscription as configured via 'az account set' in the Azure CLI profile. " +
         "When the user has not specified a subscription, prefer the subscription where isDefault is true. " +
         "If no default is set and multiple subscriptions exist, ask the user which subscription to use.";
 
@@ -54,7 +53,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             var subscriptionService = context.GetService<ISubscriptionService>();
             var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
-            var defaultSubscriptionId = EnvironmentHelpers.GetAzureSubscriptionId();
+            var defaultSubscriptionId = subscriptionService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(

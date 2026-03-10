@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -94,6 +96,64 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
             throw new Exception($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
+    }
+
+    /// <inheritdoc/>
+    public string? GetDefaultSubscriptionId()
+    {
+        // Primary: read from Azure CLI profile (~/.azure/azureProfile.json)
+        var profileDefault = ReadDefaultSubscriptionFromAzureProfile();
+        if (!string.IsNullOrEmpty(profileDefault))
+        {
+            return profileDefault;
+        }
+
+        // Fallback: AZURE_SUBSCRIPTION_ID environment variable
+        return EnvironmentHelpers.GetAzureSubscriptionId();
+    }
+
+    internal static string? ReadDefaultSubscriptionFromAzureProfile()
+    {
+        try
+        {
+            var profilePath = GetAzureProfilePath();
+            if (!File.Exists(profilePath))
+            {
+                return null;
+            }
+
+            var json = File.ReadAllText(profilePath);
+            using var doc = JsonDocument.Parse(json);
+
+            if (!doc.RootElement.TryGetProperty("subscriptions", out var subscriptions) ||
+                subscriptions.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            foreach (var sub in subscriptions.EnumerateArray())
+            {
+                if (sub.TryGetProperty("isDefault", out var isDefault) &&
+                    isDefault.ValueKind == JsonValueKind.True &&
+                    sub.TryGetProperty("id", out var id) &&
+                    id.ValueKind == JsonValueKind.String)
+                {
+                    return id.GetString();
+                }
+            }
+        }
+        catch
+        {
+            // Silently ignore errors reading the profile - this is best-effort
+        }
+
+        return null;
+    }
+
+    internal static string GetAzureProfilePath()
+    {
+        var azureDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".azure");
+        return Path.Combine(azureDir, "azureProfile.json");
     }
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)

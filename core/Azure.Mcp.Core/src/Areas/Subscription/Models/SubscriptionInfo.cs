@@ -10,7 +10,7 @@ namespace Azure.Mcp.Core.Areas.Subscription.Models;
 /// <param name="DisplayName">The display name of the subscription.</param>
 /// <param name="State">The subscription state (e.g., Enabled, Disabled).</param>
 /// <param name="TenantId">The tenant ID associated with the subscription.</param>
-/// <param name="IsDefault">Whether this subscription is the default (matches AZURE_SUBSCRIPTION_ID environment variable).</param>
+/// <param name="IsDefault">Whether this subscription is the default as configured via 'az account set' in the Azure CLI profile, or via the AZURE_SUBSCRIPTION_ID environment variable.</param>
 internal record SubscriptionInfo(
     string SubscriptionId,
     string DisplayName,
