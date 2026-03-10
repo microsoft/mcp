@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
@@ -25,9 +26,11 @@ public class AgentsGetSdkCodeSampleCommandTests
         httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
         var subscriptionService = Substitute.For<ISubscriptionService>();
         var tenantService = Substitute.For<ITenantService>();
+        var logger = Substitute.For<ILogger<FoundryExtensionsService>>();
         collection.AddSingleton(httpClientFactory);
         collection.AddSingleton(subscriptionService);
         collection.AddSingleton(tenantService);
+        collection.AddSingleton(logger);
         collection.AddSingleton<IFoundryExtensionsService, FoundryExtensionsService>();
 
         _serviceProvider = collection.BuildServiceProvider();

@@ -5,21 +5,22 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Options;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands;
 
 public abstract class BaseComputeCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] T>(bool resourceGroupRequired)
     : SubscriptionCommand<T>
     where T : BaseComputeOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(resourceGroupRequired
+            ? OptionDefinitions.Common.ResourceGroup.AsRequired()
+            : OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override T BindOptions(ParseResult parseResult)
