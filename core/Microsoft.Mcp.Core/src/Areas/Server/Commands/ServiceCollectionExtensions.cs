@@ -248,9 +248,13 @@ public static class ServiceCollectionExtensions
     /// Using <see cref="IConfiguration"/> configures <see cref="McpServerConfiguration"/>.
     /// </summary>
     /// <param name="services">Service Collection to add configuration logic to.</param>
-    public static void InitializeConfigurationAndOptions(this IServiceCollection services)
+    public static void InitializeConfigurationOptionsAndOpenTelemetry(this IServiceCollection services)
     {
+#if DEBUG
+        var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+#else
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+#endif
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false)
             .AddJsonFile($"appsettings.{environment}.json", optional: true)
@@ -272,11 +276,8 @@ public static class ServiceCollectionExtensions
 
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.
-                var entryAssembly = Assembly.GetEntryAssembly();
-                if (entryAssembly == null)
-                {
-                    throw new InvalidOperationException("Entry assembly must be a managed assembly.");
-                }
+                var entryAssembly = Assembly.GetEntryAssembly()
+                    ?? throw new InvalidOperationException("Entry assembly must be a managed assembly.");
 
                 options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
 
@@ -293,5 +294,7 @@ public static class ServiceCollectionExtensions
                 // over any other settings.
                 options.IsTelemetryEnabled = rootConfiguration.GetValue("AZURE_MCP_COLLECT_TELEMETRY", true);
             });
+
+        services.ConfigureOpenTelemetry(configuration);
     }
 }

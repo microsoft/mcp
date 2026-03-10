@@ -33,7 +33,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var services = SetupBaseServices();
 
         // Act
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
 
         // Assert
         var provider = services.BuildServiceProvider();
@@ -64,7 +64,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
 
         // Act
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -88,7 +88,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "false");
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -121,7 +121,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -145,7 +145,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -171,7 +171,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
-        ServiceCollectionExtensions.InitializeConfigurationAndOptions(services);
+        ServiceCollectionExtensions.InitializeConfigurationOptionsAndOpenTelemetry(services);
         var provider = services.BuildServiceProvider();
 
         // Assert
