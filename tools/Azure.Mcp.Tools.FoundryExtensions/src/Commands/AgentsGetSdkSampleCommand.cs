@@ -9,8 +9,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
+public class AgentsGetSdkSampleCommand(IFoundryExtensionsService foundryExtensionsService) : BaseCommand<AgentsGetSdkSampleOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
     private const string CommandTitle = "Get code samples to interact with a Foundry Agent using Microsoft Foundry SDK and programming language of your choice";
     public override string Id => "a1b2c3d4-1234-5678-abcd-ef0123456789";
     public override string Name => "get-sdk-sample";
@@ -59,8 +60,7 @@ public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
         try
         {
             var programmingLanguageLowercase = options.ProgrammingLanguage!.ToLowerInvariant();
-            var service = context.GetService<IFoundryExtensionsService>();
-            var result = service.GetSdkCodeSample(programmingLanguageLowercase);
+            var result = _foundryExtensionsService.GetSdkCodeSample(programmingLanguageLowercase);
 
             context.Activity?.AddTag("programmingLanguage", programmingLanguageLowercase);
 

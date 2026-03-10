@@ -28,6 +28,11 @@ public class FoundryExtensionsSetup : IAreaSetup
         services.AddSingleton<ThreadListCommand>();
         services.AddSingleton<ThreadGetMessagesCommand>();
 
+        services.AddSingleton<OpenAiCompletionsCreateCommand>();
+        services.AddSingleton<OpenAiEmbeddingsCreateCommand>();
+        services.AddSingleton<OpenAiModelsListCommand>();
+        services.AddSingleton<OpenAiChatCompletionsCreateCommand>();
+
         services.AddSingleton<ResourceGetCommand>();
     }
 
@@ -50,10 +55,10 @@ public class FoundryExtensionsSetup : IAreaSetup
         var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in Microsoft Foundry.");
         foundryExtensions.AddSubGroup(openai);
 
-        openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
-        openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
-        openai.AddCommand("models-list", new OpenAiModelsListCommand());
-        openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
+        openai.AddCommand("create-completion", serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>());
+        openai.AddCommand("embeddings-create", serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>());
+        openai.AddCommand("models-list", serviceProvider.GetRequiredService<OpenAiModelsListCommand>());
+        openai.AddCommand("chat-completions-create", serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>());
 
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for interacting with agents in Microsoft Foundry.");
         foundryExtensions.AddSubGroup(agents);

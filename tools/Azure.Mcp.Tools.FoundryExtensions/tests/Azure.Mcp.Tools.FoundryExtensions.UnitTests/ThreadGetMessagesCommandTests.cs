@@ -25,7 +25,6 @@ public class ThreadGetMessagesCommandTests
         _foundryService = Substitute.For<IFoundryExtensionsService>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -35,7 +34,7 @@ public class ThreadGetMessagesCommandTests
     [InlineData("--endpoint https://test-endpoint.com", FoundryExtensionsOptionDefinitions.ThreadId)]
     public async Task ExecuteAsync_Fails_WhenMissingRequiredParameter(string argsString, string missingArgName)
     {
-        var command = new ThreadGetMessagesCommand();
+        var command = new ThreadGetMessagesCommand(_foundryService);
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -65,7 +64,7 @@ public class ThreadGetMessagesCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var command = new ThreadGetMessagesCommand();
+        var command = new ThreadGetMessagesCommand(_foundryService);
         var args = command.GetCommand().Parse(["--endpoint", endpoint, "--thread-id", threadId]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
