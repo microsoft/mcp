@@ -633,8 +633,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session-id> after I completed <completion-note> |
 | monitorinstrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace-path> |
 | monitorinstrumentation_orchestrator_start | Analyze workspace <workspace-path> and return the first Azure Monitor instrumentation step |
-| monitorinstrumentation_submit_brownfield_analysis | Submit brownfield findings JSON <findings-json> for session <session-id> |
-| monitorinstrumentation_submit_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings-json> to session <session-id> |
+| monitorinstrumentation_submit_brownfield_review | Submit brownfield findings JSON <findings-json> for session <session-id> |
+| monitorinstrumentation_submit_brownfield_review | Continue migration orchestration by submitting analysis payload <findings-json> to session <session-id> |
 
 ## Azure Native ISV
 

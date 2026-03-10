@@ -2278,13 +2278,13 @@ azmcp monitorinstrumentation orchestrator_next --session-id <session-id> \
                                                --completion-note <what-was-completed>
 
 # Submit brownfield analysis findings JSON to continue migration flow
-azmcp monitorinstrumentation submit_brownfield_analysis --session-id <session-id> \
+azmcp monitorinstrumentation submit_brownfield_review --session-id <session-id> \
                                                         --findings-json <json>
 ```
 
 **Notes:**
 - `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `submit_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+- `submit_brownfield_review` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
 
 ### Azure Managed Lustre Operations
 

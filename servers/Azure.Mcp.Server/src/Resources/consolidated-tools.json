@@ -3425,7 +3425,7 @@
         "monitorinstrumentation_get_learning_resource",
         "monitorinstrumentation_orchestrator_start",
         "monitorinstrumentation_orchestrator_next",
-        "monitorinstrumentation_submit_brownfield_analysis"
+        "monitorinstrumentation_submit_brownfield_review"
       ]
     }
   ]

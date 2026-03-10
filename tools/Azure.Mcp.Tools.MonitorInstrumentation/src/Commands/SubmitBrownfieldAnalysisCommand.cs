@@ -21,7 +21,7 @@ public sealed class SubmitBrownfieldAnalysisCommand(ILogger<SubmitBrownfieldAnal
 
     public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
 
-    public override string Name => "submit_brownfield_analysis";
+    public override string Name => "submit_brownfield_review";
 
     public override string Description => "Submit brownfield code analysis findings to continue migration orchestration.";
 

@@ -51,7 +51,7 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
         group.AddCommand("get_learning_resource", serviceProvider.GetRequiredService<GetLearningResourceCommand>());
         group.AddCommand("orchestrator_start", serviceProvider.GetRequiredService<OrchestratorStartCommand>());
         group.AddCommand("orchestrator_next", serviceProvider.GetRequiredService<OrchestratorNextCommand>());
-        group.AddCommand("submit_brownfield_analysis", serviceProvider.GetRequiredService<SubmitBrownfieldAnalysisCommand>());
+        group.AddCommand("submit_brownfield_review", serviceProvider.GetRequiredService<SubmitBrownfieldAnalysisCommand>());
 
         return group;
     }
