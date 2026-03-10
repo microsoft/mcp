@@ -23,6 +23,7 @@ using Azure.Mcp.Tools.Cosmos;
 using Azure.Mcp.Tools.Deploy;
 using Azure.Mcp.Tools.EventGrid;
 using Azure.Mcp.Tools.Extension;
+using Azure.Mcp.Tools.FileShares;
 using Azure.Mcp.Tools.FoundryExtensions;
 using Azure.Mcp.Tools.FunctionApp;
 using Azure.Mcp.Tools.Grafana;
@@ -79,6 +80,7 @@ internal class CommandFactoryHelpers
             new DeploySetup(),
             new EventGridSetup(),
             new ExtensionSetup(),
+            new FileSharesSetup(),
             new FoundryExtensionsSetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),
@@ -144,6 +146,7 @@ internal class CommandFactoryHelpers
             new DeploySetup(),
             new EventGridSetup(),
             new ExtensionSetup(),
+            new FileSharesSetup(),
             new FoundryExtensionsSetup(),
             new FunctionAppSetup(),
             new GrafanaSetup(),

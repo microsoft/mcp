@@ -1,0 +1,4 @@
+pr: 1989
+changes:
+  - section: "Other Changes"
+    description: "FileShares: Improve testability by adding FileSharesSetup to CommandFactoryHelpers for consistent DI test coverage"
