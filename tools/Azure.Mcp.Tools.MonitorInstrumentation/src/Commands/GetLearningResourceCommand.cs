@@ -21,9 +21,10 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
     public override string Name => "get_learning_resource";
 
-    public override string Description => "Get the content of a learning resource by path.";
+    public override string Description =>
+        "Get the content of a learning resource by path. Use list_learning_resources to see available paths. Note: For instrumenting an application, use instrument_start instead.";
 
-    public override string Title => "Get Learning Resource";
+    public override string Title => "Get Azure Monitor Learning Resource";
 
     public override ToolMetadata Metadata => new()
     {
