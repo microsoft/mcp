@@ -41,8 +41,8 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         Secret = false
     };
 
-    private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) {"ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security"};
-    private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) {"Active", "Resolved"};
+    private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+    private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
 
     protected override void RegisterOptions(Command command)
     {
