@@ -1,21 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
-using System.Net.Http.Headers;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
+public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IHttpClientFactory httpClientFactory, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService, httpClientFactory)
 {
     private const string CoresMagicString = "cores";
     private const int MinimumCoresRequired = 2;
-
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
@@ -140,32 +135,4 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
     [
         new UsageInfo(Name: "No SKU available", Limit: 0, Used: 0)
     ];
-
-    protected async Task<JsonDocument?> GetQuotaByUrlAsync(string requestUrl, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var token = await Credential.GetTokenAsync(new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
-
-            using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var httpClient = _httpClientFactory.CreateClient(nameof(PostgreSQLUsageChecker));
-            var response = await httpClient.SendAsync(request, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"HTTP error! status: {response.StatusCode}");
-            }
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonDocument.Parse(content);
-        }
-        catch (Exception error)
-        {
-            Logger.LogWarning("Error fetching quotas directly: {Error}", error.Message);
-            return null;
-        }
-    }
 }

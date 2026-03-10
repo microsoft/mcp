@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
+using System.Net.Http.Headers;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Quota.Services.Util.Usage;
@@ -53,13 +53,15 @@ public abstract class AzureUsageChecker : IUsageChecker
     protected readonly TokenCredential Credential;
     protected readonly ILogger Logger;
     protected readonly ITenantService TenantService;
+    protected readonly IHttpClientFactory? HttpClientFactory;
 
-    protected AzureUsageChecker(TokenCredential credential, string subscriptionId, ILogger logger, ITenantService tenantService)
+    protected AzureUsageChecker(TokenCredential credential, string subscriptionId, ILogger logger, ITenantService tenantService, IHttpClientFactory? httpClientFactory = null)
     {
         SubscriptionId = subscriptionId;
         Credential = credential ?? throw new ArgumentNullException(nameof(credential));
         TenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         Logger = logger;
+        HttpClientFactory = httpClientFactory;
         var clientOptions = new ArmClientOptions { Environment = tenantService.CloudConfiguration.ArmEnvironment };
 
         ResourceClient = new ArmClient(
@@ -75,6 +77,41 @@ public abstract class AzureUsageChecker : IUsageChecker
 
 
     public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
+
+    protected async Task<JsonDocument?> GetQuotaByUrlAsync(string requestUrl, CancellationToken cancellationToken = default)
+    {
+        if (HttpClientFactory is null)
+        {
+            throw new InvalidOperationException($"{nameof(HttpClientFactory)} is required to call {nameof(GetQuotaByUrlAsync)}.");
+        }
+
+        try
+        {
+            var token = await Credential.GetTokenAsync(
+                new TokenRequestContext([TenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+                cancellationToken);
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var httpClient = HttpClientFactory.CreateClient(nameof(AzureUsageChecker));
+            var response = await httpClient.SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"HTTP error! status: {response.StatusCode}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonDocument.Parse(content);
+        }
+        catch (Exception error)
+        {
+            Logger.LogWarning("Error fetching quotas directly: {Error}", error.Message);
+            return null;
+        }
+    }
 
 }
 

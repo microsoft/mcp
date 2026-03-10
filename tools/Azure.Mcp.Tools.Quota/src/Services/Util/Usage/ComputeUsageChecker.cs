@@ -45,7 +45,7 @@ public partial class ComputeUsageChecker(TokenCredential credential, string subs
         try
         {
             var skus = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"))
-                .GetComputeResourceSkusAsync(cancellationToken: cancellationToken);
+                .GetComputeResourceSkusAsync(filter: $"location eq '{location}'", cancellationToken: cancellationToken);
             var usageMap = await GetUsagesForLocationAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
