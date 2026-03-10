@@ -4,6 +4,7 @@ param(
     [string]$SubscriptionId,
     [string]$ResourceGroupName,
     [string]$BaseName,
+    [string]$Location,
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel,
@@ -69,6 +70,7 @@ function Deploy-TestResources
         [string]$SubscriptionName,
         [string]$ResourceGroupName,
         [string]$BaseName,
+        [string]$Location,
         [int]$DeleteAfterHours,
         [string]$TestResourcesDirectory,
         [switch]$AsJob
@@ -81,29 +83,32 @@ Deploying$($AsJob ? ' in background job' : ''):
     SubscriptionName: '$SubscriptionName'
     ResourceGroupName: '$ResourceGroupName'
     BaseName: '$BaseName'
+    Location: '$Location'
     DeleteAfterHours: $DeleteAfterHours
     TestResourcesDirectory: '$TestResourcesDirectory'`n
 "@ -ForegroundColor Yellow
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
                 -ResourceGroupName $ResourceGroupName `
                 -BaseName $BaseName `
+                -Location $Location `
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
                 -UseHttpTransport:$UseHttpTransport `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
             -ResourceGroupName $ResourceGroupName `
             -BaseName $BaseName `
+            -Location $Location `
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
             -UseHttpTransport:$UseHttpTransport `
@@ -129,6 +134,7 @@ $jobInputs = $testablePaths | ForEach-Object {
         SubscriptionName = $subscriptionName
         ResourceGroupName = $ResourceGroupName ? $ResourceGroupName : "$accountName-mcp$($suffix)"
         BaseName = $BaseName ? $BaseName : "mcp$($suffix)"
+        Location = $Location
         DeleteAfterHours = $DeleteAfterHours
         TestResourcesDirectory = Resolve-Path -Path "$RepoRoot/$_/tests"
     }

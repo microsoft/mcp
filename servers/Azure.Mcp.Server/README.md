@@ -924,6 +924,12 @@ Example prompts that generate Azure CLI commands:
 * "Get virtual machine 'my-vm' with instance view including power state and runtime status"
 * "Show me the power state and provisioning status of VM 'my-vm'"
 * "What is the current status of my virtual machine 'my-vm'?"
+* "Create a new VM named 'my-vm' in resource group 'my-rg' for web workloads"
+* "Create a Linux VM with Ubuntu 22.04 and SSH key authentication"
+* "Create a development VM with Standard_B2s size in East US"
+* "Update VM 'my-vm' tags to environment=production"
+* "Create a VMSS named 'my-vmss' with 3 instances for web workloads"
+* "Update VMSS 'my-vmss' capacity to 5 instances"
 
 ### �📦 Azure Container Apps
 
@@ -1048,9 +1054,16 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### 🏛️ Azure Well-Architected Framework
+
+* "Get Well-Architected Framework guidance for App Service"
+* "What's the WAF guidance for a VM?"
+* "Show me the best practices for virtual machines"
+* "What's the architectural guidance for Azure Cosmos DB?"
+
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **42+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **43+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1098,6 +1111,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
+- 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns
 - 📊 **Azure Workbooks** - Custom visualizations
 - 🏗️ **Bicep** - Azure resource templates
 - 🏗️ **Cloud Architect** - Guided architecture design

@@ -70,7 +70,7 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         try
         {
             var service = context.GetService<IDatadogService>();
-            List<string> results = await service.ListMonitoredResources(
+            var results = await service.ListMonitoredResources(
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.DatadogResource!,

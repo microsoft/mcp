@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Informational;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;

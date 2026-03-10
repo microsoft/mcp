@@ -73,11 +73,8 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
         try
         {
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(options.ProjectName));
-                context.Activity?.AddTag(DeployTelemetryTags.ProjectName, BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant());
-            }
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(options.ProjectName));
+            context.Activity?.AddTag(DeployTelemetryTags.ProjectName, Convert.ToHexStringLower(bytes));
             context.Activity?
                     .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
                     .AddTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)

@@ -66,7 +66,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         try
         {
             var workbooksService = context.GetService<IWorkbooksService>();
-            var updatedWorkbook = await workbooksService.UpdateWorkbook(
+            var updatedWorkbook = await workbooksService.UpdateWorkbookAsync(
                 options.WorkbookId!,
                 options.DisplayName,
                 options.SerializedContent,

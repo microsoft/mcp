@@ -74,7 +74,7 @@ public static class TypeToJsonTypeMapper
 
         if (effectiveType.IsEnum)
         {
-            return "integer";
+            return "string";
         }
 
         return "object";
@@ -144,10 +144,21 @@ public static class TypeToJsonTypeMapper
             }
         }
 
+        // If the type is an enum, populate the allowed values for model guidance
+        if (effectiveType.IsEnum)
+        {
+            return new ToolPropertySchema()
+            {
+                Type = "string",
+                Description = description,
+                Enum = System.Enum.GetNames(effectiveType)
+            };
+        }
+
         return new ToolPropertySchema()
         {
             Type = jsonType,
-            Description = description ?? string.Empty,
+            Description = description,
             Items = itemsSchema
         };
     }

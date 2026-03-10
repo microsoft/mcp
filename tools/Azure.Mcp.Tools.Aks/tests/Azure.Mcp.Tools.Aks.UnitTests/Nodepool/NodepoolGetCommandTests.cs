@@ -28,10 +28,9 @@ public sealed class NodepoolGetCommandTests
         _logger = Substitute.For<ILogger<NodepoolGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_aksService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _aksService);
     }
 
     [Fact]

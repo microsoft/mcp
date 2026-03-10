@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.ApplicationInsights;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
@@ -46,23 +45,15 @@ public class ApplicationInsightsService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
+
         List<JsonNode> results = [];
+        var components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
 
-        try
-        {
-            List<ApplicationInsightsComponentResource> components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
+        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
+        results.AddRange(insights);
 
-            IEnumerable<JsonNode> insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
-            results.AddRange(insights);
-
-            // Return all results for this resource group (outer method enforces global max)
-            return results;
-        }
-        catch (Exception ex) when (ex is not ArgumentNullException)
-        {
-            _logger.LogError(ex, "Error retrieving Application Insights Code Optimization Recommendations");
-            throw;
-        }
+        // Return all results for this resource group (outer method enforces global max)
+        return results;
     }
 
     private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(
@@ -79,7 +70,7 @@ public class ApplicationInsightsService(
         }
 
         // Otherwise, query by resource group
-        ResourceGroupResource rgResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+        var rgResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
         return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -90,7 +81,7 @@ public class ApplicationInsightsService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        SubscriptionResource targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
+        var targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
         return await targetSubscription.GetApplicationInsightsComponentsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
