@@ -23,7 +23,6 @@ public sealed class ExtensionSetup : IAreaSetup
     {
         services.AddHttpClientServices();
         services.AddSingleton<ICliGenerateService, CliGenerateService>();
-        services.AddSingleton<AzCommand>();
         services.AddSingleton<AzqrCommand>();
         services.AddSingleton<CliGenerateCommand>();
         services.AddSingleton<ICliInstallService, CliInstallService>();
