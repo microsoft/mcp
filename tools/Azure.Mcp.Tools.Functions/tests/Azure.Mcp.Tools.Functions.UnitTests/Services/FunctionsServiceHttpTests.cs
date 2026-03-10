@@ -298,37 +298,33 @@ public sealed class FunctionsServiceHttpTests
     }
 
     [Fact]
-    public async Task ListGitHubDirectoryAsync_ReturnsEmpty_WhenGitHubReturns404()
+    public async Task ListGitHubDirectoryAsync_ThrowsHttpRequestException_WhenGitHubReturns404()
     {
         // Arrange
         var handler = new MockHttpMessageHandler("Not Found", HttpStatusCode.NotFound);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateService(httpClientFactory);
 
-        // Act
-        var result = await service.ListGitHubDirectoryAsync(
-            "https://api.github.com/repos/Azure/test/contents/nonexistent",
-            CancellationToken.None);
-
-        // Assert
-        Assert.Empty(result);
+        // Act & Assert
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            service.ListGitHubDirectoryAsync(
+                "https://api.github.com/repos/Azure/test/contents/nonexistent",
+                CancellationToken.None));
     }
 
     [Fact]
-    public async Task ListGitHubDirectoryAsync_ReturnsEmpty_WhenJsonMalformed()
+    public async Task ListGitHubDirectoryAsync_ThrowsJsonException_WhenJsonMalformed()
     {
         // Arrange
         var handler = new MockHttpMessageHandler("{ not an array }", HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateService(httpClientFactory);
 
-        // Act
-        var result = await service.ListGitHubDirectoryAsync(
-            "https://api.github.com/repos/Azure/test/contents/templates",
-            CancellationToken.None);
-
-        // Assert
-        Assert.Empty(result);
+        // Act & Assert
+        await Assert.ThrowsAsync<JsonException>(() =>
+            service.ListGitHubDirectoryAsync(
+                "https://api.github.com/repos/Azure/test/contents/templates",
+                CancellationToken.None));
     }
 
     #endregion

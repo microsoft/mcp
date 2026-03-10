@@ -4,7 +4,6 @@
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Microsoft.Extensions.Logging;
@@ -488,22 +487,7 @@ public sealed class FunctionsService(
         using var client = httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
 
-        try
-        {
-            return await ListGitHubDirectoryRecursiveAsync(client, contentsUrl, depth: 0, cancellationToken);
-        }
-        catch (HttpRequestException ex)
-        {
-            logger.LogError(ex, "Failed to list GitHub directory at {Url}", contentsUrl);
-            throw new InvalidOperationException(
-                $"Could not list template files from GitHub. Details: {ex.Message}", ex);
-        }
-        catch (JsonException ex)
-        {
-            logger.LogError(ex, "Failed to parse GitHub API response from {Url}", contentsUrl);
-            throw new InvalidOperationException(
-                $"Could not parse GitHub directory listing. Details: {ex.Message}", ex);
-        }
+        return await ListGitHubDirectoryRecursiveAsync(client, contentsUrl, depth: 0, cancellationToken);
     }
 
     /// <summary>
@@ -543,35 +527,24 @@ public sealed class FunctionsService(
         var allFiles = new List<GitHubContentEntry>();
         const long maxDirectoryListingSize = 1 * 1024 * 1024; // 1MB limit for directory listings
 
-        try
+        using var response = await client.GetAsync(new Uri(contentsUrl), cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var json = await GitHubUrlValidator.ReadSizeLimitedStringAsync(response.Content, maxDirectoryListingSize, cancellationToken);
+        var entries = JsonSerializer.Deserialize(json, FunctionTemplatesManifestJsonContext.Default.ListGitHubContentEntry)
+            ?? [];
+
+        foreach (var entry in entries)
         {
-            using var response = await client.GetAsync(new Uri(contentsUrl), cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var json = await GitHubUrlValidator.ReadSizeLimitedStringAsync(response.Content, maxDirectoryListingSize, cancellationToken);
-            var entries = JsonSerializer.Deserialize(json, FunctionTemplatesManifestJsonContext.Default.ListGitHubContentEntry)
-                ?? [];
-
-            foreach (var entry in entries)
+            if (entry.Type == "file")
             {
-                if (entry.Type == "file")
-                {
-                    allFiles.Add(entry);
-                }
-                else if (entry.Type == "dir" && entry.Url is not null && GitHubUrlValidator.IsValidGitHubUrl(entry.Url))
-                {
-                    var subFiles = await ListGitHubDirectoryRecursiveAsync(client, entry.Url, depth + 1, cancellationToken);
-                    allFiles.AddRange(subFiles);
-                }
+                allFiles.Add(entry);
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            logger.LogWarning(ex, "HTTP error listing GitHub directory at {Url}", contentsUrl);
-        }
-        catch (JsonException ex)
-        {
-            logger.LogWarning(ex, "JSON parsing error for GitHub directory response from {Url}", contentsUrl);
+            else if (entry.Type == "dir" && entry.Url is not null && GitHubUrlValidator.IsValidGitHubUrl(entry.Url))
+            {
+                var subFiles = await ListGitHubDirectoryRecursiveAsync(client, entry.Url, depth + 1, cancellationToken);
+                allFiles.AddRange(subFiles);
+            }
         }
 
         return allFiles;
