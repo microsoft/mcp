@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp;
@@ -13,12 +14,11 @@ namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp;
 public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
-
     [Fact]
     public async Task ExecuteAsync_SubscriptionList_ReturnsExpectedWebApp()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
+        var expectedWebappName = TestMode == TestMode.Playback ? "Sanitized" : webappName;
 
         var result = await CallToolAsync(
             "appservice_webapp_get",
@@ -37,7 +37,7 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
     public async Task ExecuteAsync_ResourceGroupList_ReturnsExpectedWebApp()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
+        var expectedWebappName = TestMode == TestMode.Playback ? "Sanitized" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -58,8 +58,8 @@ public class WebappGetCommandLiveTests(ITestOutputHelper output, TestProxyFixtur
     public async Task ExecuteAsync_WebAppGet_ReturnsExpectedWebApp()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        var expectedWebappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : webappName;
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        var expectedWebappName = TestMode == TestMode.Playback ? "Sanitized" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(

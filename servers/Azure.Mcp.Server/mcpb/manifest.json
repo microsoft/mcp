@@ -16,7 +16,7 @@
   "homepage": "https://learn.microsoft.com/azure/developer/azure-mcp-server/get-started",
   "documentation": "https://learn.microsoft.com/azure/developer/azure-mcp-server",
   "support": "https://github.com/microsoft/mcp/issues",
-  "icon": "./servericon.png",
+  "icon": "./icon.png",
   "server": {
     "type": "binary",
     "entry_point": "server/azmcp",

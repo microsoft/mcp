@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
@@ -33,6 +36,13 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         LocalRequired = false,
         Secret = false
     };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

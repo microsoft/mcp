@@ -13,7 +13,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseAppServiceCommand<BaseAppServiceOptions>()
+public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger)
+    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: false)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Details";
     private readonly ILogger<WebappGetCommand> _logger = logger;
@@ -43,7 +44,6 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseApp
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName.AsOptional());
         command.Validators.Add(commandResult =>
         {
             var appName = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
@@ -55,12 +55,7 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger) : BaseApp
         });
     }
 
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
-        return options;
-    }
+    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

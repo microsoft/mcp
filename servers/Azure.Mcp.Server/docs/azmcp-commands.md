@@ -220,14 +220,17 @@ The `azmcp server start` command supports the following options:
 
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
-| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--transport` | No | `stdio` | Transport mechanism to use. Valid values: `stdio` (default, supported in all distributions) or `http` (supported only in the Docker image distribution and other builds with HTTP enabled; may not be available in local CLI builds). |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all existing modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
+| `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -241,6 +244,41 @@ The `azmcp server start` command supports the following options:
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
+>
+> This option enables detailed debug-level logging that may include sensitive information such as request payloads and authentication details. When enabled:
+> - Log files are created in the specified directory with timestamp-based filenames (e.g., `azmcp_20251202_143052.log`)
+> - Logs may contain sensitive data that could be useful for support troubleshooting
+> - Only use this option when specifically requested by support for diagnosing issues
+> - Remove log files after troubleshooting is complete
+>
+> **Example usage:**
+> ```bash
+> # For support troubleshooting only
+> azmcp server start --dangerously-write-support-logs-to-dir /path/to/logs
+> ```
+
+> **Note on `--outgoing-auth-strategy`:**
+>
+> This option controls how the server authenticates when making requests to downstream Azure services:
+> - `NotSet` (default): A safe default is chosen based on other settings
+> - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
+> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
+
+> **Note on `--cloud`:**
+>
+> Use this option to target sovereign cloud environments:
+> - `AzureCloud` (default): Azure public cloud
+> - `AzureChinaCloud`: Azure China (operated by 21Vianet)
+> - `AzureUSGovernment`: Azure US Government
+> - Custom URL: A custom authority host URL starting with `https://`
+>
+> **Example usage:**
+> ```bash
+> # Connect to Azure US Government cloud
+> azmcp server start --cloud AzureUSGovernment
 > ```
 
 #### Server Info
@@ -623,6 +661,78 @@ azmcp appservice webapp settings update-appsettings --subscription "my-subscript
                                                     --setting-update-type "delete"
 ```
 
+#### Web App Deployments
+
+```bash
+# Get the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --app <app> \
+                                       [--deployment-id <deployment-id>]
+
+# Examples:
+# List the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app"
+
+# Get the deployment for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app" \
+                                       --deployment-id "deployment-id"
+```
+
+#### Web App Diagnostics
+
+```bash
+# List detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --app <app>
+
+# Examples:
+# List diagnostic detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription "my-subscription" \
+                                        --resource-group "my-resource-group" \
+                                        --app "my-web-app"
+```
+
+```bash
+# Diagnose an App Service Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --app <app> \
+                                            --detector-name <detector-name> \
+                                            [--start-time <start-time>] \
+                                            [--end-time <end-time>] \
+                                            [--interval <interval>]
+
+# Examples:
+# Diagnose the Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+
+# Diagnose the Web App with detector between start and end time with interval
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+                                            --start-time "2026-01-01T00:00:00Z" \
+                                            --end-time "2026-01-01T23:59:59Z" \
+                                            --interval "PT1H"
+```
+
 ### Azure CLI Operations
 
 #### Generate
@@ -796,6 +906,139 @@ azmcp compute vm get --subscription "my-subscription" \
 | `--vm-name`, `--name` | No | Name of the virtual machine |
 | `--instance-view` | No | Include instance view details (only available with `--vm-name`) |
 
+```bash
+# Create Virtual Machine (automatically creates networking resources when missing)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        --location <location> \
+                        --admin-username <admin-username> \
+                        [--admin-password <admin-password>] \
+                        [--ssh-public-key <ssh-public-key>] \
+                        [--vm-size <vm-size>] \
+                        [--image <image>] \
+                        [--os-type <os-type>] \
+                        [--virtual-network <virtual-network>] \
+                        [--subnet <subnet>] \
+                        [--public-ip-address <public-ip-address>] \
+                        [--network-security-group <network-security-group>] \
+                        [--source-address-prefix <source-address-prefix>] \
+                        [--no-public-ip] \
+                        [--zone <zone>] \
+                        [--os-disk-size-gb <os-disk-size-gb>] \
+                        [--os-disk-type <os-disk-type>]
+
+Defaults to the Azure CLI baseline of Standard_DS1_v2 size and the Ubuntu2404 image when not specified. When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+
+# Examples:
+
+# Create Linux VM with SSH key
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-linux-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --ssh-public-key "ssh-ed25519 AAAAC3..."
+
+# Create Windows VM with password
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-win-vm" \
+                        --location "eastus" \
+                        --admin-username "adminuser" \
+                        --admin-password "ComplexPassword123!" \
+                        --image "Win2022Datacenter"
+
+# Create VM with specific size and no public IP
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm create --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-private-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --ssh-public-key "ssh-ed25519 AAAAC3..." \
+                        --vm-size "Standard_D4s_v3" \
+                        --no-public-ip
+```
+
+**Image Aliases:**
+- Linux: `Ubuntu2404`, `Ubuntu2204`, `Ubuntu2004`, `Debian11`, `Debian12`, `RHEL9`, `CentOS8`
+- Windows: `Win2022Datacenter`, `Win2019Datacenter`, `Win11Pro`, `Win10Pro`
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine |
+| `--location` | Yes | Azure region |
+| `--admin-username` | Yes | Admin username |
+| `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
+| `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
+| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
+| `--image` | No | Image alias or URN (default: Ubuntu2404) |
+| `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
+| `--virtual-network` | No | Virtual network name |
+| `--subnet` | No | Subnet name |
+| `--public-ip-address` | No | Public IP address name |
+| `--network-security-group` | No | Network security group name |
+| `--source-address-prefix` | No | Source IP/CIDR for created NSG inbound rules (default: `*`) |
+| `--no-public-ip` | No | Do not create a public IP address |
+| `--zone` | No | Availability zone |
+| `--os-disk-size-gb` | No | OS disk size in GB |
+| `--os-disk-type` | No | OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' |
+
+```bash
+# Update Virtual Machine configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--vm-size <vm-size>] \
+                        [--tags <tags>] \
+                        [--license-type <license-type>] \
+                        [--boot-diagnostics <boot-diagnostics>] \
+                        [--user-data <user-data>]
+
+# Examples:
+
+# Add tags to a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --tags "environment=prod,team=compute"
+
+# Enable Azure Hybrid Benefit
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --license-type "Windows_Server"
+
+# Enable boot diagnostics
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vm update --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --boot-diagnostics "true"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine |
+| `--vm-size` | No | New VM size (may require VM to be deallocated) |
+| `--tags` | No | Tags in key=value,key2=value2 format |
+| `--license-type` | No | License type: 'Windows_Server', 'RHEL_BYOS', 'SLES_BYOS', 'None' |
+| `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
+| `--user-data` | No | Base64-encoded user data |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -848,6 +1091,126 @@ azmcp compute vmss get --subscription "my-subscription" \
 | `--resource-group`, `-g` | Conditional | Resource group name (required when using `--vmss-name`) |
 | `--vmss-name` | No | Name of the virtual machine scale set |
 | `--instance-id` | No | Instance ID of the VM in the scale set (requires `--vmss-name`) |
+
+```bash
+# Create Virtual Machine Scale Set (automatically creates networking resources when missing)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          --location <location> \
+                          --admin-username <admin-username> \
+                          [--admin-password <admin-password>] \
+                          [--ssh-public-key <ssh-public-key>] \
+                          [--vm-size <vm-size>] \
+                          [--image <image>] \
+                          [--os-type <os-type>] \
+                          [--virtual-network <virtual-network>] \
+                          [--subnet <subnet>] \
+                          [--instance-count <instance-count>] \
+                          [--upgrade-policy <upgrade-policy>] \
+                          [--zone <zone>] \
+                          [--os-disk-size-gb <os-disk-size-gb>] \
+                          [--os-disk-type <os-disk-type>]
+
+Defaults to two Standard_DS1_v2 instances running Ubuntu2404 when size or image are not provided.
+
+# Examples:
+
+# Create Linux VMSS with SSH key
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --location "eastus" \
+                          --admin-username "azureuser" \
+                          --ssh-public-key "ssh-ed25519 AAAAC3..." \
+                          --instance-count 3
+
+# Create Windows VMSS with automatic upgrade policy
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss create --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-win-vmss" \
+                          --location "eastus" \
+                          --admin-username "adminuser" \
+                          --admin-password "ComplexPassword123!" \
+                          --image "Win2022Datacenter" \
+                          --upgrade-policy "Automatic"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS (max 9 chars for Windows) |
+| `--location` | Yes | Azure region |
+| `--admin-username` | Yes | Admin username |
+| `--admin-password` | Conditional | Admin password (required for Windows) |
+| `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
+| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
+| `--image` | No | Image alias or URN (default: Ubuntu2404) |
+| `--os-type` | No | OS type: 'linux' or 'windows' |
+| `--virtual-network` | No | Virtual network name |
+| `--subnet` | No | Subnet name |
+| `--instance-count` | No | Number of VM instances (default: 2) |
+| `--upgrade-policy` | No | Upgrade policy: 'Automatic', 'Manual', 'Rolling' (default: 'Manual') |
+| `--zone` | No | Availability zone |
+| `--os-disk-size-gb` | No | OS disk size in GB |
+| `--os-disk-type` | No | OS disk type |
+
+```bash
+# Update Virtual Machine Scale Set configuration
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--capacity <capacity>] \
+                          [--vm-size <vm-size>] \
+                          [--upgrade-policy <upgrade-policy>] \
+                          [--overprovision] \
+                          [--enable-auto-os-upgrade] \
+                          [--scale-in-policy <scale-in-policy>] \
+                          [--tags <tags>]
+
+# Examples:
+
+# Scale VMSS to 5 instances
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --capacity 5
+
+# Enable automatic OS upgrades
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --enable-auto-os-upgrade true
+
+# Set scale-in policy to remove oldest VMs first
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute vmss update --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --scale-in-policy "OldestVM"
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS |
+| `--capacity` | No | Number of VM instances |
+| `--vm-size` | No | VM size |
+| `--upgrade-policy` | No | Upgrade policy: 'Automatic', 'Manual', 'Rolling' |
+| `--overprovision` | No | Enable or disable overprovisioning |
+| `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
+| `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
+| `--tags` | No | Tags in key=value,key2=value2 format |
 
 #### Disks
 
@@ -1342,6 +1705,84 @@ azmcp fileshares usage --subscription <subscription> \
                        --location <azure-region>
 ```
 
+### Microsoft Foundry Extensions Operations
+
+```bash
+# Get code samples to interact with a Foundry Agent using the Microsoft Foundry SDK
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions agents get-sdk-sample \
+    [--programming-language <language>]
+
+# List knowledge indexes in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions knowledge index list \
+    --endpoint <project-endpoint>
+
+# Get the schema of a knowledge index in Microsoft Foundry
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions knowledge index schema \
+    --endpoint <project-endpoint> \
+    --index-name <index-name>
+
+# Create chat completions using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai chat-completions-create \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --message-array <json-message-array>
+
+# Create text completions using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai create-completion \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --prompt-text <prompt>
+
+# Create embeddings using Azure OpenAI in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai embeddings-create \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name> \
+    --deployment-name <deployment-name> \
+    --input-text <text>
+
+# List available Azure OpenAI model deployments in a Microsoft Foundry resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions openai models-list \
+    --subscription <subscription> \
+    --resource-group <resource-group> \
+    --resource-name <resource-name>
+
+# Get details of Microsoft Foundry (AI) resources in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions resource get \
+    --subscription <subscription> \
+    [--resource-group <resource-group>] \
+    [--resource-name <resource-name>]
+
+# Create a thread in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads create \
+    --endpoint <project-endpoint> \
+    --user-message <initial-message>
+
+# Get messages from a Microsoft Foundry thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads get-messages \
+    --endpoint <project-endpoint> \
+    --thread-id <thread-id>
+
+# List threads in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundryextensions threads list \
+    --endpoint <project-endpoint>
+```
+
 ### Azure Function App Operations
 
 ```bash
@@ -1457,49 +1898,44 @@ azmcp aks nodepool get --subscription <subscription> \
 # Create load test
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
                               --test-id <test-id> \
-                              --display-name <display-name> \
-                              --description <description> \
-                              --endpoint <endpoint> \
-                              --virtual-users <virtual-users> \
-                              --duration <duration> \
-                              --ramp-up-time <ramp-up-time>
+                              --test-resource-name <test-resource-name> \
+                              [--resource-group <resource-group>] \
+                              [--display-name <display-name>] \
+                              [--description <description>] \
+                              [--endpoint <endpoint>] \
+                              [--virtual-users <virtual-users>] \
+                              [--duration <duration>] \
+                              [--ramp-up-time <ramp-up-time>]
 
 # Get load test
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test get --subscription <subscription> \
-                           --resource-group <resource-group> \
+                           --test-id <test-id> \
                            --test-resource-name <test-resource-name> \
-                           --test-id <test-id>
+                           [--resource-group <resource-group>]
 
 # Create load test resources
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource create --subscription <subscription> \
                                       --resource-group <resource-group> \
-                                      --test-resource-name <test-resource-name>
+                                      [--test-resource-name <test-resource-name>]
 
 # List load test resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource list --subscription <subscription> \
-                                    --resource-group <resource-group> \
-                                    --test-resource-name <test-resource-name>
+                                    [--resource-group <resource-group>] \
+                                    [--test-resource-name <test-resource-name>]
 
 # Get load test run (single run or list all runs for a test)
 # Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
-                              --testrun-id <testrun-id>
-
-# List all test runs for a specific test:
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
-                              --test-id <test-id>
+                              [--resource-group <resource-group>] \
+                              [--testrun-id <testrun-id>] \
+                              [--test-id <test-id>]
+# Note: Either --testrun-id or --test-id must be provided, but not both.
 
 # Create or update load test run
 # Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
@@ -1507,31 +1943,32 @@ azmcp loadtesting testrun get --subscription <subscription> \
 # Create a new test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <display-name> \
-                                         --description <description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <display-name>] \
+                                         [--description <description>] \
+                                         [--old-testrun-id <old-testrun-id>]
 
 # Rerun an existing test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <new-testrun-id> \
-                                         --old-testrun-id <existing-testrun-id>
+                                         [--resource-group <resource-group>] \
+                                         [--old-testrun-id <existing-testrun-id>]
 
 # Update test run metadata (idempotent):
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <updated-display-name> \
-                                         --description <updated-description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <updated-display-name>] \
+                                         [--description <updated-description>]
 ```
 
 ### Azure Managed Grafana Operations
@@ -1588,14 +2025,13 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 #   deployment      - Best practices for deployment (for general and azurefunctions)
 
 # Get best practices for building AI applications, workflows and agents in Azure
-# Call this before generating code for any AI application, building with Microsoft Foundry models,
-# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# Call this before generating code for any AI application, working with Microsoft Agent Framework,
+# or implementing AI solutions in Azure.
 azmcp get azure bestpractices ai_app
 
 # AI App Development:
 #   ai_app - Comprehensive guidance for AI applications including:
 #     • Microsoft Agent Framework usage and patterns
-#     • Microsoft Foundry model selection
 #     • Best practices for AI app/agent development in Azure
 ```
 
@@ -2324,11 +2760,12 @@ azmcp sql db delete --subscription <subscription> \
                     --server <server-name> \
                     --database <database-name>
 
-# Gets a list of all databases in a SQL server
+# Gets a list of all databases in a SQL server, or shows details of a specific database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db list --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name>
+azmcp sql db get --subscription <subscription> \
+                 --resource-group <resource-group> \
+                 --server <server-name> \
+                 [--database <database-name>]
 
 # Rename an existing SQL database to a new name within the same server
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2337,13 +2774,6 @@ azmcp sql db rename --subscription <subscription> \
                     --server <server-name> \
                     --database <current-database-name> \
                     --new-database-name <new-database-name>
-
-# Show details of a specific SQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql db show --subscription <subscription> \
-                  --resource-group <resource-group> \
-                  --server <server-name> \
-                  --database <database>
 
 # Update an existing SQL database (applies only the provided configuration changes)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2419,16 +2849,11 @@ azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
 
-# List SQL servers in a resource group
+# List SQL servers in a resource group, or show details of a specific SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
-# Show details of a specific SQL server
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp sql server show --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --server <server-name>
+azmcp sql server get --subscription <subscription> \
+                     --resource-group <resource-group> \
+                     [--server <server-name>]
 ```
 
 ### Azure Storage Operations
@@ -2736,6 +3161,14 @@ azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
 ```
 
+### Azure Well-Architected Framework Operations
+
+```bash
+# Get Azure Well-Architected Framework guidance for a specific Azure service, including architectural best practices and design patterns.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp wellarchitectedframework serviceguide get --service <service-name>
+```
+
 ### Azure Workbooks Operations
 
 ```bash
@@ -2798,152 +3231,6 @@ azmcp cloudarchitect design --question "What type of application are you buildin
                             --question-number 1 \
                             --total-questions 5 \
                             --confidence-score 0.1
-```
-
-### Microsoft Foundry Operations
-
-```bash
-# Create an agent in a Microsoft Foundry project
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents create --endpoint <endpoint> \
-                            --model-deployment <model-deployment> \
-                            --agent-name <agent-name> \
-                            --systemInstruction <system-instruction>
-
-# Connect to an agent in a Microsoft Foundry project and query it
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents connect --agent-id <agent-id> \
-                             --query <query> \
-                             --endpoint <endpoint>
-
-# Evaluate a response from an agent by passing query and response inline
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents evaluate --agent-id <agent-id> \
-                              --query <query> \
-                              --response <response> \
-                              --evaluator <evaluator> \
-                              --azure-openai-endpoint <azure-openai-endpoint> \
-                              --azure-openai-deployment <azure-openai-deployment> \
-                              [--tool-definitions <tool-definitions>]
-
-# Get SDK samples for interacting with a Microsoft Foundry agent
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
-
-# List all Azure AI Agents available in the configured project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents list --endpoint <endpoint>
-
-# Query and evaluate an agent in one command
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --endpoint <endpoint> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--evaluators <evaluators>]
-
-# List knowledge indexes in a Microsoft Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index list --endpoint <endpoint>
-
-# Get knowledge index schema information
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index schema --endpoint <endpoint> \
-                                     --index <index>
-
-# Deploy a Microsoft Foundry model
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deploy --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --deployment <deployment> \
-                            --model-name <model> \
-                            --model-format <model-format> \
-                            --azure-ai-services <azure-ai-services> \
-                            [--model-version <model-version>] \
-                            [--model-source <model-source>] \
-                            [--sku <sku>] \
-                            [--sku-capacity <sku-capacity>] \
-                            [--scale-type <scale-type>] \
-                            [--scale-capacity <scale-capacity>]
-
-# List Microsoft Foundry model deployments
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deployments list --endpoint <endpoint>
-
-# List Microsoft Foundry models
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
-                          [--publisher <publisher>] \
-                          [--license <license>] \
-                          [--model-name <model>]
-
-# Create interactive chat completions using Azure OpenAI chat models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai chat-completions-create --subscription <subscription> \
-                                             --resource-group <resource-group> \
-                                             --resource-name <resource-name> \
-                                             --deployment <deployment-name> \
-                                             --message-array <message-array> \
-                                             [--max-tokens <max-tokens>] \
-                                             [--temperature <temperature>] \
-                                             [--top-p <top-p>] \
-                                             [--frequency-penalty <frequency-penalty>] \
-                                             [--presence-penalty <presence-penalty>] \
-                                             [--stop <stop-sequences>] \
-                                             [--stream <stream>] \
-                                             [--seed <seed>] \
-                                             [--user <user>] \
-                                             [--auth-method <auth-method>]
-
-# Generate text completions using deployed Azure OpenAI models in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai create-completion --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --prompt-text <prompt-text> \
-                                       [--max-tokens <max-tokens>] \
-                                       [--temperature <temperature>]
-
-# Generate vector embeddings for text using Azure OpenAI embedding models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai embeddings-create --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --input-text <input-text> \
-                                       [--user <user>] \
-                                       [--encoding-format <encoding-format>] \
-                                       [--dimensions <dimensions>] \
-                                       [--auth-method <auth-method>]
-
-# List all available OpenAI models and deployments in an Azure resource
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai models-list --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --resource-name <resource-name> \
-                                 [--auth-method <auth-method>]
-
-# Get Microsoft Foundry (Cognitive Services) resource details
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry resource get --subscription <subscription> \
-                           [--resource-group <resource-group>] \
-                           [--resource-name <resource-name>]
-
-# Create a Microsoft Foundry agent thread
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads create --endpoint <endpoint>
-                             --user-message <user-message>
-
-# Get messages of a Microsoft Foundry agent thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads get-messages --endpoint <endpoint>
-                                   --thread-id <thread-id>
-
-# List Microsoft Foundry agent threads in a Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads list --endpoint <endpoint>
 ```
 
 ## Response Format

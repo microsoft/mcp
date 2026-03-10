@@ -70,6 +70,8 @@ public sealed class NamespaceToolLoader(
         }
         """;
 
+    private static readonly HashSet<string> MetaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
+
     private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
         {
             "type": "object",
@@ -593,20 +595,27 @@ public sealed class NamespaceToolLoader(
             string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
+    internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
-        if (args == null || !args.TryGetValue("parameters", out var paramsElem))
+        if (args == null)
         {
             return [];
         }
 
-        if (paramsElem.ValueKind == JsonValueKind.Object)
+        // Primary: extract from nested "parameters" key (case-insensitive)
+        var parametersKey = args.Keys.FirstOrDefault(k => string.Equals(k, "parameters", StringComparison.OrdinalIgnoreCase));
+        if (parametersKey != null && args.TryGetValue(parametersKey, out var paramsElem) && paramsElem.ValueKind == JsonValueKind.Object)
         {
             return paramsElem.EnumerateObject()
                 .ToDictionary(prop => prop.Name, prop => prop.Value);
         }
 
-        return [];
+        // Fallback: treat all non-meta args as parameters (Codex compatibility)
+        var flatParams = args
+            .Where(kvp => !MetaKeys.Contains(kvp.Key))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return flatParams;
     }
 
     private static bool SupportsSampling(McpServer server)

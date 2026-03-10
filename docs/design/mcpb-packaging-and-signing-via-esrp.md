@@ -49,7 +49,7 @@ bundle.mcpb (ZIP file)
 │   ├── azmcp             # Unix executable
 │   ├── azmcp.exe         # Windows executable
 │   └── [dependencies]    # All required DLLs and resources
-└── servericon.png        # Bundle icon
+└── icon.png              # Bundle icon
 ```
 
 ### Why Trimmed Binaries?
@@ -157,7 +157,7 @@ The signature signs the entire file content (including the pre-set EOCD comment_
 │     │ Copy icon              │         ├── manifest.json                     │
 │     └────────────────────────┘         ├── server/                           │
 │                                        │   └── [trimmed binaries]            │
-│                                        └── servericon.png                     │
+│                                        └── icon.png                          │
 │                                                                              │
 │  3. Package with MCPB CLI                                                    │
 │     ┌──────────────────────────────┐                                         │
@@ -229,7 +229,7 @@ Location: `eng/scripts/Pack-Mcpb.ps1`
 1. Create staging directory structure
 2. Copy trimmed binaries to `server/` subdirectory
 3. Copy `manifest.json` (uses `platform_overrides` in mcp_config for cross-platform support)
-4. Copy icon and assets. Rename icon to `servericon.png`.
+4. Copy icon and assets. Rename icon to `icon.png`.
 5. Copy LICENSE and NOTICE.txt into each bundle
 6. Validate with `mcpb validate`
 7. Package with `mcpb pack --update` (auto-populates tools array)
@@ -321,17 +321,17 @@ servers/
 ├── Azure.Mcp.Server/
 │   ├── mcpb/
 │   │   ├── manifest.json                     # MCPB manifest
-│   │   └── servericon.png                    # Server icon
+│   │   └── icon.png                          # Server icon
 │   └── server.json                           # MCP Registry config with MCPB entries
 ├── Fabric.Mcp.Server/
 │   ├── mcpb/
 │   │   ├── manifest.json                     # MCPB manifest
-│   │   └── servericon.png                    # Server icon
+│   │   └── icon.png                          # Server icon
 │   └── server.json                           # MCP Registry config with MCPB entries
 └── Template.Mcp.Server/
     ├── mcpb/
     │   ├── manifest.json                     # MCPB manifest
-    │   └── servericon.png                    # Server icon
+    │   └── icon.png                          # Server icon
     └── server.json                           # MCP Registry config with MCPB entries
 ```
 
@@ -424,7 +424,7 @@ All servers have complete `manifest.json` files with:
 - `manifest_version: "0.3"` for Claude Desktop compatibility
 - `platform_overrides` for cross-platform executable paths
 - Proper `entry_point` and `mcp_config.command` paths
-- Server icon (`servericon.png`) in the mcpb directory
+- Server icon (`icon.png`) in the mcpb directory
 
 The signing script auto-discovers servers based on the `servers/` directory structure and the presence of `manifest.json` files.
 
