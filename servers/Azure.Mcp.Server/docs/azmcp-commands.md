@@ -1258,6 +1258,19 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
+### Azure Container Apps Operations
+
+```bash
+# List Azure Container Apps in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps containerapp list --subscription <subscription>
+
+# List Azure Container Apps in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps containerapp list --subscription <subscription> \
+                                      [--resource-group <resource-group>]
+```
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
