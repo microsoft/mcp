@@ -29,7 +29,11 @@ public sealed class GetConnectionStatusCommand(ILogger<GetConnectionStatusComman
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = true
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
     };
 
     public override async Task<CommandResponse> ExecuteAsync(
