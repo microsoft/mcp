@@ -149,5 +149,5 @@ builder.Services.AddSingleton<MyFilteringProcessor>();
 
 > [!TIP]
 > **No host?** Use
-> `OpenTelemetrySdk.Create()` for the same
+> `OpenTelemetrySdk.Create()`(see in OpenTelemetrySdkCreate.md) for the same
 > builder API with manual lifecycle control.

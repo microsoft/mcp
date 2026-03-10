@@ -124,3 +124,4 @@ logger.LogInformation("Application started");
 
 `OpenTelemetrySdk.Create()` (>= 1.10.0) resolves all three issues while staying
 host-free.
+

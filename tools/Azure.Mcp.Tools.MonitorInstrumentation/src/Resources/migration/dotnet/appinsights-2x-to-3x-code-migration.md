@@ -89,11 +89,18 @@ Or set `APPLICATIONINSIGHTS_CONNECTION_STRING` as an environment variable and ca
 | `ApplicationInsightsLoggerProvider` | Logging is now automatic. No replacement needed. |
 | `ExceptionTrackingMiddleware` | Exception tracking is built-in. |
 
-## Unchanged types
+## TelemetryClient changes
 
-| Type | Notes |
+| Change | Details |
 |---|---|
-| `TelemetryClient` | Still works in 3.x. Existing `TrackEvent`, `TrackException`, `TrackMetric`, `TrackDependency`, `TrackTrace` calls require no changes. |
+| `TrackEvent` | 3-param overload `(string, IDictionary<string,string>, IDictionary<string,double>)` **removed** — metrics dict dropped. Use 2-param overload and track metrics separately via `TrackMetric()`. |
+| `TrackException` | 3-param overload with `IDictionary<string,double>` **removed**. Use 2-param overload and track metrics separately via `TrackMetric()`. |
+| `TrackAvailability` | 8-param overload with trailing `IDictionary<string,double>` **removed**. Use 7-param overload and track metrics separately via `TrackMetric()`. |
+| `TrackPageView` | **Removed entirely** (both overloads). Use `TrackEvent` or `TrackRequest` instead. |
+| `GetMetric` | `MetricConfiguration` and `MetricAggregationScope` params **removed** from all overloads. Use simplified `GetMetric(metricId, ...)`. |
+| parameterless `TelemetryClient()` | **Removed**. Use `TelemetryClient(TelemetryConfiguration)` via DI. |
+| `client.InstrumentationKey` | **Removed**. Use `TelemetryConfiguration.ConnectionString`. |
+| `TrackTrace`, `TrackMetric`, `TrackRequest`, `TrackDependency` (full overload), `Flush` | **Unchanged** — no action needed. |
 
 ## Migration steps
 
@@ -111,7 +118,7 @@ Or set `APPLICATIONINSIGHTS_CONNECTION_STRING` as an environment variable and ca
 3. Migrate custom telemetry types:
    - Convert each `ITelemetryInitializer` implementation to a `BaseProcessor<Activity>` with `OnStart`. Register via `.AddProcessor<T>()` in the OpenTelemetry pipeline.
    - Convert each `ITelemetryProcessor` implementation to a `BaseProcessor<Activity>` with `OnEnd`. To drop telemetry, clear the Recorded flag: `data.ActivityTraceFlags &= ~ActivityTraceFlags.Recorded`. Register via `.AddProcessor<T>()`.
-   - `TelemetryClient` still works in 3.x — no changes needed for existing `TrackEvent`, `TrackException`, `TrackMetric`, `TrackDependency`, `TrackTrace` calls.
+   - `TelemetryClient` mostly works in 3.x but has breaking changes: remove `IDictionary<string, double> metrics` parameter from `TrackEvent`/`TrackException`/`TrackAvailability` calls (track metrics separately via `TrackMetric()`). Replace `TrackPageView` with `TrackEvent` or `TrackRequest`. Remove `GetMetric` overloads that take `MetricConfiguration`/`MetricAggregationScope`.
 
 4. Build and verify — the `Enable*` flags (`EnableQuickPulseMetricStream`, `EnableDependencyTrackingTelemetryModule`, etc.) still work with the same defaults. No changes needed for those.
 
@@ -124,3 +131,4 @@ Or set `APPLICATIONINSIGHTS_CONNECTION_STRING` as an environment variable and ca
 
 - No-code-change migration(see in appinsights-2x-to-3x-no-code-change.md)
 - AddApplicationInsightsTelemetry API reference(see in AddApplicationInsightsTelemetry.md)
+- TelemetryClient breaking changes(see in TelemetryClient.md)

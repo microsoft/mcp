@@ -43,7 +43,7 @@ A legacy overload extending `OpenTelemetryLoggerOptions` also exists but is supe
 
 - **Cannot** be combined with `UseAzureMonitorExporter` in the same app — a runtime exception is thrown.
 - **Live Metrics** is not supported by per-signal methods. Setting `EnableLiveMetrics = true` has no effect — a warning is logged and the setting is ignored.
-- For hosted apps (ASP.NET Core, Worker Services), prefer `UseAzureMonitorExporter()` — it registers all three signals in one call with Live Metrics support.
+- For hosted apps (ASP.NET Core, Worker Services), prefer `UseAzureMonitorExporter()`(see in UseAzureMonitorExporter.md) — it registers all three signals in one call with Live Metrics support.
 
 ## AzureMonitorExporterOptions
 
@@ -130,3 +130,8 @@ using var sdk = OpenTelemetrySdk.Create(builder => builder
 
 // sdk.Dispose() flushes all signals on exit.
 ```
+
+## See also
+
+- UseAzureMonitorExporter (all signals)(see in UseAzureMonitorExporter.md)
+- WithTracing(see in WithTracing.md) · WithMetrics(see in WithMetrics.md) · WithLogging(see in WithLogging.md)
