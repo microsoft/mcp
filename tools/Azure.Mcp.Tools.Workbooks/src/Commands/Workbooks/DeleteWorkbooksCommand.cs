@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger) : GlobalCommand<DeleteWorkbookOptions>
+public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger) : BaseWorkbooksCommand<DeleteWorkbookOptions>
 {
     private const string CommandTitle = "Delete Workbook";
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;

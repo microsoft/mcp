@@ -15,7 +15,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
-public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointUpdateOptions>
+public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<ServerEndpointUpdateOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Update Server Endpoint";
     private readonly IStorageSyncService _service = service;
@@ -42,8 +43,6 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.ServerEndpoint.CloudTiering.AsOptional());

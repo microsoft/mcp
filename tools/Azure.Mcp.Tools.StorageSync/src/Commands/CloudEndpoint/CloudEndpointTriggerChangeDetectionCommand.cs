@@ -14,7 +14,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
-public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndpointTriggerChangeDetectionCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointTriggerChangeDetectionOptions>
+public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndpointTriggerChangeDetectionCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<CloudEndpointTriggerChangeDetectionOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Trigger Change Detection";
     private readonly IStorageSyncService _service = service;
@@ -41,8 +42,6 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.DirectoryPath.AsRequired());

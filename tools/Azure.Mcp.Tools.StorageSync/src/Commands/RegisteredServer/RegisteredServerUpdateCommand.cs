@@ -15,7 +15,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUpdateOptions>
+public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdateCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<RegisteredServerUpdateOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Update Registered Server";
     private readonly IStorageSyncService _service = service;
@@ -42,8 +43,6 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsRequired());
     }
 

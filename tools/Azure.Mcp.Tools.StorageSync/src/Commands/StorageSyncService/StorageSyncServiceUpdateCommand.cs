@@ -15,7 +15,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceUpdateOptions>
+public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<StorageSyncServiceUpdateOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Update Storage Sync Service";
     private readonly IStorageSyncService _service = service;
@@ -42,8 +43,6 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IncomingTrafficPolicy.AsOptional());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Tags.AsOptional());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.IdentityType.AsOptional());

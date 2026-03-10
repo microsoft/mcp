@@ -16,7 +16,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceCreateOptions>
+public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCreateCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<StorageSyncServiceCreateOptions>(resourceGroupRequired: true, storageSyncServiceRequired: false)
 {
     private const string CommandTitle = "Create Storage Sync Service";
     private readonly IStorageSyncService _service = service;
@@ -43,8 +44,6 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Location.AsRequired());
     }
 

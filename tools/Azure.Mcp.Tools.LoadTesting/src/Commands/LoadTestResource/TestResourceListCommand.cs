@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
 public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger)
-    : BaseLoadTestingCommand<TestResourceListOptions>
+    : BaseLoadTestingCommand<TestResourceListOptions>(resourceGroupRequired: false, testResourceRequired: false)
 {
     private const string _commandTitle = "Test Resource List";
     private readonly ILogger<TestResourceListCommand> _logger = logger;
@@ -40,8 +40,6 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)

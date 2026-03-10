@@ -15,7 +15,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
-public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupCreateOptions>
+public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<SyncGroupCreateOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Create Sync Group";
     private readonly IStorageSyncService _service = service;
@@ -42,8 +43,6 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
     }
 

@@ -14,7 +14,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
-public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointDeleteOptions>
+public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<CloudEndpointDeleteOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Delete Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
@@ -41,8 +42,6 @@ public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteComman
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.SyncGroup.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.CloudEndpoint.Name.AsRequired());
     }

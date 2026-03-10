@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
 public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
-    : BaseLoadTestingCommand<TestCreateOptions>
+    : BaseLoadTestingCommand<TestCreateOptions>(resourceGroupRequired: false, testResourceRequired: true)
 {
     private const string _commandTitle = "Test Create";
     private readonly ILogger<TestCreateCommand> _logger = logger;
@@ -44,15 +44,13 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.Test);
-        command.Options.Add(LoadTestingOptionDefinitions.Description);
-        command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
-        command.Options.Add(LoadTestingOptionDefinitions.Endpoint);
-        command.Options.Add(LoadTestingOptionDefinitions.VirtualUsers);
-        command.Options.Add(LoadTestingOptionDefinitions.Duration);
-        command.Options.Add(LoadTestingOptionDefinitions.RampUpTime);
+        command.Options.Add(LoadTestingOptionDefinitions.Test.AsRequired());
+        command.Options.Add(LoadTestingOptionDefinitions.Description.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.DisplayName.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.Endpoint.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.VirtualUsers.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.Duration.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.RampUpTime.AsOptional());
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)

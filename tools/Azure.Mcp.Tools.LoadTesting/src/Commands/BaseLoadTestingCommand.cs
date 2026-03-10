@@ -13,11 +13,18 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands;
 
 public abstract class BaseLoadTestingCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
+    (bool resourceGroupRequired = false, bool testResourceRequired = false)
     : SubscriptionCommand<TOptions> where TOptions : BaseLoadTestingOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(resourceGroupRequired
+            ? OptionDefinitions.Common.ResourceGroup.AsRequired()
+            : OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(testResourceRequired
+            ? LoadTestingOptionDefinitions.TestResource.AsRequired()
+            : LoadTestingOptionDefinitions.TestResource.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
