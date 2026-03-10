@@ -168,9 +168,9 @@ public class SubscriptionServiceProfileTests
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or IOException)
         {
-            // Silently ignore errors
+            // Best-effort: profile may be corrupted or inaccessible
         }
 
         return null;

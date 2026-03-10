@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Options;
@@ -142,9 +143,9 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or SecurityException)
         {
-            // Silently ignore errors reading the profile - this is best-effort
+            // Best-effort: profile may be missing, corrupted, or inaccessible
         }
 
         return null;
