@@ -80,8 +80,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         {
             var functionApps = await _functionAppService.GetFunctionApp(
                 options.Subscription!,
-                options.FunctionAppName!,
-                options.ResourceGroup!,
+                options.FunctionAppName,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
