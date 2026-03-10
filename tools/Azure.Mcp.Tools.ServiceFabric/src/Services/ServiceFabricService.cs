@@ -4,7 +4,6 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -44,10 +43,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
@@ -94,10 +90,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
@@ -138,10 +131,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);

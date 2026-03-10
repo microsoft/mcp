@@ -35,10 +35,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         {
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
 
-            var credential = await GetCredential(cancellationToken);
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-                cancellationToken);
+            var token = await GetArmAccessTokenAsync(cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
@@ -85,10 +82,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
-            var credential = await GetCredential(cancellationToken);
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-                cancellationToken);
+            var token = await GetArmAccessTokenAsync(cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
@@ -143,10 +137,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint;
 
-            var credential = await GetCredential(cancellationToken);
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-                cancellationToken);
+            var token = await GetArmAccessTokenAsync(cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
