@@ -76,15 +76,9 @@ internal static class DocumentDbResponseHelper
     /// Processes a DocumentDb service response and applies it to the command context.
     /// </summary>
     /// <param name="context">The command context to update.</param>
-    /// <param name="serviceResult">The service result object.</param>
-    public static void ProcessResponse(Microsoft.Mcp.Core.Models.Command.CommandContext context, object? serviceResult)
+    /// <param name="response">The service response.</param>
+    public static void ProcessResponse(Microsoft.Mcp.Core.Models.Command.CommandContext context, DocumentDbResponse response)
     {
-        var response = DocumentDbResponse.FromDictionary(serviceResult);
-        if (response == null)
-        {
-            return;
-        }
-
         context.Response.Status = response.StatusCode;
 
         if (response.Success)

@@ -29,30 +29,4 @@ public class DocumentDbResponse
     /// Gets or sets the response data payload from the operation.
     /// </summary>
     public object? Data { get; set; }
-
-    /// <summary>
-    /// Creates a DocumentDbResponse from a dictionary returned by the service.
-    /// </summary>
-    /// <param name="result">The service result dictionary.</param>
-    /// <returns>A DocumentDbResponse instance or null if conversion fails.</returns>
-    public static DocumentDbResponse? FromDictionary(object? result)
-    {
-        if (result is not Dictionary<string, object?> dict)
-        {
-            return null;
-        }
-
-        var success = dict.TryGetValue("success", out var successObj) && (bool)successObj!;
-        var statusCode = dict.TryGetValue("statusCode", out var statusCodeObj)
-            ? (HttpStatusCode)statusCodeObj!
-            : (success ? HttpStatusCode.OK : HttpStatusCode.InternalServerError);
-
-        return new DocumentDbResponse
-        {
-            Success = success,
-            StatusCode = statusCode,
-            Message = dict.TryGetValue("message", out var messageObj) ? messageObj?.ToString() : null,
-            Data = dict.TryGetValue("data", out var dataObj) ? dataObj : null
-        };
-    }
 }

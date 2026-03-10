@@ -959,7 +959,8 @@ Example prompts that generate Azure CLI commands:
 
 ### 🗄️ Azure DocumentDB (with MongoDB compatibility)
 
-* "Connect to/Disconnect from my DocumentDB instance"
+* "Connect to my DocumentDB instance with provided connection string"
+* "Disconnect from current DocumentDB connection"
 * "Show me the DocumentDB connection status"
 
 ### 📣 Azure Event Grid

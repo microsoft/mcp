@@ -3,6 +3,7 @@
 
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Azure.Mcp.Tools.DocumentDb.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -33,21 +34,12 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
 
     #region Connection Management
 
-    public async Task<object> ConnectAsync(string connectionString, bool testConnection = true, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> ConnectAsync(string connectionString, bool testConnection = true, CancellationToken cancellationToken = default)
     {
+        ValidateParameter(connectionString, nameof(connectionString));
+
         try
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return new Dictionary<string, object?>
-                {
-                    ["success"] = false,
-                    ["statusCode"] = HttpStatusCode.BadRequest,
-                    ["message"] = "Connection string cannot be empty",
-                    ["data"] = null
-                };
-            }
-
             // Disconnect any existing connection
             if (_client != null)
             {
@@ -65,12 +57,12 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
                 var databases = await _client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
                 _logger.LogInformation("Successfully connected to DocumentDB. Found {Count} databases", databases.Count);
 
-                return new Dictionary<string, object?>
+                return new DocumentDbResponse
                 {
-                    ["success"] = true,
-                    ["statusCode"] = HttpStatusCode.OK,
-                    ["message"] = "Connected successfully",
-                    ["data"] = new Dictionary<string, object?>
+                    Success = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Connected successfully",
+                    Data = new Dictionary<string, object?>
                     {
                         ["databaseCount"] = databases.Count,
                         ["databases"] = databases
@@ -78,84 +70,64 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
                 };
             }
 
-            return new Dictionary<string, object?>
+            return new DocumentDbResponse
             {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Connected successfully (not tested)",
-                ["data"] = null
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Connected successfully (not tested)",
+                Data = null
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to connect to DocumentDB");
             _client = null;
             _connectionString = null;
-            return new Dictionary<string, object?>
-            {
-                ["success"] = false,
-                ["statusCode"] = HttpStatusCode.InternalServerError,
-                ["message"] = $"Connection failed: {ex.Message}",
-                ["data"] = null
-            };
+
+            throw new InvalidOperationException($"Connection failed: {ex.Message}", ex);
         }
     }
 
-    public Task<object> DisconnectAsync(CancellationToken cancellationToken = default)
+    public Task<DocumentDbResponse> DisconnectAsync(CancellationToken cancellationToken = default)
     {
-        try
+        if (_client == null)
         {
-            if (_client == null)
+            return Task.FromResult(new DocumentDbResponse
             {
-                return Task.FromResult<object>(new Dictionary<string, object?>
-                {
-                    ["success"] = true,
-                    ["statusCode"] = HttpStatusCode.OK,
-                    ["message"] = "No active connection",
-                    ["data"] = new Dictionary<string, object?>
-                    {
-                        ["isConnected"] = false
-                    }
-                });
-            }
-
-            _client = null;
-            _connectionString = null;
-            _logger.LogInformation("Disconnected from DocumentDB");
-            return Task.FromResult<object>(new Dictionary<string, object?>
-            {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Disconnected successfully",
-                ["data"] = new Dictionary<string, object?>
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "No active connection",
+                Data = new Dictionary<string, object?>
                 {
                     ["isConnected"] = false
                 }
             });
         }
-        catch (Exception ex)
+
+        _client = null;
+        _connectionString = null;
+        _logger.LogInformation("Disconnected from DocumentDB");
+        return Task.FromResult(new DocumentDbResponse
         {
-            _logger.LogError(ex, "Error during disconnect");
-            return Task.FromResult<object>(new Dictionary<string, object?>
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = "Disconnected successfully",
+            Data = new Dictionary<string, object?>
             {
-                ["success"] = false,
-                ["statusCode"] = HttpStatusCode.InternalServerError,
-                ["message"] = $"Disconnect failed: {ex.Message}",
-                ["data"] = null
-            });
-        }
+                ["isConnected"] = false
+            }
+        });
     }
 
-    public async Task<object> GetConnectionStatusAsync(CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> GetConnectionStatusAsync(CancellationToken cancellationToken = default)
     {
         if (_client == null)
         {
-            return new Dictionary<string, object?>
+            return new DocumentDbResponse
             {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Not connected",
-                ["data"] = new Dictionary<string, object?>
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Not connected",
+                Data = new Dictionary<string, object?>
                 {
                     ["isConnected"] = false,
                     ["connectionString"] = null,
@@ -172,12 +144,12 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
             var command = new BsonDocument("hello", 1);
             await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
-            return new Dictionary<string, object?>
+            return new DocumentDbResponse
             {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Connection status retrieved successfully",
-                ["data"] = new Dictionary<string, object?>
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Connection status retrieved successfully",
+                Data = new Dictionary<string, object?>
                 {
                     ["isConnected"] = true,
                     ["connectionString"] = sanitizedConnectionString,
@@ -190,14 +162,7 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Connection status check failed");
-            return new Dictionary<string, object?>
-            {
-                ["success"] = false,
-                ["statusCode"] = HttpStatusCode.InternalServerError,
-                ["message"] = $"Failed to check connection status: {ex.Message}",
-                ["data"] = null
-            };
+            throw new InvalidOperationException($"Failed to check connection status: {ex.Message}", ex);
         }
     }
 

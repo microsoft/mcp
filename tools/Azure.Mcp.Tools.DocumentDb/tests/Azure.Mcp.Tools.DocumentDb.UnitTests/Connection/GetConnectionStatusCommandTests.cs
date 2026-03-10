@@ -4,11 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.DocumentDb.Commands.Connection;
+using Azure.Mcp.Tools.DocumentDb.Models;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DocumentDb.UnitTests.Connection;
@@ -39,12 +41,12 @@ public class GetConnectionStatusCommandTests
     {
         // Arrange
         _documentDbService.GetConnectionStatusAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, object?>
+            .Returns(new DocumentDbResponse
             {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Connection status retrieved successfully",
-                ["data"] = new Dictionary<string, object?>
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Connection status retrieved successfully",
+                Data = new Dictionary<string, object?>
                 {
                     ["isConnected"] = true,
                     ["connectionString"] = "mongodb://localhost:27017",
@@ -71,12 +73,12 @@ public class GetConnectionStatusCommandTests
     {
         // Arrange
         _documentDbService.GetConnectionStatusAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, object?>
+            .Returns(new DocumentDbResponse
             {
-                ["success"] = true,
-                ["statusCode"] = HttpStatusCode.OK,
-                ["message"] = "Not connected",
-                ["data"] = new Dictionary<string, object?>
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Not connected",
+                Data = new Dictionary<string, object?>
                 {
                     ["isConnected"] = false,
                     ["connectionString"] = null,
@@ -100,13 +102,7 @@ public class GetConnectionStatusCommandTests
     {
         // Arrange
         _documentDbService.GetConnectionStatusAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, object?>
-            {
-                ["success"] = false,
-                ["statusCode"] = HttpStatusCode.InternalServerError,
-                ["message"] = "Failed to check connection status: Connection timeout",
-                ["data"] = null
-            });
+            .ThrowsAsync(new Exception("Failed to check connection status: Connection timeout"));
 
         var args = _commandDefinition.Parse([]);
 

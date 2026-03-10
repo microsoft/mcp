@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.DocumentDb.Commands.Connection;
+using Azure.Mcp.Tools.DocumentDb.Models;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -39,11 +40,12 @@ public class ConnectionToggleCommandTests
     public async Task ExecuteAsync_ReturnsSuccess_WhenConnectActionSucceeds()
     {
         var connectionString = "mongodb://localhost:27017";
-        var expectedResult = new Dictionary<string, object?>
+        var expectedResult = new DocumentDbResponse
         {
-            ["success"] = true,
-            ["message"] = "Connected successfully",
-            ["data"] = new Dictionary<string, object?>
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = "Connected successfully",
+            Data = new Dictionary<string, object?>
             {
                 ["databaseCount"] = 2,
                 ["databases"] = new List<string> { "test", "admin" }
@@ -69,11 +71,12 @@ public class ConnectionToggleCommandTests
     public async Task ExecuteAsync_ReturnsSuccess_WhenConnectActionDisablesConnectionTest()
     {
         var connectionString = "mongodb://localhost:27017";
-        var expectedResult = new Dictionary<string, object?>
+        var expectedResult = new DocumentDbResponse
         {
-            ["success"] = true,
-            ["message"] = "Connected successfully (not tested)",
-            ["data"] = null
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = "Connected successfully (not tested)",
+            Data = null
         };
 
         _documentDbService.ConnectAsync(connectionString, false, Arg.Any<CancellationToken>())
@@ -96,10 +99,15 @@ public class ConnectionToggleCommandTests
     public async Task ExecuteAsync_ReturnsSuccess_WhenDisconnectActionSucceeds()
     {
         _documentDbService.DisconnectAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, object?>
+            .Returns(new DocumentDbResponse
             {
-                ["success"] = true,
-                ["message"] = "Disconnected successfully"
+                Success = true,
+                StatusCode = HttpStatusCode.OK,
+                Message = "Disconnected successfully",
+                Data = new Dictionary<string, object?>
+                {
+                    ["isConnected"] = false
+                }
             });
 
         var args = _commandDefinition.Parse([
@@ -151,11 +159,7 @@ public class ConnectionToggleCommandTests
     public async Task ExecuteAsync_Returns500_WhenDisconnectActionFails()
     {
         _documentDbService.DisconnectAsync(Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, object?>
-            {
-                ["success"] = false,
-                ["message"] = "Disconnect failed: Unexpected error"
-            });
+            .ThrowsAsync(new Exception("Disconnect failed: Unexpected error"));
 
         var args = _commandDefinition.Parse([
             "--action", "disconnect"

@@ -18,9 +18,9 @@ internal static class DocumentDbHelpers
         {
             return BsonDocument.Parse(json);
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new ArgumentException("The provided value is not valid BSON/JSON document content.", nameof(json), ex);
         }
     }
 
@@ -40,9 +40,9 @@ internal static class DocumentDbHelpers
             var json = DocumentDbResponseHelper.SerializeToJson(value);
             return BsonDocument.Parse(json);
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new InvalidOperationException($"The value of type '{value.GetType().FullName}' could not be converted to a BSON document.", ex);
         }
     }
 
@@ -56,9 +56,9 @@ internal static class DocumentDbHelpers
             var bsonArray = BsonSerializer.Deserialize<BsonArray>(json);
             return bsonArray.Select(item => item.AsBsonDocument).ToList();
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new ArgumentException("The provided value is not valid BSON/JSON array content.", nameof(json), ex);
         }
     }
 
@@ -78,9 +78,9 @@ internal static class DocumentDbHelpers
             var json = DocumentDbResponseHelper.SerializeToJson(value);
             return ParseBsonDocumentList(json);
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new InvalidOperationException($"The value of type '{value.GetType().FullName}' could not be converted to a BSON document list.", ex);
         }
     }
 

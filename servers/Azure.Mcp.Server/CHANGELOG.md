@@ -26,8 +26,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - prompt_optimize: Optimize a prompt for a specific model
 - Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
 - Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
-- Added DocumentDB tools for managing Azure DocumentDB (with MongoDB compatibility) connection: [[#1968](https://github.com/microsoft/mcp/pull/1968)]
-  - **Connection** tools (3): Connect, Disconnect, GetConnectionStatus
 
 ### Breaking Changes
 

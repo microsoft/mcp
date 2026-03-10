@@ -25,14 +25,18 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
 
     public override string Name => "toggle";
 
-    public override string Description => "Open, connect, switch, close, or disconnect the active Azure DocumentDB session for Azure Cosmos DB for MongoDB (vCore). Use this when the user wants to connect with a connection string, reconnect to a different cluster, or end the current DocumentDB session before running database commands.";
+    public override string Description => "Connect to Azure DocumentDB for Azure Cosmos DB for MongoDB (vCore) by using a connection string, or disconnect the current DocumentDB session. Use the connect action to start or replace the active session, and the disconnect action to end it before running other commands.";
 
     public override string Title => "Connect or disconnect DocumentDB";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = true
     };
 
     protected override void RegisterOptions(Command command)
@@ -43,8 +47,8 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
         command.Options.Add(DocumentDbOptionDefinitions.TestConnection);
         command.Validators.Add(commandResult =>
         {
-            var action = commandResult.GetValueOrDefault(DocumentDbOptionDefinitions.Action);
-            var connectionString = commandResult.GetValueOrDefault(DocumentDbOptionDefinitions.ConnectionString);
+            var action = commandResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Action.Name);
+            var connectionString = commandResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.ConnectionString.Name);
 
             if (string.Equals(action, ConnectAction, StringComparison.OrdinalIgnoreCase)
                 && string.IsNullOrWhiteSpace(connectionString))
@@ -68,14 +72,14 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
+
+            var options = BindOptions(parseResult);
 
             var service = context.GetService<IDocumentDbService>();
 
@@ -92,7 +96,8 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to execute DocumentDB connection action {Action}", options.Action);
+            var action = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Action.Name);
+            _logger.LogError(ex, "Failed to execute DocumentDB connection action {Action}", action);
             HandleException(context, ex);
             return context.Response;
         }
