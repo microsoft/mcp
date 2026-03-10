@@ -76,7 +76,7 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
                 cancellationToken);
 
             context.Response.Results = resources?.Count > 0 ?
-                ResponseResult.Create(new Result(resources), GroupJsonContext.Default.GroupResourceListCommandResult) :
+                ResponseResult.Create(new GroupResourceListCommandResult(resources), GroupJsonContext.Default.GroupResourceListCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -88,5 +88,5 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
         return context.Response;
     }
 
-    internal record class Result(List<GenericResourceInfo> Resources);
+    internal record class GroupResourceListCommandResult(List<GenericResourceInfo> Resources);
 }
