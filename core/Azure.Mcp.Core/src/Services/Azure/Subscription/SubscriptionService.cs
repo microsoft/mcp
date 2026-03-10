@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Security;
-using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -102,59 +100,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
     /// <inheritdoc/>
     public string? GetDefaultSubscriptionId()
     {
-        // Primary: read from Azure CLI profile (~/.azure/azureProfile.json)
-        var profileDefault = ReadDefaultSubscriptionFromAzureProfile();
-        if (!string.IsNullOrEmpty(profileDefault))
-        {
-            return profileDefault;
-        }
-
-        // Fallback: AZURE_SUBSCRIPTION_ID environment variable
-        return EnvironmentHelpers.GetAzureSubscriptionId();
-    }
-
-    internal static string? ReadDefaultSubscriptionFromAzureProfile()
-    {
-        try
-        {
-            var profilePath = GetAzureProfilePath();
-            if (!File.Exists(profilePath))
-            {
-                return null;
-            }
-
-            var json = File.ReadAllText(profilePath);
-            using var doc = JsonDocument.Parse(json);
-
-            if (!doc.RootElement.TryGetProperty("subscriptions", out var subscriptions) ||
-                subscriptions.ValueKind != JsonValueKind.Array)
-            {
-                return null;
-            }
-
-            foreach (var sub in subscriptions.EnumerateArray())
-            {
-                if (sub.TryGetProperty("isDefault", out var isDefault) &&
-                    isDefault.ValueKind == JsonValueKind.True &&
-                    sub.TryGetProperty("id", out var id) &&
-                    id.ValueKind == JsonValueKind.String)
-                {
-                    return id.GetString();
-                }
-            }
-        }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or SecurityException)
-        {
-            // Best-effort: profile may be missing, corrupted, or inaccessible
-        }
-
-        return null;
-    }
-
-    internal static string GetAzureProfilePath()
-    {
-        var azureDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".azure");
-        return Path.Combine(azureDir, "azureProfile.json");
+        return CommandHelper.GetDefaultSubscription();
     }
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)

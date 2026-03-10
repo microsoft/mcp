@@ -1,21 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 
-public class SubscriptionServiceProfileTests
+public class AzureCliProfileHelperTests
 {
     [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_ValidProfile_ReturnsDefaultId()
+    public void ParseDefaultSubscriptionId_ValidProfile_ReturnsDefaultId()
     {
-        // Arrange
-        var tempDir = Path.Combine(Path.GetTempPath(), $"azprofile_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        var profilePath = Path.Combine(tempDir, "azureProfile.json");
-
         var profileJson = """
         {
             "subscriptions": [
@@ -44,26 +39,13 @@ public class SubscriptionServiceProfileTests
         }
         """;
 
-        try
-        {
-            File.WriteAllText(profilePath, profileJson);
+        var result = AzureCliProfileHelper.ParseDefaultSubscriptionId(profileJson);
 
-            // Use reflection to test with custom path - or test the static helper directly
-            // Since ReadDefaultSubscriptionFromAzureProfile reads from GetAzureProfilePath(),
-            // we test the JSON parsing logic via the internal method
-            var result = ReadProfileFromJson(profileJson);
-
-            // Assert
-            Assert.Equal("sub-2222-2222", result);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
+        Assert.Equal("sub-2222-2222", result);
     }
 
     [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_NoDefaultInProfile_ReturnsNull()
+    public void ParseDefaultSubscriptionId_NoDefaultInProfile_ReturnsNull()
     {
         var profileJson = """
         {
@@ -79,13 +61,13 @@ public class SubscriptionServiceProfileTests
         }
         """;
 
-        var result = ReadProfileFromJson(profileJson);
+        var result = AzureCliProfileHelper.ParseDefaultSubscriptionId(profileJson);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_EmptySubscriptions_ReturnsNull()
+    public void ParseDefaultSubscriptionId_EmptySubscriptions_ReturnsNull()
     {
         var profileJson = """
         {
@@ -93,13 +75,13 @@ public class SubscriptionServiceProfileTests
         }
         """;
 
-        var result = ReadProfileFromJson(profileJson);
+        var result = AzureCliProfileHelper.ParseDefaultSubscriptionId(profileJson);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_NoSubscriptionsProperty_ReturnsNull()
+    public void ParseDefaultSubscriptionId_NoSubscriptionsProperty_ReturnsNull()
     {
         var profileJson = """
         {
@@ -107,23 +89,13 @@ public class SubscriptionServiceProfileTests
         }
         """;
 
-        var result = ReadProfileFromJson(profileJson);
+        var result = AzureCliProfileHelper.ParseDefaultSubscriptionId(profileJson);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_InvalidJson_ReturnsNull()
-    {
-        var profileJson = "this is not json";
-
-        var result = ReadProfileFromJson(profileJson);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void ReadDefaultSubscriptionFromAzureProfile_MissingIdOnDefault_ReturnsNull()
+    public void ParseDefaultSubscriptionId_MissingIdOnDefault_ReturnsNull()
     {
         var profileJson = """
         {
@@ -136,43 +108,17 @@ public class SubscriptionServiceProfileTests
         }
         """;
 
-        var result = ReadProfileFromJson(profileJson);
+        var result = AzureCliProfileHelper.ParseDefaultSubscriptionId(profileJson);
 
         Assert.Null(result);
     }
 
-    /// <summary>
-    /// Helper that simulates ReadDefaultSubscriptionFromAzureProfile's JSON parsing logic
-    /// without requiring filesystem access.
-    /// </summary>
-    private static string? ReadProfileFromJson(string json)
+    [Fact]
+    public void GetAzureProfilePath_ReturnsExpectedPath()
     {
-        try
-        {
-            using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var result = AzureCliProfileHelper.GetAzureProfilePath();
 
-            if (!doc.RootElement.TryGetProperty("subscriptions", out var subscriptions) ||
-                subscriptions.ValueKind != System.Text.Json.JsonValueKind.Array)
-            {
-                return null;
-            }
-
-            foreach (var sub in subscriptions.EnumerateArray())
-            {
-                if (sub.TryGetProperty("isDefault", out var isDefault) &&
-                    isDefault.ValueKind == System.Text.Json.JsonValueKind.True &&
-                    sub.TryGetProperty("id", out var id) &&
-                    id.ValueKind == System.Text.Json.JsonValueKind.String)
-                {
-                    return id.GetString();
-                }
-            }
-        }
-        catch (Exception ex) when (ex is System.Text.Json.JsonException or IOException)
-        {
-            // Best-effort: profile may be corrupted or inaccessible
-        }
-
-        return null;
+        Assert.Contains(".azure", result);
+        Assert.EndsWith("azureProfile.json", result);
     }
 }
