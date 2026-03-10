@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Core;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
@@ -17,9 +18,9 @@ public static class RegistryServerServiceCollectionExtensions
     /// <summary>
     /// Add HttpClient for each registry server with OAuthScopes that knows how to fetch its access token.
     /// </summary>
-    public static IServiceCollection AddRegistryRoot(this IServiceCollection services)
+    public static IServiceCollection AddRegistryRoot(this IServiceCollection services, Assembly sourceAssembly, string resourcePattern)
     {
-        var registry = RegistryServerHelper.GetRegistryRoot();
+        var registry = RegistryServerHelper.GetRegistryRoot(sourceAssembly, resourcePattern);
         if (registry?.Servers is null)
         {
             // Add an empty RegistryRoot
@@ -49,10 +50,20 @@ public static class RegistryServerServiceCollectionExtensions
             }
 
             services.AddHttpClient(RegistryServerHelper.GetRegistryServerHttpClientName(serverName))
-                .AddHttpMessageHandler((services) =>
+                .AddHttpMessageHandler((sp) =>
                 {
-                    var tokenCredentialProvider = services.GetRequiredService<IAzureTokenCredentialProvider>();
-                    return new AccessTokenHandler(tokenCredentialProvider, oauthScopes);
+                    var provider = sp.GetRequiredService<IAzureTokenCredentialProvider>();
+                    // Only force browser fallback for SingleIdentityTokenCredentialProvider
+                    // (stdio mode and UseHostingEnvironmentIdentity HTTP mode). In those scenarios
+                    // the user's own identity drives auth, so an interactive browser prompt is a
+                    // reasonable last resort when silent credentials (AzCLI, WAM, etc.) fail.
+                    // For UseOnBehalfOf (HttpOnBehalfOfTokenCredentialProvider) the OBO flow owns
+                    // the token exchange — delegate back to the provider as usual.
+                    if (provider is SingleIdentityTokenCredentialProvider)
+                    {
+                        return new AccessTokenHandler(new CustomChainedCredential(forceBrowserFallback: true), oauthScopes);
+                    }
+                    return new AccessTokenHandler(provider, oauthScopes);
                 });
         }
 

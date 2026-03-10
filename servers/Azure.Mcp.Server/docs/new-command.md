@@ -470,8 +470,8 @@ protected override void RegisterOptions(Command command)
     command.Validators.Add(commandResult =>
     {
         // Retrieve values once and infer presence from non-empty values
-        commandResult.TryGetValue(ServiceOptionDefinitions.EitherThis, out string? eitherThis);
-        commandResult.TryGetValue(ServiceOptionDefinitions.OrThat, out string? orThat);
+        var eitherThis = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.EitherThis.Name);
+        var orThat = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.OrThat.Name);
 
         var hasEitherThis = !string.IsNullOrWhiteSpace(eitherThis);
         var hasOrThat = !string.IsNullOrWhiteSpace(orThat);

@@ -5,14 +5,12 @@ using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
 public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true)
+    : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Gets Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsGetCommand> _logger = logger;
@@ -38,18 +36,9 @@ public sealed class AppSettingsGetCommand(ILogger<AppSettingsGetCommand> logger,
         LocalRequired = false
     };
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName.AsRequired());
-    }
+    protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
 
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
-        return options;
-    }
+    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
