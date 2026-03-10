@@ -11,7 +11,7 @@ public interface IGenerator
     /// Determines if this generator can handle the given analysis result
     /// </summary>
     bool CanHandle(Analysis analysis);
-    
+
     /// <summary>
     /// Generates an onboarding specification for the analyzed workspace
     /// </summary>

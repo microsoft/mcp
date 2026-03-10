@@ -1,6 +1,6 @@
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
 using Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
 using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
+using Azure.Mcp.Tools.MonitorInstrumentation.Models;
 using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Pipeline;
@@ -156,7 +156,7 @@ public class WorkspaceAnalyzer
             .ToList();
 
         var message = $"Multiple instrumentable projects detected: {string.Join(", ", instrumentable)}. Specify which project to onboard.";
-        
+
         return new OnboardingSpecBuilder(analysis)
             .WithDecision(Intents.ClarificationNeeded, Approaches.None, message)
             .AddWarning(message)
@@ -168,7 +168,7 @@ public class WorkspaceAnalyzer
         var project = analysis.Projects.FirstOrDefault();
         var appType = project?.AppType ?? AppType.Unknown;
         var message = $"No generator available for {analysis.Language}/{appType}/{analysis.State}";
-        
+
         return new OnboardingSpecBuilder(analysis)
             .WithDecision(Intents.Unsupported, Approaches.Manual, message)
             .AddWarnings(message, "Manual onboarding required. See Azure Monitor documentation.")

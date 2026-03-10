@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json;
-using ModelContextProtocol.Server;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
 using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
+using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 

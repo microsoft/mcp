@@ -11,9 +11,9 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
 public static class PythonInstrumentationRegistry
 {
     private static readonly Lazy<InstrumentationData> _data = new(LoadInstrumentationData);
-    private static readonly Lazy<Dictionary<string, InstrumentationInfo>> _instrumentationLookup = 
+    private static readonly Lazy<Dictionary<string, InstrumentationInfo>> _instrumentationLookup =
         new(() => BuildInstrumentationLookup(_data.Value));
-    private static readonly Lazy<HashSet<string>> _distroSet = 
+    private static readonly Lazy<HashSet<string>> _distroSet =
         new(() => new HashSet<string>(_data.Value.DistroInstrumentations, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>
@@ -75,14 +75,14 @@ public static class PythonInstrumentationRegistry
     public static bool IsInDistro(string libraryName)
     {
         var normalized = NormalizePackageName(libraryName);
-        
+
         // First check the instrumentation entry's InDistro flag
         var info = GetInstrumentation(libraryName);
         if (info != null)
         {
             return info.InDistro;
         }
-        
+
         // Fall back to the distroInstrumentations array for backward compatibility
         return _distroSet.Value.Contains(normalized);
     }
@@ -118,7 +118,7 @@ public static class PythonInstrumentationRegistry
     /// </summary>
     public static IEnumerable<InstrumentationInfo> GetByCategory(string category)
     {
-        return _instrumentationLookup.Value.Values.Where(i => 
+        return _instrumentationLookup.Value.Values.Where(i =>
             i.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -131,7 +131,7 @@ public static class PythonInstrumentationRegistry
         IEnumerable<string> dependencies)
     {
         var result = new List<(string Library, string InstrumentationPackage, bool InDistro)>();
-        
+
         foreach (var dep in dependencies)
         {
             var normalized = NormalizePackageName(dep);
@@ -140,7 +140,7 @@ public static class PythonInstrumentationRegistry
                 result.Add((normalized, info.InstrumentationPackage, info.InDistro));
             }
         }
-        
+
         return result;
     }
 
@@ -156,7 +156,7 @@ public static class PythonInstrumentationRegistry
     {
         // Try to load from file system first (allows updates without recompilation)
         var resourcePath = FindResourceFile();
-        
+
         if (resourcePath != null && File.Exists(resourcePath))
         {
             try
@@ -201,7 +201,8 @@ public static class PythonInstrumentationRegistry
 
         void AddCategory(List<InstrumentationInfo>? items, string category)
         {
-            if (items == null) return;
+            if (items == null)
+                return;
             foreach (var item in items)
             {
                 item.Category = category;

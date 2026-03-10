@@ -6,17 +6,17 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
 public static class OnboardingConstants
 {
     public const string SpecVersion = "0.1";
-    
+
     // Agent Instructions
-    public const string AgentPreExecuteInstruction = 
+    public const string AgentPreExecuteInstruction =
         "Fetch and review all resources using mcp_azure-monitor_get_learning_resource before presenting recommendations to the user";
-    
+
     // Learning Resource Paths
     public static class LearningResources
     {
         // Shared / Cross-language
         public const string ConceptsGenAiObservability = "learn://concepts/shared/gen-ai-observability.md";
-        
+
         // .NET
         public const string ConceptsOpenTelemetryPipelineDotNet = "learn://concepts/dotnet/opentelemetry-pipeline.md";
         public const string ConceptsAzureMonitorDistro = "learn://concepts/dotnet/azure-monitor-distro.md";
@@ -45,7 +45,7 @@ public static class OnboardingConstants
         public const string ExampleAspNetCoreSetup = "learn://examples/dotnet/aspnetcore-setup.md";
         public const string ExampleAspNetClassicSetup = "learn://examples/dotnet/aspnet-classic-setup.md";
         public const string ExampleWorkerServiceSetup = "learn://examples/dotnet/workerservice-setup.md";
-        
+
         // Node.js
         public const string ConceptsOpenTelemetryPipelineNodeJs = "learn://concepts/nodejs/opentelemetry-pipeline.md";
         public const string ConceptsAzureMonitorNodeJs = "learn://concepts/nodejs/azure-monitor-overview.md";
@@ -54,18 +54,18 @@ public static class OnboardingConstants
         public const string ExampleNestJsSetup = "learn://examples/nodejs/nestjs-setup.md";
         public const string ExampleNextJsSetup = "learn://examples/nodejs/nextjs-setup.md";
         public const string ExampleLangchainJsSetup = "learn://examples/nodejs/langchain-js-setup.md";
-        
+
         // Node.js Database Integrations
         public const string ExamplePostgresSetup = "learn://examples/nodejs/postgres-setup.md";
         public const string ExampleMongoDBSetup = "learn://examples/nodejs/mongodb-setup.md";
         public const string ExampleRedisSetup = "learn://examples/nodejs/redis-setup.md";
         public const string ExampleMySQLSetup = "learn://examples/nodejs/mysql-setup.md";
-        
+
         // Node.js Logging Integrations
         public const string ExampleWinstonSetup = "learn://examples/nodejs/winston-setup.md";
         public const string ExampleBunyanSetup = "learn://examples/nodejs/bunyan-setup.md";
         public const string ExampleConsoleNodeJsSetup = "learn://examples/nodejs/console-setup.md";
-        
+
         // Python
         public const string ConceptsOpenTelemetryPipelinePython = "learn://concepts/python/opentelemetry-pipeline.md";
         public const string ConceptsAzureMonitorPython = "learn://concepts/python/azure-monitor-overview.md";
@@ -76,7 +76,7 @@ public static class OnboardingConstants
         public const string ExampleGenAiSetup = "learn://examples/python/genai-setup.md";
         public const string ExampleGenericPythonSetup = "learn://examples/python/generic-setup.md";
     }
-    
+
     // Package Information
     public static class Packages
     {
@@ -88,7 +88,7 @@ public static class OnboardingConstants
         public const string PackageManagerNuGet = "nuget";
         public const string LatestStableVersion = "latest-stable";
     }
-    
+
     // Configuration
     public static class Config
     {
@@ -98,7 +98,7 @@ public static class OnboardingConstants
         public const string ConnectionStringPlaceholder = "<your-connection-string>";
         public const string AppSettingsFileName = "appsettings.json";
     }
-    
+
     // Code Patterns
     public static class CodePatterns
     {
@@ -106,14 +106,14 @@ public static class OnboardingConstants
         public const string UseAzureMonitorSnippet = "builder.Services.AddOpenTelemetry().UseAzureMonitor();";
         public const string WebApplicationCreateBuilderMarker = "WebApplication.CreateBuilder";
         public const string AzureMonitorNamespace = "Azure.Monitor.OpenTelemetry.AspNetCore";
-        
+
         // Worker Service
         public const string AddWorkerServiceSnippet = "services.AddApplicationInsightsTelemetryWorkerService();";
         public const string HostCreateDefaultBuilderMarker = "Host.CreateDefaultBuilder";
         public const string HostCreateApplicationBuilderMarker = "Host.CreateApplicationBuilder";
         public const string WorkerServiceNamespace = "Microsoft.Extensions.DependencyInjection";
     }
-    
+
     // Decision Intents
     public static class Intents
     {
@@ -123,7 +123,7 @@ public static class OnboardingConstants
         public const string ClarificationNeeded = "clarification-needed";
         public const string Unsupported = "unsupported";
     }
-    
+
     // Target Approaches
     public static class Approaches
     {
@@ -132,7 +132,7 @@ public static class OnboardingConstants
         public const string Manual = "manual";
         public const string None = "none";
     }
-    
+
     // Package Detection
     public static class PackageDetection
     {

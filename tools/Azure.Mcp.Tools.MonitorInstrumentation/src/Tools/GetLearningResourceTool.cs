@@ -12,7 +12,7 @@ public sealed class GetLearningResourceTool
     [McpServerTool(Name = "get_learning_resource")]
     [Description("Get the content of a learning resource by path. Use list_learning_resources to see available paths. Note: For instrumenting an application, use orchestrator_start instead.")]
     public string GetLearningResource(
-        [Description("Resource path, e.g., 'concepts/opentelemetry-pipeline.md'")] 
+        [Description("Resource path, e.g., 'concepts/opentelemetry-pipeline.md'")]
         string path)
     {
         // Strip learn:// prefix if present
@@ -36,18 +36,18 @@ public sealed class GetLearningResourceTool
         var baseDirectory = AppContext.BaseDirectory;
         var resourcesRoot = Path.GetFullPath(Path.Combine(baseDirectory, "Resources"));
         var resourcePath = Path.GetFullPath(Path.Combine(resourcesRoot, path));
-        
+
         // Additional check: ensure resolved path is within Resources directory
         if (!resourcePath.StartsWith(resourcesRoot, StringComparison.OrdinalIgnoreCase))
         {
             return "Invalid resource path. Use list_learning_resources to see available resources.";
         }
-        
+
         if (!File.Exists(resourcePath))
         {
             return $"Resource not found: {path}\n\nUse list_learning_resources to see available resources.";
         }
-        
+
         return File.ReadAllText(resourcePath);
 
         // Embedded resources approach (commented out):

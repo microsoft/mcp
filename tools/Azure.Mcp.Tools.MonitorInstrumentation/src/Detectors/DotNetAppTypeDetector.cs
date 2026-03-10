@@ -59,7 +59,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
             {
                 var projectDir = Path.GetDirectoryName(csprojPath)!;
                 entryPoint = FindEntryPoint(projectDir);
-                
+
                 // Detect hosting pattern from entry point content
                 hostingPattern = DetectHostingPattern(entryPoint);
             }
@@ -114,7 +114,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
                 return HostingPattern.MinimalApi;
 
             // Check for generic host patterns (Worker Service, console apps with hosting)
-            if (content.Contains("Host.CreateDefaultBuilder") || 
+            if (content.Contains("Host.CreateDefaultBuilder") ||
                 content.Contains("Host.CreateApplicationBuilder") ||
                 content.Contains("HostApplicationBuilder"))
                 return HostingPattern.GenericHost;

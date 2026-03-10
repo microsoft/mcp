@@ -55,8 +55,8 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
             foreach (var pkgRef in packageRefs)
             {
                 var include = pkgRef.Attribute("Include")?.Value ?? "";
-                var version = pkgRef.Attribute("Version")?.Value 
-                    ?? pkgRef.Attribute("VersionOverride")?.Value 
+                var version = pkgRef.Attribute("Version")?.Value
+                    ?? pkgRef.Attribute("VersionOverride")?.Value
                     ?? "unknown";
 
                 if (PackageDetection.AiSdkPackages.Any(p => include.Equals(p, StringComparison.OrdinalIgnoreCase)))

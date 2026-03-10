@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Text.Json;
-using ModelContextProtocol.Server;
 using Azure.Mcp.Tools.MonitorInstrumentation.Models;
 using Azure.Mcp.Tools.MonitorInstrumentation.Pipeline;
+using ModelContextProtocol.Server;
 using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 /// <summary>
 /// Single entry point for Azure Monitor instrumentation.
 /// Controls the entire workflow server-side, eliminating LLM decision randomness.
-/// 
+///
 /// Flow:
 /// 1. LLM calls orchestrator_start → gets first action with explicit instructions
 /// 2. LLM executes EXACTLY what's returned
@@ -53,11 +53,11 @@ public class OrchestratorTool
 After executing the action, call orchestrator_next to continue.
 DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.")]
     public string Start(
-        [Description("Absolute path to the workspace folder")] 
+        [Description("Absolute path to the workspace folder")]
         string workspacePath)
     {
         var spec = _analyzer.Analyze(workspacePath);
-        
+
         // Handle error cases
         if (spec.Decision.Intent == Intents.Error)
         {
@@ -128,22 +128,22 @@ DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.")]
         var firstAction = spec.Actions[0];
         var primaryProject = spec.Analysis.Projects.FirstOrDefault();
         var appTypeDescription = primaryProject?.AppType.ToString() ?? "unknown";
-        
+
         return Respond(new OrchestratorResponse
         {
             Status = "in_progress",
             SessionId = workspacePath,
             Message = $"Instrumentation started for {spec.Analysis.Language} {appTypeDescription} application.",
-            
+
             // Tell LLM exactly what to do
             Instruction = BuildInstruction(firstAction, spec.AgentMustExecuteFirst),
-            
+
             // Provide action details for execution
             CurrentAction = firstAction,
-            
+
             // Progress info
             Progress = $"Step 1 of {spec.Actions.Count}",
-            
+
             Warnings = spec.Warnings
         });
     }
@@ -160,13 +160,13 @@ Expected workflow:
 
 Returns: The next action to execute, or 'complete' status when all steps are done.")]
     public string Next(
-        [Description("The workspace path returned as sessionId from orchestrator_start")] 
+        [Description("The workspace path returned as sessionId from orchestrator_start")]
         string sessionId,
-        [Description("One sentence describing what you executed, e.g., 'Ran dotnet add package command' or 'Added UseAzureMonitor() to Program.cs'")] 
+        [Description("One sentence describing what you executed, e.g., 'Ran dotnet add package command' or 'Added UseAzureMonitor() to Program.cs'")]
         string completionNote)
     {
         CleanupExpiredSessions();
-        
+
         if (!Sessions.TryGetValue(sessionId, out var session))
         {
             return Respond(new OrchestratorResponse
@@ -215,7 +215,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
         if (nextIndex >= spec.Actions.Count)
         {
             Sessions.TryRemove(sessionId, out _);
-            
+
             return Respond(new OrchestratorResponse
             {
                 Status = "complete",
@@ -228,7 +228,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
 
         // Return next action
         var nextAction = spec.Actions[nextIndex];
-        
+
         return Respond(new OrchestratorResponse
         {
             Status = "in_progress",
@@ -396,8 +396,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
         switch (action.Type)
         {
             case ActionType.ReviewEducation:
-                var resources = action.Details.TryGetValue("resources", out var res) 
-                    ? res as IEnumerable<object> ?? [] 
+                var resources = action.Details.TryGetValue("resources", out var res)
+                    ? res as IEnumerable<object> ?? []
                     : [];
                 instruction.AppendLine("EXECUTE: Call get_learning_resource for each of these paths:");
                 foreach (var resource in resources)
@@ -584,35 +584,35 @@ internal record OrchestratorResponse
     /// Status: "in_progress", "complete", "error", "unsupported", "clarification_needed", "analysis_needed"
     /// </summary>
     public required string Status { get; init; }
-    
+
     public string? SessionId { get; init; }
-    
+
     /// <summary>
     /// Human-readable message about current state
     /// </summary>
     public required string Message { get; init; }
-    
+
     /// <summary>
     /// EXPLICIT instruction for what the LLM must do next.
     /// This is the key to reducing hallucination - tell it exactly what to do.
     /// </summary>
     public required string Instruction { get; init; }
-    
+
     /// <summary>
     /// The current action details (if in_progress)
     /// </summary>
     public OnboardingAction? CurrentAction { get; init; }
-    
+
     /// <summary>
     /// Progress indicator: "Step 2 of 4"
     /// </summary>
     public string? Progress { get; init; }
-    
+
     /// <summary>
     /// Actions already completed
     /// </summary>
     public List<string>? CompletedActions { get; init; }
-    
+
     /// <summary>
     /// Any warnings to relay to user
     /// </summary>

@@ -85,12 +85,12 @@ public enum HostingPattern
     /// ASP.NET Core minimal API pattern: WebApplication.CreateBuilder
     /// </summary>
     MinimalApi,
-    
+
     /// <summary>
     /// Generic host pattern: Host.CreateDefaultBuilder or Host.CreateApplicationBuilder
     /// </summary>
     GenericHost,
-    
+
     /// <summary>
     /// Could not determine hosting pattern
     /// </summary>
