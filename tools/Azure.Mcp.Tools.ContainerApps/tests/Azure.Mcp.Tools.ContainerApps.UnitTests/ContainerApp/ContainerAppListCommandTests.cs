@@ -102,7 +102,7 @@ public class ContainerAppListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_FiltersById_ReturnsFilteredContainerApps()
+    public async Task ExecuteAsync_FiltersByResourceGroup_ReturnsFilteredContainerApps()
     {
         // Arrange
         var expectedApps = new ResourceQueryResults<ContainerAppInfo>([new("app1", null, null, null, null)], false);

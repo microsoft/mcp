@@ -146,7 +146,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | containerapps_containerapp_list | List all Azure Container Apps in my subscription |
 | containerapps_containerapp_list | Show me my Azure Container Apps |
 | containerapps_containerapp_list | List container apps in resource group <resource_group_name> |
-| containerapps_containerapp_list | Show me the container apps in my subscription |
+| containerapps_containerapp_list | Show me the container apps in resource group <resource_group_name> |
 
 ## Azure Container Registry (ACR)
 
