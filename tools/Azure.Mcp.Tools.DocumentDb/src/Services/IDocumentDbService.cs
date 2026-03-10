@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.DocumentDb.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Azure.Mcp.Tools.DocumentDb.Models;
 
 namespace Azure.Mcp.Tools.DocumentDb.Services;
 

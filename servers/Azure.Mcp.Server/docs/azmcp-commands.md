@@ -1503,12 +1503,12 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
 # Connection Management
 
 # Connect to an Azure Cosmos DB for MongoDB (vCore) instance
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp documentdb connection toggle --action connect --connection-string <connection-string> \
                                     [--test-connection <true|false>]
 
 # Disconnect from the current DocumentDB instance
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp documentdb connection toggle --action disconnect
 
 

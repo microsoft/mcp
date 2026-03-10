@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Microsoft.Extensions.Logging;
 using Azure.Mcp.Tools.DocumentDb.Models;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
