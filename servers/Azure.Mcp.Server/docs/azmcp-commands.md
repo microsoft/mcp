@@ -3086,7 +3086,9 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 ### Azure Subscription Management
 
 ```bash
-# List available Azure subscriptions
+# List available Azure subscriptions with default subscription indicator
+# Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
+# The isDefault field is true for the subscription matching AZURE_SUBSCRIPTION_ID environment variable
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp subscription list [--tenant-id <tenant-id>]
 ```

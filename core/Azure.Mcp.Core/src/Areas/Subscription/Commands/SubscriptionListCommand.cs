@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Areas.Subscription.Models;
 using Azure.Mcp.Core.Areas.Subscription.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
@@ -21,7 +23,11 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     public override string Name => "list";
 
     public override string Description =>
-    "List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault. Use for scope selection in governance, policy, access, cost management, or deployment.";
+        "List all Azure subscriptions for the current account. Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription. " +
+        "The isDefault field indicates the subscription set via AZURE_SUBSCRIPTION_ID environment variable. " +
+        "IMPORTANT: If the user has not specified a subscription, prefer the subscription marked isDefault=true. " +
+        "If no default is set and there are multiple subscriptions, ALWAYS ask the user which subscription to use before proceeding.";
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -48,8 +54,11 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             var subscriptionService = context.GetService<ISubscriptionService>();
             var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
+            var defaultSubscriptionId = EnvironmentHelpers.GetAzureSubscriptionId();
+            var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
+
             context.Response.Results = ResponseResult.Create(
-                    new SubscriptionListCommandResult(subscriptions),
+                    new SubscriptionListCommandResult(subscriptionInfos),
                     SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)
@@ -61,5 +70,26 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         return context.Response;
     }
 
-    internal record SubscriptionListCommandResult(List<SubscriptionData> Subscriptions);
+    internal static List<SubscriptionInfo> MapToSubscriptionInfos(List<SubscriptionData> subscriptions, string? defaultSubscriptionId)
+    {
+        var hasDefault = !string.IsNullOrEmpty(defaultSubscriptionId);
+
+        var infos = subscriptions.Select(s => new SubscriptionInfo(
+            s.SubscriptionId,
+            s.DisplayName,
+            s.State?.ToString(),
+            s.TenantId?.ToString(),
+            hasDefault && s.SubscriptionId.Equals(defaultSubscriptionId, StringComparison.OrdinalIgnoreCase)
+        )).ToList();
+
+        // Sort so the default subscription appears first
+        if (hasDefault)
+        {
+            infos.Sort((a, b) => b.IsDefault.CompareTo(a.IsDefault));
+        }
+
+        return infos;
+    }
+
+    internal record SubscriptionListCommandResult(List<SubscriptionInfo> Subscriptions);
 }
