@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.Deploy.Services.Util;
 /// </summary>
 public static class IaCRulesTemplateUtil
 {
-    private static string _databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
+    private static readonly string _databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
 
     /// <summary>
     /// Generates IaC rules using embedded templates.
@@ -153,7 +153,8 @@ public static class IaCRulesTemplateUtil
 
     private static string GetToolSpecificResourceRules(string iacType, string? bicepRules, string? tfRules, string? cliRules)
     {
-        return iacType switch
+        var normalizedIacType = (iacType ?? string.Empty).ToLowerInvariant();
+        return normalizedIacType switch
         {
             IacType.Bicep => bicepRules ?? string.Empty,
             IacType.Terraform => tfRules ?? string.Empty,
