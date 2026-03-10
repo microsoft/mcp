@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
@@ -13,7 +14,7 @@ namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 /// </summary>
 /// <param name="output"></param>
 /// <param name="fixture"></param>
-internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
     public TestMode DesiredMode { get; set; } = TestMode.Record;
 
@@ -21,7 +22,7 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
 
     protected override ValueTask LoadSettingsAsync()
     {
-        Settings = new LiveTestSettings
+        Settings = new AzureLiveTestSettings
         {
             SubscriptionId = "00000000-0000-0000-0000-000000000000",
             TenantId = "00000000-0000-0000-0000-000000000000",

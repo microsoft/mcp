@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,9 +12,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture<AzureLiveTestSettings> liveServerFixture) : AzureRecordedTestsBase(output, fixture, liveServerFixture)
 {
-    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? endpointRecorded;
     private string? fromSms;
     private string? toSms;
