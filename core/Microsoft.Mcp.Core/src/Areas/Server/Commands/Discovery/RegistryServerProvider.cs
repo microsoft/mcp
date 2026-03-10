@@ -32,7 +32,8 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             Id = _id,
             Name = _id,
             Title = _serverInfo.Title,
-            Description = _serverInfo.Description ?? string.Empty
+            Description = _serverInfo.Description ?? string.Empty,
+            ToolPrefix = _serverInfo.ToolPrefix
         };
     }
 
