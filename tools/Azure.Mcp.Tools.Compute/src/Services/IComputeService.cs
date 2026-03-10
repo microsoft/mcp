@@ -88,4 +88,13 @@ public interface IComputeService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    // VM SKU operations
+    Task<List<VmSkuInfo>> ListVmSkusAsync(
+        string subscription,
+        string location,
+        string? skuFilter = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

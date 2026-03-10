@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -413,5 +414,74 @@ public class ComputeService(
         var parts = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var rgIndex = Array.IndexOf(parts, "resourceGroups");
         return rgIndex >= 0 && rgIndex + 1 < parts.Length ? parts[rgIndex + 1] : string.Empty;
+    }
+
+    public async Task<List<VmSkuInfo>> ListVmSkusAsync(
+        string subscription,
+        string location,
+        string? skuFilter = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var skus = new List<VmSkuInfo>();
+
+        // Build OData filter for location only - SKU name filtering is done client-side
+        var filter = $"location eq '{location}'";
+
+        await foreach (var sku in subscriptionResource.GetComputeResourceSkusAsync(filter, cancellationToken: cancellationToken))
+        {
+            // Only include virtualMachines SKUs
+            if (!string.Equals(sku.ResourceType, "virtualMachines", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            // Apply SKU name filter client-side (case-insensitive partial match)
+            if (!string.IsNullOrEmpty(skuFilter) &&
+                !sku.Name.Contains(skuFilter, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var capabilities = sku.Capabilities?
+                .Select(c => new VmSkuCapability(c.Name, c.Value))
+                .ToList();
+
+            var restrictions = sku.Restrictions?
+                .Select(r => new VmSkuRestriction(
+                    r.RestrictionsType?.ToString(),
+                    r.Values?.ToList(),
+                    r.ReasonCode?.ToString()))
+                .ToList();
+
+            var locationInfo = sku.LocationInfo?.FirstOrDefault();
+            var zones = locationInfo?.Zones?.ToList();
+
+            var capacity = sku.Capacity != null
+                ? new VmSkuCapacity(
+                    sku.Capacity.Minimum,
+                    sku.Capacity.Maximum,
+                    sku.Capacity.Default,
+                    sku.Capacity.ScaleType?.ToString())
+                : null;
+
+            skus.Add(new VmSkuInfo(
+                Name: sku.Name,
+                Tier: sku.Tier,
+                Size: sku.Size,
+                Family: sku.Family,
+                Locations: sku.Locations?.Select(l => l.Name).ToList(),
+                Zones: zones,
+                Capabilities: capabilities,
+                Restrictions: restrictions,
+                Capacity: capacity));
+        }
+
+        return skus;
     }
 }

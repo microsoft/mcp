@@ -46,4 +46,12 @@ public static class ComputeOptionDefinitions
         Description = "The Azure region/location",
         Required = true
     };
+
+    public const string SkuName = "sku";
+
+    public static readonly Option<string> Sku = new($"--{SkuName}")
+    {
+        Description = "Filter by SKU name (exact match, e.g., Standard_D2s_v3)",
+        Required = false
+    };
 }
