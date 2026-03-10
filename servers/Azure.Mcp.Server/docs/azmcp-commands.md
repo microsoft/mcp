@@ -2652,6 +2652,10 @@ azmcp redis list --subscription <subscription>
 # List resource groups in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp group list --subscription <subscription>
+
+# List all resources in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp group resource list --subscription <subscription> --resource-group <resource-group>
 ```
 
 ### Azure Resource Health Operations

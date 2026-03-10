@@ -671,6 +671,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | group_list | List all resource groups in my subscription |
 | group_list | Show me my resource groups |
 | group_list | Show me the resource groups in my subscription |
+| group_resource_list | List all resources in my resource group |
+| group_resource_list | Show me what resources are in the resource group myRG |
+| group_resource_list | What resources exist in resource group myRG? |
 
 ## Azure Resource Health
 

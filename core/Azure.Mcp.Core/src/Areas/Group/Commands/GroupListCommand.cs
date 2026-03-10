@@ -59,7 +59,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
                 cancellationToken);
 
             context.Response.Results = groups?.Count > 0 ?
-                ResponseResult.Create(new Result(groups), GroupJsonContext.Default.Result) :
+                ResponseResult.Create(new Result(groups), GroupJsonContext.Default.GroupListCommandResult) :
                 null;
         }
         catch (Exception ex)
