@@ -10,11 +10,12 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger)
+public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger, IHostApplicationLifetime hostApplicationLifetime)
     : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
@@ -22,6 +23,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IHostApplicationLifetime _hostApplicationLifetime = hostApplicationLifetime ?? throw new ArgumentNullException(nameof(hostApplicationLifetime));
     private const string CacheGroup = "cosmos";
     private const string CosmosClientsCacheKeyPrefix = "clients_";
     private const string CosmosDatabasesCacheKeyPrefix = "databases_";
@@ -362,7 +364,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         try
         {
             // Get all cached client keys
-            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
+            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, _hostApplicationLifetime.ApplicationStopping);
         }
         catch (Exception ex)
         {
