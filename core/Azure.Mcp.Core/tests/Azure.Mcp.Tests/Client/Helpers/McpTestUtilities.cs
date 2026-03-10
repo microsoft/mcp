@@ -277,8 +277,8 @@ public static class McpTestUtilities
 
                 // If authentication is enabled, 401 Unauthorized means server is ready
                 // If authentication is disabled, we need a success status code
-                if (resp.IsSuccessStatusCode || (authenticationEnabled && 
-                    (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized || resp.StatusCode == System.Net.HttpStatusCode.Forbidden)))   
+                if (resp.IsSuccessStatusCode || (authenticationEnabled &&
+                    (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized || resp.StatusCode == System.Net.HttpStatusCode.Forbidden)))
                 {
                     return;
                 }
