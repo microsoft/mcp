@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,9 @@ public static class AuthenticationServiceCollectionExtensions
         services.TryAddSingleton<IAzureTokenCredentialProvider>(sp =>
         {
             var cloudConfig = sp.GetRequiredService<IAzureCloudConfiguration>();
+            var configuration = sp.GetService<IConfiguration>();
             CustomChainedCredential.CloudConfiguration = cloudConfig;
+            CustomChainedCredential.Configuration = configuration;
             return new SingleIdentityTokenCredentialProvider(sp.GetRequiredService<ILoggerFactory>());
         });
 
