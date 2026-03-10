@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseAksCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
+    private readonly IAksService _aksService = aksService;
 
     public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
 
@@ -75,8 +76,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
         try
         {
-            var aksService = context.GetService<IAksService>();
-            var clusters = await aksService.GetClusters(
+            var clusters = await _aksService.GetClusters(
                 options.Subscription!,
                 options.ClusterName,
                 options.ResourceGroup,

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -42,6 +43,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
 

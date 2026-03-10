@@ -11,11 +11,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Acr.Commands.Registry;
 
-public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryListCommand> logger)
+public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryListCommand> logger, IAcrService acrService)
     : BaseAcrCommand<RegistryRepositoryListOptions>
 {
     private const string CommandTitle = "List Container Registry Repositories";
     private readonly ILogger<RegistryRepositoryListCommand> _logger = logger;
+    private readonly IAcrService _acrService = acrService;
     public override string Id => "adc6eb20-ad98-4624-954d-61581f6fbca9";
 
     public override string Name => "list";
@@ -62,8 +63,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
 
         try
         {
-            var service = context.GetService<IAcrService>();
-            var map = await service.ListRegistryRepositories(
+            var map = await _acrService.ListRegistryRepositories(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Registry,
