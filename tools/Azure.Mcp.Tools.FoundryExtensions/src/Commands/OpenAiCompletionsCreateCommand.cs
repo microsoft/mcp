@@ -91,8 +91,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
-                new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo),
+            context.Response.Results = ResponseResult.Create(
+                new(result.CompletionText, result.UsageInfo),
                 FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult);
         }
         catch (Exception ex)

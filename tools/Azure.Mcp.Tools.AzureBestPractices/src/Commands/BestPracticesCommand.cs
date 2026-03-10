@@ -122,7 +122,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         }
         catch (Exception ex)
         {
-
             _logger.LogError(ex, "Error getting best practices for Resource: {Resource}, Action: {Action}",
                 options.Resource, options.Action);
             HandleException(context, ex);

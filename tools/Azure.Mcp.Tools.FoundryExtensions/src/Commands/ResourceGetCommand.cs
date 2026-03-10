@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
@@ -85,7 +84,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new ResourceGetCommandResult([resource]),
+                    new([resource]),
                     FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
             }
             // Otherwise, list all resources in subscription/resource group
@@ -99,7 +98,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new ResourceGetCommandResult(resources ?? []),
+                    new(resources ?? []),
                     FoundryExtensionsJsonContext.Default.ResourceGetCommandResult);
             }
         }
@@ -121,5 +120,5 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record ResourceGetCommandResult([property: JsonPropertyName("resources")] List<AiResourceInformation> Resources);
+    internal record ResourceGetCommandResult(List<AiResourceInformation> Resources);
 }
