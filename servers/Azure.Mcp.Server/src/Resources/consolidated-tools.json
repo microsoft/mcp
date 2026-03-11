@@ -2227,7 +2227,7 @@
     },
     {
       "name": "get_azure_container_details",
-      "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, cluster configurations, and individual nodepool details.",
+      "description": "Get details about Azure container services including Azure Container Registry (ACR), Azure Kubernetes Service (AKS), and Azure Container Apps. View registries, repositories, nodepools, clusters, cluster configurations, individual nodepool details, and container apps.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2258,7 +2258,8 @@
         "acr_registry_list",
         "acr_registry_repository_list",
         "aks_cluster_get",
-        "aks_nodepool_get"
+        "aks_nodepool_get",
+        "containerapps_list"
       ]
     },
     {
