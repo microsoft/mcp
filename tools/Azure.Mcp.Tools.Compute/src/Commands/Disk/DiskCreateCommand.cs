@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskCreateCommand(
     ILogger<DiskCreateCommand> logger)
-    : BaseComputeCommand<DiskCreateOptions>
+    : BaseComputeCommand<DiskCreateOptions>(true)
 {
     private const string CommandTitle = "Create Managed Disk";
     private const string CommandDescription =
@@ -90,15 +90,6 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.UploadType);
         command.Options.Add(ComputeOptionDefinitions.UploadSizeBytes);
         command.Options.Add(ComputeOptionDefinitions.SecurityType);
-
-        command.Validators.Add(commandResult =>
-        {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
-            }
-        });
     }
 
     /// <inheritdoc/>

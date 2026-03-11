@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// </summary>
 public sealed class DiskUpdateCommand(
     ILogger<DiskUpdateCommand> logger)
-    : BaseComputeCommand<DiskUpdateOptions>
+    : BaseComputeCommand<DiskUpdateOptions>(false)
 {
     private const string CommandTitle = "Update Managed Disk";
     private const string CommandDescription =
