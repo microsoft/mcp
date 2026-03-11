@@ -26,11 +26,12 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
     public override string Name => "get";
 
     public override string Description =>
-        "Generate Azure Functions code or list available templates. " +
-        "USE FOR: Code generation for serverless functions with triggers and bindings. " +
-        "TWO MODES: Without --template lists templates; with --template generates function code. " +
-        "USAGE: Select 1 trigger (required) + 0 or more input/output bindings (optional). " +
-        "WORKFLOW: functions language list → functions project get → functions template get";
+        "Generate Azure Functions code from templates including triggers, bindings, AI agents, Durable Functions, and MCP servers or list available templates. " +
+        "Use for code generation for serverless functions with triggers and bindings. " +
+        "Without --template, lists available templates. " +
+        "With --template, generates function code with the specified trigger and optional input/output bindings. " +
+        "Select one trigger (required) and zero or more bindings. " +
+        "Use after functions language list and functions project get.";
 
     public override string Title => "Get Function Template";
 
