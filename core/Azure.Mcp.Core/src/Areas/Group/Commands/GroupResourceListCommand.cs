@@ -28,7 +28,7 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
         List all resources in a resource group. This command retrieves all resources available
         in the specified {OptionDefinitions.Common.ResourceGroupName} within the given
         {OptionDefinitions.Common.SubscriptionName}. Results include resource names, IDs, types,
-        and locations, returned as a JSON array.
+        and locations. The command returns a JSON object with a `resources` array containing these entries.
         """;
 
     public override string Title => CommandTitle;
