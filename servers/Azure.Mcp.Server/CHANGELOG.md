@@ -20,6 +20,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added Azure Compute VM create/update and VMSS create/update. [[#1705](https://github.com/microsoft/mcp/pull/1705)]
 - Added Azure Well-Architected Framework service guide tool to provide architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency. [[#1964](https://github.com/microsoft/mcp/pull/1964)]
 
+- Remove duplicate WWW-Authenticate response header [[#1774](https://github.com/microsoft/mcp/pull/1774)]
+
 ### Other Changes
 
 - AppLens: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1884](https://github.com/microsoft/mcp/pull/1884)]
