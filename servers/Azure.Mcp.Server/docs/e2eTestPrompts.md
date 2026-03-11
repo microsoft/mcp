@@ -240,6 +240,39 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_get | Show me the disk sizes in resource group <resource-group> |
 | compute_disk_get | What managed disks are available? |
 | compute_disk_get | Get information about disk <disk-name> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> |
+| compute_disk_create | Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> in eastus |
+| compute_disk_create | Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> from blob <blob-uri> |
+| compute_disk_create | Create a 64 GB Standard_LRS Linux disk named <disk-name> in resource group <resource-group> in zone 1 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with tags env=prod team=infra |
+| compute_disk_create | Create a 128 GB Premium_LRS disk named <disk-name> in resource group <resource-group> with performance tier P30 |
+| compute_disk_create | Create a disk <disk-name> in resource group <resource-group> with customer-managed encryption using disk encryption set <disk-encryption-set-id> |
+| compute_disk_create | Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes |
+| compute_disk_create | Create a Trusted Launch upload disk named <disk-name> in resource group <resource-group> with UploadWithSecurityData type and security-type TrustedLaunch |
+| compute_disk_create | Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput |
+| compute_disk_create | Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_create | Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
+| compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
+| compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |
+| compute_disk_update | Update disk <disk-name> to enable bursting |
+| compute_disk_update | Set the max shares on disk <disk-name> in resource group <resource-group> to 2 |
+| compute_disk_update | Change the network access policy of disk <disk-name> to DenyAll |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> with tags env=staging |
+| compute_disk_update | Set the IOPS limit on ultra disk <disk-name> in resource group <resource-group> to 10000 |
+| compute_disk_update | Update the throughput of disk <disk-name> in resource group <resource-group> to 500 MBps |
+| compute_disk_update | Change the performance tier of disk <disk-name> in resource group <resource-group> to P40 |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to use disk encryption set <disk-encryption-set-id> |
+| compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate |
+| compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev |
 
 ## Azure Cosmos DB
 
