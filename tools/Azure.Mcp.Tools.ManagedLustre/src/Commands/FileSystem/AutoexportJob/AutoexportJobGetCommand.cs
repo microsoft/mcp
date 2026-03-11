@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -91,7 +90,7 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new AutoexportJobGetResult(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoexportJobGetResult);
             }
             else
             {
@@ -104,7 +103,7 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new AutoexportJobListResult(results ?? []), ManagedLustreJsonContext.Default.AutoexportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoexportJobListResult);
             }
         }
         catch (Exception ex)

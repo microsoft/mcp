@@ -22,7 +22,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
     public override string Description =>
         $"""
 		List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
-		in the specified {OptionDefinitions.Common.Subscription} and hostpool. Results include SessionHost details and are
+		in the specified {OptionDefinitions.Common.Subscription.Name} and hostpool. Results include SessionHost details and are
 		returned as a JSON array.
 		""";
 

@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Options;
 using Azure.Mcp.Tools.Policy.Options.Assignment;
@@ -81,7 +78,7 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new PolicyAssignmentListCommandResult(assignments ?? []),
+                new(assignments ?? []),
                 PolicyJsonContext.Default.PolicyAssignmentListCommandResult);
         }
         catch (Exception ex)
@@ -97,17 +94,17 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed. Ensure you have the 'Reader' role or higher on the subscription or scope. Details: {reqEx.Message}",
-        Azure.Identity.AuthenticationFailedException =>
+        Identity.AuthenticationFailedException =>
             "Authentication failed. Please run 'az login' to sign in.",
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override System.Net.HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => (System.Net.HttpStatusCode)reqEx.Status,
-        Azure.Identity.AuthenticationFailedException => System.Net.HttpStatusCode.Unauthorized,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         _ => base.GetStatusCode(ex)
     };
 

@@ -78,7 +78,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
             else
             {
@@ -100,7 +100,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     key.Properties.CreatedOn,
                     key.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
         }
         catch (Exception ex)

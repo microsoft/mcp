@@ -2,11 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Pricing.Options;
 
 namespace Azure.Mcp.Tools.Pricing.Commands;

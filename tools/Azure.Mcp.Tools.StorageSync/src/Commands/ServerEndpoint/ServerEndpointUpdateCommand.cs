@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -94,8 +93,7 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new ServerEndpointUpdateCommandResult(endpoint);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult);
         }
         catch (Exception ex)
         {

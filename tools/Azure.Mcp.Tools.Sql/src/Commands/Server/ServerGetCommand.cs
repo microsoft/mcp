@@ -85,9 +85,7 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new List<SqlServer> { server },
-                    SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
             }
             else
             {
@@ -97,9 +95,7 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    servers ?? [],
-                    SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
             }
         }
         catch (Exception ex)

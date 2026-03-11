@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -86,7 +85,7 @@ public sealed class AutoexportJobCancelCommand(ILogger<AutoexportJobCancelComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new AutoexportJobCancelResult(options.JobName!, "Cancelled"), ManagedLustreJsonContext.Default.AutoexportJobCancelResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Cancelled"), ManagedLustreJsonContext.Default.AutoexportJobCancelResult);
         }
         catch (Exception ex)
         {

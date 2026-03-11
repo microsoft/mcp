@@ -121,7 +121,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ListWorkbooksCommandResult(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count),
+                new(result.Workbooks.ToList(), result.TotalCount, result.Workbooks.Count),
                 WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }
         catch (Exception ex)

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
@@ -49,6 +50,14 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(WorkbooksOptionDefinitions.WorkbookIds);
+        command.Validators.Add(result =>
+        {
+            var workbookIds = result.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
+            if (workbookIds == null || workbookIds.Length == 0)
+            {
+                result.AddError("At least one workbook ID is required");
+            }
+        });
     }
 
     protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)
@@ -69,20 +78,15 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
         try
         {
-            if (options.WorkbookIds == null || options.WorkbookIds.Length == 0)
-            {
-                throw new ArgumentException("At least one workbook ID is required");
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var result = await workbooksService.DeleteWorkbooksAsync(
-                options.WorkbookIds,
+                options.WorkbookIds!,
                 options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new DeleteWorkbooksCommandResult(result.Succeeded.ToList(), result.Failed.ToList()),
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
                 WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
         }
         catch (Exception ex)

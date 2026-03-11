@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -79,8 +78,7 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new SyncGroupCreateCommandResult(syncGroup);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(syncGroup), StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);
         }
         catch (Exception ex)
         {

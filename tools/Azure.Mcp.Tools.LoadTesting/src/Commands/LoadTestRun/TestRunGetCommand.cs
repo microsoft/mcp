@@ -100,7 +100,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                     cancellationToken);
                 // Set results if any were returned
                 context.Response.Results = result != null
-                    ? ResponseResult.Create(new TestRunGetCommandResult([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
+                    ? ResponseResult.Create(new([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
                     : null;
             }
             // Otherwise if TestId is provided, list all test runs for that test
@@ -114,7 +114,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
-                context.Response.Results = ResponseResult.Create(new TestRunGetCommandResult(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }
             // If neither is provided, that's ok - validation will catch it
         }

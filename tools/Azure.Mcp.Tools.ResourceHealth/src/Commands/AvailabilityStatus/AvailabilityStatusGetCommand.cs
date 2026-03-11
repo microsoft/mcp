@@ -93,7 +93,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             }
 
             context.Response.Results = ResponseResult.Create(
-                new AvailabilityStatusGetCommandResult(statuses),
+                new(statuses),
                 ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)

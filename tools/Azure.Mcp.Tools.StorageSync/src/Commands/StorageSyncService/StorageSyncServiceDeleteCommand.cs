@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
@@ -76,8 +75,7 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
                 cancellationToken);
 
             context.Response.Message = "Storage sync service deleted successfully";
-            var results = new StorageSyncServiceDeleteCommandResult("Storage sync service deleted successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Storage sync service deleted successfully"), StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult);
         }
         catch (Exception ex)
         {

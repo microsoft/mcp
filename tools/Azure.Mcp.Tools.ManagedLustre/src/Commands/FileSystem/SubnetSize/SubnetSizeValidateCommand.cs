@@ -90,7 +90,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                                 options.RetryPolicy,
                                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+            context.Response.Results = ResponseResult.Create(new(subnetIsValid), ManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }
         catch (Exception ex)
         {

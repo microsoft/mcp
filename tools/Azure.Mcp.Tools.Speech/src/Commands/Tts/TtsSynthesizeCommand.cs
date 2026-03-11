@@ -60,7 +60,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
         // Command-level validation
         command.Validators.Add(commandResult =>
         {
-            var textValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text);
+            var textValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text.Name);
 
             // Validate text is not empty
             if (string.IsNullOrWhiteSpace(textValue))
@@ -68,7 +68,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
                 commandResult.AddError("Text cannot be empty or whitespace.");
             }
 
-            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio);
+            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio.Name);
 
             // Validate output file path
             if (string.IsNullOrWhiteSpace(fileValue))
@@ -93,7 +93,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             }
 
             // Validate language format if provided
-            var languageValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language);
+            var languageValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Language.Name);
             if (!string.IsNullOrEmpty(languageValue))
             {
                 // Basic validation: language should be in format like "en-US", "es-ES"

@@ -94,7 +94,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         {
             try
             {
-                parsedMessages = [.. options.Messages.Select(m => ParseMessage(m))];
+                parsedMessages = [.. options.Messages.Select(ParseMessage)];
             }
             catch (ArgumentException ex)
             {

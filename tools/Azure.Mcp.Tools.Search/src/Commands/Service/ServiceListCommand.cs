@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Search.Options.Service;
 using Azure.Mcp.Tools.Search.Services;
@@ -67,5 +66,5 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal sealed record ServiceListCommandResult([property: JsonPropertyName("services")] List<string> Services);
+    internal sealed record ServiceListCommandResult(List<string> Services);
 }

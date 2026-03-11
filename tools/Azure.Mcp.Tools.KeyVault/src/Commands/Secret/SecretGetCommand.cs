@@ -75,7 +75,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new SecretGetCommandResult(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
             }
             else
             {
@@ -97,7 +97,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                     secret.Properties.CreatedOn,
                     secret.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new SecretGetCommandResult(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
             }
         }
         catch (Exception ex)

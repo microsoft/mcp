@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Options;
 using Azure.Mcp.Tools.Pricing.Services;
@@ -135,7 +134,7 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new PricingGetCommandResult(prices),
+                new(prices),
                 PricingJsonContext.Default.PricingGetCommandResult);
         }
         catch (Exception ex)

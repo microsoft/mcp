@@ -98,7 +98,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemUpdateResult(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         }
         catch (Exception ex)
         {

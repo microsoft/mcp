@@ -93,7 +93,7 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ResourceCreateCommandResult(resource),
+                new(resource),
                 RedisJsonContext.Default.ResourceCreateCommandResult);
         }
         catch (Exception ex)
