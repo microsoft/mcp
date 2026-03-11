@@ -19,11 +19,16 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override string Name => "list";
 
-    public override string Description => "List PostgreSQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
+    public override string Description => "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.";
 
     public override string Title => "List PostgreSQL Resources";
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
+
+    // resource-group and user are optional for this command: listing servers at subscription scope
+    // does not require either. They become necessary only when --server is given.
+    protected override bool ResourceGroupRequired => false;
+    protected override bool UserRequired => false;
 
     protected override void RegisterOptions(Command command)
     {
@@ -59,6 +64,14 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             {
                 context.Response.Status = System.Net.HttpStatusCode.BadRequest;
                 context.Response.Message = "The --server parameter is required when --database is specified.";
+                return context.Response;
+            }
+
+            // --user is required when connecting to a server (database or table listing)
+            if (!string.IsNullOrEmpty(options.Server) && string.IsNullOrEmpty(options.User))
+            {
+                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+                context.Response.Message = "The --user parameter is required when --server is specified.";
                 return context.Response;
             }
 
@@ -100,11 +113,10 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             }
             else
             {
-                // List servers in resource group
+                // List all servers in the subscription (optionally scoped to a resource group)
                 List<string> servers = await postgresService.ListServersAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.User!,
+                    options.ResourceGroup,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

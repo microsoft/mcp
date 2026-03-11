@@ -18,11 +18,29 @@ public abstract class BasePostgresCommand<
 {
     protected readonly ILogger<BasePostgresCommand<TOptions>> _logger = logger;
 
+    /// <summary>
+    /// Controls whether --resource-group is registered as a required option.
+    /// Override to false in commands where the resource group is optional (e.g. list commands
+    /// that can operate at the subscription scope).
+    /// </summary>
+    protected virtual bool ResourceGroupRequired => true;
+
+    /// <summary>
+    /// Controls whether --user is registered as a required option.
+    /// Override to false in commands where the user is optional (e.g. list commands
+    /// that do not need direct database access).
+    /// </summary>
+    protected virtual bool UserRequired => true;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(PostgresOptionDefinitions.User);
+        command.Options.Add(ResourceGroupRequired
+            ? OptionDefinitions.Common.ResourceGroup.AsRequired()
+            : OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(UserRequired
+            ? PostgresOptionDefinitions.User
+            : PostgresOptionDefinitions.User.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

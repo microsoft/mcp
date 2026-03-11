@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
@@ -22,18 +23,21 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public class PostgresService : BaseAzureService, IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly ITenantService _tenantService;
     private readonly IEntraTokenProvider _entraTokenAuth;
     private readonly IDbProvider _dbProvider;
 
     public PostgresService(
         IResourceGroupService resourceGroupService,
+        ISubscriptionService subscriptionService,
         ITenantService tenantService,
         IEntraTokenProvider entraTokenAuth,
         IDbProvider dbProvider)
         : base(tenantService)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+        _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         _entraTokenAuth = entraTokenAuth;
         _dbProvider = dbProvider;
@@ -197,20 +201,34 @@ public class PostgresService : BaseAzureService, IPostgresService
 
     public async Task<List<string>> ListServersAsync(
         string subscriptionId,
-        string resourceGroup,
-        string user,
+        string? resourceGroup,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
         var serverList = new List<string>();
-        await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+
+        if (string.IsNullOrEmpty(resourceGroup))
         {
-            serverList.Add(server.Data.Name);
+            // List all Flexible Servers across the entire subscription
+            var subscription = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+            await foreach (PostgreSqlFlexibleServerResource server in subscription.GetPostgreSqlFlexibleServersAsync(cancellationToken))
+            {
+                serverList.Add(server.Data.Name);
+            }
         }
+        else
+        {
+            // List Flexible Servers scoped to the given resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
+            if (rg == null)
+            {
+                throw new Exception($"Resource group '{resourceGroup}' not found.");
+            }
+            await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+            {
+                serverList.Add(server.Data.Name);
+            }
+        }
+
         return serverList;
     }
 

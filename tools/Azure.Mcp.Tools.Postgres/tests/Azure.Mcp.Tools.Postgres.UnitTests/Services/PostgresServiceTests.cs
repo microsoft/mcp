@@ -3,6 +3,7 @@
 
 using System.Data.Common;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Providers;
@@ -18,6 +19,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
     public class PostgresServiceTests
     {
         private readonly IResourceGroupService _resourceGroupService;
+        private readonly ISubscriptionService _subscriptionService;
         private readonly ITenantService _tenantService;
         private readonly IEntraTokenProvider _entraTokenAuth;
         private readonly IDbProvider _dbProvider;
@@ -34,6 +36,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
         public PostgresServiceTests()
         {
             _resourceGroupService = Substitute.For<IResourceGroupService>();
+            _subscriptionService = Substitute.For<ISubscriptionService>();
 
             _tenantService = Substitute.For<ITenantService>();
 
@@ -49,7 +52,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Substitute.For<DbDataReader>());
 
-            _postgresService = new PostgresService(_resourceGroupService, _tenantService, _entraTokenAuth, _dbProvider);
+            _postgresService = new PostgresService(_resourceGroupService, _subscriptionService, _tenantService, _entraTokenAuth, _dbProvider);
 
             this.subscriptionId = "test-sub";
             this.resourceGroup = "test-rg";
