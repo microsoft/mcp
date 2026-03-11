@@ -118,6 +118,8 @@ public class AzureCliProfileHelperTests
     {
         var result = AzureCliProfileHelper.GetAzureProfilePath();
 
+        // In a normal environment, user profile is available
+        Assert.NotNull(result);
         Assert.Contains(".azure", result);
         Assert.EndsWith("azureProfile.json", result);
     }

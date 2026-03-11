@@ -23,9 +23,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Description =>
         "List all Azure subscriptions for the current account. Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription. " +
-        "The isDefault field indicates the user's default subscription as configured via 'az account set' in the Azure CLI profile. " +
+        "The isDefault field indicates the user's default subscription as resolved from the Azure CLI profile (configured via 'az account set') or, if not set there, from the AZURE_SUBSCRIPTION_ID environment variable. " +
         "When the user has not specified a subscription, prefer the subscription where isDefault is true. " +
-        "If no default is set and multiple subscriptions exist, ask the user which subscription to use.";
+        "If no default can be determined from either source and multiple subscriptions exist, ask the user which subscription to use.";
 
     public override string Title => CommandTitle;
 

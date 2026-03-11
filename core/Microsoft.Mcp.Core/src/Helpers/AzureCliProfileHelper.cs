@@ -21,7 +21,7 @@ namespace Azure.Mcp.Core.Helpers
             try
             {
                 var profilePath = GetAzureProfilePath();
-                if (!File.Exists(profilePath))
+                if (string.IsNullOrEmpty(profilePath) || !File.Exists(profilePath))
                 {
                     return null;
                 }
@@ -65,9 +65,15 @@ namespace Azure.Mcp.Core.Helpers
             return null;
         }
 
-        internal static string GetAzureProfilePath()
+        internal static string? GetAzureProfilePath()
         {
-            var azureDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".azure");
+            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            if (string.IsNullOrEmpty(userProfile))
+            {
+                return null;
+            }
+
+            var azureDir = Path.Combine(userProfile, ".azure");
             return Path.Combine(azureDir, "azureProfile.json");
         }
     }

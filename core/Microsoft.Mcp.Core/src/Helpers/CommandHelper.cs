@@ -16,9 +16,12 @@ namespace Azure.Mcp.Core.Helpers
         /// <returns>True if a subscription is available, false otherwise.</returns>
         public static bool HasSubscriptionAvailable(CommandResult commandResult)
         {
-            var hasOption = commandResult.HasOptionResult(OptionDefinitions.Common.Subscription.Name);
-            var hasDefault = !string.IsNullOrEmpty(GetDefaultSubscription());
-            return hasOption || hasDefault;
+            if (commandResult.HasOptionResult(OptionDefinitions.Common.Subscription.Name))
+            {
+                return true;
+            }
+
+            return !string.IsNullOrEmpty(GetDefaultSubscription());
         }
 
         public static string? GetSubscription(ParseResult parseResult)
@@ -26,8 +29,13 @@ namespace Azure.Mcp.Core.Helpers
             // Get subscription from command line option or fallback to default subscription
             var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
 
+            if (!string.IsNullOrEmpty(subscriptionValue) && !IsPlaceholder(subscriptionValue))
+            {
+                return subscriptionValue;
+            }
+
             var defaultSubscription = GetDefaultSubscription();
-            return (string.IsNullOrEmpty(subscriptionValue) || IsPlaceholder(subscriptionValue)) && !string.IsNullOrEmpty(defaultSubscription)
+            return !string.IsNullOrEmpty(defaultSubscription)
                 ? defaultSubscription
                 : subscriptionValue;
         }
