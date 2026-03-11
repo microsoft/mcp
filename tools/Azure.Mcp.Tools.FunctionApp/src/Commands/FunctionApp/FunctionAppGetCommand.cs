@@ -16,11 +16,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
-public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
+public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
     : BaseFunctionAppCommand<FunctionAppGetOptions>()
 {
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
+    private readonly IFunctionAppService _functionAppService = functionAppService;
 
     public override string Id => "5249839c-a3c6-4f9e-b62b-afde801d95a6";
 
@@ -77,11 +78,10 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 
         try
         {
-            var service = context.GetService<IFunctionAppService>();
-            var functionApps = await service.GetFunctionApp(
+            var functionApps = await _functionAppService.GetFunctionApp(
                 options.Subscription!,
-                options.FunctionAppName!,
-                options.ResourceGroup!,
+                options.FunctionAppName,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
