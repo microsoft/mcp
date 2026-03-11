@@ -7,7 +7,7 @@ using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
-namespace Microsoft.Mcp.Tests.Client.Helpers;
+namespace Azure.Mcp.Tests.Client.Helpers;
 
 public static class McpTestUtilities
 {
