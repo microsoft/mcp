@@ -67,8 +67,7 @@ public class FastTranscriptionRecognizer(
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext([GetCognitiveServicesScope()]);
-                var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
+                var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
                 // Build the Fast Transcription API URL
                 var apiVersion = "2024-11-15";
@@ -122,7 +121,7 @@ public class FastTranscriptionRecognizer(
                 using var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
                 {
                     Content = formContent,
-                    Headers = { Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token) }
+                    Headers = { Authorization = new("Bearer", accessToken.Token) }
                 };
 
                 // Make the request using HttpClient from factory
