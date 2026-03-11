@@ -1,2 +1,3 @@
-App Service Rules:
-- App Service Site Extension (Microsoft.Web/sites/siteextensions) is required for App Service deployments.
+=== Additional requirements for App Service:
+- Must attach user-assigned managed identity.
+{{ToolSpecificRules}}

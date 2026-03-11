@@ -1,0 +1,5 @@
+- The script should be idempotent, i.e. it should check for resource existence first and only create resources that don't exist, making it safe to rerun. Check resource existence using '$<resource>exist = az <resource> show 2>$null' for ps1. Use '$ErrorActionPreference = "Continue"' to avoid breaking existence check.
+- Set up an optional input *resourceToken* for the script. This is a random alphanumeric string of <= 5 characters with lowercase letters only. E.g. `abcde`.
+- Azure resource Naming: All resources should be named like {resourcePrefix}{*resourceToken*}{instance}. Alphanumeric only! Don't use special characters! resourcePrefix is a prefix for the resource (ex. 'kv' for key vault) and <= 3 characters. instance is a number for multiple resource with the same type. E.g. rgabcde(resource group), kvabcde (key vault), sqlabcde(sql server), appabcde1(container app 1), appabcde2 (container app 2).
+- Use '--yes' or equivalent flags to avoid interactive prompts.
+- Use the SAME resourceToken params as the failed run when rerunning the script.

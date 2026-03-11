@@ -1,0 +1,17 @@
+pr: 1663
+changes:
+  - section: "Breaking Changes"
+    description: |
+      `azmcp deploy pipeline guidance get` option renames and removals:
+      - `--use-azd-pipeline-config` renamed to `--is-azd-project`
+      - `--azd-iac-options` renamed to `--iac-options`
+      - `--organization-name`, `--repository-name`, and `--github-environment-name` options removed
+      - `--pipeline-platform` and `--deploy-option` added as new options
+      This new design allows an overall better user experience to generate CI/CD pipeline to Azure. 
+  - section: "Features Added"
+    description: |
+      CodeToCloud feature parity improvements for Deploy and Quota areas:
+      - Support deployment using Azure CLI with Bicep/Terraform
+      - Support creation of a deploy-to-existing-resources plan
+      - New resource type support in quota checks, including SQL, MySQL, and CosmosDB
+      - New IaC rules added for better support regarding code quality, configuration success and security

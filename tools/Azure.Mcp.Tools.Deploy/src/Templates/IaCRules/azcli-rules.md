@@ -1,4 +1,5 @@
-- If creating AzCli script, the script should stop if any command fails. Fix the error before proceeding.
-- Azure resource Naming: All resources should be named like {resourcePrefix}{resourceToken}{instance}. Alphanumeric only! Don't use special characters! resourcePrefix is a prefix for the resource (ex. 'kv' for key vault) and <= 3 characters.  resourceToken is a random string and = 5 characters. It should be used for all azure resources in a resource group. instance is a number that can be used when there are multiple resource with the same type. For example, resourceToken=abcde, then resource name: myRg(resource group), myKv(keyvault), myServer(sql), myApp1(container app 1), myApp2(container app 2). Full resource name must be less than 32 characters.
-- Kubernetes (K8s) YAML naming: only Lowercase letters (a-z), digits (0-9), hyphens (-) is allowed. Must start and end with a letter or digit. Less than 20 characters.
-
+- Use .ps1 extension for PowerShell scripts and .sh extension for Bash scripts.
+- Ensure all the steps have been executed successfully. Fix the script and RERUN if ANY step fails.
+{{KubernetesYamlNamingRule}}
+- Validate PowerShell script syntax: ensure proper brace matching, string termination, and valid PowerShell syntax before execution.
+{{AzCliScriptRules}}
