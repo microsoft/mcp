@@ -14,9 +14,10 @@ namespace Azure.Mcp.Tools.Grafana.Commands.Workspace;
 /// <summary>
 /// Lists Azure Managed Grafana workspaces in the specified subscription.
 /// </summary>
-public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
+public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
 {
     private const string CommandTitle = "List Grafana Workspaces";
+    private readonly IGrafanaService _grafanaService = grafanaService;
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
 
     public override string Id => "7a47b562-f219-47de-80f6-12e19367b61d";
@@ -52,8 +53,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
 
         try
         {
-            var grafanaService = context.GetService<IGrafanaService>() ?? throw new InvalidOperationException("Grafana service is not available.");
-            var workspaces = await grafanaService.ListWorkspacesAsync(
+            var workspaces = await _grafanaService.ListWorkspacesAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

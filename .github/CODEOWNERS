@@ -169,6 +169,12 @@
 # ServiceLabel: %tools-Eclipse
 # ServiceOwners:                       @srnagar @microsoft/azure-mcp
 
+# PRLabel: %tools-DeviceRegistry
+/tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceRegistry
+# ServiceOwners:                       @nimengan @microsoft/azure-mcp
+
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/      @anannya03 @microsoft/azure-mcp
 
@@ -363,6 +369,12 @@
 
 # ServiceLabel: %tools-VSIX
 # ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
+
+# PRLabel: %tools-WellArchitectedFramework
+/tools/Azure.Mcp.Tools.WellArchitectedFramework/   @skakara @arunrab @microsoft/azure-mcp
+
+# ServiceLabel: %tools-WellArchitectedFramework
+# ServiceOwners:                       @skakara @arunrab
 
 # PRLabel: %tools-Workbooks
 /tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp

@@ -1002,7 +1002,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and Well-Architected Framework guidance.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1033,7 +1033,8 @@
         "azureterraformbestpractices_get",
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
-        "get_azure_bestpractices_get"
+        "get_azure_bestpractices_get",
+        "wellarchitectedframework_serviceguide_get"
       ]
     },
     {
@@ -3389,6 +3390,40 @@
       },
       "mappedToolList": [
         "appservice_webapp_settings_update-appsettings"
+      ]
+    }
+    ,
+    {
+      "name": "get_azure_device_registry_details",
+      "description": "Get details about Azure Device Registry namespaces in a subscription or resource group. Returns namespace information including name, location, provisioning state, and UUID.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "deviceregistry_namespace_list"
       ]
     }
   ]

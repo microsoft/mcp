@@ -75,7 +75,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new CertificateGetCommandResult(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
             else
             {
@@ -103,7 +103,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                     certificate.Policy.Subject,
                     certificate.Policy.IssuerName);
 
-                context.Response.Results = ResponseResult.Create(new CertificateGetCommandResult(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
             }
         }
         catch (Exception ex)

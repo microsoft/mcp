@@ -40,7 +40,7 @@ public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
     {
         var options = new AgentsGetSdkSampleOptions
         {
-            ProgrammingLanguage = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ProgrammingLanguageOption)
+            ProgrammingLanguage = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ProgrammingLanguageOption.Name)
         };
         return options;
     }

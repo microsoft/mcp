@@ -827,6 +827,18 @@ In some environments, HTTPS redirection is not needed and may need to be disable
 export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
 ```
 
+### OAuth metadata discovery behind a reverse proxy
+
+A client (e.g., VS Code) that is not pre-configured with authorization details may fetch [OAuth Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728) from the Azure MCP Server to discover them.
+
+Clients may fail to complete authorization when the server is behind a TLS-terminating reverse proxy (e.g., Azure Container Apps). The proxy forwards requests as http, so the server advertises http authorization URLs in its OAuth Protected Resource Metadata - causing a scheme mismatch that breaks the authorization flow.
+
+To fix this, set `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS` to read the client's original scheme from the `X-Forwarded-Proto` header:
+
+```bash
+export AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS=true
+```
+
 ### Common Issues
 
 #### 401 Unauthorized - Invalid Token

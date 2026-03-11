@@ -103,6 +103,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.Advisor.AdvisorSetup(),
@@ -139,6 +140,7 @@ internal class Program
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
+            new Azure.Mcp.Tools.WellArchitectedFramework.WellArchitectedFrameworkSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
             // IMPORTANT: DO NOT MODIFY OR ADD EXCLUSIONS IN THIS SECTION

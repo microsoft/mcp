@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -94,8 +93,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     return context.Response;
                 }
 
-                var singleResult = new StorageSyncServiceGetCommandResult([service]);
-                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([service]), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
             }
             else
             {
@@ -110,8 +108,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                var results = new StorageSyncServiceGetCommandResult(services ?? []);
-                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
             }
         }
         catch (Exception ex)

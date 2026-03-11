@@ -4,7 +4,6 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -19,30 +18,21 @@ using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
-public class PostgresService : BaseAzureService, IPostgresService
+public class PostgresService(
+    IResourceGroupService resourceGroupService,
+    ITenantService tenantService,
+    IEntraTokenProvider entraTokenAuth,
+    IDbProvider dbProvider) : BaseAzureService(tenantService), IPostgresService
 {
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly ITenantService _tenantService;
-    private readonly IEntraTokenProvider _entraTokenAuth;
-    private readonly IDbProvider _dbProvider;
-
-    public PostgresService(
-        IResourceGroupService resourceGroupService,
-        ITenantService tenantService,
-        IEntraTokenProvider entraTokenAuth,
-        IDbProvider dbProvider)
-        : base(tenantService)
-    {
-        _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-        _entraTokenAuth = entraTokenAuth;
-        _dbProvider = dbProvider;
-    }
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
+    private readonly IDbProvider _dbProvider = dbProvider;
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        TokenCredential tokenCredential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
+        var tokenCredential = await GetCredential(cancellationToken);
+        var accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
 
         return accessToken.Token;
     }
@@ -201,11 +191,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         string user,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var serverList = new List<string>();
         await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
         {
@@ -221,11 +209,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         string server,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
         var pgServerData = pgServer.Value.Data;
         var result = $"Server Name: {pgServerData.Name}\n" +
@@ -246,11 +232,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         string param,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
@@ -270,11 +254,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         string value,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-        if (rg == null)
-        {
-            throw new Exception($"Resource group '{resourceGroup}' not found.");
-        }
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
