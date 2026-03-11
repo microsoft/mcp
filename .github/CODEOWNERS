@@ -169,6 +169,12 @@
 # ServiceLabel: %tools-Eclipse
 # ServiceOwners:                       @srnagar @microsoft/azure-mcp
 
+# PRLabel: %tools-DeviceRegistry
+/tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceRegistry
+# ServiceOwners:                       @nimengan @microsoft/azure-mcp
+
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/      @anannya03 @microsoft/azure-mcp
 
