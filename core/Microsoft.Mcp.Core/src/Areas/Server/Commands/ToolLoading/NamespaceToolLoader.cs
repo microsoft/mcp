@@ -50,7 +50,7 @@ public sealed class NamespaceToolLoader(
         return [.. allSubGroups.Select(group => group.Name)];
     });
 
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    internal readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
 
     private const string ToolCallProxySchema = """
@@ -508,6 +508,7 @@ public sealed class NamespaceToolLoader(
 
         var list = namespaceCommands
             .Where(kvp => !(_options.Value.ReadOnly ?? false) || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
             .ToList();
 
@@ -552,10 +553,20 @@ public sealed class NamespaceToolLoader(
             Title = command.Title,
         };
 
+        JsonObject? meta = null;
+        // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject { ["SecretHint"] = metadata.Secret };
+            meta ??= new();
+            meta["SecretHint"] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta ??= new();
+            meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
         var schema = new ToolInputSchema();
         var options = command.GetCommand().Options;

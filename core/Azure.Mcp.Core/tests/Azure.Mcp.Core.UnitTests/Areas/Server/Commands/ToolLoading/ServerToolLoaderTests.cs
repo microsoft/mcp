@@ -135,4 +135,75 @@ public class ServerToolLoaderTests
             Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Undefined, "InputSchema should be defined");
         }
     }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange - use real RegistryDiscoveryStrategy
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { ReadOnly = true });
+        var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
+        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+
+        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.True(result.Tools.Count >= 0); // Should return at least an empty list
+
+        // Each tool should have proper structure if any exist
+        foreach (var tool in result.Tools)
+        {
+            Assert.NotNull(tool.Name);
+            Assert.NotEmpty(tool.Name);
+            Assert.NotNull(tool.Description);
+            Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Undefined, "InputSchema should be defined");
+            Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange - use real RegistryDiscoveryStrategy
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { IsHttpMode = true });
+        var discoveryLogger = loggerFactory.CreateLogger<RegistryDiscoveryStrategy>();
+        var discoveryStrategy = RegistryDiscoveryStrategyHelper.CreateStrategy(serviceStartOptions.Value, discoveryLogger);
+        var logger = loggerFactory.CreateLogger<ServerToolLoader>();
+
+        var toolLoader = new ServerToolLoader(discoveryStrategy, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.True(result.Tools.Count >= 0); // Should return at least an empty list
+
+        // Each tool should have proper structure if any exist
+        foreach (var tool in result.Tools)
+        {
+            Assert.NotNull(tool.Name);
+            Assert.NotEmpty(tool.Name);
+            Assert.NotNull(tool.Description);
+            Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Undefined, "InputSchema should be defined");
+            if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+            {
+                Assert.Equal(JsonValueKind.False, localRequired?.GetValueKind());
+            }
+        }
+    }
 }

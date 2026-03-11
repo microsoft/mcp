@@ -138,6 +138,75 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            ReadOnly = true
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result.Tools);
+        Assert.All(result.Tools, tool => Assert.True(tool.Name == "storage" || tool.Name == "keyvault"));
+
+        foreach (var toolList in loader._cachedToolLists.Values)
+        {
+            foreach (var tool in toolList)
+            {
+                Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result.Tools);
+        Assert.All(result.Tools, tool => Assert.True(tool.Name == "storage" || tool.Name == "keyvault"));
+
+        foreach (var toolList in loader._cachedToolLists.Values)
+        {
+            foreach (var tool in toolList)
+            {
+                var meta = tool.Meta;
+                if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
+                {
+                    Assert.False(localRequiredHint?.GetValue<bool>(),
+                        $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+                }
+            }
+        }
+    }
+
+    [Fact]
     public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
     {
         // Arrange

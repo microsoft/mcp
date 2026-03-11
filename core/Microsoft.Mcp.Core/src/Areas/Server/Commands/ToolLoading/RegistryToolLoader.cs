@@ -245,6 +245,7 @@ public sealed class RegistryToolLoader(
                         var filteredTools = toolsResponse
                             .Select(t => t.ProtocolTool)
                             .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                            .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t))
                             .ToArray();
 
                         return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)filteredTools);
@@ -301,6 +302,15 @@ public sealed class RegistryToolLoader(
         {
             _initializationSemaphore.Release();
         }
+    }
+
+    private static bool HasLocalRequiredHint(Tool tool)
+    {
+        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+        {
+            return localRequired?.GetValueKind() == JsonValueKind.True;
+        }
+        return false;
     }
 
     /// <summary>

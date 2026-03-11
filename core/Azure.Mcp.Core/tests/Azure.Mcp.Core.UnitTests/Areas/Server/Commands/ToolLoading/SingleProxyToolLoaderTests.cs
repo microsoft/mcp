@@ -24,7 +24,7 @@ public class SingleProxyToolLoaderTests
         return new RegistryDiscoveryStrategy(serviceOptions, logger, httpClientFactory, registryRoot!);
     }
 
-    private static (SingleProxyToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(bool useRealDiscovery = true)
+    private static (SingleProxyToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(bool useRealDiscovery = true, ToolLoaderOptions? toolLoaderOptions = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -46,13 +46,13 @@ public class SingleProxyToolLoaderTests
                 commandGroupDiscoveryStrategy,
                 registryDiscoveryStrategy
             ], compositeLogger);
-            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger);
+            var toolLoader = new SingleProxyToolLoader(compositeDiscoveryStrategy, logger, Microsoft.Extensions.Options.Options.Create(toolLoaderOptions ?? new ToolLoaderOptions()));
             return (toolLoader, compositeDiscoveryStrategy);
         }
         else
         {
             var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger);
+            var toolLoader = new SingleProxyToolLoader(mockDiscoveryStrategy, logger, Microsoft.Extensions.Options.Options.Create(toolLoaderOptions ?? new ToolLoaderOptions()));
             return (toolLoader, mockDiscoveryStrategy);
         }
     }
@@ -125,6 +125,53 @@ public class SingleProxyToolLoaderTests
         var azureTool = result.Tools.First();
         Assert.Equal("azure", azureTool.Name);
         Assert.Contains("real-time, programmatic access to all Azure products", azureTool.Description);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: true, toolLoaderOptions: new ToolLoaderOptions() { ReadOnly = true });
+        var request = CreateListToolsRequest();
+
+        // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        foreach (var tool in result.Tools)
+        {
+            Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: true, toolLoaderOptions: new ToolLoaderOptions() { IsHttpMode = true });
+        var request = CreateListToolsRequest();
+
+        // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        foreach (var tool in result.Tools)
+        {
+            if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+            {
+                Assert.Equal(JsonValueKind.False, localRequired?.GetValueKind());
+            }
+        }
     }
 
     [Fact]
@@ -286,9 +333,11 @@ public class SingleProxyToolLoaderTests
         // Arrange
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, logger));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, null!));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, logger, toolLoaderOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, null!, toolLoaderOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, null!));
     }
 }
