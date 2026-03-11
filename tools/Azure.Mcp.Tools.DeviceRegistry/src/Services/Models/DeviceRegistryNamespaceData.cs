@@ -12,37 +12,29 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Services.Models;
 /// </summary>
 internal sealed class DeviceRegistryNamespaceData
 {
+    /// <summary> The resource ID for the resource. </summary>
     [JsonPropertyName("id")]
     public string? ResourceId { get; set; }
 
+    /// <summary> The type of the resource. </summary>
     [JsonPropertyName("type")]
     public string? ResourceType { get; set; }
 
+    /// <summary> The name of the resource. </summary>
     [JsonPropertyName("name")]
     public string? ResourceName { get; set; }
 
-    [JsonPropertyName("location")]
+    /// <summary> The location of the resource. </summary>
     public string? Location { get; set; }
 
-    [JsonPropertyName("resourceGroup")]
+    /// <summary> The resource group of the resource. </summary>
     public string? ResourceGroup { get; set; }
 
+    /// <summary> Properties of the Device Registry Namespace. </summary>
     public DeviceRegistryNamespaceProperties? Properties { get; set; }
 
     public static DeviceRegistryNamespaceData? FromJson(JsonElement source)
     {
         return JsonSerializer.Deserialize(source, DeviceRegistryJsonContext.Default.DeviceRegistryNamespaceData);
     }
-}
-
-/// <summary>
-/// Properties of a Device Registry Namespace.
-/// </summary>
-internal sealed class DeviceRegistryNamespaceProperties
-{
-    [JsonPropertyName("provisioningState")]
-    public string? ProvisioningState { get; set; }
-
-    [JsonPropertyName("uuid")]
-    public string? Uuid { get; set; }
 }

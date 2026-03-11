@@ -52,14 +52,17 @@ public class DeviceRegistryService(
     private static DeviceRegistryNamespaceInfo ConvertToNamespaceInfoModel(JsonElement item)
     {
         var data = DeviceRegistryNamespaceData.FromJson(item);
-
+        if (data == null)
+        {
+            throw new InvalidOperationException("Failed to deserialize Device Registry Namespace data.");
+        }
         return new DeviceRegistryNamespaceInfo(
-            Name: data?.ResourceName ?? string.Empty,
-            Id: data?.ResourceId,
-            Location: data?.Location,
-            ProvisioningState: data?.Properties?.ProvisioningState,
-            Uuid: data?.Properties?.Uuid,
-            ResourceGroup: data?.ResourceGroup,
-            Type: data?.ResourceType);
+            Name: data.ResourceName ?? string.Empty,
+            Id: data.ResourceId,
+            Location: data.Location,
+            ProvisioningState: data.Properties?.ProvisioningState,
+            Uuid: data.Properties?.Uuid,
+            ResourceGroup: data.ResourceGroup,
+            Type: data.ResourceType);
     }
 }
