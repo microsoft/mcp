@@ -314,6 +314,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure Device Registry
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| deviceregistry_namespace_list | List all Device Registry namespaces in my subscription |
+| deviceregistry_namespace_list | Show me the Device Registry namespaces in subscription <subscription> |
+| deviceregistry_namespace_list | List Device Registry namespaces in resource group <resource_group_name> |
+| deviceregistry_namespace_list | What Device Registry namespaces do I have in my Azure subscription? |
+
 ## Azure Event Grid
 
 | Tool Name | Test Prompt |
