@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger) : GlobalCommand<CliInstallOptions>
+public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliInstallService cliInstallService) : GlobalCommand<CliInstallOptions>
 {
     private const string CommandTitle = "Get CLI installation instructions";
     private readonly ILogger<CliInstallCommand> _logger = logger;
+    private readonly ICliInstallService _cliInstallService = cliInstallService;
     private readonly string[] _allowedCliTypeValues = ["az", "azd", "func"];
 
     public override string Id => "464626d0-b9be-4a3b-9f29-858637ab8c10";
@@ -79,12 +80,11 @@ This tool can provide installation instructions for the specified CLI tool among
             {
                 throw new ArgumentException($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
             }
-            ICliInstallService cliInstallService = context.GetService<ICliInstallService>();
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
+            using HttpResponseMessage responseMessage = await _cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
