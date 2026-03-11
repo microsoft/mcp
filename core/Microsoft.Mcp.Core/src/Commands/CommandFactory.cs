@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -223,7 +224,7 @@ public class CommandFactory : ICommandFactory
                 {
                     activity?.SetStatus(ActivityStatusCode.Error)
                         .SetTagIfNotExists(TagName.ExceptionType, "ToolCallError")
-                        .SetTagIfNotExists(TagName.ExceptionMessage, $"Status code: {response.Status}");
+                        .SetTagIfNotExists(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)response.Status)]));
                 }
 
                 return (int)response.Status;

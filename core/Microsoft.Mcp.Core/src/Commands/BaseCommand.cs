@@ -4,6 +4,8 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json.Nodes;
+using Azure;
 using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
@@ -72,11 +74,20 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Results = null;
             return;
         }
+        else if (ex is RequestFailedException failedException)
+        {
+            // For RequestFailedException, we can include the error code and request ID.
+            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([
+                new("StatusCode", failedException.Status),
+                new("ErrorCode", failedException.ErrorCode),
+                new("RequestId", failedException.GetRawResponse()?.ClientRequestId)
+            ]));
+        }
         else
         {
             // All other cases, include the status code for now until we can determine a better way to capture error
             // details without risking PII leakage.
-            context.Activity?.SetTag(TagName.ExceptionMessage, $"Status code: {GetStatusCode(ex)}");
+            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]));
         }
 
         var result = new ExceptionResult(
