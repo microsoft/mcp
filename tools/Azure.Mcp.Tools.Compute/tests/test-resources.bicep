@@ -259,6 +259,79 @@ resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
   }
 }
 
+// Separate data disk for gallery image data disk at LUN 0
+resource testDataDisk 'Microsoft.Compute/disks@2023-10-02' = {
+  name: '${baseName}-datadisk'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 16
+  }
+}
+
+// Compute Gallery for testing gallery image reference parameter
+resource gallery 'Microsoft.Compute/galleries@2023-07-03' = {
+  name: '${replace(baseName, '-', '')}gallery'
+  location: location
+}
+
+// Gallery Image Definition (Standard security, no TrustedLaunch)
+resource galleryImage 'Microsoft.Compute/galleries/images@2023-07-03' = {
+  parent: gallery
+  name: 'test-linux-image'
+  location: location
+  properties: {
+    identifier: {
+      publisher: 'TestPublisher'
+      offer: 'TestOffer'
+      sku: 'TestSku'
+    }
+    osType: 'Linux'
+    osState: 'Specialized'
+    hyperVGeneration: 'V2'
+    architecture: 'x64'
+  }
+}
+
+// Gallery Image Version with OS disk (from test disk) and data disk at LUN 0 (from data disk)
+resource galleryImageVersion 'Microsoft.Compute/galleries/images/versions@2023-07-03' = {
+  parent: galleryImage
+  name: '1.0.0'
+  location: location
+  properties: {
+    storageProfile: {
+      osDiskImage: {
+        source: {
+          id: testDisk.id
+        }
+      }
+      dataDiskImages: [
+        {
+          lun: 0
+          source: {
+            id: testDataDisk.id
+          }
+        }
+      ]
+    }
+    publishingProfile: {
+      replicaCount: 1
+      targetRegions: [
+        {
+          name: location
+          regionalReplicaCount: 1
+          storageAccountType: 'Standard_LRS'
+        }
+      ]
+    }
+  }
+}
+
 // Assign Contributor role for managing disks
 resource diskContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
@@ -267,10 +340,11 @@ resource diskContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@
 }
 
 resource diskContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(diskContributorRoleDefinition.id, testApplicationOid, testDisk.id)
-  scope: testDisk
+  name: guid(diskContributorRoleDefinition.id, testApplicationOid, resourceGroup().id)
+  scope: resourceGroup()
   properties: {
     roleDefinitionId: diskContributorRoleDefinition.id
     principalId: testApplicationOid
+    description: 'Contributor for testApplicationOid - allows creating and updating disks in the resource group'
   }
 }
