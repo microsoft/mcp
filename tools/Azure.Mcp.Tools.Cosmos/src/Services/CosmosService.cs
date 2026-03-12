@@ -107,7 +107,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)
     {
         // Perform a lightweight operation to validate the client
-        await client.ReadAccountAsync();
+        await client.ReadAccountAsync().WaitAsync(cancellationToken);
     }
 
     private async Task<CosmosClient> GetCosmosClientAsync(
@@ -307,13 +307,20 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         return items;
     }
 
+    private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
+
     private async ValueTask DisposeAsyncCore()
     {
+        // Use a bounded timeout so disposal can never hang indefinitely.
+        // We do not use CancellationToken.None (unbounded) nor any IHostApplicationLifetime
+        // token (already cancelled by the time DisposeAsync runs).
+        using var cts = new CancellationTokenSource(s_disposeTimeout);
+
         IEnumerable<string> keys;
         try
         {
             // Get all cached client keys
-            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
+            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, cts.Token);
         }
         catch (Exception ex)
         {
@@ -329,7 +336,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         {
             try
             {
-                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
+                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: cts.Token);
                 client?.Dispose();
             }
             catch (Exception ex)
