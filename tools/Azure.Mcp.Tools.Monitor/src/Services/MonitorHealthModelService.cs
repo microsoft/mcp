@@ -103,16 +103,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<string> GetControlPlaneTokenAsync(CancellationToken cancellationToken)
     {
-<<<<<<< HEAD
         return (await GetArmAccessTokenAsync(cancellationToken)).Token;
-=======
-        TokenCredential credential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await credential.GetTokenAsync(
-            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
-
-        return accessToken.Token;
->>>>>>> upstream/main
     }
 
     private async Task<string> GetDataplaneTokenAsync(CancellationToken cancellationToken)

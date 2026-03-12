@@ -417,14 +417,7 @@ public class MonitorService(
         query += $"&$filter={Uri.EscapeDataString(filter)}";
         uriBuilder.Query = query;
 
-<<<<<<< HEAD
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
-=======
-        TokenCredential credential = await GetCredential(tenant, cancellationToken);
-        AccessToken accessToken = await credential.GetTokenAsync(
-            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
->>>>>>> upstream/main
 
         // Make paginated requests
         string? nextRequestUrl = uriBuilder.Uri.ToString();

@@ -210,17 +210,6 @@ public class MarketplaceService(ITenantService tenantService)
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
-<<<<<<< HEAD
-=======
-    private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
-    {
-        var defaultScope = _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope;
-        var tokenRequestContext = new TokenRequestContext([defaultScope]);
-        var tokenCredential = await GetCredential(tenantId, cancellationToken);
-        return await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
-    }
-
->>>>>>> upstream/main
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
