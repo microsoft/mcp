@@ -25,7 +25,7 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger)
 
     public override string Description =>
         """
-        List or get Azure Virtual Machine (VM) configuration and properties in a resource group. By default, returns VM details including name, location, size, provisioning state, and OS type. When retrieving a specific VM with --vm-name and --instance-view, the response also includes power state (running/stopped/deallocated). Use this tool to retrieve VM configuration details. Do NOT use this tool for Azure Resource Health availability status queries — use the resourcehealth availability-status get tool instead.
+        List or get Azure Virtual Machine (VM) configuration and properties in a resource group. By default, returns VM details including name, location, size, provisioning state, and OS type. When retrieving a specific VM with --vm-name and --instance-view, the response also includes power state (running/stopped/deallocated). Use this tool to retrieve VM configuration details.
         """;
 
     public override string Title => CommandTitle;
