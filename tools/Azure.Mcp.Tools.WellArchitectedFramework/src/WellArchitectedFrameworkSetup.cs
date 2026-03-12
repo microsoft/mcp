@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
+using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -16,7 +17,9 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IServiceGuideService, ServiceGuideService>();
         services.AddSingleton<ServiceGuideGetCommand>();
+        services.AddSingleton<ServiceGuideListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -29,6 +32,9 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
 
         var serviceGuideGet = serviceProvider.GetRequiredService<ServiceGuideGetCommand>();
         serviceGuide.AddCommand(serviceGuideGet.Name, serviceGuideGet);
+
+        var serviceGuideList = serviceProvider.GetRequiredService<ServiceGuideListCommand>();
+        serviceGuide.AddCommand(serviceGuideList.Name, serviceGuideList);
 
         return wellArchitectedCommandGroup;
     }
