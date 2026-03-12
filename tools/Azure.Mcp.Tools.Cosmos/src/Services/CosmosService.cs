@@ -107,7 +107,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)
     {
         // Perform a lightweight operation to validate the client
-        await client.ReadAccountAsync().WaitAsync(cancellationToken);;
+        await client.ReadAccountAsync().WaitAsync(cancellationToken);
+        ;
     }
 
     private async Task<CosmosClient> GetCosmosClientAsync(
