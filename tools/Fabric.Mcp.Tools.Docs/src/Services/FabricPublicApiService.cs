@@ -44,7 +44,8 @@ public class FabricPublicApiService(
 
         _logger.LogInformation("Listing available Fabric workloads");
 
-        return await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory, cancellationToken);
+        var workloads = await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory, cancellationToken);
+        return workloads.Where(w => !string.Equals(w, "common", StringComparison.OrdinalIgnoreCase)).ToArray();
     }
 
     public async Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType, CancellationToken cancellationToken)
