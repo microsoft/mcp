@@ -12,22 +12,27 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 public sealed class ServiceGuideService : IServiceGuideService
 {
     private static Dictionary<string, ServiceGuideModel>? s_serviceGuidesCache;
-    // Reverse lookup: normalized variation → ServiceGuideUrl, built once from s_serviceGuidesCache.
-    // Multiple variations per service all point to the same URL, so each variation is a unique key.
-    private static Dictionary<string, string>? s_variationToUrlCache;
     private static readonly object s_lock = new();
 
     public string? GetServiceGuideUrl(string serviceName)
     {
         EnsureServiceGuidesLoaded();
 
-        if (s_variationToUrlCache == null)
+        if (s_serviceGuidesCache == null)
         {
             return null;
         }
 
         var serviceNameNormalized = NormalizeServiceName(serviceName);
-        return s_variationToUrlCache.TryGetValue(serviceNameNormalized, out var url) ? url : null;
+        foreach (var kvp in s_serviceGuidesCache)
+        {
+            if (kvp.Value.ServiceNameVariationsNormalized.Contains(serviceNameNormalized))
+            {
+                return kvp.Value.ServiceGuideUrl;
+            }
+        }
+
+        return null;
     }
 
     public string GetAllServiceNamesAsCommaSeparatedList()
@@ -48,14 +53,14 @@ public sealed class ServiceGuideService : IServiceGuideService
     //      Thread B: null check → wait for lock (while Thread A is working)                    → acquire lock → null check again → see it's initialized by Thread A → return
     private static void EnsureServiceGuidesLoaded()
     {
-        if (s_variationToUrlCache != null)
+        if (s_serviceGuidesCache != null)
         {
             return;
         }
 
         lock (s_lock)
         {
-            if (s_variationToUrlCache != null)
+            if (s_serviceGuidesCache != null)
             {
                 return;
             }
@@ -77,34 +82,19 @@ public sealed class ServiceGuideService : IServiceGuideService
                 WellArchitectedFrameworkJsonContext.Default.DictionaryStringServiceGuide);
             s_serviceGuidesCache = serviceGuides ?? new Dictionary<string, ServiceGuideModel>();
 
-            // Build reverse lookup: each normalized variation maps to its service's URL.
-            // A service may have many variations, but each variation points to exactly one URL.
-            var totalVariations = s_serviceGuidesCache.Sum(kvp => kvp.Value.ServiceNameVariationsNormalized.Length);
-            var variationToUrl = new Dictionary<string, string>(totalVariations, StringComparer.Ordinal);
-            foreach (var kvp in s_serviceGuidesCache)
-            {
-                foreach (var variation in kvp.Value.ServiceNameVariationsNormalized)
-                {
-                    variationToUrl[variation] = kvp.Value.ServiceGuideUrl;
-                }
-            }
-            s_variationToUrlCache = variationToUrl;
-
             return;
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
-            // If loading fails, set to empty dictionaries to prevent repeated attempts
+            // If loading fails, set to empty dictionary to prevent repeated attempts
             s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-            s_variationToUrlCache = new Dictionary<string, string>(StringComparer.Ordinal);
 
             throw new InvalidOperationException("Missing 'service-guides.json' file", ex);
         }
         catch (JsonException ex)
         {
-            // If loading fails, set to empty dictionaries to prevent repeated attempts
+            // If loading fails, set to empty dictionary to prevent repeated attempts
             s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-            s_variationToUrlCache = new Dictionary<string, string>(StringComparer.Ordinal);
 
             throw new InvalidOperationException("Failed to parse 'service-guides.json' file", ex);
         }
