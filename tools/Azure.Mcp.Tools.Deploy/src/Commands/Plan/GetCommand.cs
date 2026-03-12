@@ -28,7 +28,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
     public override string Description =>
         """
-        Creates a deployment plan for deploying an application to Azure. Use this tool when the user wants to deploy their application to Azure and needs a recommended set of Azure services, infrastructure as code (IaC) templates, and step-by-step deployment instructions. Scans the workspace to detect services, frameworks, and dependencies, then recommends an appropriate Azure hosting service (such as Container Apps, App Service, or AKS) and generates a plan using Azure Developer CLI (azd) or Azure CLI with Bicep or Terraform. Before calling this tool, scan this workspace to detect the services to deploy and their dependent services.
+        Creates a deployment plan for deploying an application to Azure. Use this tool when the user wants to deploy their application to Azure and needs a recommended set of Azure services, infrastructure as code (IaC) templates, and step-by-step deployment instructions. Scans the workspace to detect services, frameworks, and dependencies, then recommends an appropriate Azure hosting service (such as Container Apps, App Service, or AKS) and generates a plan using Azure Developer CLI (azd) or Azure CLI with Bicep or Terraform. Before calling this tool, scan this workspace to detect the services to deploy and their dependent services. Use when user asks: how do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC?
         """;
 
     public override string Title => CommandTitle;
