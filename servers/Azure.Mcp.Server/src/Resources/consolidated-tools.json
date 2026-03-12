@@ -68,6 +68,41 @@
       ]
     },
     {
+      "name": "get_azure_functions_template_info",
+      "description": "Get Azure Functions project templates, supported languages, and template source code for bootstrapping new Azure Functions projects.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves template information without modifying any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions templates."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "functions_language_list",
+        "functions_project_get",
+        "functions_template_get"
+      ]
+    },
+    {
       "name": "add_azure_app_service_database",
       "description": "Add and configure database integrations for Azure App Service applications.",
       "toolMetadata": {
@@ -1135,7 +1170,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and Well-Architected Framework guidance.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1166,7 +1201,8 @@
         "azureterraformbestpractices_get",
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
-        "get_azure_bestpractices_get"
+        "get_azure_bestpractices_get",
+        "wellarchitectedframework_serviceguide_get"
       ]
     },
     {
@@ -1657,6 +1693,108 @@
         "compute_disk_get",
         "compute_vm_get",
         "compute_vmss_get"
+      ]
+    },
+    {
+      "name": "create_azure_compute_vms",
+      "description": "Create Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates new resources which may incur costs."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may create duplicate resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates new Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive authentication information like passwords and SSH keys."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_create",
+        "compute_vmss_create"
+      ]
+    },
+    {
+      "name": "create_azure_managed_disk",
+      "description": "Create Azure managed disks from scratch with a specified size or from a source such as a snapshot, another managed disk, or a blob URI. Configure storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, and on-demand bursting.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates new resources which may incur costs."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may create duplicate resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates new Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_create"
+      ]
+    },
+    {
+      "name": "update_azure_compute_resources",
+      "description": "Update Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Modify disk size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_update",
+        "compute_vm_update",
+        "compute_vmss_update"
       ]
     },
     {
@@ -2392,74 +2530,6 @@
         "acr_registry_repository_list",
         "aks_cluster_get",
         "aks_nodepool_get"
-      ]
-    },
-    {
-      "name": "create_azure_compute_resources",
-      "description": "Create Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool creates new resources which may incur costs."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times may create duplicate resources."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool creates new Azure resources."
-        },
-        "secret": {
-          "value": true,
-          "description": "This tool handles sensitive authentication information like passwords and SSH keys."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "compute_vm_create",
-        "compute_vmss_create"
-      ]
-    },
-    {
-      "name": "update_azure_compute_resources",
-      "description": "Update Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool modifies existing resources."
-        },
-        "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool modifies Azure resources."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "compute_vm_update",
-        "compute_vmss_update"
       ]
     },
     {
@@ -3522,6 +3592,40 @@
       },
       "mappedToolList": [
         "appservice_webapp_settings_update-appsettings"
+      ]
+    }
+    ,
+    {
+      "name": "get_azure_device_registry_details",
+      "description": "Get details about Azure Device Registry namespaces in a subscription or resource group. Returns namespace information including name, location, provisioning state, and UUID.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "deviceregistry_namespace_list"
       ]
     }
   ]

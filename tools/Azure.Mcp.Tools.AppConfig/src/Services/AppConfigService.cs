@@ -23,26 +23,21 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
-    public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var accounts = await ExecuteResourceQueryAsync(
-                "Microsoft.AppConfiguration/configurationStores",
-                resourceGroup: null, // all resource groups
-                subscription,
-                retryPolicy,
-                ConvertToAppConfigurationAccountModel,
-                cancellationToken: cancellationToken);
-
-            return accounts;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving App Configuration stores: {ex.Message}", ex);
-        }
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.AppConfiguration/configurationStores",
+            resourceGroup: null, // all resource groups
+            subscription,
+            retryPolicy,
+            ConvertToAppConfigurationAccountModel,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<List<KeyValueSetting>> GetKeyValues(
@@ -90,20 +85,38 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             Value = setting.Value,
             Label = setting.Label ?? string.Empty,
             ContentType = setting.ContentType ?? string.Empty,
-            ETag = new ETag { Value = setting.ETag.ToString() },
+            ETag = new() { Value = setting.ETag.ToString() },
             LastModified = setting.LastModified,
             Locked = setting.IsReadOnly
         });
     }
 
-    public async Task SetKeyValueLockState(string accountName, string key, bool locked, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null, CancellationToken cancellationToken = default)
+    public async Task SetKeyValueLockState(
+        string accountName,
+        string key,
+        bool locked,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? label = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
         await client.SetReadOnlyAsync(key, label, locked, cancellationToken: cancellationToken);
     }
 
-    public async Task SetKeyValue(string accountName, string key, string value, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null, string? contentType = null, string[]? tags = null, CancellationToken cancellationToken = default)
+    public async Task SetKeyValue(
+        string accountName,
+        string key,
+        string value,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? label = null,
+        string? contentType = null,
+        string[]? tags = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(value), value), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
@@ -138,7 +151,14 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         await client.SetConfigurationSettingAsync(setting, cancellationToken: cancellationToken);
     }
-    public async Task DeleteKeyValue(string accountName, string key, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null, CancellationToken cancellationToken = default)
+    public async Task DeleteKeyValue(
+        string accountName,
+        string key,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? label = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
@@ -168,32 +188,27 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         return new ConfigurationClient(endpointUri, credential, options);
     }
 
-    private async Task<AppConfigurationAccount> FindAppConfigStore(string subscription, string accountName, string subscriptionIdentifier, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<AppConfigurationAccount> FindAppConfigStore(
+        string subscription,
+        string accountName,
+        string subscriptionIdentifier,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            var account = await ExecuteSingleResourceQueryAsync(
-                        "Microsoft.AppConfiguration/configurationStores",
-                        resourceGroup: null, // all resource groups
-                        subscription: subscription,
-                        retryPolicy: retryPolicy,
-                        converter: ConvertToAppConfigurationAccountModel,
-                        additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
-                        cancellationToken: cancellationToken);
+        var account = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.AppConfiguration/configurationStores",
+            resourceGroup: null, // all resource groups
+            subscription: subscription,
+            retryPolicy: retryPolicy,
+            converter: ConvertToAppConfigurationAccountModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
+            cancellationToken: cancellationToken);
 
-            if (account == null)
-            {
-                throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
-            }
-            return account;
-        }
-        catch (Exception ex)
+        if (account == null)
         {
-            _logger.LogError(ex,
-                "Error retrieving App Configuration store '{StoreName}' for subscription '{Subscription}'",
-                accountName, subscriptionIdentifier);
-            throw;
+            throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
         }
+        return account;
     }
 
     /// <summary>
@@ -203,9 +218,8 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     /// <returns>The App Configuration account model</returns>
     private static AppConfigurationAccount ConvertToAppConfigurationAccountModel(JsonElement item)
     {
-        Models.AppConfigurationStoreData? appConfigAccount = Models.AppConfigurationStoreData.FromJson(item);
-        if (appConfigAccount == null)
-            throw new InvalidOperationException("Failed to parse App Configuration account data");
+        Models.AppConfigurationStoreData? appConfigAccount = Models.AppConfigurationStoreData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse App Configuration account data");
 
         bool publicNetworkAccess = false;
         if (appConfigAccount.Properties?.PublicNetworkAccess != null)
@@ -213,7 +227,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             publicNetworkAccess = appConfigAccount.Properties.PublicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase);
         }
 
-        return new AppConfigurationAccount
+        return new()
         {
             Name = appConfigAccount.ResourceName ?? "Unknown",
             Location = appConfigAccount.Location,
@@ -227,9 +241,9 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             EnablePurgeProtection = appConfigAccount.Properties?.EnablePurgeProtection,
             CreateMode = appConfigAccount.Properties?.CreateMode,
             // Map the new managed identity structure
-            ManagedIdentity = appConfigAccount.Identity == null ? null : new ManagedIdentityInfo
+            ManagedIdentity = appConfigAccount.Identity == null ? null : new()
             {
-                SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                SystemAssignedIdentity = new()
                 {
                     Enabled = appConfigAccount.Identity != null,
                     TenantId = appConfigAccount.Identity?.TenantId?.ToString(),
@@ -244,7 +258,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                     .ToArray()
             },
             // Full encryption properties from KeyVaultProperties
-            Encryption = appConfigAccount.Properties?.Encryption?.KeyVaultProperties == null ? null : new EncryptionProperties
+            Encryption = appConfigAccount.Properties?.Encryption?.KeyVaultProperties == null ? null : new()
             {
                 KeyIdentifier = appConfigAccount.Properties?.Encryption?.KeyVaultProperties?.KeyIdentifier,
                 IdentityClientId = appConfigAccount.Properties?.Encryption?.KeyVaultProperties?.IdentityClientId,

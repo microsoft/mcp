@@ -45,41 +45,30 @@ public class AppServiceService(
             "Adding database connection to App Service {AppName} in resource group {ResourceGroup}",
             appName, resourceGroup);
 
-        try
-        {
-            // Validate inputs
-            ValidateRequiredParameters(
-                (nameof(appName), appName),
-                (nameof(resourceGroup), resourceGroup),
-                (nameof(databaseType), databaseType),
-                (nameof(databaseServer), databaseServer),
-                (nameof(databaseName), databaseName),
-                (nameof(subscription), subscription));
+        // Validate inputs
+        ValidateRequiredParameters(
+            (nameof(appName), appName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(databaseType), databaseType),
+            (nameof(databaseServer), databaseServer),
+            (nameof(databaseName), databaseName),
+            (nameof(subscription), subscription));
 
-            // Get Azure resources
-            var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // Get Azure resources
+        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
 
-            // Prepare connection string
-            var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
-            var connectionStringName = $"{databaseName}Connection";
+        // Prepare connection string
+        var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
+        var connectionStringName = $"{databaseName}Connection";
 
-            // Update web app configuration
-            await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType, cancellationToken);
+        // Update web app configuration
+        await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType, cancellationToken);
 
-            _logger.LogInformation(
-                "Successfully added database connection {ConnectionName} to App Service {AppName}",
-                connectionStringName, appName);
+        _logger.LogInformation(
+            "Successfully added database connection {ConnectionName} to App Service {AppName}",
+            connectionStringName, appName);
 
-            return CreateDatabaseConnectionInfo(
-                databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Failed to add database connection to App Service {AppName} in resource group {ResourceGroup}",
-                appName, resourceGroup);
-            throw;
-        }
+        return CreateDatabaseConnectionInfo(databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,

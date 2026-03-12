@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -81,8 +79,7 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new StorageSyncServiceCreateCommandResult(service);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult);
         }
         catch (Exception ex)
         {

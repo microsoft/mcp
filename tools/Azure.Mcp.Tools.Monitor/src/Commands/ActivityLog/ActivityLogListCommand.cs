@@ -96,10 +96,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 cancellationToken);
 
             // Return empty array if no results
-            var activityLogs = results ?? [];
-            context.Response.Results = ResponseResult.Create(
-                new ActivityLogListCommandResult(activityLogs),
-                MonitorJsonContext.Default.ActivityLogListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.ActivityLogListCommandResult);
         }
         catch (Exception ex)
         {
@@ -116,9 +113,9 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource not found. Verify the resource name and that you have access to it.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the resource activity logs. Details: {reqEx.Message}",
         HttpRequestException httpEx when httpEx.Message.Contains("404") =>
             "Resource not found. Verify the resource name and that you have access to it.",
