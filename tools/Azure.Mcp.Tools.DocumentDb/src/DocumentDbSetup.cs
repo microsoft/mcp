@@ -58,15 +58,13 @@ public class DocumentDbSetup : IAreaSetup
             "Database operations - Commands for managing DocumentDB databases.");
         documentDb.AddSubGroup(database);
 
-        database.AddCommand(
-            serviceProvider.GetRequiredService<ListDatabasesCommand>().Name,
-            serviceProvider.GetRequiredService<ListDatabasesCommand>());
-        database.AddCommand(
-            serviceProvider.GetRequiredService<DbStatsCommand>().Name,
-            serviceProvider.GetRequiredService<DbStatsCommand>());
-        database.AddCommand(
-            serviceProvider.GetRequiredService<DropDatabaseCommand>().Name,
-            serviceProvider.GetRequiredService<DropDatabaseCommand>());
+        var listDatabasesCommand = serviceProvider.GetRequiredService<ListDatabasesCommand>();
+        var dbStatsCommand = serviceProvider.GetRequiredService<DbStatsCommand>();
+        var dropDatabaseCommand = serviceProvider.GetRequiredService<DropDatabaseCommand>();
+
+        database.AddCommand(listDatabasesCommand.Name, listDatabasesCommand);
+        database.AddCommand(dbStatsCommand.Name, dbStatsCommand);
+        database.AddCommand(dropDatabaseCommand.Name, dropDatabaseCommand);
 
         return documentDb;
     }

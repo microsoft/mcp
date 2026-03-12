@@ -1,0 +1,4 @@
+pr: 2022
+changes:
+  - section: "Features Added"
+    description: "Added DocumentDB tools for managing Azure DocumentDB (with MongoDB compatibility) database"

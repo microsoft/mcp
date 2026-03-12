@@ -4,41 +4,94 @@
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Client.Helpers;
-using Microsoft.Mcp.Tests.Generated.Models;
-using Microsoft.Mcp.Tests.Helpers;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
 
-public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture serverFixture)
-    : RecordedCommandTestsBase(output, fixture, serverFixture)
+public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture serverFixture)
+    : CommandTestsBase(output, serverFixture)
 {
-    protected override RecordingOptions? RecordingOptions => new()
-    {
-        HandleRedirects = false
-    };
-
-    public override CustomDefaultMatcher? TestMatcher => new()
-    {
-        IgnoredHeaders = "x-ms-activity-id,x-ms-request-id,x-ms-session-token"
-    };
-
-    /// <summary>
-    /// Disable default sanitizers that may interfere with DocumentDB responses
-    /// </summary>
-    public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493"];
-
-    public override List<BodyKeySanitizer> BodyKeySanitizers =>
-    [
-        ..base.BodyKeySanitizers,
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$..connectionString")
-        {
-            Value = "Sanitized"
-        })
-    ];
-
     private string ConnectionString => Settings.DeploymentOutputs["DOCUMENTDB_CONNECTION_STRING"];
+    private const string TestDatabaseName = "test";
+    private const string DropDatabaseName = "dropme";
+    private const string CollectionName = "items";
+
+    public override async ValueTask InitializeAsync()
+    {
+        SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
+        await base.InitializeAsync();
+        await SeedTestDatabasesAsync();
+    }
+
+    private async Task SeedTestDatabasesAsync()
+    {
+        const int maxAttempts = 3;
+        Exception? lastException = null;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                Output.WriteLine($"Seeding DocumentDB test data (attempt {attempt}/{maxAttempts})...");
+
+                var client = new MongoClient(ConnectionString);
+
+                await SeedDatabaseAsync(
+                    client,
+                    TestDatabaseName,
+                    [
+                        new BsonDocument { { "name", "item1" }, { "value", 100 }, { "category", "A" } },
+                        new BsonDocument { { "name", "item2" }, { "value", 200 }, { "category", "B" } },
+                        new BsonDocument { { "name", "item3" }, { "value", 300 }, { "category", "A" } }
+                    ]);
+
+                await SeedDatabaseAsync(
+                    client,
+                    DropDatabaseName,
+                    [
+                        new BsonDocument { { "name", "drop-item1" }, { "value", 1 } },
+                        new BsonDocument { { "name", "drop-item2" }, { "value", 2 } }
+                    ]);
+
+                Output.WriteLine("DocumentDB test data seeded successfully.");
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+
+                if (attempt == maxAttempts)
+                {
+                    break;
+                }
+
+                Output.WriteLine($"DocumentDB seeding attempt {attempt} failed: {ex.Message}");
+                await Task.Delay(TimeSpan.FromSeconds(10));
+            }
+        }
+
+        throw new InvalidOperationException("Failed to seed DocumentDB test databases.", lastException);
+    }
+
+    private static async Task SeedDatabaseAsync(MongoClient client, string databaseName, IEnumerable<BsonDocument> documents)
+    {
+        var database = client.GetDatabase(databaseName);
+        var filter = Builders<BsonDocument>.Filter.Empty;
+
+        var existingCollectionsCursor = await database.ListCollectionNamesAsync();
+        var existingCollections = await existingCollectionsCursor.ToListAsync();
+
+        if (!existingCollections.Contains(CollectionName))
+        {
+            await database.CreateCollectionAsync(CollectionName);
+        }
+
+        var collection = database.GetCollection<BsonDocument>(CollectionName);
+        await collection.DeleteManyAsync(filter);
+        await collection.InsertManyAsync(documents);
+    }
 
     private async Task ConnectAsync(bool testConnection = true)
     {
