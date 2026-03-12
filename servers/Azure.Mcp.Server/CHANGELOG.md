@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.27 (2026-03-2026)
+## 2.0.0-beta.27 (2026-03-12)
 
 ### Features Added
 
@@ -26,8 +26,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- AzureIsv: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1902](https://github.com/microsoft/mcp/pull/1902)]
-- Compute: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1914](https://github.com/microsoft/mcp/pull/1914)]
+- AzureIsv: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1902](https://github.com/microsoft/mcp/pull/1902)]
+- Compute: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1914](https://github.com/microsoft/mcp/pull/1914)]
 - Refactored Azure Migrate commands to use constructor dependency injection instead of context.GetService<T>() [[#1909](https://github.com/microsoft/mcp/pull/1909)]
 - Refactored `FunctionAppGetCommand` to use constructor dependency injection for `IFunctionAppService` instead of resolving it via `context.GetService<T>()` in `ExecuteAsync`. [[#1991](https://github.com/microsoft/mcp/pull/1991)]
 - Refactored `Azure.Mcp.Tools.Extension` commands to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1988](https://github.com/microsoft/mcp/pull/1988)]
