@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
 using Fabric.Mcp.Tools.Docs.Models;
 using Microsoft.Extensions.Logging;
 
@@ -60,11 +61,11 @@ public class FabricPublicApiService(
 
     public string GetWorkloadItemDefinition(string workloadType)
     {
-        var workloadItemDefinitionPath = string.Format(FormattedItemDefinitionPath, workloadType);
+        var workloadItemDefinitionPattern = BuildItemDefinitionPattern(workloadType);
 
         _logger.LogInformation("Getting item definition for workload {workloadType}", workloadType);
 
-        return EmbeddedResourceProviderService.GetEmbeddedResource(workloadItemDefinitionPath);
+        return EmbeddedResourceProviderService.GetEmbeddedResource(workloadItemDefinitionPattern);
     }
 
     public IEnumerable<string> GetTopicBestPractices(string topic)
@@ -75,6 +76,29 @@ public class FabricPublicApiService(
     }
 
     #endregion IFabricPublicApiService
+
+    /// <summary>
+    /// Builds a regex pattern for matching item definition resources.
+    /// Workload names from directory listings are camelCase (e.g., "kqlDatabase"),
+    /// while item definition files use kebab-case (e.g., "kql-database-definition.md").
+    /// This inserts an optional hyphen at each camelCase boundary to match either form.
+    /// </summary>
+    internal static string BuildItemDefinitionPattern(string workloadType)
+    {
+        var sb = new StringBuilder("item-definitions/");
+        for (int i = 0; i < workloadType.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(workloadType[i]))
+            {
+                sb.Append("-?");
+            }
+
+            sb.Append(char.ToLowerInvariant(workloadType[i]));
+        }
+
+        sb.Append("-definition\\.md");
+        return sb.ToString();
+    }
 
     private async Task<IDictionary<string, string>> GetWorkloadSpecDefinitionsAsync(string workloadType, CancellationToken cancellationToken)
     {

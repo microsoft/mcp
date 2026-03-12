@@ -254,6 +254,35 @@ public class FabricPublicApiServiceTests
         Assert.NotNull(result);
     }
 
+    [Theory]
+    [InlineData("kqlDatabase")]
+    [InlineData("cosmosDbDatabase")]
+    [InlineData("digitalTwinBuilder")]
+    [InlineData("graphQLApi")]
+    [InlineData("semanticModel")]
+    public void GetFabricWorkloadItemDefinition_WithCamelCaseWorkload_ReturnsDefinition(string workloadType)
+    {
+        // Act
+        var result = _service.GetWorkloadItemDefinition(workloadType);
+
+        // Assert
+        Assert.NotNull(result);
+    }
+
+    [Theory]
+    [InlineData("notebook", "item-definitions/notebook-definition\\.md")]
+    [InlineData("kqlDatabase", "item-definitions/kql-?database-definition\\.md")]
+    [InlineData("cosmosDbDatabase", "item-definitions/cosmos-?db-?database-definition\\.md")]
+    [InlineData("graphQLApi", "item-definitions/graph-?q-?l-?api-definition\\.md")]
+    public void BuildItemDefinitionPattern_ConvertsCorrectly(string workloadType, string expectedPattern)
+    {
+        // Act
+        var result = FabricPublicApiService.BuildItemDefinitionPattern(workloadType);
+
+        // Assert
+        Assert.Equal(expectedPattern, result);
+    }
+
     #endregion
 
     #region GetTopicBestPractices Tests
