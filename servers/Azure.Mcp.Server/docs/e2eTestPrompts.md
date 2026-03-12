@@ -431,7 +431,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
-| fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
 | fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
