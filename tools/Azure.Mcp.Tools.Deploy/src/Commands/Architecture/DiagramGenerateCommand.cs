@@ -24,7 +24,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 
     public override string Description =>
         """
-        Generates an Azure service architecture diagram showing the recommended Azure services and their connections for an application. Use this tool when the user asks to generate, create, or visualize an Azure architecture diagram for their application, or wants to see which Azure services to use. Before calling this tool, scan the workspace to detect the services to deploy and their dependent services, and find the environment variables used for connection strings. If it's a .NET Aspire application, check aspireManifest.json. Do not use this tool when the user needs a detailed network topology or security design.
+        Generates an Azure service architecture diagram showing the recommended Azure services and their connections for an application. Use this tool when the user asks to generate, create, or visualize an Azure architecture diagram for their application, or wants to see which Azure services to use. Renders the diagram from an application topology (AppTopology) provided as input; scan the workspace first to build this topology by detecting services, frameworks, and environment variables for connection strings, and for .NET Aspire applications, check aspireManifest.json. Do not use this tool when the user needs a detailed network topology or security design.
         """;
 
     public override string Title => "Generate Architecture Diagram";
