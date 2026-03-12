@@ -144,15 +144,15 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Arrange
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("root", "Root command group");
-        var stroageGroup = new CommandGroup("storage", "Storage commands");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
         var storageCommand = Substitute.For<IBaseCommand>();
         storageCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = true });
-        stroageGroup.AddCommand("readonly", storageCommand);
+        storageGroup.AddCommand("readonly", storageCommand);
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
         keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
-        rootGroup.SubGroup.AddRange([stroageGroup, keyvaultGroup]);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
         var serviceProvider = Substitute.For<IServiceProvider>();

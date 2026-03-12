@@ -89,7 +89,7 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
     {
         Id = _commandGroup.Name,
         Name = _commandGroup.Name,
-        Title = _commandGroup.Title ?? _commandGroup.Name,
-        Description = _commandGroup.Description
+        Description = _commandGroup.Description,
+        ToolMetadata = _commandGroup.ToolMetadata
     };
 }
