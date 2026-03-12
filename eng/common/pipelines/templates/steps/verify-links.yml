@@ -31,4 +31,5 @@ steps:
         -checkLinkGuidance: ${{ parameters.CheckLinkGuidance }}
         -localBuildRepoName "$env:BUILD_REPOSITORY_NAME"
         -localBuildRepoPath $(Build.SourcesDirectory)
+        -localBuildTargetBranch "$env:SYSTEM_PULLREQUEST_TARGETBRANCH"
         -inputCacheFile "https://azuresdkartifacts.blob.core.windows.net/verify-links-cache/verify-links-cache.txt"
