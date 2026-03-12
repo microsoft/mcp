@@ -318,10 +318,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| documentdb_connection_toggle | Connect to my DocumentDB instance using <connection-string> |
-| documentdb_connection_toggle | Close the DocumentDB connection |
 | documentdb_connection_get_connection_status | Show me the DocumentDB connection status |
 | documentdb_connection_get_connection_status | Is DocumentDB connected? |
+| documentdb_connection_toggle | Connect to my DocumentDB instance using <connection-string> |
+| documentdb_connection_toggle | Close the DocumentDB connection |
+| documentdb_database_db_stats | Get statistics for database <db-name> |
+| documentdb_database_db_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_database_drop_database | Drop database <db-name> |
+| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
+| documentdb_database_list_databases | List all databases in DocumentDB |
+| documentdb_database_list_databases | Show me all DocumentDB databases |
+| documentdb_database_list_databases | Get details for database <db-name> in DocumentDB |
 
 ## Azure Event Grid
 

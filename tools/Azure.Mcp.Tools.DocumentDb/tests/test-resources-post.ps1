@@ -56,6 +56,14 @@ db.items.insertMany([
     { name: 'item2', value: 200, category: 'B' },
     { name: 'item3', value: 300, category: 'A' }
 ])
+
+use dropme
+db.createCollection('items')
+db.items.insertMany([
+    { name: 'drop-item1', value: 1 },
+    { name: 'drop-item2', value: 2 }
+])
+
 print('Test database and collection initialized successfully')
 "@
 

@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
-
-// Temporarily disabled until the DocumentDb live tests are migrated to the
-// current recorded test infrastructure in a follow-up PR.
-#if false
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
+
+namespace Azure.Mcp.Tools.DocumentDb.LiveTests;
 
 public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture serverFixture)
     : RecordedCommandTestsBase(output, fixture, serverFixture)
@@ -40,6 +38,20 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
         })
     ];
 
+    private string ConnectionString => Settings.DeploymentOutputs["DOCUMENTDB_CONNECTION_STRING"];
+
+    private async Task ConnectAsync(bool testConnection = true)
+    {
+        await CallToolAsync(
+            "documentdb_connection_toggle",
+            new()
+            {
+                { "action", "connect" },
+                { "connection-string", ConnectionString },
+                { "test-connection", testConnection.ToString().ToLowerInvariant() }
+            });
+    }
+
     [Fact]
     public async Task Should_connect_with_connection_action()
     {
@@ -48,24 +60,23 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
             new()
             {
                 { "action", "connect" },
-                { "connection-string", Settings.DeploymentOutputs["DOCUMENTDB_CONNECTION_STRING"] },
+                { "connection-string", ConnectionString },
                 { "test-connection", "true" }
             });
 
-        var connectionStatus = result.AssertProperty("success");
-        Assert.True(connectionStatus.GetBoolean());
+        Assert.NotNull(result);
+
+        var databaseCount = result.Value.AssertProperty("databaseCount");
+        Assert.True(databaseCount.GetInt32() >= 0);
+
+        var databases = result.Value.AssertProperty("databases");
+        Assert.Equal(JsonValueKind.Array, databases.ValueKind);
     }
 
     [Fact]
     public async Task Should_disconnect_with_connection_action()
     {
-        await CallToolAsync(
-            "documentdb_connection_toggle",
-            new()
-            {
-                { "action", "connect" },
-                { "connection-string", Settings.DeploymentOutputs["DOCUMENTDB_CONNECTION_STRING"] }
-            });
+        await ConnectAsync();
 
         var result = await CallToolAsync(
             "documentdb_connection_toggle",
@@ -74,30 +85,139 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "action", "disconnect" }
             });
 
-        var isConnected = result.AssertProperty("isConnected");
+        Assert.NotNull(result);
+
+        var isConnected = result.Value.AssertProperty("isConnected");
         Assert.False(isConnected.GetBoolean());
     }
 
-    // [Fact]
-    // public async Task Should_connect_and_list_databases()
-    // {
-    //     // First connect to DocumentDB
-    //     await CallToolAsync(
-    //         "documentdb_connection_toggle",
-    //         new()
-    //         {
-    //             { "action", "connect" },
-    //             { "connection-string", Settings.DeploymentOutputs["DOCUMENTDB_CONNECTION_STRING"] }
-    //         });
+    [Fact]
+    public async Task Should_get_connection_status_when_not_connected()
+    {
+        await CallToolAsync(
+            "documentdb_connection_toggle",
+            new()
+            {
+                { "action", "disconnect" }
+            });
 
-    //     var result = await CallToolAsync(
-    //         "documentdb_database_list_databases",
-    //         new());
+        var result = await CallToolAsync(
+            "documentdb_connection_get_connection_status",
+            new());
 
-    //     var databasesArray = result.AssertProperty("databases");
-    //     Assert.Equal(JsonValueKind.Array, databasesArray.ValueKind);
-    //     Assert.NotEmpty(databasesArray.EnumerateArray());
-    // }
+        Assert.NotNull(result);
+
+        var isConnected = result.Value.AssertProperty("isConnected");
+        Assert.False(isConnected.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Should_get_connection_status_when_connected()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_connection_get_connection_status",
+            new());
+
+        Assert.NotNull(result);
+
+        var isConnected = result.Value.AssertProperty("isConnected");
+        Assert.True(isConnected.GetBoolean());
+
+        var details = result.Value.AssertProperty("details");
+        Assert.Equal(JsonValueKind.Object, details.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_all_databases()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_list_databases",
+            new());
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        Assert.NotEmpty(result.Value.EnumerateArray());
+
+        foreach (var database in result.Value.EnumerateArray())
+        {
+            var name = database.AssertProperty("name");
+            Assert.False(string.IsNullOrWhiteSpace(name.GetString()));
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_single_database_details_when_db_name_is_provided()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_list_databases",
+            new()
+            {
+                { "db-name", "test" }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+
+        var database = Assert.Single(result.Value.EnumerateArray());
+        var name = database.AssertProperty("name");
+        Assert.Equal("test", name.GetString());
+
+        var collectionCount = database.AssertProperty("collectionCount");
+        Assert.True(collectionCount.GetInt32() >= 1);
+
+        var collections = database.AssertProperty("collections");
+        Assert.Equal(JsonValueKind.Array, collections.ValueKind);
+        Assert.NotEmpty(collections.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_get_database_statistics()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_db_stats",
+            new()
+            {
+                { "db-name", "test" }
+            });
+
+        Assert.NotNull(result);
+
+        var database = result.Value.AssertProperty("db");
+        Assert.Equal("test", database.GetString());
+
+        var collections = result.Value.AssertProperty("collections");
+        Assert.True(collections.GetInt32() >= 1);
+    }
+
+    [Fact]
+    public async Task Should_drop_database()
+    {
+        await ConnectAsync();
+        const string databaseName = "dropme";
+
+        var result = await CallToolAsync(
+            "documentdb_database_drop_database",
+            new()
+            {
+                { "db-name", databaseName }
+            });
+
+        Assert.NotNull(result);
+
+        var name = result.Value.AssertProperty("name");
+        Assert.Equal(databaseName, name.GetString());
+
+        var deleted = result.Value.AssertProperty("deleted");
+        Assert.True(deleted.GetBoolean());
+    }
 
     // [Fact]
     // public async Task Should_sample_documents_from_collection()
@@ -222,4 +342,3 @@ public class DocumentDbCommandTests(ITestOutputHelper output, TestProxyFixture f
     //     Assert.Equal(1, deletedCount.GetInt32());
     // }
 }
-#endif

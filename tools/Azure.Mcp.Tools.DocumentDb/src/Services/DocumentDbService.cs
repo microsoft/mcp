@@ -192,7 +192,144 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
 
     #endregion
 
+    #region Database Management
+
+    public async Task<DocumentDbResponse> GetDatabasesAsync(string? dbName = null, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+
+        var databaseNames = await _client!.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(dbName) && !databaseNames.Contains(dbName, StringComparer.Ordinal))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{dbName}' was not found."
+            };
+        }
+
+        List<Dictionary<string, object?>> databases;
+        if (string.IsNullOrWhiteSpace(dbName))
+        {
+            databases = databaseNames
+                .Select(databaseName => new Dictionary<string, object?>
+                {
+                    ["name"] = databaseName
+                })
+                .ToList();
+        }
+        else
+        {
+            databases = [await GetDatabaseInfoAsync(dbName, cancellationToken)];
+        }
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = string.IsNullOrWhiteSpace(dbName)
+                ? "Databases retrieved successfully."
+                : $"Database '{dbName}' retrieved successfully.",
+            Data = databases
+        };
+    }
+
+    public async Task<DocumentDbResponse> GetDatabaseStatsAsync(string dbName, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(dbName, nameof(dbName));
+
+        if (!await DatabaseExistsAsync(dbName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{dbName}' was not found."
+            };
+        }
+
+        var database = _client!.GetDatabase(dbName);
+        var stats = await database.RunCommandAsync<BsonDocument>(new BsonDocument("dbStats", 1), cancellationToken: cancellationToken);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Database statistics for '{dbName}' retrieved successfully.",
+            Data = stats
+        };
+    }
+
+    public async Task<DocumentDbResponse> DropDatabaseAsync(string dbName, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(dbName, nameof(dbName));
+
+        if (!await DatabaseExistsAsync(dbName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{dbName}' was not found."
+            };
+        }
+
+        await _client!.DropDatabaseAsync(dbName, cancellationToken);
+
+        _logger.LogInformation("Dropped DocumentDB database {DatabaseName}", dbName);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Database '{dbName}' dropped successfully.",
+            Data = new Dictionary<string, object?>
+            {
+                ["name"] = dbName,
+                ["deleted"] = true
+            }
+        };
+    }
+
+    #endregion
+
     #region Helper Methods
+
+    private async Task<bool> DatabaseExistsAsync(string dbName, CancellationToken cancellationToken)
+    {
+        var databaseNames = await _client!.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+        return databaseNames.Contains(dbName, StringComparer.Ordinal);
+    }
+
+    private async Task<Dictionary<string, object?>> GetDatabaseInfoAsync(string dbName, CancellationToken cancellationToken)
+    {
+        var database = _client!.GetDatabase(dbName);
+        var collectionNames = await database.ListCollectionNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+        var collections = new List<Dictionary<string, object?>>(collectionNames.Count);
+        foreach (var collectionName in collectionNames)
+        {
+            var collection = database.GetCollection<BsonDocument>(collectionName);
+            var documentCount = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty, cancellationToken: cancellationToken);
+
+            collections.Add(new Dictionary<string, object?>
+            {
+                ["name"] = collectionName,
+                ["documentCount"] = documentCount
+            });
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["name"] = dbName,
+            ["collectionCount"] = collectionNames.Count,
+            ["collections"] = collections
+        };
+    }
 
     private void EnsureConnected()
     {

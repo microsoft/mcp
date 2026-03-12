@@ -3,7 +3,7 @@
 
 // using Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 using Azure.Mcp.Tools.DocumentDb.Commands.Connection;
-// using Azure.Mcp.Tools.DocumentDb.Commands.Database;
+using Azure.Mcp.Tools.DocumentDb.Commands.Database;
 // using Azure.Mcp.Tools.DocumentDb.Commands.Document;
 // using Azure.Mcp.Tools.DocumentDb.Commands.Index;
 using Azure.Mcp.Tools.DocumentDb.Services;
@@ -25,6 +25,11 @@ public class DocumentDbSetup : IAreaSetup
         // Connection Commands
         services.AddSingleton<ConnectionToggleCommand>();
         services.AddSingleton<GetConnectionStatusCommand>();
+
+        // Database Commands
+        services.AddSingleton<ListDatabasesCommand>();
+        services.AddSingleton<DbStatsCommand>();
+        services.AddSingleton<DropDatabaseCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -35,6 +40,7 @@ public class DocumentDbSetup : IAreaSetup
             "Azure DocumentDB operations for Azure Cosmos DB for MongoDB (vCore), including connection sessions and database commands.",
             Title);
 
+        // Connection subgroup
         var connection = new CommandGroup(
             "connection",
             "Connection session commands for opening, closing, reconnecting, and checking the active DocumentDB connection.");
@@ -45,6 +51,22 @@ public class DocumentDbSetup : IAreaSetup
 
         connection.AddCommand(connectionToggleCommand.Name, connectionToggleCommand);
         connection.AddCommand(getConnectionStatusCommand.Name, getConnectionStatusCommand);
+
+        // Database subgroup
+        var database = new CommandGroup(
+            "database",
+            "Database operations - Commands for managing DocumentDB databases.");
+        documentDb.AddSubGroup(database);
+
+        database.AddCommand(
+            serviceProvider.GetRequiredService<ListDatabasesCommand>().Name,
+            serviceProvider.GetRequiredService<ListDatabasesCommand>());
+        database.AddCommand(
+            serviceProvider.GetRequiredService<DbStatsCommand>().Name,
+            serviceProvider.GetRequiredService<DbStatsCommand>());
+        database.AddCommand(
+            serviceProvider.GetRequiredService<DropDatabaseCommand>().Name,
+            serviceProvider.GetRequiredService<DropDatabaseCommand>());
 
         return documentDb;
     }
