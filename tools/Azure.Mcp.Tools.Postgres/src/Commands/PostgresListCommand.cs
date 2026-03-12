@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -25,14 +26,11 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, Secret = false, LocalRequired = false };
 
-    // resource-group and user are optional for this command: listing servers at subscription scope
-    // does not require either. They become necessary only when --server is given.
-    protected override bool ResourceGroupRequired => false;
-    protected override bool UserRequired => false;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(PostgresOptionDefinitions.User.AsOptional());
         command.Options.Add(PostgresOptionDefinitions.ServerOptional);
         command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
