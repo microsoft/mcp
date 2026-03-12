@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
 
-public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger) : SubscriptionCommand<RoleAssignmentListOptions>
+public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService) : SubscriptionCommand<RoleAssignmentListOptions>
 {
     private const string _commandTitle = "List Role Assignments";
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public override string Id => "1dfbef45-4014-4575-a9ba-2242bc792e54";
 
@@ -64,8 +65,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
 
         try
         {
-            var authService = context.GetService<IAuthorizationService>();
-            var assignments = await authService.ListRoleAssignmentsAsync(
+            var assignments = await _authorizationService.ListRoleAssignmentsAsync(
                 options.Subscription!,
                 options.Scope!,
                 options.Tenant,

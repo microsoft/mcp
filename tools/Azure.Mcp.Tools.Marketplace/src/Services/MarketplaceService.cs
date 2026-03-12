@@ -148,12 +148,11 @@ public class MarketplaceService(ITenantService tenantService)
         var productsListResponse = await ExecuteMarketplaceRequestAsync(
             url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant, cancellationToken);
 
-        var result = new ProductListResponseWithNextCursor
+        return new()
         {
             Items = productsListResponse?.Items ?? [],
             NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextPageLink)
         };
-        return result;
     }
 
 
@@ -211,6 +210,17 @@ public class MarketplaceService(ITenantService tenantService)
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
+<<<<<<< HEAD
+=======
+    private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
+    {
+        var defaultScope = _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope;
+        var tokenRequestContext = new TokenRequestContext([defaultScope]);
+        var tokenCredential = await GetCredential(tenantId, cancellationToken);
+        return await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+    }
+
+>>>>>>> upstream/main
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
@@ -233,7 +243,7 @@ public class MarketplaceService(ITenantService tenantService)
 
         using var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
-        request.Uri.Reset(new Uri(url));
+        request.Uri.Reset(new(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         using var response = await pipeline.SendRequestAsync(request, cancellationToken);
