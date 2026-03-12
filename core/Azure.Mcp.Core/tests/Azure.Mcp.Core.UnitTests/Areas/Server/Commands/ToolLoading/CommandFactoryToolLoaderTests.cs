@@ -101,6 +101,32 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        var readOnlyOptions = new ToolLoaderOptions { IsHttpMode = true };
+        var (toolLoader, _) = CreateToolLoader(readOnlyOptions);
+        var request = CreateRequest();
+
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Verify basic structure
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When HTTP mode is enabled, only tools with LocalRequiredHint = false should be returned
+        // This may result in fewer tools or potentially no tools if all are marked as local required
+        foreach (var tool in result.Tools)
+        {
+            var meta = tool.Meta;
+            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
+            {
+                Assert.False(localRequiredHint?.GetValue<bool>(),
+                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+            }
+        }
+    }
+
+    [Fact]
     public async Task ListToolsHandler_WithToolFilter_ReturnsOnlySpecifiedTool()
     {
         // Arrange

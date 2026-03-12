@@ -13,7 +13,6 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcpServerProvider
 {
     private readonly CommandGroup _commandGroup = commandGroup;
-    private string? _entryPoint = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
 
     /// <summary>
     /// Gets or sets the entry point executable path for the MCP server.
@@ -21,16 +20,21 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
     /// </summary>
     public string? EntryPoint
     {
-        get => _entryPoint;
-        set => _entryPoint = string.IsNullOrWhiteSpace(value)
+        get;
+        set => field = string.IsNullOrWhiteSpace(value)
             ? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
             : value;
-    }
+    } = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
 
     /// <summary>
     /// Gets or sets whether the MCP server should run in read-only mode.
     /// </summary>
     public bool ReadOnly { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the transport mechanism for the MCP server.
+    /// </summary>
+    public string Transport { get; set; } = TransportTypes.StdIo;
 
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
@@ -59,7 +63,7 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
     /// <returns>An array of command-line arguments.</returns>
     internal string[] BuildArguments()
     {
-        var arguments = new List<string> { "server", "start", "--mode", "all", "--namespace", _commandGroup.Name };
+        var arguments = new List<string> { "server", "start", "--mode", "all", "--namespace", _commandGroup.Name, "--transport", Transport };
 
         if (ReadOnly)
         {
@@ -72,14 +76,11 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
     /// <summary>
     /// Creates metadata for the MCP server provider based on the command group.
     /// </summary>
-    public McpServerMetadata CreateMetadata()
+    public McpServerMetadata CreateMetadata() => new()
     {
-        return new McpServerMetadata
-        {
-            Id = _commandGroup.Name,
-            Name = _commandGroup.Name,
-            Title = _commandGroup.Title ?? _commandGroup.Name,
-            Description = _commandGroup.Description
-        };
-    }
+        Id = _commandGroup.Name,
+        Name = _commandGroup.Name,
+        Title = _commandGroup.Title ?? _commandGroup.Name,
+        Description = _commandGroup.Description
+    };
 }

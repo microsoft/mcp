@@ -37,6 +37,7 @@ public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory
             .Select(group => new CommandGroupServerProvider(group)
             {
                 ReadOnly = _options.Value.ReadOnly ?? false,
+                Transport = _options.Value.Transport ?? TransportTypes.StdIo,
                 EntryPoint = EntryPoint,
             })
             .Cast<IMcpServerProvider>();
