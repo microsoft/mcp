@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
+using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -43,5 +44,19 @@ public class FileShareUpdateCommandTests
     public void Title_ReturnsCorrectValue()
     {
         Assert.Equal("Update File Share", _command.Title);
+    }
+
+    [Fact]
+    public void RegisterOptions_IncludesMediaTierOption()
+    {
+        var command = _command.GetCommand();
+        var option = command.Options.FirstOrDefault(o => o.Name == FileSharesOptionDefinitions.MediaTier.Name);
+        Assert.NotNull(option);
+    }
+
+    [Fact]
+    public void Description_MentionsMediaTier()
+    {
+        Assert.Contains("media tier", _command.Description, StringComparison.OrdinalIgnoreCase);
     }
 }

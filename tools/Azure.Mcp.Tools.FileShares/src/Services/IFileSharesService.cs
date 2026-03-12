@@ -60,6 +60,7 @@ public interface IFileSharesService
         string subscription,
         string resourceGroup,
         string fileShareName,
+        string? mediaTier = null,
         int? provisionedStorageInGiB = null,
         int? provisionedIOPerSec = null,
         int? provisionedThroughputMiBPerSec = null,

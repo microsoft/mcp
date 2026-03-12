@@ -192,6 +192,7 @@ public sealed class FileSharesService(
         string subscription,
         string resourceGroup,
         string fileShareName,
+        string? mediaTier = null,
         int? provisionedStorageInGiB = null,
         int? provisionedIOPerSec = null,
         int? provisionedThroughputMiBPerSec = null,
@@ -212,53 +213,101 @@ public sealed class FileSharesService(
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-        // Create a patch object with only the properties to update
+        // Get the file share resource to update
+        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+        if (!string.IsNullOrEmpty(mediaTier))
+        {
+            // The SDK's FileSharePatchProperties does not expose MediaTier, so we use a full
+            // PUT (CreateOrUpdate) to change it, preserving all other existing properties.
+            var existingData = fileShareResource.Value.Data;
+            var existingProps = existingData.Properties;
+
+            var fileShareData = new FileShareData(existingData.Location)
+            {
+                Properties = new()
+            };
+
+            fileShareData.Properties.MediaTier = new(mediaTier);
+
+            if (existingProps != null)
+            {
+                if (!string.IsNullOrEmpty(existingProps.MountName))
+                    fileShareData.Properties.MountName = existingProps.MountName;
+                fileShareData.Properties.Redundancy = existingProps.Redundancy;
+                fileShareData.Properties.Protocol = existingProps.Protocol;
+                fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB ?? existingProps.ProvisionedStorageInGiB;
+                fileShareData.Properties.ProvisionedIOPerSec = provisionedIOPerSec ?? existingProps.ProvisionedIOPerSec;
+                fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec ?? existingProps.ProvisionedThroughputMiBPerSec;
+                fileShareData.Properties.PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess)
+                    ? new(publicNetworkAccess)
+                    : existingProps.PublicNetworkAccess;
+                fileShareData.Properties.NfsProtocolRootSquash = !string.IsNullOrEmpty(nfsRootSquash)
+                    ? new(nfsRootSquash)
+                    : existingProps.NfsProtocolRootSquash;
+
+                var effectiveSubnets = allowedSubnets?.Length > 0 ? allowedSubnets : existingProps.PublicAccessAllowedSubnets?.ToArray();
+                if (effectiveSubnets != null)
+                    foreach (var subnet in effectiveSubnets)
+                        fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
+            }
+            else
+            {
+                if (provisionedStorageInGiB.HasValue) fileShareData.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+                if (provisionedIOPerSec.HasValue) fileShareData.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+                if (provisionedThroughputMiBPerSec.HasValue) fileShareData.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+                if (!string.IsNullOrEmpty(publicNetworkAccess)) fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+                if (!string.IsNullOrEmpty(nfsRootSquash)) fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+                if (allowedSubnets?.Length > 0)
+                    foreach (var subnet in allowedSubnets)
+                        fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
+            }
+
+            if (tags is { Count: > 0 })
+                foreach (var tag in tags)
+                    fileShareData.Tags.Add(tag.Key, tag.Value);
+            else if (existingData.Tags?.Count > 0)
+                foreach (var tag in existingData.Tags)
+                    fileShareData.Tags.Add(tag.Key, tag.Value);
+
+            var putOperation = await resourceGroupResource.Value.GetFileShares()
+                .CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, fileShareData, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully updated file share media tier. FileShare: {FileShare}, ResourceGroup: {ResourceGroup}, MediaTier: {MediaTier}",
+                fileShareName, resourceGroup, mediaTier);
+
+            return FileShareInfo.FromResource(putOperation.Value);
+        }
+
+        // Use PATCH for non-mediaTier property updates
         var patch = new ResourceManager.FileShares.Models.FileSharePatch();
 
-        // Set properties that are explicitly provided
         if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
             !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
         {
             patch.Properties = new();
 
             if (provisionedStorageInGiB.HasValue)
-            {
                 patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
-            }
 
             if (provisionedIOPerSec.HasValue)
-            {
                 patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
-            }
 
             if (provisionedThroughputMiBPerSec.HasValue)
-            {
                 patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
-            }
         }
 
         if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
-        {
             patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
-        }
 
         if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
-        {
             patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
-        }
 
         if (tags is { Count: > 0 })
-        {
             foreach (var tag in tags)
-            {
                 patch.Tags.Add(tag.Key, tag.Value);
-            }
-        }
 
-        // Get the file share resource to update
-        var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
-
-        // Use UpdateAsync to patch the file share
         var operation = await fileShareResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
 
         _logger.LogInformation(

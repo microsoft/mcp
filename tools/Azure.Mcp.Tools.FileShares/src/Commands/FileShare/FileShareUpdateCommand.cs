@@ -20,7 +20,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
 
     public override string Id => "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a";
     public override string Name => "update";
-    public override string Description => "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.";
+    public override string Description => "Update an existing Azure managed file share resource. Allows updating mutable properties like the media tier (e.g., SSD or HDD), provisioned storage, IOPS, throughput, and network access settings.";
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -38,6 +38,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsRequired());
+        command.Options.Add(FileSharesOptionDefinitions.MediaTier.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedStorageGiB.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedIOPerSec.AsOptional());
         command.Options.Add(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.AsOptional());
@@ -52,6 +53,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
+        options.MediaTier = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MediaTier.Name);
         options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
         options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
         options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
@@ -101,6 +103,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileShareName!,
+                options.MediaTier,
                 options.ProvisionedStorageInGiB,
                 options.ProvisionedIOPerSec,
                 options.ProvisionedThroughputMiBPerSec,
