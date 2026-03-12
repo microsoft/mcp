@@ -9,7 +9,7 @@ public static class OnboardingConstants
 
     // Agent Instructions
     public const string AgentPreExecuteInstruction =
-        "Fetch and review all resources using mcp_azure-monitor_get_learning_resource before presenting recommendations to the user";
+        "Fetch and review all resources using get_learning_resource before presenting recommendations to the user";
 
     // Learning Resource Paths
     public static class LearningResources

@@ -625,16 +625,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource-path> |
-| monitorinstrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource-path> |
+| monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
+| monitorinstrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitorinstrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
 | monitorinstrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
-| monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session-id> with completion note <completion-note> |
-| monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session-id> after I completed <completion-note> |
-| monitorinstrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace-path> |
-| monitorinstrumentation_orchestrator_start | Analyze workspace <workspace-path> and return the first Azure Monitor instrumentation step |
-| monitorinstrumentation_submit_brownfield_review | Submit brownfield findings JSON <findings-json> for session <session-id> |
-| monitorinstrumentation_submit_brownfield_review | Continue migration orchestration by submitting analysis payload <findings-json> to session <session-id> |
+| monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session_id> with completion note <completion_note> |
+| monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitorinstrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitorinstrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitorinstrumentation_submit_brownfield_review | Submit brownfield findings JSON <findings_json> for session <session_id> |
+| monitorinstrumentation_submit_brownfield_review | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
 
 ## Azure Native ISV
 

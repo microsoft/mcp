@@ -22,7 +22,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     public override string Name => "orchestrator_start";
 
     public override string Description =>
-        "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call instrument_next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.";
+        "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator_next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.";
 
     public override string Title => "Start Azure Monitor Instrumentation";
 

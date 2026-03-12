@@ -22,7 +22,7 @@ public sealed class ListLearningResourcesCommand(ILogger<ListLearningResourcesCo
     public override string Name => "list_learning_resources";
 
     public override string Description =>
-        "List all available learning resources for Azure Monitor instrumentation. Note: For instrumenting an application, use instrument_start instead.";
+        "List all available learning resources for Azure Monitor instrumentation. Note: For instrumenting an application, use orchestrator_start instead.";
 
     public override string Title => "List Azure Monitor Learning Resources";
 

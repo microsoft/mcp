@@ -7,21 +7,21 @@ using ModelContextProtocol.Server;
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 
 /// <summary>
-/// Receives brownfield analysis findings from the LLM and generates a targeted migration plan.
+/// Receives brownfield review analysis findings from the LLM and generates a targeted migration plan.
 /// Called after orchestrator_start returns status "analysis_needed".
 /// </summary>
 [McpServerToolType]
-public class SubmitBrownfieldAnalysisTool
+public class SubmitBrownfieldReviewTool
 {
     private readonly IEnumerable<IGenerator> _generators;
 
-    public SubmitBrownfieldAnalysisTool(IEnumerable<IGenerator> generators)
+    public SubmitBrownfieldReviewTool(IEnumerable<IGenerator> generators)
     {
         _generators = generators;
     }
 
-    [McpServerTool(Name = "submit_brownfield_analysis")]
-    [Description(@"Submit brownfield code analysis findings after orchestrator_start returned status 'analysis_needed'.
+    [McpServerTool(Name = "submit_brownfield_review")]
+    [Description(@"Submit brownfield review analysis findings after orchestrator_start returned status 'analysis_needed'.
 You must have scanned the workspace source files and filled in the analysis template.
 Set any section to null if the concern does not exist in the codebase.
 After this call succeeds, continue with orchestrator_next as usual.")]

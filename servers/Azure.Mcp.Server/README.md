@@ -1020,7 +1020,7 @@ Example prompts that generate Azure CLI commands:
 ### 🧭 Azure Monitor Instrumentation
 
 * "List available Azure Monitor onboarding learning resources"
-* "Get the learning resource at 'concepts/opentelemetry-pipeline.md'"
+* "Get the learning resource at 'concepts/dotnet/opentelemetry-pipeline.md'"
 * "Start Azure Monitor instrumentation orchestration for my local workspace"
 * "Continue to the next orchestration step after I complete the previous action"
 * "Submit brownfield analysis findings to continue migration planning"
