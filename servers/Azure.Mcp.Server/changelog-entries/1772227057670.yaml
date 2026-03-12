@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure Device Registry namespace list command (`azmcp deviceregistry namespace list`)"

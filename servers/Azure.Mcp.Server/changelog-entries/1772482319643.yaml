@@ -1,4 +1,0 @@
-pr: 1902
-changes:
-  - section: "Other Changes"
-    description: "AzureIsv: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
