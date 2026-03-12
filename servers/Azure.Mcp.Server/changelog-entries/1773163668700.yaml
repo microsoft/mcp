@@ -1,4 +1,0 @@
-pr: 1909
-changes:
-  - section: "Other Changes"
-    description: "Refactored Azure Migrate commands to use constructor dependency injection instead of context.GetService<T>()"

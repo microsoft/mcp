@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure Functions toolset with three new tools: `functions_language_list` for listing supported languages, `functions_project_get` for retrieving project initialization files, and `functions_template_get` for listing and fetching function template source code."

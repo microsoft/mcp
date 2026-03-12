@@ -2,15 +2,36 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.27 (Unreleased)
+## 2.0.0-beta.27 (2026-03-2026)
 
 ### Features Added
 
+- Added compute disk create and compute disk update commands for managing Azure managed disks. [[#1936](https://github.com/microsoft/mcp/pull/1936)]
+- Added Azure Device Registry namespace list command (`azmcp deviceregistry namespace list`) [[#1961](https://github.com/microsoft/mcp/pull/1961)]
+- Added Azure Functions toolset with three new tools: `functions_language_list` for listing supported languages, `functions_project_get` for retrieving project initialization files, and `functions_template_get` for listing and fetching function template source code. [[#1959](https://github.com/microsoft/mcp/pull/1959)]
+- CodeToCloud feature parity improvements for Deploy and Quota areas: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - Support deployment using Azure CLI with Bicep/Terraform
+  - Support creation of a deploy-to-existing-resources plan
+  - New resource type support in quota checks, including SQL, MySQL, and CosmosDB
+  - New IaC rules added for better support regarding code quality, configuration success and security
+
 ### Breaking Changes
 
-### Bugs Fixed
+- `azmcp deploy pipeline guidance get` option renames and removals: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - `--use-azd-pipeline-config` renamed to `--is-azd-project`
+  - `--azd-iac-options` renamed to `--iac-options`
+  - `--organization-name`, `--repository-name`, and `--github-environment-name` options removed
+  - `--pipeline-platform` and `--deploy-option` added as new options
+  This new design allows an overall better user experience to generate CI/CD pipeline to Azure.
 
 ### Other Changes
+
+- AzureIsv: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1902](https://github.com/microsoft/mcp/pull/1902)]
+- Compute: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1914](https://github.com/microsoft/mcp/pull/1914)]
+- Refactored Azure Migrate commands to use constructor dependency injection instead of context.GetService<T>() [[#1909](https://github.com/microsoft/mcp/pull/1909)]
+- Refactored `FunctionAppGetCommand` to use constructor dependency injection for `IFunctionAppService` instead of resolving it via `context.GetService<T>()` in `ExecuteAsync`. [[#1991](https://github.com/microsoft/mcp/pull/1991)]
+- Refactored `Azure.Mcp.Tools.Extension` commands to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1988](https://github.com/microsoft/mcp/pull/1988)]
+- Refactored `Azure.Mcp.Tools.Grafana` to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1992](https://github.com/microsoft/mcp/pull/1992)]
 
 ## 2.0.0-beta.26 (2026-03-10)
 
