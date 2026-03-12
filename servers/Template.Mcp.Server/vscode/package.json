@@ -108,7 +108,7 @@
         "mocha": "~11",
         "node-loader": "~2",
         "sinon": "^21.0.0",
-        "terser-webpack-plugin": "^5.3.14",
+        "terser-webpack-plugin": "^5.4.0",
         "ts-loader": "~9",
         "typescript": "~5.1",
         "webpack": "^5.99.9",
@@ -123,5 +123,10 @@
         "rxjs": "~7",
         "semver": "~7",
         "yaml": "~2"
+    },
+    "overrides": {
+        "mocha": {
+            "serialize-javascript": "^7.0.0"
+        }
     }
 }
