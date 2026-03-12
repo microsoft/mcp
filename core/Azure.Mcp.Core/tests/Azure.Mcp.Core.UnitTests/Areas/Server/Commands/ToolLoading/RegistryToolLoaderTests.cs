@@ -229,7 +229,8 @@ public class RegistryToolLoaderTests
             Name = "not-localrequired-tool",
             Description = "Write tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
-            Annotations = new()
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = false }
         };
 
         var clientBuilder = new MockMcpClientBuilder()
@@ -260,10 +261,8 @@ public class RegistryToolLoaderTests
         Assert.Single(result.Tools);
         var returnedTool = result.Tools.First();
         Assert.Equal(notLocalRequiredTool.Name, returnedTool.Name);
-        if (returnedTool.Meta != null && returnedTool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
-        {
-            Assert.Equal(JsonValueKind.False, localRequiredHint?.GetValueKind());
-        }
+        Assert.NotNull(returnedTool.Meta);
+        Assert.Equal(JsonValueKind.False, returnedTool.Meta["LocalRequiredHint"]?.GetValueKind());
 
         // Verify that the write tool was filtered out
         Assert.DoesNotContain(result.Tools, t => t.Name == localRequiredTool.Name);
@@ -287,7 +286,8 @@ public class RegistryToolLoaderTests
             Name = "not-localrequired-tool",
             Description = "Write tool",
             InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
-            Annotations = new()
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = false }
         };
 
         var clientBuilder = new MockMcpClientBuilder()
@@ -298,7 +298,7 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: false);
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<RegistryToolLoader>();

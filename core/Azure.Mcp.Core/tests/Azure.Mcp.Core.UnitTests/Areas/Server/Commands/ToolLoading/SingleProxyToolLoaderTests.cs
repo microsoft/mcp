@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -125,53 +127,6 @@ public class SingleProxyToolLoaderTests
         var azureTool = result.Tools.First();
         Assert.Equal("azure", azureTool.Name);
         Assert.Contains("real-time, programmatic access to all Azure products", azureTool.Description);
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
-    {
-        // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: true, toolLoaderOptions: new ToolLoaderOptions() { ReadOnly = true });
-        var request = CreateListToolsRequest();
-
-        // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
-        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
-            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
-
-        // Act
-        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(result);
-        foreach (var tool in result.Tools)
-        {
-            Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
-        }
-    }
-
-    [Fact]
-    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
-    {
-        // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader(useRealDiscovery: true, toolLoaderOptions: new ToolLoaderOptions() { IsHttpMode = true });
-        var request = CreateListToolsRequest();
-
-        // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
-        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
-            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
-
-        // Act
-        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(result);
-        foreach (var tool in result.Tools)
-        {
-            if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
-            {
-                Assert.Equal(JsonValueKind.False, localRequired?.GetValueKind());
-            }
-        }
     }
 
     [Fact]
@@ -296,6 +251,110 @@ public class SingleProxyToolLoaderTests
 
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("tool\" and \"command\" parameters are required", textContent.Text);
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var mcpClient = Substitute.For<McpClient>();
+        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
+            .Returns(new JsonRpcResponse()
+            {
+                Result = new JsonObject([
+                    new("tools", new JsonArray([
+                        new JsonObject([
+                            new("name", "storage"),
+                            new("annotations", new JsonObject([
+                                new("readOnlyHint", true)
+                            ]))
+                        ]),
+                        new JsonObject([
+                            new("name", "keyvault"),
+                            new("annotations", new JsonObject([
+                                new("readOnlyHint", false)
+                            ]))
+                        ])
+                    ]))
+                ])
+            });
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
+            .Returns(mcpClient);
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { ReadOnly = true });
+        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
+
+        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, toolLoaderOptions);
+        var request = CreateCallToolRequest("storage");
+
+        // Act
+        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(tools);
+        Assert.All(tools, tool => Assert.True(tool.ProtocolTool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var storageTool = new Tool()
+        {
+            Name = "storage",
+            Meta = new([new("LocalRequiredHint", true)])
+        };
+        var storageClientTool = new McpClientTool(Substitute.For<McpClient>(), storageTool);
+        var keyvaultTool = new Tool()
+        {
+            Name = "keyvault",
+            Meta = new([new("LocalRequiredHint", false)])
+        };
+        var keyvaultClientTool = new McpClientTool(Substitute.For<McpClient>(), keyvaultTool);
+        var mcpClient = Substitute.For<McpClient>();
+        mcpClient.SendRequestAsync(Arg.Is<JsonRpcRequest>(r => r.Method == RequestMethods.ToolsList), Arg.Any<CancellationToken>())
+            .Returns(new JsonRpcResponse()
+            {
+                Result = new JsonObject([
+                    new("tools", new JsonArray([
+                        new JsonObject([
+                            new("name", "storage"),
+                            new("meta", new JsonObject([
+                                new("LocalRequiredHint", true)
+                            ]))
+                        ]),
+                        new JsonObject([
+                            new("name", "keyvault"),
+                            new("meta", new JsonObject([
+                                new("LocalRequiredHint", false)
+                            ]))
+                        ])
+                    ]))
+                ])
+            });
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
+            .Returns(mcpClient);
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions() { IsHttpMode = true });
+        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
+
+        var toolLoader = new SingleProxyToolLoader(discoveryStrategy, logger, toolLoaderOptions);
+        var request = CreateCallToolRequest("storage");
+
+        // Act
+        var tools = await toolLoader.GetToolListAsync(request, "storage", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(tools);
+        Assert.All(tools, tool =>
+        {
+            var meta = tool.ProtocolTool.Meta;
+            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
+            {
+                Assert.False(localRequiredHint?.GetValue<bool>(),
+                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+            }
+        });
     }
 
     [Fact]

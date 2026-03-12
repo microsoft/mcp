@@ -55,7 +55,8 @@ public sealed class RegistryToolLoader(
             var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
-                .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true));
+                .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t));
 
             // Filter by specific tools if provided
             if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)

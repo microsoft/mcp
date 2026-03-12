@@ -210,16 +210,23 @@ public sealed class SingleProxyToolLoader(
             return cachedJson;
         }
 
+        var listTools = await GetToolListAsync(request, tool, cancellationToken);
+        var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
+        _cachedToolListsJson[tool] = toolsJson;
+
+        return toolsJson;
+    }
+
+    internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
         var clientOptions = CreateClientOptions(request.Server);
         var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
         listTools = listTools.Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
             .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.ProtocolTool))
             .ToArray();
-        var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
-        _cachedToolListsJson[tool] = toolsJson;
 
-        return toolsJson;
+        return listTools;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)

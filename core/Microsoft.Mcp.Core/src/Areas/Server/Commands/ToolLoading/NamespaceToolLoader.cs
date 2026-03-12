@@ -117,6 +117,18 @@ public sealed class NamespaceToolLoader(
             var group = _commandFactory.RootGroup.SubGroup
                 .First(g => string.Equals(g.Name, namespaceName, StringComparison.OrdinalIgnoreCase));
 
+            if (_options.Value.ReadOnly == true && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
+            {
+                // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
+                continue;
+            }
+
+            if (_options.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
+            {
+                // If HTTP mode is enabled and all commands in the group are local-required, skip exposing this namespace as a tool.
+                continue;
+            }
+
             var tool = new Tool
             {
                 Name = namespaceName,
@@ -143,6 +155,27 @@ public sealed class NamespaceToolLoader(
         // Cache the result
         _cachedListToolsResult = allToolsResponse;
         return ValueTask.FromResult(allToolsResponse);
+    }
+
+    private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
+    {
+        foreach (var command in group.Commands)
+        {
+            if (!predicate(command.Value.Metadata))
+            {
+                return false;
+            }
+        }
+
+        foreach (var subGroup in group.SubGroup)
+        {
+            if (!AllToolsInGroupMatch(predicate, subGroup))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
@@ -479,7 +512,7 @@ public sealed class NamespaceToolLoader(
     /// <summary>
     /// Gets the available tools from the namespace commands and caches the result for subsequent requests.
     /// </summary>
-    private List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
+    internal List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
         // Check cache first
         if (_cachedToolLists.TryGetValue(namespaceName, out var cachedList))

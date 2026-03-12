@@ -369,7 +369,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         if (_cachedToolLists.TryGetValue(tool, out var cachedList))
         {
