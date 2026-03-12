@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added Azure Well-Architected Framework service guide tool to provide architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency."

@@ -81,7 +81,7 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new DatabaseGetListResult([database], false),
+                    new([database], false),
                     SqlJsonContext.Default.DatabaseGetListResult);
             }
             else
@@ -94,7 +94,7 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new DatabaseGetListResult(result?.Results ?? [], result?.AreResultsTruncated ?? false),
+                    new(result?.Results ?? [], result?.AreResultsTruncated ?? false),
                     SqlJsonContext.Default.DatabaseGetListResult);
             }
         }

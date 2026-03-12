@@ -29,10 +29,9 @@ public sealed class FunctionAppGetCommandTests
         _logger = Substitute.For<ILogger<FunctionAppGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Theory]
