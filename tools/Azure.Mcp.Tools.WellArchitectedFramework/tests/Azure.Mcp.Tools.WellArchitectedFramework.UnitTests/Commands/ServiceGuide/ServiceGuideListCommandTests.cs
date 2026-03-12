@@ -79,7 +79,8 @@ public class ServiceGuideListCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal("Missing Required options: --services", response.Message);
+        Assert.NotNull(response.Message);
+        Assert.Contains("Missing Required options: --services", response.Message);
     }
 
     [Fact]

@@ -17,7 +17,7 @@ public static class WellArchitectedFrameworkOptionDefinitions
 
     public const string ServicesNameDescription =
         "A list of Azure service names. Multiple services must be space separated, not comma separated. " +
-        """e.g., --services sql-database "App Service" Cosmos-DB """ +
+        """e.g., --services sql-database "App Service" Cosmos-DB. """ +
         "Each Azure service name format: " + ServiceNameFormat;
 
     public static readonly Option<string> Service = new($"--{ServiceName}", "-s")

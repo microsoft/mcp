@@ -44,7 +44,7 @@ public sealed class ServiceGuideService : IServiceGuideService
             return string.Empty;
         }
 
-        return string.Join(", ", s_serviceGuidesCache.Keys);
+        return string.Join(", ", s_serviceGuidesCache.Keys.OrderBy(k => k));
     }
 
     // This double-checked locking pattern is needed to ensure thread safety if two threads call EnsureServiceGuidesLoaded
@@ -86,16 +86,10 @@ public sealed class ServiceGuideService : IServiceGuideService
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
-            // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-
             throw new InvalidOperationException("Missing 'service-guides.json' file", ex);
         }
         catch (JsonException ex)
         {
-            // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-
             throw new InvalidOperationException("Failed to parse 'service-guides.json' file", ex);
         }
     }
