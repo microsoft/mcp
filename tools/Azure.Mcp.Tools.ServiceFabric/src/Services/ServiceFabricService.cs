@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
@@ -46,7 +45,7 @@ public sealed class ServiceFabricService(
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes?api-version={ApiVersion}";
 
@@ -93,7 +92,7 @@ public sealed class ServiceFabricService(
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodes/{Uri.EscapeDataString(nodeName)}?api-version={ApiVersion}";
 
@@ -134,7 +133,7 @@ public sealed class ServiceFabricService(
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
         var requestUrl = $"{GetManagementBaseUrl()}/subscriptions/{subscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ServiceFabric/managedClusters/{Uri.EscapeDataString(clusterName)}/nodeTypes/{Uri.EscapeDataString(nodeType)}/restart?api-version={ApiVersion}";
 

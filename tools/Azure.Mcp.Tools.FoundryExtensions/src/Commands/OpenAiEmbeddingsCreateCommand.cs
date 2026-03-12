@@ -93,8 +93,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiEmbeddingsCreateCommandResult>(
-                new OpenAiEmbeddingsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
                 FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult);
         }
         catch (Exception ex)

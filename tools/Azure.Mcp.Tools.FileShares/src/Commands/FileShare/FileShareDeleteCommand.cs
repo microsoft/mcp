@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -71,7 +68,7 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new FileShareDeleteCommandResult(true, options.FileShareName!),
+                new(true, options.FileShareName!),
                 FileSharesJsonContext.Default.FileShareDeleteCommandResult);
 
             _logger.LogInformation(

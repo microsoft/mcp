@@ -148,12 +148,11 @@ public class MarketplaceService(ITenantService tenantService)
         var productsListResponse = await ExecuteMarketplaceRequestAsync(
             url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant, cancellationToken);
 
-        var result = new ProductListResponseWithNextCursor
+        return new()
         {
             Items = productsListResponse?.Items ?? [],
             NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextPageLink)
         };
-        return result;
     }
 
 
@@ -233,7 +232,7 @@ public class MarketplaceService(ITenantService tenantService)
 
         using var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
-        request.Uri.Reset(new Uri(url));
+        request.Uri.Reset(new(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         using var response = await pipeline.SendRequestAsync(request, cancellationToken);
