@@ -130,8 +130,8 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiChatCompletionsCreateCommandResult>(
-                new OpenAiChatCompletionsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!, options.DeploymentName!),
                 FoundryExtensionsJsonContext.Default.OpenAiChatCompletionsCreateCommandResult);
         }
         catch (Exception ex)

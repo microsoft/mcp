@@ -142,7 +142,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]

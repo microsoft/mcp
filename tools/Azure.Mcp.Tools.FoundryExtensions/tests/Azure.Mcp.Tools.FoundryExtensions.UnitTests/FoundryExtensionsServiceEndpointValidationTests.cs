@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -19,13 +20,14 @@ public class FoundryExtensionsServiceEndpointValidationTests
     private readonly ITenantService _tenantService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly FoundryExtensionsService _service;
+    private readonly ILogger<FoundryExtensionsService> _logger = Substitute.For<ILogger<FoundryExtensionsService>>();
 
     public FoundryExtensionsServiceEndpointValidationTests()
     {
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
         _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new FoundryExtensionsService(_httpClientFactory, _subscriptionService, _tenantService);
+        _service = new FoundryExtensionsService(_httpClientFactory, _subscriptionService, _tenantService, _logger);
     }
 
     #region Test Data

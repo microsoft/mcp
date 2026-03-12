@@ -656,4 +656,91 @@ public class RegistryToolLoaderTests
         // Verify GetOrCreateClientAsync was called twice (once failed, once succeeded)
         _ = mockDiscoveryStrategy.Received(2).GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ListToolsHandler_WithToolPrefix_ExposesToolsWithPrefix()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("create_agent", "Create an agent", "Created")
+            .AddTool("list_agents", "List agents", "Agents");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — exposed names have the prefix
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "foundry_create_agent");
+        Assert.Contains(result.Tools, t => t.Name == "foundry_list_agents");
+        // Original names must NOT appear
+        Assert.DoesNotContain(result.Tools, t => t.Name == "create_agent");
+        Assert.DoesNotContain(result.Tools, t => t.Name == "list_agents");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolPrefix_RoutesUsingOriginalName()
+    {
+        // Arrange — the upstream tool is "create_agent"; the client gets exposed as "foundry_create_agent"
+        const string upstreamToolName = "create_agent";
+        const string prefixedToolName = "foundry_create_agent";
+        const string expectedResponse = "Agent created successfully";
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(upstreamToolName, "Create an agent", _ => new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = expectedResponse }],
+                IsError = false
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act — call using the prefixed name
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequest(prefixedToolName),
+            TestContext.Current.CancellationToken);
+
+        // Assert — response comes back correctly
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(text);
+        Assert.Equal(expectedResponse, text.Text);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNoToolPrefix_ExposesToolsUnchanged()
+    {
+        // Arrange — server with no toolPrefix configured
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("search_docs", "Search documentation", "Results");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("docs", "docs", "Docs server", clientBuilder)
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — tool name is unchanged
+        Assert.Single(result.Tools);
+        Assert.Equal("search_docs", result.Tools[0].Name);
+    }
 }

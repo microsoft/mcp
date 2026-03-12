@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger) : SubscriptionCommand<RecommendationListOptions>()
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService) : SubscriptionCommand<RecommendationListOptions>()
 {
     private const string CommandTitle = "List Application Insights Recommendations";
     private readonly ILogger<RecommendationListCommand> _logger = logger;
+    private readonly IApplicationInsightsService _applicationInsightsService = applicationInsightsService;
 
     public override string Id => "8d259f21-43b3-4962-bec8-de616b8b5f0d";
 
@@ -58,8 +59,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         var options = BindOptions(parseResult);
         try
         {
-            var service = context.GetService<IApplicationInsightsService>();
-            var insights = await service.GetProfilerInsightsAsync(
+            var insights = await _applicationInsightsService.GetProfilerInsightsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
@@ -67,7 +67,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?
-                ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
+                ResponseResult.Create(new(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
                 null;
         }
         catch (Exception ex)
