@@ -117,7 +117,7 @@ public sealed class ServiceGuideListCommand(ILogger<ServiceGuideListCommand> log
     private string GetGuidanceAvailable(List<(string ServiceName, string ServiceGuideUrl)> servicesWithGuidance)
     {
         var serviceLines = servicesWithGuidance.Select(s => $"{s.ServiceName}: {s.ServiceGuideUrl}").ToArray();
-        
+
         return $"""
             For detailed Azure Well-Architected Framework guidance, please refer to the markdown file at the URL specified for each service:
 
@@ -128,7 +128,7 @@ public sealed class ServiceGuideListCommand(ILogger<ServiceGuideListCommand> log
     private string GetGuidanceNotAvailable(List<string> servicesWithoutGuidance)
     {
         var servicesList = string.Join(", ", servicesWithoutGuidance.Select(s => $"'{s}'"));
-        
+
         return $"""
             Azure Well-Architected Framework guidance for the following service(s) is not available: {servicesList}
 

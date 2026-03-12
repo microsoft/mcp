@@ -879,7 +879,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB |
 | wellarchitectedframework_serviceguide_list | Get Well-Architected Framework guidance for App Service and Storage |
 | wellarchitectedframework_serviceguide_list | Show me WAF best practices for Virtual Machines, Cosmos DB, and Key Vault |
-| wellarchitectedframework_serviceguide_list | What's the architectural guidance for SQL Database and Redis Cache |
+| wellarchitectedframework_serviceguide_list | What's the architectural guidance for SQL Database and AKS |
 
 ## Azure Workbooks
 
