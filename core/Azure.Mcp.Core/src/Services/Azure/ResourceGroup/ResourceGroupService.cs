@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Models.Resource;
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -109,6 +110,31 @@ public class ResourceGroupService(
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving resource group {resourceGroupName}: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<GenericResourceInfo>> GetGenericResources(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
+
+        try
+        {
+            var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken)
+                ?? throw new Exception($"Resource group '{resourceGroupName}' not found");
+
+            var resources = await resourceGroupResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
+                .Select(r => new GenericResourceInfo(
+                    r.Data.Name,
+                    r.Data.Id.ToString(),
+                    r.Data.ResourceType.ToString(),
+                    r.Data.Location.ToString()))
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            return resources;
+        }
+        catch (Exception ex) when (ex is not ArgumentException)
+        {
+            throw new Exception($"Error retrieving resources in resource group {resourceGroupName}: {ex.Message}", ex);
         }
     }
 }
