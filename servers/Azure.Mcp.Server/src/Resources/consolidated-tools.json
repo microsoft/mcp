@@ -261,8 +261,8 @@
           "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of entities (like web search)."
         },
         "readOnly": {
           "value": false,

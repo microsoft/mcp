@@ -33,10 +33,10 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = false,
+        OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = true
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
