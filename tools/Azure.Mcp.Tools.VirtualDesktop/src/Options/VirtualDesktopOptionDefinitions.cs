@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Azure.Mcp.Tools.VirtualDesktop.Options;
 
 public static class VirtualDesktopOptionDefinitions
@@ -14,16 +16,16 @@ public static class VirtualDesktopOptionDefinitions
         $"--{HostPoolName}"
     )
     {
-        Description = "The name of the Azure Virtual Desktop host pool. This is the unique name you chose for your hostpool."
-
+        Description = "The name of the Azure Virtual Desktop host pool. This is the unique name you chose for your hostpool.",
+        Required = false
     };
 
     public static readonly Option<string> HostPoolResourceIdOption = new(
         $"--{HostPoolResourceId}"
     )
     {
-        Description = "The Azure resource ID of the host pool. When provided, this will be used instead of searching by name."
-
+        Description = "The Azure resource ID of the host pool. When provided, this will be used instead of searching by name.",
+        Required = false
     };
 
 
@@ -33,12 +35,5 @@ public static class VirtualDesktopOptionDefinitions
     {
         Description = "The name of the session host. This is the computer name of the virtual machine in the host pool.",
         Required = true
-    };
-
-    public static readonly Option<string> ResourceGroup = new(
-        $"--{ResourceGroupName}"
-    )
-    {
-        Description = "The name of the Azure resource group. This is a logical container for Azure resources.",
     };
 }

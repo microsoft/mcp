@@ -13,7 +13,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUnregisterOptions>
+public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<RegisteredServerUnregisterOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Unregister Server";
     private readonly IStorageSyncService _service = service;
@@ -40,8 +41,6 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
         command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsRequired());
     }
 

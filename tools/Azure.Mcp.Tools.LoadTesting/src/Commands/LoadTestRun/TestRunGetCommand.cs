@@ -16,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
 public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
-    : BaseLoadTestingCommand<TestRunGetOptions>
+    : BaseLoadTestingCommand<TestRunGetOptions>(resourceGroupRequired: false, testResourceRequired: true)
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
@@ -43,8 +43,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
 
