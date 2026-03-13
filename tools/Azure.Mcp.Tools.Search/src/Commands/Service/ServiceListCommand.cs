@@ -21,7 +21,7 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
 
     public override string Description =>
         """
-        Lists all Azure AI Search services in a subscription.
+        List/show Azure AI Search services in a subscription, returning details about each service.
         """;
 
     public override string Title => CommandTitle;
