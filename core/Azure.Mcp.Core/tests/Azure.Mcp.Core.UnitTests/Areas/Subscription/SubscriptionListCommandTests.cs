@@ -56,6 +56,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var args = _commandDefinition.Parse("");
 
@@ -77,8 +78,10 @@ public class SubscriptionListCommandTests
 
         Assert.Equal("sub1", first.GetProperty("subscriptionId").GetString());
         Assert.Equal("Subscription 1", first.GetProperty("displayName").GetString());
+        Assert.False(first.GetProperty("isDefault").GetBoolean());
         Assert.Equal("sub2", second.GetProperty("subscriptionId").GetString());
         Assert.Equal("Subscription 2", second.GetProperty("displayName").GetString());
+        Assert.False(second.GetProperty("isDefault").GetBoolean());
 
         await _subscriptionService.Received(1).GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
@@ -93,6 +96,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Is<string>(x => x == tenantId), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         // Act
         var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -113,6 +117,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         var args = _commandDefinition.Parse("");
 
@@ -155,6 +160,7 @@ public class SubscriptionListCommandTests
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
 
         // Act
         var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -168,4 +174,158 @@ public class SubscriptionListCommandTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithDefaultSubscription_MarksDefaultSubscription()
+    {
+        // Arrange
+        var expectedSubscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedSubscriptions);
+        _subscriptionService.GetDefaultSubscriptionId().Returns("sub2");
+
+        var args = _commandDefinition.Parse("");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Results);
+
+        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
+
+        Assert.Equal(2, subscriptionsArray.GetArrayLength());
+
+        // Default subscription should be first
+        var first = subscriptionsArray[0];
+        Assert.Equal("sub2", first.GetProperty("subscriptionId").GetString());
+        Assert.True(first.GetProperty("isDefault").GetBoolean());
+
+        var second = subscriptionsArray[1];
+        Assert.Equal("sub1", second.GetProperty("subscriptionId").GetString());
+        Assert.False(second.GetProperty("isDefault").GetBoolean());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNoDefaultSubscription_AllSubscriptionsNotDefault()
+    {
+        // Arrange
+        var expectedSubscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedSubscriptions);
+        _subscriptionService.GetDefaultSubscriptionId().Returns((string?)null);
+
+        var args = _commandDefinition.Parse("");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Results);
+
+        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
+
+        Assert.Equal(2, subscriptionsArray.GetArrayLength());
+
+        // No subscription should be marked as default
+        for (int i = 0; i < subscriptionsArray.GetArrayLength(); i++)
+        {
+            Assert.False(subscriptionsArray[i].GetProperty("isDefault").GetBoolean());
+        }
+    }
+
+    [Fact]
+    public void MapToSubscriptionInfos_WithDefaultSubscriptionId_DefaultIsFirst()
+    {
+        // Arrange
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub3", "Subscription 3")
+        };
+
+        // Act
+        var result = SubscriptionListCommand.MapToSubscriptionInfos(subscriptions, "sub2");
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Equal("sub2", result[0].SubscriptionId);
+        Assert.True(result[0].IsDefault);
+        Assert.False(result[1].IsDefault);
+        Assert.False(result[2].IsDefault);
+    }
+
+    [Fact]
+    public void MapToSubscriptionInfos_WithNoDefaultSubscriptionId_NoneMarkedDefault()
+    {
+        // Arrange
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
+        };
+
+        // Act
+        var result = SubscriptionListCommand.MapToSubscriptionInfos(subscriptions, null);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.All(result, s => Assert.False(s.IsDefault));
+    }
+
+    [Fact]
+    public void MapToSubscriptionInfos_WithNonMatchingDefaultId_NoneMarkedDefault()
+    {
+        // Arrange
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
+        };
+
+        // Act
+        var result = SubscriptionListCommand.MapToSubscriptionInfos(subscriptions, "non-existent");
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.All(result, s => Assert.False(s.IsDefault));
+    }
+
+    [Fact]
+    public void MapToSubscriptionInfos_IncludesStateAndTenantId()
+    {
+        // Arrange
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1")
+        };
+
+        // Act
+        var result = SubscriptionListCommand.MapToSubscriptionInfos(subscriptions, null);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("sub1", result[0].SubscriptionId);
+        Assert.Equal("Subscription 1", result[0].DisplayName);
+        Assert.NotNull(result[0].State);
+        Assert.NotNull(result[0].TenantId);
+    }
 }
