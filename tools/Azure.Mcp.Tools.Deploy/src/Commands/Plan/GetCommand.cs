@@ -28,7 +28,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
     public override string Description =>
         """
-        Entry point to help the agent deploy a service to the cloud. Agent should read its output and generate a deploy plan in '.azure/plan.${COPILOT_MD_EXTENSION}' for execution steps, recommended Azure services based on the information agent detected from project. Before calling this tool, scan this workspace to detect the services to deploy and their dependent services. If user has existing resources and only wants to deploy to existing resources, agent MUST first help user to pick existing Azure resources's ARM ID with Az CLI command or prompt user to provide!
+        Creates a deployment plan for deploying an application to Azure using the options provided by the caller. Use this tool when the user wants a formatted, step-by-step deployment plan (including suggested Azure resources, infrastructure as code (IaC) templates, and deployment instructions) based on a target Azure hosting service (for example, Container Apps, App Service, or AKS) and a chosen provisioning tool (such as Azure Developer CLI (azd) or Azure CLI with Bicep or Terraform). This command does not scan the workspace or automatically recommend Azure services. Instead, the caller or agent must first analyze the workspace, determine the services, frameworks, and dependencies to deploy, select the appropriate Azure hosting service, provisioning tool, IaC type, and deployment option, and then pass those chosen values into this tool to generate the deployment plan.
         """;
 
     public override string Title => CommandTitle;
