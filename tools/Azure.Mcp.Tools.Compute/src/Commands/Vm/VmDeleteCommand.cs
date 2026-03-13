@@ -45,7 +45,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = false
+        Secret = true
     };
 
     protected override void RegisterOptions(Command command)

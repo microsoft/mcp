@@ -44,7 +44,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = false
+        Secret = true
     };
 
     protected override void RegisterOptions(Command command)
