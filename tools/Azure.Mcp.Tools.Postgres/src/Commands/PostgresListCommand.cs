@@ -42,6 +42,13 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             {
                 result.AddError("The --server parameter is required when --database is specified.");
             }
+
+            // Validate that --user is provided when --server is specified
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.User.Name)))
+            {
+                result.AddError("The --user parameter is required when --server is specified.");
+            }
         });
     }
 
@@ -65,14 +72,6 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             }
 
             var options = BindOptions(parseResult);
-
-            // --user is required when connecting to a server (database or table listing)
-            if (!string.IsNullOrEmpty(options.Server) && string.IsNullOrEmpty(options.User))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "The --user parameter is required when --server is specified.";
-                return context.Response;
-            }
 
             IPostgresService postgresService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
 
