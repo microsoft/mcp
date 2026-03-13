@@ -1,43 +1,30 @@
-using System.ComponentModel;
 using System.Text.Json;
 using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
 using Azure.Mcp.Tools.MonitorInstrumentation.Models;
-using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 
 /// <summary>
-/// Receives brownfield review analysis findings from the LLM and generates a targeted migration plan.
+/// Receives brownfield analysis findings from the LLM and generates a targeted migration plan.
 /// Called after orchestrator_start returns status "analysis_needed".
 /// </summary>
-[McpServerToolType]
-public class SubmitBrownfieldReviewTool
+public class SendBrownfieldAnalysisTool
 {
     private readonly IEnumerable<IGenerator> _generators;
 
-    public SubmitBrownfieldReviewTool(IEnumerable<IGenerator> generators)
+    public SendBrownfieldAnalysisTool(IEnumerable<IGenerator> generators)
     {
         _generators = generators;
     }
 
-    [McpServerTool(Name = "submit_brownfield_review")]
-    [Description(@"Submit brownfield review analysis findings after orchestrator_start returned status 'analysis_needed'.
-You must have scanned the workspace source files and filled in the analysis template.
-Set any section to null if the concern does not exist in the codebase.
-After this call succeeds, continue with orchestrator_next as usual.")]
     public string Submit(
-        [Description("The sessionId returned from orchestrator_start")]
         string sessionId,
-        [Description("Service options findings from analyzing AddApplicationInsightsTelemetry() call. Null if not found.")]
         ServiceOptionsFindings? serviceOptions,
-        [Description("Telemetry initializer findings from analyzing ITelemetryInitializer implementations. Null if none found.")]
         InitializerFindings? initializers,
-        [Description("Telemetry processor findings from analyzing ITelemetryProcessor implementations. Null if none found.")]
         ProcessorFindings? processors,
-        [Description("TelemetryClient usage findings from analyzing direct TelemetryClient usage. Null if not found.")]
         ClientUsageFindings? clientUsage,
-        [Description("Custom sampling configuration findings. Null if no custom sampling.")]
-        SamplingFindings? sampling)
+        SamplingFindings? sampling,
+        TelemetryPipelineFindings? telemetryPipeline)
     {
         if (!OrchestratorTool.Sessions.TryGetValue(sessionId, out var session))
         {
@@ -66,7 +53,8 @@ After this call succeeds, continue with orchestrator_next as usual.")]
             Initializers = initializers,
             Processors = processors,
             ClientUsage = clientUsage,
-            Sampling = sampling
+            Sampling = sampling,
+            TelemetryPipeline = telemetryPipeline
         };
 
         // Store findings and attach to analysis for generator

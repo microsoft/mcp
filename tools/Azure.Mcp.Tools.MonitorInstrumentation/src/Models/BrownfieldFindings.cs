@@ -11,6 +11,7 @@ public record BrownfieldFindings
     public ProcessorFindings? Processors { get; init; }
     public ClientUsageFindings? ClientUsage { get; init; }
     public SamplingFindings? Sampling { get; init; }
+    public TelemetryPipelineFindings? TelemetryPipeline { get; init; }
 }
 
 /// <summary>
@@ -34,6 +35,12 @@ public record ServiceOptionsFindings
     public string? RequestCollectionOptions { get; init; }
     public string? DependencyCollectionOptions { get; init; }
 
+    // --- Properties removed in 3.x (Worker Service only) ---
+    public bool? EnableEventCounterCollectionModule { get; init; }
+    public bool? EnableAppServicesHeartbeatTelemetryModule { get; init; }
+    public bool? EnableAzureInstanceMetadataTelemetryModule { get; init; }
+    public bool? EnableDiagnosticsTelemetryModule { get; init; }
+
     // --- Properties still valid in 3.x (no action needed) ---
     public string? ConnectionString { get; init; }
     public double? SamplingRatio { get; init; }
@@ -44,6 +51,9 @@ public record ServiceOptionsFindings
     public bool? UseApplicationInsights { get; init; }
     public bool? AddTelemetryProcessor { get; init; }
     public bool? ConfigureTelemetryModule { get; init; }
+
+    /// <summary>true if the string overload e.g. AddApplicationInsightsTelemetry("ikey") is used — REMOVED in 3.x</summary>
+    public bool? UsesInstrumentationKeyOverload { get; init; }
 }
 
 /// <summary>
@@ -105,4 +115,20 @@ public record SamplingFindings
     public string? Type { get; init; }
     public string? Details { get; init; }
     public string? File { get; init; }
+}
+
+/// <summary>
+/// Findings from analyzing custom ITelemetryChannel or TelemetrySink usage.
+/// Both TelemetryChannel and TelemetrySinks properties are removed from TelemetryConfiguration in 3.x.
+/// </summary>
+public record TelemetryPipelineFindings
+{
+    public bool Found { get; init; }
+    /// <summary>true if custom ITelemetryChannel or TelemetryConfiguration.TelemetryChannel assignment found</summary>
+    public bool HasCustomChannel { get; init; }
+    /// <summary>true if TelemetrySinks or DefaultTelemetrySink usage found</summary>
+    public bool HasTelemetrySinks { get; init; }
+    public string? ClassName { get; init; }
+    public string? File { get; init; }
+    public string? Details { get; init; }
 }

@@ -1,19 +1,8 @@
-using System.ComponentModel;
-using ModelContextProtocol.Server;
-
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 
-[McpServerToolType]
 public sealed class GetLearningResourceTool
 {
-    // For embedded resources approach:
-    // private const string ResourcePrefix = "Azure.Mcp.Tools.MonitorInstrumentation.Resources.";
-
-    [McpServerTool(Name = "get_learning_resource")]
-    [Description("Get the content of a learning resource by path. Use list_learning_resources to see available paths. Note: For instrumenting an application, use orchestrator_start instead.")]
-    public string GetLearningResource(
-        [Description("Resource path, e.g., 'concepts/opentelemetry-pipeline.md'")]
-        string path)
+    public static string GetLearningResource(string path)
     {
         // Strip learn:// prefix if present
         if (path.StartsWith("learn://", StringComparison.OrdinalIgnoreCase))

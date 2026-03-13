@@ -1,9 +1,7 @@
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using System.Text.Json;
 using Azure.Mcp.Tools.MonitorInstrumentation.Models;
 using Azure.Mcp.Tools.MonitorInstrumentation.Pipeline;
-using ModelContextProtocol.Server;
 using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
@@ -18,7 +16,6 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 /// 3. LLM calls orchestrator_next → gets next action (or completion)
 /// 4. Repeat until complete
 /// </summary>
-[McpServerToolType]
 public class OrchestratorTool
 {
     private readonly WorkspaceAnalyzer _analyzer;
@@ -48,13 +45,7 @@ public class OrchestratorTool
         }
     }
 
-    [McpServerTool(Name = "orchestrator_start")]
-    [Description(@"START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute.
-After executing the action, call orchestrator_next to continue.
-DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.")]
-    public string Start(
-        [Description("Absolute path to the workspace folder")]
-        string workspacePath)
+    public string Start(string workspacePath)
     {
         var spec = _analyzer.Analyze(workspacePath);
 
@@ -148,22 +139,7 @@ DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.")]
         });
     }
 
-    [McpServerTool(Name = "orchestrator_next")]
-    [Description(@"Get the next instrumentation action after completing the current one.
-Call this ONLY after you have executed the EXACT instruction from the previous response.
-DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
-
-Expected workflow:
-1. You received an action from orchestrator_start or orchestrator_next
-2. You executed EXACTLY what the 'instruction' field told you to do
-3. Now call this tool to get the next action
-
-Returns: The next action to execute, or 'complete' status when all steps are done.")]
-    public string Next(
-        [Description("The workspace path returned as sessionId from orchestrator_start")]
-        string sessionId,
-        [Description("One sentence describing what you executed, e.g., 'Ran dotnet add package command' or 'Added UseAzureMonitor() to Program.cs'")]
-        string completionNote)
+    public string Next(string sessionId, string completionNote)
     {
         CleanupExpiredSessions();
 
@@ -185,7 +161,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
                 Status = "error",
                 SessionId = sessionId,
                 Message = "Brownfield analysis is pending. Submit findings first.",
-                Instruction = "Call submit_brownfield_review with the filled analysis template before calling orchestrator_next."
+                Instruction = "Call send_brownfield_analysis with the filled analysis template before calling orchestrator_next."
             });
         }
 
@@ -287,7 +263,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
         sb.AppendLine("4. clientUsage — Find all files that use TelemetryClient directly (injection, instantiation, or method calls)");
         sb.AppendLine("5. sampling — Find any custom sampling configuration");
         sb.AppendLine();
-        sb.AppendLine("When done, call submit_brownfield_review with the sessionId and your filled findings JSON.");
+        sb.AppendLine("When done, call send_brownfield_analysis with the sessionId and your filled findings JSON.");
         return sb.ToString();
     }
 
@@ -376,7 +352,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     }
 
     /// <summary>
-    /// Public accessor for BuildInstruction, used by SubmitBrownfieldAnalysisTool.
+    /// Public accessor for BuildInstruction, used by SendBrownfieldAnalysisTool.
     /// </summary>
     internal static string BuildInstructionPublic(OnboardingAction action, string? preInstruction)
     {

@@ -15,7 +15,7 @@ public class AspNetCoreBrownfieldGenerator : IGenerator
             .Where(p => p.AppType == AppType.AspNetCore)
             .ToList();
 
-        // BrownfieldFindings must be populated (by SubmitBrownfieldAnalysisTool)
+        // BrownfieldFindings must be populated (by SendBrownfieldAnalysisTool)
         // so we don't match during the initial WorkspaceAnalyzer scan.
         return analysis.Language == Language.DotNet
             && aspNetCoreProjects.Count == 1

@@ -1,14 +1,8 @@
-using System.ComponentModel;
-using ModelContextProtocol.Server;
-
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 
-[McpServerToolType]
 public sealed class ListLearningResourcesTool
 {
-    [McpServerTool(Name = "list_learning_resources")]
-    [Description("List all available learning resources for Azure Monitor onboarding. Note: For instrumenting an application, use orchestrator_start instead.")]
-    public string ListLearningResources()
+    public static string ListLearningResources()
     {
         var baseDirectory = AppContext.BaseDirectory;
         var resourcesPath = Path.Combine(baseDirectory, "Resources");

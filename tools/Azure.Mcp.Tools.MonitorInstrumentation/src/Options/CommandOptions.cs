@@ -22,7 +22,7 @@ public sealed class OrchestratorNextOptions
     public string? CompletionNote { get; set; }
 }
 
-public sealed class SubmitBrownfieldAnalysisOptions
+public sealed class SendBrownfieldAnalysisOptions
 {
     public string? SessionId { get; set; }
 

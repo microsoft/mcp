@@ -28,16 +28,14 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
         services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
 
         services.AddSingleton<WorkspaceAnalyzer>();
-        services.AddSingleton<ListLearningResourcesTool>();
-        services.AddSingleton<GetLearningResourceTool>();
         services.AddSingleton<OrchestratorTool>();
-        services.AddSingleton<SubmitBrownfieldAnalysisTool>();
+        services.AddSingleton<SendBrownfieldAnalysisTool>();
 
         services.AddSingleton<ListLearningResourcesCommand>();
         services.AddSingleton<GetLearningResourceCommand>();
         services.AddSingleton<OrchestratorStartCommand>();
         services.AddSingleton<OrchestratorNextCommand>();
-        services.AddSingleton<SubmitBrownfieldAnalysisCommand>();
+        services.AddSingleton<SendBrownfieldAnalysisCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -51,7 +49,7 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
         group.AddCommand("get_learning_resource", serviceProvider.GetRequiredService<GetLearningResourceCommand>());
         group.AddCommand("orchestrator_start", serviceProvider.GetRequiredService<OrchestratorStartCommand>());
         group.AddCommand("orchestrator_next", serviceProvider.GetRequiredService<OrchestratorNextCommand>());
-        group.AddCommand("submit_brownfield_review", serviceProvider.GetRequiredService<SubmitBrownfieldAnalysisCommand>());
+        group.AddCommand("send_brownfield_analysis", serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>());
 
         return group;
     }

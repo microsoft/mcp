@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
 
@@ -60,8 +59,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
         try
         {
-            var tool = context.GetService<GetLearningResourceTool>();
-            var result = tool.GetLearningResource(options.Path!);
+            var result = GetLearningResourceTool.GetLearningResource(options.Path!);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);

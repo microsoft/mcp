@@ -6,9 +6,7 @@ using Azure.Mcp.Tools.MonitorInstrumentation.Options;
 using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
 
@@ -42,8 +40,7 @@ public sealed class ListLearningResourcesCommand(ILogger<ListLearningResourcesCo
     {
         try
         {
-            var tool = context.GetService<ListLearningResourcesTool>();
-            var result = tool.ListLearningResources();
+            var result = ListLearningResourcesTool.ListLearningResources();
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
