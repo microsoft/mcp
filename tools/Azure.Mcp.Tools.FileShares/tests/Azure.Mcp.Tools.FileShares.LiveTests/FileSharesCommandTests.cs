@@ -24,11 +24,24 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = Sanitized,
             GroupForReplace = "1"
+        }),
+        // Sanitize private endpoint connection names in URIs (format: privateEndpointConnections/{name})
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "privateEndpointConnections\\/([^?\\/]+)",
+            Value = Sanitized,
+            GroupForReplace = "1"
         })
     }.ToList();
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
     {
+        // Sanitize private endpoint connection names BEFORE resource base name (format: {resourceBaseName}-fs-pe.{guid})
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = $"{Settings.ResourceBaseName}-fs-pe\\.[a-f0-9]{{8}}-[a-f0-9]{{4}}-[a-f0-9]{{4}}-[a-f0-9]{{4}}-[a-f0-9]{{12}}",
+            Value = Sanitized,
+        }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
             Regex = Settings.ResourceGroupName,
