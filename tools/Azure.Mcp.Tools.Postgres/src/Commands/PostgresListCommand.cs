@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
+using Microsoft.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
@@ -35,6 +34,15 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
         command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
         command.Options.Add(PostgresOptionDefinitions.Password);
+        command.Validators.Add(result =>
+        {
+            // Validate that --server is provided when --database is specified
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.DatabaseOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)))
+            {
+                result.AddError("The --server parameter is required when --database is specified.");
+            }
+        });
     }
 
     protected override BasePostgresOptions BindOptions(ParseResult parseResult)
@@ -51,19 +59,12 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
     {
         try
         {
-            var options = BindOptions(parseResult);
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
 
-            // Validate that --server is provided when --database is specified
-            if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "The --server parameter is required when --database is specified.";
-                return context.Response;
-            }
+            var options = BindOptions(parseResult);
 
             // --user is required when connecting to a server (database or table listing)
             if (!string.IsNullOrEmpty(options.Server) && string.IsNullOrEmpty(options.User))
@@ -90,7 +91,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PostgresListCommandResult(null, null, tables ?? []),
+                    new(null, null, tables ?? []),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
@@ -106,7 +107,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PostgresListCommandResult(null, databases ?? [], null),
+                    new(null, databases ?? [], null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
             else
@@ -118,7 +119,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PostgresListCommandResult(servers ?? [], null, null),
+                    new(servers ?? [], null, null),
                     PostgresJsonContext.Default.PostgresListCommandResult);
             }
         }
