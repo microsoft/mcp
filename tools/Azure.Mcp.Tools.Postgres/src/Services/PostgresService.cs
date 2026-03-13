@@ -4,6 +4,9 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
+using System.Runtime.CompilerServices;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -199,26 +202,37 @@ public class PostgresService(
         {
             // List all Flexible Servers across the entire subscription
             var subscription = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
-            await foreach (PostgreSqlFlexibleServerResource server in subscription.GetPostgreSqlFlexibleServersAsync(cancellationToken))
-            {
-                serverList.Add(server.Data.Name);
-            }
+            await foreach (var name in ListSubscriptionServerNamesAsync(subscription, cancellationToken))
+                serverList.Add(name);
         }
         else
         {
             // List Flexible Servers scoped to the given resource group
             var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
             if (rg == null)
-            {
                 throw new Exception($"Resource group '{resourceGroup}' not found.");
-            }
-            await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
-            {
-                serverList.Add(server.Data.Name);
-            }
+            await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
+                serverList.Add(name);
         }
 
         return serverList;
+    }
+
+    // Virtual so tests can override and avoid calling the un-mockable ARM SDK extension methods.
+    protected virtual async IAsyncEnumerable<string> ListSubscriptionServerNamesAsync(
+        SubscriptionResource subscription,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in subscription.GetPostgreSqlFlexibleServersAsync(cancellationToken))
+            yield return server.Data.Name;
+    }
+
+    protected virtual async IAsyncEnumerable<string> ListResourceGroupServerNamesAsync(
+        ResourceGroupResource resourceGroup,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in resourceGroup.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+            yield return server.Data.Name;
     }
 
     public async Task<string> GetServerConfigAsync(
