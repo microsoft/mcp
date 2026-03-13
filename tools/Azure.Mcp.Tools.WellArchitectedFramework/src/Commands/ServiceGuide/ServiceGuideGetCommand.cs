@@ -70,7 +70,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         var options = BindOptions(parseResult);
         context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
-        
+
         try
         {
             var supportedServicesBulletList = GetSupportedServicesBulletList();
