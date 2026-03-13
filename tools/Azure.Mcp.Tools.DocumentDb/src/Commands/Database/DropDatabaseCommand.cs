@@ -21,14 +21,18 @@ public sealed class DropDatabaseCommand(ILogger<DropDatabaseCommand> logger)
 
     public override string Name => "drop_database";
 
-    public override string Description => "Delete (drop) a database from DocumentDB, removing all its collections and data";
+    public override string Description => "Drop a DocumentDB database, removing all of its collections and data.";
 
     public override string Title => "Drop Database";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = false,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false
     };
 
     protected override void RegisterOptions(Command command)

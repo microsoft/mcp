@@ -21,14 +21,18 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
 
     public override string Name => "db_stats";
 
-    public override string Description => "Show statistics (stats) for a DocumentDB database, including size and storage usage details";
+    public override string Description => "Show statistics for a DocumentDB database, including collection counts, size, and storage usage details.";
 
     public override string Title => "Database Statistics";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = true
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
     };
 
     protected override void RegisterOptions(Command command)

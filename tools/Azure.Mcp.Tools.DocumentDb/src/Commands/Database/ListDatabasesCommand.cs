@@ -22,14 +22,18 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
 
     public override string Name => "list_databases";
 
-    public override string Description => "Return DocumentDB databases. If --db-name is omitted, returns an array of database names. If --db-name is provided, returns an array containing detailed information for that database.";
+    public override string Description => "List DocumentDB databases. If --db-name is omitted, returns all database names. If --db-name is provided, returns detailed information for that database.";
 
     public override string Title => "List Databases";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = true
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
     };
 
     protected override void RegisterOptions(Command command)

@@ -1715,15 +1715,15 @@ azmcp documentdb connection get connection status
 
 # Database Operations
 # List all databases in the DocumentDB instance, or provide --db-name to get details for a specific database
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb database list databases [--db-name <database-name>]
 
-# Get detailed statistics about a database's size and storage usage
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Get detailed statistics about a DocumentDB database's size and storage usage
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb database db stats --db-name <database-name>
 
 # Drop a database and all its collections
-# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb database drop database --db-name <database-name>
 ```
 
