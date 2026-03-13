@@ -33,7 +33,7 @@ public sealed class ConnectionToggleCommand(ILogger<ConnectionToggleCommand> log
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
