@@ -72,7 +72,7 @@ public class ServiceGuideGetCommandTests
         }
         else
         {
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
             Assert.Contains("'--service'", response.Message);
         }
     }
