@@ -2,27 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
-using System.Text.Json;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
+using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using ServiceGuideModel = Azure.Mcp.Tools.WellArchitectedFramework.Models.ServiceGuide;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 
-public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger)
+public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
     : BaseCommand<ServiceGuideGetOptions>
 {
     private const string CommandTitle = "Get Well-Architected Framework Service Guide";
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
-
-    private static Dictionary<string, ServiceGuideModel>? s_serviceGuidesCache;
+    private readonly IServiceGuideService _serviceGuideService = serviceGuideService;
 
     public override string Id => "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f";
 
@@ -30,10 +27,10 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
     public override string Description =>
         "Get Azure Well-Architected Framework guidance for a specific Azure service, " +
-        "including architectural best practices, design patterns, and recommendations based on the five pillars: " +
+        "or list all supported services when no service is specified. " +
+        "When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: " +
         "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Required option: --service: The Azure service name (case-insensitive; spaces and hyphens are normalized) " +
-        "e.g., 'App Service', 'app-service', 'SQL Database', 'sql-database', 'Cosmos DB', 'cosmos-db'";
+        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
 
     public override string Title => CommandTitle;
 
@@ -49,6 +46,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
     protected override void RegisterOptions(Command command)
     {
+        base.RegisterOptions(command);
         command.Options.Add(WellArchitectedFrameworkOptionDefinitions.Service);
     }
 
@@ -71,117 +69,90 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         }
 
         var options = BindOptions(parseResult);
+        context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
 
         try
         {
-            // Lazy load service guides on first use
-            LoadServiceGuides();
+            var supportedServicesBulletList = GetSupportedServicesBulletList();
 
-            var serviceName = options.Service!;
-            var serviceGuideUrl = GetServiceGuideUrl(serviceName);
-            var guidance = GetGuidance(serviceName, serviceGuideUrl);
+            // If no service is specified, return list of all services
+            if (string.IsNullOrWhiteSpace(options.Service))
+            {
+                var listResponse = GetServiceListResponse(supportedServicesBulletList);
+                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+            }
+            else
+            {
+                // Service is specified, return guidance for that service
+                var serviceName = options.Service;
+                var serviceGuideUrl = _serviceGuideService.GetServiceGuideUrl(serviceName);
 
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
-            context.Response.Message = string.Empty;
+                var guidance = string.IsNullOrWhiteSpace(serviceGuideUrl)
+                    ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
+                    : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-            context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
+                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting Well-Architected Framework guidance for service: {Service}", options.Service);
+            if (string.IsNullOrEmpty(options.Service))
+            {
+                _logger.LogError(ex, "Error listing services with Well-Architected Framework guidance.");
+            }
+            else
+            {
+                _logger.LogError(ex, "Error getting Well-Architected Framework guidance for {Service}.", options.Service);
+            }
             HandleException(context, ex);
         }
 
         return Task.FromResult(context.Response);
     }
 
-    private static void LoadServiceGuides()
+    private string GetServiceListResponse(string supportedServicesBulletList)
     {
-        if (s_serviceGuidesCache != null)
+        var serviceNames = _serviceGuideService.GetAllServiceNames();
+        if (serviceNames.Count == 0)
         {
-            return;
+            return "No Azure Well-Architected Framework service guides are currently available.";
         }
 
-        Assembly assembly = typeof(ServiceGuideGetCommand).Assembly;
+        return $"""
+            Azure Well-Architected Framework service guides are available for the following services:
 
-        try
-        {
-            string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, "service-guides.json");
-            string jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
-            var serviceGuides = JsonSerializer.Deserialize(
-                jsonContent,
-                WellArchitectedFrameworkJsonContext.Default.DictionaryStringServiceGuide);
-            s_serviceGuidesCache = serviceGuides ?? new Dictionary<string, ServiceGuideModel>();
+            {supportedServicesBulletList}
 
-            return;
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-
-            throw new InvalidOperationException("Missing 'service-guides.json' file", ex);
-        }
-        catch (JsonException ex)
-        {
-            // If loading fails, set to empty dictionary to prevent repeated attempts
-            s_serviceGuidesCache = new Dictionary<string, ServiceGuideModel>();
-
-            throw new InvalidOperationException("Failed to parse 'service-guides.json' file", ex);
-        }
+            To get guidance for a specific service, use this command with the --service <service-name> option.
+            """;
     }
 
-    private static string? GetServiceGuideUrl(string serviceName)
+    private string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
     {
-        if (s_serviceGuidesCache == null)
-        {
-            return null;
-        }
-
-        var serviceNameNormalized = NormalizeServiceName(serviceName);
-        foreach (var kvp in s_serviceGuidesCache)
-        {
-            if (kvp.Value.ServiceNameVariationsNormalized.Contains(serviceNameNormalized))
-            {
-                return kvp.Value.ServiceGuideUrl;
-            }
-        }
-
-        return null;
+        return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
+            $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
-    private static string NormalizeServiceName(string serviceName)
+    private string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
     {
-        return serviceName
-            .ToLowerInvariant()
-            .Trim()
-            .Replace("-", string.Empty)
-            .Replace("_", string.Empty)
-            .Replace(" ", string.Empty);
+        return $"""
+            Azure Well-Architected Framework guidance for '{serviceName}' service is not available.
+
+            Please try a different variation of the service name using the following format for the --service option:
+            {WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription}
+
+            Supported services:
+            {supportedServicesBulletList}
+
+            For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides
+            """;
     }
 
-    private static string GetGuidance(string serviceName, string? serviceGuideUrl)
+    private string GetSupportedServicesBulletList()
     {
-        if (string.IsNullOrWhiteSpace(serviceGuideUrl))
-        {
-            return $"Azure Well-Architected Framework guidance for '{serviceName}' service is not available. " +
-                "Please use lowercase with hyphens for the service name or try a different variation of the service name. " +
-                $"Supported services include: {GetAllServiceNamesAsCommaSeparatedList()}. " +
-                "Or visit the following URL for guidance on supported services: https://learn.microsoft.com/azure/well-architected/service-guides";
-        }
+        var serviceNames = _serviceGuideService.GetAllServiceNames();
+        var supportedServicesBulletList = string.Join("\n", serviceNames.Select(name => $"- {name}"));
 
-        return $"For detailed Azure Well-Architected Framework guidance on {serviceName} service, " +
-            $"please refer to the markdown file at this url: {serviceGuideUrl}";
-    }
-
-    private static string GetAllServiceNamesAsCommaSeparatedList()
-    {
-        if (s_serviceGuidesCache == null || s_serviceGuidesCache.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        return string.Join(", ", s_serviceGuidesCache.Keys);
+        return supportedServicesBulletList;
     }
 }

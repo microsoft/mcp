@@ -930,9 +930,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance |
+| wellarchitectedframework_serviceguide_get | What services have architectural guidance? |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? |
-| wellarchitectedframework_serviceguide_get | Show me the best practices for virtual machines |
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB |
 
 ## Azure Workbooks
