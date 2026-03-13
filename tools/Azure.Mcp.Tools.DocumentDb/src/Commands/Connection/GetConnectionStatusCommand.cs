@@ -41,8 +41,6 @@ public sealed class GetConnectionStatusCommand(ILogger<GetConnectionStatusComman
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
