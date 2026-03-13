@@ -74,8 +74,9 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var tools = visibleCommands
+            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
-            .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -238,14 +239,20 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
+        JsonObject? meta = null;
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject
-            {
-                ["SecretHint"] = metadata.Secret
-            };
+            meta ??= new();
+            meta["SecretHint"] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta ??= new();
+            meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
         var options = command.GetCommand().Options;
 

@@ -158,10 +158,10 @@
 # ServiceOwners:                       @sajeetharan @xiangyan99
 
 # PRLabel: %tools-Deploy
-/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xiaofanzhou @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Deploy
-# ServiceOwners:                       @qianwens @xiaofanzhou
+# ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # ServiceLabel: %tools-Docker
 # ServiceOwners:                       @conniey @microsoft/azure-mcp
@@ -204,6 +204,12 @@
 
 # ServiceLabel: %tools-FunctionApp
 # ServiceOwners:                      @jongio
+
+# PRLabel: %tools-Functions
+/tools/Azure.Mcp.Tools.Functions/   @manvkaur @vrdmr @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Functions
+# ServiceOwners:                             @manvkaur @vrdmr
 
 # PRLabel: %tools-Grafana
 /tools/Azure.Mcp.Tools.Grafana/        @weng5e @xiangyan99 @microsoft/azure-mcp
@@ -290,10 +296,10 @@
 # ServiceOwners:                     @anannya03 @microsoft/azure-mcp
 
 # PRLabel: %tools-Quota
-/tools/Azure.Mcp.Tools.Quota/          @qianwens @xiaofanzhou @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Quota/          @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Quota
-# ServiceOwners:                       @qianwens @xiaofanzhou
+# ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # PRLabel: %tools-Redis
 /tools/Azure.Mcp.Tools.Redis/           @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp

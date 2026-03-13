@@ -1360,4 +1360,330 @@ public class ComputeService(
         var rgIndex = Array.IndexOf(parts, "resourceGroups");
         return rgIndex >= 0 && rgIndex + 1 < parts.Length ? parts[rgIndex + 1] : string.Empty;
     }
+
+    public async Task<DiskInfo> CreateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        string? source = null,
+        string? location = null,
+        int? sizeGb = null,
+        string? sku = null,
+        string? osType = null,
+        string? zone = null,
+        string? hyperVGeneration = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
+        string? galleryImageReference = null,
+        int? galleryImageReferenceLun = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        string? uploadType = null,
+        long? uploadSizeBytes = null,
+        string? securityType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+        var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+
+        // Default to the resource group's location if not specified
+        var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
+
+        var creationData = CreateDiskCreationData(source, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
+
+        var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
+        {
+            CreationData = creationData
+        };
+
+        if (sizeGb.HasValue)
+        {
+            diskData.DiskSizeGB = sizeGb.Value;
+        }
+
+        if (!string.IsNullOrEmpty(sku))
+        {
+            diskData.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+        }
+
+        if (!string.IsNullOrEmpty(osType))
+        {
+            if (osType.Equals("Windows", StringComparison.OrdinalIgnoreCase))
+            {
+                diskData.OSType = SupportedOperatingSystemType.Windows;
+            }
+            else if (osType.Equals("Linux", StringComparison.OrdinalIgnoreCase))
+            {
+                diskData.OSType = SupportedOperatingSystemType.Linux;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid OS type: {osType}. Accepted values: Linux, Windows.");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(zone))
+        {
+            diskData.Zones.Add(zone);
+        }
+
+        if (!string.IsNullOrEmpty(hyperVGeneration))
+        {
+            diskData.HyperVGeneration = new HyperVGeneration(hyperVGeneration);
+        }
+
+        if (maxShares.HasValue)
+        {
+            diskData.MaxShares = maxShares.Value;
+        }
+
+        if (!string.IsNullOrEmpty(networkAccessPolicy))
+        {
+            diskData.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+        }
+
+        if (!string.IsNullOrEmpty(enableBursting))
+        {
+            diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (tags is not null)
+        {
+            diskData.Tags.Clear();
+            if (!string.IsNullOrEmpty(tags))
+            {
+                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var parts = pair.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        diskData.Tags[parts[0]] = parts[1];
+                    }
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
+        {
+            diskData.Encryption ??= new DiskEncryption();
+            if (!string.IsNullOrEmpty(diskEncryptionSet))
+            {
+                diskData.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+            }
+
+            if (!string.IsNullOrEmpty(encryptionType))
+            {
+                diskData.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskAccessId))
+        {
+            diskData.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+        }
+
+        if (!string.IsNullOrEmpty(tier))
+        {
+            diskData.Tier = tier;
+        }
+
+        if (diskIopsReadWrite.HasValue)
+        {
+            diskData.DiskIopsReadWrite = diskIopsReadWrite.Value;
+        }
+
+        if (diskMbpsReadWrite.HasValue)
+        {
+            diskData.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
+        }
+
+        if (!string.IsNullOrEmpty(securityType))
+        {
+            diskData.SecurityProfile = new DiskSecurityProfile
+            {
+                SecurityType = new DiskSecurityType(securityType)
+            };
+        }
+
+        _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
+
+        var result = await rgResource.Value.GetManagedDisks()
+            .CreateOrUpdateAsync(Azure.WaitUntil.Completed, diskName, diskData, cancellationToken);
+
+        return ConvertToDiskModel(result.Value, resourceGroup);
+    }
+
+    public async Task<DiskInfo> UpdateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        int? sizeGb = null,
+        string? sku = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+        var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+        var diskResource = await rgResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
+
+        var diskPatch = new ManagedDiskPatch();
+
+        if (sizeGb.HasValue)
+        {
+            diskPatch.DiskSizeGB = sizeGb.Value;
+        }
+
+        if (!string.IsNullOrEmpty(sku))
+        {
+            diskPatch.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+        }
+
+        if (diskIopsReadWrite.HasValue)
+        {
+            diskPatch.DiskIopsReadWrite = diskIopsReadWrite.Value;
+        }
+
+        if (diskMbpsReadWrite.HasValue)
+        {
+            diskPatch.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
+        }
+
+        if (maxShares.HasValue)
+        {
+            diskPatch.MaxShares = maxShares.Value;
+        }
+
+        if (!string.IsNullOrEmpty(networkAccessPolicy))
+        {
+            diskPatch.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+        }
+
+        if (!string.IsNullOrEmpty(enableBursting))
+        {
+            diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (tags is not null)
+        {
+            diskPatch.Tags.Clear();
+            if (!string.IsNullOrEmpty(tags))
+            {
+                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var parts = pair.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        diskPatch.Tags[parts[0]] = parts[1];
+                    }
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
+        {
+            diskPatch.Encryption ??= new DiskEncryption();
+            if (!string.IsNullOrEmpty(diskEncryptionSet))
+            {
+                diskPatch.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+            }
+
+            if (!string.IsNullOrEmpty(encryptionType))
+            {
+                diskPatch.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(diskAccessId))
+        {
+            diskPatch.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+        }
+
+        if (!string.IsNullOrEmpty(tier))
+        {
+            diskPatch.Tier = tier;
+        }
+
+        _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
+
+        var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
+
+        return ConvertToDiskModel(result.Value, resourceGroup);
+    }
+
+    private static DiskCreationData CreateDiskCreationData(string? source, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
+    {
+        if (!string.IsNullOrEmpty(uploadType))
+        {
+            var createOption = uploadType.Equals("UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
+                ? DiskCreateOption.UploadPreparedSecure
+                : DiskCreateOption.Upload;
+
+            return new DiskCreationData(createOption)
+            {
+                UploadSizeBytes = uploadSizeBytes
+            };
+        }
+
+        if (!string.IsNullOrEmpty(galleryImageReference))
+        {
+            var creationData = new DiskCreationData(DiskCreateOption.FromImage)
+            {
+                GalleryImageReference = new ImageDiskReference
+                {
+                    Id = new Azure.Core.ResourceIdentifier(galleryImageReference)
+                }
+            };
+
+            if (galleryImageReferenceLun.HasValue)
+            {
+                creationData.GalleryImageReference.Lun = galleryImageReferenceLun.Value;
+            }
+
+            return creationData;
+        }
+
+        if (string.IsNullOrEmpty(source))
+        {
+            return new DiskCreationData(DiskCreateOption.Empty);
+        }
+
+        // Blob URIs start with http:// or https://
+        if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DiskCreationData(DiskCreateOption.Import)
+            {
+                SourceUri = new Uri(source)
+            };
+        }
+
+        // Otherwise treat as a resource ID (snapshot or managed disk)
+        return new DiskCreationData(DiskCreateOption.Copy)
+        {
+            SourceResourceId = new Azure.Core.ResourceIdentifier(source)
+        };
+    }
 }
