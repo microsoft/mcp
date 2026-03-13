@@ -9,37 +9,37 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// Provides access to the allowlist of skill file references permitted for telemetry.
+/// Provides access to the allowlist of plugin file references permitted for telemetry.
 /// </summary>
-public interface ISkillFileReferenceAllowlistProvider
+public interface IPluginFileReferenceAllowlistProvider
 {
     /// <summary>
-    /// Gets the set of allowed skill-relative file references.
+    /// Gets the set of allowed plugin-relative file references.
     /// Only telemetry events with file paths in this set will be logged (with PII stripped).
     /// </summary>
-    /// <returns>A HashSet of allowed skill-relative file references (case-insensitive).</returns>
+    /// <returns>A HashSet of allowed plugin-relative file references (case-insensitive).</returns>
     HashSet<string> GetAllowedPaths();
 }
 
 /// <summary>
-/// Provides skill file reference allowlist loaded from an embedded JSON resource.
-/// The resource should contain a JSON array of skill-relative file references.
+/// Provides plugin file reference allowlist loaded from an embedded JSON resource.
+/// The resource should contain a JSON array of plugin-relative file references.
 /// </summary>
-public sealed class ResourceSkillFileReferenceAllowlistProvider : ISkillFileReferenceAllowlistProvider
+public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileReferenceAllowlistProvider
 {
-    private readonly ILogger<ResourceSkillFileReferenceAllowlistProvider> _logger;
+    private readonly ILogger<ResourcePluginFileReferenceAllowlistProvider> _logger;
     private readonly Assembly _sourceAssembly;
     private readonly string _resourcePattern;
     private readonly Lazy<HashSet<string>> _allowedPaths;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ResourceSkillFileReferenceAllowlistProvider"/> class.
+    /// Initializes a new instance of the <see cref="ResourcePluginFileReferenceAllowlistProvider"/> class.
     /// </summary>
     /// <param name="logger">Logger for diagnostic messages.</param>
     /// <param name="sourceAssembly">The assembly containing the embedded resource.</param>
-    /// <param name="resourcePattern">The pattern or name of the embedded resource (e.g., "allowed-skill-file-references.json").</param>
-    public ResourceSkillFileReferenceAllowlistProvider(
-        ILogger<ResourceSkillFileReferenceAllowlistProvider> logger,
+    /// <param name="resourcePattern">The pattern or name of the embedded resource (e.g., "allowed-plugin-file-references.json").</param>
+    public ResourcePluginFileReferenceAllowlistProvider(
+        ILogger<ResourcePluginFileReferenceAllowlistProvider> logger,
         Assembly sourceAssembly,
         string resourcePattern)
     {
@@ -69,7 +69,7 @@ public sealed class ResourceSkillFileReferenceAllowlistProvider : ISkillFileRefe
                 }
             }
 
-            _logger.LogInformation("Loaded {Count} allowed skill file references from {ResourceName}", paths.Count, resourceName);
+            _logger.LogInformation("Loaded {Count} allowed plugin file references from {ResourceName}", paths.Count, resourceName);
             return new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase);
         }
         catch (Exception ex)
@@ -77,7 +77,7 @@ public sealed class ResourceSkillFileReferenceAllowlistProvider : ISkillFileRefe
             // Return empty set if loading fails (fail-closed for security)
             // This ensures that if the resource is missing or malformed,
             // no telemetry will be logged rather than allowing all paths
-            var errorMessage = "Failed to load allowed skill file references from JSON resource. Returning empty allowlist for security.";
+            var errorMessage = "Failed to load allowed plugin file references from JSON resource. Returning empty allowlist for security.";
             _logger.LogError(ex, errorMessage);
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }

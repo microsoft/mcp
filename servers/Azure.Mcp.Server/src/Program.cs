@@ -45,8 +45,8 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            SkillTelemetryCommand.ConfigureServices = ConfigureServices;
-            SkillTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
+            PluginTelemetryCommand.ConfigureServices = ConfigureServices;
+            PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
 
@@ -247,8 +247,8 @@ internal class Program
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
 
-        services.AddSingleton<ISkillFileReferenceAllowlistProvider>(sp =>
-            ActivatorUtilities.CreateInstance<ResourceSkillFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-skill-file-references.json"));
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

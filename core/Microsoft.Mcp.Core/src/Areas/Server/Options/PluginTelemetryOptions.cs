@@ -6,10 +6,10 @@ using System.Text.Json.Serialization;
 namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
-/// Configuration options for publishing skill telemetry.
+/// Configuration options for publishing plugin telemetry.
 /// Inherits from ServiceStartOptions to enable full MCP server service registration.
 /// </summary>
-public class SkillTelemetryOptions : ServiceStartOptions
+public class PluginTelemetryOptions : ServiceStartOptions
 {
     /// <summary>
     /// Gets or sets the timestamp of the telemetry event in ISO 8601 format.
@@ -18,7 +18,7 @@ public class SkillTelemetryOptions : ServiceStartOptions
     public string? Timestamp { get; set; }
 
     /// <summary>
-    /// Gets or sets the type of event being logged (e.g., 'skill_invocation', 'tool_invocation', 'file_reference').
+    /// Gets or sets the type of event being logged (e.g., 'plugin_invocation', 'tool_invocation', 'file_reference').
     /// </summary>
     [JsonPropertyName("eventType")]
     public string? EventType { get; set; }
@@ -30,10 +30,16 @@ public class SkillTelemetryOptions : ServiceStartOptions
     public string? SessionId { get; set; }
 
     /// <summary>
-    /// Gets or sets the name of the skill being invoked.
+    /// Gets or sets the type of client invoking the telemetry (e.g., 'copilot-cli', 'vscode', 'claude-desktop').
     /// </summary>
-    [JsonPropertyName("skillName")]
-    public string? SkillName { get; set; }
+    [JsonPropertyName("clientType")]
+    public string? ClientType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the plugin being invoked.
+    /// </summary>
+    [JsonPropertyName("pluginName")]
+    public string? PluginName { get; set; }
 
     /// <summary>
     /// Gets or sets the name of the tool being invoked.
@@ -43,8 +49,7 @@ public class SkillTelemetryOptions : ServiceStartOptions
 
     /// <summary>
     /// Gets or sets the file reference being accessed.
-    /// This will be validated against an allowlist before telemetry is emitted.
-    /// After validation, this contains the skill-relative path with PII removed.
+    /// This should be a plugin-relative path that will be validated against an allowlist before telemetry is emitted.
     /// </summary>
     [JsonPropertyName("fileReference")]
     public string? FileReference { get; set; }
