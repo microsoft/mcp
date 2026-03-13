@@ -14,6 +14,7 @@ using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+
 namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 
 public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService service)
