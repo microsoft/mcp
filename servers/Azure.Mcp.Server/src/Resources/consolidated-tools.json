@@ -183,7 +183,7 @@
     },
     {
       "name": "get_azure_database_connection_status",
-      "description": "Get the current DocumentDB connection status and details for the active Azure Cosmos DB for MongoDB (vCore) session.",
+      "description": "Get the current connection status and details for the active Azure DocumentDB session.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -250,7 +250,7 @@
     },
     {
       "name": "manage_azure_documentdb_connections",
-      "description": "Connect to or disconnect from an Azure Cosmos DB for MongoDB (vCore) instance by managing the current DocumentDB session.",
+      "description": "Manage the current Azure DocumentDB session by connecting to or disconnecting from an instance.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -269,8 +269,8 @@
           "description": "This tool may modify its environment and perform write operations (create, update, delete)."
         },
         "secret": {
-          "value": true,
-          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
         },
         "localRequired": {
           "value": false,
