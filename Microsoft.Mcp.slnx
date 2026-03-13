@@ -317,6 +317,9 @@
   <Folder Name="/tools/Azure.Mcp.Tools.MonitorInstrumentation/src/">
     <Project Path="tools/Azure.Mcp.Tools.MonitorInstrumentation/src/Azure.Mcp.Tools.MonitorInstrumentation.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.MonitorInstrumentation/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.MonitorInstrumentation/tests/Azure.Mcp.Tools.MonitorInstrumentation.UnitTests/Azure.Mcp.Tools.MonitorInstrumentation.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/" />
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/src/">
     <Project Path="tools/Azure.Mcp.Tools.MySql/src/Azure.Mcp.Tools.MySql.csproj" />

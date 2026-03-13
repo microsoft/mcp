@@ -267,79 +267,9 @@ public class OrchestratorTool
         return sb.ToString();
     }
 
-    private static object BuildAnalysisTemplate()
+    private static AnalysisTemplate BuildAnalysisTemplate()
     {
-        return new
-        {
-            serviceOptions = new
-            {
-                entryPointFile = "(string) File containing AddApplicationInsightsTelemetry, e.g. Program.cs",
-                setupPattern = "(string) e.g. AddApplicationInsightsTelemetry",
-                instrumentationKey = "(string|null) options.InstrumentationKey value — REMOVED in 3.x",
-                connectionString = "(string|null) options.ConnectionString value",
-                enableAdaptiveSampling = "(bool|null) — REMOVED in 3.x",
-                developerMode = "(bool|null) — REMOVED in 3.x",
-                endpointAddress = "(string|null) — REMOVED in 3.x, now part of ConnectionString",
-                enableHeartbeat = "(bool|null) — REMOVED in 3.x",
-                enableDebugLogger = "(bool|null) — REMOVED in 3.x",
-                requestCollectionOptions = "(string|null) — REMOVED in 3.x",
-                dependencyCollectionOptions = "(string|null) — REMOVED in 3.x",
-                samplingRatio = "(number|null) — New in 3.x, already correct if set",
-                tracesPerSecond = "(number|null) — New in 3.x, already correct if set",
-                enableQuickPulseMetricStream = "(bool|null) — unchanged",
-                useApplicationInsights = "(bool) true if UseApplicationInsights() call found — REMOVED in 3.x",
-                addTelemetryProcessor = "(bool) true if AddApplicationInsightsTelemetryProcessor<T>() found — REMOVED in 3.x",
-                configureTelemetryModule = "(bool) true if ConfigureTelemetryModule<T>() found — REMOVED in 3.x"
-            },
-            initializers = new
-            {
-                found = "(bool) true if any ITelemetryInitializer implementations exist",
-                implementations = new[]
-                {
-                    new
-                    {
-                        className = "(string) class name",
-                        file = "(string) file path",
-                        purpose = "(string) what this initializer does"
-                    }
-                },
-                registrations = new[] { "(string) the DI registration line, e.g. services.AddSingleton<ITelemetryInitializer, MyInit>()" }
-            },
-            processors = new
-            {
-                found = "(bool) true if any ITelemetryProcessor implementations exist",
-                implementations = new[]
-                {
-                    new
-                    {
-                        className = "(string) class name",
-                        file = "(string) file path",
-                        purpose = "(string) what this processor does"
-                    }
-                },
-                registrations = new[] { "(string) the registration line" }
-            },
-            clientUsage = new
-            {
-                directUsage = "(bool) true if TelemetryClient is used anywhere",
-                usages = new[]
-                {
-                    new
-                    {
-                        file = "(string) file path",
-                        pattern = "(string) e.g. Constructor injection of TelemetryClient",
-                        methods = new[] { "(string) method names called, e.g. TrackEvent, TrackException" }
-                    }
-                }
-            },
-            sampling = new
-            {
-                hasCustomSampling = "(bool) true if any custom sampling config exists",
-                type = "(string|null) e.g. adaptive, fixed-rate",
-                details = "(string|null) description of what was found",
-                file = "(string|null) file where sampling is configured"
-            }
-        };
+        return AnalysisTemplate.CreateDefault();
     }
 
     /// <summary>
@@ -597,7 +527,7 @@ internal record OrchestratorResponse
     /// <summary>
     /// Brownfield analysis template (only present when status is "analysis_needed")
     /// </summary>
-    public object? AnalysisTemplate { get; init; }
+    public AnalysisTemplate? AnalysisTemplate { get; init; }
 }
 
 #endregion

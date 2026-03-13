@@ -13,4 +13,5 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
 [JsonSerializable(typeof(InstrumentationData))]
 [JsonSerializable(typeof(OrchestratorResponse))]
 [JsonSerializable(typeof(BrownfieldFindings))]
+[JsonSerializable(typeof(AnalysisTemplate))]
 internal partial class OnboardingJsonContext : JsonSerializerContext;

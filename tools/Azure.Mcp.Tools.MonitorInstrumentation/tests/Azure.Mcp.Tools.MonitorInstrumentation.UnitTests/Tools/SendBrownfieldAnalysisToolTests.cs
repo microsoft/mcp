@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Reflection;
 using Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
 using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
 using Azure.Mcp.Tools.MonitorInstrumentation.Models;
@@ -12,11 +11,6 @@ namespace Azure.Mcp.Tools.MonitorInstrumentation.UnitTests.Tools;
 
 public sealed class SendBrownfieldAnalysisToolTests
 {
-    public SendBrownfieldAnalysisToolTests()
-    {
-        ClearSessions();
-    }
-
     [Fact]
     public void Submit_WithoutActiveSession_ReturnsError()
     {
@@ -42,13 +36,19 @@ public sealed class SendBrownfieldAnalysisToolTests
     public void Submit_WhenSessionIsNotAwaitingAnalysis_ReturnsError()
     {
         // Arrange
-        var sessionId = $"session-{Guid.NewGuid():N}";
-        AddSession(sessionId, "Executing", CreateAnalysis());
+        var workspacePath = CreateWorkspaceDirectory();
+        var orchestrator = new OrchestratorTool(CreateAnalyzer(
+            state: InstrumentationState.Greenfield,
+            existingInstrumentation: null,
+            generators: [CreateGenerator(CreateSpecWithOneAction())]));
+        var startResponse = ParseJson(orchestrator.Start(workspacePath));
+        var sessionId = startResponse.GetProperty("sessionId").GetString();
+
         var tool = new SendBrownfieldAnalysisTool([CreateGenerator(CreateSpecWithOneAction())]);
 
         // Act
         var response = ParseJson(tool.Submit(
-            sessionId,
+            sessionId!,
             null,
             null,
             null,
@@ -65,13 +65,19 @@ public sealed class SendBrownfieldAnalysisToolTests
     public void Submit_WhenAwaitingAnalysisAndNoMatchingGenerator_ReturnsUnsupported()
     {
         // Arrange
-        var sessionId = $"session-{Guid.NewGuid():N}";
-        AddSession(sessionId, "AwaitingAnalysis", CreateAnalysis());
+        var workspacePath = CreateWorkspaceDirectory();
+        var orchestrator = new OrchestratorTool(CreateAnalyzer(
+            state: InstrumentationState.Brownfield,
+            existingInstrumentation: new ExistingInstrumentation { Type = InstrumentationType.ApplicationInsightsSdk },
+            generators: []));
+        var startResponse = ParseJson(orchestrator.Start(workspacePath));
+        var sessionId = startResponse.GetProperty("sessionId").GetString();
+
         var tool = new SendBrownfieldAnalysisTool([]);
 
         // Act
         var response = ParseJson(tool.Submit(
-            sessionId,
+            sessionId!,
             new ServiceOptionsFindings { SetupPattern = "AddApplicationInsightsTelemetry" },
             null,
             null,
@@ -87,15 +93,20 @@ public sealed class SendBrownfieldAnalysisToolTests
     public void Submit_WhenAwaitingAnalysisAndGeneratorMatches_ReturnsInProgress()
     {
         // Arrange
-        var sessionId = $"session-{Guid.NewGuid():N}";
-        AddSession(sessionId, "AwaitingAnalysis", CreateAnalysis());
+        var workspacePath = CreateWorkspaceDirectory();
+        var orchestrator = new OrchestratorTool(CreateAnalyzer(
+            state: InstrumentationState.Brownfield,
+            existingInstrumentation: new ExistingInstrumentation { Type = InstrumentationType.ApplicationInsightsSdk },
+            generators: []));
+        var startResponse = ParseJson(orchestrator.Start(workspacePath));
+        var sessionId = startResponse.GetProperty("sessionId").GetString();
 
         var matchingGenerator = CreateGenerator(CreateSpecWithOneAction());
         var tool = new SendBrownfieldAnalysisTool([matchingGenerator]);
 
         // Act
         var response = ParseJson(tool.Submit(
-            sessionId,
+            sessionId!,
             new ServiceOptionsFindings { SetupPattern = "AddApplicationInsightsTelemetry" },
             new InitializerFindings { Found = false },
             new ProcessorFindings { Found = false },
@@ -142,26 +153,6 @@ public sealed class SendBrownfieldAnalysisToolTests
             generators);
     }
 
-    private static Analysis CreateAnalysis()
-    {
-        return new Analysis
-        {
-            Language = Language.DotNet,
-            State = InstrumentationState.Brownfield,
-            ExistingInstrumentation = new ExistingInstrumentation { Type = InstrumentationType.ApplicationInsightsSdk },
-            Projects =
-            [
-                new ProjectInfo
-                {
-                    ProjectFile = "app.csproj",
-                    EntryPoint = "Program.cs",
-                    AppType = AppType.AspNetCore,
-                    HostingPattern = HostingPattern.MinimalApi
-                }
-            ]
-        };
-    }
-
     private static IGenerator CreateGenerator(OnboardingSpec spec)
     {
         var generator = Substitute.For<IGenerator>();
@@ -202,31 +193,10 @@ public sealed class SendBrownfieldAnalysisToolTests
         return document.RootElement.Clone();
     }
 
-    private static void AddSession(string sessionId, string stateName, Analysis analysis)
+    private static string CreateWorkspaceDirectory()
     {
-        var toolsAssembly = typeof(OrchestratorTool).Assembly;
-        var executionSessionType = toolsAssembly.GetType("Azure.Mcp.Tools.MonitorInstrumentation.Tools.ExecutionSession")!;
-        var sessionStateType = toolsAssembly.GetType("Azure.Mcp.Tools.MonitorInstrumentation.Tools.SessionState")!;
-
-        var session = Activator.CreateInstance(executionSessionType)!;
-        executionSessionType.GetProperty("WorkspacePath")!.SetValue(session, sessionId);
-        executionSessionType.GetProperty("Analysis")!.SetValue(session, analysis);
-        executionSessionType.GetProperty("State")!.SetValue(session, Enum.Parse(sessionStateType, stateName));
-        executionSessionType.GetProperty("CreatedAt")!.SetValue(session, DateTime.UtcNow);
-
-        var sessions = GetSessions();
-        sessions.GetType().GetMethod("TryAdd")!.Invoke(sessions, [sessionId, session]);
-    }
-
-    private static object GetSessions()
-    {
-        var sessionsField = typeof(OrchestratorTool).GetField("Sessions", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-        return sessionsField!.GetValue(null)!;
-    }
-
-    private static void ClearSessions()
-    {
-        var sessions = GetSessions();
-        sessions.GetType().GetMethod("Clear")!.Invoke(sessions, null);
+        var path = Path.Combine(Path.GetTempPath(), $"monitorinstrumentation-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(path);
+        return path;
     }
 }

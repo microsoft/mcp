@@ -68,7 +68,7 @@ public sealed class OrchestratorToolTests
     }
 
     [Fact]
-    public void Start_WithBrownfieldUnsupportedAiSdk_ThrowsForAnalysisTemplateSerialization()
+    public void Start_WithBrownfieldUnsupportedAiSdk_ReturnsAnalysisNeeded()
     {
         // Arrange
         var workspacePath = CreateWorkspaceDirectory();
@@ -81,9 +81,14 @@ public sealed class OrchestratorToolTests
 
             var tool = new OrchestratorTool(analyzer);
 
+            // Act
+            var response = ParseJson(tool.Start(workspacePath));
+
             // Assert
-            var ex = Assert.Throws<NotSupportedException>(() => tool.Start(workspacePath));
-            Assert.Contains("AnalysisTemplate", ex.Message, StringComparison.Ordinal);
+            Assert.Equal("analysis_needed", response.GetProperty("status").GetString());
+            Assert.Equal(workspacePath, response.GetProperty("sessionId").GetString());
+            Assert.True(response.TryGetProperty("analysisTemplate", out var analysisTemplate));
+            Assert.True(analysisTemplate.TryGetProperty("serviceOptions", out _));
         }
         finally
         {
