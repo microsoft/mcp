@@ -105,6 +105,47 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
             });
     }
 
+    private static string CreateUniqueName(string prefix) => $"{prefix}{Guid.NewGuid():N}";
+
+    private MongoClient CreateClient() => new(ConnectionString);
+
+    private async Task CreateCollectionWithDocumentsAsync(string databaseName, string collectionName, IEnumerable<BsonDocument> documents)
+    {
+        var client = CreateClient();
+        var database = client.GetDatabase(databaseName);
+
+        var existingCollectionsCursor = await database.ListCollectionNamesAsync();
+        var existingCollections = await existingCollectionsCursor.ToListAsync();
+
+        if (!existingCollections.Contains(collectionName))
+        {
+            await database.CreateCollectionAsync(collectionName);
+        }
+
+        var collection = database.GetCollection<BsonDocument>(collectionName);
+        await collection.DeleteManyAsync(Builders<BsonDocument>.Filter.Empty);
+        await collection.InsertManyAsync(documents);
+    }
+
+    private async Task<bool> CollectionExistsAsync(string databaseName, string collectionName)
+    {
+        var client = CreateClient();
+        var database = client.GetDatabase(databaseName);
+        var existingCollectionsCursor = await database.ListCollectionNamesAsync();
+        var existingCollections = await existingCollectionsCursor.ToListAsync();
+        return existingCollections.Contains(collectionName);
+    }
+
+    private async Task DeleteDatabaseIfExistsAsync(string databaseName)
+    {
+        var client = CreateClient();
+        var existingDatabases = await client.ListDatabaseNames().ToListAsync();
+        if (existingDatabases.Contains(databaseName))
+        {
+            await client.DropDatabaseAsync(databaseName);
+        }
+    }
+
     [Fact]
     public async Task Should_connect_with_connection_action()
     {
@@ -270,6 +311,146 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
 
         var deleted = result.Value.AssertProperty("deleted");
         Assert.True(deleted.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Should_get_collection_statistics()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_collection_collection_stats",
+            new()
+            {
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName }
+            });
+
+        Assert.NotNull(result);
+
+        var ns = result.Value.AssertProperty("ns");
+        Assert.Equal($"{TestDatabaseName}.{CollectionName}", ns.GetString());
+
+        var count = result.Value.AssertProperty("count");
+        Assert.True(count.GetInt32() >= 3);
+    }
+
+    [Fact]
+    public async Task Should_sample_documents_from_collection()
+    {
+        await ConnectAsync();
+        const int sampleSize = 2;
+
+        var result = await CallToolAsync(
+            "documentdb_collection_sample_documents",
+            new()
+            {
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "sample-size", sampleSize.ToString() }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+
+        var samples = result.Value.EnumerateArray().ToList();
+        Assert.NotEmpty(samples);
+        Assert.True(samples.Count <= sampleSize);
+
+        foreach (var sample in samples)
+        {
+            Assert.Equal(JsonValueKind.Object, sample.ValueKind);
+        }
+    }
+
+    [Fact]
+    public async Task Should_rename_collection()
+    {
+        await ConnectAsync();
+
+        var databaseName = CreateUniqueName("rename-db-");
+        var collectionName = CreateUniqueName("old-");
+        var newCollectionName = CreateUniqueName("new-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(
+                databaseName,
+                collectionName,
+                [new BsonDocument { { "name", "rename-item" }, { "value", 1 } }]);
+
+            var result = await CallToolAsync(
+                "documentdb_collection_rename_collection",
+                new()
+                {
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "new-collection-name", newCollectionName }
+                });
+
+            Assert.NotNull(result);
+
+            var resultDatabaseName = result.Value.AssertProperty("databaseName");
+            Assert.Equal(databaseName, resultDatabaseName.GetString());
+
+            var oldName = result.Value.AssertProperty("oldName");
+            Assert.Equal(collectionName, oldName.GetString());
+
+            var newName = result.Value.AssertProperty("newName");
+            Assert.Equal(newCollectionName, newName.GetString());
+
+            var renamed = result.Value.AssertProperty("renamed");
+            Assert.True(renamed.GetBoolean());
+
+            Assert.False(await CollectionExistsAsync(databaseName, collectionName));
+            Assert.True(await CollectionExistsAsync(databaseName, newCollectionName));
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_drop_collection()
+    {
+        await ConnectAsync();
+
+        var databaseName = CreateUniqueName("drop-db-");
+        var collectionName = CreateUniqueName("drop-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(
+                databaseName,
+                collectionName,
+                [new BsonDocument { { "name", "drop-item" }, { "value", 1 } }]);
+
+            var result = await CallToolAsync(
+                "documentdb_collection_drop_collection",
+                new()
+                {
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName }
+                });
+
+            Assert.NotNull(result);
+
+            var resultDatabaseName = result.Value.AssertProperty("databaseName");
+            Assert.Equal(databaseName, resultDatabaseName.GetString());
+
+            var resultCollectionName = result.Value.AssertProperty("collectionName");
+            Assert.Equal(collectionName, resultCollectionName.GetString());
+
+            var deleted = result.Value.AssertProperty("deleted");
+            Assert.True(deleted.GetBoolean());
+
+            Assert.False(await CollectionExistsAsync(databaseName, collectionName));
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
     }
 
     // [Fact]

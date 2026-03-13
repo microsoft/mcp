@@ -972,6 +972,12 @@ Example prompts that generate Azure CLI commands:
 * "Get statistics for database 'mydb'"
 * "Get details for database 'analytics' in DocumentDB"
 * "Drop database 'testdb'"
+* "Show me collections in database 'mydb'"
+* "Get statistics for collection 'users'"
+* "Rename collection 'old-name' to 'new-name'"
+* "Sample documents from collection 'products'"
+* "Find documents in collection 'users' where status is active"
+* "Count documents in collection 'orders'"
 
 ### 📣 Azure Event Grid
 

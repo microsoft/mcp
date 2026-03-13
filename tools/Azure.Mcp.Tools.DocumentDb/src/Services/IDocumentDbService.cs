@@ -18,4 +18,10 @@ public interface IDocumentDbService : IDisposable
     Task<DocumentDbResponse> GetDatabasesAsync(string? dbName = null, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> GetDatabaseStatsAsync(string dbName, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> DropDatabaseAsync(string dbName, CancellationToken cancellationToken = default);
+
+    // Collection Operations
+    Task<DocumentDbResponse> GetCollectionStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> RenameCollectionAsync(string databaseName, string oldName, string newName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> DropCollectionAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default);
 }

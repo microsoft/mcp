@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// using Azure.Mcp.Tools.DocumentDb.Commands.Collection;
+using Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 using Azure.Mcp.Tools.DocumentDb.Commands.Connection;
 using Azure.Mcp.Tools.DocumentDb.Commands.Database;
 // using Azure.Mcp.Tools.DocumentDb.Commands.Document;
@@ -30,6 +30,12 @@ public class DocumentDbSetup : IAreaSetup
         services.AddSingleton<ListDatabasesCommand>();
         services.AddSingleton<DbStatsCommand>();
         services.AddSingleton<DropDatabaseCommand>();
+
+        // Collection Commands
+        services.AddSingleton<CollectionStatsCommand>();
+        services.AddSingleton<RenameCollectionCommand>();
+        services.AddSingleton<DropCollectionCommand>();
+        services.AddSingleton<SampleDocumentsCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -65,6 +71,22 @@ public class DocumentDbSetup : IAreaSetup
         database.AddCommand(listDatabasesCommand.Name, listDatabasesCommand);
         database.AddCommand(dbStatsCommand.Name, dbStatsCommand);
         database.AddCommand(dropDatabaseCommand.Name, dropDatabaseCommand);
+
+        // Collection subgroup
+        var collection = new CommandGroup(
+            "collection",
+            "Collection operations - Commands for managing DocumentDB collections.");
+        documentDb.AddSubGroup(collection);
+
+        var collectionStatsCommand = serviceProvider.GetRequiredService<CollectionStatsCommand>();
+        var renameCollectionCommand = serviceProvider.GetRequiredService<RenameCollectionCommand>();
+        var dropCollectionCommand = serviceProvider.GetRequiredService<DropCollectionCommand>();
+        var sampleDocumentsCommand = serviceProvider.GetRequiredService<SampleDocumentsCommand>();
+
+        collection.AddCommand(collectionStatsCommand.Name, collectionStatsCommand);
+        collection.AddCommand(renameCollectionCommand.Name, renameCollectionCommand);
+        collection.AddCommand(dropCollectionCommand.Name, dropCollectionCommand);
+        collection.AddCommand(sampleDocumentsCommand.Name, sampleDocumentsCommand);
 
         return documentDb;
     }

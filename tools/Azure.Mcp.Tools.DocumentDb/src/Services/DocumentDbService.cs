@@ -297,12 +297,209 @@ public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbS
 
     #endregion
 
+    #region Collection Operations
+
+    public async Task<DocumentDbResponse> GetCollectionStatsAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        if (!await DatabaseExistsAsync(databaseName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{databaseName}' was not found."
+            };
+        }
+
+        if (!await CollectionExistsAsync(databaseName, collectionName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Collection '{collectionName}' was not found in database '{databaseName}'."
+            };
+        }
+
+        var database = _client!.GetDatabase(databaseName);
+        var command = new BsonDocument { { "collStats", collectionName } };
+        var stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Collection statistics for '{collectionName}' retrieved successfully.",
+            Data = stats
+        };
+    }
+
+    public async Task<DocumentDbResponse> RenameCollectionAsync(string databaseName, string oldName, string newName, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(oldName, nameof(oldName));
+        ValidateParameter(newName, nameof(newName));
+
+        if (!await DatabaseExistsAsync(databaseName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{databaseName}' was not found."
+            };
+        }
+
+        if (!await CollectionExistsAsync(databaseName, oldName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Collection '{oldName}' was not found in database '{databaseName}'."
+            };
+        }
+
+        if (await CollectionExistsAsync(databaseName, newName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.Conflict,
+                Message = $"Collection '{newName}' already exists in database '{databaseName}'."
+            };
+        }
+
+        var database = _client!.GetDatabase(databaseName);
+        await database.RenameCollectionAsync(oldName, newName, cancellationToken: cancellationToken);
+
+        _logger.LogInformation("Renamed collection {OldName} to {NewName} in database {DatabaseName}", oldName, newName, databaseName);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Collection '{oldName}' was renamed to '{newName}' successfully.",
+            Data = new Dictionary<string, object?>
+            {
+                ["databaseName"] = databaseName,
+                ["oldName"] = oldName,
+                ["newName"] = newName,
+                ["renamed"] = true
+            }
+        };
+    }
+
+    public async Task<DocumentDbResponse> DropCollectionAsync(string databaseName, string collectionName, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        if (!await DatabaseExistsAsync(databaseName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{databaseName}' was not found."
+            };
+        }
+
+        if (!await CollectionExistsAsync(databaseName, collectionName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Collection '{collectionName}' was not found in database '{databaseName}'."
+            };
+        }
+
+        var database = _client!.GetDatabase(databaseName);
+        await database.DropCollectionAsync(collectionName, cancellationToken);
+
+        _logger.LogWarning("Dropped collection {CollectionName} from database {DatabaseName}", collectionName, databaseName);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Collection '{collectionName}' dropped successfully.",
+            Data = new Dictionary<string, object?>
+            {
+                ["databaseName"] = databaseName,
+                ["collectionName"] = collectionName,
+                ["deleted"] = true
+            }
+        };
+    }
+
+    public async Task<DocumentDbResponse> SampleDocumentsAsync(string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        if (!await DatabaseExistsAsync(databaseName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Database '{databaseName}' was not found."
+            };
+        }
+
+        if (!await CollectionExistsAsync(databaseName, collectionName, cancellationToken))
+        {
+            return new DocumentDbResponse
+            {
+                Success = false,
+                StatusCode = HttpStatusCode.NotFound,
+                Message = $"Collection '{collectionName}' was not found in database '{databaseName}'."
+            };
+        }
+
+        var database = _client!.GetDatabase(databaseName);
+        var collection = database.GetCollection<BsonDocument>(collectionName);
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$sample", new BsonDocument("size", sampleSize))
+        };
+
+        var documents = await collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+        return new DocumentDbResponse
+        {
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = $"Retrieved {documents.Count} sample document(s) from collection '{collectionName}'.",
+            Data = documents
+        };
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private async Task<bool> DatabaseExistsAsync(string dbName, CancellationToken cancellationToken)
     {
         var databaseNames = await _client!.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
         return databaseNames.Contains(dbName, StringComparer.Ordinal);
+    }
+
+    private async Task<bool> CollectionExistsAsync(string dbName, string collectionName, CancellationToken cancellationToken)
+    {
+        var database = _client!.GetDatabase(dbName);
+        var collectionNames = await database.ListCollectionNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+        return collectionNames.Contains(collectionName, StringComparer.Ordinal);
     }
 
     private async Task<Dictionary<string, object?>> GetDatabaseInfoAsync(string dbName, CancellationToken cancellationToken)
