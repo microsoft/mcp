@@ -72,7 +72,7 @@ public class ServiceGuideGetCommandTests
         }
         else
         {
-            Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.Contains("'--service'", response.Message);
         }
     }

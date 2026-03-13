@@ -1058,8 +1058,7 @@ Example prompts that generate Azure CLI commands:
 
 * "List all services with Well-Architected Framework guidance"
 * "Get Well-Architected Framework guidance for App Service"
-* "Show me the best practices for virtual machines"
-* "What's the architectural guidance for Azure Cosmos DB?
+* "What's the architectural guidance for Azure Cosmos DB?"
 
 ## Complete List of Supported Azure Services
 

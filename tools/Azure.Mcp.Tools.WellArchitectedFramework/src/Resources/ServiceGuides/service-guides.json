@@ -24,7 +24,7 @@
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-container-apps.md"
   },
   "cosmos-db": {
-    "serviceNameVariationsNormalized": ["azurecosmos", "azurecosmosdb", "cosmos", "cosmosdb"],
+    "serviceNameVariationsNormalized": ["azurecosmos", "azurecosmosdb", "cosmos", "cosmosdb", "cosmosdatabase"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/cosmos-db.md"
   },
   "azure-databricks": {
