@@ -27,7 +27,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             },
             "parameters": {
               "type": "object",
-              "description": "A key/value pair of parameters names nad values to pass to the tool call command."
+              "description": "A key/value pair of parameters names and values to pass to the tool call command."
             }
           },
           "additionalProperties": false
@@ -369,7 +369,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         if (_cachedToolLists.TryGetValue(tool, out var cachedList))
         {
@@ -398,10 +398,20 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         var list = listTools
             .Select(t => t.ProtocolTool)
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
+            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !HasLocalRequiredHint(t))
             .ToList();
 
         _cachedToolLists[tool] = list;
         return list;
+    }
+
+    private static bool HasLocalRequiredHint(Tool tool)
+    {
+        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+        {
+            return localRequired?.GetValueKind() == JsonValueKind.True;
+        }
+        return false;
     }
 
     private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)

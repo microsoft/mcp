@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
@@ -21,7 +22,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     public override async ValueTask InitializeAsync()
     {
         await LoadSettingsAsync();
-        if (TestMode == Tests.Helpers.TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             endpointRecorded = "https://sanitized.communication.azure.com";
             fromSms = "12345678900";
@@ -93,7 +94,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     public async Task Should_SendSms_WithValidParameters()
     {
 
-        if (TestMode != Tests.Helpers.TestMode.Playback)
+        if (TestMode != TestMode.Playback)
         {
             Assert.SkipWhen(string.IsNullOrEmpty(endpointRecorded), "Communication Services endpoint not configured for live testing");
             Assert.SkipWhen(string.IsNullOrEmpty(fromSms), "From phone number not configured for live testing");

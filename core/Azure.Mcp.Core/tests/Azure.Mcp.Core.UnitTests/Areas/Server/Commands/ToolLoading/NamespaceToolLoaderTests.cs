@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -138,6 +139,76 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = true });
+        storageGroup.AddCommand("readonly", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
+        keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            ReadOnly = true
+        });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("storage", tool.Name));
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var stroageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = true });
+        stroageGroup.AddCommand("localrequired", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
+        keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([stroageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http
+        });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("keyvault", tool.Name));
+    }
+
+    [Fact]
     public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
     {
         // Arrange
@@ -239,7 +310,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     {
         // Arrange
         var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
-        var request = CreateCallToolRequest(null!, new Dictionary<string, object?>());
+        var request = CreateCallToolRequest(null!, []);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -252,7 +323,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Arrange
         var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>());
+        var request = CreateCallToolRequest(toolName, []);
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -587,6 +658,62 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            ReadOnly = true
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", []);
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool => Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", []);
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool =>
+        {
+            var meta = tool.Meta;
+            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
+            {
+                Assert.False(localRequiredHint?.GetValue<bool>(),
+                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+            }
+        });
+    }
+
     // Helper methods
 
     private string GetFirstAvailableNamespace()
@@ -602,9 +729,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
+        return new(mockServer, new() { Method = RequestMethods.ToolsList })
         {
-            Params = new ListToolsRequestParams()
+            Params = new()
         };
     }
 
@@ -617,9 +744,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
-            Params = new CallToolRequestParams
+            Params = new()
             {
                 Name = toolName,
                 Arguments = jsonArguments
@@ -632,9 +759,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         Dictionary<string, JsonElement> arguments)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
-            Params = new CallToolRequestParams
+            Params = new()
             {
                 Name = toolName,
                 Arguments = arguments

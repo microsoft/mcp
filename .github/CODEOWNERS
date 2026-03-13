@@ -22,6 +22,7 @@
 # Eng Sys
 ##################
 /eng/                                  @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
+/eng/common/                           @microsoft/azure-sdk-eng
 /.github/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 /.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
@@ -157,16 +158,22 @@
 # ServiceOwners:                       @sajeetharan @xiangyan99
 
 # PRLabel: %tools-Deploy
-/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xiaofanzhou @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Deploy
-# ServiceOwners:                       @qianwens @xiaofanzhou
+# ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # ServiceLabel: %tools-Docker
 # ServiceOwners:                       @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Eclipse
 # ServiceOwners:                       @srnagar @microsoft/azure-mcp
+
+# PRLabel: %tools-DeviceRegistry
+/tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceRegistry
+# ServiceOwners:                       @nimengan @microsoft/azure-mcp
 
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/      @anannya03 @microsoft/azure-mcp
@@ -186,10 +193,10 @@
 # ServiceLabel: %tools-FileShares
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
-# PRLabel: %tools-Foundry
-/tools/Azure.Mcp.Tools.Foundry/        @jayzzh @xiangyan99 @microsoft/azure-mcp
+# PRLabel: %tools-FoundryExtensions
+/tools/Azure.Mcp.Tools.FoundryExtensions/     @jayzzh @xiangyan99 @microsoft/azure-mcp
 
-# ServiceLabel: %tools-Foundry
+# ServiceLabel: %tools-FoundryExtensions
 # ServiceOwners:                       @jayzzh @xiangyan99
 
 # PRLabel: %tools-FunctionApp
@@ -197,6 +204,12 @@
 
 # ServiceLabel: %tools-FunctionApp
 # ServiceOwners:                      @jongio
+
+# PRLabel: %tools-Functions
+/tools/Azure.Mcp.Tools.Functions/   @manvkaur @vrdmr @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Functions
+# ServiceOwners:                             @manvkaur @vrdmr
 
 # PRLabel: %tools-Grafana
 /tools/Azure.Mcp.Tools.Grafana/        @weng5e @xiangyan99 @microsoft/azure-mcp
@@ -283,10 +296,10 @@
 # ServiceOwners:                     @anannya03 @microsoft/azure-mcp
 
 # PRLabel: %tools-Quota
-/tools/Azure.Mcp.Tools.Quota/          @qianwens @xiaofanzhou @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Quota/          @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Quota
-# ServiceOwners:                       @qianwens @xiaofanzhou
+# ServiceOwners:                       @qianwens @xfz11 @wchigit
 
 # PRLabel: %tools-Redis
 /tools/Azure.Mcp.Tools.Redis/           @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
@@ -362,6 +375,12 @@
 
 # ServiceLabel: %tools-VSIX
 # ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
+
+# PRLabel: %tools-WellArchitectedFramework
+/tools/Azure.Mcp.Tools.WellArchitectedFramework/   @skakara @arunrab @microsoft/azure-mcp
+
+# ServiceLabel: %tools-WellArchitectedFramework
+# ServiceOwners:                       @skakara @arunrab
 
 # PRLabel: %tools-Workbooks
 /tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp

@@ -1,5 +1,144 @@
 # Release History
 
+
+
+## 2.0.0-beta.27 (2026-03-12) (pre-release)
+
+### Added
+
+- Added compute disk create and compute disk update commands for managing Azure managed disks. [[#1936](https://github.com/microsoft/mcp/pull/1936)]
+- Added Azure Device Registry namespace list command (`azmcp deviceregistry namespace list`) [[#1961](https://github.com/microsoft/mcp/pull/1961)]
+- Added Azure Functions toolset with three new tools: `functions_language_list` for listing supported languages, `functions_project_get` for retrieving project initialization files, and `functions_template_get` for listing and fetching function template source code. [[#1959](https://github.com/microsoft/mcp/pull/1959)]
+- CodeToCloud feature parity improvements for Deploy and Quota areas: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - Support deployment using Azure CLI with Bicep/Terraform
+  - Support creation of a deploy-to-existing-resources plan
+  - New resource type support in quota checks, including SQL, MySQL, and CosmosDB
+  - New IaC rules added for better support regarding code quality, configuration success and security
+
+### Changed
+
+- **Breaking:** `azmcp deploy pipeline guidance get` option renames and removals: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - `--use-azd-pipeline-config` renamed to `--is-azd-project`
+  - `--azd-iac-options` renamed to `--iac-options`
+  - `--organization-name`, `--repository-name`, and `--github-environment-name` options removed
+  - `--pipeline-platform` and `--deploy-option` added as new options
+  This new design allows an overall better user experience to generate CI/CD pipeline to Azure.
+- AzureIsv: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1902](https://github.com/microsoft/mcp/pull/1902)]
+- Compute: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1914](https://github.com/microsoft/mcp/pull/1914)]
+- Refactored Azure Migrate commands to use constructor dependency injection instead of context.GetService<T>() [[#1909](https://github.com/microsoft/mcp/pull/1909)]
+- Refactored `FunctionAppGetCommand` to use constructor dependency injection for `IFunctionAppService` instead of resolving it via `context.GetService<T>()` in `ExecuteAsync`. [[#1991](https://github.com/microsoft/mcp/pull/1991)]
+- Refactored `Azure.Mcp.Tools.Extension` commands to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1988](https://github.com/microsoft/mcp/pull/1988)]
+- Refactored `Azure.Mcp.Tools.Grafana` to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1992](https://github.com/microsoft/mcp/pull/1992)]
+
+## 2.0.0-beta.26 (2026-03-10) (pre-release)
+
+### Added
+
+- Added `DeviceCodeCredential` support for headless environments (Docker, WSL, SSH tunnels, CI) where browser-based interactive authentication is unavailable. It is automatically used as a last-resort fallback in the default and `dev` credential chains, and can also be selected exclusively by setting `AZURE_TOKEN_CREDENTIALS=DeviceCodeCredential`. Not available in `stdio` or `http` server transport modes. [[#1908](https://github.com/microsoft/mcp/pull/1908)]
+- Added Azure Compute VM create/update and VMSS create/update. [[#1705](https://github.com/microsoft/mcp/pull/1705)]
+- Added Azure Well-Architected Framework service guide tool to provide architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency. [[#1964](https://github.com/microsoft/mcp/pull/1964)]
+
+### Changed
+
+- AppLens: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1884](https://github.com/microsoft/mcp/pull/1884)]
+- Acr: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1881](https://github.com/microsoft/mcp/pull/1881)]
+- Aks: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1883](https://github.com/microsoft/mcp/pull/1883)]
+- Authorization: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1901](https://github.com/microsoft/mcp/pull/1901)]
+- Advisor: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1882](https://github.com/microsoft/mcp/pull/1882)]
+- Refactored `ApplicationInsights` tools to use constructor dependency injection. [[#1899](https://github.com/microsoft/mcp/pull/1899)]
+
+## 2.0.0-beta.25 (2026-03-05) (pre-release)
+
+### Added
+
+- Added new tools available via the external Azure AI Foundry MCP server (https://mcp.ai.azure.com) that provide capabilities not previously available in Azure MCP Server: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+  - agent_container_control: Control an agent container
+  - agent_container_status_get: Get the status of an agent container
+  - agent_definition_schema_get: Get the schema for an agent definition
+  - agent_invoke: Invoke an agent interactively
+  - evaluation_agent_batch_eval_create: Create a batch evaluation run for an agent
+  - evaluation_dataset_batch_eval_create: Create a batch evaluation run using a dataset
+  - evaluator_catalog_create: Create a custom evaluator in the catalog
+  - evaluator_catalog_delete: Delete an evaluator from the catalog
+  - evaluator_catalog_get: Get an evaluator from the catalog
+  - evaluator_catalog_update: Update an evaluator in the catalog
+  - project_connection_create: Create a connection in a Foundry project
+  - project_connection_delete: Delete a connection from a Foundry project
+  - project_connection_get: Get details of a Foundry project connection
+  - project_connection_list: List connections in a Foundry project
+  - project_connection_list_metadata: List metadata for connections in a Foundry project
+  - project_connection_update: Update a connection in a Foundry project
+  - prompt_optimize: Optimize a prompt for a specific model
+- Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
+- Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
+
+### Changed
+
+- **Breaking:** Foundry tools previously under the `foundry` namespace have moved to the new `foundryextensions` namespace within Azure MCP Server, retaining direct in-process access to Azure OpenAI, knowledge indexes, agent threads, and resources: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+  - foundryextensions_agents_get_sdk_sample: Get an SDK code sample for Azure AI Foundry Agents
+  - foundryextensions_knowledge_index_list: List knowledge indexes in a Foundry project
+  - foundryextensions_knowledge_index_schema: Get the schema of a knowledge index
+  - foundryextensions_openai_chat_completions_create: Create a chat completion using an Azure OpenAI deployment
+  - foundryextensions_openai_create_completion: Create a text completion using an Azure OpenAI deployment
+  - foundryextensions_openai_embeddings_create: Create embeddings using an Azure OpenAI deployment
+  - foundryextensions_openai_models_list: List available Azure OpenAI models
+  - foundryextensions_resource_get: Get details about a Foundry resource
+  - foundryextensions_threads_create: Create a new agent thread
+  - foundryextensions_threads_get_messages: Get messages from an agent thread
+  - foundryextensions_threads_list: List agent threads
+- **Breaking:** The following Azure AI Foundry tools were renamed as part of the migration to the external Foundry MCP server (https://mcp.ai.azure.com). See the Breaking Changes entry for the full list of removed tools: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+  - foundry_agents_list → agent_get
+  - foundry_agents_create → agent_update
+  - foundry_agents_connect → agent_invoke
+  - foundry_models_list → model_catalog_list
+  - foundry_models_deploy → model_deploy
+  - foundry_models_deployments_list → model_deployment_get
+  - foundry_agents_query-and-evaluate → evaluation_agent_batch_eval_create
+  - foundry_agents_evaluate → evaluator_catalog_get
+- Added Cloud to telemetry to denote which Azure cloud the tool is using. [[#1918](https://github.com/microsoft/mcp/pull/1918)]
+- Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure from 4.4.0-preview.1 to 4.4.0. [[#1896](https://github.com/microsoft/mcp/pull/1896)]
+
+### Fixed
+
+- Fixed JSON Schema generation for OpenAI Codex model compatibility: added `additionalProperties: false`, enum types now emit as `string` with named values, added `enum` array to enum properties, empty descriptions are omitted instead of serialized as empty strings. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
+- Fixed argument parsing to support camelCase parameter names and flat argument structures sent by Codex and other OpenAI models. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
+- Fixed flaky VisualStudioToolNameTests by using in-process CommandFactory instead of external process with timeout. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
+- Fixed Linux stdio watcher regression where using CWD as content root could exhaust inotify watchers (ENOSPC). Host builders now use AppContext.BaseDirectory as content root. [[#1935](https://github.com/microsoft/mcp/pull/1935)]
+
+## 2.0.0-beta.24 (2026-03-03) (pre-release)
+
+### Added
+
+- Added App Service web app deployment retrieval tool. [[#1898](https://github.com/microsoft/mcp/pull/1898)]
+
+### Changed
+
+- **Breaking:** Consolidated `sql_db_show` and `sql_db_list` commands into a single `sql_db_get` command, and `sql_server_show` and `sql_server_list` commands into a single `sql_server_get` command. [[#1897](https://github.com/microsoft/mcp/pull/1897)]
+
+### Fixed
+
+- Fixed multiple bugs for the Azure Workbooks tool [[#1646](https://github.com/microsoft/mcp/pull/1646)]
+
+## 2.0.0-beta.23 (2026-02-27) (pre-release)
+
+### Added
+
+- Disable external process commands (`azqr`) in HTTP remote mode for security. [[#1522](https://github.com/microsoft/mcp/pull/1522)]
+- Added the `appservice_webapp_get` tool to retrieve details about Web Apps. [[#1810](https://github.com/microsoft/mcp/pull/1810)]
+- Added the following App Service Web App settings tools: [[#1831](https://github.com/microsoft/mcp/pull/1831)]
+  - `appservice_webapp_settings_get-appsettings`: Get application settings for an App Service Web App
+  - `appservice_webapp_settings_update-appsettings`: Update application settings for an App Service Web App
+
+### Changed
+
+- **Breaking:** Consolidated the `cosmos_account_list`, `cosmos_database_list`, and `cosmos_database_container_list` commands into a single `cosmos_list` command. [[#1821](https://github.com/microsoft/mcp/pull/1821)]
+- Improve testability by removing dependency on `CommandContext.ServiceProvider` in the `ExecuteAsync()` method for App Configuration `*Command` classes. [[#1815](https://github.com/microsoft/mcp/pull/1815)]
+
+### Fixed
+
+- Fixed `azqr` tool calls failing due to `costs` parameter removed in latest version. [[#1739](https://github.com/microsoft/mcp/pull/1739)]
+- Fixed OAuth Protected Resource Metadata flows in Azure Container Apps (ACA) by reading the `X-Forwarded-Proto` header (opt-in via `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS`) to correctly construct the scheme in `WWW-Authenticate` challenge responses and the OAuth PRM endpoint. [[#1820](https://github.com/microsoft/mcp/pull/1820)]
+
 ## 2.0.0-beta.22 (2026-02-24) (pre-release)
 
 ### Added
@@ -56,7 +195,7 @@
 
 - Consolidated KeyVault get/list commands - separate list commands removed: [[#1653](https://github.com/microsoft/mcp/pull/1653)]
     - Removed keyvault_key_list - use keyvault_key_get without providing a key name
-    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name  
+    - Removed keyvault_secret_list - use keyvault_secret_get without providing a secret name
     - Removed keyvault_certificate_list - use keyvault_certificate_get without providing a certificate name
 - Consolidated Monitor WebTest commands – (get/list merged into monitor_webtests_get, create/update merged into monitor_webtests_createorupdate): [[#1678](https://github.com/microsoft/mcp/pull/1678)]
     - Removed monitor_webtests_list – use monitor_webtests_get without providing a WebTest name

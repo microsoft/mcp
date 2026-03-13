@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
@@ -82,8 +81,7 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
                 cancellationToken);
 
             context.Response.Message = "Server endpoint deleted successfully";
-            var results = new ServerEndpointDeleteCommandResult("Server endpoint deleted successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Server endpoint deleted successfully"), StorageSyncJsonContext.Default.ServerEndpointDeleteCommandResult);
         }
         catch (Exception ex)
         {

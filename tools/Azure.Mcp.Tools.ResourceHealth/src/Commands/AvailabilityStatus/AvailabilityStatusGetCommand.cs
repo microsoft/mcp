@@ -26,8 +26,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     public override string Name => "get";
 
     public override string Description =>
-        "Get availability status and health status for Azure resources. Shows the health status of a specific virtual machine, storage account, or other resource. Lists availability status for all resources in a subscription or resource group to identify health issues and availability problems.";
-
+        "Get the Azure Resource Health availability status for a specific resource or all resources in a subscription or resource group. Use this tool when asked about the availability status, health status, or Resource Health of an Azure resource (e.g. virtual machine, storage account). Reports whether a resource is Available, Unavailable, Degraded, or Unknown, including the reason and details. This is the correct tool for questions like 'What is the availability status of VM X?' or 'Is resource Y healthy?'.";
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -93,7 +92,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             }
 
             context.Response.Results = ResponseResult.Create(
-                new AvailabilityStatusGetCommandResult(statuses),
+                new(statuses),
                 ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)

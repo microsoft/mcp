@@ -1,9 +1,5 @@
 <Solution>
   <Folder Name="/core/" />
-  <Folder Name="/core/Azure.Mcp.Core/" />
-  <Folder Name="/core/Azure.Mcp.Core/src/">
-    <Project Path="../../core/Azure.Mcp.Core/src/Azure.Mcp.Core.csproj" />
-  </Folder>
   <Folder Name="/core/Fabric.Mcp.Core/" />
   <Folder Name="/core/Fabric.Mcp.Core/src/">
     <Project Path="../../core/Fabric.Mcp.Core/src/Fabric.Mcp.Core.csproj" />
@@ -11,6 +7,10 @@
   <Folder Name="/core/Microsoft.Mcp.Core/" />
   <Folder Name="/core/Microsoft.Mcp.Core/src/">
     <Project Path="../../core/Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
+  </Folder>
+  <Folder Name="/core/Microsoft.Mcp.Core/tests/">
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.UnitTests/Microsoft.Mcp.Core.UnitTests.csproj" />
+    <Project Path="../../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
   </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Fabric.Mcp.Server/" />

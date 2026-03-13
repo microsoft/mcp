@@ -17,10 +17,13 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
+public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
 {
     private const string CommandTitle = "Azure Quick Review CLI Command";
     private readonly ILogger<AzqrCommand> _logger = logger;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
+    private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzqrPath;
     public override string Id => "e7ef18a3-2730-4300-bad3-dc766f47dd2a";
@@ -76,9 +79,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
             var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
 
-            var subscriptionService = context.GetService<ISubscriptionService>();
-            var dateTimeProvider = context.GetService<IDateTimeProvider>();
-            var subscription = await subscriptionService.GetSubscription(options.Subscription, options.Tenant, cancellationToken: cancellationToken);
+            var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";
@@ -88,7 +89,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             }
 
             var tempDir = Path.GetTempPath();
-            var dateString = dateTimeProvider.UtcNow.ToString("yyyyMMdd-HHmmss");
+            var dateString = _dateTimeProvider.UtcNow.ToString("yyyyMMdd-HHmmss");
             var reportFileName = Path.Combine(tempDir, $"azqr-report-{options.Subscription}-{dateString}");
 
             // Azure Quick Review always appends the file extension to the report file's name, we need to create a new path with the file extension to check for the existence of the report file.
@@ -99,8 +100,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             // Also generate a JSON report for users who don't have access to Excel.
             command += " --json";
 
-            var processService = context.GetService<IExternalProcessService>();
-            var result = await processService.ExecuteAsync(azqrPath, command,
+            var result = await _processService.ExecuteAsync(azqrPath, command,
                 operationTimeoutSeconds: _processTimeoutSeconds,
                 cancellationToken: cancellationToken);
 

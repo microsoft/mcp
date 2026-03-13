@@ -35,12 +35,11 @@ public class VmGetCommandTests
         _computeService = Substitute.For<IComputeService>();
         _logger = Substitute.For<ILogger<VmGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _computeService);
         _commandDefinition = _command.GetCommand();
+        _serviceProvider = new ServiceCollection()
+            .BuildServiceProvider();
+        _context = new(_serviceProvider);
     }
 
     [Fact]

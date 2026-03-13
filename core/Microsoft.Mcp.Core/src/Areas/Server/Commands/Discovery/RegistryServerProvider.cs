@@ -25,16 +25,14 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// Creates metadata that describes this registry-based server.
     /// </summary>
     /// <returns>A metadata object containing the server's identity and description.</returns>
-    public McpServerMetadata CreateMetadata()
+    public McpServerMetadata CreateMetadata() => new()
     {
-        return new McpServerMetadata
-        {
-            Id = _id,
-            Name = _id,
-            Title = _serverInfo.Title,
-            Description = _serverInfo.Description ?? string.Empty
-        };
-    }
+        Id = _id,
+        Name = _id,
+        Title = _serverInfo.Title,
+        Description = _serverInfo.Description ?? string.Empty,
+        ToolPrefix = _serverInfo.ToolPrefix
+    };
 
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
