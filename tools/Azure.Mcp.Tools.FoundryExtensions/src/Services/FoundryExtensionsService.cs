@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
-using System.Reflection;
 using System.Text.Json.Nodes;
-using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core.Pipeline;
@@ -15,7 +13,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options.Thread;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Extensions.AI;
@@ -632,29 +629,6 @@ public class FoundryExtensionsService(
         return new(new(endpoint), credential, clientOptions);
     }
 
-    private async Task<(AIProjectClient ProjectClient, PersistentAgentsClient AgentsClient)> CreateAIProjectAndPersistentAgentsClientsAsync(
-        string endpoint,
-        string? tenant = null,
-        CancellationToken cancellationToken = default)
-    {
-        var credential = await GetCredential(tenant, cancellationToken);
-        var transport = CreateTransport();
-
-        var projectClientOptions = new AIProjectClientOptions
-        {
-            Transport = transport
-        };
-
-        var projectClient = new AIProjectClient(new(endpoint), credential, projectClientOptions);
-
-        var agentsClientOptions = new PersistentAgentsAdministrationClientOptions
-        {
-            Transport = transport
-        };
-
-        return (projectClient, new(endpoint, credential, agentsClientOptions));
-    }
-
     private HttpClientTransport CreateTransport() => new(_httpClientFactory.CreateClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
@@ -731,120 +705,6 @@ public class FoundryExtensionsService(
         return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
     }
 
-    public async Task<ThreadListResult> ListThreads(
-        string projectEndpoint,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
-        List<ThreadItem> threads = [];
-
-        await foreach (var thread in threadsIterator.WithCancellation(cancellationToken))
-        {
-            threads.Add(new()
-            {
-                ThreadId = thread.Id
-            });
-        }
-
-        return new()
-        {
-            Threads = [.. threads]
-        };
-    }
-
-    public async Task<ThreadCreateResult> CreateThread(
-        string projectEndpoint,
-        string userMessage,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint),
-            (nameof(userMessage), userMessage));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-
-        PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
-            [new(MessageRole.User, userMessage)],
-            cancellationToken: cancellationToken);
-
-        return new()
-        {
-            ThreadId = thread.Id,
-            ProjectEndpoint = projectEndpoint
-        };
-    }
-
-    public async Task<ThreadGetMessagesResult> GetMessages(
-        string projectEndpoint,
-        string threadId,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint),
-            (nameof(threadId), threadId));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-
-        List<PersistentThreadMessage> messages = [];
-        var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
-        await foreach (var message in messagesIterator.WithCancellation(cancellationToken))
-        {
-            messages.Add(message);
-        }
-        List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = [.. ConvertMessages(messages)];
-        return new()
-        {
-            ThreadId = threadId,
-            Messages = convertedMessages
-        };
-    }
-
-    public AgentsGetSdkCodeSampleResult GetSdkCodeSample(string programmingLanguage)
-    {
-        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
-        string resourceFileName;
-        if (programmingLanguageLowerCase == "csharp")
-        {
-            resourceFileName = "csharp.md";
-        }
-        else if (programmingLanguageLowerCase == "typescript")
-        {
-            resourceFileName = "typescript.md";
-        }
-        else if (programmingLanguageLowerCase == "python")
-        {
-            resourceFileName = "python.md";
-        }
-        else
-        {
-            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
-        }
-
-        Assembly assembly = typeof(FoundryExtensionsService).Assembly;
-
-        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
-        string codeSampleText = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
-
-        return new()
-        {
-            CodeSampleText = codeSampleText
-        };
-    }
-
     private async Task<AiResourceInformation> BuildResourceInformation(
         CognitiveServicesAccountResource account,
         string subscriptionName,
@@ -887,32 +747,5 @@ public class FoundryExtensionsService(
         }
 
         return resourceInfo;
-    }
-
-    private static IEnumerable<Microsoft.Extensions.AI.ChatMessage> ConvertMessages(IEnumerable<PersistentThreadMessage> messages)
-    {
-        foreach (PersistentThreadMessage message in messages)
-        {
-            Microsoft.Extensions.AI.ChatMessage result = new()
-            {
-                AuthorName = message.AssistantId,
-                MessageId = message.Id,
-                RawRepresentation = message,
-                Role = message.Role == MessageRole.Agent ? ChatRole.Assistant : ChatRole.User,
-            };
-
-            foreach (var messageContent in message.ContentItems)
-            {
-                AIContent content = messageContent switch
-                {
-                    MessageTextContent mtc => new TextContent(mtc.Text),
-                    _ => new AIContent(),
-                };
-                content.RawRepresentation = messageContent;
-                result.Contents.Add(content);
-            }
-
-            yield return result;
-        }
     }
 }

@@ -1905,11 +1905,6 @@ azmcp fileshares usage --subscription <subscription> \
 ### Microsoft Foundry Extensions Operations
 
 ```bash
-# Get code samples to interact with a Foundry Agent using the Microsoft Foundry SDK
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions agents get-sdk-sample \
-    [--programming-language <language>]
-
 # List knowledge indexes in a Microsoft Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions knowledge index list \
@@ -1961,23 +1956,6 @@ azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
     [--resource-name <resource-name>]
-
-# Create a thread in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads create \
-    --endpoint <project-endpoint> \
-    --user-message <initial-message>
-
-# Get messages from a Microsoft Foundry thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads get-messages \
-    --endpoint <project-endpoint> \
-    --thread-id <thread-id>
-
-# List threads in a Microsoft Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads list \
-    --endpoint <project-endpoint>
 ```
 
 ### Azure Function App Operations

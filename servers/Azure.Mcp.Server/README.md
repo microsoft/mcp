@@ -843,10 +843,6 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * List Microsoft Foundry agents
 * Connect and query Microsoft Foundry agents
 * Evaluate Microsoft Foundry agents
-* Get SDK samples for interacting with Microsoft Foundry agent
-* Create Microsoft Foundry agent threads
-* List Microsoft Foundry agent threads
-* Get messages of a Microsoft Foundry thread
 
 ### 📊 Azure Advisor
 
