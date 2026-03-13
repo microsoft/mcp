@@ -348,7 +348,7 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        //GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
+        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
     }
 
     [Fact]
@@ -387,7 +387,7 @@ public class McpRuntimeTests
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
         Assert.Equal(toolName, actualToolName);
 
-        //GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
+        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
 
         Assert.DoesNotContain(activity.TagObjects,
             x => string.Equals(x.Key, AzureTagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
@@ -510,7 +510,7 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        //GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
+        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
     }
 
     [Fact]
@@ -811,6 +811,7 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        GetAndAssertTagKeyValue(activity, TagName.ExceptionType);
 
         // Error details are present in the CallToolResult content; assert that instead of relying
         // on telemetry tag propagation which is dependent on the telemetry implementation.

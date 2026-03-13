@@ -1,0 +1,4 @@
+pr: 1942
+changes:
+  - section: "Other Changes"
+    description: "Reintroduce capturing error information in telemetry with standard 'exception.message', 'exception.type', and 'exception.stacktrace' telemetry tags, replacing ErrorDetails tag."
