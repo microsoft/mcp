@@ -21,22 +21,15 @@ public sealed class ContainerAppsService(ISubscriptionService subscriptionServic
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var containerApps = await ExecuteResourceQueryAsync(
-                "Microsoft.App/containerApps",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToContainerAppInfoModel,
-                cancellationToken: cancellationToken);
+        var containerApps = await ExecuteResourceQueryAsync(
+            "Microsoft.App/containerApps",
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToContainerAppInfoModel,
+            cancellationToken: cancellationToken);
 
-            return containerApps;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving container apps: {ex.Message}", ex);
-        }
+        return containerApps;
     }
 
     private static ContainerAppInfo ConvertToContainerAppInfoModel(JsonElement item)
