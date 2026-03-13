@@ -1,4 +1,0 @@
-pr: 1984
-changes:
-  - section: "Other Changes"
-    description: "Deploy: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
