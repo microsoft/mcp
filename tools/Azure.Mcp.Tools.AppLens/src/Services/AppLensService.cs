@@ -100,29 +100,8 @@ public class AppLensService(
 
         var filteredResults = queryResults;
 
-        // Progressive filtering by subscription
-        if (!string.IsNullOrEmpty(subscription))
-        {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
-            var subscriptionId = subscriptionResource.Data.SubscriptionId;
-
-            var subscriptionFiltered = filteredResults
-                .Where(r => r.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase))
-                .ToImmutableArray();
-
-            if (subscriptionFiltered.Length == 0)
-            {
-                var foundSubscriptions = string.Join("\n", filteredResults
-                    .Select(r => r.SubscriptionId)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .Select(s => $"- {s}"));
-                return new DidNotFindResourceResult(
-                    $"Found resources with name '{resourceName}' but not in subscription '{subscription}'.\n" +
-                    $"Resources were found in the following subscriptions:\n{foundSubscriptions}");
-            }
-
-            filteredResults = subscriptionFiltered;
-        }
+        // There is no need to filter by the given subscription (if any) because that would
+        // have been taken care of by the ARG query.
 
         // Progressive filtering by resource group
         if (!string.IsNullOrEmpty(resourceGroup))
