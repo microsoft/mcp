@@ -918,6 +918,12 @@ Example prompts that generate Azure CLI commands:
 * "List all my managed disks in subscription 'my-subscription'"
 * "Show me all disks in resource group 'my-resource-group'"
 * "Get details of disk 'my-disk' in resource group 'my-resource-group'"
+* "Create a 128 GB Premium_LRS managed disk named 'my-disk' in resource group 'my-resource-group'"
+* "Create a managed disk from snapshot in resource group 'my-resource-group'"
+* "Create a disk 'my-disk' in resource group 'my-resource-group' with tags env=prod team=infra"
+* "Update disk 'my-disk' in resource group 'my-resource-group' to 256 GB"
+* "Change the SKU of disk 'my-disk' to Premium_LRS"
+* "Set the IOPS limit on ultra disk 'my-disk' in resource group 'my-resource-group' to 10000"
 * "List all virtual machines in my subscription"
 * "Show me all VMs in resource group 'my-resource-group'"
 * "Get details for virtual machine 'my-vm' in resource group 'my-resource-group'"
@@ -1054,9 +1060,16 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### 🏛️ Azure Well-Architected Framework
+
+* "List all services with Well-Architected Framework guidance"
+* "What services have architectural guidance?"
+* "Get Well-Architected Framework guidance for App Service"
+* "What's the architectural guidance for Azure Cosmos DB?"
+
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **42+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **43+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1075,9 +1088,10 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
-- � **Azure File Shares** - Azure managed file share operations
-- ⚡ **Azure Functions** - Function App management
+- 📁 **Azure File Shares** - Azure managed file share operations
+- ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
@@ -1104,6 +1118,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
+- 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns
 - 📊 **Azure Workbooks** - Custom visualizations
 - 🏗️ **Bicep** - Azure resource templates
 - 🏗️ **Cloud Architect** - Guided architecture design

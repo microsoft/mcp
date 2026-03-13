@@ -64,9 +64,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
 
         try
         {
-
-
-            string result = await _deployService.GetAzdResourceLogsAsync(
+            var result = await _deployService.GetAzdResourceLogsAsync(
                 options.WorkspaceFolder!,
                 options.AzdEnvName!,
                 options.Subscription!,

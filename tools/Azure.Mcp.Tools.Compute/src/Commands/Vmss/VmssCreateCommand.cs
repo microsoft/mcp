@@ -3,13 +3,11 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.Mcp.Tools.Compute.Utilities;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -18,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
-    : BaseComputeCommand<VmssCreateOptions>()
+    : BaseComputeCommand<VmssCreateOptions>(true)
 {
     private const string CommandTitle = "Create Virtual Machine Scale Set";
     private readonly ILogger<VmssCreateCommand> _logger = logger;
@@ -82,10 +80,36 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         // Resource group is required for create
         command.Validators.Add(commandResult =>
         {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
+            // Determine OS type from image
+            var effectiveOsType = ComputeUtilities.DetermineOsType(
+                commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name),
+                commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name));
+
+            var adminPassword = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
+            // Custom validation: For Windows VMSS, password is required
+            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(adminPassword))
             {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
+                commandResult.AddError("The --admin-password option is required for Windows VMSS.");
+            }
+
+            // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)
+            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
+                && commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name)?.Length > 9)
+            {
+                commandResult.AddError(
+                    "Windows VMSS name cannot exceed 9 characters. Azure appends a 6-character suffix to create the computer name, " +
+                    "and Windows computer names are limited to 15 characters total.");
+            }
+
+            // Custom validation: For Linux VMSS, either SSH key or password must be provided
+            if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name)) &&
+                string.IsNullOrEmpty(adminPassword))
+            {
+                commandResult.AddError(
+                    "Linux VMSS require authentication. Please provide either --ssh-public-key or --admin-password. " +
+                    "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
+                    "and pass the full key content to --ssh-public-key.");
             }
         });
     }
@@ -120,37 +144,6 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Determine OS type from image
-        var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
-
-        // Custom validation: For Windows VMSS, password is required
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
-        {
-            throw new CommandValidationException(
-                "The --admin-password option is required for Windows VMSS.",
-                HttpStatusCode.BadRequest);
-        }
-
-        // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && options.VmssName!.Length > 9)
-        {
-            throw new CommandValidationException(
-                "Windows VMSS name cannot exceed 9 characters. Azure appends a 6-character suffix to create the computer name, and Windows computer names are limited to 15 characters total.",
-                HttpStatusCode.BadRequest);
-        }
-
-        // Custom validation: For Linux VMSS, either SSH key or password must be provided
-        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.SshPublicKey) &&
-            string.IsNullOrEmpty(options.AdminPassword))
-        {
-            throw new CommandValidationException(
-                "Linux VMSS require authentication. Please provide either --ssh-public-key or --admin-password. " +
-                "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
-                "and pass the full key content to --ssh-public-key.",
-                HttpStatusCode.BadRequest);
-        }
-
         var computeService = context.GetService<IComputeService>();
 
         try
@@ -179,9 +172,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmssCreateCommandResult(result),
-                ComputeJsonContext.Default.VmssCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssCreateCommandResult);
         }
         catch (Exception ex)
         {

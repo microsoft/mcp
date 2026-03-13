@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class AzCommand(ILogger<AzCommand> logger, int processTimeoutSeconds = 300) : GlobalCommand<AzOptions>()
+public sealed class AzCommand(ILogger<AzCommand> logger, IExternalProcessService processService, int processTimeoutSeconds = 300) : GlobalCommand<AzOptions>()
 {
     private const string CommandTitle = "Azure CLI Command";
     private readonly ILogger<AzCommand> _logger = logger;
+    private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzPath;
     private volatile bool _isAuthenticated = false;
@@ -178,13 +179,12 @@ Your job is to answer questions about an Azure environment by executing Azure CL
         {
             ArgumentNullException.ThrowIfNull(options.Command);
             var command = options.Command;
-            var processService = context.GetService<IExternalProcessService>();
 
             // Try to authenticate, but continue even if it fails
-            await AuthenticateWithAzureCredentialsAsync(processService, _logger, cancellationToken);
+            await AuthenticateWithAzureCredentialsAsync(_processService, _logger, cancellationToken);
 
             var azPath = FindAzCliPath() ?? throw new FileNotFoundException("Azure CLI executable not found in PATH or common installation locations. Please ensure Azure CLI is installed.");
-            var result = await processService.ExecuteAsync(azPath, command,
+            var result = await _processService.ExecuteAsync(azPath, command,
                 operationTimeoutSeconds: _processTimeoutSeconds,
                 cancellationToken: cancellationToken);
 
@@ -194,7 +194,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
                 context.Response.Message = result.Error;
             }
 
-            var jElem = processService.ParseJsonOutput(result);
+            var jElem = _processService.ParseJsonOutput(result);
             context.Response.Results = ResponseResult.Create(jElem, ExtensionJsonContext.Default.JsonElement);
         }
         catch (Exception ex)
