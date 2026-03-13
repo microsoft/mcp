@@ -26,7 +26,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
     public override string Description =>
         """
         Gets the details of Azure AI Search indexes, including fields, description, and more. If a specific index name
-        is not provided, the command will return details for all indexes within the specified service.
+        is not provided, the command will return details for all indexes.
         """;
 
     public override string Title => CommandTitle;
