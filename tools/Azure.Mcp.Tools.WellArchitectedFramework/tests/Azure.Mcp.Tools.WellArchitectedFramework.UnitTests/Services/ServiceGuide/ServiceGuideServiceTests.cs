@@ -46,7 +46,7 @@ public class ServiceGuideServiceTests
     [InlineData("\"cosmos-db\"")]  // With double quotes
     [InlineData("'cosmos-db'")]    // With single quotes
     [InlineData(" \" cosmos-db \" ")]  // Combination
-    public void GetServiceGuideUrl_ReturnsCorrectUrl_ForCosmosDbVariations(string variation)
+    public void GetServiceGuideUrl_ReturnsCorrectUrl_ForServiceNameVariations(string variation)
     {
         // Act
         var result = _service.GetServiceGuideUrl(variation);

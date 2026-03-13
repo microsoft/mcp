@@ -19,7 +19,6 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
     {
         services.AddSingleton<IServiceGuideService, ServiceGuideService>();
         services.AddSingleton<ServiceGuideGetCommand>();
-        services.AddSingleton<ServiceGuideListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,9 +31,6 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
 
         var serviceGuideGet = serviceProvider.GetRequiredService<ServiceGuideGetCommand>();
         serviceGuide.AddCommand(serviceGuideGet.Name, serviceGuideGet);
-
-        var serviceGuideList = serviceProvider.GetRequiredService<ServiceGuideListCommand>();
-        serviceGuide.AddCommand(serviceGuideList.Name, serviceGuideList);
 
         return wellArchitectedCommandGroup;
     }
