@@ -85,7 +85,7 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ManagedClusterNodeTypeRestartCommandResult(response),
+                new(response),
                 ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult);
         }
         catch (Exception ex)

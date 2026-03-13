@@ -17,11 +17,12 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 /// <summary>
 /// Command to diagnose Azure resources using AppLens conversational diagnostics.
 /// </summary>
-public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger)
+public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger, IAppLensService appLensService)
     : SubscriptionCommand<ResourceDiagnoseOptions>
 {
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
+    private readonly IAppLensService _appLensService = appLensService;
 
     public override string Id => "92fb5b7d-f1d7-4834-a61a-e170ad8594ac";
 
@@ -73,12 +74,10 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
             ResourceDiagnoseOptions options = BindOptions(parseResult);
 
-            var service = context.GetService<IAppLensService>();
-
             _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {Resource}, Options: {Options}",
                 options.Question, options.Resource, options);
 
-            var result = await service.DiagnoseResourceAsync(
+            var result = await _appLensService.DiagnoseResourceAsync(
                 options.Question,
                 options.Resource,
                 options.Subscription!,

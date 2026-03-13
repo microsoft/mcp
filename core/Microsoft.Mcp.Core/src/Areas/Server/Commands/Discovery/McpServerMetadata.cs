@@ -34,6 +34,11 @@ public sealed class McpServerMetadata(string id = "", string name = "", string d
     public string Description { get; set; } = description;
 
     /// <summary>
+    /// Gets or sets the prefix to prepend to all tool names from this server.
+    /// </summary>
+    public string? ToolPrefix { get; set; }
+
+    /// <summary>
     /// Gets or sets the tool metadata for this server, containing tool-specific information.
     /// </summary>
     public ToolMetadata? ToolMetadata { get; set; }

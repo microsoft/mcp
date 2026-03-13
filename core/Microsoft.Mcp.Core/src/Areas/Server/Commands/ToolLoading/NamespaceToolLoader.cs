@@ -50,7 +50,7 @@ public sealed class NamespaceToolLoader(
         return [.. allSubGroups.Select(group => group.Name)];
     });
 
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    internal readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
 
     private const string ToolCallProxySchema = """
@@ -69,6 +69,8 @@ public sealed class NamespaceToolLoader(
           "additionalProperties": false
         }
         """;
+
+    private static readonly HashSet<string> MetaKeys = new(StringComparer.OrdinalIgnoreCase) { "intent", "command", "learn", "parameters" };
 
     private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
         {
@@ -115,6 +117,18 @@ public sealed class NamespaceToolLoader(
             var group = _commandFactory.RootGroup.SubGroup
                 .First(g => string.Equals(g.Name, namespaceName, StringComparison.OrdinalIgnoreCase));
 
+            if (_options.Value.ReadOnly == true && AllToolsInGroupMatch(meta => !meta.ReadOnly, group))
+            {
+                // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
+                continue;
+            }
+
+            if (_options.Value.IsHttpMode && AllToolsInGroupMatch(meta => meta.LocalRequired, group))
+            {
+                // If HTTP mode is enabled and all commands in the group are local-required, skip exposing this namespace as a tool.
+                continue;
+            }
+
             var tool = new Tool
             {
                 Name = namespaceName,
@@ -141,6 +155,27 @@ public sealed class NamespaceToolLoader(
         // Cache the result
         _cachedListToolsResult = allToolsResponse;
         return ValueTask.FromResult(allToolsResponse);
+    }
+
+    private static bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate, CommandGroup group)
+    {
+        foreach (var command in group.Commands)
+        {
+            if (!predicate(command.Value.Metadata))
+            {
+                return false;
+            }
+        }
+
+        foreach (var subGroup in group.SubGroup)
+        {
+            if (!AllToolsInGroupMatch(predicate, subGroup))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
@@ -477,7 +512,7 @@ public sealed class NamespaceToolLoader(
     /// <summary>
     /// Gets the available tools from the namespace commands and caches the result for subsequent requests.
     /// </summary>
-    private List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
+    internal List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
         // Check cache first
         if (_cachedToolLists.TryGetValue(namespaceName, out var cachedList))
@@ -506,6 +541,7 @@ public sealed class NamespaceToolLoader(
 
         var list = namespaceCommands
             .Where(kvp => !(_options.Value.ReadOnly ?? false) || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
             .ToList();
 
@@ -550,10 +586,20 @@ public sealed class NamespaceToolLoader(
             Title = command.Title,
         };
 
+        JsonObject? meta = null;
+        // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject { ["SecretHint"] = metadata.Secret };
+            meta ??= new();
+            meta["SecretHint"] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta ??= new();
+            meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
         var schema = new ToolInputSchema();
         var options = command.GetCommand().Options;
@@ -593,20 +639,27 @@ public sealed class NamespaceToolLoader(
             string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
+    internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
-        if (args == null || !args.TryGetValue("parameters", out var paramsElem))
+        if (args == null)
         {
             return [];
         }
 
-        if (paramsElem.ValueKind == JsonValueKind.Object)
+        // Primary: extract from nested "parameters" key (case-insensitive)
+        var parametersKey = args.Keys.FirstOrDefault(k => string.Equals(k, "parameters", StringComparison.OrdinalIgnoreCase));
+        if (parametersKey != null && args.TryGetValue(parametersKey, out var paramsElem) && paramsElem.ValueKind == JsonValueKind.Object)
         {
             return paramsElem.EnumerateObject()
                 .ToDictionary(prop => prop.Name, prop => prop.Value);
         }
 
-        return [];
+        // Fallback: treat all non-meta args as parameters (Codex compatibility)
+        var flatParams = args
+            .Where(kvp => !MetaKeys.Contains(kvp.Key))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return flatParams;
     }
 
     private static bool SupportsSampling(McpServer server)

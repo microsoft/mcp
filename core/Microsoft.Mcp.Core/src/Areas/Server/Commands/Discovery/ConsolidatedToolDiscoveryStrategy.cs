@@ -25,12 +25,14 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 public sealed class ConsolidatedToolDiscoveryStrategy(
     ICommandFactory commandFactory,
     IServiceProvider serviceProvider,
+    IConsolidatedToolDefinitionProvider definitionProvider,
     IOptions<ServiceStartOptions> options,
     IOptions<McpServerConfiguration> configurationOptions,
     ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IConsolidatedToolDefinitionProvider _definitionProvider = definitionProvider;
     private readonly IOptions<ServiceStartOptions> _options = options;
     private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
@@ -55,8 +57,8 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
             return _consolidatedCommandFactory;
         }
 
-        // Load consolidated tool definitions from JSON file
-        var consolidatedTools = LoadConsolidatedToolDefinitions();
+        // Load consolidated tool definitions
+        List<ConsolidatedToolDefinition> consolidatedTools = _definitionProvider.GetToolDefinitions();
 
         // Filter commands based on options
         var allCommands = _commandFactory.AllCommands;
@@ -167,40 +169,6 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
         return _consolidatedCommandFactory;
     }
 
-    private List<ConsolidatedToolDefinition> LoadConsolidatedToolDefinitions()
-    {
-        try
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "Microsoft.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
-            using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream == null)
-            {
-                var errorMessage = $"Failed to load embedded resource '{resourceName}'";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
-            using var jsonDoc = JsonDocument.Parse(json);
-            if (!jsonDoc.RootElement.TryGetProperty("consolidated_tools", out var toolsArray))
-            {
-                var errorMessage = "Property 'consolidated_tools' not found in consolidated-tools.json";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            return JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
-        }
-        catch (Exception ex)
-        {
-            var errorMessage = "Failed to load consolidated tools from JSON file";
-            _logger.LogError(ex, errorMessage);
-            throw new InvalidOperationException(errorMessage);
-        }
-    }
-
     private Dictionary<string, IBaseCommand> FilterCommands(IReadOnlyDictionary<string, IBaseCommand> allCommands)
     {
         return allCommands
@@ -210,6 +178,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
             .Where(kvp => _options.Value.ReadOnly == false || kvp.Value.Metadata.ReadOnly == true)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Where(kvp =>
             {
                 // Filter by namespace if specified
@@ -261,18 +230,12 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 /// Each instance creates a top-level namespace for one consolidated tool in the CommandFactory.
 /// This allows NamespaceToolLoader to see each consolidated tool as a separate top-level namespace.
 /// </summary>
-internal sealed class SingleConsolidatedToolAreaSetup : IAreaSetup
+internal sealed class SingleConsolidatedToolAreaSetup(
+    ConsolidatedToolDefinition consolidatedTool,
+    Dictionary<string, IBaseCommand> matchingCommands) : IAreaSetup
 {
-    private readonly ConsolidatedToolDefinition _consolidatedTool;
-    private readonly Dictionary<string, IBaseCommand> _matchingCommands;
-
-    public SingleConsolidatedToolAreaSetup(
-        ConsolidatedToolDefinition consolidatedTool,
-        Dictionary<string, IBaseCommand> matchingCommands)
-    {
-        _consolidatedTool = consolidatedTool;
-        _matchingCommands = matchingCommands;
-    }
+    private readonly ConsolidatedToolDefinition _consolidatedTool = consolidatedTool;
+    private readonly Dictionary<string, IBaseCommand> _matchingCommands = matchingCommands;
 
     public string Name => _consolidatedTool.Name ?? string.Empty;
     public string Title => Name;

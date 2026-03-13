@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 using Xunit;
 
@@ -9,21 +10,28 @@ namespace Azure.Mcp.Tools.Deploy.UnitTests;
 public sealed class DeploymentPlanTemplateUtilV2Tests
 {
     [Theory]
-    [InlineData("TestProject", "ContainerApp", "AZD", "bicep")]
-    [InlineData("", "WebApp", "AzCli", "")]
-    [InlineData("MyApp", "AKS", "AZD", "terraform")]
+    [InlineData("TestProject", "ContainerApp", "AZD", "from-project", "provision-and-deploy", "bicep")]
+    [InlineData("", "WebApp", "AzCli", "from-azure", "deploy-only", "")]
+    [InlineData("MyApp", "AKS", "AzCli", "from-project", "provision-and-deploy", "terraform")]
+    [InlineData("TestProject1", "ContainerApp", "AzCli", "from-project", "provision-only", "bicep")]
     public void GetPlanTemplate_ValidInputs_ReturnsFormattedTemplate(
         string projectName,
         string targetAppService,
         string provisioningTool,
-        string azdIacOptions)
+        string sourceType,
+        string deployOption,
+        string iacOptions)
     {
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             projectName,
             targetAppService,
             provisioningTool,
-            azdIacOptions);
+            sourceType,
+            deployOption,
+            iacOptions,
+            "<sub-id>",
+            "myRG");
 
         // Assert
         Assert.NotNull(result);
@@ -33,12 +41,31 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         Assert.Contains("## **Goal**", result);
         Assert.Contains("## **Project Information**", result);
         Assert.Contains("## **Azure Resources Architecture**", result);
-        Assert.Contains("## **Recommended Azure Resources**", result);
+        // Sample mermaid diagram check
+        if (targetAppService.ToLowerInvariant() == "aks")
+        {
+            Assert.Contains("svcazurekubernetesservice", result);
+        }
+        else
+        {
+            Assert.Contains("svcazurecontainerapps", result);
+        }
+        if (deployOption == DeployOption.DeployOnly)
+        {
+            Assert.Contains("## **Existing Azure Resources**", result);
+        }
+        else
+        {
+            Assert.Contains("## **Recommended Azure Resources**", result);
+        }
         Assert.Contains("## **Execution Step**", result);
 
         // Should not contain unprocessed placeholders for main content
         Assert.DoesNotContain("{{Title}}", result);
         Assert.DoesNotContain("{{ProvisioningTool}}", result);
+        Assert.DoesNotContain("{{AzureComputeHost}}", result);
+        Assert.DoesNotContain("{{ProjectName}}", result);
+        Assert.DoesNotContain("{{Goal}}", result);
 
         // Should contain appropriate provisioning tool
         if (provisioningTool.ToLowerInvariant() == "azd")
@@ -59,7 +86,9 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "",
             "ContainerApp",
             "AZD",
-            "bicep");
+            "from-project",
+            "provision-and-deploy",
+            "bicep", null, null);
 
         // Assert
         Assert.Contains("Azure Deployment Plan", result);
@@ -77,7 +106,9 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             projectName,
             "ContainerApp",
             "AZD",
-            "bicep");
+            "from-project",
+            "provision-and-deploy",
+            "bicep", null, null);
 
         // Assert
         Assert.Contains($"Azure Deployment Plan for {projectName} Project", result);
@@ -98,7 +129,9 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "TestProject",
             targetAppService,
             "AZD",
-            "bicep");
+            "from-project",
+            "provision-and-deploy",
+            "bicep", null, null);
 
         // Assert
         Assert.Contains(expectedAzureHost, result);
@@ -112,7 +145,9 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "TestProject",
             "ContainerApp",
             "azd",
-            "");
+            "from-project",
+            "provision-and-deploy",
+            "", null, null);
 
         // Assert
         Assert.Contains("bicep", result);
@@ -126,7 +161,8 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "TestProject",
             "AKS",
             "AZD",
-            "bicep");
+            "from-project",
+            "provision-and-deploy", "bicep", null, null);
 
         // Assert
         Assert.Contains("kubectl apply", result);
@@ -142,10 +178,12 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
             "TestProject",
             "ContainerApp",
             "AzCli",
-            "");
+            "from-project",
+            "provision-and-deploy",
+            "", null, null);
 
         // Assert
-        Assert.Contains("Build and Push Docker Image", result);
+        Assert.Contains("build + push image to ACR", result);
         Assert.Contains("Dockerfile", result);
     }
 }

@@ -89,4 +89,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("cloud")]
     public string? Cloud { get; set; } = null;
+
+    /// <summary>
+    /// Gets a value indicating whether the server is running in HTTP (remote) mode.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsHttpMode => Transport == TransportTypes.Http;
 }

@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.LiveTests;
@@ -124,7 +125,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
 
         var first = functionApps.EnumerateArray().First();
         var name = RegisterOrRetrieveVariable("functionAppName", first.AssertProperty("name").GetString()!);
-        if (TestMode == Tests.Helpers.TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             name = string.Concat("Sanitized", name.AsSpan(name.IndexOf('-')));
         }
@@ -146,7 +147,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var functionApp = functionApps.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, functionApp.ValueKind);
 
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : name, functionApp.AssertProperty("name").GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : name, functionApp.AssertProperty("name").GetString());
         Assert.Equal(resourceGroup, functionApp.AssertProperty("resourceGroupName").GetString());
         // Common useful properties
         if (functionApp.TryGetProperty("location", out var loc))
@@ -171,7 +172,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]

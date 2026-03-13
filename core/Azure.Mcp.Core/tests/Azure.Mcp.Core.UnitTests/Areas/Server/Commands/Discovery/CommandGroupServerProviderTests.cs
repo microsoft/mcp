@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using Xunit;
 
@@ -138,14 +138,16 @@ public class CommandGroupServerProviderTests
     {
         // Arrange
         var commandGroup = new CommandGroup("testGroup", "Test Description");
-        var provider = new CommandGroupServerProvider(commandGroup);
-        provider.ReadOnly = false;
+        var provider = new CommandGroupServerProvider(commandGroup)
+        {
+            ReadOnly = false
+        };
 
         // Act
         var arguments = provider.BuildArguments();
 
         // Assert
-        var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup" };
+        var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup", "--transport", "stdio" };
         Assert.Equal(expected, arguments);
     }
 
@@ -154,14 +156,34 @@ public class CommandGroupServerProviderTests
     {
         // Arrange
         var commandGroup = new CommandGroup("testGroup", "Test Description");
-        var provider = new CommandGroupServerProvider(commandGroup);
-        provider.ReadOnly = true;
+        var provider = new CommandGroupServerProvider(commandGroup)
+        {
+            ReadOnly = true
+        };
 
         // Act
         var arguments = provider.BuildArguments();
 
         // Assert
-        var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup", "--read-only" };
+        var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup", "--transport", "stdio", "--read-only" };
+        Assert.Equal(expected, arguments);
+    }
+
+    [Fact]
+    public void BuildArguments_WithCustomTransport_IncludesTransportFlag()
+    {
+        // Arrange
+        var commandGroup = new CommandGroup("testGroup", "Test Description");
+        var provider = new CommandGroupServerProvider(commandGroup)
+        {
+            Transport = "custom-transport"
+        };
+
+        // Act
+        var arguments = provider.BuildArguments();
+
+        // Assert
+        var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup", "--transport", "custom-transport" };
         Assert.Equal(expected, arguments);
     }
 }

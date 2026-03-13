@@ -23,8 +23,9 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, (string ServerName, McpClient Client)> _toolClientMap = [];
+    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client)> _toolClientMap = [];
     private List<McpClient> _discoveredClients = [];
+    private Dictionary<McpClient, string?> _clientPrefixMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -54,7 +55,8 @@ public sealed class RegistryToolLoader(
             var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
-                .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true));
+                .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t));
 
             // Filter by specific tools if provided
             if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
@@ -62,9 +64,13 @@ public sealed class RegistryToolLoader(
                 filteredTools = filteredTools.Where(t => _options.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
             }
 
+            var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
             foreach (var tool in filteredTools)
             {
-                allToolsResponse.Tools.Add(tool);
+                var exposedTool = string.IsNullOrEmpty(prefix)
+                    ? tool
+                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, Annotations = tool.Annotations };
+                allToolsResponse.Tools.Add(exposedTool);
             }
         }
 
@@ -119,7 +125,7 @@ public sealed class RegistryToolLoader(
             }
         }
 
-        if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client == null)
+        if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client is null)
         {
             var content = new TextContentBlock
             {
@@ -141,7 +147,7 @@ public sealed class RegistryToolLoader(
             .SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
-        return await kvp.Client.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
+        return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -169,6 +175,19 @@ public sealed class RegistryToolLoader(
     {
         if (_isInitialized)
         {
+            return;
+        }
+
+        // When running under a test proxy (TEST_PROXY_URL is set by the test infrastructure),
+        // every outgoing HTTP request is redirected through the proxy by RecordingRedirectHandler.
+        // External registry server connections (e.g. mcp.ai.azure.com) would therefore hit the
+        // test proxy during an active recording/playback session, either producing unrecorded
+        // traffic in playback mode or polluting the recording sequence in record mode. Skip
+        // registry initialization entirely so only the local in-process tools are loaded.
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEST_PROXY_URL")))
+        {
+            _logger.LogDebug("Skipping registry server initialization: TEST_PROXY_URL is set (running under test proxy).");
+            _isInitialized = true;
             return;
         }
 
@@ -202,7 +221,7 @@ public sealed class RegistryToolLoader(
                         if (mcpClient == null)
                         {
                             _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
-                            return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
+                            return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
                         }
                     }
                     catch (OperationCanceledException)
@@ -213,12 +232,12 @@ public sealed class RegistryToolLoader(
                     catch (InvalidOperationException ex)
                     {
                         _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
                     }
 
                     try
@@ -227,9 +246,10 @@ public sealed class RegistryToolLoader(
                         var filteredTools = toolsResponse
                             .Select(t => t.ProtocolTool)
                             .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                            .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t))
                             .ToArray();
 
-                        return (serverMetadata.Name, mcpClient, (IEnumerable<Tool>?)filteredTools);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)filteredTools);
                     }
                     catch (OperationCanceledException)
                     {
@@ -239,7 +259,7 @@ public sealed class RegistryToolLoader(
                     catch (Exception ex)
                     {
                         _logger.LogWarning("Failed to list tools for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, (McpClient?)null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, (McpClient?)null, (IEnumerable<Tool>?)null);
                     }
                 }
                 catch (OperationCanceledException)
@@ -255,15 +275,17 @@ public sealed class RegistryToolLoader(
             var toolCount = 0;
 
             // Process results and populate the client cache and tool map
-            foreach (var (serverName, mcpClient, tools) in results)
+            foreach (var (serverName, toolPrefix, mcpClient, tools) in results)
             {
                 if (mcpClient != null && tools != null)
                 {
                     _discoveredClients.Add(mcpClient);
+                    _clientPrefixMap[mcpClient] = toolPrefix;
 
                     foreach (var tool in tools)
                     {
-                        _toolClientMap[tool.Name] = (serverName, mcpClient);
+                        var exposedName = string.IsNullOrEmpty(toolPrefix) ? tool.Name : toolPrefix + tool.Name;
+                        _toolClientMap[exposedName] = (serverName, tool.Name, mcpClient);
                         toolCount++;
                     }
                     successCount++;
@@ -283,6 +305,15 @@ public sealed class RegistryToolLoader(
         }
     }
 
+    private static bool HasLocalRequiredHint(Tool tool)
+    {
+        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+        {
+            return localRequired?.GetValueKind() == JsonValueKind.True;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Disposes resources owned by this tool loader.
     /// Clears collections and disposes the initialization semaphore.
@@ -296,6 +327,7 @@ public sealed class RegistryToolLoader(
         // Clear references to clients (but don't dispose them - discovery strategy owns them)
         _discoveredClients.Clear();
         _toolClientMap.Clear();
+        _clientPrefixMap.Clear();
 
         await ValueTask.CompletedTask;
     }

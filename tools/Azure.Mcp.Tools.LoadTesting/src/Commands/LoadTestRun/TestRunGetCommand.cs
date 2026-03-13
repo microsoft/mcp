@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -42,6 +43,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
 
@@ -97,7 +100,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                     cancellationToken);
                 // Set results if any were returned
                 context.Response.Results = result != null
-                    ? ResponseResult.Create(new TestRunGetCommandResult([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
+                    ? ResponseResult.Create(new([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
                     : null;
             }
             // Otherwise if TestId is provided, list all test runs for that test
@@ -111,7 +114,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
-                context.Response.Results = ResponseResult.Create(new TestRunGetCommandResult(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }
             // If neither is provided, that's ok - validation will catch it
         }

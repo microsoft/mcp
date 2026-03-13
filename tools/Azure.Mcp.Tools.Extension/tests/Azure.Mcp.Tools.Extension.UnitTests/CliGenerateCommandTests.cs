@@ -35,7 +35,7 @@ public sealed class CliGenerateCommandTests
         collection.AddSingleton(_httpClientFactory);
         collection.AddSingleton(_cliGenerateService);
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _cliGenerateService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

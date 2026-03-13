@@ -91,16 +91,21 @@ To simplify the work of collection server and platform metadata in build scripts
     }
   ],
   "matrices": {
-    "linuxBuildMatrix": {
-      "linux_x64": {
-        "Pool": "Missing-LINUXPOOL",
-        "OSVmImage": "Missing-LINUXVMIMAGE",
-        "Architecture": "x64",
-        "Native": false,
-        "RunUnitTests": true
+    "linuxBuildMatrices": {
+      "x64": {
+        "linux_x64": {
+          "Pool": "Missing-LINUXPOOL",
+          "OSVmImage": "Missing-LINUXVMIMAGE",
+          "Architecture": "x64",
+          "Native": false,
+          "RunUnitTests": true
+        },
+        "linux_musl_arm64_docker": { ... }
       },
-      "linux_arm64": {
-        ...
+      "arm64": {
+        "linux_arm64": {
+          ...
+        }
       }
     },
     "linuxSmokeTestMatrix": {
@@ -110,9 +115,12 @@ To simplify the work of collection server and platform metadata in build scripts
         "Architecture": "x64"
       }
     },
-    "macosBuildMatrix": {
-      "macos_x64": {},
-      "macos_arm64": {},
+    "macosBuildMatrices": {
+      "x64": {
+        "macos_x64": {},
+        "macos_arm64": {}
+      },
+      "arm64": {}
     },
     ...
     "liveTestMatrix": {
@@ -195,7 +203,7 @@ Zip files for each server in a release are added to the GitHub release assets.
 - packed with [`Pack-Mcpb.ps1`](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Mcpb.ps1)
 - signed via [`pack-and-sign-mcpb.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/mcpb/pack-and-sign-mcpb.yml)
 - released via [`release-mcpb.yml`](https://github.com/microsoft/mcp/blob/main/eng/pipelines/templates/jobs/mcpb/release-mcpb.yml)
-- requires a `manifest.json` and `servericon.png` under `servers/<ServerName>/mcpb/`
+- requires a `manifest.json` and `icon.png` under `servers/<ServerName>/mcpb/`
 
 MCPB files are signed MCP bundles that can be installed directly into Claude Desktop with a single click. Each platform (win-x64, linux-x64, osx-x64, osx-arm64) produces a separate `.mcpb` file containing trimmed server binaries. The bundles are signed using ESRP's Pkcs7DetachedSign operation and verified with the `mcpb verify` CLI.
 
