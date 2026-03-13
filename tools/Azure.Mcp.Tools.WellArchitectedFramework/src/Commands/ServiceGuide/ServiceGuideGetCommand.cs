@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
@@ -26,9 +27,10 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
     public override string Description =>
         "Get Azure Well-Architected Framework guidance for a specific Azure service, " +
-        "including architectural best practices, design patterns, and recommendations based on the five pillars: " +
+        "or list all supported services when no service is specified. " +
+        "When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: " +
         "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Required option: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
+        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
 
     public override string Title => CommandTitle;
 
@@ -66,37 +68,65 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             return Task.FromResult(context.Response);
         }
 
-        var options = BindOptions(parseResult);
-        context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
-
         try
         {
-            var serviceName = options.Service!;
-            var serviceGuideUrl = _serviceGuideService.GetServiceGuideUrl(serviceName);
+            var options = BindOptions(parseResult);
+            context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
 
-            var guidance = string.IsNullOrWhiteSpace(serviceGuideUrl)
-                ? GetGuidanceNotAvailable(serviceName)
-                : GetGuidanceAvailable(serviceName, serviceGuideUrl);
+            // If no service is specified, return list of all services
+            if (string.IsNullOrWhiteSpace(options.Service))
+            {
+                var listResponse = GetServiceListResponse();
 
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
-            context.Response.Message = string.Empty;
+                context.Response.Status = HttpStatusCode.OK;
+                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Message = string.Empty;
+            }
+            else
+            {
+                // Service is specified, return guidance for that service
+                var serviceName = options.Service;
+                var serviceGuideUrl = _serviceGuideService.GetServiceGuideUrl(serviceName);
+
+                var guidance = string.IsNullOrWhiteSpace(serviceGuideUrl)
+                    ? GetGuidanceNotAvailable(serviceName)
+                    : GetGuidanceAvailable(serviceName, serviceGuideUrl);
+
+                context.Response.Status = HttpStatusCode.OK;
+                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Message = string.Empty;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting Well-Architected Framework guidance for service: {Service}", options.Service);
+            _logger.LogError(ex, "Error getting Well-Architected Framework guidance");
             HandleException(context, ex);
         }
 
         return Task.FromResult(context.Response);
     }
 
+    private string GetServiceListResponse()
+    {
+        var serviceNames = _serviceGuideService.GetAllServiceNames();
+        if (serviceNames.Count == 0)
+        {
+            return "No Azure Well-Architected Framework service guides are currently available.";
+        }
+
+        return $"""
+            Azure Well-Architected Framework service guides are available for the following services:
+
+            {GetSupportedServicesBulletList()}
+
+            To get guidance for a specific service, use this command with the --service <service-name> option.
+            """;
+    }
+
     private string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
     {
-        return $"""
-            For detailed Azure Well-Architected Framework guidance on '{serviceName}' service,
-            please refer to the markdown file at this URL: {serviceGuideUrl}
-            """;
+        return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
+            $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
     private string GetGuidanceNotAvailable(string serviceName)
@@ -107,9 +137,18 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             Please try a different variation of the service name using the following format for the --service option:
             {WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription}
 
-            Supported services include: {_serviceGuideService.GetAllServiceNamesAsCommaSeparatedList()}
+            Supported services:
+            {GetSupportedServicesBulletList()}
 
-            Or visit the following URL for guidance on supported services: https://learn.microsoft.com/azure/well-architected/service-guides
+            For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides
             """;
+    }
+
+    private string GetSupportedServicesBulletList()
+    {
+        var serviceNames = _serviceGuideService.GetAllServiceNames();
+        var supportedServicesBulletList = string.Join("\n", serviceNames.Select(name => $"- {name}"));
+
+        return supportedServicesBulletList;
     }
 }

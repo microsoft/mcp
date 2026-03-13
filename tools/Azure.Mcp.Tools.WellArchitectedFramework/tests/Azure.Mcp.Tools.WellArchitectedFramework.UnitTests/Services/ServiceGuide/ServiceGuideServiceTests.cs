@@ -188,10 +188,10 @@ public class ServiceGuideServiceTests
     }
 
     [Fact]
-    public void GetAllServiceNamesAsCommaSeparatedList_ContainsExpectedServices()
+    public void GetAllServiceNames_ContainsExpectedServices()
     {
         // Act
-        var result = _service.GetAllServiceNamesAsCommaSeparatedList();
+        var result = _service.GetAllServiceNames();
 
         // Assert
         Assert.NotNull(result);
@@ -200,19 +200,16 @@ public class ServiceGuideServiceTests
         Assert.Contains("azure-databricks", result);
         Assert.Contains("app-service-web-apps", result);
         Assert.Contains("azure-api-management", result);
-
-        var services = result.Split(", ");
-        Assert.True(services.Length > 0);
-        Assert.All(services, s => Assert.NotEmpty(s.Trim()));
+        Assert.True(result.Count > 0);
     }
 
     [Fact]
-    public void GetAllServiceNamesAsCommaSeparatedList_MultipleCallsReturnSameResult()
+    public void GetAllServiceNames_MultipleCallsReturnSameResult()
     {
         // Act
-        var result1 = _service.GetAllServiceNamesAsCommaSeparatedList();
-        var result2 = _service.GetAllServiceNamesAsCommaSeparatedList();
-        var result3 = _service.GetAllServiceNamesAsCommaSeparatedList();
+        var result1 = _service.GetAllServiceNames();
+        var result2 = _service.GetAllServiceNames();
+        var result3 = _service.GetAllServiceNames();
 
         // Assert
         Assert.Equal(result1, result2);
@@ -220,15 +217,15 @@ public class ServiceGuideServiceTests
     }
 
     [Fact]
-    public void GetAllServiceNamesAsCommaSeparatedList_DifferentInstances_ReturnSameResults()
+    public void GetAllServiceNames_DifferentInstances_ReturnSameResults()
     {
         // Arrange - Create multiple service instances
         var service1 = new ServiceGuideService();
         var service2 = new ServiceGuideService();
 
         // Act
-        var result1 = service1.GetAllServiceNamesAsCommaSeparatedList();
-        var result2 = service2.GetAllServiceNamesAsCommaSeparatedList();
+        var result1 = service1.GetAllServiceNames();
+        var result2 = service2.GetAllServiceNames();
 
         // Assert
         Assert.Equal(result1, result2);

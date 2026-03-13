@@ -13,8 +13,8 @@ public interface IServiceGuideService
     string? GetServiceGuideUrl(string serviceName);
 
     /// <summary>
-    /// Gets all supported service names as a comma-separated list.
+    /// Gets all supported service names.
     /// </summary>
-    /// <returns>Comma-separated list of service names.</returns>
-    string GetAllServiceNamesAsCommaSeparatedList();
+    /// <returns>List of all supported service names in alphabetically sorted order.</returns>
+    List<string> GetAllServiceNames();
 }

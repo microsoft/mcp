@@ -35,16 +35,16 @@ public sealed class ServiceGuideService : IServiceGuideService
         return null;
     }
 
-    public string GetAllServiceNamesAsCommaSeparatedList()
+    public List<string> GetAllServiceNames()
     {
         EnsureServiceGuidesLoaded();
 
         if (s_serviceGuidesCache == null || s_serviceGuidesCache.Count == 0)
         {
-            return string.Empty;
+            return [];
         }
 
-        return string.Join(", ", s_serviceGuidesCache.Keys.OrderBy(k => k));
+        return [.. s_serviceGuidesCache.Keys.OrderBy(k => k)];
     }
 
     // This double-checked locking pattern is needed to ensure thread safety if two threads call EnsureServiceGuidesLoaded

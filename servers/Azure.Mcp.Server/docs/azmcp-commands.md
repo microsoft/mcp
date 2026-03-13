@@ -3165,7 +3165,7 @@ azmcp virtualdesktop hostpool host list --subscription <subscription> \
 
 ```bash
 # Get Azure Well-Architected Framework guidance for a specific Azure service or list all supported services.
-# If --service is provided, returns guidance for that specific service; otherwise, lists all supported servicec.
+# If --service is provided, returns guidance for that specific service; otherwise, lists all supported services.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp wellarchitectedframework serviceguide get [--service <service-name>]
 ```

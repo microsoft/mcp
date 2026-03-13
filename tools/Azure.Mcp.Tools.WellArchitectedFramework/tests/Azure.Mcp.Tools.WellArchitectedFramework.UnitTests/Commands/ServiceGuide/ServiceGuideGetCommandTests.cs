@@ -54,8 +54,8 @@ public class ServiceGuideGetCommandTests
     [InlineData("--service databricks", true)]
     [InlineData("--service \"app service\"", true)]
     [InlineData("--service cosmos-db", true)]
-    [InlineData("", false)]
-    [InlineData("--service", false)]
+    [InlineData("", true)]  // Empty args should succeed and return list of services
+    [InlineData("--service", false)]  // --service without value should fail
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -72,9 +72,34 @@ public class ServiceGuideGetCommandTests
         }
         else
         {
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-            Assert.Equal("Missing Required options: --service", response.Message);
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+            Assert.Contains("'--service'", response.Message);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsServiceList_WhenNoServiceProvided()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse("");
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<List<string>>(json);
+        
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Contains("Azure Well-Architected Framework service guides are available for the following services:", result[0]);
+        Assert.Contains("To get guidance for a specific service, use this command with the --service <service-name> option", result[0]);
+        // Should contain at least some common service names
+        Assert.Contains("app-service", result[0]);
     }
 
     [Theory]
@@ -129,8 +154,7 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result[0]);
-        Assert.Contains("Supported services include:", result[0]);
-        Assert.Contains("https://learn.microsoft.com/azure/well-architected/service-guides", result[0]);
+        Assert.Contains("For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides", result[0]);
     }
 
     [Theory]
@@ -228,6 +252,22 @@ public class ServiceGuideGetCommandTests
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.NotNull(response.Message);
         }
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly_WhenNoServiceProvided()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse("");
+
+        // Act
+        var options = typeof(ServiceGuideGetCommand)
+            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.Invoke(_command, new object[] { args }) as Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide.ServiceGuideGetOptions;
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.Null(options.Service);
     }
 
     [Fact]
