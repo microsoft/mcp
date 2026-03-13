@@ -259,6 +259,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled |
 | compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys |
 | compute_disk_create | Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB |
+| compute_disk_delete | Delete the managed disk <disk-name> in resource group <resource-group> |
+| compute_disk_delete | Remove managed disk <disk-name> from resource group <resource-group> |
+| compute_disk_delete | Delete disk <disk-name> in resource group <resource-group> in my subscription |
 | compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
 | compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
 | compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |

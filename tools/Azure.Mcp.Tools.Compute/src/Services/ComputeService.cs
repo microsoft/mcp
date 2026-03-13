@@ -1686,4 +1686,40 @@ public class ComputeService(
             SourceResourceId = new Azure.Core.ResourceIdentifier(source)
         };
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> DeleteDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+            var diskResource = await resourceGroupResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
+
+            await diskResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}",
+                diskName, resourceGroup);
+
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogWarning(
+                "Disk not found during delete operation. Disk: {Disk}, ResourceGroup: {ResourceGroup}",
+                diskName, resourceGroup);
+
+            // Return false to indicate the disk was not found (idempotent delete)
+            return false;
+        }
+    }
 }
