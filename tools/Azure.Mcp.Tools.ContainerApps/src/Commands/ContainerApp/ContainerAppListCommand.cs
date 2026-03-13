@@ -23,7 +23,7 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
         $"""
         List Azure Container Apps in a subscription. Optionally filter by resource group. Each container app result
         includes: name, location, resourceGroup, managedEnvironmentId, provisioningState. If no container apps are
-        found the tool returns null results (consistent with other list commands).
+        found the tool returns an empty list of results (consistent with other list commands).
         """;
 
     public override string Title => CommandTitle;
