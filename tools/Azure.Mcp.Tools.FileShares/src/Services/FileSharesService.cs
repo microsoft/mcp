@@ -640,10 +640,12 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-        var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
 
-        var output = response.Value.Properties;
+            var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
 
             var result = response.Value;
 
@@ -661,11 +663,11 @@ public sealed class FileSharesService(
         }
         catch (Exception ex)
         {
-            LiveShares = new()
-            {
-                FileShareCount = output.LiveSharesFileShareCount ?? 0
-            }
-        };
+            _logger.LogError(ex,
+                "Error getting usage data. Subscription: {Subscription}, Location: {Location}",
+                subscription, location);
+            throw;
+        }
     }
 
     public async Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
