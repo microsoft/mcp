@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Replaces ErrorDetails with exception.type, exception.message, and exception.stacktrace in telemetry"

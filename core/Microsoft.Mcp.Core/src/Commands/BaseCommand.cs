@@ -50,8 +50,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     protected virtual void HandleException(CommandContext context, Exception ex)
     {
         context.Activity?.SetStatus(ActivityStatusCode.Error)
-            .SetTag(TagName.ExceptionType, ex.GetType().ToString())
-            .SetTag(TagName.ExceptionStackTrace, ex.StackTrace);
+            ?.SetTag(TagName.ExceptionType, ex.GetType().ToString())
+            ?.SetTag(TagName.ExceptionStackTrace, ex.StackTrace);
 
         var response = context.Response;
 
@@ -139,8 +139,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         if (!result.IsValid && commandResponse != null)
         {
             Activity.Current?.SetStatus(ActivityStatusCode.Error)
-                .SetTag(TagName.ExceptionType, "ValidationError")
-                .SetTag(TagName.ExceptionMessage, string.Join("; ", result.Errors));
+                ?.SetTag(TagName.ExceptionType, "ValidationError")
+                ?.SetTag(TagName.ExceptionMessage, string.Join("; ", result.Errors));
 
             commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = string.Join('\n', result.Errors);
