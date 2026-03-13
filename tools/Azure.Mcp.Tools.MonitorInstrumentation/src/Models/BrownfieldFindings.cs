@@ -1,7 +1,7 @@
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
 
 /// <summary>
-/// Combined brownfield findings submitted by the LLM after analyzing the codebase.
+/// Combined brownfield findings sent by the LLM after analyzing the codebase.
 /// Each section is nullable — the LLM sets a section to null if the concern doesn't exist.
 /// </summary>
 public record BrownfieldFindings

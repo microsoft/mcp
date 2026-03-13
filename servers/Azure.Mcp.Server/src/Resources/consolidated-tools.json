@@ -3393,7 +3393,7 @@
     },
     {
       "name": "guide_azure_monitor_instrumentation",
-      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. List and read onboarding resources, start orchestration, continue step-by-step actions, and submit brownfield analysis findings.",
+      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. List and read onboarding resources, start orchestration, continue step-by-step actions, and send brownfield analysis findings.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -3425,7 +3425,7 @@
         "monitorinstrumentation_get_learning_resource",
         "monitorinstrumentation_orchestrator_start",
         "monitorinstrumentation_orchestrator_next",
-        "monitorinstrumentation_submit_brownfield_review"
+        "monitorinstrumentation_send_brownfield_analysis"
       ]
     }
   ]

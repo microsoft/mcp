@@ -2265,26 +2265,31 @@ azmcp monitor webtests update --subscription <subscription> \
 
 ```bash
 # List available Azure Monitor onboarding learning resources
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitorinstrumentation list_learning_resources
 
 # Get a specific learning resource by path
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitorinstrumentation get_learning_resource --path <resource-path>
 
 # Start deterministic instrumentation orchestration for a local workspace
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitorinstrumentation orchestrator_start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitorinstrumentation orchestrator_next --session-id <session-id> \
                                                --completion-note <what-was-completed>
 
 # Submit brownfield analysis findings JSON to continue migration flow
-azmcp monitorinstrumentation submit_brownfield_review --session-id <session-id> \
-                                                        --findings-json <json>
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitorinstrumentation send_brownfield_analysis --session-id <session-id> \
+                                                      --findings-json <json>
 ```
 
 **Notes:**
 - `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `submit_brownfield_review` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
 
 ### Azure Managed Lustre Operations
 

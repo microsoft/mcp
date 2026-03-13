@@ -31,7 +31,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `monitorinstrumentation_get_learning_resource`
   - `monitorinstrumentation_orchestrator_start`
   - `monitorinstrumentation_orchestrator_next`
-  - `monitorinstrumentation_submit_brownfield_review`
+  - `monitorinstrumentation_send_brownfield_analysis`
 
 ### Breaking Changes
 
