@@ -39,7 +39,7 @@ public class ResourceHealthService(
 
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
 
-            var token = await GetArmAccessTokenAsync(cancellationToken);
+        var token = await GetArmAccessTokenAsync(cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
