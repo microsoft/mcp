@@ -68,19 +68,18 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             return Task.FromResult(context.Response);
         }
 
+        var options = BindOptions(parseResult);
+        context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
+        
         try
         {
-            var options = BindOptions(parseResult);
-            context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
+            var supportedServicesBulletList = GetSupportedServicesBulletList();
 
             // If no service is specified, return list of all services
             if (string.IsNullOrWhiteSpace(options.Service))
             {
-                var listResponse = GetServiceListResponse();
-
-                context.Response.Status = HttpStatusCode.OK;
+                var listResponse = GetServiceListResponse(supportedServicesBulletList);
                 context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
-                context.Response.Message = string.Empty;
             }
             else
             {
@@ -89,24 +88,29 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                 var serviceGuideUrl = _serviceGuideService.GetServiceGuideUrl(serviceName);
 
                 var guidance = string.IsNullOrWhiteSpace(serviceGuideUrl)
-                    ? GetGuidanceNotAvailable(serviceName)
+                    ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
                     : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
-                context.Response.Message = string.Empty;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting Well-Architected Framework guidance");
+            if (string.IsNullOrEmpty(options.Service))
+            {
+                _logger.LogError(ex, "Error listing services with Well-Architected Framework guidance.");
+            }
+            else
+            {
+                _logger.LogError(ex, "Error getting Well-Architected Framework guidance for {Service}.", options.Service);
+            }
             HandleException(context, ex);
         }
 
         return Task.FromResult(context.Response);
     }
 
-    private string GetServiceListResponse()
+    private string GetServiceListResponse(string supportedServicesBulletList)
     {
         var serviceNames = _serviceGuideService.GetAllServiceNames();
         if (serviceNames.Count == 0)
@@ -117,7 +121,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         return $"""
             Azure Well-Architected Framework service guides are available for the following services:
 
-            {GetSupportedServicesBulletList()}
+            {supportedServicesBulletList}
 
             To get guidance for a specific service, use this command with the --service <service-name> option.
             """;
@@ -129,7 +133,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
-    private string GetGuidanceNotAvailable(string serviceName)
+    private string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
     {
         return $"""
             Azure Well-Architected Framework guidance for '{serviceName}' service is not available.
@@ -138,7 +142,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             {WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription}
 
             Supported services:
-            {GetSupportedServicesBulletList()}
+            {supportedServicesBulletList}
 
             For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides
             """;

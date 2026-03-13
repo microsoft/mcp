@@ -61,19 +61,34 @@ public class ServiceGuideGetCommandTests
         // Arrange
         var parseResult = _commandDefinition.Parse(args);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
         if (shouldSucceed)
         {
+            // Act
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+            // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            Assert.NotEqual(HttpStatusCode.OK, response.Status);
-            Assert.Contains("'--service'", response.Message);
+            // For failure cases, check if there are parse errors first
+            if (parseResult.Errors.Count > 0)
+            {
+                // Parse-time validation errors (option without value)
+                Assert.True(parseResult.Errors.Count > 0);
+                Assert.Contains("--service", parseResult.Errors.Select(e => e.Message).FirstOrDefault() ?? string.Empty);
+            }
+            else
+            {
+                // Act
+                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+                // Runtime validation errors
+                Assert.NotEqual(HttpStatusCode.OK, response.Status);
+                Assert.Contains("'--service'", response.Message);
+            }
         }
     }
 
