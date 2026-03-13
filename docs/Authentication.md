@@ -84,6 +84,36 @@ az account show
 
 The default credential chain includes `InteractiveBrowserCredential` as a fallback for development convenience.
 
+### Docker Containers
+
+When running Azure MCP Server in a Docker container (e.g., `docker run -i --rm --env-file .env mcr.microsoft.com/azure-sdk/azure-mcp:latest`), use a non-interactive credential to avoid requiring a browser or terminal.
+
+**Recommended: Service Principal via EnvironmentCredential**
+
+Set `AZURE_TOKEN_CREDENTIALS=prod` together with your service principal credentials in your `.env` file:
+
+```env
+AZURE_TOKEN_CREDENTIALS=prod
+AZURE_TENANT_ID=<your-tenant-id>
+AZURE_CLIENT_ID=<your-app-client-id>
+AZURE_CLIENT_SECRET=<your-app-client-secret>
+```
+
+`AZURE_TOKEN_CREDENTIALS=prod` restricts the credential chain to `EnvironmentCredential`, `WorkloadIdentityCredential`, and `ManagedIdentityCredential`. This skips `InteractiveBrowserCredential` entirely, preventing errors caused by a missing GUI or keyring daemon inside the container.
+
+> [!IMPORTANT]
+> Omitting `AZURE_TOKEN_CREDENTIALS=prod` in a Docker container causes the server to fall back to `InteractiveBrowserCredential`, which tries to initialize the MSAL token cache via `libsecret`. If no keyring daemon is running in the container, authentication fails with `Persistence check failed` / `libsecret-1.so.0` not found errors even though your service principal credentials are correct.
+
+**Alternative: Managed Identity (for Azure-hosted containers)**
+
+When running on Azure Container Instances, AKS, or App Service with a managed identity, set:
+
+```env
+AZURE_TOKEN_CREDENTIALS=prod
+# For user-assigned managed identity only:
+AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
 ### CI/CD Pipelines
 
 For automated builds and deployments, set the following environment variables:
@@ -93,6 +123,7 @@ For automated builds and deployments, set the following environment variables:
 export AZURE_CLIENT_ID="<pipeline-sp-client-id>"
 export AZURE_CLIENT_SECRET="<pipeline-sp-secret>"
 export AZURE_TENANT_ID="<your-tenant-id>"
+export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
 ## Authentication Scenarios in Enterprise Environments
