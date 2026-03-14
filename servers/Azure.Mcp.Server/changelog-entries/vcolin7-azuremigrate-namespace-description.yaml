@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated the description for the \"azuremigrate\" tool namespace for better LLM selection accuracy."

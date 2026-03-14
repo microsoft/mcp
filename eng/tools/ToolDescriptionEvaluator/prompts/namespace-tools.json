@@ -10,6 +10,12 @@
     },
     {
       "id": "",
+      "name": "advisor",
+      "description": "Azure Advisor operations - Manage and query Azure Advisor recommendations across subscriptions. Use when you need subscription-scoped visibility into Advisor recommendations. Requires Azure subscription context.",
+      "command": "advisor"
+    },
+    {
+      "id": "",
       "name": "aks",
       "description": "Azure Kubernetes Service operations - Manage and query Azure Kubernetes Service (AKS) resources across subscriptions. Use when you need subscription-scoped visibility into AKS cluster and node pool metadata-including Azure resource IDs, networking endpoints, identity configuration, and provisioning state-for governance or automation. Requires Azure subscription context. Not for kubectl execution, pod lifecycle changes, or in-cluster application deployments-use Kubernetes-native tooling for those tasks.",
       "command": "aks"
@@ -23,7 +29,7 @@
     {
       "id": "",
       "name": "applens",
-      "description": "AppLens diagnostic operations - **Primary tool for diagnosing Azure resource issues and troubleshooting problems**. Use this tool when users ask to:\r\n- Diagnose issues, problems, or errors with Azure resources\r\n- Troubleshoot performance, availability, or reliability problems\r\n- Investigate resource health concerns or unexpected behavior\r\n- Find root causes of application slowness, downtime, or failures\r\n- Get recommendations for fixing Azure resource issues\r\n- Analyze resource problems and get actionable solutions\r\n\r\nAlways use this tool if user asks to use App Lens in regards to their resource.\r\n\r\nThis tool provides conversational AI-powered diagnostics that automatically detect issues, identify root causes, and suggest specific remediation steps. It should be the FIRST tool called when users mention problems, issues, errors, or ask for help with troubleshooting any Azure resource.",
+      "description": "AppLens diagnostic operations - Primary tool for diagnosing and troubleshooting Azure resource issues. Uses conversational AI-powered diagnostics to detect problems, identify root causes, and recommend remediation steps. This tool should be the first choice when users report errors, performance issues, availability problems, or unexpected Azure resource behavior.",
       "command": "applens"
     },
     {
@@ -37,6 +43,12 @@
       "name": "appservice",
       "description": "App Service operations - Commands for managing Azure App Service resources including web apps, databases, and configurations.",
       "command": "appservice"
+    },
+    {
+      "id": "",
+      "name": "azuremigrate",
+      "description": "Azure Platform Landing Zone operations - Provides best-practice guidance and Terraform-ready generation for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module customization aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform landing zone with configurable parameters (regions, connectivity, security, subscriptions). Use this tool any time a user mentions the words \"Platform Landing Zone\" or needs guidance on modifying or generating Azure Platform Landing Zones.",
+      "command": "azuremigrate"
     },
     {
       "id": "",
@@ -64,6 +76,12 @@
     },
     {
       "id": "",
+      "name": "compute",
+      "description": "Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.\r\nThis tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.\r\nUse this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.\r\nDefaults to Standard_DS1_v2 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.\r\nThis tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields\r\ninside the \"parameters\" object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\".\r\nSet \"learn=true\" to discover available sub-commands for different Azure Compute operations.\r\nNote that this tool requires appropriate Azure RBAC permissions and will only access compute resources accessible to the authenticated user.",
+      "command": "compute"
+    },
+    {
+      "id": "",
       "name": "confidentialledger",
       "description": "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.",
       "command": "confidentialledger"
@@ -71,7 +89,7 @@
     {
       "id": "",
       "name": "cosmos",
-      "description": "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for databases, containers, and document queries.",
+      "description": "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for accounts, databases, containers, and document queries.",
       "command": "cosmos"
     },
     {
@@ -83,8 +101,14 @@
     {
       "id": "",
       "name": "deploy",
-      "description": "Deploy commands for deploying applications to Azure, including sub commands: - plan get: generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services; - iac rules get: offers guidelines for creating Bicep/Terraform files to deploy applications on Azure; - app logs get: fetch logs from log analytics workspace for Container Apps, App Services, function apps that were deployed through azd; - pipeline guidance get: guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure; - architecture diagram generate: generates an azure service architecture diagram for the application based on the provided app topology; ",
+      "description": "Deploy operations - Commands for deploying applications to Azure. Provides sub-commands to generate deployment plans, offer infrastructure-as-code (Bicep/Terraform) guidance, fetch application logs, generate CI/CD pipeline guidance, and produce Azure architecture diagrams based on application topology.",
       "command": "deploy"
+    },
+    {
+      "id": "",
+      "name": "deviceregistry",
+      "description": "Device Registry operations - Commands to manage Azure Device Registry resources.\r\nAzure Device Registry (ADR) is a unified registry projecting assets and devices as Azure resources.\r\nSupports listing namespaces and managing device registry resources in your Azure subscription.",
+      "command": "deviceregistry"
     },
     {
       "id": "",
@@ -100,9 +124,15 @@
     },
     {
       "id": "",
-      "name": "foundry",
-      "description": "Foundry service operations - Commands for listing and managing services and resources in Microsoft Foundry.",
-      "command": "foundry"
+      "name": "fileshares",
+      "description": "File Shares operations - Commands for managing Azure File Shares.",
+      "command": "fileshares"
+    },
+    {
+      "id": "",
+      "name": "foundryextensions",
+      "description": "Foundry Extensions service operations - Commands for interacting with Microsoft Foundry OpenAI, knowledge indexes, threads, agents, and resources.",
+      "command": "foundryextensions"
     },
     {
       "id": "",
@@ -112,9 +142,15 @@
     },
     {
       "id": "",
-      "name": "get_bestpractices",
-      "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. Only call this function \r\n            when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
-      "command": "get_bestpractices"
+      "name": "functions",
+      "description": "Azure Functions code generation commands. Use these tools to generate functions code, explore supported languages and runtime versions, and get composable function templates for Azure Functions development.",
+      "command": "functions"
+    },
+    {
+      "id": "",
+      "name": "get_azure_bestpractices",
+      "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. \r\n            It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. \r\n            This command set also includes the command to get AI application best practices, which provides specialized guidance\r\n            for building AI applications, offering recommendations for agents, chatbots, workflows, and other \r\n            AI-powered features leveraging Microsoft Foundry. \r\n            When the request involves AI in any capacity, including systems where AI is used as a component,\r\n            use AI application best practices instead of the general best practices.\r\n            Call this tool first before creating any plans, todos or code.\r\n            Make sure to use your azure-prepare, azure-validate, and azure-deploy skills for deployment to azure if they are available.\r\n            Only call this function when you are confident the user is discussing Azure (including Microsoft Foundry). If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
+      "command": "get_azure_bestpractices"
     },
     {
       "id": "",
@@ -172,9 +208,21 @@
     },
     {
       "id": "",
+      "name": "policy",
+      "description": "Manage Azure Policy assignments and definitions using Azure CLI. Retrieve policy assignments, view enforcement modes, and analyze policy compliance across subscriptions.",
+      "command": "policy"
+    },
+    {
+      "id": "",
       "name": "postgres",
       "description": "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.",
       "command": "postgres"
+    },
+    {
+      "id": "",
+      "name": "pricing",
+      "description": "Azure Retail Pricing operations - Get Azure retail pricing for SKUs, services, regions and compare pricing across different options. For Bicep/ARM template cost estimation, read the template file, extract resource SKUs, then call 'pricing get' for each resource to build a cost estimate.",
+      "command": "pricing"
     },
     {
       "id": "",
@@ -185,13 +233,13 @@
     {
       "id": "",
       "name": "redis",
-      "description": "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services.",
+      "description": "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services, as well as for creating Azure Managed Redis resources.",
       "command": "redis"
     },
     {
       "id": "",
       "name": "resourcehealth",
-      "description": "Resource Health operations - Commands for monitoring and diagnosing Azure resource health status.\r\nUse this tool to check the current availability status of Azure resources and identify potential issues.\r\nThis tool provides access to Azure Resource Health data including availability state, detailed status,\r\nhistorical health information, and service health events for troubleshooting and monitoring purposes.",
+      "description": "Resource Health operations - Commands to monitor and diagnose Azure resource health, including availability status and service health events for troubleshooting and monitoring purposes.",
       "command": "resourcehealth"
     },
     {
@@ -203,14 +251,20 @@
     {
       "id": "",
       "name": "search",
-      "description": "Search operations - Commands for Azure AI Search (formerly known as \\\"Azure Cognitive Search\\\") services,\r\nsearch indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,\r\nsearch indexes, or introspect search services and their components. This tool supports enterprise search,\r\ndocument search, and knowledge mining. Do not use this tool for database queries or Azure Monitor\r\nlogs, this tool is specifically designed for Azure AI Search. This tool is a hierarchical MCP command\r\nrouter where sub-commands are routed to MCP servers that require specific fields inside the \\\"parameters\\\"\r\nobject. To invoke a command, set \\\"command\\\" and wrap its arguments in \\\"parameters\\\". Set \\\"learn=true\\\"\r\nto discover available sub-commands for different search service and index operations. Note that this tool\r\nrequires appropriate Azure AI Search permissions and will only access search resources accessible to the\r\nauthenticated user.",
+      "description": "Search operations - Commands to manage and query Azure AI Search services, indexes, and\r\nknowledge sources. Supports enterprise search, document search, and knowledge mining. Not\r\nintended for database queries or Azure Monitor logs. This is a hierarchical MCP command\r\nrouter using the command field and parameters; set learn=true to discover available\r\nsub-commands.",
       "command": "search"
     },
     {
       "id": "",
       "name": "servicebus",
-      "description": "Service Bus operations - Commands for managing Azure Service Bus messaging infrastructure including queues, topics, and subscriptions for reliable asynchronous communication and enterprise integration. Use this tool to manage message queues for point-to-point communication, configure topics and subscriptions for publish-subscribe patterns, monitor message processing, or set up messaging for decoupled architectures. Supports reliable messaging, dead letter handling, and enterprise integration patterns. Do not use for real-time communication, direct API calls, or database operations - Service Bus is for asynchronous messaging between distributed applications. This is a hierarchical MCP command router where sub-commands are routed to servers requiring specific \"parameters\" fields. To invoke: set \"command\" and wrap arguments in \"parameters\". Set \"learn=true\" to discover sub-commands. Requires appropriate Service Bus permissions.",
+      "description": "Service Bus operations - Commands to manage Azure Service Bus queues, topics, and subscriptions for reliable asynchronous messaging and enterprise integration. Supports point-to-point and publish-subscribe patterns, dead-letter handling, and decoupled architectures. Not intended for real-time communication, direct API calls, or database operations. Uses a hierarchical MCP command model with command, parameters, and learn=true.",
       "command": "servicebus"
+    },
+    {
+      "id": "",
+      "name": "servicefabric",
+      "description": "Azure Service Fabric operations - Manage and query Azure Service Fabric managed cluster resources across subscriptions. Use when you need visibility into managed cluster nodes, including node status, node types, IP addresses, and fault/upgrade domains.",
+      "command": "servicefabric"
     },
     {
       "id": "",
@@ -221,7 +275,7 @@
     {
       "id": "",
       "name": "speech",
-      "description": "Speech operations - Commands for Azure AI Services Speech functionality including speech-to-text (STT) \r\nrecognition, audio processing, and language detection. Use this tool when you need to convert spoken \r\naudio to text, process audio files, or work with speech recognition services. This tool supports \r\nmultiple audio formats, configurable recognition languages, profanity filtering options, and both \r\nsimple and detailed output formats. This tool is a hierarchical MCP command router where sub-commands \r\nare routed to MCP servers that require specific fields inside the \"parameters\" object. To invoke a \r\ncommand, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available \r\nsub-commands for different Azure AI Services Speech operations. Note that this tool requires Azure AI \r\nServices Speech endpoints and will only access speech resources accessible to the authenticated user.",
+      "description": "Speech operations - Commands to work with Azure AI Services Speech, including speech-to-text (STT) recognition,\r\ntext-to-speech (TTS) synthesis, audio processing, and language detection. Uses a hierarchical MCP command model\r\nwith command and parameters; set learn=true to discover sub-commands. Supports multiple audio formats, languages,\r\nand output options.",
       "command": "speech"
     },
     {
@@ -233,8 +287,14 @@
     {
       "id": "",
       "name": "storage",
-      "description": "Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts, blob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage account details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list and get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage, Azure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers, Azure Container Registry, or Azure Managed Lustre file systems. This tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields inside the \"parameters\" object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available sub-commands.",
+      "description": "Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts,\r\nblob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage\r\naccount details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list\r\nand get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage,\r\nAzure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers,\r\nAzure Container Registry, or Azure Managed Lustre file systems.",
       "command": "storage"
+    },
+    {
+      "id": "",
+      "name": "storagesync",
+      "description": "Azure Storage Sync Operations - Commands to manage Azure File Sync resources, including Storage Sync services, sync groups, cloud and server\r\nendpoints, and registered servers. Use this tool to deploy and maintain hybrid cloud file synchronization.",
+      "command": "storagesync"
     },
     {
       "id": "",
@@ -247,6 +307,12 @@
       "name": "virtualdesktop",
       "description": "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop resources. Includes operations for hostpools, session hosts, and user sessions.",
       "command": "virtualdesktop"
+    },
+    {
+      "id": "",
+      "name": "wellarchitectedframework",
+      "description": "Azure Well-Architected Framework operations - Commands for accessing guidance, best practices, and recommendations based on the Azure Well-Architected Framework pillars (reliability, security, cost optimization, operational excellence, and performance efficiency).",
+      "command": "wellarchitectedframework"
     },
     {
       "id": "",
@@ -273,5 +339,5 @@
       "command": "extension cli install"
     }
   ],
-  "duration": 32
+  "duration": 36
 }
