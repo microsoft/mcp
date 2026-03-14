@@ -4,14 +4,18 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
+using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
+using Azure.ResourceManager;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
+using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Npgsql;
 
@@ -20,11 +24,13 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 
 public class PostgresService(
     IResourceGroupService resourceGroupService,
+    ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IEntraTokenProvider entraTokenAuth,
     IDbProvider dbProvider) : BaseAzureService(tenantService), IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IEntraTokenProvider _entraTokenAuth = entraTokenAuth;
     private readonly IDbProvider _dbProvider = dbProvider;
@@ -187,19 +193,46 @@ public class PostgresService(
 
     public async Task<List<string>> ListServersAsync(
         string subscriptionId,
-        string resourceGroup,
-        string user,
+        string? resourceGroup,
         CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
-
         var serverList = new List<string>();
-        await foreach (PostgreSqlFlexibleServerResource server in rg.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+
+        if (string.IsNullOrEmpty(resourceGroup))
         {
-            serverList.Add(server.Data.Name);
+            // List all Flexible Servers across the entire subscription
+            var subscription = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+            await foreach (var name in ListSubscriptionServerNamesAsync(subscription, cancellationToken))
+                serverList.Add(name);
         }
+        else
+        {
+            // List Flexible Servers scoped to the given resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
+            if (rg == null)
+                throw new Exception($"Resource group '{resourceGroup}' not found.");
+            await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
+                serverList.Add(name);
+        }
+
         return serverList;
+    }
+
+    // Virtual so tests can override and avoid calling the un-mockable ARM SDK extension methods.
+    protected virtual async IAsyncEnumerable<string> ListSubscriptionServerNamesAsync(
+        SubscriptionResource subscription,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in subscription.GetPostgreSqlFlexibleServersAsync(cancellationToken))
+            yield return server.Data.Name;
+    }
+
+    protected virtual async IAsyncEnumerable<string> ListResourceGroupServerNamesAsync(
+        ResourceGroupResource resourceGroup,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (PostgreSqlFlexibleServerResource server in resourceGroup.GetPostgreSqlFlexibleServers().GetAllAsync(cancellationToken))
+            yield return server.Data.Name;
     }
 
     public async Task<string> GetServerConfigAsync(
