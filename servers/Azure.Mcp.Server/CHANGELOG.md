@@ -86,6 +86,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - prompt_optimize: Optimize a prompt for a specific model
 - Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
 - Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
+- Added Azure Monitor Instrumentation operations for deterministic onboarding and migration guidance in local workspaces, including learning resources and orchestrated execution flow:
+  - `monitorinstrumentation_list_learning_resources`
+  - `monitorinstrumentation_get_learning_resource`
+  - `monitorinstrumentation_orchestrator_start`
+  - `monitorinstrumentation_orchestrator_next`
+  - `monitorinstrumentation_send_brownfield_analysis`
 
 ### Breaking Changes
 

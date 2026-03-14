@@ -1,0 +1,4 @@
+pr: 1960
+changes:
+  - section: "Features Added"
+    description: "Add MonitorInstrumentation tool that analyzes a local workspace and returns step-by-step guidance to instrument applications with Azure Monitor"

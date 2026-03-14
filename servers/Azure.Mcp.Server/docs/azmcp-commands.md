@@ -2469,8 +2469,41 @@ azmcp monitor webtests update --subscription <subscription> \
                               [--ssl-check <true|false>] \
                               [--ssl-lifetime-check <days>] \
                               [--timeout <seconds>]
-ubscription> \
-                            --resource-group <resource-group>
+
+```
+
+### Azure Monitor Instrumentation Operations
+
+```bash
+# List available Azure Monitor onboarding learning resources
+azmcp monitorinstrumentation list_learning_resources
+
+# Get a specific learning resource by path
+azmcp monitorinstrumentation get_learning_resource --path <resource-path>
+
+# Start deterministic instrumentation orchestration for a local workspace
+azmcp monitorinstrumentation orchestrator_start --workspace-path <absolute-workspace-path>
+
+# Continue orchestration after completing the previous action
+azmcp monitorinstrumentation orchestrator_next --session-id <session-id> \
+                                               --completion-note <what-was-completed>
+
+# Submit brownfield analysis findings JSON to continue migration flow
+azmcp monitorinstrumentation send_brownfield_analysis --session-id <session-id> \
+                                                      --findings-json <json>
+```
+
+**Notes:**
+- `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+
+### Azure Managed Lustre Operations
+
+```bash
+# List Azure Managed Lustre file systems in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs list --subscription <subscription> \
+                            [--resource-group <resource-group>]
 
 # Create an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
