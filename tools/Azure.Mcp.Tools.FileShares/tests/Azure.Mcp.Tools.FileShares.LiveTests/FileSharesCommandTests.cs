@@ -487,7 +487,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
     public async Task Should_list_private_endpoint_connections()
     {
         var result = await CallToolAsync(
-            "fileshares_fileshare_privateendpointconnection_get",
+            "fileshares_fileshare_peconnection_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -510,7 +510,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         string? connectionName = null;
         {
             var listResult = await CallToolAsync(
-                "fileshares_fileshare_privateendpointconnection_get",
+                "fileshares_fileshare_peconnection_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -536,7 +536,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         // Get specific connection
         {
             var result = await CallToolAsync(
-                "fileshares_fileshare_privateendpointconnection_get",
+                "fileshares_fileshare_peconnection_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -564,7 +564,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         string? connectionName = null;
         {
             var listResult = await CallToolAsync(
-                "fileshares_fileshare_privateendpointconnection_get",
+                "fileshares_fileshare_peconnection_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -590,7 +590,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
         // Update connection status to Approved with description
         {
             var result = await CallToolAsync(
-                "fileshares_fileshare_privateendpointconnection_update",
+                "fileshares_fileshare_peconnection_update",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

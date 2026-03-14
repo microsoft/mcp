@@ -78,7 +78,7 @@ public class FileSharesSetup : IAreaSetup
         var snapshotDelete = serviceProvider.GetRequiredService<SnapshotDeleteCommand>();
         snapshot.AddCommand(snapshotDelete.Name, snapshotDelete);
 
-        var privateEndpoint = new CommandGroup("privateendpointconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
+        var privateEndpoint = new CommandGroup("peconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
         fileShare.AddSubGroup(privateEndpoint);
 
         var privateEndpointGet = serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>();
