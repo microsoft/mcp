@@ -1,0 +1,51 @@
+{
+  "generatorType": "aspnetcore-greenfield",
+  "language": "dotnet",
+  "appType": "aspnetcore",
+  "decision": {
+    "intent": "onboard",
+    "solution": "azure-monitor-distro",
+    "rationale": "ASP.NET Core greenfield application. UseAzureMonitor() provides automatic instrumentation for traces, metrics, and logs."
+  },
+  "actions": [
+    {
+      "id": "review-education",
+      "type": "review-education",
+      "title": "Review educational materials before implementation",
+      "resources": [
+        "learn://concepts/dotnet/opentelemetry-pipeline.md",
+        "learn://concepts/dotnet/azure-monitor-distro.md",
+        "learn://api-reference/dotnet/UseAzureMonitor.md",
+        "learn://api-reference/dotnet/AddOpenTelemetry.md",
+        "learn://examples/dotnet/aspnetcore-setup.md"
+      ]
+    },
+    {
+      "id": "add-distro-package",
+      "type": "add-package",
+      "title": "Add Azure Monitor OpenTelemetry distro package",
+      "dependsOn": "review-education",
+      "packageManager": "nuget",
+      "packageName": "Azure.Monitor.OpenTelemetry.AspNetCore",
+      "version": "latest-stable"
+    },
+    {
+      "id": "configure-opentelemetry",
+      "type": "modify-code",
+      "title": "Add OpenTelemetry with Azure Monitor to service configuration",
+      "dependsOn": "add-distro-package",
+      "codeTemplate": "templates/aspnetcore/instrumentation-code.cs",
+      "insertionHint": "WebApplication.CreateBuilder",
+      "requiredImport": "Azure.Monitor.OpenTelemetry.AspNetCore"
+    },
+    {
+      "id": "add-connection-string",
+      "type": "add-config",
+      "title": "Configure Azure Monitor connection string",
+      "targetFile": "appsettings.json",
+      "configKey": "AzureMonitor.ConnectionString",
+      "configValue": "<your-connection-string>",
+      "validationKey": "APPLICATIONINSIGHTS_CONNECTION_STRING"
+    }
+  ]
+}
