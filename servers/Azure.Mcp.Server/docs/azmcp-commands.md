@@ -1885,6 +1885,24 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 ```
 
 ```bash
+# Get a specific private endpoint connection or list all private endpoint connections for a file share
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --file-share-name <file-share-name> \
+                                            [--connection-name <connection-name>]
+
+# Update the state of a private endpoint connection for a file share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection update --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --file-share-name <file-share-name> \
+                                               --connection-name <connection-name> \
+                                               --status <Approved|Rejected> \
+                                               [--description <description>]
+```
+
+```bash
 # Get File Shares limits and quotas for a region
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares limits --subscription <subscription> \

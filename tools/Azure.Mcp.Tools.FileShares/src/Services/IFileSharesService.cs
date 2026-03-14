@@ -218,4 +218,5 @@ public interface IFileSharesService
         string? description = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);}
+        CancellationToken cancellationToken = default);
+}

@@ -23,7 +23,7 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
 {
     private const string CommandTitle = "Get Private Endpoint Connection";
 
-    public override string Id => "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c";
+    public override string Id => "a8e9f7d6-c5b4-4a3d-9e2f-1c0b8a7d6e5f";
     public override string Name => "get";
     public override string Description => "Get details of a specific private endpoint connection or list all private endpoint connections for a file share. If --connection-name is provided, returns a specific connection; otherwise, lists all connections.";
     public override string Title => CommandTitle;

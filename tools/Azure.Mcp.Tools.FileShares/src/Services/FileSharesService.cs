@@ -516,8 +516,8 @@ public sealed class FileSharesService(
         var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
         var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
-            // Get the existing snapshot
-            var existingSnapshot = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
+        // Get the existing snapshot
+        var existingSnapshot = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
 
         // Create a patch object with only the properties to update
         var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();

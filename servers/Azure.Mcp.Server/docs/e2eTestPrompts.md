@@ -429,6 +429,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
 | fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | Show me the private endpoint connections for file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | What private endpoint connections exist for file share <file_share_name>? |
+| fileshares_fileshare_peconnection_update | Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_update | Reject private endpoint connection <connection_name> for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Update private endpoint connection <connection_name> status to Approved for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
