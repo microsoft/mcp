@@ -221,7 +221,7 @@ public class BaseAzureServiceTests
             CreateArmClientAsync(tenant, retryPolicy);
 
         public Task<AccessToken> GetArmAccessTokenPublicAsync(CancellationToken cancellationToken) =>
-            GetArmAccessTokenAsync(cancellationToken);
+            GetArmAccessTokenAsync(null, cancellationToken);
 
         public Task<AccessToken> GetArmAccessTokenPublicAsync(string? tenant, CancellationToken cancellationToken) =>
             GetArmAccessTokenAsync(tenant, cancellationToken);
