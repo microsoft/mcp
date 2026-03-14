@@ -37,13 +37,12 @@ public class PostgresListCommandTests
     public async Task ExecuteAsync_ListsServers_WhenNoServerOrDatabaseProvided()
     {
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2", "postgres-server-3" };
-        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
+        _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var command = new PostgresListCommand(_logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--user", "user1"
+            "--resource-group", "rg1"
         ]);
         var context = new CommandContext(_serviceProvider);
 
@@ -60,6 +59,50 @@ public class PostgresListCommandTests
         Assert.Equal(expectedServers, result.Servers);
         Assert.Null(result.Databases);
         Assert.Null(result.Tables);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListsAllServersInSubscription_WhenNoResourceGroupProvided()
+    {
+        var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2" };
+        _postgresService.ListServersAsync("sub123", null, Arg.Any<CancellationToken>()).Returns(expectedServers);
+
+        var command = new PostgresListCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123"
+        ]);
+        var context = new CommandContext(_serviceProvider);
+
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.PostgresListCommandResult);
+        Assert.NotNull(result);
+        Assert.Equal(expectedServers, result.Servers);
+        Assert.Null(result.Databases);
+        Assert.Null(result.Tables);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsError_WhenServerProvidedWithoutUser()
+    {
+        var command = new PostgresListCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--server", "server1"
+        ]);
+        var context = new CommandContext(_serviceProvider);
+
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("The --user parameter is required when --server is specified.", response.Message);
     }
 
     [Fact]
@@ -143,13 +186,12 @@ public class PostgresListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoServersExist()
     {
-        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns([]);
+        _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns([]);
 
         var command = new PostgresListCommand(_logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--user", "user1"
+            "--resource-group", "rg1"
         ]);
         var context = new CommandContext(_serviceProvider);
 
@@ -248,14 +290,13 @@ public class PostgresListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenListServersThrows()
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
+        _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new PostgresListCommand(_logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--user", "user1"
+            "--resource-group", "rg1"
         ]);
         var context = new CommandContext(_serviceProvider);
 
@@ -332,15 +373,11 @@ public class PostgresListCommandTests
 
     [Theory]
     [InlineData("--subscription")]
-    [InlineData("--resource-group")]
-    [InlineData("--user")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
         var command = new PostgresListCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
-            ("--subscription", "sub123"),
-            ("--resource-group", "rg1"),
-            ("--user", "user1")
+            ("--subscription", "sub123")
         ));
 
         var context = new CommandContext(_serviceProvider);

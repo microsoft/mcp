@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
@@ -17,7 +19,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override string Name => "list";
 
-    public override string Description => "List PostgreSQL servers, databases, or tables in your subscription. Returns all servers by default. Specify --server to list databases on that server, or --server and --database to list tables in a specific database.";
+    public override string Description => "List PostgreSQL servers, databases, or tables. Returns all servers in the subscription by default (optionally scoped to a --resource-group). Specify --server to list databases on that server, or --server and --database to list tables in a specific database. --user is required when --server is provided.";
 
     public override string Title => "List PostgreSQL Resources";
 
@@ -26,6 +28,8 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(PostgresOptionDefinitions.User.AsOptional());
         command.Options.Add(PostgresOptionDefinitions.ServerOptional);
         command.Options.Add(PostgresOptionDefinitions.DatabaseOptional);
         command.Options.Add(PostgresOptionDefinitions.AuthType);
@@ -37,6 +41,13 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
                 string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)))
             {
                 result.AddError("The --server parameter is required when --database is specified.");
+            }
+
+            // Validate that --user is provided when --server is specified
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.ServerOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string>(PostgresOptionDefinitions.User.Name)))
+            {
+                result.AddError("The --user parameter is required when --server is specified.");
             }
         });
     }
@@ -100,11 +111,10 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             }
             else
             {
-                // List servers in resource group
+                // List all servers in the subscription (optionally scoped to a resource group)
                 List<string> servers = await postgresService.ListServersAsync(
                     options.Subscription!,
-                    options.ResourceGroup!,
-                    options.User!,
+                    options.ResourceGroup,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

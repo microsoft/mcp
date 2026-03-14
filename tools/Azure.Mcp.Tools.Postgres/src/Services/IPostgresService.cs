@@ -48,8 +48,7 @@ public interface IPostgresService
 
     Task<List<string>> ListServersAsync(
         string subscriptionId,
-        string resourceGroup,
-        string user,
+        string? resourceGroup,
         CancellationToken cancellationToken);
 
     Task<string> GetServerConfigAsync(
