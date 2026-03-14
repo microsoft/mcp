@@ -1,5 +1,4 @@
 [
-  "azure-prepare\\SKILL.md",
   "azure-prepare\\references\\analyze.md",
   "azure-prepare\\references\\apim.md",
   "azure-prepare\\references\\architecture.md",
@@ -64,8 +63,6 @@
   "azure-prepare\\references\\services\\sql-database\\README.md",
   "azure-prepare\\references\\services\\static-web-apps\\README.md",
   "azure-prepare\\references\\services\\storage\\README.md",
-  "microsoft-foundry\\.gitignore",
-  "microsoft-foundry\\SKILL.md",
   "microsoft-foundry\\foundry-agent\\create\\create-prompt.md",
   "microsoft-foundry\\foundry-agent\\create\\create.md",
   "microsoft-foundry\\foundry-agent\\create\\references\\agent-tools.md",
