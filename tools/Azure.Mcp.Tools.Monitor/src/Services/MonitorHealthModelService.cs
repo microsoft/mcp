@@ -103,7 +103,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<string> GetControlPlaneTokenAsync(CancellationToken cancellationToken)
     {
-        return (await GetArmAccessTokenAsync(cancellationToken)).Token;
+        return (await GetArmAccessTokenAsync(null, cancellationToken)).Token;
     }
 
     private async Task<string> GetDataplaneTokenAsync(CancellationToken cancellationToken)
