@@ -7,5 +7,5 @@ namespace Azure.Mcp.Tools.DocumentDb.Options;
 
 public class BaseDocumentDbOptions : GlobalOptions
 {
-	public string? ConnectionString { get; set; }
+    public string? ConnectionString { get; set; }
 }
