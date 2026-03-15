@@ -56,7 +56,7 @@ public sealed class UsageGuideGetCommand(ILogger<UsageGuideGetCommand> logger, I
             return Task.FromResult(context.Response);
         }
 
-        var options = BindOptions(parseResult);
+        BindOptions(parseResult);
 
         try
         {

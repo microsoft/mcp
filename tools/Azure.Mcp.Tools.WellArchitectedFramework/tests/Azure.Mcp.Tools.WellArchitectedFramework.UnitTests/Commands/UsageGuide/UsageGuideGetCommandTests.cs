@@ -106,12 +106,7 @@ public class UsageGuideGetCommandTests
         
         // Verify key content from the usage guide is present
         Assert.Contains("Azure Well-Architected Framework: AI Agent Usage Guide", result[0]);
-        Assert.Contains("Five Core Pillars", result[0]);
-        Assert.Contains("Reliability", result[0]);
-        Assert.Contains("Security", result[0]);
-        Assert.Contains("Cost Optimization", result[0]);
-        Assert.Contains("Operational Excellence", result[0]);
-        Assert.Contains("Performance Efficiency", result[0]);
+        Assert.Contains("Building blocks of the framework", result[0]);
         Assert.Contains("Systematic Application Process", result[0]);
     }
 

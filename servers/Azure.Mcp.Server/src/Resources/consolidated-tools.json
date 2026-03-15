@@ -1069,6 +1069,7 @@
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
         "get_azure_bestpractices_get",
+        "wellarchitectedframework_usageguide_get",
         "wellarchitectedframework_serviceguide_get"
       ]
     },
