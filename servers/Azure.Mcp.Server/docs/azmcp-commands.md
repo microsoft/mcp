@@ -1704,7 +1704,7 @@ azmcp documentdb index list indexes --connection-string <connection-string> \
                                     --collection-name <collection-name>
 
 # Create an index on a collection
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb index create index --connection-string <connection-string> \
                                     --db-name <db-name> \
                                     --collection-name <collection-name> \

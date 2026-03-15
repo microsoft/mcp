@@ -28,7 +28,7 @@ public sealed class CreateIndexCommand(ILogger<CreateIndexCommand> logger)
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
