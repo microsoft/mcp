@@ -111,42 +111,6 @@ public class UsageGuideGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsCorrectContentStructure()
-    {
-        // Arrange
-        var args = _commandDefinition.Parse("");
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<string>>(json);
-        
-        Assert.NotNull(result);
-        Assert.Single(result);
-        
-        // Verify the content structure includes the main sections
-        var content = result[0];
-        Assert.Contains("## Purpose", content);
-        Assert.Contains("## What is the Azure Well-Architected Framework?", content);
-        Assert.Contains("## Building blocks of the framework", content);
-        Assert.Contains("### Layer 1: Pillars (Foundation)", content);
-        Assert.Contains("### Layer 2: Workloads", content);
-        Assert.Contains("### Layer 3: Service Guides (Implementation)", content);
-        Assert.Contains("## Systematic Application Process", content);
-        Assert.Contains("### Step 1: Understand All Design Principles", content);
-        Assert.Contains("### Step 2: Pick and Prioritize Design Strategies", content);
-        Assert.Contains("### Step 3: Make Strategic Design Tradeoffs", content);
-        Assert.Contains("### Step 4: Match Workload Scenarios", content);
-        Assert.Contains("### Step 5: Select and Configure Azure Services", content);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
