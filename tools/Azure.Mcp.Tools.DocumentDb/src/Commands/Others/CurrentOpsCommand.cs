@@ -1,0 +1,85 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.CommandLine;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.DocumentDb.Models;
+using Azure.Mcp.Tools.DocumentDb.Options;
+using Azure.Mcp.Tools.DocumentDb.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Others;
+
+public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
+    : BaseDocumentDbCommand<CurrentOpsOptions>()
+{
+    private readonly ILogger<CurrentOpsCommand> _logger = logger;
+
+    public override string Id => "e9f0a1b2-c3d4-4e9f-6a7b-8c9d0e1f2a3b";
+
+    public override string Name => "current_ops";
+
+    public override string Description => "Get information about current DocumentDB operations";
+
+    public override string Title => "Current Operations";
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(DocumentDbOptionDefinitions.Ops);
+    }
+
+    protected override CurrentOpsOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Ops = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Ops.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context,
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
+    {
+        CurrentOpsOptions? commandOptions = null;
+
+        try
+        {
+            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            {
+                return context.Response;
+            }
+
+            var options = commandOptions = BindOptions(parseResult);
+
+            var service = context.GetService<IDocumentDbService>();
+
+            var filter = DocumentDbHelpers.ParseBsonDocument(options.Ops);
+
+            DocumentDbResponse result = await service.GetCurrentOpsAsync(options.ConnectionString!, filter, cancellationToken);
+
+            DocumentDbResponseHelper.ProcessResponse(context, result);
+
+            return context.Response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get current operations with filter: {Ops}", commandOptions?.Ops);
+            HandleException(context, ex);
+            return context.Response;
+        }
+    }
+}
