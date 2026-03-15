@@ -1698,30 +1698,35 @@ azmcp deviceregistry namespace list --subscription <subscription> \
 
 ```bash
 # List all indexes on a collection
-azmcp documentdb index list_indexes --connection-string <connection-string> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index list indexes --connection-string <connection-string> \
                                     --db-name <db-name> \
                                     --collection-name <collection-name>
 
 # Create an index on a collection
-azmcp documentdb index create_index --connection-string <connection-string> \
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index create index --connection-string <connection-string> \
                                     --db-name <db-name> \
                                     --collection-name <collection-name> \
                                     --keys <json-index-keys> \
                                     [--options <json-index-options>]
 
 # Drop an index from a collection
-azmcp documentdb index drop_index --connection-string <connection-string> \
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index drop index --connection-string <connection-string> \
                                   --db-name <db-name> \
                                   --collection-name <collection-name> \
                                   --index-name <index-name>
 
 # Get index statistics for a collection
-azmcp documentdb index index_stats --connection-string <connection-string> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index index stats --connection-string <connection-string> \
                                    --db-name <db-name> \
                                    --collection-name <collection-name>
 
 # Get current DocumentDB operations
-azmcp documentdb index current_ops --connection-string <connection-string> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index current ops --connection-string <connection-string> \
                                    [--ops <json-filter>]
 ```
 
