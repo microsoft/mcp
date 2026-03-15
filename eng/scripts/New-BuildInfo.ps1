@@ -170,6 +170,53 @@ function CheckVariable($name) {
     return $value
 }
 
+function Test-ProjectUsesMongoDbDriver {
+    param(
+        [string] $ProjectPath
+    )
+
+    if (!(Test-Path $ProjectPath)) {
+        return $false
+    }
+
+    $projectContent = Get-Content $ProjectPath -Raw
+    return $projectContent -match '<PackageReference\s+Include="MongoDB\.Driver"'
+}
+
+function Test-ServerHasMongoDbDependency {
+    param(
+        [System.IO.FileInfo] $ServerProject
+    )
+
+    $serverProjectDirectory = Split-Path $ServerProject.FullName -Parent
+    $serverProjectContent = Get-Content $ServerProject.FullName -Raw
+    $projectReferenceMatches = [regex]::Matches($serverProjectContent, '<ProjectReference\s+Include="([^"]+)"')
+
+    foreach ($projectReferenceMatch in $projectReferenceMatches) {
+        $projectReference = $projectReferenceMatch.Groups[1].Value
+        if (-not $projectReference) {
+            continue
+        }
+
+        $expandedReference = $projectReference.Replace('$(RepoRoot)', $RepoRoot)
+        $expandedReference = $expandedReference.Replace('$(MSBuildThisFileDirectory)', "$serverProjectDirectory/")
+        $expandedReference = $expandedReference.Replace('\', '/')
+
+        if (-not [System.IO.Path]::IsPathRooted($expandedReference)) {
+            $expandedReference = (Join-Path $serverProjectDirectory $expandedReference).Replace('\', '/')
+        }
+
+        $referencedProjects = @(Get-ChildItem -Path $expandedReference -File -ErrorAction SilentlyContinue)
+        foreach ($referencedProject in $referencedProjects) {
+            if (Test-ProjectUsesMongoDbDriver -ProjectPath $referencedProject.FullName) {
+                return $true
+            }
+        }
+    }
+
+    return $false
+}
+
 $windowsPool = CheckVariable 'WINDOWSPOOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
 $linuxArm64Pool = CheckVariable 'LINUXARM64POOL'
@@ -387,6 +434,13 @@ function Get-ServerDetails {
             $version.PrereleaseNumber = $BuildId
         }
 
+        # Check if this server depends on MongoDB.Driver (incompatible with IL trimming)
+        $hasMongoDbDependency = Test-ServerHasMongoDbDependency -ServerProject $serverProject
+
+        if ($hasMongoDbDependency) {
+            Write-Host "Server $serverName depends on DocumentDb (with MongoDB.Driver) - trimming will be disabled" -ForegroundColor Yellow
+        }
+
         # Calculate VSIX version based on server version
         $vsixVersion = $null
         $vsixIsPrerelease = $false
@@ -473,7 +527,8 @@ function Get-ServerDetails {
                         architecture = $arch
                         extension = $os.extension
                         native = $false
-                        trimmed = $true
+                        # Disable trimming for servers with MongoDB.Driver dependency (uses extensive reflection)
+                        trimmed = !$hasMongoDbDependency
                     }
                 }
             }
@@ -498,7 +553,7 @@ function Get-ServerDetails {
                 architecture = $additionalPlatform.architecture
                 extension = $os.extension
                 native = $additionalPlatform.native
-                trimmed = $additionalPlatform.trimmed
+                trimmed = $additionalPlatform.trimmed -and !$hasMongoDbDependency
                 specialPurpose = $additionalPlatform.specialPurpose
             }
         }
