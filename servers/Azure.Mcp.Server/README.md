@@ -965,9 +965,11 @@ Example prompts that generate Azure CLI commands:
 
 ### 🗄️ Azure DocumentDB (with MongoDB compatibility)
 
-* "Connect to my DocumentDB instance with provided connection string"
-* "Disconnect from current DocumentDB connection"
-* "Show me the DocumentDB connection status"
+* "List indexes for collection 'items' in DocumentDB database 'test'"
+* "Create an index on field 'category' for collection 'items' in DocumentDB database 'test'"
+* "Drop index 'category_1' from collection 'items' in DocumentDB database 'test'"
+* "Show index statistics for collection 'items' in DocumentDB database 'test'"
+* "Show current DocumentDB operations"
 
 ### 📣 Azure Event Grid
 

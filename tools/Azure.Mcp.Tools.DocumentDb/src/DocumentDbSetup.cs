@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
 // using Azure.Mcp.Tools.DocumentDb.Commands.Collection;
-using Azure.Mcp.Tools.DocumentDb.Commands.Connection;
 // using Azure.Mcp.Tools.DocumentDb.Commands.Database;
 // using Azure.Mcp.Tools.DocumentDb.Commands.Document;
-// using Azure.Mcp.Tools.DocumentDb.Commands.Index;
+using Azure.Mcp.Tools.DocumentDb.Commands.Index;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -22,9 +20,11 @@ public class DocumentDbSetup : IAreaSetup
     {
         services.AddSingleton<IDocumentDbService, DocumentDbService>();
 
-        // Connection Commands
-        services.AddSingleton<ConnectionToggleCommand>();
-        services.AddSingleton<GetConnectionStatusCommand>();
+        services.AddSingleton<CreateIndexCommand>();
+        services.AddSingleton<ListIndexesCommand>();
+        services.AddSingleton<DropIndexCommand>();
+        services.AddSingleton<IndexStatsCommand>();
+        services.AddSingleton<CurrentOpsCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,19 +32,25 @@ public class DocumentDbSetup : IAreaSetup
         // Create DocumentDB root command group
         var documentDb = new CommandGroup(
             Name,
-            "Azure DocumentDB operations for Azure Cosmos DB for MongoDB (vCore), including connection sessions and database commands.",
+            "Azure DocumentDB index and diagnostics operations for Azure Cosmos DB for MongoDB (vCore).",
             Title);
 
-        var connection = new CommandGroup(
-            "connection",
-            "Connection session commands for opening, closing, reconnecting, and checking the active DocumentDB connection.");
-        documentDb.AddSubGroup(connection);
+        var index = new CommandGroup(
+            "index",
+            "Manage indexes and inspect index-related diagnostics by providing a DocumentDB connection string per request.");
+        documentDb.AddSubGroup(index);
 
-        var connectionToggleCommand = serviceProvider.GetRequiredService<ConnectionToggleCommand>();
-        var getConnectionStatusCommand = serviceProvider.GetRequiredService<GetConnectionStatusCommand>();
+        var createIndexCommand = serviceProvider.GetRequiredService<CreateIndexCommand>();
+        var listIndexesCommand = serviceProvider.GetRequiredService<ListIndexesCommand>();
+        var dropIndexCommand = serviceProvider.GetRequiredService<DropIndexCommand>();
+        var indexStatsCommand = serviceProvider.GetRequiredService<IndexStatsCommand>();
+        var currentOpsCommand = serviceProvider.GetRequiredService<CurrentOpsCommand>();
 
-        connection.AddCommand(connectionToggleCommand.Name, connectionToggleCommand);
-        connection.AddCommand(getConnectionStatusCommand.Name, getConnectionStatusCommand);
+        index.AddCommand(createIndexCommand.Name, createIndexCommand);
+        index.AddCommand(listIndexesCommand.Name, listIndexesCommand);
+        index.AddCommand(dropIndexCommand.Name, dropIndexCommand);
+        index.AddCommand(indexStatsCommand.Name, indexStatsCommand);
+        index.AddCommand(currentOpsCommand.Name, currentOpsCommand);
 
         return documentDb;
     }

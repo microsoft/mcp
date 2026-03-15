@@ -5,226 +5,329 @@ using System.Net;
 using Azure.Mcp.Tools.DocumentDb.Models;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 
 namespace Azure.Mcp.Tools.DocumentDb.Services;
 
-public class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbService
+public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocumentDbService
 {
     private readonly ILogger<DocumentDbService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private MongoClient? _client;
-    private string? _connectionString;
-    private bool _disposed;
+    private static readonly JsonWriterSettings s_jsonWriterSettings = new() { OutputMode = JsonOutputMode.RelaxedExtendedJson };
 
-    /// <summary>
-    /// Helper method to convert BsonDocument to JSON string for serialization
-    /// </summary>
-    private static string? BsonDocumentToJson(BsonDocument? doc)
+    public async Task<DocumentDbResponse> CreateIndexAsync(string connectionString, string databaseName, string collectionName, BsonDocument keys, BsonDocument? options = null, CancellationToken cancellationToken = default)
     {
-        return doc?.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { OutputMode = MongoDB.Bson.IO.JsonOutputMode.RelaxedExtendedJson });
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(keys);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var createIndexOptions = CreateIndexOptions(options);
+            var model = new CreateIndexModel<BsonDocument>(new BsonDocumentIndexKeysDefinition<BsonDocument>(keys), createIndexOptions);
+            var indexName = await collection.Indexes.CreateOneAsync(model, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Created index {IndexName} on {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
+
+            return Success(
+                "Index created successfully",
+                new Dictionary<string, object?>
+                {
+                    ["index_name"] = indexName,
+                    ["keys"] = BsonDocumentToJson(keys),
+                    ["options"] = BsonDocumentToJson(options)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access creating index on {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating index on {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to create index: {ex.Message}");
+        }
     }
 
-    /// <summary>
-    /// Helper method to convert List of BsonDocument to List of JSON strings for serialization
-    /// </summary>
-    private static List<string> BsonDocumentListToJson(List<BsonDocument> docs)
+    public async Task<DocumentDbResponse> ListIndexesAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default)
     {
-        return docs.Select(doc => doc.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { OutputMode = MongoDB.Bson.IO.JsonOutputMode.RelaxedExtendedJson })).ToList();
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var indexes = await collection.Indexes.List(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            return Success(
+                "Indexes retrieved successfully",
+                new Dictionary<string, object?>
+                {
+                    ["indexes"] = BsonDocumentListToJson(indexes),
+                    ["count"] = indexes.Count
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access listing indexes for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing indexes for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to list indexes: {ex.Message}");
+        }
     }
 
-    #region Connection Management
+    public async Task<DocumentDbResponse> DropIndexAsync(string connectionString, string databaseName, string collectionName, string indexName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ValidateParameter(indexName, nameof(indexName));
 
-    public async Task<DocumentDbResponse> ConnectAsync(string connectionString, bool testConnection = true, CancellationToken cancellationToken = default)
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            await collection.Indexes.DropOneAsync(indexName, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Dropped index {IndexName} from {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
+
+            return Success(
+                $"Index '{indexName}' dropped successfully",
+                new Dictionary<string, object?>
+                {
+                    ["index_name"] = indexName
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "IndexNotFound")
+        {
+            _logger.LogWarning("Index '{IndexName}' not found in {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
+            return Failure(HttpStatusCode.BadRequest, $"Index '{indexName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access dropping index {IndexName} from {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error dropping index {IndexName} from {DatabaseName}.{CollectionName}", indexName, databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to drop index: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> GetIndexStatsAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var pipeline = new[]
+            {
+                new BsonDocument("$indexStats", new BsonDocument())
+            };
+
+            var stats = await collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            return Success(
+                "Index statistics retrieved successfully",
+                new Dictionary<string, object?>
+                {
+                    ["stats"] = BsonDocumentListToJson(stats),
+                    ["count"] = stats.Count
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access getting index stats for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting index stats for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to get index stats: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> GetCurrentOpsAsync(string connectionString, BsonDocument? filter = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
 
         try
         {
-            // Disconnect any existing connection
-            if (_client != null)
+            var adminDb = CreateClient(connectionString).GetDatabase("admin");
+            var command = new BsonDocument("currentOp", 1);
+
+            if (filter != null && filter.ElementCount > 0)
             {
-                await DisconnectAsync(cancellationToken);
-            }
-
-            _connectionString = connectionString;
-            var settings = MongoClientSettings.FromConnectionString(connectionString);
-            settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
-            _client = new MongoClient(settings);
-
-            if (testConnection)
-            {
-                // Test the connection by listing databases
-                var databases = await _client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
-                _logger.LogInformation("Successfully connected to DocumentDB. Found {Count} databases", databases.Count);
-
-                return new DocumentDbResponse
+                foreach (var element in filter)
                 {
-                    Success = true,
-                    StatusCode = HttpStatusCode.OK,
-                    Message = "Connected successfully",
-                    Data = new Dictionary<string, object?>
-                    {
-                        ["databaseCount"] = databases.Count,
-                        ["databases"] = databases
-                    }
-                };
+                    command.Add(element);
+                }
             }
 
-            return new DocumentDbResponse
-            {
-                Success = true,
-                StatusCode = HttpStatusCode.OK,
-                Message = "Connected successfully (not tested)",
-                Data = null
-            };
+            var result = await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+            return Success(
+                "Current operations retrieved successfully",
+                new Dictionary<string, object?>
+                {
+                    ["operations"] = BsonDocumentToJson(result)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Admin database not found");
+            return Failure(HttpStatusCode.BadRequest, "Admin database not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Namespace not found for current operations");
+            return Failure(HttpStatusCode.BadRequest, "Namespace not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access getting current operations");
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
         }
         catch (Exception ex)
         {
-            _client = null;
-            _connectionString = null;
-
-            throw new InvalidOperationException($"Connection failed: {ex.Message}", ex);
+            _logger.LogError(ex, "Error getting current operations");
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to get current operations: {ex.Message}");
         }
     }
 
-    public Task<DocumentDbResponse> DisconnectAsync(CancellationToken cancellationToken = default)
+    private static IMongoCollection<BsonDocument> GetCollection(string connectionString, string databaseName, string collectionName)
     {
-        if (_client == null)
+        return CreateClient(connectionString)
+            .GetDatabase(databaseName)
+            .GetCollection<BsonDocument>(collectionName);
+    }
+
+    private static MongoClient CreateClient(string connectionString)
+    {
+        var settings = MongoClientSettings.FromConnectionString(connectionString);
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
+        return new MongoClient(settings);
+    }
+
+    private static CreateIndexOptions CreateIndexOptions(BsonDocument? options)
+    {
+        var createIndexOptions = new CreateIndexOptions();
+
+        if (options == null)
         {
-            return Task.FromResult(new DocumentDbResponse
-            {
-                Success = true,
-                StatusCode = HttpStatusCode.OK,
-                Message = "No active connection",
-                Data = new Dictionary<string, object?>
-                {
-                    ["isConnected"] = false
-                }
-            });
+            return createIndexOptions;
         }
 
-        _client = null;
-        _connectionString = null;
-        _logger.LogInformation("Disconnected from DocumentDB");
-        return Task.FromResult(new DocumentDbResponse
+        if (options.Contains("unique"))
+        {
+            createIndexOptions.Unique = options["unique"].AsBoolean;
+        }
+
+        if (options.Contains("name"))
+        {
+            createIndexOptions.Name = options["name"].AsString;
+        }
+
+        if (options.Contains("sparse"))
+        {
+            createIndexOptions.Sparse = options["sparse"].AsBoolean;
+        }
+
+        if (options.Contains("expireAfterSeconds"))
+        {
+            createIndexOptions.ExpireAfter = TimeSpan.FromSeconds(options["expireAfterSeconds"].ToInt32());
+        }
+
+        return createIndexOptions;
+    }
+
+    private static string? BsonDocumentToJson(BsonDocument? doc)
+    {
+        return doc?.ToJson(s_jsonWriterSettings);
+    }
+
+    private static List<string> BsonDocumentListToJson(List<BsonDocument> docs)
+    {
+        return docs.Select(doc => doc.ToJson(s_jsonWriterSettings)).ToList();
+    }
+
+    private static DocumentDbResponse Success(string message, object? data = null)
+    {
+        return new DocumentDbResponse
         {
             Success = true,
             StatusCode = HttpStatusCode.OK,
-            Message = "Disconnected successfully",
-            Data = new Dictionary<string, object?>
-            {
-                ["isConnected"] = false
-            }
-        });
+            Message = message,
+            Data = data
+        };
     }
 
-    public async Task<DocumentDbResponse> GetConnectionStatusAsync(CancellationToken cancellationToken = default)
+    private static DocumentDbResponse Failure(HttpStatusCode statusCode, string message)
     {
-        if (_client == null)
+        return new DocumentDbResponse
         {
-            return new DocumentDbResponse
-            {
-                Success = true,
-                StatusCode = HttpStatusCode.OK,
-                Message = "Not connected",
-                Data = new Dictionary<string, object?>
-                {
-                    ["isConnected"] = false,
-                    ["connectionString"] = null,
-                    ["details"] = null
-                }
-            };
-        }
-
-        var sanitizedConnectionString = SanitizeConnectionString(_connectionString);
-
-        try
-        {
-            var adminDb = _client.GetDatabase("admin");
-            var command = new BsonDocument("hello", 1);
-            await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            return new DocumentDbResponse
-            {
-                Success = true,
-                StatusCode = HttpStatusCode.OK,
-                Message = "Connection status retrieved successfully",
-                Data = new Dictionary<string, object?>
-                {
-                    ["isConnected"] = true,
-                    ["connectionString"] = sanitizedConnectionString,
-                    ["details"] = new Dictionary<string, object?>
-                    {
-                        ["status"] = "Connected and verified"
-                    }
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to check connection status: {ex.Message}", ex);
-        }
+            Success = false,
+            StatusCode = statusCode,
+            Message = message,
+            Data = null
+        };
     }
 
-    private string? SanitizeConnectionString(string? connectionString)
-    {
-        if (string.IsNullOrEmpty(connectionString))
-            return null;
-
-        // Hide password from connection string
-        try
-        {
-            var uri = new Uri(connectionString);
-            if (!string.IsNullOrEmpty(uri.UserInfo))
-            {
-                var sanitized = connectionString.Replace(uri.UserInfo, "***:***");
-                return sanitized;
-            }
-        }
-        catch
-        {
-            // If parsing fails, just return a placeholder
-            return "mongodb://***";
-        }
-
-        return connectionString;
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    private void EnsureConnected()
-    {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("Not connected to DocumentDB. Please call ConnectAsync first.");
-        }
-    }
-
-    private void ValidateParameter(string? value, string paramName)
+    private static void ValidateParameter(string? value, string paramName)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             throw new ArgumentException($"{paramName} cannot be null or empty", paramName);
         }
     }
-
-    #endregion
-
-    #region IDisposable
-
-    public void Dispose()
-    {
-        if (_disposed)
-            return;
-
-        _client = null;
-        _connectionString = null;
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
-    }
-
-    #endregion
 }

@@ -360,10 +360,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| documentdb_connection_toggle | Connect to my DocumentDB instance using <connection-string> |
-| documentdb_connection_toggle | Close the DocumentDB connection |
-| documentdb_connection_get_connection_status | Show me the DocumentDB connection status |
-| documentdb_connection_get_connection_status | Is DocumentDB connected? |
+| documentdb_index_list_indexes | List indexes for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_list_indexes | Show me all indexes on collection <collection-name> in database <db-name> |
+| documentdb_index_create_index | Create an index on collection <collection-name> in DocumentDB database <db-name> using keys <keys> |
+| documentdb_index_create_index | Add a DocumentDB index for collection <collection-name> in database <db-name> with keys <keys> and options <options> |
+| documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_drop_index | Remove the <index-name> index from DocumentDB collection <collection-name> in database <db-name> |
+| documentdb_index_index_stats | Show index statistics for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_index_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
+| documentdb_index_current_ops | Show current DocumentDB operations |
+| documentdb_index_current_ops | Get current DocumentDB operations filtered by <ops> |
 
 ## Azure Event Grid
 

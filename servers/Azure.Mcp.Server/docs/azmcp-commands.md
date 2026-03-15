@@ -1697,21 +1697,32 @@ azmcp deviceregistry namespace list --subscription <subscription> \
 ### Azure DocumentDB (with MongoDB compatibility) Operations
 
 ```bash
-# Connection Management
+# List all indexes on a collection
+azmcp documentdb index list_indexes --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name>
 
-# Connect to a DocumentDB instance
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb connection toggle --action connect --connection-string <connection-string> \
-                                    [--test-connection <true|false>]
+# Create an index on a collection
+azmcp documentdb index create_index --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name> \
+                                    --keys <json-index-keys> \
+                                    [--options <json-index-options>]
 
-# Disconnect from the current DocumentDB instance
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb connection toggle --action disconnect
+# Drop an index from a collection
+azmcp documentdb index drop_index --connection-string <connection-string> \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name> \
+                                  --index-name <index-name>
 
+# Get index statistics for a collection
+azmcp documentdb index index_stats --connection-string <connection-string> \
+                                   --db-name <db-name> \
+                                   --collection-name <collection-name>
 
-# Get the current DocumentDB connection status and details
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb connection get connection status
+# Get current DocumentDB operations
+azmcp documentdb index current_ops --connection-string <connection-string> \
+                                   [--ops <json-filter>]
 ```
 
 ### Azure Event Grid Operations

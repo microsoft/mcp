@@ -5,4 +5,7 @@ using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.DocumentDb.Options;
 
-public class BaseDocumentDbOptions : GlobalOptions;
+public class BaseDocumentDbOptions : GlobalOptions
+{
+	public string? ConnectionString { get; set; }
+}

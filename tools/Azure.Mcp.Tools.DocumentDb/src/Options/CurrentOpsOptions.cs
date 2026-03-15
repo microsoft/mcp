@@ -3,4 +3,7 @@
 
 namespace Azure.Mcp.Tools.DocumentDb.Options;
 
-public class GetConnectionStatusOptions : BaseDocumentDbOptions;
+public class CurrentOpsOptions : BaseDocumentDbOptions
+{
+    public string? Ops { get; set; }
+}

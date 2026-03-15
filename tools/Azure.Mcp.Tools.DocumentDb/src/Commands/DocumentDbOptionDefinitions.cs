@@ -7,17 +7,10 @@ namespace Azure.Mcp.Tools.DocumentDb.Commands;
 
 internal static class DocumentDbOptionDefinitions
 {
-    public static readonly Option<string> Action = CreateActionOption();
-
     public static readonly Option<string> ConnectionString = new("--connection-string")
     {
-        Description = "Azure DocumentDB or Azure Cosmos DB for MongoDB (vCore) connection string used to connect or switch the active session"
-    };
-
-    public static readonly Option<bool> TestConnection = new("--test-connection")
-    {
-        Description = "Verify the connection immediately after connecting",
-        DefaultValueFactory = _ => true
+        Description = "Azure DocumentDB connection string used for this request.",
+        Required = true
     };
 
     public static readonly Option<string> DbName = new("--db-name")
@@ -112,15 +105,4 @@ internal static class DocumentDbOptionDefinitions
     {
         Description = "Filter for current operations"
     };
-
-    private static Option<string> CreateActionOption()
-    {
-        var option = new Option<string>("--action")
-        {
-            Description = "Connection session action to perform. Use 'connect' to open or switch the active DocumentDB session, or 'disconnect' to close the current session.",
-            Required = true
-        };
-        option.AcceptOnlyFromAmong("connect", "disconnect");
-        return option;
-    }
 }
