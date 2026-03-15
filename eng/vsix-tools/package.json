@@ -1,5 +1,13 @@
 {
     "devDependencies": {
         "@vscode/vsce": "~3"
+    },
+    "_overrideComments": {
+        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)"
+    },
+    "overrides": {
+        "@vscode/vsce": {
+            "yauzl": "^3.2.1"
+        }
     }
 }
