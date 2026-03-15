@@ -4,36 +4,35 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.DocumentDb.Models;
 using Azure.Mcp.Tools.DocumentDb.Options;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
-public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
-    : BaseDocumentDbCommand<IndexStatsOptions>()
+public sealed class RenameCollectionCommand(ILogger<RenameCollectionCommand> logger)
+    : BaseDocumentDbCommand<RenameCollectionOptions>()
 {
-    private readonly ILogger<IndexStatsCommand> _logger = logger;
+    private readonly ILogger<RenameCollectionCommand> _logger = logger;
 
-    public override string Id => "d8e9f0a1-b2c3-4d8e-5f6a-7b8c9d0e1f2a";
+    public override string Id => "c9d0e1f2-a3b4-4c9d-6e7f-8a9b0c1d2e3f";
 
-    public override string Name => "index_stats";
+    public override string Name => "rename_collection";
 
-    public override string Description => "Get statistics for indexes on a collection";
+    public override string Description => "Rename a collection";
 
-    public override string Title => "Index Statistics";
+    public override string Title => "Rename Collection";
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
-        Idempotent = true,
+        Destructive = true,
+        Idempotent = false,
         OpenWorld = false,
-        ReadOnly = true,
+        Secret = false,
         LocalRequired = false,
-        Secret = false
+        ReadOnly = false
     };
 
     protected override void RegisterOptions(Command command)
@@ -41,13 +40,15 @@ public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
         base.RegisterOptions(command);
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+        command.Options.Add(DocumentDbOptionDefinitions.NewCollectionName);
     }
 
-    protected override IndexStatsOptions BindOptions(ParseResult parseResult)
+    protected override RenameCollectionOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
+        options.NewCollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.NewCollectionName.Name);
         return options;
     }
 
@@ -56,7 +57,7 @@ public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        IndexStatsOptions? commandOptions = null;
+        RenameCollectionOptions? options = null;
 
         try
         {
@@ -65,11 +66,11 @@ public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
                 return context.Response;
             }
 
-            var options = commandOptions = BindOptions(parseResult);
+            options = BindOptions(parseResult);
 
             var service = context.GetService<IDocumentDbService>();
 
-            DocumentDbResponse result = await service.GetIndexStatsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, cancellationToken);
+            var result = await service.RenameCollectionAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, options.NewCollectionName!, cancellationToken);
 
             DocumentDbResponseHelper.ProcessResponse(context, result);
 
@@ -77,7 +78,7 @@ public sealed class IndexStatsCommand(ILogger<IndexStatsCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get index statistics for collection: {CollectionName}, database: {DbName}", commandOptions?.CollectionName, commandOptions?.DbName);
+            _logger.LogError(ex, "Failed to rename collection from {OldName} to {NewName} in database: {DbName}", options?.CollectionName, options?.NewCollectionName, options?.DbName);
             HandleException(context, ex);
             return context.Response;
         }

@@ -369,12 +369,204 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
 
     #endregion
 
+    #region Collection Operations
+
+    public async Task<DocumentDbResponse> GetCollectionStatsAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, databaseName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{databaseName}' was not found.");
+            }
+
+            if (!await CollectionExistsAsync(client, databaseName, collectionName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Collection '{collectionName}' was not found in database '{databaseName}'.");
+            }
+
+            var database = client.GetDatabase(databaseName);
+            var command = new BsonDocument { { "collStats", collectionName } };
+            var stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+            return Success($"Collection statistics for '{collectionName}' retrieved successfully.", stats);
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access getting stats for collection {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting collection stats for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to get collection stats: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> RenameCollectionAsync(string connectionString, string databaseName, string oldName, string newName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(oldName, nameof(oldName));
+        ValidateParameter(newName, nameof(newName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, databaseName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{databaseName}' was not found.");
+            }
+
+            if (!await CollectionExistsAsync(client, databaseName, oldName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Collection '{oldName}' was not found in database '{databaseName}'.");
+            }
+
+            if (await CollectionExistsAsync(client, databaseName, newName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.Conflict, $"Collection '{newName}' already exists in database '{databaseName}'.");
+            }
+
+            var database = client.GetDatabase(databaseName);
+            await database.RenameCollectionAsync(oldName, newName, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Renamed collection {OldName} to {NewName} in database {DatabaseName}", oldName, newName, databaseName);
+
+            return Success(
+                $"Collection '{oldName}' was renamed to '{newName}' successfully.",
+                new Dictionary<string, object?>
+                {
+                    ["databaseName"] = databaseName,
+                    ["oldName"] = oldName,
+                    ["newName"] = newName,
+                    ["renamed"] = true
+                });
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access renaming collection {OldName} to {NewName} in database {DatabaseName}", oldName, newName, databaseName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error renaming collection {OldName} to {NewName} in database {DatabaseName}", oldName, newName, databaseName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to rename collection: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> DropCollectionAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, databaseName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{databaseName}' was not found.");
+            }
+
+            if (!await CollectionExistsAsync(client, databaseName, collectionName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Collection '{collectionName}' was not found in database '{databaseName}'.");
+            }
+
+            var database = client.GetDatabase(databaseName);
+            await database.DropCollectionAsync(collectionName, cancellationToken);
+
+            _logger.LogWarning("Dropped collection {CollectionName} from database {DatabaseName}", collectionName, databaseName);
+
+            return Success(
+                $"Collection '{collectionName}' dropped successfully.",
+                new Dictionary<string, object?>
+                {
+                    ["databaseName"] = databaseName,
+                    ["collectionName"] = collectionName,
+                    ["deleted"] = true
+                });
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access dropping collection {CollectionName} from database {DatabaseName}", collectionName, databaseName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error dropping collection {CollectionName} from database {DatabaseName}", collectionName, databaseName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to drop collection: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> SampleDocumentsAsync(string connectionString, string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, databaseName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{databaseName}' was not found.");
+            }
+
+            if (!await CollectionExistsAsync(client, databaseName, collectionName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Collection '{collectionName}' was not found in database '{databaseName}'.");
+            }
+
+            var database = client.GetDatabase(databaseName);
+            var collection = database.GetCollection<BsonDocument>(collectionName);
+
+            var pipeline = new[]
+            {
+                new BsonDocument("$sample", new BsonDocument("size", sampleSize))
+            };
+
+            var documents = await collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            return Success($"Retrieved {documents.Count} sample document(s) from collection '{collectionName}'.", documents);
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access sampling documents from collection {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sampling documents from collection {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to sample documents: {ex.Message}");
+        }
+    }
+
+    #endregion
+
     #region Helper Functions
 
     private static async Task<bool> DatabaseExistsAsync(MongoClient client, string dbName, CancellationToken cancellationToken)
     {
         var databaseNames = await client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
         return databaseNames.Contains(dbName, StringComparer.Ordinal);
+    }
+
+    private static async Task<bool> CollectionExistsAsync(MongoClient client, string dbName, string collectionName, CancellationToken cancellationToken)
+    {
+        var database = client.GetDatabase(dbName);
+        var collectionNames = await database.ListCollectionNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+        return collectionNames.Contains(collectionName, StringComparer.Ordinal);
     }
 
     private static async Task<Dictionary<string, object?>> GetDatabaseInfoAsync(MongoClient client, string dbName, CancellationToken cancellationToken)

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+using Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 using Azure.Mcp.Tools.DocumentDb.Commands.Database;
 using Azure.Mcp.Tools.DocumentDb.Commands.Index;
+using Azure.Mcp.Tools.DocumentDb.Commands.Others;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -9,7 +11,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.DocumentDb;
 
-public class DocumentDbSetup : IAreaSetup
+public sealed class DocumentDbSetup : IAreaSetup
 {
     public string Name => "documentdb";
     public string Title => "Azure DocumentDB (with MongoDB compatibility)";
@@ -18,14 +20,23 @@ public class DocumentDbSetup : IAreaSetup
     {
         services.AddSingleton<IDocumentDbService, DocumentDbService>();
 
+        // Index commands
         services.AddSingleton<CreateIndexCommand>();
         services.AddSingleton<ListIndexesCommand>();
         services.AddSingleton<DropIndexCommand>();
-        services.AddSingleton<IndexStatsCommand>();
-        services.AddSingleton<CurrentOpsCommand>();
+
+        // Database commands
         services.AddSingleton<ListDatabasesCommand>();
-        services.AddSingleton<DbStatsCommand>();
         services.AddSingleton<DropDatabaseCommand>();
+
+        // Collection commands
+        services.AddSingleton<RenameCollectionCommand>();
+        services.AddSingleton<DropCollectionCommand>();
+        services.AddSingleton<SampleDocumentsCommand>();
+
+        // Other commands
+        services.AddSingleton<GetStatsCommand>();
+        services.AddSingleton<CurrentOpsCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -33,7 +44,7 @@ public class DocumentDbSetup : IAreaSetup
         // Create DocumentDB root command group
         var documentDb = new CommandGroup(
             Name,
-            "Azure DocumentDB index, database, and diagnostics operations for Azure DocumentDB.",
+            "Azure DocumentDB index, database, collection, and diagnostics operations for Azure DocumentDB.",
             Title);
 
         var index = new CommandGroup(
@@ -42,27 +53,49 @@ public class DocumentDbSetup : IAreaSetup
         var database = new CommandGroup(
             "database",
             "Inspect and manage DocumentDB databases by providing a DocumentDB connection string per request.");
+        var collection = new CommandGroup(
+            "collection",
+            "Manage DocumentDB collections by providing a DocumentDB connection string per request.");
+        var others = new CommandGroup(
+            "others",
+            "Inspect DocumentDB statistics and diagnostic operations by providing a DocumentDB connection string per request.");
+
         documentDb.AddSubGroup(index);
         documentDb.AddSubGroup(database);
+        documentDb.AddSubGroup(collection);
+        documentDb.AddSubGroup(others);
 
+        // Index commands
         var createIndexCommand = serviceProvider.GetRequiredService<CreateIndexCommand>();
         var listIndexesCommand = serviceProvider.GetRequiredService<ListIndexesCommand>();
         var dropIndexCommand = serviceProvider.GetRequiredService<DropIndexCommand>();
-        var indexStatsCommand = serviceProvider.GetRequiredService<IndexStatsCommand>();
-        var currentOpsCommand = serviceProvider.GetRequiredService<CurrentOpsCommand>();
+
+        // Database commands
         var listDatabasesCommand = serviceProvider.GetRequiredService<ListDatabasesCommand>();
-        var dbStatsCommand = serviceProvider.GetRequiredService<DbStatsCommand>();
         var dropDatabaseCommand = serviceProvider.GetRequiredService<DropDatabaseCommand>();
+
+        // Collection commands
+        var renameCollectionCommand = serviceProvider.GetRequiredService<RenameCollectionCommand>();
+        var dropCollectionCommand = serviceProvider.GetRequiredService<DropCollectionCommand>();
+        var sampleDocumentsCommand = serviceProvider.GetRequiredService<SampleDocumentsCommand>();
+
+        // Other commands
+        var getStatsCommand = serviceProvider.GetRequiredService<GetStatsCommand>();
+        var currentOpsCommand = serviceProvider.GetRequiredService<CurrentOpsCommand>();
 
         index.AddCommand(createIndexCommand.Name, createIndexCommand);
         index.AddCommand(listIndexesCommand.Name, listIndexesCommand);
         index.AddCommand(dropIndexCommand.Name, dropIndexCommand);
-        index.AddCommand(indexStatsCommand.Name, indexStatsCommand);
-        index.AddCommand(currentOpsCommand.Name, currentOpsCommand);
 
         database.AddCommand(listDatabasesCommand.Name, listDatabasesCommand);
-        database.AddCommand(dbStatsCommand.Name, dbStatsCommand);
         database.AddCommand(dropDatabaseCommand.Name, dropDatabaseCommand);
+
+        collection.AddCommand(renameCollectionCommand.Name, renameCollectionCommand);
+        collection.AddCommand(dropCollectionCommand.Name, dropCollectionCommand);
+        collection.AddCommand(sampleDocumentsCommand.Name, sampleDocumentsCommand);
+
+        others.AddCommand(getStatsCommand.Name, getStatsCommand);
+        others.AddCommand(currentOpsCommand.Name, currentOpsCommand);
 
         return documentDb;
     }

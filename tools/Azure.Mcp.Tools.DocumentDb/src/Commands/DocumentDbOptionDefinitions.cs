@@ -25,6 +25,8 @@ internal static class DocumentDbOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> ResourceType = CreateResourceTypeOption();
+
     public static readonly Option<string> NewCollectionName = new("--new-collection-name")
     {
         Description = "New collection name",
@@ -105,4 +107,16 @@ internal static class DocumentDbOptionDefinitions
     {
         Description = "Filter for current operations"
     };
+
+    private static Option<string> CreateResourceTypeOption()
+    {
+        var option = new Option<string>("--resource-type")
+        {
+            Description = "Resource type to retrieve statistics for. Valid values: collection, database, index.",
+            Required = true
+        };
+
+        option.AcceptOnlyFromAmong("collection", "database", "index");
+        return option;
+    }
 }

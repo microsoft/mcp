@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.DocumentDb.Commands.Index;
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Others;
 
 public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
     : BaseDocumentDbCommand<CurrentOpsOptions>()

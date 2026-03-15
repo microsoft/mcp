@@ -10,41 +10,45 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
 
-public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
-    : BaseDocumentDbCommand<DbStatsOptions>()
+public sealed class SampleDocumentsCommand(ILogger<SampleDocumentsCommand> logger)
+    : BaseDocumentDbCommand<SampleDocumentsOptions>()
 {
-    private readonly ILogger<DbStatsCommand> _logger = logger;
+    private readonly ILogger<SampleDocumentsCommand> _logger = logger;
 
-    public override string Id => "e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b";
+    public override string Id => "e1f2a3b4-c5d6-4e1f-8a9b-0c1d2e3f4a5b";
 
-    public override string Name => "db_stats";
+    public override string Name => "sample_documents";
 
-    public override string Description => "Show statistics for a DocumentDB database, including collection counts, size, and storage usage details.";
+    public override string Description => "Retrieve sample documents from a specific collection. Useful for understanding data schema and query generation";
 
-    public override string Title => "Database Statistics";
+    public override string Title => "Sample Documents";
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = false,
-        ReadOnly = true,
         Secret = false,
-        LocalRequired = false
+        LocalRequired = false,
+        ReadOnly = true
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
+        command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+        command.Options.Add(DocumentDbOptionDefinitions.SampleSize);
     }
 
-    protected override DbStatsOptions BindOptions(ParseResult parseResult)
+    protected override SampleDocumentsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
+        options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
+        options.SampleSize = parseResult.GetValueOrDefault<int>(DocumentDbOptionDefinitions.SampleSize.Name);
         return options;
     }
 
@@ -53,7 +57,7 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        DbStatsOptions? options = null;
+        SampleDocumentsOptions? options = null;
 
         try
         {
@@ -63,11 +67,10 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
             }
 
             options = BindOptions(parseResult);
-            var dbName = options.DbName!;
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetDatabaseStatsAsync(options.ConnectionString!, dbName, cancellationToken);
+            var result = await service.SampleDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, options.SampleSize, cancellationToken);
 
             DocumentDbResponseHelper.ProcessResponse(context, result);
 
@@ -75,7 +78,7 @@ public sealed class DbStatsCommand(ILogger<DbStatsCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get database statistics for database: {DbName}", options?.DbName);
+            _logger.LogError(ex, "Failed to sample documents from collection: {CollectionName} in database: {DbName} with sample size: {SampleSize}", options?.CollectionName, options?.DbName, options?.SampleSize);
             HandleException(context, ex);
             return context.Response;
         }

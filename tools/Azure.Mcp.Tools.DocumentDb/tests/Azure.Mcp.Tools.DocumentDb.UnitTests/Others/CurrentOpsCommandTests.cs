@@ -3,7 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Tools.DocumentDb.Commands.Index;
+using Azure.Mcp.Tools.DocumentDb.Commands.Others;
 using Azure.Mcp.Tools.DocumentDb.Models;
 using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +13,7 @@ using MongoDB.Bson;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.DocumentDb.UnitTests.Index;
+namespace Azure.Mcp.Tools.DocumentDb.UnitTests.Others;
 
 public class CurrentOpsCommandTests
 {

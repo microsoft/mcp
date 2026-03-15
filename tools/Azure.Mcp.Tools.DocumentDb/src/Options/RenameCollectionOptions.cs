@@ -3,7 +3,11 @@
 
 namespace Azure.Mcp.Tools.DocumentDb.Options;
 
-public class DbStatsOptions : BaseDocumentDbOptions
+public class RenameCollectionOptions : BaseDocumentDbOptions
 {
     public string? DbName { get; set; }
+
+    public string? CollectionName { get; set; }
+
+    public string? NewCollectionName { get; set; }
 }

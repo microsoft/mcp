@@ -19,4 +19,10 @@ public interface IDocumentDbService
     Task<DocumentDbResponse> GetDatabasesAsync(string connectionString, string? dbName = null, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> GetDatabaseStatsAsync(string connectionString, string dbName, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> DropDatabaseAsync(string connectionString, string dbName, CancellationToken cancellationToken = default);
+
+    // Collection Operations
+    Task<DocumentDbResponse> GetCollectionStatsAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> RenameCollectionAsync(string connectionString, string databaseName, string oldName, string newName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> DropCollectionAsync(string connectionString, string databaseName, string collectionName, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> SampleDocumentsAsync(string connectionString, string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default);
 }

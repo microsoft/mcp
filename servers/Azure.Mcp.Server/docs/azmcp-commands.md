@@ -1718,26 +1718,55 @@ azmcp documentdb index drop index --connection-string <connection-string> \
                                   --collection-name <collection-name> \
                                   --index-name <index-name>
 
-# Get index statistics for a collection
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb index index stats --connection-string <connection-string> \
-                                   --db-name <db-name> \
-                                   --collection-name <collection-name>
-
-# Get current DocumentDB operations
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb index current ops --connection-string <connection-string> \
-                                   [--ops <json-filter>]
-
 # List all databases or inspect a single database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb database list databases --connection-string <connection-string> \
                                          [--db-name <db-name>]
 
-# Get statistics for a database
+# Rename a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection rename collection --connection-string <connection-string> \
+                                              --db-name <db-name> \
+                                              --collection-name <collection-name> \
+                                              --new-collection-name <new-collection-name>
+
+# Drop a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection drop collection --connection-string <connection-string> \
+                                            --db-name <db-name> \
+                                            --collection-name <collection-name>
+
+# Sample documents from a collection
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection sample documents --connection-string <connection-string> \
+                                             --db-name <db-name> \
+                                             --collection-name <collection-name> \
+                                             [--sample-size <sample-size>]
+
+# Get DocumentDB statistics for a database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp documentdb database db stats --connection-string <connection-string> \
-                                   --db-name <db-name>
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type database \
+                                  --db-name <db-name>
+
+# Get DocumentDB statistics for a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type collection \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get DocumentDB statistics for indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type index \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get current DocumentDB operations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others current ops --connection-string <connection-string> \
+                                    [--ops <json-filter>]
 
 # Drop a database
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
