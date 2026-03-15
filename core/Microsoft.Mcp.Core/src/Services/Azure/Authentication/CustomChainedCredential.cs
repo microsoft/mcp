@@ -117,14 +117,27 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     private const string OnlyUseBrokerCredentialEnvVarName = "AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL";
     private const string ClientIdEnvVarName = "AZURE_MCP_CLIENT_ID";
     private const string TokenCredentialsEnvVarName = "AZURE_TOKEN_CREDENTIALS";
+    private const string TenantSwitcherEnabledEnvVarName = "AZURE_MCP_ENABLE_TENANT_SWITCHER";
 
     private static bool ShouldUseOnlyBrokerCredential()
     {
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 
+    private static bool IsTenantSwitcherEnabled(string? tenantId)
+    {
+        // In server mode (stdio/http), if a tenant was explicitly requested, enable tenant
+        // switching behavior by default to reduce cross-tenant cached identity confusion.
+        // Can also be enabled explicitly in any mode with AZURE_MCP_ENABLE_TENANT_SWITCHER=true.
+        return !string.IsNullOrEmpty(tenantId) &&
+               (!string.IsNullOrEmpty(ActiveTransport) ||
+                EnvironmentHelpers.GetEnvironmentVariableAsBool(TenantSwitcherEnabledEnvVarName));
+    }
+
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
     {
+        bool tenantSwitcherEnabled = IsTenantSwitcherEnabled(tenantId);
+
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
@@ -193,11 +206,13 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         // (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
         // Other pinned credentials (e.g. AzureCliCredential) may still allow the browser fallback
         // when the caller explicitly requests it via forceBrowserFallback=true.
-        bool shouldAddBrowserFallback = !isPinnedCredentialMode || (forceBrowserFallback && !isProd);
+        bool shouldAddBrowserFallback = !isPinnedCredentialMode ||
+                                        (forceBrowserFallback && !isProd) ||
+                                        (tenantSwitcherEnabled && !isProd);
 
         if (shouldAddBrowserFallback)
         {
-            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+            creds.Add(CreateBrowserCredential(tenantId, authRecord, tenantSwitcherEnabled));
         }
 
         // Add DeviceCodeCredential as a fallback for headless environments (Docker, WSL, SSH, CI)
@@ -218,15 +233,24 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static string TokenCacheName = "azure-mcp-msal.cache";
 
-    private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord)
+    private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord, bool tenantSwitcherEnabled = false)
     {
         string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+
+        if (tenantSwitcherEnabled)
+        {
+            // For explicit tenant switching, avoid replaying a stale auth record from a
+            // different tenant, and force an account picker to allow complete MFA/2FA flow.
+            authRecord = null;
+        }
 
         IntPtr handle = WindowHandleProvider.GetWindowHandle();
 
         InteractiveBrowserCredentialBrokerOptions brokerOptions = new(handle)
         {
-            UseDefaultBrokerAccount = !ShouldUseOnlyBrokerCredential() && authRecord is null,
+            UseDefaultBrokerAccount = !ShouldUseOnlyBrokerCredential() &&
+                                      authRecord is null &&
+                                      string.IsNullOrEmpty(tenantId),
             TenantId = string.IsNullOrEmpty(tenantId) ? null : tenantId,
             AuthenticationRecord = authRecord,
             TokenCachePersistenceOptions = new TokenCachePersistenceOptions()
