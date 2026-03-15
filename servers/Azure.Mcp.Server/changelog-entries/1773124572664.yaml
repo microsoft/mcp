@@ -1,0 +1,4 @@
+pr: 1968
+changes:
+  - section: "Features Added"
+    description: "Added mcp tools for managing Azure DocumentDB (with MongoDB compatibility) index
