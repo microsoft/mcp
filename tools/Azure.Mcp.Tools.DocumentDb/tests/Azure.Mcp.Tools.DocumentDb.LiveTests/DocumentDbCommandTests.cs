@@ -156,8 +156,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_list_all_databases()
     {
-        await ConnectAsync();
-
         var result = await CallToolAsync(
             "documentdb_database_list_databases",
             new()
@@ -179,8 +177,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_get_single_database_details_when_db_name_is_provided()
     {
-        await ConnectAsync();
-
         var result = await CallToolAsync(
             "documentdb_database_list_databases",
             new()
@@ -207,8 +203,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_get_database_statistics()
     {
-        await ConnectAsync();
-
         var result = await CallToolAsync(
             "documentdb_database_db_stats",
             new()
@@ -229,7 +223,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_drop_database()
     {
-        await ConnectAsync();
         const string databaseName = "dropme";
 
         var result = await CallToolAsync(
