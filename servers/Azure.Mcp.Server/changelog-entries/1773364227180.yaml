@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Centralized ARM access token acquisition in BaseAzureService via GetArmAccessTokenAsync, eliminating duplicated inline credential and token fetching logic across service implementations."
