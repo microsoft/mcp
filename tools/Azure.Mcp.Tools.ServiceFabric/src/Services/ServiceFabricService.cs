@@ -42,10 +42,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
@@ -92,10 +89,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
@@ -136,10 +130,7 @@ public sealed class ServiceFabricService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var token = await credential.GetTokenAsync(
-            new([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
