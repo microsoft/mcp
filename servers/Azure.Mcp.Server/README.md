@@ -970,6 +970,10 @@ Example prompts that generate Azure CLI commands:
 * "Drop index 'category_1' from collection 'items' in DocumentDB database 'test'"
 * "Show index statistics for collection 'items' in DocumentDB database 'test'"
 * "Show current DocumentDB operations"
+* "List all databases in DocumentDB"
+* "Get statistics for database 'mydb'"
+* "Get details for database 'analytics' in DocumentDB"
+* "Drop database 'testdb'"
 
 ### 📣 Azure Event Grid
 

@@ -1728,6 +1728,21 @@ azmcp documentdb index index stats --connection-string <connection-string> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb index current ops --connection-string <connection-string> \
                                    [--ops <json-filter>]
+
+# List all databases or inspect a single database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database list databases --connection-string <connection-string> \
+                                         [--db-name <db-name>]
+
+# Get statistics for a database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database db stats --connection-string <connection-string> \
+                                   --db-name <db-name>
+
+# Drop a database
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database drop database --connection-string <connection-string> \
+                                        --db-name <db-name>
 ```
 
 ### Azure Event Grid Operations

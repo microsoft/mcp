@@ -153,6 +153,102 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
             });
     }
 
+    [Fact]
+    public async Task Should_list_all_databases()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_list_databases",
+            new()
+            {
+                { "connection-string", ConnectionString }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        Assert.NotEmpty(result.Value.EnumerateArray());
+
+        foreach (var database in result.Value.EnumerateArray())
+        {
+            var name = database.AssertProperty("name");
+            Assert.False(string.IsNullOrWhiteSpace(name.GetString()));
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_single_database_details_when_db_name_is_provided()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_list_databases",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", "test" }
+            });
+
+        Assert.NotNull(result);
+        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+
+        var database = Assert.Single(result.Value.EnumerateArray());
+        var name = database.AssertProperty("name");
+        Assert.Equal("test", name.GetString());
+
+        var collectionCount = database.AssertProperty("collectionCount");
+        Assert.True(collectionCount.GetInt32() >= 1);
+
+        var collections = database.AssertProperty("collections");
+        Assert.Equal(JsonValueKind.Array, collections.ValueKind);
+        Assert.NotEmpty(collections.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Should_get_database_statistics()
+    {
+        await ConnectAsync();
+
+        var result = await CallToolAsync(
+            "documentdb_database_db_stats",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", "test" }
+            });
+
+        Assert.NotNull(result);
+
+        var database = result.Value.AssertProperty("db");
+        Assert.Equal("test", database.GetString());
+
+        var collections = result.Value.AssertProperty("collections");
+        Assert.True(collections.GetInt32() >= 1);
+    }
+
+    [Fact]
+    public async Task Should_drop_database()
+    {
+        await ConnectAsync();
+        const string databaseName = "dropme";
+
+        var result = await CallToolAsync(
+            "documentdb_database_drop_database",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", databaseName }
+            });
+
+        Assert.NotNull(result);
+
+        var name = result.Value.AssertProperty("name");
+        Assert.Equal(databaseName, name.GetString());
+
+        var deleted = result.Value.AssertProperty("deleted");
+        Assert.True(deleted.GetBoolean());
+    }
+
     private async Task SeedTestDatabaseAsync()
     {
         const int maxAttempts = 3;

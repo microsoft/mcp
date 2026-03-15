@@ -15,6 +15,8 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
     private readonly ILogger<DocumentDbService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private static readonly JsonWriterSettings s_jsonWriterSettings = new() { OutputMode = JsonOutputMode.RelaxedExtendedJson };
 
+    #region Index Management
+
     public async Task<DocumentDbResponse> CreateIndexAsync(string connectionString, string databaseName, string collectionName, BsonDocument keys, BsonDocument? options = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
@@ -245,6 +247,162 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         }
     }
 
+    #endregion
+
+    #region Database Management
+
+    public async Task<DocumentDbResponse> GetDatabasesAsync(string connectionString, string? dbName = null, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+            var databaseNames = await client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(dbName) && !databaseNames.Contains(dbName, StringComparer.Ordinal))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{dbName}' was not found.");
+            }
+
+            List<Dictionary<string, object?>> databases;
+            if (string.IsNullOrWhiteSpace(dbName))
+            {
+                databases = databaseNames
+                    .Select(databaseName => new Dictionary<string, object?>
+                    {
+                        ["name"] = databaseName
+                    })
+                    .ToList();
+            }
+            else
+            {
+                databases = [await GetDatabaseInfoAsync(client, dbName, cancellationToken)];
+            }
+
+            return Success(
+                string.IsNullOrWhiteSpace(dbName)
+                    ? "Databases retrieved successfully."
+                    : $"Database '{dbName}' retrieved successfully.",
+                databases);
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access listing databases");
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing databases. Database: {DatabaseName}", dbName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to list databases: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> GetDatabaseStatsAsync(string connectionString, string dbName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(dbName, nameof(dbName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, dbName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{dbName}' was not found.");
+            }
+
+            var database = client.GetDatabase(dbName);
+            var stats = await database.RunCommandAsync<BsonDocument>(new BsonDocument("dbStats", 1), cancellationToken: cancellationToken);
+
+            return Success($"Database statistics for '{dbName}' retrieved successfully.", stats);
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access getting stats for database {DatabaseName}", dbName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting database stats for {DatabaseName}", dbName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to get database stats: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> DropDatabaseAsync(string connectionString, string dbName, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(dbName, nameof(dbName));
+
+        try
+        {
+            var client = CreateClient(connectionString);
+
+            if (!await DatabaseExistsAsync(client, dbName, cancellationToken))
+            {
+                return Failure(HttpStatusCode.NotFound, $"Database '{dbName}' was not found.");
+            }
+
+            await client.DropDatabaseAsync(dbName, cancellationToken);
+
+            _logger.LogInformation("Dropped DocumentDB database {DatabaseName}", dbName);
+
+            return Success(
+                $"Database '{dbName}' dropped successfully.",
+                new Dictionary<string, object?>
+                {
+                    ["name"] = dbName,
+                    ["deleted"] = true
+                });
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access dropping database {DatabaseName}", dbName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error dropping database {DatabaseName}", dbName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to drop database: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    #region Helper Functions
+
+    private static async Task<bool> DatabaseExistsAsync(MongoClient client, string dbName, CancellationToken cancellationToken)
+    {
+        var databaseNames = await client.ListDatabaseNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+        return databaseNames.Contains(dbName, StringComparer.Ordinal);
+    }
+
+    private static async Task<Dictionary<string, object?>> GetDatabaseInfoAsync(MongoClient client, string dbName, CancellationToken cancellationToken)
+    {
+        var database = client.GetDatabase(dbName);
+        var collectionNames = await database.ListCollectionNames(cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+        var collections = new List<Dictionary<string, object?>>(collectionNames.Count);
+        foreach (var collectionName in collectionNames)
+        {
+            var collection = database.GetCollection<BsonDocument>(collectionName);
+            var documentCount = await collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty, cancellationToken: cancellationToken);
+
+            collections.Add(new Dictionary<string, object?>
+            {
+                ["name"] = collectionName,
+                ["documentCount"] = documentCount
+            });
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["name"] = dbName,
+            ["collectionCount"] = collectionNames.Count,
+            ["collections"] = collections
+        };
+    }
+
     private static IMongoCollection<BsonDocument> GetCollection(string connectionString, string databaseName, string collectionName)
     {
         return CreateClient(connectionString)
@@ -330,4 +488,6 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
             throw new ArgumentException($"{paramName} cannot be null or empty", paramName);
         }
     }
+
+    #endregion
 }

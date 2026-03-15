@@ -370,6 +370,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | documentdb_index_index_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
 | documentdb_index_current_ops | Show current DocumentDB operations |
 | documentdb_index_current_ops | Get current DocumentDB operations filtered by <ops> |
+| documentdb_database_db_stats | Get statistics for database <db-name> |
+| documentdb_database_db_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_database_drop_database | Drop database <db-name> |
+| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
+| documentdb_database_list_databases | List all databases in DocumentDB |
+| documentdb_database_list_databases | Show me all DocumentDB databases |
+| documentdb_database_list_databases | Get details for database <db-name> in DocumentDB |
 
 ## Azure Event Grid
 
