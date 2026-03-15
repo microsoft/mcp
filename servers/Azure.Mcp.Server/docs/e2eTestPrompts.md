@@ -139,6 +139,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | extension_cli_install | How to install azd |
 | extension_cli_install | What is Azure Functions Core tools and how to install it |
 
+## Azure Container Apps
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| containerapps_list | List all Azure Container Apps in my subscription |
+| containerapps_list | Show me my Azure Container Apps |
+| containerapps_list | List container apps in resource group <resource_group_name> |
+| containerapps_list | Show me the container apps in resource group <resource_group_name> |
+
 ## Azure Container Registry (ACR)
 
 | Tool Name | Test Prompt |
