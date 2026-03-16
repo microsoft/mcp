@@ -10,27 +10,31 @@ In multi-tenant environments, users may be prompted with incomplete or incorrect
 
 ## Mitigation Implemented
 
-### Tenant Switcher behavior in `CustomChainedCredential`
+### Tenant Switcher behavior via isolated `TenantAwareCredential`
 
 File changed:
+
+- `core/Microsoft.Mcp.Core/src/Services/Azure/Authentication/TenantAwareCredential.cs`
+- `core/Microsoft.Mcp.Core/src/Services/Azure/Authentication/SingleIdentityTokenCredentialProvider.cs`
+
+And intentionally preserved:
 
 - `core/Microsoft.Mcp.Core/src/Services/Azure/Authentication/CustomChainedCredential.cs`
 
 Key behavior added:
 
-1. **Tenant switch detection**
-   - Introduced `AZURE_MCP_ENABLE_TENANT_SWITCHER` toggle.
-   - In MCP server mode (`stdio`/`http`), tenant switcher is automatically enabled when an explicit tenant is requested.
+1. **Isolated tenant-specific credential path**
+   - `SingleIdentityTokenCredentialProvider` continues to use `CustomChainedCredential` for default auth.
+   - Only explicit tenant-scoped requests are routed to `TenantAwareCredential`.
 
 2. **Cross-tenant cache protection**
-   - When tenant switcher is enabled, the credential flow avoids replaying prior `AuthenticationRecord` values that may belong to a different tenant.
+   - `TenantAwareCredential` avoids replaying prior `AuthenticationRecord` values that may belong to a different tenant.
 
 3. **Account picker / interactive safety for tenant switching**
-   - Browser fallback behavior is allowed for explicit tenant switching (except in strict `AZURE_TOKEN_CREDENTIALS=prod` mode).
-   - `UseDefaultBrokerAccount` is suppressed when a tenant ID is explicitly provided, reducing sticky-account behavior.
+   - For explicit tenant switching, `UseDefaultBrokerAccount` is suppressed and tenant-specific interactive auth is used, reducing sticky-account behavior.
 
 4. **Production-mode guardrail preserved**
-   - `AZURE_TOKEN_CREDENTIALS=prod` still suppresses interactive fallback, preserving non-interactive enterprise/CI constraints.
+   - Default authentication flow remains intact for non-tenant-specific paths.
 
 ## Enterprise Security Rationale
 
