@@ -8,18 +8,18 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests;
 
-public class ServiceGuidesJsonSchemaTests
+public class ServiceGuidesMetadataTests
 {
     private const string ExpectedBaseUrl = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/";
     private readonly Dictionary<string, ServiceGuideEntry> _serviceGuides;
     private readonly string _jsonContent;
 
-    public ServiceGuidesJsonSchemaTests()
+    public ServiceGuidesMetadataTests()
     {
         var assembly = Assembly.GetAssembly(typeof(Commands.ServiceGuide.ServiceGuideGetCommand));
         Assert.NotNull(assembly);
 
-        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly!, "service-guides.json");
+        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly!, "service-guides-metadata.json");
         _jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly!, resourceName);
 
         _serviceGuides = JsonSerializer.Deserialize(
@@ -142,7 +142,7 @@ public class ServiceGuidesJsonSchemaTests
             var expectedVariations = kvp.Value;
 
             // Assert - Service exists
-            Assert.True(_serviceGuides.ContainsKey(serviceKey), $"Service '{serviceKey}' should exist in service-guides.json");
+            Assert.True(_serviceGuides.ContainsKey(serviceKey), $"Service '{serviceKey}' should exist in service-guides-metadata.json");
 
             var service = _serviceGuides[serviceKey];
             

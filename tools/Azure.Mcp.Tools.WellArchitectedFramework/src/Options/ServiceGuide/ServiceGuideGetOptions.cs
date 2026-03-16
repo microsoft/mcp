@@ -10,4 +10,7 @@ public class ServiceGuideGetOptions : GlobalOptions
 {
     [JsonPropertyName(WellArchitectedFrameworkOptionDefinitions.ServiceName)]
     public string? Service { get; set; }
+
+    [JsonPropertyName(WellArchitectedFrameworkOptionDefinitions.ModeName)]
+    public ServiceGuideOutputMode Mode { get; set; } = ServiceGuideOutputMode.Summary;
 }

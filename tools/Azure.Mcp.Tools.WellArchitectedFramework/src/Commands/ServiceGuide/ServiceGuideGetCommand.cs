@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options;
@@ -30,7 +29,8 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
         "or list all supported services when no service is specified. " +
         "When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: " +
         "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
+        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription + "; " +
+        "Optional: --mode: " + WellArchitectedFrameworkOptionDefinitions.ModeDescription;
 
     public override string Title => CommandTitle;
 
@@ -48,13 +48,30 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(WellArchitectedFrameworkOptionDefinitions.Service);
+        command.Options.Add(WellArchitectedFrameworkOptionDefinitions.Mode);
     }
 
     protected override ServiceGuideGetOptions BindOptions(ParseResult parseResult)
     {
+        var modeString = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Mode.Name);
+        var mode = ServiceGuideOutputMode.Summary; // Default
+        
+        if (!string.IsNullOrWhiteSpace(modeString))
+        {
+            if (Enum.TryParse<ServiceGuideOutputMode>(modeString, ignoreCase: true, out var parsedMode))
+            {
+                mode = parsedMode;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid mode '{modeString}'. Valid values are: {string.Join(", ", Enum.GetNames<ServiceGuideOutputMode>())}");
+            }
+        }
+        
         return new ServiceGuideGetOptions
         {
-            Service = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Service.Name)
+            Service = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Service.Name),
+            Mode = mode
         };
     }
 
@@ -70,6 +87,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         var options = BindOptions(parseResult);
         context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
+        context.Activity?.AddTag("WellArchitectedFramework_Mode", options.Mode);
 
         try
         {
@@ -83,15 +101,30 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             }
             else
             {
-                // Service is specified, return guidance for that service
+                // Service is specified
                 var serviceName = options.Service;
                 var serviceGuideUrl = _serviceGuideService.GetServiceGuideUrl(serviceName);
 
-                var guidance = string.IsNullOrWhiteSpace(serviceGuideUrl)
-                    ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
-                    : GetGuidanceAvailable(serviceName, serviceGuideUrl);
-
-                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                // Check if guidance exists for the service
+                if (string.IsNullOrWhiteSpace(serviceGuideUrl))
+                {
+                    var serviceNotAvailableGuidance = GetServiceNotAvailableGuidance(serviceName, supportedServicesBulletList);
+                    context.Response.Results = ResponseResult.Create([serviceNotAvailableGuidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                }
+                else
+                {
+                    // Return guidance for service based on output mode
+                    if (options.Mode == ServiceGuideOutputMode.Url)
+                    {
+                        var serviceGuideURLGuidance = GetServiceGuideURLGuidance(serviceName, serviceGuideUrl);
+                        context.Response.Results = ResponseResult.Create([serviceGuideURLGuidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                    }
+                    else
+                    {
+                        var serviceGuideSummary = _serviceGuideService.GetServiceGuideSummary(serviceName);
+                        context.Response.Results = ResponseResult.Create([serviceGuideSummary], WellArchitectedFrameworkJsonContext.Default.ListString);
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -127,13 +160,13 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             """;
     }
 
-    private string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
+    private string GetServiceGuideURLGuidance(string serviceName, string serviceGuideUrl)
     {
         return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
             $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
-    private string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
+    private string GetServiceNotAvailableGuidance(string serviceName, string supportedServicesBulletList)
     {
         return $"""
             Azure Well-Architected Framework guidance for '{serviceName}' service is not available.

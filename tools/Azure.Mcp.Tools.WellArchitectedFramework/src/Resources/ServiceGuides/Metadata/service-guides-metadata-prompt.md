@@ -1,4 +1,4 @@
-<!-- Run below prompt in Copilot to generate the service-guides.json file. No need to include this comment in the prompt. -->
+<!-- Run below prompt in Copilot to generate the 'service-guides-metadata.json' file. No need to include this comment in the prompt. -->
 
 Analyze the TOC.yml file from https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/TOC.yml and generate a JSON file with Azure service guide mappings.
 
@@ -12,7 +12,8 @@ REQUIRED JSON STRUCTURE:
 {
   "<service-key>": {
     "serviceNameVariationsNormalized": ["<variation1>", "<variation2>", ...],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>"
+    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>",
+    "serviceGuideFile": "./Guides/<service-key>.json"
   }
 }
 
@@ -36,6 +37,10 @@ RULES FOR GENERATION:
    - Base: "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/"
    - Append the href value from TOC.yml (e.g., "service-guides/azure-blob-storage.md")
 
+4. **serviceGuideFile**: Construct as:
+   - Format: "./Guides/<service-key>.json"
+   - Use the same service-key as the top-level key (e.g., "./Guides/azure-blob-storage.json")
+
 SPECIAL HANDLING:
 - If a service has nested items (like Azure SQL Managed Instance with "reliability" and "operational excellence" sub-pages), skip it or handle it separately
 - Only include services with direct href links to markdown files
@@ -49,13 +54,15 @@ EXAMPLE OUTPUT:
 {
   "application-insights": {
     "serviceNameVariationsNormalized": ["applicationinsights", "appinsights", "insights"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md"
+    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md",
+    "serviceGuideFile": "./Guides/application-insights.json"
   },
   "azure-blob-storage": {
     "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md"
+    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md",
+    "serviceGuideFile": "./Guides/azure-blob-storage.json"
   }
 }
 
-Generate the complete service-guides.json file with all services found in the Service guides section.
+Generate the complete service-guides-metadata.json file with all services found in the Service guides section.
 
