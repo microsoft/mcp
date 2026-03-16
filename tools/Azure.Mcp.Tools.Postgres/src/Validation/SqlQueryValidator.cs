@@ -12,12 +12,84 @@ namespace Azure.Mcp.Tools.Postgres.Validation;
 /// Implements a conservative ALLOW list: only a single read-only SELECT statement with common, non-destructive
 /// clauses is permitted. No subqueries, CTEs, UNION/INTERSECT/EXCEPT, DDL/DML, or procedural/privileged commands.
 /// Identifiers (table / column / alias) are allowed if they don't collide with an explicitly disallowed keyword.
+/// Dangerous PostgreSQL functions and system catalogs are explicitly blocked.
 /// This is intentionally strict to minimize risk; relax only with strong justification.
 /// </summary>
 internal static class SqlQueryValidator
 {
     private const int MaxQueryLength = 5000; // Arbitrary safety cap to avoid extremely large inputs.
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // 3 second timeout for regex operations
+
+    /// <summary>
+    /// Dangerous PostgreSQL functions and system catalogs that must be blocked even in SELECT queries.
+    /// These can read arbitrary files, list directories, access credentials, or enable lateral movement.
+    /// </summary>
+    private static readonly HashSet<string> DangerousIdentifiers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // File system read functions
+        "pg_read_file",
+        "pg_read_binary_file",
+
+        // Directory listing functions
+        "pg_ls_dir",
+        "pg_ls_logdir",
+        "pg_ls_waldir",
+        "pg_ls_tmpdir",
+        "pg_ls_archive_statusdir",
+
+        // File write / program execution
+        "pg_file_write",
+        "pg_execute_server_program",
+
+        // Large object functions (can read/write files via OIDs)
+        "lo_import",
+        "lo_export",
+        "lo_get",
+        "lo_put",
+        "lo_from_bytea",
+
+        // Credential / auth system catalogs
+        "pg_shadow",
+        "pg_authid",
+
+        // External database access (lateral movement)
+        "dblink",
+        "dblink_connect",
+        "dblink_exec",
+        "dblink_send_query",
+
+        // Copy-based exfiltration
+        "pg_copy_to",
+        "pg_copy_from",
+
+        // Extension management
+        "pg_create_extension",
+
+        // Advisory lock abuse
+        "pg_advisory_lock",
+        "pg_advisory_unlock",
+
+        // File metadata
+        "pg_stat_file",
+
+        // Session termination (DoS)
+        "pg_terminate_backend",
+        "pg_cancel_backend",
+
+        // Server configuration manipulation
+        "pg_reload_conf",
+        "set_config",
+        "current_setting",
+
+        // Denial-of-service
+        "pg_sleep",
+
+        // Cross-session information leak
+        "pg_stat_activity",
+
+        // Foreign data wrapper credential exposure
+        "pg_user_mappings",
+    };
 
     /// <summary>
     /// Ensures the provided query is a single, read-only SELECT statement (no comments, no stacked statements).
@@ -80,6 +152,17 @@ internal static class SqlQueryValidator
         if (!matches[0].Value.Equals("select", StringComparison.OrdinalIgnoreCase))
         {
             throw new CommandValidationException("Only single read-only SELECT statements are allowed.", HttpStatusCode.BadRequest);
+        }
+
+        // Check all tokens against blocklist of dangerous functions and system catalogs.
+        foreach (Match match in matches)
+        {
+            if (DangerousIdentifiers.Contains(match.Value))
+            {
+                throw new CommandValidationException(
+                    $"Function or identifier '{match.Value}' is not allowed.",
+                    HttpStatusCode.BadRequest);
+            }
         }
     }
 }
