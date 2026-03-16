@@ -5,6 +5,7 @@ using System.Data.Common;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
@@ -29,6 +30,7 @@ public class PostgresServiceConnectionStringInjectionTests
     {
         var resourceGroupService = Substitute.For<IResourceGroupService>();
         var tenantService = Substitute.For<ITenantService>();
+        var subscriptionService = Substitute.For<ISubscriptionService>();
 
         var entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
@@ -42,7 +44,7 @@ public class PostgresServiceConnectionStringInjectionTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(resourceGroupService, tenantService, entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(resourceGroupService, tenantService, subscriptionService, entraTokenAuth, _dbProvider);
     }
 
     private static void AssertConnectionStringNotInjected(string connectionString, string expectedHost, string injectedHost)
