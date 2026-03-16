@@ -47,14 +47,14 @@ public sealed class SampleCommandTests
             _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
-                "table1 | sample 10",
+                "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             _kusto.QueryItemsAsync(
-                "sub1", "mycluster", "db1", "table1 | sample 10",
+                "sub1", "mycluster", "db1", "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
@@ -88,14 +88,14 @@ public sealed class SampleCommandTests
             _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
-                "table1 | sample 10",
+                "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             _kusto.QueryItemsAsync(
-                "sub1", "mycluster", "db1", "table1 | sample 10",
+                "sub1", "mycluster", "db1", "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }

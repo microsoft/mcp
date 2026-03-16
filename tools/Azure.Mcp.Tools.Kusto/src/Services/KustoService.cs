@@ -29,6 +29,29 @@ public sealed class KustoService(
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
     private static readonly TimeSpan s_providerCacheDuration = TimeSpan.FromHours(2);
 
+    /// <summary>
+    /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
+    /// </summary>
+    internal static string EscapeKqlIdentifier(string identifier)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+        // Remove any existing KQL bracket escape sequences to normalize the identifier
+        var unescaped = identifier
+            .Replace("['", "", StringComparison.Ordinal)
+            .Replace("[\"", "", StringComparison.Ordinal)
+            .Replace("\"]", "", StringComparison.Ordinal)
+            .Replace("']", "", StringComparison.Ordinal);
+
+        if (string.IsNullOrWhiteSpace(unescaped))
+        {
+            throw new ArgumentException("Identifier is empty after removing escape characters.", nameof(identifier));
+        }
+
+        // Use KQL bracket notation with escaped single quotes
+        return $"['{unescaped.Replace("'", "''")}']";
+    }
+
     // Provider cache key generator
     private static string GetProviderCacheKey(string clusterUri, string? tenant)
     {
@@ -181,7 +204,7 @@ public sealed class KustoService(
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant, cancellationToken);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(
             databaseName,
-            $".show table {tableName} cslschema", cancellationToken);
+            $".show table {EscapeKqlIdentifier(tableName)} cslschema", cancellationToken);
         var result = KustoResultToStringList(kustoResult);
         if (result.Count > 0)
         {
