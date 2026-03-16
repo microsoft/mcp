@@ -36,6 +36,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
+    - [Sovereign Cloud Support](#sovereign-cloud-support)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
     - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
 - [Support and Reference](#support-and-reference)
@@ -827,6 +828,40 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+
+## Sovereign Cloud Support
+
+Azure MCP Server supports connecting to Azure sovereign clouds. By default, it authenticates against the Azure Public Cloud.
+
+| Cloud | Aliases |
+|-------|---------|
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `public` |
+| Azure China Cloud | `AzureChinaCloud`, `china` |
+| Azure US Government | `AzureUSGovernment`, `usgov` |
+
+Use the `--cloud` option when starting the server, or set the `AZURE_CLOUD` environment variable:
+
+```bash
+# Command line
+azmcp server start --cloud AzureChinaCloud
+
+# Environment variable (PowerShell)
+$env:AZURE_CLOUD = "AzureUSGovernment"
+azmcp server start
+```
+
+Before connecting, authenticate your local tools against the target cloud:
+
+```bash
+# Azure CLI
+az cloud set --name AzureChinaCloud
+az login
+
+# Azure PowerShell
+Connect-AzAccount -Environment AzureChinaCloud
+```
+
+For full configuration options, see the [Sovereign Clouds documentation](https://github.com/microsoft/mcp/blob/main/docs/sovereign-clouds.md).
 
 ## What can you do with the Azure MCP Server?
 
