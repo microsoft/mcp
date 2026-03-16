@@ -62,3 +62,35 @@ The Azure MCP Server requires configuration based on the client type. Below are 
   }
 }
 ```
+
+## CLI Mode (Direct Commands)
+
+Azure MCP Server also supports direct CLI usage without starting the MCP server. This is useful for shell-based agents, automation scripts, and CI/CD pipelines.
+
+### Running CLI commands
+
+```bash
+# Via npx (Node.js)
+npx -y @azure/mcp@latest storage account list --subscription <subscription-id>
+
+# Via dnx (.NET)
+dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>
+
+# Via uvx (Python)
+uvx --from msmcp-azure azmcp storage account list --subscription <subscription-id>
+```
+
+### Common CLI commands
+
+```bash
+# List resources
+azmcp storage account list --subscription <sub-id>
+azmcp keyvault secret list --subscription <sub-id> --vault-name <name>
+azmcp compute vm list --subscription <sub-id>
+
+# Discover commands
+azmcp --help
+azmcp storage --help
+```
+
+> Authenticate with `az login` before running CLI commands.

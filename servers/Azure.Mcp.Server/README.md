@@ -36,6 +36,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
+    - [CLI Mode](#cli-mode)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
     - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
 - [Support and Reference](#support-and-reference)
@@ -827,6 +828,57 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+
+## CLI Mode
+
+In addition to the MCP server, Azure MCP Server can be used directly from the command line. Every tool available through the MCP server is also accessible as a CLI command via the `azmcp` executable — no server required.
+
+### When to use CLI mode
+
+| Scenario | Recommended mode |
+|----------|-----------------|
+| IDE agent (VS Code, IntelliJ, etc.) | **MCP server** |
+| Shell-based agents with terminal access | CLI mode |
+| CI/CD pipelines and automation scripts | CLI mode |
+| Quick one-off queries | CLI mode |
+
+### CLI examples
+
+```bash
+# List Azure Storage accounts
+azmcp storage account list --subscription <subscription-id>
+
+# List Cosmos DB accounts
+azmcp cosmos account list --subscription <subscription-id>
+
+# List Key Vault secrets
+azmcp keyvault secret list --subscription <subscription-id> --vault-name <vault-name>
+
+# List virtual machines
+azmcp compute vm list --subscription <subscription-id>
+
+# Discover available commands
+azmcp --help
+azmcp storage --help
+```
+
+### Running CLI commands via package managers
+
+Use the same package managers as the MCP server:
+
+```bash
+# Node.js (npx)
+npx -y @azure/mcp@latest storage account list --subscription <subscription-id>
+
+# .NET (dnx)
+dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>
+
+# Python (uvx)
+uvx --from msmcp-azure azmcp storage account list --subscription <subscription-id>
+```
+
+> [!NOTE]
+> CLI mode uses the same authentication as the MCP server. Run `az login` before using CLI commands.
 
 ## What can you do with the Azure MCP Server?
 
