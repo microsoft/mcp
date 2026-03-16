@@ -23,9 +23,6 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # $DeploymentOutputs keys are all UPPERCASE
 
-# Save updated test settings
-$testSettings | ConvertTo-Json | Out-File (Join-Path $PSScriptRoot '.testsettings.json') -Encoding UTF8
-
 Write-Host "Test resources deployed successfully for DocumentDB"
 Write-Host "Connection string saved to .testsettings.json"
 
