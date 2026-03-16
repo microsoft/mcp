@@ -185,7 +185,7 @@
         "mocha": "~11",
         "node-loader": "~2",
         "sinon": "^21.0.0",
-        "terser-webpack-plugin": "^5.3.14",
+        "terser-webpack-plugin": "^5.4.0",
         "ts-loader": "~9",
         "typescript": "~5.1",
         "webpack": "^5.99.9",
@@ -200,5 +200,19 @@
         "rxjs": "~7",
         "semver": "~7",
         "yaml": "~2"
+    },
+    "_overrideComments": {
+        "serialize-javascript": "Prototype pollution in serialize-javascript < 7.0.0 (via mocha)",
+        "diff": "GHSA-73rr-hh4g-fpgx: DoS in jsdiff 6.0.0-8.0.2 (via mocha)",
+        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)"
+    },
+    "overrides": {
+        "mocha": {
+            "serialize-javascript": "^7.0.0",
+            "diff": "^8.0.3"
+        },
+        "@vscode/vsce": {
+            "yauzl": "^3.2.1"
+        }
     }
 }

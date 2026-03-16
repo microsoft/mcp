@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -24,13 +25,14 @@ public class ResourceHealthServiceSsrfValidationTests
     private readonly ITenantService _tenantService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ResourceHealthService _service;
+    private readonly ILogger<ResourceHealthService> _logger = Substitute.For<ILogger<ResourceHealthService>>();
 
     public ResourceHealthServiceSsrfValidationTests()
     {
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
         _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory);
+        _service = new ResourceHealthService(_subscriptionService, _tenantService, _httpClientFactory, _logger);
     }
 
     private void SetupMocksForValidRequest(HttpResponseMessage response)

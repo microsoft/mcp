@@ -78,8 +78,8 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiModelsListCommandResult>(
-                new OpenAiModelsListCommandResult(result, options.ResourceName!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!),
                 FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
         }
         catch (Exception ex)
@@ -90,7 +90,5 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
         return context.Response;
     }
 
-    internal record OpenAiModelsListCommandResult(
-        OpenAiModelsListResult ModelsListResult,
-        string ResourceName);
+    internal record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
 }

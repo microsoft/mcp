@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.26 (Unreleased)
+## 2.0.0-beta.28 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,56 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.27 (2026-03-12)
+
+### Features Added
+
+- Added compute disk create and compute disk update commands for managing Azure managed disks. [[#1936](https://github.com/microsoft/mcp/pull/1936)]
+- Added Azure Device Registry namespace list command (`azmcp deviceregistry namespace list`) [[#1961](https://github.com/microsoft/mcp/pull/1961)]
+- Added Azure Functions toolset with three new tools: `functions_language_list` for listing supported languages, `functions_project_get` for retrieving project initialization files, and `functions_template_get` for listing and fetching function template source code. [[#1959](https://github.com/microsoft/mcp/pull/1959)]
+- CodeToCloud feature parity improvements for Deploy and Quota areas: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - Support deployment using Azure CLI with Bicep/Terraform
+  - Support creation of a deploy-to-existing-resources plan
+  - New resource type support in quota checks, including SQL, MySQL, and CosmosDB
+  - New IaC rules added for better support regarding code quality, configuration success and security
+
+### Breaking Changes
+
+- `azmcp deploy pipeline guidance get` option renames and removals: [[#1663](https://github.com/microsoft/mcp/pull/1663)]
+  - `--use-azd-pipeline-config` renamed to `--is-azd-project`
+  - `--azd-iac-options` renamed to `--iac-options`
+  - `--organization-name`, `--repository-name`, and `--github-environment-name` options removed
+  - `--pipeline-platform` and `--deploy-option` added as new options
+  This new design allows an overall better user experience to generate CI/CD pipeline to Azure.
+
+### Other Changes
+
+- AzureIsv: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1902](https://github.com/microsoft/mcp/pull/1902)]
+- Compute: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1914](https://github.com/microsoft/mcp/pull/1914)]
+- Refactored Azure Migrate commands to use constructor dependency injection instead of context.GetService<T>() [[#1909](https://github.com/microsoft/mcp/pull/1909)]
+- Refactored `FunctionAppGetCommand` to use constructor dependency injection for `IFunctionAppService` instead of resolving it via `context.GetService<T>()` in `ExecuteAsync`. [[#1991](https://github.com/microsoft/mcp/pull/1991)]
+- Refactored `Azure.Mcp.Tools.Extension` commands to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1988](https://github.com/microsoft/mcp/pull/1988)]
+- Refactored `Azure.Mcp.Tools.Grafana` to use constructor dependency injection instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1992](https://github.com/microsoft/mcp/pull/1992)]
+
+## 2.0.0-beta.26 (2026-03-10)
+
+### Features Added
+
+- Added `DeviceCodeCredential` support for headless environments (Docker, WSL, SSH tunnels, CI) where browser-based interactive authentication is unavailable. It is automatically used as a last-resort fallback in the default and `dev` credential chains, and can also be selected exclusively by setting `AZURE_TOKEN_CREDENTIALS=DeviceCodeCredential`. Not available in `stdio` or `http` server transport modes. [[#1908](https://github.com/microsoft/mcp/pull/1908)]
+- Added Azure Compute VM create/update and VMSS create/update. [[#1705](https://github.com/microsoft/mcp/pull/1705)]
+- Added Azure Well-Architected Framework service guide tool to provide architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency. [[#1964](https://github.com/microsoft/mcp/pull/1964)]
+
+- Remove duplicate WWW-Authenticate response header [[#1774](https://github.com/microsoft/mcp/pull/1774)]
+
+### Other Changes
+
+- AppLens: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1884](https://github.com/microsoft/mcp/pull/1884)]
+- Acr: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1881](https://github.com/microsoft/mcp/pull/1881)]
+- Aks: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1883](https://github.com/microsoft/mcp/pull/1883)]
+- Authorization: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1901](https://github.com/microsoft/mcp/pull/1901)]
+- Advisor: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1882](https://github.com/microsoft/mcp/pull/1882)]
+- Refactored `ApplicationInsights` tools to use constructor dependency injection. [[#1899](https://github.com/microsoft/mcp/pull/1899)]
 
 ## 2.0.0-beta.25 (2026-03-06)
 
@@ -36,6 +86,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - prompt_optimize: Optimize a prompt for a specific model
 - Added `eng/scripts/Preflight.ps1` developer CI preflight check script with format, spelling, build, tool metadata, README validation, unit test, and AOT analysis steps. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
 - Added tools for web app diagnostics. [[#1907](https://github.com/microsoft/mcp/pull/1907)]
+- Added Azure Monitor Instrumentation operations for deterministic onboarding and migration guidance in local workspaces, including learning resources and orchestrated execution flow:
+  - `monitorinstrumentation_list_learning_resources`
+  - `monitorinstrumentation_get_learning_resource`
+  - `monitorinstrumentation_orchestrator_start`
+  - `monitorinstrumentation_orchestrator_next`
+  - `monitorinstrumentation_send_brownfield_analysis`
 
 ### Breaking Changes
 

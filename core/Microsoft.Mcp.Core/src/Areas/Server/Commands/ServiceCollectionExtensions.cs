@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serviceStartOptions.DangerouslyDisableElicitation,
             Tool = serviceStartOptions.Tool,
+            IsHttpMode = serviceStartOptions.IsHttpMode
         };
 
         if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
@@ -141,7 +142,8 @@ public static class ServiceCollectionExtensions
                     Namespace: DiscoveryConstants.UtilityNamespaces,
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
                     DangerouslyDisableElicitation: defaultToolLoaderOptions.DangerouslyDisableElicitation,
-                    Tool: defaultToolLoaderOptions.Tool
+                    Tool: defaultToolLoaderOptions.Tool,
+                    IsHttpMode: defaultToolLoaderOptions.IsHttpMode
                 );
 
                 toolLoaders.Add(new CommandFactoryToolLoader(

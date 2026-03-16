@@ -15,10 +15,11 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
 /// <summary>
 /// Send an email message using Azure Communication Services.
 /// </summary>
-public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCommunicationCommand<EmailSendOptions>
+public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService) : BaseCommunicationCommand<EmailSendOptions>
 {
     private const string CommandTitle = "Send Email";
     private readonly ILogger<EmailSendCommand> _logger = logger;
+    private readonly ICommunicationService _communicationService = communicationService;
 
     public override string Name => "send";
     public override string Id => "60f79b69-9e90-4f07-9bf4-bd4452f1143d";
@@ -96,11 +97,10 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
             return context.Response;
         }
         var options = BindOptions(parseResult);
-        var communicationService = context.GetService<ICommunicationService>();
 
         try
         {
-            var result = await communicationService.SendEmailAsync(
+            var result = await _communicationService.SendEmailAsync(
                 options.Endpoint!,
                 options.From!,
                 options.SenderName,

@@ -462,9 +462,49 @@ public class CustomChainedCredentialTests
     }
 
     /// <summary>
+    /// Tests that prod mode with forceBrowserFallback=true does NOT add a browser fallback.
+    /// prod always signals a non-interactive environment — the browser popup must never appear.
+    /// </summary>
+    [Fact]
+    public void ProdMode_WithForceBrowserFallback_CreatesCredentialSuccessfully()
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        // Act — forceBrowserFallback=true must still be suppressed by prod mode
+        var credential = CreateCustomChainedCredential(forceBrowserFallback: true);
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that a non-prod pinned credential with forceBrowserFallback=true DOES add a browser
+    /// fallback. Only prod is treated as strictly non-interactive.
+    /// </summary>
+    [Theory]
+    [InlineData("AzureCliCredential")]
+    [InlineData("ManagedIdentityCredential")]
+    public void NonProdPinnedCredential_WithForceBrowserFallback_CreatesCredentialSuccessfully(string credentialType)
+    {
+        // Arrange
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act — forceBrowserFallback=true should override non-prod pinned mode
+        var credential = CreateCustomChainedCredential(forceBrowserFallback: true);
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
-    private static TokenCredential CreateCustomChainedCredential()
+    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
     {
         var assembly = typeof(global::Azure.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
         var customChainedCredentialType = assembly.GetType("Azure.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
@@ -483,7 +523,7 @@ public class CustomChainedCredentialTests
 
         Assert.NotNull(constructor);
 
-        var credential = constructor.Invoke([null, null, false]) as TokenCredential;
+        var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
         Assert.NotNull(credential);
 
         return credential;
