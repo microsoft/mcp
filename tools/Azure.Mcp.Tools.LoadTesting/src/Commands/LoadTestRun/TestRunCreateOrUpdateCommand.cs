@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
 public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger)
-    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
+    : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>(resourceGroupRequired: false, testResourceRequired: true)
 {
     private const string _commandTitle = "Test Run Create or Update";
     private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
@@ -44,10 +44,8 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsRequired());
-        command.Options.Add(LoadTestingOptionDefinitions.Test);
+        command.Options.Add(LoadTestingOptionDefinitions.Test.AsRequired());
         command.Options.Add(LoadTestingOptionDefinitions.DisplayName.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Description.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.OldTestRunId.AsOptional());

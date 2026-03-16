@@ -13,7 +13,8 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>
+public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : 
+BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>(resourceGroupRequired: true, storageSyncServiceRequired: true)
 {
     private const string CommandTitle = "Delete Storage Sync Service";
     private readonly IStorageSyncService _service = service;
@@ -40,8 +41,6 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
     }
 
     protected override StorageSyncServiceDeleteOptions BindOptions(ParseResult parseResult)

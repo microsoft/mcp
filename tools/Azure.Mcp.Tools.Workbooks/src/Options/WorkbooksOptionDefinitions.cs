@@ -60,21 +60,21 @@ public static class WorkbooksOptionDefinitions
     };
 
     // Command-specific variations for required fields
-    public static readonly Option<string> DisplayNameRequired = new(
-        $"--{DisplayNameText}"
-    )
-    {
-        Description = "The display name of the workbook.",
-        Required = true
-    };
+    // public static readonly Option<string> DisplayNameRequired = new(
+    //     $"--{DisplayNameText}"
+    // )
+    // {
+    //     Description = "The display name of the workbook.",
+    //     Required = true
+    // };
 
-    public static readonly Option<string> SerializedContentRequired = new(
-        $"--{SerializedContentText}"
-    )
-    {
-        Description = "The serialized JSON content of the workbook.",
-        Required = true
-    };
+    // public static readonly Option<string> SerializedContentRequired = new(
+    //     $"--{SerializedContentText}"
+    // )
+    // {
+    //     Description = "The serialized JSON content of the workbook.",
+    //     Required = true
+    // };
 
     // Filter options for listing workbooks
     public static readonly Option<string> Kind = new(

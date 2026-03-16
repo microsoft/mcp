@@ -46,8 +46,8 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(WorkbooksOptionDefinitions.DisplayNameRequired);
-        command.Options.Add(WorkbooksOptionDefinitions.SerializedContentRequired);
+        command.Options.Add(WorkbooksOptionDefinitions.DisplayName.AsRequired());
+        command.Options.Add(WorkbooksOptionDefinitions.SerializedContent.AsRequired());
         command.Options.Add(WorkbooksOptionDefinitions.SourceId);
     }
 
@@ -55,8 +55,8 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayNameRequired.Name);
-        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContentRequired.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayName.Name);
+        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContent.Name);
         options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceId.Name);
         return options;
     }
