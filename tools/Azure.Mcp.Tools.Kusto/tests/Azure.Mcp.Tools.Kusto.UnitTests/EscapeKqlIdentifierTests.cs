@@ -15,6 +15,9 @@ public sealed class EscapeKqlIdentifierTests
     [InlineData("table with spaces", "['table with spaces']")]
     [InlineData("table'name", "['table''name']")]
     [InlineData("table''double", "['table''''double']")]
+    [InlineData("table\ninjection", "['table\ninjection']")]
+    [InlineData("table\rinjection", "['table\rinjection']")]
+    [InlineData("table\0injection", "['table\0injection']")]
     public static void EscapeKqlIdentifier_EscapesCorrectly(string input, string expected)
     {
         var result = KustoService.EscapeKqlIdentifier(input);
@@ -22,10 +25,19 @@ public sealed class EscapeKqlIdentifierTests
     }
 
     [Theory]
-    [InlineData("table\ninjection")]
-    [InlineData("table\rinjection")]
-    [InlineData("table\0injection")]
-    public static void EscapeKqlIdentifier_RejectsControlCharacters(string input)
+    [InlineData("['MyTable']", "['MyTable']")]
+    [InlineData("[\"MyTable\"]", "['MyTable']")]
+    [InlineData("['table''name']", "['table''''name']")]
+    public static void EscapeKqlIdentifier_UnescapesAndReescapes(string input, string expected)
+    {
+        var result = KustoService.EscapeKqlIdentifier(input);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("['']")]
+    [InlineData("[\"\"]")]
+    public static void EscapeKqlIdentifier_RejectsEmptyAfterUnescape(string input)
     {
         Assert.Throws<ArgumentException>(() => KustoService.EscapeKqlIdentifier(input));
     }
@@ -47,9 +59,10 @@ public sealed class EscapeKqlIdentifierTests
     [Fact]
     public static void EscapeKqlIdentifier_PreventsKqlInjection()
     {
-        // Simulates the attack from the vulnerability report
+        // Simulates the attack from the vulnerability report - newlines are safely wrapped in brackets
         var malicious = "TestTable cslschema\n| take 0\n.show databases";
-        Assert.Throws<ArgumentException>(() => KustoService.EscapeKqlIdentifier(malicious));
+        var result = KustoService.EscapeKqlIdentifier(malicious);
+        Assert.Equal("['TestTable cslschema\n| take 0\n.show databases']", result);
     }
 
     [Fact]

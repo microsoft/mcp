@@ -36,14 +36,20 @@ public sealed class KustoService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
 
-        // Reject control characters and newlines that could enable command injection
-        if (identifier.AsSpan().ContainsAny('\r', '\n', '\0'))
+        // Remove any existing KQL bracket escape sequences to normalize the identifier
+        var unescaped = identifier
+            .Replace("['", "", StringComparison.Ordinal)
+            .Replace("[\"", "", StringComparison.Ordinal)
+            .Replace("\"]", "", StringComparison.Ordinal)
+            .Replace("']", "", StringComparison.Ordinal);
+
+        if (string.IsNullOrWhiteSpace(unescaped))
         {
-            throw new ArgumentException($"Identifier contains invalid characters.", nameof(identifier));
+            throw new ArgumentException("Identifier is empty after removing escape characters.", nameof(identifier));
         }
 
         // Use KQL bracket notation with escaped single quotes
-        return $"['{identifier.Replace("'", "''")}']";
+        return $"['{unescaped.Replace("'", "''")}']";
     }
 
     // Provider cache key generator
