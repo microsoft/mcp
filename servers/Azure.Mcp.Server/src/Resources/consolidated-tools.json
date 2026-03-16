@@ -1665,7 +1665,7 @@
       ]
     },
     {
-      "name": "delete_azure_compute_disk",
+      "name": "delete_azure_managed_disk",
       "description": "Delete an Azure managed disk from a resource group. This is an idempotent operation that returns whether the disk was successfully removed. The disk must not be attached to a virtual machine; detach it first before deleting.",
       "toolMetadata": {
         "destructive": {

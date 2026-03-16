@@ -111,8 +111,6 @@ public sealed class DiskDeleteCommand(
     {
         RequestFailedException reqEx when reqEx.Status == 409 =>
             "The disk is currently attached to a virtual machine. Detach the disk before deleting.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "Disk or resource group not found. Verify the disk name and resource group are correct.",
         RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed deleting the disk. Details: {reqEx.Message}",
         Identity.AuthenticationFailedException =>

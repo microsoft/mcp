@@ -1285,7 +1285,6 @@ public class ComputeService(
         return ConvertToDiskModel(diskResource.Value, resourceGroup);
     }
 
-    /// <inheritdoc/>
     public async Task<List<DiskInfo>> ListDisksAsync(
         string subscription,
         string? resourceGroup = null,
@@ -1687,7 +1686,6 @@ public class ComputeService(
         };
     }
 
-    /// <inheritdoc/>
     public async Task<bool> DeleteDiskAsync(
         string diskName,
         string resourceGroup,
