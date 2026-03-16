@@ -71,22 +71,23 @@ Azure MCP Server also supports direct CLI usage without starting the MCP server.
 
 ```bash
 # Via npx (Node.js)
-npx -y @azure/mcp@latest azmcp storage account list --subscription <subscription-id>
+npx -y @azure/mcp@latest azmcp storage account get --subscription <subscription-id>
 
 # Via dnx (.NET)
-dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>
+dnx Azure.Mcp -- azmcp storage account get --subscription <subscription-id>
 
 # Via uvx (Python)
-uvx --from msmcp-azure azmcp storage account list --subscription <subscription-id>
+uvx --from msmcp-azure azmcp storage account get --subscription <subscription-id>
 ```
 
 ### Common CLI commands
 
 ```bash
-# List resources
-azmcp storage account list --subscription <sub-id>
-azmcp keyvault secret list --subscription <sub-id> --vault-name <name>
-azmcp compute vm list --subscription <sub-id>
+# List resources (omit the specific resource name to list all)
+azmcp storage account get --subscription <sub-id>
+azmcp keyvault secret get --subscription <sub-id> --vault <name>
+azmcp compute vm get --subscription <sub-id>
+azmcp cosmos list --subscription <sub-id>
 
 # Discover commands
 azmcp --help

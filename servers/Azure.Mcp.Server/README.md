@@ -845,17 +845,17 @@ In addition to the MCP server, Azure MCP Server can be used directly from the co
 ### CLI examples
 
 ```bash
-# List Azure Storage accounts
-azmcp storage account list --subscription <subscription-id>
+# Get Azure Storage accounts (omit --account to list all)
+azmcp storage account get --subscription <subscription-id>
 
 # List Cosmos DB accounts
-azmcp cosmos account list --subscription <subscription-id>
+azmcp cosmos list --subscription <subscription-id>
 
-# List Key Vault secrets
-azmcp keyvault secret list --subscription <subscription-id> --vault-name <vault-name>
+# List Key Vault secrets (omit --secret to list all)
+azmcp keyvault secret get --subscription <subscription-id> --vault <vault-name>
 
-# List virtual machines
-azmcp compute vm list --subscription <subscription-id>
+# List virtual machines (omit --vm-name to list all)
+azmcp compute vm get --subscription <subscription-id>
 
 # Discover available commands
 azmcp --help
@@ -868,13 +868,13 @@ Use the same package managers as the MCP server:
 
 ```bash
 # Node.js (npx)
-npx -y @azure/mcp@latest azmcp storage account list --subscription <subscription-id>
+npx -y @azure/mcp@latest azmcp storage account get --subscription <subscription-id>
 
 # .NET (dnx)
-dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>
+dnx Azure.Mcp -- azmcp storage account get --subscription <subscription-id>
 
 # Python (uvx)
-uvx --from msmcp-azure azmcp storage account list --subscription <subscription-id>
+uvx --from msmcp-azure azmcp storage account get --subscription <subscription-id>
 ```
 
 > [!NOTE]
