@@ -74,7 +74,7 @@ Azure MCP Server also supports direct CLI usage without starting the MCP server.
 npx -y @azure/mcp@latest azmcp storage account get --subscription <subscription-id>
 
 # Via dnx (.NET)
-dnx Azure.Mcp -- azmcp storage account get --subscription <subscription-id>
+dnx Azure.Mcp azmcp storage account get --subscription <subscription-id>
 
 # Via uvx (Python)
 uvx --from msmcp-azure azmcp storage account get --subscription <subscription-id>

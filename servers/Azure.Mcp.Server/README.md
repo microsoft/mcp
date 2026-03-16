@@ -868,7 +868,7 @@ Use the same package managers as the MCP server:
 npx -y @azure/mcp@latest azmcp storage account get --subscription <subscription-id>
 
 # .NET (dnx)
-dnx Azure.Mcp -- azmcp storage account get --subscription <subscription-id>
+dnx Azure.Mcp azmcp storage account get --subscription <subscription-id>
 
 # Python (uvx)
 uvx --from msmcp-azure azmcp storage account get --subscription <subscription-id>
