@@ -18,6 +18,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -43,6 +44,9 @@ internal class Program
 
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+
+            PluginTelemetryCommand.ConfigureServices = ConfigureServices;
+            PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
 
@@ -246,6 +250,9 @@ internal class Program
 
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
+
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
