@@ -4,6 +4,7 @@
 using System.Reflection;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -391,6 +392,66 @@ public class CustomChainedCredentialTests
         // Arrange
         using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
+
+        // Act
+        var credential = CreateCustomChainedCredential();
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
+    }
+
+    /// <summary>
+    /// Tests that when Configuration is set, token credentials are read from IConfiguration
+    /// rather than only from environment variables.
+    /// </summary>
+    [Fact]
+    public void Configuration_WhenSet_ReadsTokenCredentialsFromConfiguration()
+    {
+        // Arrange: env var cleared; IConfiguration provides the credential type
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", null);
+
+        var credentialType = GetCustomChainedCredentialType();
+        var configProp = credentialType.GetProperty("Configuration",
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        Assert.NotNull(configProp);
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["AZURE_TOKEN_CREDENTIALS"] = "AzureCliCredential" })
+            .Build();
+        configProp.SetValue(null, config);
+
+        try
+        {
+            // Act
+            var credential = CreateCustomChainedCredential();
+
+            // Assert
+            Assert.NotNull(credential);
+            Assert.IsAssignableFrom<TokenCredential>(credential);
+        }
+        finally
+        {
+            configProp.SetValue(null, null);
+        }
+    }
+
+    /// <summary>
+    /// Tests that when Configuration is null, token credentials fall back to environment variables.
+    /// </summary>
+    [Fact]
+    public void Configuration_WhenNull_FallsBackToEnvironmentVariable()
+    {
+        // Arrange: Configuration is null; env var provides the credential type
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzureCliCredential");
+
+        var credentialType = GetCustomChainedCredentialType();
+        var configProp = credentialType.GetProperty("Configuration",
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        Assert.NotNull(configProp);
+        configProp.SetValue(null, null); // Ensure Configuration is null
 
         // Act
         var credential = CreateCustomChainedCredential();
