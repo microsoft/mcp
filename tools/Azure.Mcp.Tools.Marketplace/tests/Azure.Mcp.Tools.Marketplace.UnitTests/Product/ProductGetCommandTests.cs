@@ -30,10 +30,10 @@ public class ProductGetCommandTests
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _marketplaceService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
