@@ -37,7 +37,9 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<VmssDeleteCommand>();
 
         // Disk commands
+        services.AddSingleton<DiskCreateCommand>();
         services.AddSingleton<DiskGetCommand>();
+        services.AddSingleton<DiskUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -96,8 +98,14 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(disk);
 
         // Register Disk commands
+        var diskCreate = serviceProvider.GetRequiredService<DiskCreateCommand>();
+        disk.AddCommand(diskCreate.Name, diskCreate);
+
         var diskGet = serviceProvider.GetRequiredService<DiskGetCommand>();
         disk.AddCommand(diskGet.Name, diskGet);
+
+        var diskUpdate = serviceProvider.GetRequiredService<DiskUpdateCommand>();
+        disk.AddCommand(diskUpdate.Name, diskUpdate);
 
         return compute;
     }

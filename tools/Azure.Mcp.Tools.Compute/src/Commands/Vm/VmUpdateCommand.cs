@@ -3,12 +3,10 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -17,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
-    : BaseComputeCommand<VmUpdateOptions>()
+    : BaseComputeCommand<VmUpdateOptions>(true)
 {
     private const string CommandTitle = "Update Virtual Machine";
     private readonly ILogger<VmUpdateCommand> _logger = logger;
@@ -63,10 +61,14 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
         // Resource group is required for update
         command.Validators.Add(commandResult =>
         {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
+            // Custom validation: At least one update property must be specified
+            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))
             {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
+                commandResult.AddError("At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.");
             }
         });
     }
@@ -92,18 +94,6 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Custom validation: At least one update property must be specified
-        if (string.IsNullOrEmpty(options.VmSize) &&
-            string.IsNullOrEmpty(options.Tags) &&
-            string.IsNullOrEmpty(options.LicenseType) &&
-            string.IsNullOrEmpty(options.BootDiagnostics) &&
-            string.IsNullOrEmpty(options.UserData))
-        {
-            throw new CommandValidationException(
-                "At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.",
-                HttpStatusCode.BadRequest);
-        }
-
         var computeService = context.GetService<IComputeService>();
 
         try
@@ -123,9 +113,7 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmUpdateCommandResult(result),
-                ComputeJsonContext.Default.VmUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);
         }
         catch (Exception ex)
         {
