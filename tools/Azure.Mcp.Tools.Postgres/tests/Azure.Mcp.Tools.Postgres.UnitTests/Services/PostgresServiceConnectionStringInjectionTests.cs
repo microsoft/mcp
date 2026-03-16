@@ -44,7 +44,7 @@ public class PostgresServiceConnectionStringInjectionTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(resourceGroupService, tenantService, subscriptionService, entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(resourceGroupService, subscriptionService, tenantService, entraTokenAuth, _dbProvider);
     }
 
     private static void AssertConnectionStringNotInjected(string connectionString, string expectedHost, string injectedHost)
