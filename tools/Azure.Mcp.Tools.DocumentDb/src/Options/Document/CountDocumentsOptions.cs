@@ -9,5 +9,5 @@ public class CountDocumentsOptions : BaseDocumentDbOptions
 
     public string? CollectionName { get; set; }
 
-    public string? Query { get; set; }
+    public string? Filter { get; set; }
 }

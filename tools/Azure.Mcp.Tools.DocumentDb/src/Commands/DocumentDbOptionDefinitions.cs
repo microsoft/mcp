@@ -39,9 +39,15 @@ internal static class DocumentDbOptionDefinitions
         DefaultValueFactory = _ => 10
     };
 
-    public static readonly Option<string> Query = new("--query")
+    public static readonly Option<string> Filter = new("--filter")
     {
-        Description = "Query or filter document in JSON format."
+        Description = "Optional filter document in JSON format. Defaults to {} when omitted."
+    };
+
+    public static readonly Option<string> RequiredFilter = new("--filter")
+    {
+        Description = "Filter document in JSON format.",
+        Required = true
     };
 
     public static readonly Option<string> Options = new("--options")
@@ -52,12 +58,6 @@ internal static class DocumentDbOptionDefinitions
     public static readonly Option<string> DocumentsPayload = new("--documents")
     {
         Description = "Single JSON document or JSON array of documents to insert.",
-        Required = true
-    };
-
-    public static readonly Option<string> Filter = new("--filter")
-    {
-        Description = "Filter document in JSON format for update or delete operations.",
         Required = true
     };
 
@@ -101,9 +101,9 @@ internal static class DocumentDbOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> Ops = new("--ops")
+    public static readonly Option<string> OpsFilter = new("--ops-filter")
     {
-        Description = "Current operation filter in JSON format."
+        Description = "Optional filter for current operations in JSON format. Defaults to {} when omitted."
     };
 
     private static Option<string> CreateResourceTypeOption()
@@ -141,4 +141,5 @@ internal static class DocumentDbOptionDefinitions
         option.AcceptOnlyFromAmong("find", "count", "aggregate");
         return option;
     }
+
 }

@@ -37,12 +37,12 @@ public class CountDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CountsDocuments_WhenQueryIsProvided()
+    public async Task ExecuteAsync_CountsDocuments_WhenFilterIsProvided()
     {
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var query = "{\"status\": \"active\"}";
+        var filter = "{\"status\": \"active\"}";
         var expectedResult = new DocumentDbResponse
         {
             Success = true,
@@ -51,7 +51,7 @@ public class CountDocumentsCommandTests
             Data = new Dictionary<string, object?>
             {
                 ["count"] = 42L,
-                ["query"] = "{\"status\":\"active\"}"
+                ["filter"] = "{\"status\":\"active\"}"
             }
         };
 
@@ -67,7 +67,7 @@ public class CountDocumentsCommandTests
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", query
+            "--filter", filter
         ]);
 
         // Act
@@ -80,7 +80,7 @@ public class CountDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CountsAllDocuments_WhenNoQueryProvided()
+    public async Task ExecuteAsync_CountsAllDocuments_WhenNoFilterProvided()
     {
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
@@ -93,7 +93,7 @@ public class CountDocumentsCommandTests
             Data = new Dictionary<string, object?>
             {
                 ["count"] = 100L,
-                ["query"] = "{}"
+                ["filter"] = "{}"
             }
         };
 

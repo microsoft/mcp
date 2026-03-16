@@ -250,7 +250,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     }
 
     [Fact]
-    public async Task Should_find_documents_with_query_and_options()
+    public async Task Should_find_documents_with_filter_and_options()
     {
         var result = await CallToolAsync(
             "documentdb_document_find_documents",
@@ -259,7 +259,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 { "connection-string", ConnectionString },
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
-                { "query", "{\"category\":\"A\"}" },
+                { "filter", "{\"category\":\"A\"}" },
                 { "options", "{\"limit\":1,\"sort\":{\"value\":-1}}" }
             });
 
@@ -278,7 +278,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     }
 
     [Fact]
-    public async Task Should_count_documents_with_query()
+    public async Task Should_count_documents_with_filter()
     {
         var result = await CallToolAsync(
             "documentdb_document_count_documents",
@@ -287,7 +287,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 { "connection-string", ConnectionString },
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
-                { "query", "{\"category\":\"A\"}" }
+                { "filter", "{\"category\":\"A\"}" }
             });
 
         var count = result.AssertProperty("count");
@@ -485,7 +485,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                     { "connection-string", ConnectionString },
                     { "db-name", databaseName },
                     { "collection-name", collectionName },
-                    { "query", "{\"name\":\"workflow-item\"}" },
+                    { "filter", "{\"name\":\"workflow-item\"}" },
                     { "update", "{\"$set\":{\"status\":\"processing\"}}" }
                 });
 
@@ -503,7 +503,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     }
 
     [Fact]
-    public async Task Should_explain_find_query()
+    public async Task Should_explain_find_filter()
     {
         var result = await CallToolAsync(
             "documentdb_document_explain_query",
@@ -513,7 +513,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
                 { "operation", "find" },
-                { "query", "{\"category\":\"A\"}" },
+                { "filter", "{\"category\":\"A\"}" },
                 { "options", "{\"limit\":1}" }
             });
 

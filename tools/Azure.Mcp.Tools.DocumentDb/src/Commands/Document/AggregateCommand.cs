@@ -21,7 +21,7 @@ public sealed class AggregateCommand(ILogger<AggregateCommand> logger)
 
     public override string Name => "aggregate";
 
-    public override string Description => "Run an aggregation pipeline on a collection. Pipelines that use write stages such as $out or $merge may modify data.";
+    public override string Description => "Run an aggregation pipeline on a collection.";
 
     public override string Title => "Aggregate Pipeline";
 

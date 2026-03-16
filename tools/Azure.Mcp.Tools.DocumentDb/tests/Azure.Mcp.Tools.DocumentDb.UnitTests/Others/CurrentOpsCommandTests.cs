@@ -67,7 +67,7 @@ public class CurrentOpsCommandTests
 
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([
             "--connection-string", connectionString,
-            "--ops", "{\"op\":\"query\"}"]), TestContext.Current.CancellationToken);
+            "--ops-filter", "{\"op\":\"query\"}"]), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);

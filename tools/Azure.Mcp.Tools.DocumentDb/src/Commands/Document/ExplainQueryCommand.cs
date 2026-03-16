@@ -22,7 +22,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
 
     public override string Name => "explain_query";
 
-    public override string Description => "Explain a find, count, or aggregate query by setting --operation find|count|aggregate.";
+    public override string Description => "Explain a find, count, or aggregate operation for a collection. Use an optional --filter for find and count, or --pipeline for aggregate.";
 
     public override string Title => "Explain Query";
 
@@ -42,7 +42,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
         command.Options.Add(DocumentDbOptionDefinitions.Operation);
-        command.Options.Add(DocumentDbOptionDefinitions.Query);
+        command.Options.Add(DocumentDbOptionDefinitions.Filter);
         command.Options.Add(DocumentDbOptionDefinitions.Options);
         command.Options.Add(DocumentDbOptionDefinitions.Pipeline.AsOptional());
     }
@@ -53,7 +53,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
         options.Operation = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Operation.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Query.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Filter.Name);
         options.Options = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Options.Name);
         options.Pipeline = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Pipeline.Name);
         return options;
@@ -73,14 +73,14 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
             options = BindOptions(parseResult);
 
             var service = context.GetService<IDocumentDbService>();
-            var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
+            var filter = DocumentDbHelpers.ParseBsonDocument(options.Filter);
             var queryOptions = DocumentDbHelpers.ParseBsonDocument(options.Options);
 
             var result = options.Operation switch
             {
-                "count" => await service.ExplainCountQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, cancellationToken),
+                "count" => await service.ExplainCountQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, cancellationToken),
                 "aggregate" => await service.ExplainAggregateQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, ParsePipeline(options.Pipeline), cancellationToken),
-                _ => await service.ExplainFindQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, queryOptions, cancellationToken)
+                _ => await service.ExplainFindQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, queryOptions, cancellationToken)
             };
 
             DocumentDbResponseHelper.ProcessResponse(context, result);
@@ -88,7 +88,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to explain query on collection: {CollectionName}, database: {DbName}, operation: {Operation}", options?.CollectionName, options?.DbName, options?.Operation);
+            _logger.LogError(ex, "Failed to explain operation on collection: {CollectionName}, database: {DbName}, operation: {Operation}", options?.CollectionName, options?.DbName, options?.Operation);
             HandleException(context, ex);
             return context.Response;
         }

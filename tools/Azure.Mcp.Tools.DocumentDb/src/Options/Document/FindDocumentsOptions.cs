@@ -9,7 +9,7 @@ public class FindDocumentsOptions : BaseDocumentDbOptions
 
     public string? CollectionName { get; set; }
 
-    public string? Query { get; set; }
+    public string? Filter { get; set; }
 
     public string? Options { get; set; }
 }

@@ -5,5 +5,5 @@ namespace Azure.Mcp.Tools.DocumentDb.Options;
 
 public class CurrentOpsOptions : BaseDocumentDbOptions
 {
-    public string? Ops { get; set; }
+    public string? OpsFilter { get; set; }
 }

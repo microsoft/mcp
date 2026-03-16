@@ -37,12 +37,12 @@ public class FindDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_FindsDocuments_WhenQueryIsProvided()
+    public async Task ExecuteAsync_FindsDocuments_WhenFilterIsProvided()
     {
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var query = "{\"status\": \"active\"}";
+        var filter = "{\"status\": \"active\"}";
         var expectedResult = new DocumentDbResponse
         {
             Success = true,
@@ -54,7 +54,7 @@ public class FindDocumentsCommandTests
                 ["total_count"] = 1L,
                 ["returned_count"] = 1,
                 ["has_more"] = false,
-                ["query"] = "{\"status\":\"active\"}",
+                ["filter"] = "{\"status\":\"active\"}",
                 ["applied_options"] = new Dictionary<string, object?>
                 {
                     ["limit"] = 100,
@@ -78,7 +78,7 @@ public class FindDocumentsCommandTests
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", query
+            "--filter", filter
         ]);
 
         // Act
@@ -91,7 +91,7 @@ public class FindDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_FindsAllDocuments_WhenNoQueryProvided()
+    public async Task ExecuteAsync_FindsAllDocuments_WhenNoFilterProvided()
     {
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
@@ -107,7 +107,7 @@ public class FindDocumentsCommandTests
                 ["total_count"] = 2L,
                 ["returned_count"] = 2,
                 ["has_more"] = false,
-                ["query"] = "{}",
+                ["filter"] = "{}",
                 ["applied_options"] = new Dictionary<string, object?>
                 {
                     ["limit"] = 100,
@@ -148,7 +148,7 @@ public class FindDocumentsCommandTests
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var query = "{\"status\": \"active\"}";
+        var filter = "{\"status\": \"active\"}";
         var options = "{\"limit\": 10, \"skip\": 5}";
         var expectedResult = new DocumentDbResponse
         {
@@ -161,7 +161,7 @@ public class FindDocumentsCommandTests
                 ["total_count"] = 15L,
                 ["returned_count"] = 1,
                 ["has_more"] = true,
-                ["query"] = "{\"status\":\"active\"}",
+                ["filter"] = "{\"status\":\"active\"}",
                 ["applied_options"] = new Dictionary<string, object?>
                 {
                     ["limit"] = 10,
@@ -185,7 +185,7 @@ public class FindDocumentsCommandTests
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", query,
+            "--filter", filter,
             "--options", options
         ]);
 
@@ -199,18 +199,18 @@ public class FindDocumentsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenInvalidJsonInQuery()
+    public async Task ExecuteAsync_Returns400_WhenInvalidJsonInFilter()
     {
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var invalidQuery = "{invalid json}";
+        var invalidFilter = "{invalid json}";
 
         var args = _commandDefinition.Parse([
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", invalidQuery
+            "--filter", invalidFilter
         ]);
 
         // Act

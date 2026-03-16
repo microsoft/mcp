@@ -35,7 +35,7 @@ public class ExplainQueryCommandTests
         _documentDbService.ExplainFindQueryAsync(Arg.Is("mongodb://localhost"), Arg.Is("testdb"), Arg.Is("testcollection"), Arg.Any<BsonDocument?>(), Arg.Any<BsonDocument?>(), Arg.Any<CancellationToken>())
             .Returns(new DocumentDbResponse { Success = true, StatusCode = HttpStatusCode.OK, Data = new Dictionary<string, object?> { ["explain"] = "{}" } });
 
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "find", "--query", "{\"status\":\"active\"}"]), TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "find", "--filter", "{\"status\":\"active\"}"]), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }

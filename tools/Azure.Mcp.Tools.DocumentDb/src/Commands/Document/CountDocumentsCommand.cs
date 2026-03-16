@@ -24,7 +24,7 @@ public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
 
     public override string Name => "count_documents";
 
-    public override string Description => "Count documents in a collection matching a query";
+    public override string Description => "Count documents in a collection matching an optional filter.";
 
     public override string Title => "Count Documents";
 
@@ -43,7 +43,7 @@ public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
         base.RegisterOptions(command);
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
-        command.Options.Add(DocumentDbOptionDefinitions.Query);
+        command.Options.Add(DocumentDbOptionDefinitions.Filter);
     }
 
     protected override CountDocumentsOptions BindOptions(ParseResult parseResult)
@@ -51,7 +51,7 @@ public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Query.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Filter.Name);
         return options;
     }
 
@@ -73,9 +73,9 @@ public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
+            var filter = DocumentDbHelpers.ParseBsonDocument(options.Filter);
 
-            var result = await service.CountDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, cancellationToken);
+            var result = await service.CountDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, cancellationToken);
 
             // Process response using unified DocumentDbResponse type
             DocumentDbResponseHelper.ProcessResponse(context, result);
@@ -84,7 +84,7 @@ public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to count documents in collection: {CollectionName}, database: {DbName}, query: {Query}", options?.CollectionName, options?.DbName, options?.Query);
+            _logger.LogError(ex, "Failed to count documents in collection: {CollectionName}, database: {DbName}, filter: {Filter}", options?.CollectionName, options?.DbName, options?.Filter);
             HandleException(context, ex);
             return context.Response;
         }

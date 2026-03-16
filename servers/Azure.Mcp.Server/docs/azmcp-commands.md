@@ -1766,27 +1766,27 @@ azmcp documentdb others get stats --connection-string <connection-string> \
 # Get current Azure DocumentDB operations
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb others current ops --connection-string <connection-string> \
-                                    [--ops <json-filter>]
+                                    [--ops-filter <json-filter>]
 
 # Drop a database
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb database drop database --connection-string <connection-string> \
                                         --db-name <db-name>
 
-# Find documents in a collection with optional query options for limit, skip, sort, and projection
+# Find and retrieve documents from a collection matching an optional filter, with limit, skip, sort, and projection options
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document find documents --connection-string <connection-string> \
                                          --db-name <db-name> \
                                          --collection-name <collection-name> \
-                                         [--query <json-query>] \
+                                         [--filter <json-filter>] \
                                          [--options <json-options>]
 
-# Count documents in a collection, optionally filtered by a query
+# Count documents in a collection matching an optional filter
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document count documents --connection-string <connection-string> \
                                           --db-name <db-name> \
                                           --collection-name <collection-name> \
-                                          [--query <json-query>]
+                                          [--filter <json-filter>]
 
 # Insert one document or many documents into a collection. If --mode is omitted, the command auto-detects a single document versus a JSON array payload.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1796,7 +1796,7 @@ azmcp documentdb document insert documents --connection-string <connection-strin
                                            --documents <json-document-or-array> \
                                            [--mode <single|many>]
 
-# Update one document or many documents in a collection. If --mode is omitted, the command defaults to single.
+# Update one or more documents in a collection matching a required filter. If --mode is omitted, the command defaults to single.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document update documents --connection-string <connection-string> \
                                            --db-name <db-name> \
@@ -1806,7 +1806,7 @@ azmcp documentdb document update documents --connection-string <connection-strin
                                            [--upsert] \
                                            [--mode <single|many>]
 
-# Delete one document or many documents from a collection. If --mode is omitted, the command defaults to single.
+# Delete one or more documents from a collection matching a required filter. If --mode is omitted, the command defaults to single.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document delete documents --connection-string <connection-string> \
                                            --db-name <db-name> \
@@ -1822,22 +1822,22 @@ azmcp documentdb document aggregate --connection-string <connection-string> \
                                     --pipeline <json-pipeline> \
                                     [--allow-disk-use]
 
-# Find and modify a document atomically, returning the document before modification
+# Find and update a single document in a collection matching a required filter, returning the document before modification
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document find and modify --connection-string <connection-string> \
                                           --db-name <db-name> \
                                           --collection-name <collection-name> \
-                                          --query <json-query> \
+                                          --filter <json-filter> \
                                           --update <json-update> \
                                           [--upsert]
 
-# Explain a find, count, or aggregate query by setting --operation find|count|aggregate
+# Explain a find, count, or aggregate operation for a collection. Use an optional --filter for find and count, or --pipeline for aggregate
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document explain query --connection-string <connection-string> \
                                         --db-name <db-name> \
                                         --collection-name <collection-name> \
                                         --operation <find|count|aggregate> \
-                                        [--query <json-query>] \
+                                        [--filter <json-filter>] \
                                         [--options <json-options>] \
                                         [--pipeline <json-pipeline>]
 ```

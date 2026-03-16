@@ -42,7 +42,7 @@ public class FindAndModifyCommandTests
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var query = "{\"status\": \"pending\"}";
+        var filter = "{\"status\": \"pending\"}";
         var update = "{\"$set\": {\"status\": \"processing\"}}";
         var expectedResult = new DocumentDbResponse
         {
@@ -70,7 +70,7 @@ public class FindAndModifyCommandTests
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", query,
+            "--filter", filter,
             "--update", update
         ]);
 
@@ -87,7 +87,7 @@ public class FindAndModifyCommandTests
         var connectionString = "mongodb://localhost";
         var dbName = "testdb";
         var collectionName = "testcollection";
-        var query = "{\"_id\": \"123\"}";
+        var filter = "{\"_id\": \"123\"}";
         var update = "{\"$set\": {\"name\": \"updated\"}}";
 
         _documentDbService.FindAndModifyAsync(
@@ -109,7 +109,7 @@ public class FindAndModifyCommandTests
             "--connection-string", connectionString,
             "--db-name", dbName,
             "--collection-name", collectionName,
-            "--query", query,
+            "--filter", filter,
             "--update", update
         ]);
 

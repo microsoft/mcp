@@ -27,8 +27,8 @@ public interface IDocumentDbService
     Task<DocumentDbResponse> SampleDocumentsAsync(string connectionString, string databaseName, string collectionName, int sampleSize = 10, CancellationToken cancellationToken = default);
 
     // Document Operations
-    Task<DocumentDbResponse> FindDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default);
-    Task<DocumentDbResponse> CountDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> FindDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, BsonDocument? options = null, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> CountDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> InsertDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument document, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> InsertManyAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> documents, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> UpdateDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default);
@@ -36,8 +36,8 @@ public interface IDocumentDbService
     Task<DocumentDbResponse> DeleteDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> DeleteManyAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> AggregateAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> pipeline, bool allowDiskUse = false, CancellationToken cancellationToken = default);
-    Task<DocumentDbResponse> FindAndModifyAsync(string connectionString, string databaseName, string collectionName, BsonDocument query, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default);
-    Task<DocumentDbResponse> ExplainFindQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default);
-    Task<DocumentDbResponse> ExplainCountQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> FindAndModifyAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> ExplainFindQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, BsonDocument? options = null, CancellationToken cancellationToken = default);
+    Task<DocumentDbResponse> ExplainCountQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, CancellationToken cancellationToken = default);
     Task<DocumentDbResponse> ExplainAggregateQueryAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> pipeline, CancellationToken cancellationToken = default);
 }

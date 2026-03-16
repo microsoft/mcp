@@ -21,7 +21,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
 
     public override string Name => "find_documents";
 
-    public override string Description => "Find and retrieve all documents (or filter by query) in a collection. Supports options for limit, skip, sort, and projection";
+    public override string Description => "Find and retrieve documents from a collection matching an optional filter. Supports limit, skip, sort, and projection options.";
 
     public override string Title => "Find Documents";
 
@@ -41,7 +41,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
 
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
-        command.Options.Add(DocumentDbOptionDefinitions.Query);
+        command.Options.Add(DocumentDbOptionDefinitions.Filter);
         command.Options.Add(DocumentDbOptionDefinitions.Options);
     }
 
@@ -50,7 +50,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Query.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Filter.Name);
         options.Options = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Options.Name);
         return options;
     }
@@ -73,10 +73,10 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
+            var filter = DocumentDbHelpers.ParseBsonDocument(options.Filter);
             var queryOptions = DocumentDbHelpers.ParseBsonDocument(options.Options);
 
-            var result = await service.FindDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, queryOptions, cancellationToken);
+            var result = await service.FindDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, queryOptions, cancellationToken);
 
             // Process response using unified DocumentDbResponse type
             DocumentDbResponseHelper.ProcessResponse(context, result);
@@ -85,7 +85,7 @@ public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to find documents in collection: {CollectionName}, database: {DbName}, query: {Query}", options?.CollectionName, options?.DbName, options?.Query);
+            _logger.LogError(ex, "Failed to find documents in collection: {CollectionName}, database: {DbName}, filter: {Filter}", options?.CollectionName, options?.DbName, options?.Filter);
             HandleException(context, ex);
             return context.Response;
         }

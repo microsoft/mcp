@@ -21,7 +21,7 @@ public sealed class DropDatabaseCommand(ILogger<DropDatabaseCommand> logger)
 
     public override string Name => "drop_database";
 
-    public override string Description => "Drop an Azure DocumentDB database, removing all of its collections and data.";
+    public override string Description => "Drop a database.";
 
     public override string Title => "Drop Database";
 

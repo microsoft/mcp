@@ -561,7 +561,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
 
     #region Document Operations
 
-    public async Task<DocumentDbResponse> FindDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> FindDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
         ValidateParameter(databaseName, nameof(databaseName));
@@ -570,13 +570,13 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         try
         {
             var collection = GetCollection(connectionString, databaseName, collectionName);
-            var filter = query ?? new BsonDocument();
+            var effectiveFilter = filter ?? new BsonDocument();
             var limit = options?.GetValue("limit", 100).ToInt32() ?? 100;
             var skip = options?.GetValue("skip", 0).ToInt32() ?? 0;
             var sort = options != null && options.Contains("sort") && options["sort"].IsBsonDocument ? options["sort"].AsBsonDocument : null;
             var projection = options != null && options.Contains("projection") && options["projection"].IsBsonDocument ? options["projection"].AsBsonDocument : null;
 
-            var cursor = collection.Find(filter).Limit(limit).Skip(skip);
+            var cursor = collection.Find(effectiveFilter).Limit(limit).Skip(skip);
 
             if (sort != null)
             {
@@ -589,7 +589,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
             }
 
             var documents = await cursor.ToListAsync(cancellationToken);
-            var totalCount = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+            var totalCount = await collection.CountDocumentsAsync(effectiveFilter, cancellationToken: cancellationToken);
 
             return Success(
                 "Documents retrieved successfully",
@@ -599,7 +599,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
                     ["total_count"] = totalCount,
                     ["returned_count"] = documents.Count,
                     ["has_more"] = totalCount > skip + documents.Count,
-                    ["query"] = BsonDocumentToJson(filter),
+                    ["filter"] = BsonDocumentToJson(effectiveFilter),
                     ["applied_options"] = new Dictionary<string, object?>
                     {
                         ["limit"] = limit,
@@ -631,7 +631,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         }
     }
 
-    public async Task<DocumentDbResponse> CountDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> CountDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
         ValidateParameter(databaseName, nameof(databaseName));
@@ -640,15 +640,15 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         try
         {
             var collection = GetCollection(connectionString, databaseName, collectionName);
-            var filter = query ?? new BsonDocument();
-            var count = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+            var effectiveFilter = filter ?? new BsonDocument();
+            var count = await collection.CountDocumentsAsync(effectiveFilter, cancellationToken: cancellationToken);
 
             return Success(
                 "Documents counted successfully",
                 new Dictionary<string, object?>
                 {
                     ["count"] = count,
-                    ["query"] = BsonDocumentToJson(filter)
+                    ["filter"] = BsonDocumentToJson(effectiveFilter)
                 });
         }
         catch (MongoCommandException ex) when (ex.Code == 26)
@@ -1004,12 +1004,12 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         }
     }
 
-    public async Task<DocumentDbResponse> FindAndModifyAsync(string connectionString, string databaseName, string collectionName, BsonDocument query, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> FindAndModifyAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
         ValidateParameter(databaseName, nameof(databaseName));
         ValidateParameter(collectionName, nameof(collectionName));
-        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(filter);
         ArgumentNullException.ThrowIfNull(update);
 
         try
@@ -1021,7 +1021,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
                 ReturnDocument = ReturnDocument.Before
             };
 
-            var result = await collection.FindOneAndUpdateAsync(query, update, options, cancellationToken);
+            var result = await collection.FindOneAndUpdateAsync(filter, update, options, cancellationToken);
 
             return Success(
                 "Find and modify completed successfully",
@@ -1030,7 +1030,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
                     ["matched"] = result != null,
                     ["upsertedId"] = result?["_id"]?.ToString(),
                     ["original_document"] = BsonDocumentToJson(result),
-                    ["query"] = BsonDocumentToJson(query),
+                    ["filter"] = BsonDocumentToJson(filter),
                     ["update"] = BsonDocumentToJson(update),
                     ["upsert"] = upsert
                 });
@@ -1057,7 +1057,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         }
     }
 
-    public async Task<DocumentDbResponse> ExplainFindQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> ExplainFindQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
         ValidateParameter(databaseName, nameof(databaseName));
@@ -1066,7 +1066,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         try
         {
             var database = CreateClient(connectionString).GetDatabase(databaseName);
-            var filter = query ?? new BsonDocument();
+            var effectiveFilter = filter ?? new BsonDocument();
             var sort = options != null && options.Contains("sort") && options["sort"].IsBsonDocument ? options["sort"].AsBsonDocument : null;
             var projection = options != null && options.Contains("projection") && options["projection"].IsBsonDocument ? options["projection"].AsBsonDocument : null;
             var limit = options?.GetValue("limit", BsonNull.Value);
@@ -1075,7 +1075,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
             var findCommand = new BsonDocument
             {
                 { "find", collectionName },
-                { "filter", filter }
+                { "filter", effectiveFilter }
             };
 
             if (sort != null)
@@ -1142,7 +1142,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
         }
     }
 
-    public async Task<DocumentDbResponse> ExplainCountQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
+    public async Task<DocumentDbResponse> ExplainCountQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? filter = null, CancellationToken cancellationToken = default)
     {
         ValidateParameter(connectionString, nameof(connectionString));
         ValidateParameter(databaseName, nameof(databaseName));
@@ -1158,7 +1158,7 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
                     new BsonDocument
                     {
                         { "count", collectionName },
-                        { "query", query ?? new BsonDocument() }
+                        { "query", filter ?? new BsonDocument() }
                     }
                 },
                 { "verbosity", "executionStats" }

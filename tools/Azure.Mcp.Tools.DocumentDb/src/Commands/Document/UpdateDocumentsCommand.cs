@@ -20,7 +20,7 @@ public sealed class UpdateDocumentsCommand(ILogger<UpdateDocumentsCommand> logge
 
     public override string Name => "update_documents";
 
-    public override string Description => "Update one document or many documents in a collection. If --mode is omitted, the command defaults to single. Use --mode many to update multiple documents.";
+    public override string Description => "Update one or more documents in a collection matching a required filter. If --mode is omitted, the command defaults to single. Use --mode many to update multiple documents.";
 
     public override string Title => "Update Documents";
 
@@ -39,7 +39,7 @@ public sealed class UpdateDocumentsCommand(ILogger<UpdateDocumentsCommand> logge
         base.RegisterOptions(command);
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
-        command.Options.Add(DocumentDbOptionDefinitions.Filter);
+        command.Options.Add(DocumentDbOptionDefinitions.RequiredFilter);
         command.Options.Add(DocumentDbOptionDefinitions.Update);
         command.Options.Add(DocumentDbOptionDefinitions.Upsert);
         command.Options.Add(DocumentDbOptionDefinitions.Mode);

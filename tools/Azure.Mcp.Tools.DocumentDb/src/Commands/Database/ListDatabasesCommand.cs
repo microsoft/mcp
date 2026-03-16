@@ -22,7 +22,7 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
 
     public override string Name => "list_databases";
 
-    public override string Description => "List Azure DocumentDB databases. If --db-name is omitted, returns all database names. If --db-name is provided, returns detailed information for that database.";
+    public override string Description => "List databases. If --db-name is omitted, returns all database names. If --db-name is provided, returns detailed information for that database.";
 
     public override string Title => "List Databases";
 

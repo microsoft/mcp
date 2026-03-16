@@ -20,7 +20,7 @@ public sealed class DeleteDocumentsCommand(ILogger<DeleteDocumentsCommand> logge
 
     public override string Name => "delete_documents";
 
-    public override string Description => "Delete documents from a collection. If --mode is omitted, the command defaults to single. Use --mode many to delete multiple documents.";
+    public override string Description => "Delete one or more documents from a collection matching a required filter. If --mode is omitted, the command defaults to single. Use --mode many to delete multiple documents.";
 
     public override string Title => "Delete Documents";
 
@@ -39,7 +39,7 @@ public sealed class DeleteDocumentsCommand(ILogger<DeleteDocumentsCommand> logge
         base.RegisterOptions(command);
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
-        command.Options.Add(DocumentDbOptionDefinitions.Filter);
+        command.Options.Add(DocumentDbOptionDefinitions.RequiredFilter);
         command.Options.Add(DocumentDbOptionDefinitions.Mode);
     }
 

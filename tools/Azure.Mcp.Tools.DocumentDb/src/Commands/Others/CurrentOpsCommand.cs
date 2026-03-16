@@ -22,7 +22,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
 
     public override string Name => "current_ops";
 
-    public override string Description => "Get information about current Azure DocumentDB operations.";
+    public override string Description => "Get information about current operations, optionally filtered by --ops-filter.";
 
     public override string Title => "Current Operations";
 
@@ -39,13 +39,13 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DocumentDbOptionDefinitions.Ops);
+        command.Options.Add(DocumentDbOptionDefinitions.OpsFilter);
     }
 
     protected override CurrentOpsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Ops = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Ops.Name);
+        options.OpsFilter = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.OpsFilter.Name);
         return options;
     }
 
@@ -67,7 +67,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var filter = DocumentDbHelpers.ParseBsonDocument(options.Ops);
+            var filter = DocumentDbHelpers.ParseBsonDocument(options.OpsFilter);
 
             DocumentDbResponse result = await service.GetCurrentOpsAsync(options.ConnectionString!, filter, cancellationToken);
 
@@ -77,7 +77,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get current operations with filter: {Ops}", commandOptions?.Ops);
+            _logger.LogError(ex, "Failed to get current operations with filter: {OpsFilter}", commandOptions?.OpsFilter);
             HandleException(context, ex);
             return context.Response;
         }
