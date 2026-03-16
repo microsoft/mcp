@@ -910,4 +910,174 @@ public class EndpointValidatorTests
     }
 
     #endregion
+
+    #region IPv6 Loopback/Localhost Bypass Representations
+
+    [Theory]
+    // Alternate compressed and expanded forms of ::1
+    [InlineData("0:0:0:0:0:0:0:1")]                    // Full expanded form of ::1
+    [InlineData("0000:0000:0000:0000:0000:0000:0000:0001")] // Zero-padded full form
+    [InlineData("0::0:1")]                              // Alternate compressed representation
+    // Expanded IPv4-mapped loopback forms
+    [InlineData("0:0:0:0:0:ffff:127.0.0.1")]           // Expanded IPv4-mapped form
+    public void IsPrivateOrReservedIP_LoopbackAlternateRepresentations_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    // Various ::1 representations in URLs
+    [InlineData("http://[0:0:0:0:0:0:0:1]/")]                      // Full expanded form
+    [InlineData("http://[0000:0000:0000:0000:0000:0000:0000:0001]/")] // Zero-padded full form
+    [InlineData("http://[0::0:1]/")]                                // Alternate compressed
+    // Expanded IPv4-mapped loopback in URLs
+    [InlineData("http://[0:0:0:0:0:ffff:127.0.0.1]/")]             // Expanded IPv4-mapped form
+    public void ValidatePublicTargetUrl_LoopbackAlternateRepresentations_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    #endregion
+
+    #region IPv6 Zone ID / Encoding Obfuscation Bypass
+
+    [Theory]
+    // Zone IDs with various encodings — .NET Uri parser strips zone IDs,
+    // so the IP is still validated correctly as ::1 or fe80::1
+    [InlineData("http://[::1%25eth0]/")]                // Zone ID with interface name
+    [InlineData("http://[fe80::1%25eth0]/")]            // Link-local with zone ID
+    public void ValidatePublicTargetUrl_IPv6WithZoneId_Blocked(string url)
+    {
+        // .NET's Uri parser handles %25 as literal % in zone IDs.
+        // The underlying IP (::1 or fe80::1) is still private/reserved.
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    #endregion
+
+    #region IPv6 Internal Network Targeting via IPv4-Mapped Addresses
+
+    [Theory]
+    // IPv4-mapped private IPs in URL form
+    [InlineData("http://[::ffff:10.0.0.1]/")]          // IPv4-mapped internal IP
+    [InlineData("http://[::ffff:192.168.1.1]/")]        // IPv4-mapped private range
+    [InlineData("http://[::ffff:172.16.0.1]/")]         // IPv4-mapped private 172.16.x
+    [InlineData("http://[::ffff:100.64.0.1]/")]         // IPv4-mapped CGNAT
+    // Cloud metadata endpoint
+    [InlineData("http://[::ffff:169.254.169.254]/")]    // IPv4-mapped cloud metadata endpoint
+    public void ValidatePublicTargetUrl_IPv4MappedPrivateInUrl_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    [Theory]
+    // Unique local (private) addresses
+    [InlineData("http://[fd00:ec2::254]/")]             // Unique local (fc00::/7 private range)
+    public void ValidatePublicTargetUrl_IPv6UniqueLocalAddresses_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    #endregion
+
+    #region IPv6 Parser Confusion and Authority Bypass
+
+    [Fact]
+    public void ValidatePublicTargetUrl_CredentialSectionBypass_Blocked()
+    {
+        // http://attacker.com@[::1]/ — .NET Uri parser treats attacker.com as userinfo
+        // and [::1] as the actual host, which is loopback
+        var url = "http://attacker.com@[::1]/";
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            // If .NET parses it, the host should be ::1 (loopback) → blocked
+            Assert.Throws<SecurityException>(() =>
+                EndpointValidator.ValidatePublicTargetUrl(url));
+        }
+        // If .NET rejects the URI entirely, that's also safe (no request possible)
+    }
+
+    [Theory]
+    // Non-standard ports targeting internal services
+    [InlineData("http://[::1]:8080/")]                  // Non-standard port on loopback
+    [InlineData("http://[::1]:80/")]                    // Standard port on loopback
+    [InlineData("http://[::1]:443/")]                   // HTTPS port on loopback
+    [InlineData("http://[::1]:3000/")]                  // Common dev server port
+    public void ValidatePublicTargetUrl_LoopbackNonStandardPorts_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    [Fact]
+    public void ValidatePublicTargetUrl_BracketlessIPv6_Rejected()
+    {
+        // http://::1/ without brackets — invalid per RFC 3986.
+        // .NET's Uri.TryCreate should reject this, preventing any request.
+        var url = "http://::1/";
+        if (Uri.TryCreate(url, UriKind.Absolute, out _))
+        {
+            // If somehow parsed, it must still be blocked
+            Assert.Throws<SecurityException>(() =>
+                EndpointValidator.ValidatePublicTargetUrl(url));
+        }
+        else
+        {
+            // Invalid URI → safe (ValidatePublicTargetUrl would throw SecurityException)
+            Assert.Throws<SecurityException>(() =>
+                EndpointValidator.ValidatePublicTargetUrl(url));
+        }
+    }
+
+    [Fact]
+    public void ValidatePublicTargetUrl_AuthorityConfusion_ParsedCorrectly()
+    {
+        // http://[::1]:80@attacker.com/ — .NET Uri parser correctly identifies
+        // attacker.com as the host (userinfo = [::1]:80), so this is NOT a bypass.
+        // The request would go to attacker.com, not ::1.
+        var url = "http://[::1]:80@attacker.com/";
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            // .NET correctly parses the host as attacker.com, not ::1
+            Assert.Equal("attacker.com", uri.Host);
+        }
+        // If .NET rejects the URI entirely, that's also safe
+    }
+
+    #endregion
+
+    #region IPv6 Cloud Metadata Bypass Variants
+
+    [Theory]
+    // Various ways to reach 169.254.169.254 (IMDS) via IPv6
+    [InlineData("::ffff:169.254.169.254")]                    // IPv4-mapped (canonical)
+    [InlineData("0:0:0:0:0:ffff:169.254.169.254")]           // IPv4-mapped expanded
+    [InlineData("0000:0000:0000:0000:0000:ffff:a9fe:a9fe")]  // IPv4-mapped hex fully expanded
+    // Various ways to reach 10.0.0.1 via IPv6
+    [InlineData("0:0:0:0:0:ffff:10.0.0.1")]                  // Expanded IPv4-mapped
+    [InlineData("0000:0000:0000:0000:0000:ffff:0a00:0001")]  // Fully expanded hex
+    // Various ways to reach 192.168.1.1 via IPv6
+    [InlineData("0:0:0:0:0:ffff:192.168.1.1")]               // Expanded IPv4-mapped
+    public void IsPrivateOrReservedIP_CloudMetadataIPv6Variants_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    // URL-level tests for cloud metadata via IPv6
+    [InlineData("http://[::ffff:169.254.169.254]/latest/meta-data/")]  // IMDS with path
+    [InlineData("http://[::ffff:168.63.129.16]/machine")]              // Azure WireServer via IPv6
+    public void ValidatePublicTargetUrl_CloudMetadataIPv6InUrl_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    #endregion
 }
