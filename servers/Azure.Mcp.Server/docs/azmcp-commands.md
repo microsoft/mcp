@@ -1041,7 +1041,7 @@ azmcp compute vm update --subscription "my-subscription" \
 
 ```bash
 # Delete a Virtual Machine
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --vm-name <vm-name> \
@@ -1051,14 +1051,14 @@ azmcp compute vm delete --subscription <subscription> \
 # Examples:
 
 # Delete a VM (requires --force confirmation)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm delete --subscription "my-subscription" \
                         --resource-group "my-rg" \
                         --vm-name "my-vm" \
                         --force
 
 # Force delete a VM even if it is in a running or failed state
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm delete --subscription "my-subscription" \
                         --resource-group "my-rg" \
                         --vm-name "my-vm" \
@@ -1255,7 +1255,7 @@ azmcp compute vmss update --subscription "my-subscription" \
 
 ```bash
 # Delete a Virtual Machine Scale Set
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss delete --subscription <subscription> \
                           --resource-group <resource-group> \
                           --vmss-name <vmss-name> \
@@ -1265,14 +1265,14 @@ azmcp compute vmss delete --subscription <subscription> \
 # Examples:
 
 # Delete a VMSS (requires --force confirmation)
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss delete --subscription "my-subscription" \
                           --resource-group "my-rg" \
                           --vmss-name "my-vmss" \
                           --force
 
 # Force delete a VMSS even if it is in a running or failed state
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss delete --subscription "my-subscription" \
                           --resource-group "my-rg" \
                           --vmss-name "my-vmss" \

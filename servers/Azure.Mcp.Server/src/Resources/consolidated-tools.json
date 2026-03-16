@@ -2350,8 +2350,8 @@
           "description": "This tool permanently deletes Azure resources."
         },
         "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
+          "value": true,
+          "description": "This tool triggers elicitation for destructive confirmation."
         },
         "localRequired": {
           "value": false,
