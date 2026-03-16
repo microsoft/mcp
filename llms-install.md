@@ -71,7 +71,7 @@ Azure MCP Server also supports direct CLI usage without starting the MCP server.
 
 ```bash
 # Via npx (Node.js)
-npx -y @azure/mcp@latest storage account list --subscription <subscription-id>
+npx -y @azure/mcp@latest azmcp storage account list --subscription <subscription-id>
 
 # Via dnx (.NET)
 dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>

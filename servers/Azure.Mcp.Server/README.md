@@ -868,7 +868,7 @@ Use the same package managers as the MCP server:
 
 ```bash
 # Node.js (npx)
-npx -y @azure/mcp@latest storage account list --subscription <subscription-id>
+npx -y @azure/mcp@latest azmcp storage account list --subscription <subscription-id>
 
 # .NET (dnx)
 dnx Azure.Mcp -- azmcp storage account list --subscription <subscription-id>
