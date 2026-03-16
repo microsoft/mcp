@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> logger)
+public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogger<AutoexportJobGetCommand> logger)
     : BaseManagedLustreCommand<AutoexportJobGetOptions>(logger)
 {
     private const string CommandTitle = "Get Azure Managed Lustre Autoexport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoexportJobGetCommand> _logger = logger;
 
     public override string Id => "9a3b7e2f-4d6c-8a1e-b5f3-2c7d8e9a1b4f";
@@ -76,7 +77,7 @@ public sealed class AutoexportJobGetCommand(ILogger<AutoexportJobGetCommand> log
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
+            var svc = _service;
 
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
