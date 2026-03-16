@@ -16,7 +16,7 @@
     The architectures to include in the manifest (e.g., 'amd64', 'arm64').
 
 .EXAMPLE
-    ./Publish-DockerImages.ps1 -Version '2.0.0' -BaseRepo 'azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp' -Architectures 'amd64','arm64'
+    ./Publish-DockerManifests.ps1 -Version '2.0.0' -BaseRepo 'azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp' -Architectures 'amd64','arm64'
 #>
 
 [CmdletBinding()]
