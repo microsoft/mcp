@@ -47,7 +47,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
-    private static string BuildConnectionString(string host, string database, string user, string password)
+    internal static string BuildConnectionString(string host, string database, string user, string password)
     {
         var builder = new NpgsqlConnectionStringBuilder
         {
