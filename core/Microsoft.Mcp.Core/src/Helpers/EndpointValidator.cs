@@ -13,6 +13,17 @@ namespace Microsoft.Mcp.Core.Helpers;
 /// </summary>
 public static class EndpointValidator
 {
+    private static readonly string[] s_reservedHosts =
+    [
+        "localhost",
+        "local",
+        "localtest.me",          // Common localhost alias
+        "lvh.me",                // localhost variations
+        "nip.io",                // Wildcard DNS - resolves to embedded IP
+        "sslip.io",              // Wildcard DNS - resolves to embedded IP
+        "xip.io",                // Wildcard DNS - resolves to embedded IP
+    ];
+
     /// <summary>
     /// Gets the allowed domain suffixes for Azure services based on the cloud environment.
     /// </summary>
@@ -200,7 +211,7 @@ public static class EndpointValidator
             if (IsPrivateOrReservedIP(ipAddress))
             {
                 throw new SecurityException(
-                    $"Target URL '{url}' uses a private or reserved IP address ({ipAddress}). " +
+                    "Target URL uses a private or reserved IP address. " +
                     "Targeting internal endpoints is not permitted.");
             }
         }
@@ -211,18 +222,8 @@ public static class EndpointValidator
             var normalizedHost = uri.Host.TrimEnd('.');
 
             // Check for reserved hostnames (catches localhost variations)
-            var reservedHosts = new[]
-            {
-                "localhost",
-                "local",
-                "localtest.me",          // Common localhost alias
-                "lvh.me",                // localhost variations
-                "nip.io",                // Wildcard DNS - resolves to embedded IP
-                "sslip.io",              // Wildcard DNS - resolves to embedded IP
-                "xip.io",                // Wildcard DNS - resolves to embedded IP
-            };
 
-            if (reservedHosts.Any(reserved =>
+            if (s_reservedHosts.Any(reserved =>
                 normalizedHost.Equals(reserved, StringComparison.OrdinalIgnoreCase) ||
                 normalizedHost.EndsWith($".{reserved}", StringComparison.OrdinalIgnoreCase)))
             {
@@ -239,7 +240,7 @@ public static class EndpointValidator
                     if (IsPrivateOrReservedIP(resolvedIp))
                     {
                         throw new SecurityException(
-                            $"Target URL hostname '{uri.Host}' resolves to a private or reserved IP address ({resolvedIp}). " +
+                            $"Target URL hostname '{uri.Host}' resolves to a private or reserved IP address. " +
                             "Targeting internal endpoints is not permitted.");
                     }
                 }
@@ -248,12 +249,12 @@ public static class EndpointValidator
             {
                 throw; // Re-throw SecurityException from private IP check
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // DNS resolution failure - treat as invalid for security
                 throw new SecurityException(
                     $"Unable to resolve hostname '{uri.Host}' for security validation. " +
-                    $"Ensure the hostname is publicly resolvable. Details: {ex.Message}");
+                    "Ensure the hostname is publicly resolvable.");
             }
         }
     }
@@ -424,14 +425,7 @@ public static class EndpointValidator
                 return true;
             }
 
-            // Benchmarking: 2001:2::/48 (RFC 5180) - non-routable
-            if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
-                bytes[2] == 0x00 && bytes[3] == 0x02)
-            {
-                return true;
-            }
-
-            // BMWG benchmarking: 2001:2::/48 (RFC 5180) - non-routable
+            // BMWG benchmarking: 2001:0002::/48 (RFC 5180) - non-routable
             if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
                 bytes[2] == 0x00 && bytes[3] == 0x02 &&
                 bytes[4] == 0x00 && bytes[5] == 0x00)

@@ -522,8 +522,7 @@ public class EndpointValidatorTests
     [InlineData("2001:0000:4136:e378:8000:63bf:f7f7:f7f7")]  // Teredo client XOR → 8.8.8.8 (public)
     public void IsPrivateOrReservedIP_TeredoPublicIPv4_ReturnsFalse(string address)
     {
-        // 3fff:fdd2 XOR ffff = c000:022d = 192.0.2.45 (documentation range 192.0.2.0/24, but not checked as private)
-        // Actually 192.0.2.x is TEST-NET-1, not in our private list, so returns false
+        // Teredo with client IPv4 8.8.8.8: bytes[12..15] = 0xf7 XOR 0xff = 0x08 → 8.8.8.8 (public)
         var ipAddress = IPAddress.Parse(address);
         Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
     }
@@ -749,6 +748,131 @@ public class EndpointValidatorTests
     {
         // Should not throw for HTTP/HTTPS with public IPs
         EndpointValidator.ValidatePublicTargetUrl(url);
+    }
+
+    #endregion
+
+    #region Additional Coverage Tests (MQ Wave 1)
+
+    [Theory]
+    [InlineData("8.8.8.8")]            // Google DNS
+    [InlineData("1.1.1.1")]            // Cloudflare DNS
+    [InlineData("13.107.42.14")]       // Microsoft public
+    public void IsPrivateOrReservedIP_PublicIPv4_ReturnsFalse(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("2607:f8b0:4004:800::200e")]   // Google IPv6
+    [InlineData("2606:4700:4700::1111")]        // Cloudflare IPv6
+    public void IsPrivateOrReservedIP_PublicIPv6_ReturnsFalse(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("::ffff:8.8.8.8")]     // IPv4-mapped public
+    [InlineData("::ffff:1.1.1.1")]     // IPv4-mapped public
+    public void IsPrivateOrReservedIP_IPv4MappedPublic_ReturnsFalse(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("::8.8.8.8")]          // IPv4-compatible public
+    [InlineData("::1.1.1.1")]          // IPv4-compatible public
+    public void IsPrivateOrReservedIP_IPv4CompatiblePublic_ReturnsFalse(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("fe80::1")]            // Link-local
+    [InlineData("fe80::abcd:ef01:2345:6789")]
+    public void IsPrivateOrReservedIP_IPv6LinkLocal_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("172.15.255.255", false)]   // Just below 172.16/12
+    [InlineData("172.16.0.0", true)]        // Range start
+    [InlineData("172.31.255.255", true)]     // Range end
+    [InlineData("172.32.0.0", false)]        // Just above range
+    [InlineData("100.63.255.255", false)]    // Just below CGNAT
+    [InlineData("100.64.0.0", true)]         // CGNAT start
+    [InlineData("100.127.255.255", true)]    // CGNAT end
+    [InlineData("100.128.0.0", false)]       // Just above CGNAT
+    public void IsPrivateOrReservedIP_IPv4Boundaries(string address, bool expected)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.Equal(expected, EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("224.0.0.1")]          // Multicast
+    [InlineData("239.255.255.255")]    // Multicast upper bound
+    [InlineData("240.0.0.1")]          // Future reserved
+    [InlineData("255.255.255.254")]    // Future reserved upper
+    public void IsPrivateOrReservedIP_IPv4MulticastAndReserved_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("http://local.")]
+    [InlineData("http://localtest.me.")]
+    [InlineData("http://lvh.me.")]
+    public void ValidatePublicTargetUrl_TrailingDotReservedHosts_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    [Theory]
+    [InlineData("http://[::ffff:169.254.169.254]")]     // IPv4-mapped IMDS
+    [InlineData("http://[::ffff:127.0.0.1]")]           // IPv4-mapped loopback
+    [InlineData("http://[2002:a9fe:a9fe::1]")]          // 6to4 IMDS
+    [InlineData("http://[::1]")]                         // IPv6 loopback
+    public void ValidatePublicTargetUrl_IPv6TransitionInUrl_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    [Theory]
+    [InlineData("http://evil.localhost")]
+    [InlineData("http://sub.lvh.me")]
+    [InlineData("http://any.sub.nip.io")]
+    public void ValidatePublicTargetUrl_SubdomainOfReservedHost_Blocked(string url)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+    }
+
+    [Fact]
+    public void ValidatePublicTargetUrl_SanitizedErrorMessages_NoIPLeak()
+    {
+        // Verify that error messages for literal private IPs don't leak the address value
+        var ex = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl("http://127.0.0.1/test"));
+        Assert.DoesNotContain("127.0.0.1", ex.Message);
+    }
+
+    [Fact]
+    public void ValidatePublicTargetUrl_DnsError_NoDetailLeak()
+    {
+        // Verify DNS error messages don't leak internal resolver details
+        var ex = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl("http://this-host-does-not-exist-12345.invalid/test"));
+        Assert.DoesNotContain("Details:", ex.Message);
     }
 
     #endregion
