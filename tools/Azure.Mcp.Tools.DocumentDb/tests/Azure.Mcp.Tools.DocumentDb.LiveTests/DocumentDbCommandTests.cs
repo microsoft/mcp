@@ -130,10 +130,11 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
             });
 
         var statsResult = await CallToolAsync(
-            "documentdb_index_index_stats",
+            "documentdb_others_get_stats",
             new()
             {
                 { "connection-string", ConnectionString },
+                { "resource-type", "index" },
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName }
             });
@@ -204,10 +205,11 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     public async Task Should_get_database_statistics()
     {
         var result = await CallToolAsync(
-            "documentdb_database_db_stats",
+            "documentdb_others_get_stats",
             new()
             {
                 { "connection-string", ConnectionString },
+                { "resource-type", "database" },
                 { "db-name", "test" }
             });
 
@@ -224,6 +226,11 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     public async Task Should_drop_database()
     {
         const string databaseName = "dropme";
+
+        await CreateCollectionWithDocumentsAsync(
+            databaseName,
+            CollectionName,
+            [new BsonDocument { { "name", "drop-item" }, { "value", 1 } }]);
 
         var result = await CallToolAsync(
             "documentdb_database_drop_database",
@@ -293,12 +300,12 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_get_collection_statistics()
     {
-        await ConnectAsync();
-
         var result = await CallToolAsync(
-            "documentdb_collection_collection_stats",
+            "documentdb_others_get_stats",
             new()
             {
+                { "connection-string", ConnectionString },
+                { "resource-type", "collection" },
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName }
             });
@@ -315,13 +322,13 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_sample_documents_from_collection()
     {
-        await ConnectAsync();
         const int sampleSize = 2;
 
         var result = await CallToolAsync(
             "documentdb_collection_sample_documents",
             new()
             {
+                { "connection-string", ConnectionString },
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
                 { "sample-size", sampleSize.ToString() }
@@ -343,8 +350,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_rename_collection()
     {
-        await ConnectAsync();
-
         var databaseName = CreateUniqueName("rename-db-");
         var collectionName = CreateUniqueName("old-");
         var newCollectionName = CreateUniqueName("new-");
@@ -360,6 +365,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 "documentdb_collection_rename_collection",
                 new()
                 {
+                    { "connection-string", ConnectionString },
                     { "db-name", databaseName },
                     { "collection-name", collectionName },
                     { "new-collection-name", newCollectionName }
@@ -391,8 +397,6 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     [Fact]
     public async Task Should_drop_collection()
     {
-        await ConnectAsync();
-
         var databaseName = CreateUniqueName("drop-db-");
         var collectionName = CreateUniqueName("drop-col-");
 
@@ -407,6 +411,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 "documentdb_collection_drop_collection",
                 new()
                 {
+                    { "connection-string", ConnectionString },
                     { "db-name", databaseName },
                     { "collection-name", collectionName }
                 });
@@ -427,6 +432,52 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
         finally
         {
             await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    private static string CreateUniqueName(string prefix)
+    {
+        return $"{prefix}{Guid.NewGuid():N}";
+    }
+
+    private async Task CreateCollectionWithDocumentsAsync(string databaseName, string collectionName, IEnumerable<BsonDocument> documents)
+    {
+        var client = new MongoClient(ConnectionString);
+        var database = client.GetDatabase(databaseName);
+
+        var existingCollections = await (await database.ListCollectionNamesAsync()).ToListAsync();
+        if (!existingCollections.Contains(collectionName, StringComparer.Ordinal))
+        {
+            await database.CreateCollectionAsync(collectionName);
+        }
+
+        var collection = database.GetCollection<BsonDocument>(collectionName);
+        await collection.DeleteManyAsync(Builders<BsonDocument>.Filter.Empty);
+
+        var documentsList = documents.ToList();
+        if (documentsList.Count > 0)
+        {
+            await collection.InsertManyAsync(documentsList);
+        }
+    }
+
+    private async Task<bool> CollectionExistsAsync(string databaseName, string collectionName)
+    {
+        var client = new MongoClient(ConnectionString);
+        var database = client.GetDatabase(databaseName);
+        var collections = await (await database.ListCollectionNamesAsync()).ToListAsync();
+
+        return collections.Contains(collectionName, StringComparer.Ordinal);
+    }
+
+    private async Task DeleteDatabaseIfExistsAsync(string databaseName)
+    {
+        var client = new MongoClient(ConnectionString);
+        var databases = await (await client.ListDatabaseNamesAsync()).ToListAsync();
+
+        if (databases.Contains(databaseName, StringComparer.Ordinal))
+        {
+            await client.DropDatabaseAsync(databaseName);
         }
     }
 }

@@ -366,12 +366,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | documentdb_index_create_index | Add a DocumentDB index for collection <collection-name> in database <db-name> with keys <keys> and options <options> |
 | documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in DocumentDB database <db-name> |
 | documentdb_index_drop_index | Remove the <index-name> index from DocumentDB collection <collection-name> in database <db-name> |
-| documentdb_index_index_stats | Show index statistics for collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_index_index_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
-| documentdb_index_current_ops | Show current DocumentDB operations |
-| documentdb_index_current_ops | Get current DocumentDB operations filtered by <ops> |
-| documentdb_database_db_stats | Get statistics for database <db-name> |
-| documentdb_database_db_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_others_get_stats | Show index statistics for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_others_get_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
+| documentdb_others_current_ops | Show current DocumentDB operations |
+| documentdb_others_current_ops | Get current DocumentDB operations filtered by <ops> |
+| documentdb_others_get_stats | Get statistics for database <db-name> |
+| documentdb_others_get_stats | Show me stats for DocumentDB database <db-name> |
 | documentdb_database_drop_database | Drop database <db-name> |
 | documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
 | documentdb_database_list_databases | List all databases in DocumentDB |
