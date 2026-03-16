@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed connection string injection vulnerability in PostgreSQL and MySQL tools by using parameterized connection string builders instead of string interpolation"

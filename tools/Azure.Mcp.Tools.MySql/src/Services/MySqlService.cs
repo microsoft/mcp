@@ -113,7 +113,20 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         var host = NormalizeServerName(server);
-        return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
+        return BuildConnectionString(host, database, user, entraIdAccessToken);
+    }
+
+    internal static string BuildConnectionString(string host, string database, string user, string password)
+    {
+        var builder = new MySqlConnectionStringBuilder
+        {
+            Server = host,
+            Database = database,
+            UserID = user,
+            Password = password,
+            SslMode = MySqlSslMode.Required
+        };
+        return builder.ConnectionString;
     }
 
     internal static void ValidateQuerySafety(string query)
