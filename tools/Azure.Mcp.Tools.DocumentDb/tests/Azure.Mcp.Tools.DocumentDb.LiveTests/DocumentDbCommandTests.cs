@@ -155,6 +155,23 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
     }
 
     [Fact]
+    public async Task Should_get_current_operations()
+    {
+        var result = await CallToolAsync(
+            "documentdb_others_current_ops",
+            new()
+            {
+                { "connection-string", ConnectionString }
+            });
+
+        var operations = result.AssertProperty("operations").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(operations));
+
+        using var operationsJson = JsonDocument.Parse(operations!);
+        Assert.True(operationsJson.RootElement.TryGetProperty("inprog", out _));
+    }
+
+    [Fact]
     public async Task Should_list_all_databases()
     {
         var result = await CallToolAsync(
@@ -513,8 +530,26 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
                 { "operation", "find" },
-                { "filter", "{\"category\":\"A\"}" },
-                { "options", "{\"limit\":1}" }
+                { "query-body", "{\"filter\":{\"category\":\"A\"},\"options\":{\"limit\":1}}" }
+            });
+
+        var explain = result.AssertProperty("explain").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(explain));
+        Assert.Contains("executionStats", explain, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_explain_count_filter()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_explain_query",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "operation", "count" },
+                { "query-body", "{\"filter\":{\"category\":\"A\"}}" }
             });
 
         var explain = result.AssertProperty("explain").GetString();
@@ -533,7 +568,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
                 { "db-name", TestDatabaseName },
                 { "collection-name", CollectionName },
                 { "operation", "aggregate" },
-                { "pipeline", "[{\"$match\":{\"category\":\"A\"}}]" }
+                { "query-body", "{\"pipeline\":[{\"$match\":{\"category\":\"A\"}}]}" }
             });
 
         var explain = result.AssertProperty("explain").GetString();

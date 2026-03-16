@@ -35,9 +35,33 @@ public class ExplainQueryCommandTests
         _documentDbService.ExplainFindQueryAsync(Arg.Is("mongodb://localhost"), Arg.Is("testdb"), Arg.Is("testcollection"), Arg.Any<BsonDocument?>(), Arg.Any<BsonDocument?>(), Arg.Any<CancellationToken>())
             .Returns(new DocumentDbResponse { Success = true, StatusCode = HttpStatusCode.OK, Data = new Dictionary<string, object?> { ["explain"] = "{}" } });
 
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "find", "--filter", "{\"status\":\"active\"}"]), TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "find", "--query-body", "{\"filter\":{\"status\":\"active\"},\"options\":{\"limit\":1}}"]), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _documentDbService.Received(1).ExplainFindQueryAsync(
+            "mongodb://localhost",
+            "testdb",
+            "testcollection",
+            Arg.Is<BsonDocument?>(doc => doc != null && doc["status"] == "active"),
+            Arg.Is<BsonDocument?>(doc => doc != null && doc["limit"] == 1),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExplainsCount_WhenOperationCount()
+    {
+        _documentDbService.ExplainCountQueryAsync(Arg.Is("mongodb://localhost"), Arg.Is("testdb"), Arg.Is("testcollection"), Arg.Any<BsonDocument?>(), Arg.Any<CancellationToken>())
+            .Returns(new DocumentDbResponse { Success = true, StatusCode = HttpStatusCode.OK, Data = new Dictionary<string, object?> { ["explain"] = "{}" } });
+
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "count", "--query-body", "{\"filter\":{\"status\":\"active\"}}"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _documentDbService.Received(1).ExplainCountQueryAsync(
+            "mongodb://localhost",
+            "testdb",
+            "testcollection",
+            Arg.Is<BsonDocument?>(doc => doc != null && doc["status"] == "active"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -46,8 +70,22 @@ public class ExplainQueryCommandTests
         _documentDbService.ExplainAggregateQueryAsync(Arg.Is("mongodb://localhost"), Arg.Is("testdb"), Arg.Is("testcollection"), Arg.Any<List<BsonDocument>>(), Arg.Any<CancellationToken>())
             .Returns(new DocumentDbResponse { Success = true, StatusCode = HttpStatusCode.OK, Data = new Dictionary<string, object?> { ["explain"] = "{}" } });
 
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "aggregate", "--pipeline", "[{\"$match\":{\"status\":\"active\"}}]"]), TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "aggregate", "--query-body", "{\"pipeline\":[{\"$match\":{\"status\":\"active\"}}]}" ]), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _documentDbService.Received(1).ExplainAggregateQueryAsync(
+            "mongodb://localhost",
+            "testdb",
+            "testcollection",
+            Arg.Is<List<BsonDocument>>(pipeline => pipeline.Count == 1 && pipeline[0]["$match"].AsBsonDocument["status"] == "active"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenAggregateQueryBodyMissingPipeline()
+    {
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(["--connection-string", "mongodb://localhost", "--db-name", "testdb", "--collection-name", "testcollection", "--operation", "aggregate", "--query-body", "{\"filter\":{\"status\":\"active\"}}"]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

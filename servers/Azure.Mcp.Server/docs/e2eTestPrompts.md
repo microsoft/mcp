@@ -380,9 +380,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | documentdb_document_delete_documents | Remove all documents with <filter> from collection <collection-name> in DocumentDB database <db-name> |
 | documentdb_document_aggregate | Run an aggregation pipeline on collection <collection-name> in database <db-name> from DocumentDB cluster |
 | documentdb_document_find_and_modify | Find and update documents with <filter> in collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_document_explain_query | Explain the find query against collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_document_explain_query | Show me the execution plan for a counting query on collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_document_explain_query | Explain the aggregation query on collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Explain the find query described by <query-body> against collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Show me the execution plan for the count query described by <query-body> on collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Explain the aggregation query described by <query-body> on collection <collection-name> in DocumentDB database <db-name> |
 
 ## Azure Event Grid
 

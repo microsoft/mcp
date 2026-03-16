@@ -10,9 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-
-
-
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
 public sealed class FindAndModifyCommand(ILogger<FindAndModifyCommand> logger)

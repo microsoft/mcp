@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 
 namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
@@ -22,7 +23,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
 
     public override string Name => "explain_query";
 
-    public override string Description => "Explain a find, count, or aggregate operation for a collection. Use an optional --filter for find and count, or --pipeline for aggregate.";
+    public override string Description => "Explain a find, count, or aggregate operation for a collection by passing an operation-specific JSON body with --query-body.";
 
     public override string Title => "Explain Query";
 
@@ -42,9 +43,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
         command.Options.Add(DocumentDbOptionDefinitions.Operation);
-        command.Options.Add(DocumentDbOptionDefinitions.Filter);
-        command.Options.Add(DocumentDbOptionDefinitions.Options);
-        command.Options.Add(DocumentDbOptionDefinitions.Pipeline.AsOptional());
+        command.Options.Add(DocumentDbOptionDefinitions.QueryBody);
     }
 
     protected override ExplainQueryOptions BindOptions(ParseResult parseResult)
@@ -53,9 +52,7 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
         options.Operation = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Operation.Name);
-        options.Filter = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Filter.Name);
-        options.Options = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Options.Name);
-        options.Pipeline = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Pipeline.Name);
+        options.QueryBody = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.QueryBody.Name);
         return options;
     }
 
@@ -73,14 +70,13 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
             options = BindOptions(parseResult);
 
             var service = context.GetService<IDocumentDbService>();
-            var filter = DocumentDbHelpers.ParseBsonDocument(options.Filter);
-            var queryOptions = DocumentDbHelpers.ParseBsonDocument(options.Options);
+            var queryBody = ParseQueryBody(options.QueryBody);
 
             var result = options.Operation switch
             {
-                "count" => await service.ExplainCountQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, cancellationToken),
-                "aggregate" => await service.ExplainAggregateQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, ParsePipeline(options.Pipeline), cancellationToken),
-                _ => await service.ExplainFindQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, filter, queryOptions, cancellationToken)
+                "count" => await service.ExplainCountQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, GetCountFilter(queryBody), cancellationToken),
+                "aggregate" => await service.ExplainAggregateQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, GetAggregatePipeline(queryBody), cancellationToken),
+                _ => await service.ExplainFindQueryAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, GetFindFilter(queryBody), GetFindOptions(queryBody), cancellationToken)
             };
 
             DocumentDbResponseHelper.ProcessResponse(context, result);
@@ -94,15 +90,80 @@ public sealed class ExplainQueryCommand(ILogger<ExplainQueryCommand> logger)
         }
     }
 
-    private static List<BsonDocument> ParsePipeline(string? pipeline)
+    private static BsonDocument? ParseQueryBody(string? queryBody)
     {
-        var parsedPipeline = DocumentDbHelpers.ParseBsonDocumentList(pipeline);
+        return DocumentDbHelpers.ParseBsonDocument(queryBody);
+    }
 
-        if (parsedPipeline == null || parsedPipeline.Count == 0)
+    private static BsonDocument? GetFindFilter(BsonDocument? queryBody)
+    {
+        EnsureAllowedFields(queryBody, "filter", "options");
+        return GetOptionalDocument(queryBody, "filter");
+    }
+
+    private static BsonDocument? GetFindOptions(BsonDocument? queryBody)
+    {
+        EnsureAllowedFields(queryBody, "filter", "options");
+        return GetOptionalDocument(queryBody, "options");
+    }
+
+    private static BsonDocument? GetCountFilter(BsonDocument? queryBody)
+    {
+        EnsureAllowedFields(queryBody, "filter");
+        return GetOptionalDocument(queryBody, "filter");
+    }
+
+    private static List<BsonDocument> GetAggregatePipeline(BsonDocument? queryBody)
+    {
+        EnsureAllowedFields(queryBody, "pipeline");
+
+        if (queryBody == null || !queryBody.TryGetValue("pipeline", out var pipelineValue))
         {
-            throw new ArgumentException("Invalid pipeline format or empty pipeline");
+            throw new ArgumentException("The --query-body JSON must contain a 'pipeline' array when --operation is 'aggregate'.");
         }
 
-        return parsedPipeline;
+        if (pipelineValue is not BsonArray pipelineArray)
+        {
+            throw new ArgumentException("The 'pipeline' field in --query-body must be a JSON array.");
+        }
+
+        try
+        {
+            return pipelineArray.Select(item => item.AsBsonDocument).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException("Each item in the 'pipeline' array must be a JSON document.", ex);
+        }
+    }
+
+    private static BsonDocument? GetOptionalDocument(BsonDocument? queryBody, string fieldName)
+    {
+        if (queryBody == null || !queryBody.TryGetValue(fieldName, out var value))
+        {
+            return null;
+        }
+
+        if (value is not BsonDocument document)
+        {
+            throw new ArgumentException($"The '{fieldName}' field in --query-body must be a JSON document.");
+        }
+
+        return document;
+    }
+
+    private static void EnsureAllowedFields(BsonDocument? queryBody, params string[] allowedFields)
+    {
+        if (queryBody == null)
+        {
+            return;
+        }
+
+        var disallowedFields = queryBody.Names.Where(name => !allowedFields.Contains(name, StringComparer.Ordinal)).ToList();
+
+        if (disallowedFields.Count > 0)
+        {
+            throw new ArgumentException($"The --query-body JSON contains unsupported fields for this operation: {string.Join(", ", disallowedFields)}.");
+        }
     }
 }

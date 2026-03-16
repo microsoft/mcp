@@ -63,8 +63,7 @@ resource allowPublicIpRange 'Microsoft.DocumentDB/mongoClusters/firewallRules@20
   }
 }
 
-// Output the connection string (will be sanitized in tests)
+// Output the usable connection string for tests.
 // The connectionString property returns a template like: mongodb+srv://<user>:<password>@host...
-// We need to replace <user> and <password> with actual credentials
-output DOCUMENTDB_ENDPOINT string = documentDbAccount.properties.connectionString
+// Replace the placeholders with the generated credentials before publishing the output.
 output DOCUMENTDB_CONNECTION_STRING string = replace(replace(documentDbAccount.properties.connectionString, '<user>', administratorLogin), '<password>', administratorLoginPassword)

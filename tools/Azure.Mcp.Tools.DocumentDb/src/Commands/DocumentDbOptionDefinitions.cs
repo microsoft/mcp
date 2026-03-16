@@ -55,6 +55,11 @@ internal static class DocumentDbOptionDefinitions
         Description = "Command-specific options in JSON format."
     };
 
+    public static readonly Option<string> QueryBody = new("--query-body")
+    {
+        Description = "Operation-specific JSON body for explain_query. For find use {\"filter\": {...}, \"options\": {...}}; for count use {\"filter\": {...}}; for aggregate use {\"pipeline\": [...]}."
+    };
+
     public static readonly Option<string> DocumentsPayload = new("--documents")
     {
         Description = "Single JSON document or JSON array of documents to insert.",

@@ -11,9 +11,5 @@ public sealed class ExplainQueryOptions : BaseDocumentDbOptions
 
     public string? Operation { get; set; }
 
-    public string? Filter { get; set; }
-
-    public string? Options { get; set; }
-
-    public string? Pipeline { get; set; }
+    public string? QueryBody { get; set; }
 }

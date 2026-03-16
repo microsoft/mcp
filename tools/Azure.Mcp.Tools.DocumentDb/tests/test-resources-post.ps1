@@ -88,7 +88,8 @@ print('Test database and collection initialized successfully')
         }
     }
 } catch {
-    Write-Warning "Failed to initialize database: $_"
+    $testSettingsPath = Join-Path $PSScriptRoot ".testsettings.json"
+    Write-Warning "Failed to initialize database. Review the warning details above for the failure cause."
     Write-Warning "Tests may fail if database and collections don't exist."
-    Write-Warning "You can manually run: mongosh `"$($DeploymentOutputs['DOCUMENTDB_CONNECTION_STRING'])`""
+    Write-Warning "Read the DocumentDB connection string from '$testSettingsPath' and run mongosh manually if initialization is still required."
 }

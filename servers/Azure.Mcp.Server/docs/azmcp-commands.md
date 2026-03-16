@@ -1831,15 +1831,13 @@ azmcp documentdb document find and modify --connection-string <connection-string
                                           --update <json-update> \
                                           [--upsert]
 
-# Explain a find, count, or aggregate operation for a collection. Use an optional --filter for find and count, or --pipeline for aggregate
+# Explain a find, count, or aggregate operation for a collection by passing an operation-specific JSON body with --query-body
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp documentdb document explain query --connection-string <connection-string> \
                                         --db-name <db-name> \
                                         --collection-name <collection-name> \
                                         --operation <find|count|aggregate> \
-                                        [--filter <json-filter>] \
-                                        [--options <json-options>] \
-                                        [--pipeline <json-pipeline>]
+                                        [--query-body <json-body>]
 ```
 
 ### Azure Event Grid Operations
