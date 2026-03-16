@@ -73,7 +73,7 @@ public class PostgresService(
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
@@ -100,7 +100,7 @@ public class PostgresService(
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
@@ -149,7 +149,7 @@ public class PostgresService(
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
@@ -176,7 +176,7 @@ public class PostgresService(
     {
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
+        var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
@@ -313,6 +313,18 @@ public class PostgresService(
         {
             throw new Exception($"Failed to update parameter '{param}' to value '{value}'.");
         }
+    }
+
+    private static string BuildConnectionString(string host, string database, string user, string password)
+    {
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host,
+            Database = database,
+            Username = user,
+            Password = password
+        };
+        return builder.ConnectionString;
     }
 
     private async Task<string> GetPassword(string authType, string? password, CancellationToken cancellationToken)
