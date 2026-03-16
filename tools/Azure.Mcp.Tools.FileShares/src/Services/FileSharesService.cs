@@ -223,6 +223,40 @@ public sealed class FileSharesService(
 
             if (provisionedStorageInGiB.HasValue)
             {
+                patch.Properties = new Azure.ResourceManager.FileShares.Models.FileSharePatchProperties();
+
+                if (provisionedStorageInGiB.HasValue)
+                {
+                    patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
+                }
+
+                if (provisionedIOPerSec.HasValue)
+                {
+                    patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
+                }
+
+                if (provisionedThroughputMiBPerSec.HasValue)
+                {
+                    patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
+                }
+
+                if (!string.IsNullOrEmpty(publicNetworkAccess))
+                {
+                    patch.Properties.PublicNetworkAccess = new Azure.ResourceManager.FileShares.Models.FileSharePublicNetworkAccess(publicNetworkAccess);
+                }
+
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                {
+                    patch.Properties.NfsProtocolRootSquash = new Azure.ResourceManager.FileShares.Models.ShareRootSquash(nfsRootSquash);
+                }
+
+                if (allowedSubnets != null && allowedSubnets.Length > 0)
+                {
+                    foreach (var subnet in allowedSubnets)
+                    {
+                        patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
+                    }
+                }
                 patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
             }
 
@@ -483,7 +517,7 @@ public sealed class FileSharesService(
         var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
         // Get the existing snapshot
-        var existingSnapshot = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
+        var existingSnapshot = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
 
         // Create a patch object with only the properties to update
         var patch = new ResourceManager.FileShares.Models.FileShareSnapshotPatch();
@@ -534,8 +568,8 @@ public sealed class FileSharesService(
             var snapshotCollection = fileShareResource.Value.GetFileShareSnapshots();
 
             // Get the snapshot and delete it
-            var snapshotResource = await snapshotCollection.GetFileShareSnapshotAsync(snapshotId, cancellationToken);
-            await snapshotResource.Value.DeleteFileShareSnapshotAsync(WaitUntil.Completed, cancellationToken);
+            var snapshotResource = await snapshotCollection.GetAsync(snapshotId, cancellationToken);
+            await snapshotResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted snapshot. Snapshot: {SnapshotId}, FileShare: {FileShare}, ResourceGroup: {ResourceGroup}",
@@ -606,22 +640,34 @@ public sealed class FileSharesService(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-        var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
-
-        var output = response.Value.Properties;
-
-        _logger.LogInformation(
-            "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
-            output.LiveSharesFileShareCount, subscription, location);
-
-        return new()
+        try
         {
-            LiveShares = new()
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var azureLocation = new Azure.Core.AzureLocation(location);
+
+            var response = await subscriptionResource.GetUsageDataAsync(azureLocation, cancellationToken);
+
+            var result = response.Value;
+
+            _logger.LogInformation(
+                "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
+                result.LiveSharesFileShareCount, subscription, location);
+
+            return new FileShareUsageDataResult
             {
-                FileShareCount = output.LiveSharesFileShareCount ?? 0
-            }
-        };
+                LiveShares = new LiveSharesUsageData
+                {
+                    FileShareCount = result.LiveSharesFileShareCount ?? 0
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting usage data. Subscription: {Subscription}, Location: {Location}",
+                subscription, location);
+            throw;
+        }
     }
 
     public async Task<FileShareProvisioningRecommendationResult> GetProvisioningRecommendationAsync(
@@ -652,6 +698,149 @@ public sealed class FileSharesService(
             ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
             AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
         };
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(connectionName), connectionName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            var connection = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAsync(connectionName, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully retrieved private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+
+            return PrivateEndpointConnectionInfo.FromResource(connection.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+            throw;
+        }
+    }
+
+    public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointConnectionsAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            var connections = new List<PrivateEndpointConnectionInfo>();
+            await foreach (var connection in fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAllAsync(cancellationToken))
+            {
+                connections.Add(PrivateEndpointConnectionInfo.FromResource(connection));
+            }
+
+            _logger.LogInformation(
+                "Successfully listed private endpoint connections. Count: {Count}, FileShare: {FileShareName}",
+                connections.Count, fileShareName);
+
+            return connections;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error listing private endpoint connections. FileShare: {FileShareName}",
+                fileShareName);
+            throw;
+        }
+    }
+
+    public async Task<PrivateEndpointConnectionInfo> UpdatePrivateEndpointConnectionAsync(
+        string subscription,
+        string resourceGroup,
+        string fileShareName,
+        string connectionName,
+        string status,
+        string? description = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(fileShareName), fileShareName),
+            (nameof(connectionName), connectionName),
+            (nameof(status), status));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var subscriptionResource = armClient.GetSubscriptionResource(
+                SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
+
+            // Get existing connection (validate existence)
+            _ = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .GetAsync(connectionName, cancellationToken);
+
+            // Create updated connection data
+            var connectionData = new FileSharePrivateEndpointConnectionData
+            {
+                Properties = new Azure.ResourceManager.FileShares.Models.FileSharePrivateEndpointConnectionProperties(
+                    new Azure.ResourceManager.FileShares.Models.FileSharePrivateLinkServiceConnectionState
+                    {
+                        Status = new Azure.ResourceManager.FileShares.Models.FileSharesPrivateEndpointServiceConnectionStatus(status),
+                        Description = description
+                    })
+            };
+
+            var operation = await fileShareResource.Value.GetFileSharePrivateEndpointConnections()
+                .CreateOrUpdateAsync(WaitUntil.Completed, connectionName, connectionData, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully updated private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}, Status: {Status}",
+                connectionName, fileShareName, status);
+
+            return PrivateEndpointConnectionInfo.FromResource(operation.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error updating private endpoint connection. Connection: {ConnectionName}, FileShare: {FileShareName}",
+                connectionName, fileShareName);
+            throw;
+        }
     }
 }
 

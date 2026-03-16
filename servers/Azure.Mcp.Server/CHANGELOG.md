@@ -6,11 +6,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Enhanced Azure File Shares private endpoint connection management with improved reliability and updated SDK support. [[#1823](https://github.com/microsoft/mcp/pull/1823)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 ### Other Changes
+
+#### Dependency Updates
+
+- Updated `Azure.ResourceManager.FileShares` from `1.0.0-beta.1` to `1.0.0-beta.2`.
 
 ## 2.0.0-beta.27 (2026-03-12)
 
