@@ -55,16 +55,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.VmssName.AsRequired());
         command.Options.Add(ComputeOptionDefinitions.Force);
         command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
-
-        // Resource group is required for delete
-        command.Validators.Add(commandResult =>
-        {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
-            }
-        });
     }
 
     protected override VmssDeleteOptions BindOptions(ParseResult parseResult)

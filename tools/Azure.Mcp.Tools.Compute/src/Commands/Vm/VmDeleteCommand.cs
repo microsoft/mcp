@@ -56,16 +56,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
         command.Options.Add(ComputeOptionDefinitions.Force);
         command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
-
-        // Resource group is required for delete
-        command.Validators.Add(commandResult =>
-        {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
-            {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
-            }
-        });
     }
 
     protected override VmDeleteOptions BindOptions(ParseResult parseResult)
