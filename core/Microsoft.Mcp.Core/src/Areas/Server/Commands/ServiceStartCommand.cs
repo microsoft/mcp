@@ -566,7 +566,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
         services.AddHttpServiceCacheService();
 
-
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
 
@@ -995,7 +994,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             // Treat invalid/unknown values as telemetry disabled to avoid startup failures.
             isTelemetryEnabled = false;
         }
-        
+
         string? connectionString = configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
         if (!isTelemetryEnabled || string.IsNullOrWhiteSpace(connectionString))
         {
