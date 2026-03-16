@@ -831,16 +831,22 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 
 ## CLI Mode
 
-In addition to the MCP server, Azure MCP Server can be used directly from the command line. Every tool available through the MCP server is also accessible as a CLI command via the `azmcp` executable — no server required.
+In addition to the MCP server, Azure MCP Server can be used directly from the command line. Every tool available through the MCP server is also accessible as a CLI command via `azmcp` — no server required. Both modes use the same binary, the same command tree, and the same authentication.
 
-### When to use CLI mode
+### When to use CLI vs MCP
 
-| Scenario | Recommended mode |
-|----------|-----------------|
-| IDE agent (VS Code, IntelliJ, etc.) | **MCP server** |
-| Shell-based agents with terminal access | CLI mode |
-| CI/CD pipelines and automation scripts | CLI mode |
-| Quick one-off queries | CLI mode |
+| Agent Pattern | Use | Why |
+|--------------|-----|-----|
+| Coding agent in terminal (Copilot CLI, Cursor, Aider, Claude Code) | **CLI** | Agent has shell access. CLI is 4–32× more token-efficient. LLMs know CLI patterns from training data. No server process to manage. |
+| IDE-embedded agent (VS Code Copilot, IntelliJ AI) | **Either** | MCP is the default path since the IDE hosts MCP servers natively. But these agents also have full shell access via integrated terminal, so CLI works too. |
+| Agent framework with MCP SDK (Semantic Kernel, AutoGen, LangGraph, Foundry agents) | **MCP** | Framework provides an MCP client SDK with typed tool schemas. `tools/list` enables runtime discovery. |
+| Agent framework without MCP SDK (shell-based agents, custom orchestrators) | **CLI** | No MCP client available, but the agent can spawn processes. Use `azmcp --help` for command discovery. JSON output is machine-parseable. |
+| CI/CD pipeline agent (GitHub Actions, Azure Pipelines, Jenkins) | **CLI** | Deterministic execution. No server lifecycle to manage. Composable with other CLI tools via pipes and shell scripting. |
+| Multi-tenant SaaS agent (acting on behalf of customers) | **MCP** | Per-user OAuth scoping. Tenant isolation. Audit trail per tool call. CLI uses ambient credentials with no user boundary. |
+| Single-user automation script | **CLI** | Simplest path. No server to start or stop. Direct invocation. JSON output pipes to `jq`. |
+| Custom GPT / Copilot extension (Copilot Studio, ChatGPT plugins) | **MCP** | No shell access available. These platforms connect to remote MCP endpoints over HTTP. |
+| Batch processing / data pipeline | **CLI** | Parallel execution via `xargs` / `parallel`. No connection pooling overhead. Each invocation is independent and stateless. |
+| Agent with shell access, no IDE (SSH, container, serverless, Codespaces terminal) | **CLI** | CLI works everywhere a shell exists. No host/client runtime required. Just install the binary and go. |
 
 ### CLI examples
 
