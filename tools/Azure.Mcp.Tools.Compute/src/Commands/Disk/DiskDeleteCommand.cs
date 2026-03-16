@@ -26,7 +26,8 @@ public sealed class DiskDeleteCommand(
         "Deletes an Azure managed disk from the specified resource group. "
         + "This is an idempotent operation that returns Deleted = true if the disk was successfully removed, "
         + "or Deleted = false if the disk was not found. "
-        + "The disk must not be attached to a virtual machine; detach it first before deleting.";
+        + "The disk must not be attached to a virtual machine; detach it first before deleting. "
+        + "Use --force to confirm deletion.";
 
     private readonly ILogger<DiskDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -52,12 +53,14 @@ public sealed class DiskDeleteCommand(
     {
         base.RegisterOptions(command);
         command.Options.Add(ComputeOptionDefinitions.Disk.AsRequired());
+        command.Options.Add(ComputeOptionDefinitions.Force);
     }
 
     protected override DiskDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DiskName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
+        options.Force = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Force);
         return options;
     }
 
@@ -69,6 +72,20 @@ public sealed class DiskDeleteCommand(
         }
 
         var options = BindOptions(parseResult);
+
+        // If --force is not specified, return a warning message
+        if (!options.Force)
+        {
+            context.Response.Results = ResponseResult.Create(
+                new DiskDeleteCommandResult(
+                    $"WARNING: This will permanently delete disk '{options.DiskName}' in resource group '{options.ResourceGroup}'. " +
+                    "This operation cannot be undone. Use --force to confirm deletion.",
+                    false,
+                    options.DiskName!),
+                ComputeJsonContext.Default.DiskDeleteCommandResult);
+            return context.Response;
+        }
+
         try
         {
             _logger.LogInformation(
@@ -85,7 +102,12 @@ public sealed class DiskDeleteCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new DiskDeleteCommandResult(deleted, options.DiskName!),
+                new DiskDeleteCommandResult(
+                    deleted
+                        ? $"Disk '{options.DiskName}' was successfully deleted from resource group '{options.ResourceGroup}'."
+                        : $"Disk '{options.DiskName}' was not found in resource group '{options.ResourceGroup}'.",
+                    deleted,
+                    options.DiskName!),
                 ComputeJsonContext.Default.DiskDeleteCommandResult);
         }
         catch (Exception ex)
@@ -123,5 +145,5 @@ public sealed class DiskDeleteCommand(
     /// <summary>
     /// Result record for the disk delete command.
     /// </summary>
-    public record DiskDeleteCommandResult(bool Deleted, string DiskName);
+    public record DiskDeleteCommandResult(string Message, bool Deleted, string DiskName);
 }

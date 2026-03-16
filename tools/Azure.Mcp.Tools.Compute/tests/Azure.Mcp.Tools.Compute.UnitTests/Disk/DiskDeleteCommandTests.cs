@@ -73,7 +73,7 @@ public class DiskDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName, "--force"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -89,6 +89,7 @@ public class DiskDeleteCommandTests
         Assert.NotNull(result);
         Assert.True(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
+        Assert.Contains("successfully deleted", result.Message);
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class DiskDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName, "--force"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -124,6 +125,7 @@ public class DiskDeleteCommandTests
         Assert.NotNull(result);
         Assert.False(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
+        Assert.Contains("was not found", result.Message);
     }
 
     [Fact]
@@ -143,7 +145,7 @@ public class DiskDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName, "--force"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -158,6 +160,7 @@ public class DiskDeleteCommandTests
         Assert.NotNull(result);
         Assert.True(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
+        Assert.NotNull(result.Message);
     }
 
     [Fact]
@@ -205,7 +208,7 @@ public class DiskDeleteCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Azure.RequestFailedException("Conflict"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName, "--force"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -223,7 +226,7 @@ public class DiskDeleteCommandTests
         var resourceGroup = "testrg";
         var diskName = "testdisk";
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName, "--force"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -233,6 +236,43 @@ public class DiskDeleteCommandTests
             diskName,
             resourceGroup,
             subscription,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutForce_ReturnsWarning()
+    {
+        // Arrange
+        var subscription = "test-sub";
+        var resourceGroup = "testrg";
+        var diskName = "testdisk";
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskDeleteCommandResult);
+
+        Assert.NotNull(result);
+        Assert.False(result.Deleted);
+        Assert.Contains("WARNING", result.Message);
+        Assert.Contains("--force", result.Message);
+        Assert.Equal(diskName, result.DiskName);
+
+        // Verify the service was NOT called
+        await _computeService.DidNotReceive().DeleteDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());

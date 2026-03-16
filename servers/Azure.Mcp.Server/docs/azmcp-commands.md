@@ -1365,15 +1365,18 @@ azmcp compute disk create --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute disk delete --subscription <subscription> \
                           --resource-group <resource-group> \
-                          --disk-name <disk-name>
+                          --disk-name <disk-name> \
+                          [--force]
 ```
 
 **Command Behavior:**
 - Deletes an Azure managed disk from the specified resource group.
+- Requires `--force` to confirm and proceed with deletion. Without `--force`, the command returns a warning message and does not delete the disk.
 - This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
 - The disk must not be attached to a virtual machine. Detach it first before deleting.
 
 **Returns:**
+- `Message`: A human-readable message describing the result or warning.
 - `Deleted`: Boolean indicating whether the disk was deleted.
 - `DiskName`: Name of the disk that was targeted for deletion.
 
@@ -1383,6 +1386,7 @@ azmcp compute disk delete --subscription <subscription> \
 | `--subscription` | Yes | Azure subscription ID or name |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--disk-name` | Yes | Name of the managed disk to delete |
+| `--force` | No | Required to confirm and proceed with deletion. Without this flag, a warning is returned instead. |
 
 ```bash
 # Update a managed disk's size

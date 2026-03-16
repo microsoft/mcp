@@ -335,6 +335,15 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+
+    public const string ForceName = "force";
+
+    public static readonly Option<bool> Force = new($"--{ForceName}")
+    {
+        Description = "Required to confirm and proceed with deletion",
+        Required = false
+    };
+
     // VM update options
     public const string LicenseTypeName = "license-type";
     public const string BootDiagnosticsName = "boot-diagnostics";
