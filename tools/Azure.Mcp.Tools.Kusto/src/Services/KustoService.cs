@@ -43,7 +43,7 @@ public sealed class KustoService(
         }
 
         // Use KQL bracket notation with escaped single quotes
-        return $"['{identifier.Replace("'", "''")}']"; 
+        return $"['{identifier.Replace("'", "''")}']";
     }
 
     // Provider cache key generator
