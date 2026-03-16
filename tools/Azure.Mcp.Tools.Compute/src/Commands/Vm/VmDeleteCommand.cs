@@ -27,7 +27,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
     public override string Description =>
         """
-        Delete, remove, or destroy an Azure Virtual Machine (VM) and its associated resources.
+        Delete, remove, or destroy an Azure Virtual Machine (VM).
         Use this to permanently remove a VM that is no longer needed.
         Equivalent to 'az vm delete'. This operation is irreversible and the VM data will be lost.
         Use --force to bypass the confirmation prompt. Use --force-deletion to force delete the VM
