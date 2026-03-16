@@ -204,7 +204,9 @@ public static class EndpointValidator
                 "local",
                 "localtest.me",          // Common localhost alias
                 "lvh.me",                // localhost variations
-                "169.254.169.254.nip.io"  // IMDS bypass attempt
+                "nip.io",                // Wildcard DNS - resolves to embedded IP
+                "sslip.io",              // Wildcard DNS - resolves to embedded IP
+                "xip.io",                // Wildcard DNS - resolves to embedded IP
             };
 
             if (reservedHosts.Any(reserved =>
@@ -248,6 +250,14 @@ public static class EndpointValidator
     /// </summary>
     public static bool IsPrivateOrReservedIP(IPAddress ipAddress)
     {
+        // Normalize IPv4-mapped IPv6 addresses (::ffff:0:0/96) to their IPv4 equivalent
+        // so they are validated against IPv4 private/reserved ranges. Without this,
+        // an attacker can bypass SSRF protection using DNS AAAA records like ::ffff:169.254.169.254.
+        if (ipAddress.IsIPv4MappedToIPv6)
+        {
+            ipAddress = ipAddress.MapToIPv4();
+        }
+
         var bytes = ipAddress.GetAddressBytes();
 
         if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -319,6 +329,12 @@ public static class EndpointValidator
                 return true;
             }
 
+            // Unspecified: :: (equivalent to 0.0.0.0)
+            if (ipAddress.Equals(IPAddress.IPv6Any))
+            {
+                return true;
+            }
+
             // Private: fc00::/7
             if ((bytes[0] & 0xfe) == 0xfc)
             {
@@ -329,6 +345,56 @@ public static class EndpointValidator
             if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80)
             {
                 return true;
+            }
+
+            // Multicast: ff00::/8
+            if (bytes[0] == 0xff)
+            {
+                return true;
+            }
+
+            // Discard prefix: 0100::/64 (RFC 6666)
+            if (bytes[0] == 0x01 && bytes[1] == 0x00 &&
+                bytes[2] == 0x00 && bytes[3] == 0x00 &&
+                bytes[4] == 0x00 && bytes[5] == 0x00 &&
+                bytes[6] == 0x00 && bytes[7] == 0x00)
+            {
+                return true;
+            }
+
+            // Documentation: 2001:db8::/32 (RFC 3849) - non-routable
+            if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
+                bytes[2] == 0x0d && bytes[3] == 0xb8)
+            {
+                return true;
+            }
+
+            // 6to4: 2002::/16 - embeds IPv4 in bytes[2..5]; validate the embedded address
+            if (bytes[0] == 0x20 && bytes[1] == 0x02)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[2], bytes[3], bytes[4], bytes[5]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // Teredo: 2001:0000::/32 - client IPv4 in bytes[12..15] XOR'd with 0xFF
+            if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
+                bytes[2] == 0x00 && bytes[3] == 0x00)
+            {
+                var embeddedIpv4 = new IPAddress([
+                    (byte)(bytes[12] ^ 0xff),
+                    (byte)(bytes[13] ^ 0xff),
+                    (byte)(bytes[14] ^ 0xff),
+                    (byte)(bytes[15] ^ 0xff)]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // IPv4-compatible (deprecated): ::x.x.x.x - validate embedded IPv4
+            if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0 &&
+                bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0 &&
+                bytes[8] == 0 && bytes[9] == 0 && bytes[10] == 0 && bytes[11] == 0)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
             }
         }
 

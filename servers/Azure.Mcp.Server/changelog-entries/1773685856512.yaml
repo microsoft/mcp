@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Hardened EndpointValidator SSRF protection to handle IPv4-mapped IPv6 addresses (::ffff:0:0/96 range) that could bypass private IP validation"

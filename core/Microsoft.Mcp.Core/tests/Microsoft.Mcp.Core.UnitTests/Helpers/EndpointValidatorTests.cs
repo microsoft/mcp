@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using System.Net.Sockets;
 using System.Security;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
@@ -333,10 +335,12 @@ public class EndpointValidatorTests
         // The error should mention either:
         // 1. "resolves to a private or reserved IP" (if DNS succeeded)
         // 2. "Unable to resolve hostname" (if DNS failed - still secure)
+        // 3. "reserved" (if hostname matches a known wildcard DNS service)
         Assert.True(
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
-            exception.Message.Contains("Unable to resolve hostname", StringComparison.OrdinalIgnoreCase),
-            $"Expected error about private IP or DNS resolution, but got: {exception.Message}");
+            exception.Message.Contains("Unable to resolve hostname", StringComparison.OrdinalIgnoreCase) ||
+            exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase),
+            $"Expected error about private IP, DNS resolution, or reserved hostname, but got: {exception.Message}");
     }
 
     [Fact]
@@ -356,7 +360,9 @@ public class EndpointValidatorTests
     #region DNS Bypass Prevention Tests - SDL Security
 
     [Theory]
-    [InlineData("http://169.254.169.254.nip.io")]  // IMDS bypass attempt
+    [InlineData("http://169.254.169.254.nip.io")]  // IMDS bypass via nip.io
+    [InlineData("http://evil.sslip.io")]            // sslip.io wildcard DNS
+    [InlineData("http://evil.xip.io")]              // xip.io wildcard DNS
     public void ValidatePublicTargetUrl_KnownSSRFBypassDomains_ThrowsSecurityException(string url)
     {
         // Act & Assert
@@ -423,6 +429,162 @@ public class EndpointValidatorTests
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
             exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase),
             $"Expected error message about private or reserved addresses, but got: {exception.Message}");
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv4-mapped IPv6 bypass tests
+
+    [Theory]
+    [InlineData("::ffff:169.254.169.254")]  // IMDS
+    [InlineData("::ffff:168.63.129.16")]    // Azure WireServer
+    [InlineData("::ffff:127.0.0.1")]        // Loopback
+    [InlineData("::ffff:10.0.0.1")]         // Private 10.x
+    [InlineData("::ffff:172.16.0.1")]       // Private 172.16.x
+    [InlineData("::ffff:192.168.1.1")]      // Private 192.168.x
+    [InlineData("::ffff:100.64.0.1")]       // CGNAT
+    [InlineData("::ffff:0.0.0.0")]          // Reserved
+    [InlineData("::ffff:255.255.255.255")]  // Broadcast
+    public void IsPrivateOrReservedIP_IPv4MappedIPv6_ReturnsTrue(string address)
+    {
+        // Arrange
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(ipAddress.IsIPv4MappedToIPv6);
+
+        // Act & Assert
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv6 reserved ranges
+
+    [Theory]
+    [InlineData("::")]         // Unspecified (equivalent to 0.0.0.0)
+    [InlineData("ff02::1")]    // Multicast - all nodes
+    [InlineData("ff05::1")]    // Multicast - site-local
+    [InlineData("ff0e::1")]    // Multicast - global
+    [InlineData("ff01::1")]    // Multicast - interface-local
+    public void IsPrivateOrReservedIP_IPv6ReservedRanges_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("2001:db8::1")]        // Documentation prefix (RFC 3849)
+    [InlineData("2001:db8:1234::1")]   // Documentation prefix variant
+    public void IsPrivateOrReservedIP_DocumentationPrefix_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("100::1")]    // Discard prefix (RFC 6666)
+    [InlineData("100::")]     // Discard prefix base
+    public void IsPrivateOrReservedIP_DiscardPrefix_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - 6to4 embedded IPv4 bypass
+
+    [Theory]
+    [InlineData("2002:a9fe:a9fe::1")]   // 6to4 embedding 169.254.169.254 (IMDS)
+    [InlineData("2002:a83f:8110::1")]   // 6to4 embedding 168.63.129.16 (WireServer)
+    [InlineData("2002:7f00:0001::1")]   // 6to4 embedding 127.0.0.1 (Loopback)
+    [InlineData("2002:0a00:0001::1")]   // 6to4 embedding 10.0.0.1 (Private)
+    [InlineData("2002:c0a8:0101::1")]   // 6to4 embedding 192.168.1.1 (Private)
+    [InlineData("2002:ac10:0001::1")]   // 6to4 embedding 172.16.0.1 (Private)
+    public void IsPrivateOrReservedIP_6to4EmbeddedPrivateIPv4_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_6to4EmbeddedPublicIPv4_ReturnsFalse()
+    {
+        // 2002:0808:0808::1 embeds 8.8.8.8 (Google DNS - public)
+        var ipAddress = IPAddress.Parse("2002:0808:0808::1");
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - Teredo embedded IPv4 bypass
+
+    [Theory]
+    [InlineData("2001:0000:4136:e378:8000:63bf:3fff:fdd2")]  // Teredo client IPv4 = 192.0.2.45 → ~bytes = public, but let's test private
+    public void IsPrivateOrReservedIP_TeredoPublicIPv4_ReturnsFalse(string address)
+    {
+        // 3fff:fdd2 XOR ffff = c000:022d = 192.0.2.45 (documentation range 192.0.2.0/24, but not checked as private)
+        // Actually 192.0.2.x is TEST-NET-1, not in our private list, so returns false
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_TeredoEmbeddedLoopback_ReturnsTrue()
+    {
+        // Teredo with client IPv4 127.0.0.1: bytes[12..15] = 127^0xFF, 0^0xFF, 0^0xFF, 1^0xFF = 0x80, 0xFF, 0xFF, 0xFE
+        var ipAddress = IPAddress.Parse("2001:0000:4136:e378:8000:63bf:80ff:fffe");
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_TeredoEmbeddedIMDS_ReturnsTrue()
+    {
+        // Teredo with client IPv4 169.254.169.254: XOR each byte with 0xFF
+        // 169^255=86 (0x56), 254^255=1 (0x01), 169^255=86 (0x56), 254^255=1 (0x01)
+        var ipAddress = IPAddress.Parse("2001:0000:4136:e378:8000:63bf:5601:5601");
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_TeredoEmbeddedPrivate10x_ReturnsTrue()
+    {
+        // Teredo with client IPv4 10.0.0.1: XOR each byte with 0xFF
+        // 10^255=245 (0xF5), 0^255=255 (0xFF), 0^255=255 (0xFF), 1^255=254 (0xFE)
+        var ipAddress = IPAddress.Parse("2001:0000:4136:e378:8000:63bf:f5ff:fffe");
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv4-compatible IPv6 (deprecated)
+
+    [Theory]
+    [InlineData("::127.0.0.1")]       // IPv4-compatible loopback
+    [InlineData("::10.0.0.1")]        // IPv4-compatible private
+    [InlineData("::192.168.1.1")]     // IPv4-compatible private
+    [InlineData("::169.254.169.254")] // IPv4-compatible IMDS
+    public void IsPrivateOrReservedIP_IPv4CompatibleIPv6_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.Equal(AddressFamily.InterNetworkV6, ipAddress.AddressFamily);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region ValidatePublicTargetUrl - Wildcard DNS services
+
+    [Theory]
+    [InlineData("http://anything.nip.io")]
+    [InlineData("http://anything.sslip.io")]
+    [InlineData("http://anything.xip.io")]
+    [InlineData("http://10.0.0.1.nip.io")]
+    [InlineData("http://192-168-1-1.sslip.io")]
+    public void ValidatePublicTargetUrl_WildcardDnsServices_ThrowsSecurityException(string url)
+    {
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
