@@ -59,7 +59,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         // and ignore what we got from the .testsettings.json file
         if (Settings.TestMode == TestMode.Playback)
         {
+            var enableProfiling = Settings.EnableProfiling;
             Settings = PlaybackSettings;
+            Settings.EnableProfiling = enableProfiling;
         }
 
         TestMode = Settings.TestMode;

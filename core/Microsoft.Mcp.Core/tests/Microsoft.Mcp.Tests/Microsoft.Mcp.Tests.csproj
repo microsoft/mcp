@@ -11,5 +11,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="xunit.v3.assert" />
     <PackageReference Include="xunit.v3.extensibility.core" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" />
   </ItemGroup>
 </Project>
