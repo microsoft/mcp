@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Handle GitHub API rate limiting, add runtime configuration, and live tests for Azure Functions toolset"
