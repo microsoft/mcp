@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
-public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger)
+public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestResourceListOptions>
 {
     private const string _commandTitle = "Test Resource List";
     private readonly ILogger<TestResourceListCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "eb44ef6c-93dc-4fa1-949c-a5e8939d5052";
     public override string Name => "list";
     public override string Description =>
@@ -55,10 +56,8 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)
-            var results = await service.GetLoadTestResourcesAsync(
+            var results = await _loadTestingService.GetLoadTestResourcesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.TestResourceName,
