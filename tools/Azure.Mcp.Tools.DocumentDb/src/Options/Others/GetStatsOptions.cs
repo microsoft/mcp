@@ -3,8 +3,10 @@
 
 namespace Azure.Mcp.Tools.DocumentDb.Options;
 
-public class DropCollectionOptions : BaseDocumentDbOptions
+public sealed class GetStatsOptions : BaseDocumentDbOptions
 {
+    public string? ResourceType { get; set; }
+
     public string? DbName { get; set; }
 
     public string? CollectionName { get; set; }

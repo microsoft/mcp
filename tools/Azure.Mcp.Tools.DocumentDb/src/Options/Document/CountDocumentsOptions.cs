@@ -3,11 +3,11 @@
 
 namespace Azure.Mcp.Tools.DocumentDb.Options;
 
-public sealed class GetStatsOptions : BaseDocumentDbOptions
+public class CountDocumentsOptions : BaseDocumentDbOptions
 {
-    public string? ResourceType { get; set; }
-
     public string? DbName { get; set; }
 
     public string? CollectionName { get; set; }
+
+    public string? Query { get; set; }
 }

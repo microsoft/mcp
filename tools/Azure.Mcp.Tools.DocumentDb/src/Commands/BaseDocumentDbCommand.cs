@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.DocumentDb.Options;
@@ -26,4 +27,11 @@ public abstract class BaseDocumentDbCommand<
             ConnectionString = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.ConnectionString.Name)
         };
     }
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => HttpStatusCode.BadRequest,
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,
+        _ => base.GetStatusCode(ex)
+    };
 }

@@ -559,6 +559,699 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
 
     #endregion
 
+    #region Document Operations
+
+    public async Task<DocumentDbResponse> FindDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var filter = query ?? new BsonDocument();
+            var limit = options?.GetValue("limit", 100).ToInt32() ?? 100;
+            var skip = options?.GetValue("skip", 0).ToInt32() ?? 0;
+            var sort = options != null && options.Contains("sort") && options["sort"].IsBsonDocument ? options["sort"].AsBsonDocument : null;
+            var projection = options != null && options.Contains("projection") && options["projection"].IsBsonDocument ? options["projection"].AsBsonDocument : null;
+
+            var cursor = collection.Find(filter).Limit(limit).Skip(skip);
+
+            if (sort != null)
+            {
+                cursor = cursor.Sort(sort);
+            }
+
+            if (projection != null)
+            {
+                cursor = cursor.Project<BsonDocument>(projection);
+            }
+
+            var documents = await cursor.ToListAsync(cancellationToken);
+            var totalCount = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+            return Success(
+                "Documents retrieved successfully",
+                new Dictionary<string, object?>
+                {
+                    ["documents"] = BsonDocumentListToJson(documents),
+                    ["total_count"] = totalCount,
+                    ["returned_count"] = documents.Count,
+                    ["has_more"] = totalCount > skip + documents.Count,
+                    ["query"] = BsonDocumentToJson(filter),
+                    ["applied_options"] = new Dictionary<string, object?>
+                    {
+                        ["limit"] = limit,
+                        ["skip"] = skip,
+                        ["sort"] = BsonDocumentToJson(sort),
+                        ["projection"] = BsonDocumentToJson(projection)
+                    }
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access finding documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to find documents: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> CountDocumentsAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var filter = query ?? new BsonDocument();
+            var count = await collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+            return Success(
+                "Documents counted successfully",
+                new Dictionary<string, object?>
+                {
+                    ["count"] = count,
+                    ["query"] = BsonDocumentToJson(filter)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access counting documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error counting documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to count documents: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> InsertDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument document, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(document);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            await collection.InsertOneAsync(document, cancellationToken: cancellationToken);
+            var insertedId = document["_id"].ToString();
+
+            _logger.LogInformation("Inserted document with ID {Id} into {DatabaseName}.{CollectionName}", insertedId, databaseName, collectionName);
+
+            return Success(
+                "Document inserted successfully",
+                new Dictionary<string, object?>
+                {
+                    ["inserted_id"] = insertedId,
+                    ["acknowledged"] = true,
+                    ["inserted_count"] = 1
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access inserting document into {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inserting document into {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to insert document: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> InsertManyAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> documents, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(documents);
+
+        if (documents.Count == 0)
+        {
+            return Success(
+                "No documents to insert",
+                new Dictionary<string, object?>
+                {
+                    ["inserted_ids"] = Array.Empty<string>(),
+                    ["acknowledged"] = true,
+                    ["inserted_count"] = 0
+                });
+        }
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            await collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
+            var insertedIds = documents.Select(document => document["_id"].ToString()).ToList();
+
+            _logger.LogInformation("Inserted {Count} documents into {DatabaseName}.{CollectionName}", documents.Count, databaseName, collectionName);
+
+            return Success(
+                $"{documents.Count} documents inserted successfully",
+                new Dictionary<string, object?>
+                {
+                    ["inserted_ids"] = insertedIds,
+                    ["acknowledged"] = true,
+                    ["inserted_count"] = documents.Count
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access inserting documents into {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inserting documents into {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to insert documents: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> UpdateDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(update);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var options = new UpdateOptions { IsUpsert = upsert };
+            var result = await collection.UpdateOneAsync(filter, update, options, cancellationToken);
+
+            _logger.LogInformation("Updated document in {DatabaseName}.{CollectionName}. Matched: {Matched}, Modified: {Modified}", databaseName, collectionName, result.MatchedCount, result.ModifiedCount);
+
+            return Success(
+                "Document updated successfully",
+                new Dictionary<string, object?>
+                {
+                    ["matched_count"] = result.MatchedCount,
+                    ["modified_count"] = result.ModifiedCount,
+                    ["upserted_id"] = result.UpsertedId?.ToString(),
+                    ["acknowledged"] = result.IsAcknowledged
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access updating document in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating document in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to update document: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> UpdateManyAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(update);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var options = new UpdateOptions { IsUpsert = upsert };
+            var result = await collection.UpdateManyAsync(filter, update, options, cancellationToken);
+
+            _logger.LogInformation("Updated documents in {DatabaseName}.{CollectionName}. Matched: {Matched}, Modified: {Modified}", databaseName, collectionName, result.MatchedCount, result.ModifiedCount);
+
+            return Success(
+                "Documents updated successfully",
+                new Dictionary<string, object?>
+                {
+                    ["matched_count"] = result.MatchedCount,
+                    ["modified_count"] = result.ModifiedCount,
+                    ["upserted_id"] = result.UpsertedId?.ToString(),
+                    ["acknowledged"] = result.IsAcknowledged
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access updating documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to update documents: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> DeleteDocumentAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(filter);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var result = await collection.DeleteOneAsync(filter, cancellationToken);
+
+            _logger.LogInformation("Deleted {Count} document from {DatabaseName}.{CollectionName}", result.DeletedCount, databaseName, collectionName);
+
+            return Success(
+                "Document deleted successfully",
+                new Dictionary<string, object?>
+                {
+                    ["deleted_count"] = result.DeletedCount,
+                    ["acknowledged"] = result.IsAcknowledged
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access deleting document from {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting document from {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to delete document: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> DeleteManyAsync(string connectionString, string databaseName, string collectionName, BsonDocument filter, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(filter);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var result = await collection.DeleteManyAsync(filter, cancellationToken);
+
+            _logger.LogInformation("Deleted {Count} documents from {DatabaseName}.{CollectionName}", result.DeletedCount, databaseName, collectionName);
+
+            return Success(
+                "Documents deleted successfully",
+                new Dictionary<string, object?>
+                {
+                    ["deleted_count"] = result.DeletedCount,
+                    ["acknowledged"] = result.IsAcknowledged
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access deleting documents from {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting documents from {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to delete documents: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> AggregateAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> pipeline, bool allowDiskUse = false, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(pipeline);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var options = new AggregateOptions { AllowDiskUse = allowDiskUse };
+            var results = await collection.Aggregate<BsonDocument>(pipeline, options, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            return Success(
+                "Aggregation completed successfully",
+                new Dictionary<string, object?>
+                {
+                    ["results"] = BsonDocumentListToJson(results),
+                    ["total_count"] = results.Count
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access aggregating documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error executing aggregation pipeline in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to execute aggregation: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> FindAndModifyAsync(string connectionString, string databaseName, string collectionName, BsonDocument query, BsonDocument update, bool upsert = false, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(update);
+
+        try
+        {
+            var collection = GetCollection(connectionString, databaseName, collectionName);
+            var options = new FindOneAndUpdateOptions<BsonDocument>
+            {
+                IsUpsert = upsert,
+                ReturnDocument = ReturnDocument.Before
+            };
+
+            var result = await collection.FindOneAndUpdateAsync(query, update, options, cancellationToken);
+
+            return Success(
+                "Find and modify completed successfully",
+                new Dictionary<string, object?>
+                {
+                    ["matched"] = result != null,
+                    ["upsertedId"] = result?["_id"]?.ToString(),
+                    ["original_document"] = BsonDocumentToJson(result),
+                    ["query"] = BsonDocumentToJson(query),
+                    ["update"] = BsonDocumentToJson(update),
+                    ["upsert"] = upsert
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access finding and modifying documents in {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in find and modify for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to find and modify document: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> ExplainFindQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, BsonDocument? options = null, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var database = CreateClient(connectionString).GetDatabase(databaseName);
+            var filter = query ?? new BsonDocument();
+            var sort = options != null && options.Contains("sort") && options["sort"].IsBsonDocument ? options["sort"].AsBsonDocument : null;
+            var projection = options != null && options.Contains("projection") && options["projection"].IsBsonDocument ? options["projection"].AsBsonDocument : null;
+            var limit = options?.GetValue("limit", BsonNull.Value);
+            var skip = options?.GetValue("skip", BsonNull.Value);
+
+            var findCommand = new BsonDocument
+            {
+                { "find", collectionName },
+                { "filter", filter }
+            };
+
+            if (sort != null)
+            {
+                findCommand.Add("sort", sort);
+            }
+
+            if (projection != null)
+            {
+                findCommand.Add("projection", projection);
+            }
+
+            if (limit != null && !limit.IsBsonNull)
+            {
+                findCommand.Add("limit", limit.ToInt32());
+            }
+
+            if (skip != null && !skip.IsBsonNull)
+            {
+                findCommand.Add("skip", skip.ToInt32());
+            }
+
+            var command = new BsonDocument
+            {
+                { "explain", findCommand },
+                { "verbosity", "executionStats" }
+            };
+
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+            return Success(
+                "Find query explained successfully",
+                new Dictionary<string, object?>
+                {
+                    ["options_applied"] = new Dictionary<string, object?>
+                    {
+                        ["sort"] = BsonDocumentToJson(sort),
+                        ["projection"] = BsonDocumentToJson(projection),
+                        ["limit"] = limit?.IsBsonNull == false ? limit.ToInt32() : null,
+                        ["skip"] = skip?.IsBsonNull == false ? skip.ToInt32() : null
+                    },
+                    ["explain"] = BsonDocumentToJson(explain)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access explaining find query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error explaining find query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to explain find query: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> ExplainCountQueryAsync(string connectionString, string databaseName, string collectionName, BsonDocument? query = null, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+
+        try
+        {
+            var database = CreateClient(connectionString).GetDatabase(databaseName);
+            var command = new BsonDocument
+            {
+                {
+                    "explain",
+                    new BsonDocument
+                    {
+                        { "count", collectionName },
+                        { "query", query ?? new BsonDocument() }
+                    }
+                },
+                { "verbosity", "executionStats" }
+            };
+
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+            return Success(
+                "Count query explained successfully",
+                new Dictionary<string, object?>
+                {
+                    ["explain"] = BsonDocumentToJson(explain)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access explaining count query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error explaining count query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to explain count query: {ex.Message}");
+        }
+    }
+
+    public async Task<DocumentDbResponse> ExplainAggregateQueryAsync(string connectionString, string databaseName, string collectionName, List<BsonDocument> pipeline, CancellationToken cancellationToken = default)
+    {
+        ValidateParameter(connectionString, nameof(connectionString));
+        ValidateParameter(databaseName, nameof(databaseName));
+        ValidateParameter(collectionName, nameof(collectionName));
+        ArgumentNullException.ThrowIfNull(pipeline);
+
+        try
+        {
+            var database = CreateClient(connectionString).GetDatabase(databaseName);
+            var command = new BsonDocument
+            {
+                {
+                    "explain",
+                    new BsonDocument
+                    {
+                        { "aggregate", collectionName },
+                        { "pipeline", new BsonArray(pipeline) },
+                        { "cursor", new BsonDocument() }
+                    }
+                },
+                { "verbosity", "executionStats" }
+            };
+
+            var explain = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+            return Success(
+                "Aggregate query explained successfully",
+                new Dictionary<string, object?>
+                {
+                    ["explain"] = BsonDocumentToJson(explain)
+                });
+        }
+        catch (MongoCommandException ex) when (ex.Code == 26)
+        {
+            _logger.LogWarning("Database '{DatabaseName}' not found", databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Database '{databaseName}' not found");
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            _logger.LogWarning("Collection '{CollectionName}' not found in database '{DatabaseName}'", collectionName, databaseName);
+            return Failure(HttpStatusCode.BadRequest, $"Collection '{collectionName}' not found");
+        }
+        catch (MongoAuthenticationException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access explaining aggregate query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.Unauthorized, $"Unauthorized access: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error explaining aggregate query for {DatabaseName}.{CollectionName}", databaseName, collectionName);
+            return Failure(HttpStatusCode.InternalServerError, $"Failed to explain aggregate query: {ex.Message}");
+        }
+    }
+
+    #endregion
+
     #region Helper Functions
 
     private static async Task<bool> DatabaseExistsAsync(MongoClient client, string dbName, CancellationToken cancellationToken)

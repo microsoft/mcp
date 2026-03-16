@@ -10,43 +10,48 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.DocumentDb.Commands.Collection;
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
 
-public sealed class DropCollectionCommand(ILogger<DropCollectionCommand> logger)
-    : BaseDocumentDbCommand<DropCollectionOptions>()
+public sealed class FindDocumentsCommand(ILogger<FindDocumentsCommand> logger)
+    : BaseDocumentDbCommand<FindDocumentsOptions>()
 {
-    private readonly ILogger<DropCollectionCommand> _logger = logger;
+    private readonly ILogger<FindDocumentsCommand> _logger = logger;
 
-    public override string Id => "d0e1f2a3-b4c5-4d0e-7f8a-9b0c1d2e3f4a";
+    public override string Id => "f2a3b4c5-d6e7-4f2a-9b0c-1d2e3f4a5b6c";
 
-    public override string Name => "drop_collection";
+    public override string Name => "find_documents";
 
-    public override string Description => "Drop a collection from a database";
+    public override string Description => "Find and retrieve all documents (or filter by query) in a collection. Supports options for limit, skip, sort, and projection";
 
-    public override string Title => "Drop Collection";
+    public override string Title => "Find Documents";
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
-        Idempotent = false,
+        Destructive = false,
+        Idempotent = true,
         OpenWorld = false,
+        ReadOnly = true,
         Secret = false,
-        LocalRequired = false,
-        ReadOnly = false
+        LocalRequired = false
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+
         command.Options.Add(DocumentDbOptionDefinitions.DbName);
         command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+        command.Options.Add(DocumentDbOptionDefinitions.Query);
+        command.Options.Add(DocumentDbOptionDefinitions.Options);
     }
 
-    protected override DropCollectionOptions BindOptions(ParseResult parseResult)
+    protected override FindDocumentsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
         options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Query.Name);
+        options.Options = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Options.Name);
         return options;
     }
 
@@ -55,7 +60,7 @@ public sealed class DropCollectionCommand(ILogger<DropCollectionCommand> logger)
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        DropCollectionOptions? options = null;
+        FindDocumentsOptions? options = null;
 
         try
         {
@@ -68,15 +73,19 @@ public sealed class DropCollectionCommand(ILogger<DropCollectionCommand> logger)
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.DropCollectionAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, cancellationToken);
+            var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
+            var queryOptions = DocumentDbHelpers.ParseBsonDocument(options.Options);
 
+            var result = await service.FindDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, queryOptions, cancellationToken);
+
+            // Process response using unified DocumentDbResponse type
             DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to drop collection: {CollectionName} from database: {DbName}", options?.CollectionName, options?.DbName);
+            _logger.LogError(ex, "Failed to find documents in collection: {CollectionName}, database: {DbName}, query: {Query}", options?.CollectionName, options?.DbName, options?.Query);
             HandleException(context, ex);
             return context.Response;
         }

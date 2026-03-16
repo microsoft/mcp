@@ -9,22 +9,24 @@ using Azure.Mcp.Tools.DocumentDb.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Tools.DocumentDb.Commands.Database;
 
-public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
-    : BaseDocumentDbCommand<ListDatabasesOptions>()
+
+
+namespace Azure.Mcp.Tools.DocumentDb.Commands.Document;
+
+public sealed class CountDocumentsCommand(ILogger<CountDocumentsCommand> logger)
+    : BaseDocumentDbCommand<CountDocumentsOptions>()
 {
-    private readonly ILogger<ListDatabasesCommand> _logger = logger;
+    private readonly ILogger<CountDocumentsCommand> _logger = logger;
 
-    public override string Id => "d4e5f6a7-b8c9-4d4e-1f2a-3b4c5d6e7f8a";
+    public override string Id => "a3b4c5d6-e7f8-4a3b-0c1d-2e3f4a5b6c7d";
 
-    public override string Name => "list_databases";
+    public override string Name => "count_documents";
 
-    public override string Description => "List Azure DocumentDB databases. If --db-name is omitted, returns all database names. If --db-name is provided, returns detailed information for that database.";
+    public override string Description => "Count documents in a collection matching a query";
 
-    public override string Title => "List Databases";
+    public override string Title => "Count Documents";
 
     public override ToolMetadata Metadata => new()
     {
@@ -39,13 +41,17 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DocumentDbOptionDefinitions.DbName.AsOptional());
+        command.Options.Add(DocumentDbOptionDefinitions.DbName);
+        command.Options.Add(DocumentDbOptionDefinitions.CollectionName);
+        command.Options.Add(DocumentDbOptionDefinitions.Query);
     }
 
-    protected override ListDatabasesOptions BindOptions(ParseResult parseResult)
+    protected override CountDocumentsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DbName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.DbName.Name);
+        options.CollectionName = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.CollectionName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(DocumentDbOptionDefinitions.Query.Name);
         return options;
     }
 
@@ -54,7 +60,7 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
         ParseResult parseResult,
         CancellationToken cancellationToken)
     {
-        ListDatabasesOptions? options = null;
+        CountDocumentsOptions? options = null;
 
         try
         {
@@ -64,19 +70,21 @@ public sealed class ListDatabasesCommand(ILogger<ListDatabasesCommand> logger)
             }
 
             options = BindOptions(parseResult);
-            var dbName = options.DbName;
 
             var service = context.GetService<IDocumentDbService>();
 
-            var result = await service.GetDatabasesAsync(options.ConnectionString!, dbName, cancellationToken);
+            var query = DocumentDbHelpers.ParseBsonDocument(options.Query);
 
+            var result = await service.CountDocumentsAsync(options.ConnectionString!, options.DbName!, options.CollectionName!, query, cancellationToken);
+
+            // Process response using unified DocumentDbResponse type
             DocumentDbResponseHelper.ProcessResponse(context, result);
 
             return context.Response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get DocumentDB database details. Database: {DbName}", options?.DbName);
+            _logger.LogError(ex, "Failed to count documents in collection: {CollectionName}, database: {DbName}, query: {Query}", options?.CollectionName, options?.DbName, options?.Query);
             HandleException(context, ex);
             return context.Response;
         }

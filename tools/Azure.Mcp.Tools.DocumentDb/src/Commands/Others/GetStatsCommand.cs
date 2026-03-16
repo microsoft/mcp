@@ -23,7 +23,7 @@ public sealed class GetStatsCommand(ILogger<GetStatsCommand> logger)
 
     public override string Name => "get_stats";
 
-    public override string Description => "Get statistics for a DocumentDB collection, database, or index by resource type.";
+    public override string Description => "Get statistics for an Azure DocumentDB collection, database, or index by resource type.";
 
     public override string Title => "Get Statistics";
 

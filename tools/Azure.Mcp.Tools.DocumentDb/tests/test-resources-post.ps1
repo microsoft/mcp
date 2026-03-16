@@ -23,7 +23,7 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # $DeploymentOutputs keys are all UPPERCASE
 
-Write-Host "Test resources deployed successfully for DocumentDB"
+Write-Host "Test resources deployed successfully for Azure DocumentDB"
 Write-Host "Connection string saved to .testsettings.json"
 
 # Initialize test database and collections using MongoDB driver

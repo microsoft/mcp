@@ -21,7 +21,7 @@ var administratorLogin = 'testadmin'
 // Use a password without special characters that need URL encoding (! and @ cause issues)
 var administratorLoginPassword = 'Pass${uniqueString(resourceGroup().id)}0rd'
 
-// DocumentDB (Azure Cosmos DB for MongoDB vCore) account
+// Azure DocumentDB (with MongoDB compatibility) cluster
 resource documentDbAccount 'Microsoft.DocumentDB/mongoClusters@2024-03-01-preview' = {
   name: '${take(baseName, 30)}-ddb'
   location: location

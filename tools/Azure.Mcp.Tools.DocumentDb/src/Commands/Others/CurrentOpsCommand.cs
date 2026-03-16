@@ -22,7 +22,7 @@ public sealed class CurrentOpsCommand(ILogger<CurrentOpsCommand> logger)
 
     public override string Name => "current_ops";
 
-    public override string Description => "Get information about current DocumentDB operations";
+    public override string Description => "Get information about current Azure DocumentDB operations.";
 
     public override string Title => "Current Operations";
 

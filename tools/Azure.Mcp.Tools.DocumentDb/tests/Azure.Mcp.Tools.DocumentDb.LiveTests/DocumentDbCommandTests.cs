@@ -25,7 +25,7 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
         await LoadSettingsAsync();
 
         Assert.SkipWhen(TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Live,
-            "DocumentDb index tests are live-only and do not support record/playback mode");
+            "DocumentDb live tests are live-only and do not support record/playback mode");
 
         SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
         await base.InitializeAsync();
@@ -249,6 +249,298 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
         Assert.True(deleted.GetBoolean());
     }
 
+    [Fact]
+    public async Task Should_find_documents_with_query_and_options()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_find_documents",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "query", "{\"category\":\"A\"}" },
+                { "options", "{\"limit\":1,\"sort\":{\"value\":-1}}" }
+            });
+
+        var documents = result.AssertProperty("documents");
+        Assert.Equal(JsonValueKind.Array, documents.ValueKind);
+
+        var returnedCount = result.AssertProperty("returned_count");
+        Assert.Equal(1, returnedCount.GetInt32());
+
+        var totalCount = result.AssertProperty("total_count");
+        Assert.True(totalCount.GetInt32() >= 2);
+
+        var firstDocument = Assert.Single(documents.EnumerateArray()).GetString();
+        Assert.Contains("\"category\":\"A\"", firstDocument, StringComparison.Ordinal);
+        Assert.Contains("\"value\":300", firstDocument, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Should_count_documents_with_query()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_count_documents",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "query", "{\"category\":\"A\"}" }
+            });
+
+        var count = result.AssertProperty("count");
+        Assert.Equal(2, count.GetInt32());
+    }
+
+    [Fact]
+    public async Task Should_insert_single_document()
+    {
+        var databaseName = CreateUniqueName("doc-insert-db-");
+        var collectionName = CreateUniqueName("doc-insert-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(databaseName, collectionName, []);
+
+            var result = await CallToolAsync(
+                "documentdb_document_insert_documents",
+                new()
+                {
+                    { "connection-string", ConnectionString },
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "documents", "{\"name\":\"live-insert\",\"value\":42}" }
+                });
+
+            Assert.False(string.IsNullOrWhiteSpace(result.AssertProperty("inserted_id").GetString()));
+            Assert.Equal(1, result.AssertProperty("inserted_count").GetInt32());
+
+            var inserted = await FindSingleDocumentAsync(databaseName, collectionName, Builders<BsonDocument>.Filter.Eq("name", "live-insert"));
+            Assert.NotNull(inserted);
+            Assert.Equal(42, inserted!["value"].ToInt32());
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_insert_many_documents_when_mode_many()
+    {
+        var databaseName = CreateUniqueName("doc-insertmany-db-");
+        var collectionName = CreateUniqueName("doc-insertmany-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(databaseName, collectionName, []);
+
+            var result = await CallToolAsync(
+                "documentdb_document_insert_documents",
+                new()
+                {
+                    { "connection-string", ConnectionString },
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "documents", "[{\"name\":\"bulk-a\",\"value\":1},{\"name\":\"bulk-b\",\"value\":2}]" },
+                    { "mode", "many" }
+                });
+
+            Assert.Equal(2, result.AssertProperty("inserted_count").GetInt32());
+
+            var insertedCount = await CountCollectionDocumentsAsync(databaseName, collectionName);
+            Assert.Equal(2L, insertedCount);
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_update_many_documents()
+    {
+        var databaseName = CreateUniqueName("doc-update-db-");
+        var collectionName = CreateUniqueName("doc-update-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(
+                databaseName,
+                collectionName,
+                [
+                    new BsonDocument { { "name", "item-a" }, { "status", "pending" } },
+                    new BsonDocument { { "name", "item-b" }, { "status", "pending" } },
+                    new BsonDocument { { "name", "item-c" }, { "status", "done" } }
+                ]);
+
+            var result = await CallToolAsync(
+                "documentdb_document_update_documents",
+                new()
+                {
+                    { "connection-string", ConnectionString },
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "filter", "{\"status\":\"pending\"}" },
+                    { "update", "{\"$set\":{\"status\":\"processed\"}}" },
+                    { "mode", "many" }
+                });
+
+            Assert.Equal(2, result.AssertProperty("matched_count").GetInt32());
+            Assert.Equal(2, result.AssertProperty("modified_count").GetInt32());
+
+            var updatedCount = await CountCollectionDocumentsAsync(
+                databaseName,
+                collectionName,
+                Builders<BsonDocument>.Filter.Eq("status", "processed"));
+
+            Assert.Equal(2L, updatedCount);
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_delete_many_documents()
+    {
+        var databaseName = CreateUniqueName("doc-delete-db-");
+        var collectionName = CreateUniqueName("doc-delete-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(
+                databaseName,
+                collectionName,
+                [
+                    new BsonDocument { { "name", "item-a" }, { "status", "remove" } },
+                    new BsonDocument { { "name", "item-b" }, { "status", "remove" } },
+                    new BsonDocument { { "name", "item-c" }, { "status", "keep" } }
+                ]);
+
+            var result = await CallToolAsync(
+                "documentdb_document_delete_documents",
+                new()
+                {
+                    { "connection-string", ConnectionString },
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "filter", "{\"status\":\"remove\"}" },
+                    { "mode", "many" }
+                });
+
+            Assert.Equal(2, result.AssertProperty("deleted_count").GetInt32());
+
+            var remainingCount = await CountCollectionDocumentsAsync(databaseName, collectionName);
+            Assert.Equal(1L, remainingCount);
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_run_aggregate_pipeline()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_aggregate",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "pipeline", "[{\"$match\":{\"category\":\"A\"}},{\"$group\":{\"_id\":\"$category\",\"count\":{\"$sum\":1}}}]" }
+            });
+
+        var results = result.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, results.ValueKind);
+        Assert.Equal(1, result.AssertProperty("total_count").GetInt32());
+
+        var aggregateResult = Assert.Single(results.EnumerateArray()).GetString();
+        Assert.Contains("\"_id\":\"A\"", aggregateResult, StringComparison.Ordinal);
+        Assert.Contains("\"count\":2", aggregateResult, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Should_find_and_modify_document()
+    {
+        var databaseName = CreateUniqueName("doc-fam-db-");
+        var collectionName = CreateUniqueName("doc-fam-col-");
+
+        try
+        {
+            await CreateCollectionWithDocumentsAsync(
+                databaseName,
+                collectionName,
+                [new BsonDocument { { "name", "workflow-item" }, { "status", "pending" } }]);
+
+            var result = await CallToolAsync(
+                "documentdb_document_find_and_modify",
+                new()
+                {
+                    { "connection-string", ConnectionString },
+                    { "db-name", databaseName },
+                    { "collection-name", collectionName },
+                    { "query", "{\"name\":\"workflow-item\"}" },
+                    { "update", "{\"$set\":{\"status\":\"processing\"}}" }
+                });
+
+            Assert.True(result.AssertProperty("matched").GetBoolean());
+            Assert.Contains("\"status\":\"pending\"", result.AssertProperty("original_document").GetString(), StringComparison.Ordinal);
+
+            var updated = await FindSingleDocumentAsync(databaseName, collectionName, Builders<BsonDocument>.Filter.Eq("name", "workflow-item"));
+            Assert.NotNull(updated);
+            Assert.Equal("processing", updated!["status"].AsString);
+        }
+        finally
+        {
+            await DeleteDatabaseIfExistsAsync(databaseName);
+        }
+    }
+
+    [Fact]
+    public async Task Should_explain_find_query()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_explain_query",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "operation", "find" },
+                { "query", "{\"category\":\"A\"}" },
+                { "options", "{\"limit\":1}" }
+            });
+
+        var explain = result.AssertProperty("explain").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(explain));
+        Assert.Contains("executionStats", explain, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_explain_aggregate_query()
+    {
+        var result = await CallToolAsync(
+            "documentdb_document_explain_query",
+            new()
+            {
+                { "connection-string", ConnectionString },
+                { "db-name", TestDatabaseName },
+                { "collection-name", CollectionName },
+                { "operation", "aggregate" },
+                { "pipeline", "[{\"$match\":{\"category\":\"A\"}}]" }
+            });
+
+        var explain = result.AssertProperty("explain").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(explain));
+        Assert.Contains("executionStats", explain, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task SeedTestDatabaseAsync()
     {
         const int maxAttempts = 3;
@@ -468,6 +760,24 @@ public class DocumentDbCommandTests(ITestOutputHelper output, LiveServerFixture 
         var collections = await (await database.ListCollectionNamesAsync()).ToListAsync();
 
         return collections.Contains(collectionName, StringComparer.Ordinal);
+    }
+
+    private async Task<long> CountCollectionDocumentsAsync(string databaseName, string collectionName, FilterDefinition<BsonDocument>? filter = null)
+    {
+        var client = new MongoClient(ConnectionString);
+        var database = client.GetDatabase(databaseName);
+        var collection = database.GetCollection<BsonDocument>(collectionName);
+
+        return await collection.CountDocumentsAsync(filter ?? Builders<BsonDocument>.Filter.Empty);
+    }
+
+    private async Task<BsonDocument?> FindSingleDocumentAsync(string databaseName, string collectionName, FilterDefinition<BsonDocument> filter)
+    {
+        var client = new MongoClient(ConnectionString);
+        var database = client.GetDatabase(databaseName);
+        var collection = database.GetCollection<BsonDocument>(collectionName);
+
+        return await collection.Find(filter).FirstOrDefaultAsync();
     }
 
     private async Task DeleteDatabaseIfExistsAsync(string databaseName)

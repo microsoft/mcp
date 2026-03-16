@@ -360,23 +360,50 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| documentdb_index_list_indexes | List indexes for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_list_indexes | List indexes for collection <collection-name> in Azure DocumentDB database <db-name> |
 | documentdb_index_list_indexes | Show me all indexes on collection <collection-name> in database <db-name> |
-| documentdb_index_create_index | Create an index on collection <collection-name> in DocumentDB database <db-name> using keys <keys> |
-| documentdb_index_create_index | Add a DocumentDB index for collection <collection-name> in database <db-name> with keys <keys> and options <options> |
-| documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_index_drop_index | Remove the <index-name> index from DocumentDB collection <collection-name> in database <db-name> |
-| documentdb_others_get_stats | Show index statistics for collection <collection-name> in DocumentDB database <db-name> |
-| documentdb_others_get_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
-| documentdb_others_current_ops | Show current DocumentDB operations |
-| documentdb_others_current_ops | Get current DocumentDB operations filtered by <ops> |
+| documentdb_index_create_index | Create an index on collection <collection-name> in Azure DocumentDB database <db-name> using keys <keys> |
+| documentdb_index_create_index | Add an Azure DocumentDB index for collection <collection-name> in database <db-name> with keys <keys> and options <options> |
+| documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in Azure DocumentDB database <db-name> |
+| documentdb_index_drop_index | Remove the <index-name> index from Azure DocumentDB collection <collection-name> in database <db-name> |
+| documentdb_others_get_stats | Show index statistics for collection <collection-name> in Azure DocumentDB database <db-name> |
+| documentdb_others_get_stats | Get Azure DocumentDB index stats for collection <collection-name> in database <db-name> |
+| documentdb_others_current_ops | Show current Azure DocumentDB operations |
+| documentdb_others_current_ops | Get current Azure DocumentDB operations filtered by <ops> |
 | documentdb_others_get_stats | Get statistics for database <db-name> |
-| documentdb_others_get_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_others_get_stats | Show me stats for Azure DocumentDB database <db-name> |
 | documentdb_database_drop_database | Drop database <db-name> |
-| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
-| documentdb_database_list_databases | List all databases in DocumentDB |
-| documentdb_database_list_databases | Show me all DocumentDB databases |
-| documentdb_database_list_databases | Get details for database <db-name> in DocumentDB |
+| documentdb_database_drop_database | Delete the database <db-name> from Azure DocumentDB |
+| documentdb_database_list_databases | List all databases in Azure DocumentDB |
+| documentdb_database_list_databases | Show me all Azure DocumentDB databases |
+| documentdb_database_list_databases | Get details for database <db-name> in Azure DocumentDB |
+| documentdb_document_find_documents | Find all documents in collection <collection-name> in database <db-name> |
+| documentdb_document_find_documents | Find documents where status equals active in collection <collection-name> in database <db-name> |
+| documentdb_document_find_documents | Query collection <collection-name> in database <db-name> for documents |
+| documentdb_document_count_documents | Count all documents in collection <collection-name> in database <db-name> |
+| documentdb_document_count_documents | How many documents are in collection <collection-name> in database <db-name> |
+| documentdb_document_insert_documents | Insert a document into collection <collection-name> in database <db-name> |
+| documentdb_document_insert_documents | Add a new document to collection <collection-name> in database <db-name> |
+| documentdb_document_insert_documents | Insert multiple documents into collection <collection-name> in database <db-name> |
+| documentdb_document_insert_documents | Bulk insert documents into collection <collection-name> in database <db-name> |
+| documentdb_document_update_documents | Update a document in collection <collection-name> in database <db-name> |
+| documentdb_document_update_documents | Update documents where id equals <id> in collection <collection-name> in database <db-name> |
+| documentdb_document_update_documents | Update multiple documents in collection <collection-name> in database <db-name> |
+| documentdb_document_update_documents | Bulk update documents in collection <collection-name> in database <db-name> |
+| documentdb_document_delete_documents | Delete a document from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_documents | Remove document where id equals <id> from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_documents | Delete multiple documents from collection <collection-name> in database <db-name> |
+| documentdb_document_delete_documents | Remove all documents where status equals inactive from collection <collection-name> in database <db-name> |
+| documentdb_document_aggregate | Run an aggregation pipeline on collection <collection-name> in database <db-name> |
+| documentdb_document_aggregate | Aggregate documents in collection <collection-name> in database <db-name> |
+| documentdb_document_find_and_modify | Find and modify a document in collection <collection-name> in database <db-name> |
+| documentdb_document_find_and_modify | Find, update, and return a document from collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Explain the query plan for finding documents in collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Show me the execution plan for a find query on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Explain the query plan for counting documents in collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Show me how the count query executes on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Explain the aggregation pipeline on collection <collection-name> in database <db-name> |
+| documentdb_document_explain_query | Show me the execution plan for aggregation on collection <collection-name> in database <db-name> |
 
 ## Azure Event Grid
 
