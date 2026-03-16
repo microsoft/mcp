@@ -203,7 +203,7 @@ public class DiskDeleteCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Throws(new Azure.RequestFailedException("Conflict"));
+            .ThrowsAsync(new Azure.RequestFailedException("Conflict"));
 
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
 
@@ -216,7 +216,7 @@ public class DiskDeleteCommandTests
     }
 
     [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
+    public async Task BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
         var subscription = "test-sub";
@@ -226,10 +226,10 @@ public class DiskDeleteCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--disk-name", diskName]);
 
         // Act
-        var response = _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken).Result;
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - if the command reached the service call, options were bound correctly
-        _computeService.Received().DeleteDiskAsync(
+        await _computeService.Received().DeleteDiskAsync(
             diskName,
             resourceGroup,
             subscription,

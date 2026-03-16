@@ -1362,7 +1362,7 @@ azmcp compute disk create --subscription <subscription> \
 
 ```bash
 # Delete a managed disk
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute disk delete --subscription <subscription> \
                           --resource-group <resource-group> \
                           --disk-name <disk-name>
@@ -1694,7 +1694,7 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
                                    [--pipeline-platform <pipeline-platform>] \
-                                   [--deploy-option <deploy-option>] 
+                                   [--deploy-option <deploy-option>]
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

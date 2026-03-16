@@ -11,5 +11,5 @@ public class DiskDeleteOptions : BaseComputeOptions
     /// <summary>
     /// Gets or sets the name of the disk.
     /// </summary>
-    public string? Disk { get; set; }
+    public string? DiskName { get; set; }
 }

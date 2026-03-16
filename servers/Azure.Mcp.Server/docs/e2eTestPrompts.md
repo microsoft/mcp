@@ -217,23 +217,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> |
 | compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> |
 | compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> |
-
-## Azure Confidential Ledger
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
-| confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
-| confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
-| confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
-| confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
-| confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
-| confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
-
-## Azure Compute
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
 | compute_disk_get | List all managed disks in my subscription |
 | compute_disk_get | Show me all disks in resource group <resource-group> |
 | compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
@@ -276,6 +259,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys |
 | compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate |
 | compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev |
+
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
+| confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
+| confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
 ## Azure Cosmos DB
 

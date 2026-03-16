@@ -921,6 +921,7 @@ Example prompts that generate Azure CLI commands:
 * "Create a 128 GB Premium_LRS managed disk named 'my-disk' in resource group 'my-resource-group'"
 * "Create a managed disk from snapshot in resource group 'my-resource-group'"
 * "Create a disk 'my-disk' in resource group 'my-resource-group' with tags env=prod team=infra"
+* "Delete managed disk 'my-disk' in resource group 'my-resource-group'"
 * "Update disk 'my-disk' in resource group 'my-resource-group' to 256 GB"
 * "Change the SKU of disk 'my-disk' to Premium_LRS"
 * "Set the IOPS limit on ultra disk 'my-disk' in resource group 'my-resource-group' to 10000"
