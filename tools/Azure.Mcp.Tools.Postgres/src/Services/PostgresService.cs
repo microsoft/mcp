@@ -47,11 +47,23 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
+    private static string BuildConnectionString(string host, string database, string user, string password)
+    {
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host,
+            Database = database,
+            Username = user,
+            Password = password
+        };
+        return builder.ConnectionString;
+    }
+
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken}";
+        var connectionString = BuildConnectionString(host, "postgres", user, entraIdAccessToken);
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
@@ -69,7 +81,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = BuildConnectionString(host, database, user, entraIdAccessToken);
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         await using var command = new NpgsqlCommand(query, resource.Connection);
@@ -97,7 +109,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = BuildConnectionString(host, database, user, entraIdAccessToken);
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
@@ -115,7 +127,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = BuildConnectionString(host, database, user, entraIdAccessToken);
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table}';";

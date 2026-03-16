@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed connection string injection vulnerability in PostgreSQL and MySQL tools by using `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder` instead of raw string interpolation, preventing parameter override attacks via user-controlled inputs.
+
 ### Other Changes
 
 ## 1.0.2 (2026-03-05)
