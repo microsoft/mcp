@@ -1191,6 +1191,10 @@ To disable only Microsoft telemetry collection while keeping your own Applicatio
 ```bash
 export AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT=false
 ```
+
+#### Plugin Telemetry (Agent Hooks)
+
+The `plugin-telemetry` command allows agent hooks in clients such as Copilot CLI to emit plugin usage metrics to Microsoft. It is a hidden, programmatic-only command intended for use in agent hook scripts. Supported fields include `--timestamp`, `--event-type`, `--session-id`, `--client-type`, `--plugin-name`, `--tool-name`, and `--file-reference`. File references are validated against a built-in allowlist before telemetry is emitted.
 <!-- remove-section: end remove_telemetry_config_section -->
 
 ## Compliance Responsibility

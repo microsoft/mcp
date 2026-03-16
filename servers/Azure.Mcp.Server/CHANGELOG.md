@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added `plugin-telemetry` command to publish plugin usage telemetry from agent hooks. Supports emitting event type, session ID, client type, plugin name, tool name, and file references (validated against an allowlist). [[#1979](https://github.com/microsoft/mcp/pull/1979)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
