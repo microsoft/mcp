@@ -137,7 +137,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, Cosmos DB, and Azure DocumentDB (MongoDB-compatible). List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, inspect DocumentDB databases, indexes, statistics, and current operations, list and view detailed information about SQL servers, and view database server details across Azure database services.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -178,24 +178,28 @@
         "sql_db_get",
         "sql_server_get",
         "cosmos_list",
-        "cosmos_database_container_item_query"
+        "cosmos_database_container_item_query",
+        "documentdb_database_list_databases",
+        "documentdb_index_list_indexes",
+        "documentdb_others_current_ops",
+        "documentdb_others_get_stats"
       ]
     },
     {
-      "name": "inspect_azure_documentdb_indexes_and_diagnostics",
-      "description": "Inspect Azure DocumentDB collection indexes and diagnostics, including current operations and index statistics via the resource type filter, by supplying a connection string for each request.",
+      "name": "sample_azure_documentdb_collection_documents",
+      "description": "Retrieve sample documents from Azure DocumentDB collections to inspect document structure and infer schema patterns for query authoring.",
       "toolMetadata": {
         "destructive": {
           "value": false,
           "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
           "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
           "value": true,
@@ -211,14 +215,12 @@
         }
       },
       "mappedToolList": [
-        "documentdb_index_list_indexes",
-        "documentdb_others_get_stats",
-        "documentdb_others_current_ops"
+        "documentdb_collection_sample_documents"
       ]
     },
     {
-      "name": "manage_azure_documentdb_indexes",
-      "description": "Create or drop indexes in Azure DocumentDB collections by supplying a connection string for each request.",
+      "name": "edit_azure_documentdb_databases_and_collections",
+      "description": "Manage Azure DocumentDB databases, collections, and indexes. Create and drop indexes, rename or drop collections, and drop databases.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -230,11 +232,11 @@
         },
         "openWorld": {
           "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
           "value": false,
-          "description": "This tool may modify its environment and perform write operations (create, update, delete)."
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
         },
         "secret": {
           "value": false,
@@ -246,143 +248,11 @@
         }
       },
       "mappedToolList": [
+        "documentdb_collection_drop_collection",
+        "documentdb_collection_rename_collection",
+        "documentdb_database_drop_database",
         "documentdb_index_create_index",
         "documentdb_index_drop_index"
-      ]
-    },
-    {
-      "name": "get_azure_documentdb_database_details",
-      "description": "List DocumentDB databases, inspect a specific database, and retrieve database statistics including collection counts and storage usage by supplying a connection string for each request.",
-      "toolMetadata": {
-        "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
-        },
-        "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
-        },
-        "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "documentdb_database_list_databases",
-        "documentdb_others_get_stats"
-      ]
-    },
-    {
-      "name": "inspect_azure_documentdb_collection_details",
-      "description": "Inspect Azure DocumentDB collection statistics and sample collection documents by supplying a connection string for each request.",
-      "toolMetadata": {
-        "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
-        },
-        "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "documentdb_collection_sample_documents",
-        "documentdb_others_get_stats"
-      ]
-    },
-    {
-      "name": "manage_azure_documentdb_collections",
-      "description": "Rename or drop Azure DocumentDB collections by supplying a connection string for each request.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment and perform write operations (create, update, delete)."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "documentdb_collection_rename_collection",
-        "documentdb_collection_drop_collection"
-      ]
-    },
-    {
-      "name": "delete_azure_documentdb_databases",
-      "description": "Delete DocumentDB databases by dropping a database and all of its collections and data.",
-      "toolMetadata": {
-        "destructive": {
-          "value": true,
-          "description": "This tool may delete or modify existing resources in its environment."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool may modify its environment and perform write operations (create, update, delete)."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "documentdb_database_drop_database"
       ]
     },
     {
