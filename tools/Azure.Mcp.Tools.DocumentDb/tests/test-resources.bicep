@@ -8,6 +8,15 @@ param baseName string = resourceGroup().name
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = 'westus' == resourceGroup().location ? 'westus2' : resourceGroup().location
 
+@description('Enable an additional public firewall rule for local development. Leave disabled for CI and shared test environments.')
+param enablePublicIpRule bool = false
+
+@description('Start IP address for the optional public firewall rule used for local development.')
+param allowedStartIpAddress string = '0.0.0.0'
+
+@description('End IP address for the optional public firewall rule used for local development.')
+param allowedEndIpAddress string = '255.255.255.255'
+
 var administratorLogin = 'testadmin'
 // Use a password without special characters that need URL encoding (! and @ cause issues)
 var administratorLoginPassword = 'Pass${uniqueString(resourceGroup().id)}0rd'
@@ -43,14 +52,14 @@ resource allowAzureServices 'Microsoft.DocumentDB/mongoClusters/firewallRules@20
   }
 }
 
-// Allow access from anywhere (for development/testing)
-// Note: This is insecure. In production, restrict to specific IPs
-resource allowAllIPs 'Microsoft.DocumentDB/mongoClusters/firewallRules@2024-03-01-preview' = {
+// Optional public IP rule for local development.
+// Keep disabled for CI/shared environments and prefer a narrow caller IP range when enabled.
+resource allowPublicIpRange 'Microsoft.DocumentDB/mongoClusters/firewallRules@2024-03-01-preview' = if (enablePublicIpRule) {
   parent: documentDbAccount
-  name: 'AllowAllIPs'
+  name: 'AllowPublicIpRange'
   properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '255.255.255.255'
+    startIpAddress: allowedStartIpAddress
+    endIpAddress: allowedEndIpAddress
   }
 }
 

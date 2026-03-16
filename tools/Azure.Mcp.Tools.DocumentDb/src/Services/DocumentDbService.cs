@@ -212,7 +212,12 @@ public sealed class DocumentDbService(ILogger<DocumentDbService> logger) : IDocu
             {
                 foreach (var element in filter)
                 {
-                    command.Add(element);
+                    if (string.Equals(element.Name, "currentOp", StringComparison.Ordinal))
+                    {
+                        return Failure(HttpStatusCode.BadRequest, "The 'currentOp' filter field is reserved and cannot be overridden.");
+                    }
+
+                    command[element.Name] = element.Value;
                 }
             }
 
