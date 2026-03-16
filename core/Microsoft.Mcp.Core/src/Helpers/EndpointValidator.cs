@@ -185,6 +185,15 @@ public static class EndpointValidator
             throw new SecurityException($"Invalid URL format: {url}");
         }
 
+        // Only allow HTTP and HTTPS schemes to prevent protocol-specific SSRF
+        // (e.g., gopher://, file://, dict:// attacks)
+        if (!uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase) &&
+            !uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new SecurityException(
+                $"Target URL must use HTTP or HTTPS protocol. Got: {uri.Scheme}");
+        }
+
         // Check if host is a literal IP address
         if (IPAddress.TryParse(uri.Host, out var ipAddress))
         {
@@ -197,6 +206,10 @@ public static class EndpointValidator
         }
         else
         {
+            // Normalize FQDN trailing dot (e.g., "nip.io." -> "nip.io")
+            // to prevent blocklist bypass via DNS absolute form
+            var normalizedHost = uri.Host.TrimEnd('.');
+
             // Check for reserved hostnames (catches localhost variations)
             var reservedHosts = new[]
             {
@@ -210,8 +223,8 @@ public static class EndpointValidator
             };
 
             if (reservedHosts.Any(reserved =>
-                uri.Host.Equals(reserved, StringComparison.OrdinalIgnoreCase) ||
-                uri.Host.EndsWith($".{reserved}", StringComparison.OrdinalIgnoreCase)))
+                normalizedHost.Equals(reserved, StringComparison.OrdinalIgnoreCase) ||
+                normalizedHost.EndsWith($".{reserved}", StringComparison.OrdinalIgnoreCase)))
             {
                 throw new SecurityException(
                     $"Target URL hostname '{uri.Host}' is reserved and cannot be targeted.");
@@ -320,6 +333,42 @@ public static class EndpointValidator
             {
                 return true;  // Multicast (224.0.0.0/4) and Reserved (240.0.0.0/4)
             }
+
+            // TEST-NET-1: 192.0.2.0/24 (RFC 5737) - documentation, non-routable
+            if (bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 2)
+            {
+                return true;
+            }
+
+            // TEST-NET-2: 198.51.100.0/24 (RFC 5737) - documentation, non-routable
+            if (bytes[0] == 198 && bytes[1] == 51 && bytes[2] == 100)
+            {
+                return true;
+            }
+
+            // TEST-NET-3: 203.0.113.0/24 (RFC 5737) - documentation, non-routable
+            if (bytes[0] == 203 && bytes[1] == 0 && bytes[2] == 113)
+            {
+                return true;
+            }
+
+            // Benchmarking: 198.18.0.0/15 (RFC 2544) - testing, non-routable
+            if (bytes[0] == 198 && (bytes[1] == 18 || bytes[1] == 19))
+            {
+                return true;
+            }
+
+            // IANA special: 192.0.0.0/24 (RFC 6890)
+            if (bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 0)
+            {
+                return true;
+            }
+
+            // 6to4 relay: 192.88.99.0/24 (RFC 7526, deprecated)
+            if (bytes[0] == 192 && bytes[1] == 88 && bytes[2] == 99)
+            {
+                return true;
+            }
         }
         else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
         {
@@ -347,6 +396,12 @@ public static class EndpointValidator
                 return true;
             }
 
+            // Site-local: fec0::/10 (RFC 3879, deprecated but may still be routed)
+            if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0xc0)
+            {
+                return true;
+            }
+
             // Multicast: ff00::/8
             if (bytes[0] == 0xff)
             {
@@ -367,6 +422,45 @@ public static class EndpointValidator
                 bytes[2] == 0x0d && bytes[3] == 0xb8)
             {
                 return true;
+            }
+
+            // Benchmarking: 2001:2::/48 (RFC 5180) - non-routable
+            if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
+                bytes[2] == 0x00 && bytes[3] == 0x02)
+            {
+                return true;
+            }
+
+            // BMWG benchmarking: 2001:2::/48 (RFC 5180) - non-routable
+            if (bytes[0] == 0x20 && bytes[1] == 0x01 &&
+                bytes[2] == 0x00 && bytes[3] == 0x02 &&
+                bytes[4] == 0x00 && bytes[5] == 0x00)
+            {
+                return true;
+            }
+
+            // NAT64: 64:ff9b::/96 (RFC 6052) - embeds IPv4 in last 32 bits
+            // On NAT64 infrastructure, 64:ff9b::a9fe:a9fe translates to 169.254.169.254
+            if (bytes[0] == 0x00 && bytes[1] == 0x64 &&
+                bytes[2] == 0xff && bytes[3] == 0x9b &&
+                bytes[4] == 0x00 && bytes[5] == 0x00 &&
+                bytes[6] == 0x00 && bytes[7] == 0x00 &&
+                bytes[8] == 0x00 && bytes[9] == 0x00 &&
+                bytes[10] == 0x00 && bytes[11] == 0x00)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // NAT64 v2: 64:ff9b:1::/48 (RFC 8215 + RFC 6052 Section 2.2)
+            // For /48 prefix, IPv4 is split: first 16 bits in bytes[6-7],
+            // last 16 bits in bytes[9-10], with byte[8] reserved ("u" byte).
+            if (bytes[0] == 0x00 && bytes[1] == 0x64 &&
+                bytes[2] == 0xff && bytes[3] == 0x9b &&
+                bytes[4] == 0x00 && bytes[5] == 0x01)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[6], bytes[7], bytes[9], bytes[10]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
             }
 
             // 6to4: 2002::/16 - embeds IPv4 in bytes[2..5]; validate the embedded address
@@ -392,6 +486,19 @@ public static class EndpointValidator
             if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0 &&
                 bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0 &&
                 bytes[8] == 0 && bytes[9] == 0 && bytes[10] == 0 && bytes[11] == 0)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // IPv4-translated: ::ffff:0:x.x.x.x (RFC 2765/6145, SIIT)
+            // Different from IPv4-mapped (::ffff:x.x.x.x) — bytes[8-9]=FF:FF instead of [10-11].
+            // .NET's IsIPv4MappedToIPv6 does NOT recognize this prefix!
+            // On SIIT/NAT64 infrastructure, ::ffff:0:a9fe:a9fe translates to 169.254.169.254.
+            if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0 &&
+                bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0 &&
+                bytes[8] == 0xff && bytes[9] == 0xff &&
+                bytes[10] == 0 && bytes[11] == 0)
             {
                 var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
                 return IsPrivateOrReservedIP(embeddedIpv4);

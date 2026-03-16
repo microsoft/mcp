@@ -519,7 +519,7 @@ public class EndpointValidatorTests
     #region IsPrivateOrReservedIP - Teredo embedded IPv4 bypass
 
     [Theory]
-    [InlineData("2001:0000:4136:e378:8000:63bf:3fff:fdd2")]  // Teredo client IPv4 = 192.0.2.45 → ~bytes = public, but let's test private
+    [InlineData("2001:0000:4136:e378:8000:63bf:f7f7:f7f7")]  // Teredo client XOR → 8.8.8.8 (public)
     public void IsPrivateOrReservedIP_TeredoPublicIPv4_ReturnsFalse(string address)
     {
         // 3fff:fdd2 XOR ffff = c000:022d = 192.0.2.45 (documentation range 192.0.2.0/24, but not checked as private)
@@ -585,6 +585,170 @@ public class EndpointValidatorTests
         var exception = Assert.Throws<SecurityException>(() =>
             EndpointValidator.ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - NAT64 embedded IPv4 bypass
+
+    [Theory]
+    [InlineData("64:ff9b::a9fe:a9fe")]   // NAT64 embedding 169.254.169.254 (IMDS)
+    [InlineData("64:ff9b::a83f:8110")]   // NAT64 embedding 168.63.129.16 (WireServer)
+    [InlineData("64:ff9b::7f00:1")]      // NAT64 embedding 127.0.0.1 (Loopback)
+    [InlineData("64:ff9b::a00:1")]       // NAT64 embedding 10.0.0.1 (Private)
+    [InlineData("64:ff9b::c0a8:101")]    // NAT64 embedding 192.168.1.1 (Private)
+    public void IsPrivateOrReservedIP_NAT64EmbeddedPrivateIPv4_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_NAT64EmbeddedPublicIPv4_ReturnsFalse()
+    {
+        // 64:ff9b::808:808 embeds 8.8.8.8 (Google DNS - public)
+        var ipAddress = IPAddress.Parse("64:ff9b::808:808");
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("64:ff9b:1:a9fe:a9:fe00::")]   // NAT64v2 /48: IMDS 169.254.169.254 in bytes[6-7,9-10]
+    [InlineData("64:ff9b:1:7f00:0:100::")]      // NAT64v2 /48: Loopback 127.0.0.1 in bytes[6-7,9-10]
+    [InlineData("64:ff9b:1:a9fe:a9:fe00:808:808")] // NAT64v2 EXPLOIT: IMDS in correct pos, public IP in suffix
+    public void IsPrivateOrReservedIP_NAT64v2EmbeddedPrivateIPv4_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_NAT64v2EmbeddedPublicIPv4_ReturnsFalse()
+    {
+        // NAT64v2 /48: 8.8.8.8 in bytes[6-7,9-10] → public
+        var ipAddress = IPAddress.Parse("64:ff9b:1:808:8:800::");
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - Site-local IPv6 (deprecated)
+
+    [Theory]
+    [InlineData("fec0::1")]        // Site-local
+    [InlineData("feff::1")]        // Site-local upper bound
+    public void IsPrivateOrReservedIP_SiteLocalIPv6_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv4 TEST-NETs and reserved ranges
+
+    [Theory]
+    [InlineData("192.0.2.1")]      // TEST-NET-1 (RFC 5737)
+    [InlineData("198.51.100.1")]   // TEST-NET-2 (RFC 5737)
+    [InlineData("203.0.113.1")]    // TEST-NET-3 (RFC 5737)
+    [InlineData("198.18.0.1")]     // Benchmarking (RFC 2544)
+    [InlineData("198.19.255.255")] // Benchmarking upper bound
+    [InlineData("192.0.0.1")]      // IANA special (RFC 6890)
+    [InlineData("192.88.99.1")]    // 6to4 relay (RFC 7526)
+    public void IsPrivateOrReservedIP_IPv4ReservedRanges_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - BMWG benchmarking IPv6
+
+    [Theory]
+    [InlineData("2001:2::1")]          // BMWG benchmarking (RFC 5180)
+    [InlineData("2001:2:0:ffff::1")]   // BMWG upper bound within /48
+    public void IsPrivateOrReservedIP_BMWGIPv6_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region ValidatePublicTargetUrl - Trailing dot FQDN bypass
+
+    [Theory]
+    [InlineData("http://nip.io./path")]
+    [InlineData("http://sslip.io./path")]
+    [InlineData("http://xip.io./path")]
+    [InlineData("http://169.254.169.254.nip.io./path")]
+    [InlineData("http://localhost./path")]
+    public void ValidatePublicTargetUrl_TrailingDotReservedHost_ThrowsSecurityException(string url)
+    {
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv4-translated (SIIT) bypass
+
+    [Theory]
+    [InlineData("::ffff:0:a9fe:a9fe")]   // IPv4-translated IMDS 169.254.169.254
+    [InlineData("::ffff:0:7f00:1")]      // IPv4-translated loopback 127.0.0.1
+    [InlineData("::ffff:0:a00:1")]       // IPv4-translated 10.0.0.1
+    [InlineData("::ffff:0:c0a8:101")]    // IPv4-translated 192.168.1.1
+    [InlineData("::ffff:0:a83f:8110")]   // IPv4-translated WireServer 168.63.129.16
+    public void IsPrivateOrReservedIP_IPv4TranslatedPrivateIPv4_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Fact]
+    public void IsPrivateOrReservedIP_IPv4TranslatedPublicIPv4_ReturnsFalse()
+    {
+        // ::ffff:0:808:808 embeds 8.8.8.8 (public)
+        var ipAddress = IPAddress.Parse("::ffff:0:808:808");
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region IsPrivateOrReservedIP - IPv6 BMWG benchmarking prefix
+
+    [Fact]
+    public void IsPrivateOrReservedIP_IPv6Benchmarking_ReturnsTrue()
+    {
+        // 2001:2::/48 (RFC 5180) - benchmarking, non-routable
+        var ipAddress = IPAddress.Parse("2001:2::1");
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
+
+    #region ValidatePublicTargetUrl - Scheme enforcement
+
+    [Theory]
+    [InlineData("ftp://8.8.8.8/")]
+    [InlineData("gopher://8.8.8.8/")]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("dict://8.8.8.8:11211/")]
+    public void ValidatePublicTargetUrl_NonHttpScheme_ThrowsSecurityException(string url)
+    {
+        var exception = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Contains("HTTP or HTTPS", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("http://8.8.8.8/")]
+    [InlineData("https://8.8.8.8/")]
+    public void ValidatePublicTargetUrl_HttpSchemes_Allowed(string url)
+    {
+        // Should not throw for HTTP/HTTPS with public IPs
+        EndpointValidator.ValidatePublicTargetUrl(url);
     }
 
     #endregion
