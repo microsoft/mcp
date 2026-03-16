@@ -5,7 +5,6 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -97,7 +96,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     /// <summary>
     /// Configuration for reading settings. Set by DI container during service registration.
     /// When set, configuration-based retrieval is preferred over direct environment variable access,
-    /// allowing non-environment sources (e.g. appsettings.json) to override values.
+    /// allowing values to come from non-environment sources (e.g. appsettings.json) in addition to environment variables.
     /// </summary>
     internal static IConfiguration? Configuration { get; set; }
 
