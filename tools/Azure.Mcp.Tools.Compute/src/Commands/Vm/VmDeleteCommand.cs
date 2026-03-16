@@ -16,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
-    : BaseComputeCommand<VmDeleteOptions>()
+    : BaseComputeCommand<VmDeleteOptions>(true)
 {
     private const string CommandTitle = "Delete Virtual Machine";
     private readonly ILogger<VmDeleteCommand> _logger = logger;

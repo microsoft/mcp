@@ -341,7 +341,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<bool> Force = new($"--{ForceName}")
     {
-        Description = "Force delete without confirmation prompt",
+        Description = "Required to confirm and proceed with deletion",
         Required = false
     };
 

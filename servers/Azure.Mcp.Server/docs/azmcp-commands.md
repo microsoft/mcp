@@ -1045,7 +1045,7 @@ azmcp compute vm update --subscription "my-subscription" \
 azmcp compute vm delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --vm-name <vm-name> \
-                        --force \
+                        [--force] \
                         [--force-deletion]
 
 # Examples:
@@ -1259,7 +1259,7 @@ azmcp compute vmss update --subscription "my-subscription" \
 azmcp compute vmss delete --subscription <subscription> \
                           --resource-group <resource-group> \
                           --vmss-name <vmss-name> \
-                          --force \
+                          [--force] \
                           [--force-deletion]
 
 # Examples:
@@ -1752,7 +1752,7 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
                                    [--pipeline-platform <pipeline-platform>] \
-                                   [--deploy-option <deploy-option>] 
+                                   [--deploy-option <deploy-option>]
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

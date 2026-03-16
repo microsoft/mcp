@@ -16,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
 public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
-    : BaseComputeCommand<VmssDeleteOptions>()
+    : BaseComputeCommand<VmssDeleteOptions>(true)
 {
     private const string CommandTitle = "Delete Virtual Machine Scale Set";
     private readonly ILogger<VmssDeleteCommand> _logger = logger;

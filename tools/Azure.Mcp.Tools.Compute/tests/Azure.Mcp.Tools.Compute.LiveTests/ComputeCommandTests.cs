@@ -577,30 +577,23 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var nonExistentVmName = "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8];
 
-        try
-        {
-            var result = await CallToolAsync(
-                "compute_vm_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "vm-name", nonExistentVmName },
-                    { "force", true }
-                });
-
-            // The command sets Status = NotFound with a Message when VM is not found
-            if (result.HasValue)
+        var result = await Client.CallToolAsync(
+            "compute_vm_delete",
+            new Dictionary<string, object?>
             {
-                var message = result.Value.AssertProperty("message");
-                Assert.Contains("not found", message.GetString(), StringComparison.OrdinalIgnoreCase);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Some implementations may throw - verify it's a not-found error
-            Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
-        }
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", nonExistentVmName },
+                { "force", true }
+            },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Command sets Status = NotFound which maps to IsError = true
+        Assert.True(result.IsError, "Expected error response for non-existent VM");
+
+        var content = McpTestUtilities.GetFirstText(result.Content);
+        Assert.False(string.IsNullOrWhiteSpace(content), "Expected error message content");
+        Assert.Contains("not found", content, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -670,30 +663,23 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var nonExistentVmssName = "nonexistent-vmss-" + Guid.NewGuid().ToString("N")[..8];
 
-        try
-        {
-            var result = await CallToolAsync(
-                "compute_vmss_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "vmss-name", nonExistentVmssName },
-                    { "force", true }
-                });
-
-            // The command sets Status = NotFound with a Message when VMSS is not found
-            if (result.HasValue)
+        var result = await Client.CallToolAsync(
+            "compute_vmss_delete",
+            new Dictionary<string, object?>
             {
-                var message = result.Value.AssertProperty("message");
-                Assert.Contains("not found", message.GetString(), StringComparison.OrdinalIgnoreCase);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Some implementations may throw - verify it's a not-found error
-            Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
-        }
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", nonExistentVmssName },
+                { "force", true }
+            },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Command sets Status = NotFound which maps to IsError = true
+        Assert.True(result.IsError, "Expected error response for non-existent VMSS");
+
+        var content = McpTestUtilities.GetFirstText(result.Content);
+        Assert.False(string.IsNullOrWhiteSpace(content), "Expected error message content");
+        Assert.Contains("not found", content, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
