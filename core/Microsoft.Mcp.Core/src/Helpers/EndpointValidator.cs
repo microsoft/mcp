@@ -235,6 +235,16 @@ public static class EndpointValidator
             try
             {
                 var hostEntry = Dns.GetHostEntry(uri.Host);
+
+                // Fail-closed: reject if DNS returns no addresses (prevents
+                // bypass via empty AddressList where downstream resolves differently)
+                if (hostEntry.AddressList.Length == 0)
+                {
+                    throw new SecurityException(
+                        $"Target URL hostname '{uri.Host}' resolved to no IP addresses. " +
+                        "Ensure the hostname resolves to a public IP address.");
+                }
+
                 foreach (var resolvedIp in hostEntry.AddressList)
                 {
                     if (IsPrivateOrReservedIP(resolvedIp))
@@ -493,6 +503,25 @@ public static class EndpointValidator
                 bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0 &&
                 bytes[8] == 0xff && bytes[9] == 0xff &&
                 bytes[10] == 0 && bytes[11] == 0)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // ISATAP (RFC 5214): embeds IPv4 in last 4 bytes with interface ID
+            // pattern ::0:5efe:x.x.x.x (modified EUI-64 with 5efe marker).
+            // Link-local ISATAP (fe80::5efe:...) is already blocked by fe80::/10 above,
+            // but global-prefix ISATAP (e.g., 2001:db8::5efe:a9fe:a9fe) would bypass.
+            if (bytes[8] == 0x00 && bytes[9] == 0x00 &&
+                bytes[10] == 0x5e && bytes[11] == 0xfe)
+            {
+                var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
+                return IsPrivateOrReservedIP(embeddedIpv4);
+            }
+
+            // Also check ISATAP with u/l bit set (::200:5efe:x.x.x.x)
+            if (bytes[8] == 0x02 && bytes[9] == 0x00 &&
+                bytes[10] == 0x5e && bytes[11] == 0xfe)
             {
                 var embeddedIpv4 = new IPAddress([bytes[12], bytes[13], bytes[14], bytes[15]]);
                 return IsPrivateOrReservedIP(embeddedIpv4);

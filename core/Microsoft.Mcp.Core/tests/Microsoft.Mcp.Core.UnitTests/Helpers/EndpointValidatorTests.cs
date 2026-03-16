@@ -876,4 +876,38 @@ public class EndpointValidatorTests
     }
 
     #endregion
+
+    #region ISATAP and Empty DNS Tests (MQ Wave 4)
+
+    [Theory]
+    [InlineData("2001:db8:1::5efe:a9fe:a9fe")]    // ISATAP global prefix with IMDS IPv4
+    [InlineData("2001:db8:1::5efe:7f00:0001")]     // ISATAP global prefix with loopback
+    [InlineData("2001:db8:1::5efe:0a00:0001")]     // ISATAP global prefix with 10.0.0.1
+    public void IsPrivateOrReservedIP_IsatapEmbeddedPrivate_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("2607:f8b0::5efe:0808:0808")]      // ISATAP with 8.8.8.8 (public)
+    public void IsPrivateOrReservedIP_IsatapEmbeddedPublic_ReturnsFalse(string address)
+    {
+        // ISATAP with public embedded IPv4 should not be blocked
+        // Note: 2607:f8b0::/32 is Google's prefix — not in any blocked range
+        // The ISATAP check extracts 8.8.8.8 which is public → returns false
+        var ipAddress = IPAddress.Parse(address);
+        Assert.False(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    [Theory]
+    [InlineData("2001:db8:1:0:200:5efe:a9fe:a9fe")]  // ISATAP u/l bit set with IMDS
+    [InlineData("2001:db8:1:0:200:5efe:7f00:0001")]   // ISATAP u/l bit set with loopback
+    public void IsPrivateOrReservedIP_IsatapULBitEmbeddedPrivate_ReturnsTrue(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        Assert.True(EndpointValidator.IsPrivateOrReservedIP(ipAddress));
+    }
+
+    #endregion
 }
