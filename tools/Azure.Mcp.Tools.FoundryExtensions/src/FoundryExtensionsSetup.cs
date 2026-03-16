@@ -22,12 +22,6 @@ public class FoundryExtensionsSetup : IAreaSetup
         services.AddSingleton<KnowledgeIndexListCommand>();
         services.AddSingleton<KnowledgeIndexSchemaCommand>();
 
-        services.AddSingleton<AgentsGetSdkSampleCommand>();
-
-        services.AddSingleton<ThreadCreateCommand>();
-        services.AddSingleton<ThreadListCommand>();
-        services.AddSingleton<ThreadGetMessagesCommand>();
-
         services.AddSingleton<ResourceGetCommand>();
     }
 
@@ -55,22 +49,10 @@ public class FoundryExtensionsSetup : IAreaSetup
         openai.AddCommand("models-list", new OpenAiModelsListCommand());
         openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
 
-        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for interacting with agents in Microsoft Foundry.");
-        foundryExtensions.AddSubGroup(agents);
-
-        agents.AddCommand("get-sdk-sample", serviceProvider.GetRequiredService<AgentsGetSdkSampleCommand>());
-
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Microsoft Foundry resources.");
         foundryExtensions.AddSubGroup(resources);
 
         resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
-
-        var threads = new CommandGroup("threads", "Foundry agent threads operations - Commands for listing, creating threads and getting messages in a thread in Microsoft Foundry.");
-        foundryExtensions.AddSubGroup(threads);
-
-        threads.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
-        threads.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
-        threads.AddCommand("get-messages", serviceProvider.GetRequiredService<ThreadGetMessagesCommand>());
 
         return foundryExtensions;
     }

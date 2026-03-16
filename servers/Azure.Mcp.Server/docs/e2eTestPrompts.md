@@ -1008,6 +1008,3 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription |
 | foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
 | foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundryextensions_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundryextensions_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundryextensions_threads_list | List my Microsoft Foundry threads |
