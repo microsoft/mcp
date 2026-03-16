@@ -117,6 +117,41 @@ public class DatabaseQueryCommandTests
     [InlineData("SELECT * FROM users /* block comment */")] // block comment
     [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
     [InlineData("UPDATE accounts SET balance=0;")]
+    [InlineData("SELECT pg_read_file('/etc/passwd')")] // file read
+    [InlineData("SELECT pg_ls_archive_statusdir()")] // archive status directory listing
+    [InlineData("SELECT pg_execute_server_program('id')")] // server program execution
+    [InlineData("SELECT lo_export(12345, '/tmp/out')")] // large object export
+    [InlineData("SELECT lo_put(12345, 0, 'data')")] // large object write
+    [InlineData("SELECT lo_from_bytea(0, 'data')")] // large object from bytea
+    [InlineData("SELECT dblink_exec('host=evil.com', 'DROP TABLE x')")] // remote exec
+    [InlineData("SELECT dblink_send_query('conn', 'SELECT 1')")] // remote async query
+    [InlineData("SELECT pg_copy_to('users', '/tmp/dump')")] // copy-based exfiltration
+    [InlineData("SELECT pg_copy_from('users', '/tmp/payload')")] // copy-based injection
+    [InlineData("SELECT pg_create_extension('evil_ext')")] // extension install
+    [InlineData("SELECT pg_advisory_lock(1)")] // advisory lock abuse
+    [InlineData("SELECT pg_advisory_unlock(1)")] // advisory unlock    
+    [InlineData("SELECT pg_read_binary_file('/etc/hostname')")] // binary file read
+    [InlineData("SELECT pg_ls_dir('/etc')")] // directory listing
+    [InlineData("SELECT pg_ls_logdir()")] // log directory listing
+    [InlineData("SELECT pg_ls_waldir()")] // WAL directory listing
+    [InlineData("SELECT pg_ls_tmpdir()")] // tmp directory listing
+    [InlineData("SELECT usename, passwd FROM pg_shadow")] // credential access
+    [InlineData("SELECT rolname, rolsuper FROM pg_authid")] // auth access
+    [InlineData("SELECT lo_import('/etc/passwd')")] // large object import
+    [InlineData("SELECT lo_get(12345)")] // large object read
+    [InlineData("SELECT dblink('host=evil.com')")] // external connection
+    [InlineData("SELECT dblink_connect('host=evil.com')")] // external connection
+    [InlineData("SELECT pg_file_write('/tmp/evil', 'data', false)")] // file write
+    [InlineData("SELECT encode(pg_read_binary_file('/etc/hostname'), 'hex')")] // encoded file read
+    [InlineData("SELECT pg_stat_file('/etc/passwd')")] // file metadata
+    [InlineData("SELECT pg_terminate_backend(1234)")] // session kill DoS
+    [InlineData("SELECT pg_cancel_backend(1234)")] // session cancel DoS
+    [InlineData("SELECT pg_reload_conf()")] // config reload
+    [InlineData("SELECT set_config('log_statement', 'all', false)")] // runtime setting change
+    [InlineData("SELECT current_setting('config_file')")] // setting leak
+    [InlineData("SELECT pg_sleep(3600)")] // denial-of-service
+    [InlineData("SELECT * FROM pg_stat_activity")] // cross-session info leak
+    [InlineData("SELECT * FROM pg_user_mappings")] // FDW credential exposure
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
         var command = new DatabaseQueryCommand(_logger);
