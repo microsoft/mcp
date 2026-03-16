@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.AppLens.Options.Resource;
 /// <summary>
 /// Options for the AppLens resource diagnose command.
 /// </summary>
-public class ResourceDiagnoseOptions : SubscriptionOptions
+public class ResourceDiagnoseOptions : GlobalOptions
 {
     /// <summary>
     /// The user's question for diagnosis.
@@ -21,7 +21,12 @@ public class ResourceDiagnoseOptions : SubscriptionOptions
     public string Resource { get; set; } = string.Empty;
 
     /// <summary>
-    /// The Resource Type of the resource to diagnose
+    /// The Resource Type of the resource to diagnose. This is optional and used to disambiguate between multiple resources with the same name.
     /// </summary>
     public string? ResourceType { get; set; }
+
+    /// <summary>
+    /// The subscription of the resource to diagnose. This is optional and used to disambiguate between multiple resources with the same name.
+    /// </summary>
+    public string? Subscription { get; set; }
 }
