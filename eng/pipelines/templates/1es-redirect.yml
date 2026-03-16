@@ -29,7 +29,6 @@ extends:
         featureFlags:
           autoBaseline: true
     featureFlags:
-      containerFlowV2: true
       golang:
         internalModuleProxy:
           enabled: true
