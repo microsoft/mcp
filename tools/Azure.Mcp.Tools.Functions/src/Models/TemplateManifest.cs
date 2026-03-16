@@ -25,4 +25,11 @@ public sealed class TemplateManifest
 
     [JsonPropertyName("templates")]
     public IReadOnlyList<TemplateManifestEntry> Templates { get; init; } = [];
+
+    /// <summary>
+    /// Runtime version information for each supported language.
+    /// Keys are language names (e.g., "Python", "JavaScript", "TypeScript", "Java", "CSharp", "PowerShell").
+    /// </summary>
+    [JsonPropertyName("runtimeVersions")]
+    public IReadOnlyDictionary<string, RuntimeVersionInfo>? RuntimeVersions { get; init; }
 }

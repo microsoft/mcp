@@ -10,64 +10,6 @@ namespace Azure.Mcp.Tools.Functions.UnitTests.Services;
 
 public sealed class FunctionsServiceTests
 {
-    #region ConstructGitHubContentsApiUrl Tests
-
-    [Fact]
-    public void ConstructGitHubContentsApiUrl_ValidInputs_ReturnsCorrectUrl()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/azure-functions-templates";
-        var folderPath = "templates/python/HttpTrigger";
-
-        // Act
-        var result = FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, folderPath);
-
-        // Assert
-        Assert.Equal("https://api.github.com/repos/Azure/azure-functions-templates/contents/templates/python/HttpTrigger", result);
-    }
-
-    [Fact]
-    public void ConstructGitHubContentsApiUrl_TrimsLeadingSlash()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/repo";
-        var folderPath = "/templates/python";
-
-        // Act
-        var result = FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, folderPath);
-
-        // Assert
-        Assert.Equal("https://api.github.com/repos/Azure/repo/contents/templates/python", result);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("not-a-github-url")]
-    public void ConstructGitHubContentsApiUrl_InvalidRepoUrl_ThrowsArgumentException(string repoUrl)
-    {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, "templates/python"));
-        Assert.Equal("repositoryUrl", ex.ParamName);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(".")]
-    [InlineData("..")]
-    public void ConstructGitHubContentsApiUrl_RootFolderPath_ThrowsArgumentException(string folderPath)
-    {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConstructGitHubContentsApiUrl("https://github.com/Azure/repo", folderPath));
-        Assert.Equal("folderPath", ex.ParamName);
-        Assert.Contains("subdirectory", ex.Message);
-    }
-
-    #endregion
-
     #region ConvertToRawGitHubUrl Tests
 
     [Fact]

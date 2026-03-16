@@ -23,7 +23,6 @@ public sealed class ManifestService(
     private const long MaxManifestSizeBytes = 10_485_760; // 10 MB
     private const string CacheGroup = "functions";
     private const string ManifestCacheKey = "manifest";
-    private static readonly TimeSpan s_manifestCacheDuration = TimeSpan.FromHours(12);
 
     private readonly string _manifestUrl = options.Value.ManifestUrl;
     private readonly string _fallbackManifestUrl = options.Value.FallbackManifestUrl;
@@ -44,7 +43,7 @@ public sealed class ManifestService(
     /// <inheritdoc />
     public async Task<TemplateManifest> FetchManifestAsync(CancellationToken cancellationToken)
     {
-        var cached = await cacheService.GetAsync<TemplateManifest>(CacheGroup, ManifestCacheKey, s_manifestCacheDuration, cancellationToken);
+        var cached = await cacheService.GetAsync<TemplateManifest>(CacheGroup, ManifestCacheKey, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
         if (cached?.Templates?.Count > 0)
         {
             return cached;
@@ -54,7 +53,7 @@ public sealed class ManifestService(
         var primaryResult = await TryFetchManifestAsync(_manifestUrl, cancellationToken);
         if (primaryResult.IsSuccess)
         {
-            await cacheService.SetAsync(CacheGroup, ManifestCacheKey, primaryResult.Manifest!, s_manifestCacheDuration, cancellationToken);
+            await cacheService.SetAsync(CacheGroup, ManifestCacheKey, primaryResult.Manifest!, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
             return primaryResult.Manifest!;
         }
 
@@ -63,7 +62,7 @@ public sealed class ManifestService(
         var fallbackResult = await TryFetchManifestAsync(_fallbackManifestUrl, cancellationToken);
         if (fallbackResult.IsSuccess)
         {
-            await cacheService.SetAsync(CacheGroup, ManifestCacheKey, fallbackResult.Manifest!, s_manifestCacheDuration, cancellationToken);
+            await cacheService.SetAsync(CacheGroup, ManifestCacheKey, fallbackResult.Manifest!, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
             return fallbackResult.Manifest!;
         }
 
