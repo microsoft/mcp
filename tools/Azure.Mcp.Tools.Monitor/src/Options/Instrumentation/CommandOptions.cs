@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Options;
+namespace Azure.Mcp.Tools.Monitor.Options;
 
 public sealed class GetLearningResourceOptions
 {

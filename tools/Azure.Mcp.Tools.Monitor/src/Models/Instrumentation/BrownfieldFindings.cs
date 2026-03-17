@@ -1,4 +1,4 @@
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
+namespace Azure.Mcp.Tools.Monitor.Models;
 
 /// <summary>
 /// Combined brownfield findings sent by the LLM after analyzing the codebase.

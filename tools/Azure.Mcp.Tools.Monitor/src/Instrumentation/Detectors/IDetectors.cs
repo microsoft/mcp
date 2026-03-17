@@ -1,6 +1,6 @@
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using Azure.Mcp.Tools.Monitor.Models;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
+namespace Azure.Mcp.Tools.Monitor.Detectors;
 
 public interface ILanguageDetector
 {

@@ -1,8 +1,8 @@
 using System.Text.Json;
-using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools;
 
 /// <summary>
 /// Receives brownfield analysis findings from the LLM and generates a targeted migration plan.

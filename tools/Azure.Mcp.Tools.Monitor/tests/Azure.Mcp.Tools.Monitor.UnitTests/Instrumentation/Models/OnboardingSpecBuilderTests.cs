@@ -1,7 +1,7 @@
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using Azure.Mcp.Tools.Monitor.Models;
 using Xunit;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.UnitTests.Models;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Models;
 
 public sealed class OnboardingSpecBuilderTests
 {

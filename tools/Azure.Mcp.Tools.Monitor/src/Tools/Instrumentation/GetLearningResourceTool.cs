@@ -1,4 +1,4 @@
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools;
 
 public sealed class GetLearningResourceTool
 {

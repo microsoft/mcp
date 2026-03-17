@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
-using Azure.Mcp.Tools.MonitorInstrumentation.Pipeline;
-using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
+using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Pipeline;
+using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools;
 
 /// <summary>
 /// Single entry point for Azure Monitor instrumentation.

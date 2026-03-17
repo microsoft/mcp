@@ -3,7 +3,7 @@
 
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Options;
+namespace Azure.Mcp.Tools.Monitor.Options;
 
 public static class MonitorInstrumentationOptionDefinitions
 {

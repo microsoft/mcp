@@ -1,8 +1,8 @@
 using System.Xml.Linq;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
-using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
+using Azure.Mcp.Tools.Monitor.Models;
+using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
+namespace Azure.Mcp.Tools.Monitor.Detectors;
 
 public class DotNetInstrumentationDetector : IInstrumentationDetector
 {

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using Azure.Mcp.Tools.Monitor.Models;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
+namespace Azure.Mcp.Tools.Monitor.Detectors;
 
 /// <summary>
 /// Loads and caches Python instrumentation data from the JSON resource file.

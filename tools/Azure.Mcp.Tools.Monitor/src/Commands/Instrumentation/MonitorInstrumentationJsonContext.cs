@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands;
 
 [JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]

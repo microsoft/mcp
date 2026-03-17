@@ -1,7 +1,7 @@
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
-using static Azure.Mcp.Tools.MonitorInstrumentation.Models.OnboardingConstants;
+using Azure.Mcp.Tools.Monitor.Models;
+using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Generators;
+namespace Azure.Mcp.Tools.Monitor.Generators;
 
 /// <summary>
 /// Generator for ASP.NET Core brownfield projects migrating from Application Insights SDK 2.x to 3.x.

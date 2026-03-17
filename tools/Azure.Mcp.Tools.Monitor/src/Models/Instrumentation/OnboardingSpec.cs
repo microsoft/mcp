@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
+namespace Azure.Mcp.Tools.Monitor.Models;
 
 public record OnboardingSpec
 {

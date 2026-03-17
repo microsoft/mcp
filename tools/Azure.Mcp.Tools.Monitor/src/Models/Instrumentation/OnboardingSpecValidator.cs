@@ -1,4 +1,4 @@
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
+namespace Azure.Mcp.Tools.Monitor.Models;
 
 /// <summary>
 /// Validates onboarding specifications for correctness and consistency

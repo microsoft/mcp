@@ -1,13 +1,13 @@
 using System.Text.Json;
-using Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
-using Azure.Mcp.Tools.MonitorInstrumentation.Generators;
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
-using Azure.Mcp.Tools.MonitorInstrumentation.Pipeline;
-using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+using Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Pipeline;
+using Azure.Mcp.Tools.Monitor.Tools;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.UnitTests.Tools;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Tools;
 
 public sealed class SendBrownfieldAnalysisToolTests
 {

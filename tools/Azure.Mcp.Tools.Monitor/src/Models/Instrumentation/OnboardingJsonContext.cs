@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.MonitorInstrumentation.Detectors;
-using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+using Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Tools;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Models;
+namespace Azure.Mcp.Tools.Monitor.Models;
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

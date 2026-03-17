@@ -1,6 +1,6 @@
-using Azure.Mcp.Tools.MonitorInstrumentation.Models;
+using Azure.Mcp.Tools.Monitor.Models;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Generators;
+namespace Azure.Mcp.Tools.Monitor.Generators;
 
 /// <summary>
 /// Interface for generating onboarding specifications based on workspace analysis

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.MonitorInstrumentation.Options;
-using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
+using Azure.Mcp.Tools.Monitor.Options;
+using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands;
 
 public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger)
     : BaseCommand<GetLearningResourceOptions>
