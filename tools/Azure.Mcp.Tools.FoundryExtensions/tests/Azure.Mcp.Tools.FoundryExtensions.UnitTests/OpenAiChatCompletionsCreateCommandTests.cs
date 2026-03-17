@@ -2,17 +2,26 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
+using Azure.Mcp.Tools.FoundryExtensions.Services;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
 public class OpenAiChatCompletionsCreateCommandTests
 {
+    private readonly IFoundryExtensionsService _foundryService;
+
+    public OpenAiChatCompletionsCreateCommandTests()
+    {
+        _foundryService = Substitute.For<IFoundryExtensionsService>();
+    }
+
     [Fact]
     public void Name_ReturnsCorrectCommandName()
     {
         // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
+        var command = new OpenAiChatCompletionsCreateCommand(_foundryService);
 
         // Act & Assert
         Assert.Equal("chat-completions-create", command.Name);
@@ -22,7 +31,7 @@ public class OpenAiChatCompletionsCreateCommandTests
     public void Description_ContainsExpectedContent()
     {
         // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
+        var command = new OpenAiChatCompletionsCreateCommand(_foundryService);
 
         // Act & Assert
         Assert.Contains("Create chat completions", command.Description);
@@ -35,7 +44,7 @@ public class OpenAiChatCompletionsCreateCommandTests
     public void Title_ReturnsCorrectValue()
     {
         // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
+        var command = new OpenAiChatCompletionsCreateCommand(_foundryService);
 
         // Act & Assert
         Assert.Equal("Create OpenAI Chat Completions", command.Title);
@@ -45,7 +54,7 @@ public class OpenAiChatCompletionsCreateCommandTests
     public void Metadata_HasCorrectProperties()
     {
         // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
+        var command = new OpenAiChatCompletionsCreateCommand(_foundryService);
 
         // Act & Assert
         Assert.False(command.Metadata.Destructive);

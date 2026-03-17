@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
@@ -19,7 +18,6 @@ public class KnowledgeIndexListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IFoundryExtensionsService _service;
-    private readonly ILogger<KnowledgeIndexListCommand> _logger;
     private readonly KnowledgeIndexListCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
@@ -27,11 +25,10 @@ public class KnowledgeIndexListCommandTests
     public KnowledgeIndexListCommandTests()
     {
         _service = Substitute.For<IFoundryExtensionsService>();
-        _logger = Substitute.For<ILogger<KnowledgeIndexListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_service);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new();
+        _command = new(_service);
         _context = new CommandContext(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

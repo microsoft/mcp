@@ -1,0 +1,4 @@
+pr: 1990
+changes:
+  - section: "Other Changes"
+    description: "FoundryExtensions: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"

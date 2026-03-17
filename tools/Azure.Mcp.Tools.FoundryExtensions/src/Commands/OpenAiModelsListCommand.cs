@@ -14,8 +14,10 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsListOptions>
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "List OpenAI Models";
 
     public override string Id => "a7b8c9d0-7890-bcde-0123-456789012345";
@@ -68,7 +70,7 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
             var result = await foundryService.ListOpenAiModelsAsync(
                 options.ResourceName!,
                 options.Subscription!,
