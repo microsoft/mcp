@@ -56,8 +56,8 @@ public class GroupResourceListCommandTests
 
         _resourceGroupService
             .GetGenericResources(
-                Arg.Is<string>(x => x == subscriptionId),
-                Arg.Is<string>(x => x == resourceGroup),
+                Arg.Is<string>(subscriptionId),
+                Arg.Is<string>(resourceGroup),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
