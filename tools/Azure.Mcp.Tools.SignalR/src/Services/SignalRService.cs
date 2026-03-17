@@ -31,7 +31,7 @@ public sealed class SignalRService(
     private readonly ILogger<SignalRService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "signalr";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<IEnumerable<Runtime>> GetRuntimeAsync(
         string subscription,
