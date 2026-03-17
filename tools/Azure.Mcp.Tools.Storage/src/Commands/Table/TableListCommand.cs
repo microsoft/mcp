@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Table.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseStorageCommand<BaseStorageOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions>()
 {
     private const string CommandTitle = "List Tables in Azure Storage";
     private readonly ILogger<TableListCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
 
@@ -44,8 +45,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
 
         try
         {
-            var tablesService = context.GetService<IStorageService>();
-            var tables = await tablesService.ListTables(
+            var tables = await _storageService.ListTables(
                 options.Account!,
                 options.Subscription!,
                 options.Tenant,
