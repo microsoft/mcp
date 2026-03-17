@@ -78,7 +78,7 @@ public sealed class ManifestService(
 
         try
         {
-            using var client = HttpClientHelper.CreateClientWithUserAgent(httpClientFactory);
+            using var client = httpClientFactory.CreateClient();
             using var response = await client.GetAsync(uri, cancellationToken);
             response.EnsureSuccessStatusCode();
 

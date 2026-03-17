@@ -330,7 +330,7 @@ public sealed class FunctionsService(
         }
 
         var files = new List<ProjectTemplateFile>();
-        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
+        using var client = _httpClientFactory.CreateClient();
 
         foreach (var (fullPath, relativePath, size) in filePaths)
         {
@@ -383,7 +383,7 @@ public sealed class FunctionsService(
     /// </summary>
     private async Task<GitHubTreeResponse> FetchTreeFromGitHubAsync(string treeUrl, string repoPath, CancellationToken cancellationToken)
     {
-        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
+        using var client = _httpClientFactory.CreateClient();
 
         HttpResponseMessage response;
         try
@@ -519,7 +519,7 @@ public sealed class FunctionsService(
         var zipUrl = $"https://api.github.com/repos/{repoPath}/zipball/{DefaultBranch}";
         var normalizedFolder = GitHubUrlValidator.NormalizeFolderPath(folderPath, allowRoot: true) ?? string.Empty;
 
-        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
+        using var client = _httpClientFactory.CreateClient();
 
         _logger.LogInformation("Downloading repository archive from {Url}", zipUrl);
 
