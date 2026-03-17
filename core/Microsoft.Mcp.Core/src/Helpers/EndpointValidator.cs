@@ -19,6 +19,8 @@ public static class EndpointValidator
         "local",
         "localtest.me",          // Common localhost alias
         "lvh.me",                // localhost variations
+        "traefik.me",            // Resolves to 127.0.0.1
+        "localho.st",            // Resolves to 127.0.0.1
         "nip.io",                // Wildcard DNS - resolves to embedded IP
         "sslip.io",              // Wildcard DNS - resolves to embedded IP
         "xip.io",                // Wildcard DNS - resolves to embedded IP
