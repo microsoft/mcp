@@ -16,6 +16,7 @@ using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Tools.AppLens;
+using Azure.Mcp.Tools.AppService;
 using Azure.Mcp.Tools.Authorization;
 using Azure.Mcp.Tools.AzureBestPractices;
 using Azure.Mcp.Tools.AzureIsv;
@@ -70,6 +71,7 @@ internal class CommandFactoryHelpers
             new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
@@ -135,6 +137,7 @@ internal class CommandFactoryHelpers
             new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),

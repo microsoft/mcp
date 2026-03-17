@@ -1,0 +1,4 @@
+pr: 1900
+changes:
+  - section: "Other Changes"
+    description: "AppService: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
