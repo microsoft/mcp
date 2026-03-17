@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Redis: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"
