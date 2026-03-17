@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : SubscriptionCommand<ResourceGetOptions>()
+public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<ResourceGetOptions>()
 {
     private const string CommandTitle = "Get Microsoft Foundry Resource Details";
     private readonly ILogger<ResourceGetCommand> _logger = logger;
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     public override string Id => "b8c9d0e1-8901-cdef-1234-567890123456";
 
@@ -70,7 +71,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
+            var service = _foundryExtensionsService;
 
             // If resource name and resource group are provided, get specific resource
             if (!string.IsNullOrEmpty(options.ResourceName) && !string.IsNullOrEmpty(options.ResourceGroup))
