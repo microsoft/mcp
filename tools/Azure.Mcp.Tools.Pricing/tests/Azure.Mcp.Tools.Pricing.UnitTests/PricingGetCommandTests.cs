@@ -33,7 +33,7 @@ public sealed class PricingGetCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange & Act
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
 
         // Assert
         Assert.Equal("get", command.Name);
@@ -86,7 +86,7 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedPrices);
 
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
@@ -109,7 +109,7 @@ public sealed class PricingGetCommandTests
     public async Task ExecuteAsync_WithNoFilters_ReturnsBadRequest()
     {
         // Arrange
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
@@ -138,7 +138,7 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new List<PriceItem>());
 
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse("--sku NonExistentSku");
         var context = new CommandContext(_serviceProvider);
 
@@ -171,7 +171,7 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<PriceItem>>(new Exception("Test error")));
 
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse("--sku Standard_D4s_v5");
         var context = new CommandContext(_serviceProvider);
 
@@ -200,7 +200,7 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new List<PriceItem>());
 
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse("--sku Standard_D4s_v5 --include-savings-plan");
         var context = new CommandContext(_serviceProvider);
 
@@ -236,7 +236,7 @@ public sealed class PricingGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new List<PriceItem>());
 
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var args = command.GetCommand().Parse("--sku Standard_D4s_v5 --currency EUR");
         var context = new CommandContext(_serviceProvider);
 
@@ -260,7 +260,7 @@ public sealed class PricingGetCommandTests
     public void BindOptions_BindsAllOptionsCorrectly()
     {
         // Arrange
-        var command = new PricingGetCommand(_logger);
+        var command = new PricingGetCommand(_logger, _pricingService);
         var cliArgs = "--sku Standard_D4s_v5 --service \"Virtual Machines\" --region eastus " +
                       "--service-family Compute --price-type Consumption --currency EUR " +
                       "--include-savings-plan --filter \"isPrimaryMeterRegion eq true\"";
