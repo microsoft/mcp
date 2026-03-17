@@ -39,10 +39,9 @@ public sealed class WorkspaceLogQueryCommandTests
         _logger = Substitute.For<ILogger<WorkspaceLogQueryCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_monitorService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _monitorService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

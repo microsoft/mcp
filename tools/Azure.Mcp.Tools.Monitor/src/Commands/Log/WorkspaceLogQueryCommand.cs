@@ -9,7 +9,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
+public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
 {
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
@@ -75,7 +75,6 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
 
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
             var results = await monitorService.QueryWorkspaceLogs(
                 options.Subscription!,
                 options.Workspace!,

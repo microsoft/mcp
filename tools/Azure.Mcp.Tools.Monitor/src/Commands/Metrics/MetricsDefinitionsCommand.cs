@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for listing Azure Monitor metric definitions
 /// </summary>
-public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger)
+public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger, IMonitorMetricsService metricsService)
     : BaseMetricsCommand<MetricsDefinitionsOptions>
 {
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
@@ -70,10 +70,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
         try
         {
-            // Get the metrics service from DI
-            var service = context.GetService<IMonitorMetricsService>();
             // Call service operation with required parameters
-            var allResults = await service.ListMetricDefinitionsAsync(
+            var allResults = await metricsService.ListMetricDefinitionsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,

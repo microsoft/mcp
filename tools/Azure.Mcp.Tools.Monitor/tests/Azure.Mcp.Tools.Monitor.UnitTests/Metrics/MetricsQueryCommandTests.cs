@@ -30,10 +30,9 @@ public class MetricsQueryCommandTests
         _logger = Substitute.For<ILogger<MetricsQueryCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     #region Constructor and Properties Tests
