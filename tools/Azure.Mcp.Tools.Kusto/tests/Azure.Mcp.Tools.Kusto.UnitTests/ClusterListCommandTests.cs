@@ -28,7 +28,6 @@ public sealed class ClusterListCommandTests
         _logger = Substitute.For<ILogger<ClusterListCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -42,7 +41,7 @@ public sealed class ClusterListCommandTests
             "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
-        var command = new ClusterListCommand(_logger);
+        var command = new ClusterListCommand(_logger, _kusto);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -68,7 +67,7 @@ public sealed class ClusterListCommandTests
         _kusto.ListClustersAsync("sub123", null, null, Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<string>([], false));
 
-        var command = new ClusterListCommand(_logger);
+        var command = new ClusterListCommand(_logger, _kusto);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -97,7 +96,7 @@ public sealed class ClusterListCommandTests
         _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new ClusterListCommand(_logger);
+        var command = new ClusterListCommand(_logger, _kusto);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 

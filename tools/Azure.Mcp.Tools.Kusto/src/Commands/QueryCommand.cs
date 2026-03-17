@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCommand<QueryOptions>()
+public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kustoService) : BaseDatabaseCommand<QueryOptions>()
 {
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
+    private readonly IKustoService _kustoService = kustoService;
 
     public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
 
@@ -59,11 +60,10 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
         try
         {
             List<JsonElement> results = [];
-            var kusto = context.GetService<IKustoService>();
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Query!,
@@ -74,7 +74,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : SubscriptionCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterGetOptions>
 {
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
+    private readonly IKustoService _kustoService = kustoService;
 
     public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
 
@@ -63,8 +64,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
-            var cluster = await kusto.GetClusterAsync(
+            var cluster = await _kustoService.GetClusterAsync(
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,

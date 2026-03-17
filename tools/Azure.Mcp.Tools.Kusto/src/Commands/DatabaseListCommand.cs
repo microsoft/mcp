@@ -9,10 +9,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : BaseClusterCommand<DatabaseListOptions>()
+public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger, IKustoService kustoService) : BaseClusterCommand<DatabaseListOptions>()
 {
     private const string CommandTitle = "List Kusto Databases";
     private readonly ILogger<DatabaseListCommand> _logger = logger;
+    private readonly IKustoService _kustoService = kustoService;
 
     public override string Id => "0bd79f0b-c360-4c96-b3e0-02fce97dcc41";
 
@@ -44,13 +45,11 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
-
             List<string> databasesNames = [];
 
             if (UseClusterUri(options))
             {
-                databasesNames = await kusto.ListDatabasesAsync(
+                databasesNames = await _kustoService.ListDatabasesAsync(
                     options.ClusterUri!,
                     options.Tenant,
                     options.AuthMethod,
@@ -59,7 +58,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
             }
             else
             {
-                databasesNames = await kusto.ListDatabasesAsync(
+                databasesNames = await _kustoService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Tenant,
