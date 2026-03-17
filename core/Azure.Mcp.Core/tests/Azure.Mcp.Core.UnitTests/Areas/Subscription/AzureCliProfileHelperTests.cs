@@ -114,13 +114,35 @@ public class AzureCliProfileHelperTests
     }
 
     [Fact]
-    public void GetAzureProfilePath_ReturnsExpectedPath()
+    public void GetAzureProfilePath_WhenUserProfileAvailable_ReturnsExpectedPath()
     {
         var result = AzureCliProfileHelper.GetAzureProfilePath();
 
-        // In a normal environment, user profile is available
-        Assert.NotNull(result);
-        Assert.Contains(".azure", result);
-        Assert.EndsWith("azureProfile.json", result);
+        // In containerized/CI environments, user profile may not be available
+        if (string.IsNullOrEmpty(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
+        {
+            Assert.Null(result);
+        }
+        else
+        {
+            Assert.NotNull(result);
+            Assert.Contains(".azure", result);
+            Assert.EndsWith("azureProfile.json", result);
+        }
+    }
+
+    [Fact]
+    public void GetAzureProfilePath_ReturnsNullOrValidPath()
+    {
+        var result = AzureCliProfileHelper.GetAzureProfilePath();
+
+        // The method must either return null (empty user profile) or a valid absolute path
+        if (result != null)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(result));
+            Assert.Contains(".azure", result);
+            Assert.EndsWith("azureProfile.json", result);
+            Assert.True(Path.IsPathRooted(result), "Path should be absolute, not relative");
+        }
     }
 }

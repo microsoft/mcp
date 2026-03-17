@@ -26,6 +26,8 @@ namespace Azure.Mcp.Core.Helpers
                     return null;
                 }
 
+                // Synchronous read is intentional: the Azure CLI profile is a small local file
+                // and the result is cached by CommandHelper so this runs at most once per process.
                 var json = File.ReadAllText(profilePath);
                 return ParseDefaultSubscriptionId(json);
             }
