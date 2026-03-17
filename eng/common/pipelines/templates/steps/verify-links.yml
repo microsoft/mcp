@@ -29,7 +29,7 @@ steps:
         -branchReplaceRegex "${{ parameters.BranchReplaceRegex }}"
         -branchReplacementName ${{ parameters.BranchReplacementName }}
         -checkLinkGuidance: ${{ parameters.CheckLinkGuidance }}
-        -localBuildRepoName "$env:BUILD_REPOSITORY_NAME"
+        -localBuildRepoName "$(Build.Repository.Name)"
         -localBuildRepoPath $(Build.SourcesDirectory)
-        -localBuildTargetBranch "$env:SYSTEM_PULLREQUEST_TARGETBRANCH"
+        -localBuildTargetBranch "$(System.PullRequest.TargetBranch)"
         -inputCacheFile "https://azuresdkartifacts.blob.core.windows.net/verify-links-cache/verify-links-cache.txt"
