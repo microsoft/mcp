@@ -75,9 +75,7 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = resources?.Count > 0 ?
-                ResponseResult.Create(new GroupResourceListCommandResult(resources), GroupJsonContext.Default.GroupResourceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(resources ?? []), GroupJsonContext.Default.GroupResourceListCommandResult);
         }
         catch (Exception ex)
         {
