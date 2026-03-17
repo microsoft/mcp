@@ -28,6 +28,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     [
         // Data manipulation that could be harmful
         "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
+        // Set operations that can be used for data exfiltration
+        "UNION", "INTERSECT", "EXCEPT",
         // Administrative operations
         "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
         // Information disclosure
@@ -142,23 +144,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxResultLimit:N0} characters to prevent potential DoS attacks.");
         }
 
-        // Clean the query: remove comments, normalize whitespace, and trim
-        var cleanedQuery = query;
+        // Strip string literals before checking for comment markers to avoid
+        // false positives (e.g., 'C#Developer' or 'foo--bar' are not comments).
+        // The pattern handles both SQL-standard doubled quotes ('') and
+        // MySQL's default backslash escaping (\') inside string literals.
+        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, TimeSpan.FromSeconds(3));
 
-        // Remove line comments (-- comment)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+        // Reject queries containing SQL comments to prevent bypass attacks
+        // (e.g., MySQL version-specific comments /*!50000 ... */ that are executed as code)
+        if (queryWithoutStrings.Contains("--", StringComparison.Ordinal) || queryWithoutStrings.Contains("/*", StringComparison.Ordinal) || queryWithoutStrings.Contains("#", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("SQL comments are not allowed for security reasons.");
+        }
 
-        // Remove hash comments (# comment)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"#.*?$", "", RegexOptions.Multiline);
-
-        // Remove block comments (/* comment */)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        // Normalize whitespace: replace multiple whitespace characters with single space
-        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
-
-        // Trim the result
-        cleanedQuery = cleanedQuery.Trim();
+        // Normalize whitespace and trim for validation
+        var cleanedQuery = Regex.Replace(query, @"\s+", " ", RegexOptions.Multiline).Trim();
 
         // Ensure the cleaned query is not empty
         if (string.IsNullOrWhiteSpace(cleanedQuery))
