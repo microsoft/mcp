@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
@@ -43,6 +44,15 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.AccountOptional);
         command.Options.Add(CosmosOptionDefinitions.DatabaseOptional);
+        command.Validators.Add(result =>
+        {
+            // Validate that --account is provided when --database is specified
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.DatabaseOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.AccountOptional.Name)))
+            {
+                result.AddError("The --account parameter is required when --database is specified.");
+            }
+        });
     }
 
     protected override CosmosListOptions BindOptions(ParseResult parseResult)
@@ -62,14 +72,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
 
         var options = BindOptions(parseResult);
 
-        // Validate that --account is provided when --database is specified
-        if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Account))
-        {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "The --account parameter is required when --database is specified.";
-            return context.Response;
-        }
-
         try
         {
             var cosmosService = context.GetService<ICosmosService>() ?? throw new InvalidOperationException("Cosmos DB service is not available.");
@@ -87,7 +89,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new CosmosListCommandResult(null, null, containers ?? []),
+                    new(null, null, containers ?? []),
                     CosmosJsonContext.Default.CosmosListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Account))
@@ -102,7 +104,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new CosmosListCommandResult(null, databases ?? [], null),
+                    new(null, databases ?? [], null),
                     CosmosJsonContext.Default.CosmosListCommandResult);
             }
             else
@@ -115,7 +117,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new CosmosListCommandResult(accounts ?? [], null, null),
+                    new(accounts ?? [], null, null),
                     CosmosJsonContext.Default.CosmosListCommandResult);
             }
         }

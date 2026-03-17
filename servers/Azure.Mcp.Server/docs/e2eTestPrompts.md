@@ -240,6 +240,39 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_get | Show me the disk sizes in resource group <resource-group> |
 | compute_disk_get | What managed disks are available? |
 | compute_disk_get | Get information about disk <disk-name> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> |
+| compute_disk_create | Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> in eastus |
+| compute_disk_create | Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> from blob <blob-uri> |
+| compute_disk_create | Create a 64 GB Standard_LRS Linux disk named <disk-name> in resource group <resource-group> in zone 1 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with tags env=prod team=infra |
+| compute_disk_create | Create a 128 GB Premium_LRS disk named <disk-name> in resource group <resource-group> with performance tier P30 |
+| compute_disk_create | Create a disk <disk-name> in resource group <resource-group> with customer-managed encryption using disk encryption set <disk-encryption-set-id> |
+| compute_disk_create | Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes |
+| compute_disk_create | Create a Trusted Launch upload disk named <disk-name> in resource group <resource-group> with UploadWithSecurityData type and security-type TrustedLaunch |
+| compute_disk_create | Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput |
+| compute_disk_create | Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_create | Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
+| compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
+| compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |
+| compute_disk_update | Update disk <disk-name> to enable bursting |
+| compute_disk_update | Set the max shares on disk <disk-name> in resource group <resource-group> to 2 |
+| compute_disk_update | Change the network access policy of disk <disk-name> to DenyAll |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> with tags env=staging |
+| compute_disk_update | Set the IOPS limit on ultra disk <disk-name> in resource group <resource-group> to 10000 |
+| compute_disk_update | Update the throughput of disk <disk-name> in resource group <resource-group> to 500 MBps |
+| compute_disk_update | Change the performance tier of disk <disk-name> in resource group <resource-group> to P40 |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to use disk encryption set <disk-encryption-set-id> |
+| compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate |
+| compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev |
 
 ## Azure Cosmos DB
 
@@ -308,11 +341,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| deploy_app_logs_get | Show me the log of the application deployed by azd  |
+| deploy_app_logs_get | Show me the log of the application deployed by azd |
 | deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules to generate bicep scripts  |
-| deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
-| deploy_plan_get | Create a plan to deploy this application to azure |
+| deploy_iac_rules_get | Show me the rules and best practices for writing Bicep and Terraform IaC for Azure |
+| deploy_pipeline_guidance_get | How do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure? |
+| deploy_plan_get | How do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC? |
+
+## Azure Device Registry
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| deviceregistry_namespace_list | List all Device Registry namespaces in my subscription |
+| deviceregistry_namespace_list | Show me the Device Registry namespaces in subscription <subscription> |
+| deviceregistry_namespace_list | List Device Registry namespaces in resource group <resource_group_name> |
+| deviceregistry_namespace_list | What Device Registry namespaces do I have in my Azure subscription? |
 
 ## Azure Event Grid
 
@@ -387,9 +429,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
 | fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | Show me the private endpoint connections for file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | What private endpoint connections exist for file share <file_share_name>? |
+| fileshares_fileshare_peconnection_update | Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_update | Reject private endpoint connection <connection_name> for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Update private endpoint connection <connection_name> status to Approved for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
-| fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
 | fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
@@ -411,6 +460,22 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_get | List all function apps in my subscription |
 | functionapp_get | Show me my Azure function apps |
 | functionapp_get | What function apps do I have? |
+
+## Azure Functions Templates
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| functions_language_list | What languages does Azure Functions support? |
+| functions_language_list | Compare all Azure Functions languages side by side |
+| functions_language_list | What runtime versions are available for Azure Functions? |
+| functions_project_get | Set up a new Azure Functions project in Python |
+| functions_project_get | Generate the project files for a TypeScript Azure Functions app |
+| functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
+| functions_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functions_template_get | Show me all the Python Azure Function templates |
+| functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
+| functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
+| functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 
@@ -621,6 +686,26 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
 
+## Azure Monitor Instrumentation
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
+| monitorinstrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
+| monitorinstrumentation_get_learning_resource | Retrieve the Azure Monitor instrumentation guidance document at <resource_path> |
+| monitorinstrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
+| monitorinstrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitorinstrumentation_list_learning_resources | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session_id> with completion note <completion_note> |
+| monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitorinstrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
+| monitorinstrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitorinstrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitorinstrumentation_orchestrator_start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
+| monitorinstrumentation_send_brownfield_analysis | Submit brownfield findings JSON <findings_json> for session <session_id> |
+| monitorinstrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
+| monitorinstrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
+
 ## Azure Native ISV
 
 | Tool Name | Test Prompt |
@@ -677,9 +762,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | resourcehealth_availability-status_get | Get the availability status for resource <resource_name> |
-| resourcehealth_availability-status_get | Show me the health status of the storage account <storage_account_name> |
+| resourcehealth_availability-status_get | What is the Azure Resource Health availability status of the storage account <storage_account_name>? |
 | resourcehealth_availability-status_get | What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>? |
-| resourcehealth_availability-status_get | List availability status for all resources in my subscription |
+| resourcehealth_availability-status_get | Get Azure Resource Health availability status for all resources in my subscription |
 | resourcehealth_availability-status_get | Show me the health status of all my Azure resources |
 | resourcehealth_availability-status_get | What resources in resource group <resource_group_name> have health issues? |
 | resourcehealth_health-events_list | List all service health events in my subscription |
@@ -721,7 +806,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | servicefabric_managedcluster_node_get | Get all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name> |
-| servicefabric_managedcluster_node_get | Show me the nodes and their status for managed cluster <cluster_name> |
+| servicefabric_managedcluster_node_get | Show me the nodes and their status for Service Fabric managed cluster <cluster_name> |
 | servicefabric_managedcluster_node_get | Get node <node_name> from Service Fabric managed cluster <cluster_name> |
 | servicefabric_managedcluster_nodetype_restart | Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD |
 | servicefabric_managedcluster_nodetype_restart | Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name> |
@@ -869,6 +954,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
 | virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
+## Azure Well-Architected Framework
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance |
+| wellarchitectedframework_serviceguide_get | What services have architectural guidance? |
+| wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service |
+| wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? |
+| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB |
+
 ## Azure Workbooks
 
 | Tool Name | Test Prompt |
@@ -900,7 +995,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| foundryextensions_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
 | foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
 | foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
 | foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
@@ -914,6 +1008,3 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription |
 | foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
 | foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundryextensions_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundryextensions_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundryextensions_threads_list | List my Microsoft Foundry threads |

@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.App;
 
-public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : SubscriptionCommand<LogsGetOptions>()
+public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService) : SubscriptionCommand<LogsGetOptions>()
 {
     private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
+    private readonly IDeployService _deployService = deployService;
     public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
 
     public override string Name => "get";
@@ -63,10 +64,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
         try
         {
-
-
-            var deployService = context.GetService<IDeployService>();
-            string result = await deployService.GetAzdResourceLogsAsync(
+            var result = await _deployService.GetAzdResourceLogsAsync(
                 options.WorkspaceFolder!,
                 options.AzdEnvName!,
                 options.Subscription!,

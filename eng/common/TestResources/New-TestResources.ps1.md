@@ -13,7 +13,7 @@ Deploys live test resources defined for a service directory to Azure.
 ## SYNTAX
 
 ### Default (Default)
-```
+```pwsh
 New-TestResources.ps1 [-BaseName <String>] [-ResourceGroupName <String>] [-ServiceDirectory] <String>
  [-TestResourcesDirectory <String>] [-TestApplicationId <String>] [-TestApplicationSecret <String>]
  [-TestApplicationOid <String>] [-SubscriptionId <String>] [-DeleteAfterHours <Int32>] [-Location <String>]
@@ -24,7 +24,7 @@ New-TestResources.ps1 [-BaseName <String>] [-ResourceGroupName <String>] [-Servi
 ```
 
 ### Provisioner
-```
+```pwsh
 New-TestResources.ps1 [-BaseName <String>] [-ResourceGroupName <String>] [-ServiceDirectory] <String>
  [-TestResourcesDirectory <String>] [-TestApplicationId <String>] [-TestApplicationSecret <String>]
  [-TestApplicationOid <String>] -TenantId <String> [-SubscriptionId <String>]
@@ -59,7 +59,7 @@ or those specified in $ProvisionerApplicationId and $ProvisionerApplicationSecre
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+```pwsh
 Connect-AzAccount -Subscription 'REPLACE_WITH_SUBSCRIPTION_ID'
 New-TestResources.ps1 keyvault
 ```
@@ -74,7 +74,7 @@ Requires PowerShell 7 to use ConvertFrom-SecureString -AsPlainText or convert
 the SecureString to plaintext by another means.
 
 ### EXAMPLE 2
-```
+```pwsh
 Connect-AzAccount -Subscription 'REPLACE_WITH_SUBSCRIPTION_ID'
 New-TestResources.ps1 `
     -BaseName 'azsdk' `
@@ -96,7 +96,7 @@ Requires PowerShell 7 to use ConvertFrom-SecureString -AsPlainText or convert
 the SecureString to plaintext by another means.
 
 ### EXAMPLE 3
-```
+```pwsh
 Connect-AzAccount -Subscription 'REPLACE_WITH_SUBSCRIPTION_ID'
 New-TestResources.ps1 `
     -BaseName 'azsdk' `
@@ -115,7 +115,7 @@ to the 'TestApplicationId' for the resource group and the resources that it cont
 without altering its existing permissions.
 
 ### EXAMPLE 4
-```
+```pwsh
 New-TestResources.ps1 `
     -BaseName 'azsdk' `
     -ServiceDirectory 'keyvault' `
@@ -145,7 +145,7 @@ Requires PowerShell 7 to use ConvertFrom-SecureString -AsPlainText or convert
 the SecureString to plaintext by another means.
 
 ### EXAMPLE 5
-```
+```pwsh
 New-TestResources.ps1 `
     -ServiceDirectory '$(ServiceDirectory)' `
     -TenantId '$(TenantId)' `

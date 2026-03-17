@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed credential chain crash from InteractiveBrowserCredential failure."

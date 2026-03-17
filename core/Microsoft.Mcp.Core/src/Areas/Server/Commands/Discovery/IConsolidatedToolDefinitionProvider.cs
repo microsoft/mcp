@@ -18,18 +18,11 @@ public class NullConsolidatedToolDefinitionProvider : IConsolidatedToolDefinitio
     public List<ConsolidatedToolDefinition> GetToolDefinitions() => [];
 }
 
-public class ResourceConsolidatedToolDefinitionProvider : IConsolidatedToolDefinitionProvider
+public class ResourceConsolidatedToolDefinitionProvider(ILogger<ResourceConsolidatedToolDefinitionProvider> logger, Assembly sourceAssembly, string resourcePattern) : IConsolidatedToolDefinitionProvider
 {
-    private ILogger<ResourceConsolidatedToolDefinitionProvider> _logger;
-    private readonly Assembly _sourceAssembly;
-    private readonly string _resourcePattern;
-
-    public ResourceConsolidatedToolDefinitionProvider(ILogger<ResourceConsolidatedToolDefinitionProvider> logger, Assembly sourceAssembly, string resourcePattern)
-    {
-        _logger = logger;
-        _sourceAssembly = sourceAssembly;
-        _resourcePattern = resourcePattern;
-    }
+    private ILogger<ResourceConsolidatedToolDefinitionProvider> _logger = logger;
+    private readonly Assembly _sourceAssembly = sourceAssembly;
+    private readonly string _resourcePattern = resourcePattern;
 
     public List<ConsolidatedToolDefinition> GetToolDefinitions()
     {
@@ -46,7 +39,7 @@ public class ResourceConsolidatedToolDefinitionProvider : IConsolidatedToolDefin
                 throw new InvalidOperationException(errorMessage);
             }
 
-            return JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
+            return JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? [];
         }
         catch (Exception ex)
         {

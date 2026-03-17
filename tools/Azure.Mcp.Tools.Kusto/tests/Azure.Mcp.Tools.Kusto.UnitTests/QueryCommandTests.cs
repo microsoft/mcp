@@ -26,7 +26,6 @@ public sealed class QueryCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<QueryCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -58,7 +57,7 @@ public sealed class QueryCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
-        var command = new QueryCommand(_logger);
+        var command = new QueryCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -99,7 +98,7 @@ public sealed class QueryCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new QueryCommand(_logger);
+        var command = new QueryCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -135,7 +134,7 @@ public sealed class QueryCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
         }
-        var command = new QueryCommand(_logger);
+        var command = new QueryCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -150,7 +149,7 @@ public sealed class QueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new QueryCommand(_logger);
+        var command = new QueryCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);

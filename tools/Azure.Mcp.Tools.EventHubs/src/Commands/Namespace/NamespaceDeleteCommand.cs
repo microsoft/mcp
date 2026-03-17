@@ -14,11 +14,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger)
+public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<NamespaceDeleteOptions>
 {
     private const string CommandTitle = "Delete Event Hubs Namespace";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
 
     public override string Id => "187ffc25-1e32-4e39-a7d4-94859852ac50";
@@ -76,9 +77,7 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
-            var success = await eventHubsService.DeleteNamespaceAsync(
+            var success = await _service.DeleteNamespaceAsync(
                 options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,

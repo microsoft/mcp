@@ -149,7 +149,7 @@ public class ProfilerDataService(
         return request;
     }
 
-    private ValueTask<T?> ReadAsAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
+    private static ValueTask<T?> ReadAsAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         if (stream is null)
         {
