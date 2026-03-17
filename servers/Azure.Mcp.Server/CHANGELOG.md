@@ -2,21 +2,50 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.28 (Unreleased)
+## 2.0.0-beta.28 (2026-03-17)
 
 ### Features Added
 
 - Enhanced Azure File Shares private endpoint connection management with improved reliability and updated SDK support. [[#1823](https://github.com/microsoft/mcp/pull/1823)]
+- Added MonitorInstrumentation tool that analyzes a local workspace and returns step-by-step guidance to instrument applications with Azure Monitor. [[#1960](https://github.com/microsoft/mcp/pull/1960)]
+- Enhanced 'wellarchitectedframework_serviceguide_get' command to act as a list command when no service parameter is provided, reducing the number of tools needed. [[#2020](https://github.com/microsoft/mcp/pull/2020)]
+- Expanded PostgreSQL SQL query validator blocklist with additional dangerous functions and system catalogs. [[#2067](https://github.com/microsoft/mcp/pull/2067)]
+- Added hidden publish-skill-telemetry server command to emit skill/tool invocation telemetry for agent scenarios (e.g., Copilot CLI), including validated and sanitized file references via an embedded allowlist. [[#1979](https://github.com/microsoft/mcp/pull/1979)]
 
 ### Breaking Changes
 
+- Removed foundryextensions_agents_get-sdk-sample, foundryextensions_threads_create, foundryextensions_threads_list, and foundryextensions_threads_get-messages tools from the foundryextensions namespace. [[#2937](https://github.com/microsoft/mcp/pull/2037)]
+
 ### Bugs Fixed
+
+- Improved AppLens diagnose tool to use ARG-based resource discovery with optional subscription, resource group, and resource type parameters. [[#2018](https://github.com/microsoft/mcp/pull/2018)]
+- Added filtering on LocalRequired when running in remote mode. [[#2017](https://github.com/microsoft/mcp/pull/2017)]
+- Fixed `azmcp postgres list` incorrectly requiring `--resource-group` and `--user` when listing servers at subscription scope. Both parameters are now optional as intended. [[#2015](https://github.com/microsoft/mcp/pull/2015)]
+- Fixed connection string injection vulnerability in PostgreSQL and MySQL tools by using parameterized connection string builders instead of string interpolation. [[#2056](https://github.com/microsoft/mcp/pull/2056)]
+- Fixed KQL injection vulnerabilities in Kusto tools where user-controlled table names were directly interpolated into KQL commands without escaping, allowing arbitrary command execution. [[#2070](https://github.com/microsoft/mcp/pull/2070)]
+- Fixed credential chain crash from InteractiveBrowserCredential failure. [[#2076](https://github.com/microsoft/mcp/pull/2076)]
 
 ### Other Changes
 
+- FoundryExtensions: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1990](https://github.com/microsoft/mcp/pull/1990)]
+- Storage: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1880](https://github.com/microsoft/mcp/pull/1880)]
+- Redis: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1888](https://github.com/microsoft/mcp/pull/1888)]
+- AppService: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1900](https://github.com/microsoft/mcp/pull/1900)]
+- Refactored Azure.Mcp.Tools.Communication commands to use constructor dependency injection instead of resolving services via context.GetService<T>() in ExecuteAsync. [[#1913](https://github.com/microsoft/mcp/pull/1913)]
+- Refactored `Azure.Mcp.Tools.EventHubs` commands to use constructor dependency injection for `IEventHubsService` instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`. [[#1986](https://github.com/microsoft/mcp/pull/1986)]
+- Reintroduced capturing error information in telemetry with standard 'exception.message', 'exception.type', and 'exception.stacktrace' telemetry tags, replacing ErrorDetails tag. [[#1942](https://github.com/microsoft/mcp/pull/1942)]
+- Improved deploy tool descriptions for better LLM selection accuracy: clarified that `deploy_plan_get` generates a plan from caller-provided options and does not scan the workspace, and that `deploy_architecture_diagram_generate` renders from a provided AppTopology input. [[#2023](https://github.com/microsoft/mcp/pull/2023)]
+- Centralized ARM access token acquisition in BaseAzureService via GetArmAccessTokenAsync, eliminating duplicated inline credential and token fetching logic across service implementations. [[#2033](https://github.com/microsoft/mcp/pull/2033)]
+- Updated .NET SDK from 10.0.103 to 10.0.201. [[#2072](https://github.com/microsoft/mcp/pull/2072)]
+- Updated Landing Zone URL in Azure Migrate Tool to use aka.ms links. [[#2028](https://github.com/microsoft/mcp/pull/2028)]
+- Updated the description for the \"azuremigrate\" tool namespace for better LLM selection accuracy. [[#2043](https://github.com/microsoft/mcp/pull/2043)]
+- Improved Search tool descriptions to improve matching and differentiating the tools from each other. [[#2071](https://github.com/microsoft/mcp/pull/2071)]
+- Standardized CacheService TTLs across services by introducing centralized CacheDurations tiers (subscription 12h→2h; service data 1h→5m). [[#1973](https://github.com/microsoft/mcp/pull/1973)]
+- Switched Docker publishing to 1ES tasks for pushing images to ACR and split the release process into separate load and multi-arch manifest publish steps [[#2069](https://github.com/microsoft/mcp/pull/2069)]
+
 #### Dependency Updates
 
-- Updated `Azure.ResourceManager.FileShares` from `1.0.0-beta.1` to `1.0.0-beta.2`.
+- Updated `Azure.ResourceManager.FileShares` from `1.0.0-beta.1` to `1.0.0-beta.2`. [[#1823](https://github.com/microsoft/mcp/pull/1823)]
 
 ## 2.0.0-beta.27 (2026-03-12)
 
