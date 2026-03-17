@@ -10,6 +10,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Merged Azure Monitor Instrumentation into the Azure Monitor toolset and removed the standalone MonitorInstrumentation area setup.
+  - CLI path changed from `azmcp monitorinstrumentation ...` to `azmcp monitor instrumentation ...`
+  - Tool IDs changed from `monitorinstrumentation_*` to `monitor_instrumentation_*`
+
 ### Bugs Fixed
 
 ### Other Changes
