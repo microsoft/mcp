@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
-public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> logger)
+public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<ConsumerGroupGetOptions>
 {
     private const string CommandTitle = "Get Event Hubs Consumer Groups";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<ConsumerGroupGetCommand> _logger = logger;
     public override string Id => "604fda48-2438-419d-a819-5f9d2f3b21f8";
 
@@ -77,12 +78,10 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
             if (!string.IsNullOrEmpty(options.ConsumerGroup))
             {
                 // Get specific consumer group
-                var consumerGroup = await eventHubsService.GetConsumerGroupAsync(
+                var consumerGroup = await _service.GetConsumerGroupAsync(
                     options.ConsumerGroup,
                     options.EventHub!,
                     options.Namespace!,
@@ -98,7 +97,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
             else
             {
                 // List all consumer groups
-                var consumerGroups = await eventHubsService.GetConsumerGroupsAsync(
+                var consumerGroups = await _service.GetConsumerGroupsAsync(
                     options.EventHub!,
                     options.Namespace!,
                     options.ResourceGroup!,

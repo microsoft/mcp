@@ -15,11 +15,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger)
+public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<NamespaceUpdateOptions>
 {
     private const string CommandTitle = "Create or Update Event Hubs Namespace";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
 
     public override string Id => "225eb25d-52c5-4c3a-9eb4-066cf2b9da84";
@@ -133,8 +134,6 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
             // Parse tags if provided
             Dictionary<string, string>? tags = null;
             if (!string.IsNullOrEmpty(options.Tags))
@@ -149,7 +148,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 }
             }
 
-            var updatedNamespace = await eventHubsService.CreateOrUpdateNamespaceAsync(
+            var updatedNamespace = await _service.CreateOrUpdateNamespaceAsync(
                 options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,

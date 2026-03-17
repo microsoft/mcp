@@ -30,7 +30,7 @@ public class ConsumerGroupGetCommandTests
         collection.AddSingleton(_eventHubsService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _eventHubsService);
         _context = new(_serviceProvider);
     }
 

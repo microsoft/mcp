@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
+public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<NamespaceGetOptions>
 {
     private const string CommandTitle = "Get Event Hubs Namespaces";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<NamespaceGetCommand> _logger = logger;
 
     public override string Id => "71ec6c5b-b6e4-4c64-b31b-2d61dfad3b5c";
@@ -86,15 +87,13 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
             // Determine if this is a single namespace request or list request
             bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.Namespace);
 
             if (isSingleNamespaceRequest)
             {
                 // Get single namespace with detailed information
-                var namespaceDetails = await eventHubsService.GetNamespaceAsync(
+                var namespaceDetails = await _service.GetNamespaceAsync(
                     options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -108,7 +107,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             }
             else
             {
-                var namespaces = await eventHubsService.GetNamespacesAsync(
+                var namespaces = await _service.GetNamespacesAsync(
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,

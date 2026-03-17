@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
-public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateCommand> logger)
+public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<ConsumerGroupUpdateOptions>
 {
     private const string CommandTitle = "Create or Update Event Hubs Consumer Group";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<ConsumerGroupUpdateCommand> _logger = logger;
     public override string Id => "859871ba-b8dc-439c-a607-11b0d89f5112";
 
@@ -78,9 +79,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
-            var consumerGroup = await eventHubsService.CreateOrUpdateConsumerGroupAsync(
+            var consumerGroup = await _service.CreateOrUpdateConsumerGroupAsync(
                 options.ConsumerGroup!,
                 options.EventHub!,
                 options.Namespace!,
