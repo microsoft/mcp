@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Fact]
     public async Task Should_get_nodepool_for_cluster()
@@ -62,7 +63,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
 
         var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : nodepoolName, nodePool.GetProperty("name").GetString());
 
         if (nodePool.TryGetProperty("mode", out var modeProperty))
         {
@@ -141,7 +142,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output, TestProxyF
         var errorDetails = result.Value;
         errorDetails.AssertProperty("message");
         var typeProperty = errorDetails.AssertProperty("type");
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("RequestFailedException", typeProperty.GetString());
     }
 
     [Fact]

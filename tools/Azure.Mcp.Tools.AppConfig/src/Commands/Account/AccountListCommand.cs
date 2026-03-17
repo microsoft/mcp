@@ -11,10 +11,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
-public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : SubscriptionCommand<AccountListOptions>()
+public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions>()
 {
     private const string CommandTitle = "List App Configuration Stores";
     private readonly ILogger<AccountListCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override string Id => "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a";
 
@@ -49,14 +50,13 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 
         try
         {
-            var appConfigService = context.GetService<IAppConfigService>();
-            var accounts = await appConfigService.GetAppConfigAccounts(
+            var accounts = await _appConfigService.GetAppConfigAccounts(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {
@@ -67,5 +67,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts);
+    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
 }

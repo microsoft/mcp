@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
@@ -13,7 +13,7 @@ namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 /// </summary>
 /// <param name="output"></param>
 /// <param name="fixture"></param>
-internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public TestMode DesiredMode { get; set; } = TestMode.Record;
 

@@ -8,8 +8,8 @@ using System.Web;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
 using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.ResourceManager;
@@ -23,15 +23,13 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
 public class ProfilerDataService(
-    IHttpClientService httpClientService,
+    IHttpClientFactory httpClientFactory,
     ILogger<ProfilerDataService> logger,
     ITenantService tenantService)
     : BaseAzureService(tenantService), IProfilerDataService
 {
-    private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
-    private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";
-
-    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(Endpoint));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -99,7 +97,7 @@ public class ProfilerDataService(
 
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
-        UriBuilder uriBuilder = new(Endpoint)
+        UriBuilder uriBuilder = new(GetDiagnosticServiceEndpoint())
         {
             Path = path
         };
@@ -120,7 +118,7 @@ public class ProfilerDataService(
 
         var scopes = new string[]
         {
-            DefaultScope
+            GetDiagnosticServicesScope()
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
@@ -151,7 +149,7 @@ public class ProfilerDataService(
         return request;
     }
 
-    private ValueTask<T?> ReadAsAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
+    private static ValueTask<T?> ReadAsAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         if (stream is null)
         {
@@ -179,7 +177,8 @@ public class ProfilerDataService(
     internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, cancellationToken);
-        return await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var client = _httpClientFactory.CreateClient();
+        return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, CancellationToken cancellationToken, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
@@ -198,5 +197,27 @@ public class ProfilerDataService(
         string appId = applicationInsightsComponentResource.Data.AppId;
         _logger.LogInformation("Resolving appId: {resourceId} => {appId}", resourceId, appId);
         return Guid.Parse(appId);
+    }
+
+    private string GetDiagnosticServiceEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://dataplane.diagnosticservices.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://dataplane.diagnosticservices.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://dataplane.diagnosticservices.azure.us",
+            _ => "https://dataplane.diagnosticservices.azure.com"
+        };
+    }
+
+    private string GetDiagnosticServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "api://dataplane.diagnosticservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "api://dataplane.diagnosticservices.azure.cn/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "api://dataplane.diagnosticservices.azure.us/.default",
+            _ => "api://dataplane.diagnosticservices.azure.com/.default"
+        };
     }
 }

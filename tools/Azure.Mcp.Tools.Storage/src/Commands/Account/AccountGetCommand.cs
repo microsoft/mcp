@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -15,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
 
@@ -65,11 +65,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
             // Call service operation with required parameters
-            var accounts = await storageService.GetAccountDetails(
+            var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
@@ -77,7 +74,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(accounts ?? []), StorageJsonContext.Default.AccountGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,5 +94,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     }
 
     // Strongly-typed result record
-    internal record AccountGetCommandResult([property: JsonPropertyName("accounts")] List<StorageAccountInfo> Accounts);
+    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
 }

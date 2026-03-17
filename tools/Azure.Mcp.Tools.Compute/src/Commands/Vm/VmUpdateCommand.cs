@@ -1,0 +1,144 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.Compute.Models;
+using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Tools.Compute.Options.Vm;
+using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+
+namespace Azure.Mcp.Tools.Compute.Commands.Vm;
+
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
+    : BaseComputeCommand<VmUpdateOptions>(true)
+{
+    private const string CommandTitle = "Update Virtual Machine";
+    private readonly ILogger<VmUpdateCommand> _logger = logger;
+
+    public override string Id => "f330138e-8048-4a4a-8170-d8b6f958eaa4";
+
+    public override string Name => "update";
+
+    public override string Description =>
+        """
+        Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
+        Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
+        Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
+        """;
+
+    public override string Title => CommandTitle;
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+
+        // Required options
+        command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
+
+        // Update options (at least one required - validated in command)
+        command.Options.Add(ComputeOptionDefinitions.VmSize);
+        command.Options.Add(ComputeOptionDefinitions.Tags);
+        command.Options.Add(ComputeOptionDefinitions.LicenseType);
+        command.Options.Add(ComputeOptionDefinitions.BootDiagnostics);
+        command.Options.Add(ComputeOptionDefinitions.UserData);
+
+        // Resource group is required for update
+        command.Validators.Add(commandResult =>
+        {
+            // Custom validation: At least one update property must be specified
+            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))
+            {
+                commandResult.AddError("At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.");
+            }
+        });
+    }
+
+    protected override VmUpdateOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
+        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
+        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
+        options.LicenseType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name);
+        options.BootDiagnostics = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name);
+        options.UserData = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        var computeService = context.GetService<IComputeService>();
+
+        try
+        {
+            context.Activity?.AddTag("subscription", options.Subscription);
+
+            var result = await computeService.UpdateVmAsync(
+                options.VmName!,
+                options.ResourceGroup!,
+                options.Subscription!,
+                options.VmSize,
+                options.Tags,
+                options.LicenseType,
+                options.BootDiagnostics,
+                options.UserData,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error updating VM. VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                options.VmName, options.ResourceGroup, options.Subscription);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "VM not found. Verify the VM name, resource group, and that you have access.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed. Verify you have appropriate permissions to update VM. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            $"Operation conflict. The VM may need to be deallocated for size changes. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) =>
+            $"Quota exceeded. You may need to request a quota increase for the selected VM size. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    internal record VmUpdateCommandResult(VmUpdateResult Vm);
+}

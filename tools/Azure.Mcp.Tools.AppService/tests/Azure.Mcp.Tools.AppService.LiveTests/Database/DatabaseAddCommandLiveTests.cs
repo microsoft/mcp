@@ -2,37 +2,22 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
 
 [Trait("Command", "DatabaseAddCommand")]
-public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : BaseAppServiceCommandLiveTests(output, fixture, liveServerFixture)
 {
-    public override List<BodyKeySanitizer> BodyKeySanitizers =>
-    [
-        ..base.BodyKeySanitizers,
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.selfLink")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.customDomainVerificationId")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.inboundIpAddress")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleInboundIpAddresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.inboundIpv6Address")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleInboundIpv6Addresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.ftpsHostName")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.outboundIpAddresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpAddresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.outboundIpv6Addresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpv6Addresses")),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.homeStamp")),
-    ];
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsSuccessResult()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
             new()
@@ -102,7 +87,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixt
     public async Task ExecuteAsync_WithInvalidDatabaseTypes_ReturnsValidationError(string invalidDatabaseType)
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
             new()

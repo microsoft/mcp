@@ -4,14 +4,13 @@
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Models;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal class CliGenerateService(IHttpClientService httpClientService, IAzureTokenCredentialProvider tokenCredentialProvider) : ICliGenerateService
+internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTokenCredentialProvider tokenCredentialProvider, IAzureCloudConfiguration cloudConfiguration) : ICliGenerateService
 {
-    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
     public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent, CancellationToken cancellationToken)
@@ -23,7 +22,7 @@ internal class CliGenerateService(IHttpClientService httpClientService, IAzureTo
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), cancellationToken);
 
         // AzCli copilot API endpoint
-        const string url = "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
+        var url = GetCliCopilotEndpoint();
 
         var requestBody = new AzureCliGenerateRequest()
         {
@@ -42,8 +41,23 @@ internal class CliGenerateService(IHttpClientService httpClientService, IAzureTo
             RequestUri = new Uri(url),
             Content = content
         };
-        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
-        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
+        requestMessage.Headers.Authorization = new("Bearer", accessToken.Token);
+        HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
         return responseMessage;
+    }
+
+    private string GetCliCopilotEndpoint()
+    {
+        return cloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.cn/azcli/copilot",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot",
+            _ =>
+                "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot"
+        };
     }
 }

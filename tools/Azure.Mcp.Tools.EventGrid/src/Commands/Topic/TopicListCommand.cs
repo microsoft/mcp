@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
-public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEventGridCommand<TopicListOptions>
+public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<TopicListOptions>
 {
     private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
+    private readonly IEventGridService _eventGridService = eventGridService;
     public override string Id => "42390294-2856-4980-a057-095c91355650";
 
     public override string Name => "list";
@@ -59,8 +60,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
         try
         {
-            var eventGridService = context.GetService<IEventGridService>();
-            var topics = await eventGridService.GetTopicsAsync(
+            var topics = await _eventGridService.GetTopicsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,

@@ -78,7 +78,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of resources converted to the specified type</returns>
-    protected async Task<List<T>> ExecuteResourceQueryAsync<T>(
+    protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
         string? resourceGroup,
         string subscription,
@@ -131,7 +131,7 @@ public abstract class BaseAzureResourceService(
             }
         }
 
-        return results;
+        return new ResourceQueryResults<T>(results, result?.ResultTruncated == ResultTruncated.True);
     }
 
     /// <summary>
@@ -207,11 +207,11 @@ public abstract class BaseAzureResourceService(
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
     /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
-    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, retryPolicy, options).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, retryPolicy, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public abstract class BaseAzureResourceService(
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>
-    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo)
+    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         if (armClient == null)
             throw new ArgumentNullException(nameof(armClient));
@@ -263,7 +263,9 @@ public abstract class BaseAzureResourceService(
         GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
             ?? throw new InvalidOperationException("Failed to create deployment data");
         // Create the resource
-        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data);
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data, cancellationToken);
         return result.Value;
     }
 }
+
+public sealed record ResourceQueryResults<T>(List<T> Results, bool AreResultsTruncated);

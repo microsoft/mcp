@@ -54,9 +54,15 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
+    'PypiPackageName',
+    'PypiPackageKeywords',
+    'PypiDescription',
+
     'IsAotCompatible',
 
-    'McpRepositoryName'
+    'McpRepositoryName',
+
+    'McpbPlatforms'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

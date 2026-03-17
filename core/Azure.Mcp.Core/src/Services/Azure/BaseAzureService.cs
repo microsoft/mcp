@@ -158,6 +158,19 @@ public abstract class BaseAzureService
         }
     }
 
+    /// <summary>
+    /// Gets an ARM access token for the given tenant using the ARM default scope.
+    /// </summary>
+    /// <param name="tenant">Optional tenant ID or name to authenticate against.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    protected async Task<AccessToken> GetArmAccessTokenAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        var credential = await GetCredential(tenant, cancellationToken);
+        return await credential.GetTokenAsync(
+            new TokenRequestContext([TenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
+            cancellationToken);
+    }
+
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
@@ -219,6 +232,7 @@ public abstract class BaseAzureService
             TokenCredential credential = await GetCredential(tenantId, cancellationToken);
             ArmClientOptions options = armClientOptions ?? new();
             options.Transport = new HttpClientTransport(TenantService.GetClient());
+            options.Environment = TenantService.CloudConfiguration.ArmEnvironment;
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             ArmClient armClient = new(credential, defaultSubscriptionId: default, options);

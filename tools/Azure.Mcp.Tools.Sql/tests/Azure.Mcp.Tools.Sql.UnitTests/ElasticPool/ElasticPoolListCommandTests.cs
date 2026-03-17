@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -53,8 +54,8 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_WithValidParameters_ReturnsElasticPools()
     {
         // Arrange
-        var mockElasticPools = new List<SqlElasticPool>
-        {
+        var mockElasticPools = new ResourceQueryResults<SqlElasticPool>(
+        [
             new(
                 Name: "pool1",
                 Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/elasticPools/pool1",
@@ -72,7 +73,7 @@ public class ElasticPoolListCommandTests
                 Dtu: 100,
                 StorageMB: 5120
             )
-        };
+        ], false);
 
         _sqlService.GetElasticPoolsAsync(
             Arg.Is("server1"),
@@ -98,7 +99,7 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_WithEmptyList_ReturnsEmptyResults()
     {
         // Arrange
-        var mockElasticPools = new List<SqlElasticPool>();
+        var mockElasticPools = new ResourceQueryResults<SqlElasticPool>([], false);
 
         _sqlService.GetElasticPoolsAsync(
             Arg.Is("server1"),
@@ -206,7 +207,7 @@ public class ElasticPoolListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns([]);
+                .Returns(new ResourceQueryResults<SqlElasticPool>([], false));
         }
 
         var parseResult = _commandDefinition.Parse(args);

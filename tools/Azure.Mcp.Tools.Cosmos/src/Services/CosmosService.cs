@@ -4,38 +4,44 @@
 using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tenantService), ICosmosService, IDisposable
+public sealed class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService, IHttpClientFactory httpClientFactory, ILogger<CosmosService> logger)
+    : BaseAzureService(tenantService), ICosmosService, IAsyncDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private const string CosmosBaseUri = "https://{0}.documents.azure.com:443/";
+    private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "cosmos";
     private const string CosmosClientsCacheKeyPrefix = "clients_";
     private const string CosmosDatabasesCacheKeyPrefix = "databases_";
     private const string CosmosContainersCacheKeyPrefix = "containers_";
-    private static readonly TimeSpan s_cacheDurationResources = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
+    private static readonly TimeSpan s_cacheDurationResources = CacheDurations.ServiceData;
     private bool _disposed;
 
     private async Task<CosmosDBAccountResource> GetCosmosAccountAsync(
         string subscription,
         string accountName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync())
+        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
             if (account.Data.Name == accountName)
             {
@@ -65,24 +71,20 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             clientOptions.MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
         }
 
+        clientOptions.HttpClientFactory = () => _httpClientFactory.CreateClient();
+
         CosmosClient cosmosClient;
         switch (authMethod)
         {
             case AuthMethod.Key:
-                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant);
+                var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant, cancellationToken: cancellationToken);
                 var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
-                cosmosClient = new CosmosClient(
-                    string.Format(CosmosBaseUri, accountName),
-                    keys.Value.PrimaryMasterKey,
-                    clientOptions);
+                cosmosClient = new(GetCosmosBaseUri(accountName), keys.Value.PrimaryMasterKey, clientOptions);
                 break;
 
             case AuthMethod.Credential:
             default:
-                cosmosClient = new CosmosClient(
-                    string.Format(CosmosBaseUri, accountName),
-                    await GetCredential(cancellationToken),
-                    clientOptions);
+                cosmosClient = new(GetCosmosBaseUri(accountName), await GetCredential(tenant, cancellationToken), clientOptions);
                 break;
         }
 
@@ -92,21 +94,21 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         return cosmosClient;
     }
 
+    private string GetCosmosBaseUri(string accountName)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{accountName}.documents.azure.com:443/",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{accountName}.documents.azure.us:443/",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{accountName}.documents.azure.cn:443/",
+            _ => $"https://{accountName}.documents.azure.com:443/"
+        };
+    }
+
     private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            // Perform a lightweight operation to validate the client
-            await client.ReadAccountAsync();
-        }
-        catch (CosmosException ex)
-        {
-            throw new Exception($"Failed to validate CosmosClient: {ex.StatusCode} - {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unexpected error while validating CosmosClient: {ex.Message}", ex);
-        }
+        // Perform a lightweight operation to validate the client
+        await client.ReadAccountAsync().WaitAsync(cancellationToken);
     }
 
     private async Task<CosmosClient> GetCosmosClientAsync(
@@ -120,7 +122,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var key = CosmosClientsCacheKeyPrefix + accountName;
-        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationResources, cancellationToken);
+        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
 
@@ -135,7 +137,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
                 retryPolicy,
                 cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
             return cosmosClient;
         }
         catch (Exception ex) when (
@@ -151,7 +153,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
                 retryPolicy,
                 cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
             return cosmosClient;
         }
 
@@ -164,19 +166,12 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var accounts = new List<string>();
-        try
+        await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
         {
-            await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
+            if (account?.Data?.Name != null)
             {
-                if (account?.Data?.Name != null)
-                {
-                    accounts.Add(account.Data.Name);
-                }
+                accounts.Add(account.Data.Name);
             }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Cosmos DB accounts: {ex.Message}", ex);
         }
 
         return accounts;
@@ -203,33 +198,26 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var databases = new List<string>();
 
-        try
+        var iterator = client.GetDatabaseQueryStreamIterator();
+        while (iterator.HasMoreResults)
         {
-            var iterator = client.GetDatabaseQueryStreamIterator();
-            while (iterator.HasMoreResults)
+            using ResponseMessage dbResponse = await iterator.ReadNextAsync(cancellationToken);
+            if (!dbResponse.IsSuccessStatusCode)
             {
-                using ResponseMessage dbResponse = await iterator.ReadNextAsync(cancellationToken);
-                if (!dbResponse.IsSuccessStatusCode)
+                throw new Exception(dbResponse.ErrorMessage);
+            }
+            using JsonDocument dbsQueryResultDoc = JsonDocument.Parse(dbResponse.Content);
+            if (dbsQueryResultDoc.RootElement.TryGetProperty("Databases", out JsonElement documentsElement))
+            {
+                foreach (JsonElement databaseElement in documentsElement.EnumerateArray())
                 {
-                    throw new Exception(dbResponse.ErrorMessage);
-                }
-                using JsonDocument dbsQueryResultDoc = JsonDocument.Parse(dbResponse.Content);
-                if (dbsQueryResultDoc.RootElement.TryGetProperty("Databases", out JsonElement documentsElement))
-                {
-                    foreach (JsonElement databaseElement in documentsElement.EnumerateArray())
+                    string? databaseId = databaseElement.GetProperty("id").GetString();
+                    if (!string.IsNullOrEmpty(databaseId))
                     {
-                        string? databaseId = databaseElement.GetProperty("id").GetString();
-                        if (!string.IsNullOrEmpty(databaseId))
-                        {
-                            databases.Add(databaseId);
-                        }
+                        databases.Add(databaseId);
                     }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing databases in the account '{accountName}': {ex.Message}", ex);
         }
 
         await _cacheService.SetAsync(CacheGroup, cacheKey, databases, s_cacheDurationResources, cancellationToken);
@@ -258,34 +246,27 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var containers = new List<string>();
 
-        try
+        var database = client.GetDatabase(databaseName);
+        var iterator = database.GetContainerQueryStreamIterator();
+        while (iterator.HasMoreResults)
         {
-            var database = client.GetDatabase(databaseName);
-            var iterator = database.GetContainerQueryStreamIterator();
-            while (iterator.HasMoreResults)
+            using ResponseMessage containerRResponse = await iterator.ReadNextAsync(cancellationToken);
+            if (!containerRResponse.IsSuccessStatusCode)
             {
-                using ResponseMessage containerRResponse = await iterator.ReadNextAsync(cancellationToken);
-                if (!containerRResponse.IsSuccessStatusCode)
+                throw new Exception(containerRResponse.ErrorMessage);
+            }
+            using JsonDocument containersQueryResultDoc = JsonDocument.Parse(containerRResponse.Content);
+            if (containersQueryResultDoc.RootElement.TryGetProperty("DocumentCollections", out JsonElement containersElement))
+            {
+                foreach (JsonElement containerElement in containersElement.EnumerateArray())
                 {
-                    throw new Exception(containerRResponse.ErrorMessage);
-                }
-                using JsonDocument containersQueryResultDoc = JsonDocument.Parse(containerRResponse.Content);
-                if (containersQueryResultDoc.RootElement.TryGetProperty("DocumentCollections", out JsonElement containersElement))
-                {
-                    foreach (JsonElement containerElement in containersElement.EnumerateArray())
+                    string? containerId = containerElement.GetProperty("id").GetString();
+                    if (!string.IsNullOrEmpty(containerId))
                     {
-                        string? containerId = containerElement.GetProperty("id").GetString();
-                        if (!string.IsNullOrEmpty(containerId))
-                        {
-                            containers.Add(containerId);
-                        }
+                        containers.Add(containerId);
                     }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing containers in database '{databaseName}' of account '{accountName}': {ex.Message}", ex);
         }
 
         await _cacheService.SetAsync(CacheGroup, cacheKey, containers, s_cacheDurationResources, cancellationToken);
@@ -307,63 +288,74 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
 
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
 
+        var container = client.GetContainer(databaseName, containerName);
+        var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
+        var queryDef = new QueryDefinition(baseQuery);
+
+        var items = new List<JsonElement>();
+        var queryIterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new() { MaxItemCount = -1 }
+        );
+
+        while (queryIterator.HasMoreResults)
+        {
+            using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
+            using var document = JsonDocument.Parse(response.Content);
+            items.Add(document.RootElement.Clone());
+        }
+
+        return items;
+    }
+
+    private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
+
+    private async ValueTask DisposeAsyncCore()
+    {
+        // Use a bounded timeout so disposal can never hang indefinitely.
+        // We do not use CancellationToken.None (unbounded) nor any IHostApplicationLifetime
+        // token (already cancelled by the time DisposeAsync runs).
+        using var cts = new CancellationTokenSource(s_disposeTimeout);
+
+        IEnumerable<string> keys;
         try
         {
-            var container = client.GetContainer(databaseName, containerName);
-            var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
-            var queryDef = new QueryDefinition(baseQuery);
-
-            var items = new List<JsonElement>();
-            var queryIterator = container.GetItemQueryStreamIterator(
-                queryDef,
-                requestOptions: new QueryRequestOptions { MaxItemCount = -1 }
-            );
-
-            while (queryIterator.HasMoreResults)
-            {
-                using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
-                using var document = JsonDocument.Parse(response.Content);
-                items.Add(document.RootElement.Clone());
-            }
-
-            return items;
-        }
-        catch (CosmosException ex)
-        {
-            throw new Exception($"Cosmos DB error occurred while querying items: {ex.StatusCode} - {ex.Message}", ex);
+            // Get all cached client keys
+            keys = await _cacheService.GetGroupKeysAsync(CacheGroup, cts.Token);
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error querying items: {ex.Message}", ex);
+            _logger.LogError(ex, "Failed to retrieve cached CosmosClient keys during disposal");
+            return;
         }
-    }
 
-    protected virtual async void Dispose(bool disposing)
-    {
-        if (!_disposed)
+        // Filter for client keys only (those that start with the client prefix)
+        var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
+
+        // Retrieve and dispose each client
+        foreach (var key in clientKeys)
         {
-            if (disposing)
+            try
             {
-                // Get all cached client keys
-                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
-
-                // Filter for client keys only (those that start with the client prefix)
-                var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));
-
-                // Retrieve and dispose each client
-                foreach (var key in clientKeys)
-                {
-                    var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key);
-                    client?.Dispose();
-                }
-                _disposed = true;
+                var client = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, cancellationToken: cts.Token);
+                client?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispose CosmosClient for cache key {CacheKey}", key);
             }
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(disposing: true);
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        await DisposeAsyncCore();
         GC.SuppressFinalize(this);
     }
 

@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : SubscriptionCommand<ClusterListOptions>()
+public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterListOptions>()
 {
     private const string CommandTitle = "List Kusto Clusters";
     private readonly ILogger<ClusterListCommand> _logger = logger;
+    private readonly IKustoService _kustoService = kustoService;
 
     public override string Id => "2cff1548-40c9-48ea-8548-6bfa91f2ea85";
 
@@ -45,14 +46,13 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
-            var clusterNames = await kusto.ListClustersAsync(
+            var clusterNames = await _kustoService.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(clusterNames ?? []), KustoJsonContext.Default.ClusterListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false), KustoJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {
@@ -63,5 +63,5 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record ClusterListCommandResult(List<string> Clusters);
+    internal record ClusterListCommandResult(List<string> Clusters, bool AreResultsTruncated);
 }

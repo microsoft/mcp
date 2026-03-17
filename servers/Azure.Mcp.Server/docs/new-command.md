@@ -202,7 +202,7 @@ Choose the appropriate base class for your service based on the operations neede
    public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
        : BaseAzureResourceService(subscriptionService, tenantService), IMyService
    {
-       public async Task<List<MyResource>> ListResourcesAsync(
+       public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
            RetryPolicyOptions? retryPolicy,
@@ -270,9 +270,40 @@ Choose the appropriate base class for your service based on the operations neede
 **API Pattern Discovery:**
 - Study existing services (e.g., Sql, Postgres, Redis) to understand resource access patterns
 - Use resource collections correctly
-   - ✅ Good: `.GetSqlServers().GetAsync(serverName)`
+   - ✅ Good: `.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken)`
    - ❌ Bad: `.GetSqlServerAsync(serverName, cancellationToken)`
 - Check Azure SDK documentation for correct method signatures and property names
+
+**CRITICAL: Verify SDK Property Names Before Implementation**
+
+Azure SDK property names frequently differ from documentation or expected names. Always verify actual property names:
+
+1. **Use IntelliSense First**: Let the IDE show you what's actually available
+2. **Inspect Assemblies When Needed**: If you get compilation errors about missing properties:
+   ```powershell
+   # Find the SDK assembly
+   $dll = Get-ChildItem -Path "c:\mcp" -Recurse -Filter "Azure.ResourceManager.*.dll" | Select-Object -First 1 -ExpandProperty FullName
+
+   # Load and inspect types
+   Add-Type -Path $dll
+   [Azure.ResourceManager.Compute.Models.VirtualMachineExtensionInstanceView].GetProperties() | Select-Object Name, PropertyType
+   ```
+
+3. **Common Property Name Patterns**:
+   - Extension types: `VirtualMachineExtensionInstanceViewType` (not `TypeHandlerType` or `TypePropertiesType`)
+   - Time properties: Often use `StartOn`/`LastActionOn` (not `StartTime`/`LastActionTime`)
+   - Date properties: May use `CreatedOn` (not `CreationDate` or `CreateDate`)
+   - Location: Usually `Location.Name` or `Location.ToString()` (Location is an object, not a string)
+
+4. **Properties That May Not Exist**:
+   - `RollingUpgradePolicy.Mode` - Mode is on parent VMSS upgrade policy, not in rolling upgrade status
+   - Nested policy properties may be at different hierarchy levels than documentation suggests
+   - Some properties shown in REST API may not exist in .NET SDK models
+
+5. **When Properties Don't Exist**:
+   - Set values to `null` if the property truly doesn't exist in the data model
+   - Don't try to derive missing data from other sources unless explicitly required
+   - Document why a property is set to null in comments
 
 **Common Azure Resource Read Operation Patterns:**
 ```csharp
@@ -285,6 +316,17 @@ var resources = await ExecuteResourceQueryAsync(
     ConvertToSqlDatabaseModel,
     additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
     cancellationToken: cancellationToken);
+
+// Direct ARM client pattern - CRITICAL: Use GetResourceGroupAsync with await
+var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+var resource = await rgResource.Value.GetVirtualMachines().GetAsync(vmName, cancellationToken: cancellationToken);
+
+// ❌ WRONG: This causes compilation errors
+var resource = await subscriptionResource
+    .GetResourceGroup(resourceGroup, cancellationToken)  // Missing Async and await
+    .Value
+    .GetVirtualMachines()
+    .GetAsync(vmName, cancellationToken: cancellationToken);
 ```
 
 **Property Access Issues:**
@@ -293,10 +335,39 @@ var resources = await ExecuteResourceQueryAsync(
 - Some properties are objects that need `.ToString()` conversion (e.g., `Location.ToString()`)
 - Be aware of nullable properties and use appropriate null checks
 
+**Dictionary Type Casting for Tags:**
+Azure SDK often returns `IDictionary<string, string>` for Tags, but models expect `IReadOnlyDictionary<string, string>`:
+```csharp
+// ✅ Correct: Cast to IReadOnlyDictionary
+Tags: data.Tags as IReadOnlyDictionary<string, string>
+
+// ❌ Wrong: Direct assignment causes compilation error
+Tags: data.Tags  // Error CS1503: cannot convert from IDictionary to IReadOnlyDictionary
+```
+
 **Compilation Error Resolution:**
 - When you see `cannot convert from 'System.Threading.CancellationToken' to 'string'`, check method parameter order
 - For `'SqlDatabaseData' does not contain a definition for 'X'`, verify property names in the actual SDK types
 - Use existing service implementations as reference for correct property access patterns
+
+**Specialized Resource Collection Patterns:**
+Some Azure resources require specific collection access patterns:
+
+```csharp
+// ✅ Correct: Rolling upgrade status for VMSS
+var upgradeStatus = await vmssResource.Value
+    .GetVirtualMachineScaleSetRollingUpgrade()  // Get the collection
+    .GetAsync(cancellationToken);  // Then get the latest
+
+// ❌ Wrong: Method doesn't exist
+var upgradeStatus = await vmssResource.Value
+    .GetLatestVirtualMachineScaleSetRollingUpgradeAsync(cancellationToken);
+
+// ✅ Correct: VMSS instances
+var vms = await vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync(cancellationToken: cancellationToken);
+
+// Pattern: Get{ResourceType}() returns collection, then .GetAsync(ResourceName, CancellationToken) or .GetAllAsync(CancellationToken)
+```
 
 ### 2. Options Class
 
@@ -399,8 +470,8 @@ protected override void RegisterOptions(Command command)
     command.Validators.Add(commandResult =>
     {
         // Retrieve values once and infer presence from non-empty values
-        commandResult.TryGetValue(ServiceOptionDefinitions.EitherThis, out string? eitherThis);
-        commandResult.TryGetValue(ServiceOptionDefinitions.OrThat, out string? orThat);
+        var eitherThis = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.EitherThis.Name);
+        var orThat = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.OrThat.Name);
 
         var hasEitherThis = !string.IsNullOrWhiteSpace(eitherThis);
         var hasOrThat = !string.IsNullOrWhiteSpace(orThat);
@@ -478,6 +549,28 @@ protected override void RegisterOptions(Command command)
     // Filter - use default requirement from definition
     command.Options.Add(ServiceOptionDefinitions.Filter);
 }
+
+// When you need a custom option (e.g., making a required option optional for a specific command)
+protected override void RegisterOptions(Command command)
+{
+    base.RegisterOptions(command);
+    command.Options.Remove(ComputeOptionDefinitions.ResourceGroup);
+
+    // ✅ Correct: Use string parameters for Option constructor
+    var optionalRg = new Option<string>(
+        "--resource-group",
+        "-g")
+    {
+        Description = "The name of the resource group (optional)"
+    };
+    command.Options.Add(optionalRg);
+
+    // ❌ Wrong: Don't use array for aliases in constructor
+    var wrongOption = new Option<string>(
+        ComputeOptionDefinitions.ResourceGroup.Aliases.ToArray(),
+        "Description");
+    // Error CS1503: Argument 1: cannot convert from 'string[]' to 'string'
+}
 ```
 
 **Name-Based Binding Pattern:**
@@ -510,8 +603,19 @@ protected override MyCommandOptions BindOptions(ParseResult parseResult)
 
 ### 3. Command Class
 
+**CRITICAL: Using Statements**
+Ensure all necessary using statements are included, especially for option definitions:
+
 ```csharp
 using System.Net;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.{Toolset}.Models;
+using Azure.Mcp.Tools.{Toolset}.Options;  // REQUIRED: For {Toolset}OptionDefinitions
+using Azure.Mcp.Tools.{Toolset}.Options.{Resource};  // For resource-specific options
+using Azure.Mcp.Tools.{Toolset}.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
     : Base{Toolset}Command<{Resource}{Operation}Options>
@@ -800,16 +904,34 @@ public interface IMyService
         string subscription,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken = default);
 }
 ```
 
 **Service Implementation Requirements:**
 - Pass the `CancellationToken` parameter to all async method calls
 - Use `cancellationToken: cancellationToken` when calling Azure SDK methods
+- Use `.WithCancellation(cancellationToken)` when iterating over async enumerables with `await foreach`
 - Always include `CancellationToken cancellationToken` as the final parameter (only use a default value if and only if other parameters have default values)
 - Force callers to explicitly provide a CancellationToken
 - Never pass `CancellationToken.None` or `default` as a value to a `CancellationToken` method parameter
+
+**Example - Async Enumerable Pattern:**
+```csharp
+// ✅ Correct: Use .WithCancellation() for async enumerables
+var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+await foreach (var resourceGroup in subscription.GetResourceGroups().WithCancellation(cancellationToken))
+{
+    return resourceGroup.Data.Name;
+}
+
+// ❌ Wrong: Missing .WithCancellation()
+var subscription = _armClient.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+await foreach (var resourceGroup in subscription.GetResourceGroups())
+{
+    return resourceGroup.Data.Name;
+}
+```
 
 **Unit Testing Requirements:**
 - **Mock setup**: Use `Arg.Any<CancellationToken>()` for CancellationToken parameters in mock setups
@@ -2053,7 +2175,7 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(null, retryPolicy);
@@ -2063,7 +2185,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 **Issue: `cannot convert from 'System.Threading.CancellationToken' to 'string'`**
 - **Cause**: Wrong parameter order in resource manager method calls
 - **Solution**: Check method signatures; many Azure SDK methods don't take CancellationToken as second parameter
-- **Fix**: Use `.GetAsync(resourceName)` instead of `.GetAsync(resourceName, cancellationToken)`
+- **Fix**: Use `.GetAsync(resourceName, cancellationToken: cancellationToken)` instead of `.GetAsync(resourceName, cancellationToken)`
 
 **Issue: `'SqlDatabaseData' does not contain a definition for 'CreationDate'`**
 - **Cause**: Property names in Azure SDK differ from expected/documented names
@@ -2079,7 +2201,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 
 **Issue: Wrong resource access pattern**
 - **Problem**: Using `.GetSqlServerAsync(name, cancellationToken)`
-- **Solution**: Use resource collections: `.GetSqlServers().GetAsync(name)`
+- **Solution**: Use resource collections: `GetSqlServers().GetAsync(name, cancellationToken: cancellationToken)`
 - **Pattern**: Always access through collections, not direct async methods
 
 ### Live Test Infrastructure Issues
@@ -2279,7 +2401,7 @@ Commands should be **transport-agnostic** - they work identically in stdio and H
 public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccountGetOptions>
 {
     private readonly IStorageService _storageService;
-    
+
     public StorageAccountGetCommand(
         IStorageService storageService,
         ILogger<StorageAccountGetCommand> logger)
@@ -2290,21 +2412,23 @@ public sealed class StorageAccountGetCommand : SubscriptionCommand<StorageAccoun
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
-        
+
         // Authentication provider handles both stdio and HTTP scenarios
         var accounts = await _storageService.GetStorageAccountsAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.RetryPolicy);
-        
+            options.RetryPolicy,
+            cancellationToken);
+
         // Standard response format works for all transports
         context.Response.Results = ResponseResult.Create(
             new(accounts ?? []),
             StorageJsonContext.Default.CommandResult);
-        
+
         return context.Response;
     }
 }
@@ -2320,7 +2444,7 @@ public override async Task<CommandResponse> ExecuteAsync(...)
     {
         // Different behavior for HTTP mode
     }
-    
+
     // ❌ Don't access HttpContext directly in commands
     var httpContext = _httpContextAccessor.HttpContext;
     if (httpContext != null)
@@ -2351,13 +2475,13 @@ public class StorageService : BaseAzureService, IStorageService
         CancellationToken cancellationToken = default)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy);
-        
+        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy, cancellationToken: cancellationToken);
+
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
-        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity  
+        // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity
         // - Local identity in stdio mode (Azure CLI, VS Code, etc.)
-        
+
         // ... Azure SDK calls
     }
 }
@@ -2378,7 +2502,7 @@ Remote HTTP mode supports **multiple concurrent users**:
 public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseListOptions>
 {
     private readonly ISqlService _sqlService;  // ✅ Singleton service, thread-safe
-    
+
     public SqlDatabaseListCommand(
         ISqlService sqlService,
         ILogger<SqlDatabaseListCommand> logger)
@@ -2389,17 +2513,19 @@ public sealed class SqlDatabaseListCommand : SubscriptionCommand<SqlDatabaseList
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult)
+        ParseResult parseResult,
+        CancellationToken cancellationToken)
     {
         // ✅ Options created per-request, no shared state
         var options = BindOptions(parseResult);
-        
+
         // ✅ Service calls are async and don't store request state
         var databases = await _sqlService.ListDatabasesAsync(
             options.Subscription!,
             options.ResourceGroup,
-            options.Server);
-        
+            options.Server,
+            cancellationToken: cancellationToken);
+
         return context.Response;
     }
 }
@@ -2412,7 +2538,7 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
     // ❌ Don't store per-request state in command fields
     private CommandContext? _currentContext;
     private BadCommandOptions? _currentOptions;
-    
+
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         ParseResult parseResult)
@@ -2420,7 +2546,7 @@ public sealed class BadCommand : SubscriptionCommand<BadCommandOptions>
         // ❌ Race condition with multiple concurrent requests
         _currentContext = context;
         _currentOptions = BindOptions(parseResult);
-        
+
         // ❌ Another request might overwrite these before we use them
         await Task.Delay(100);
         return _currentContext.Response;
@@ -2443,12 +2569,12 @@ public async Task<List<Resource>> GetResourcesAsync(
     // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
-    
+
     var credential = await GetCredential(tenant, cancellationToken);
-    
+
     // ✅ If tenant is null, service will use default tenant
     // ✅ If tenant is provided, service validates it's accessible
-    
+
     var armClient = new ArmClient(credential);
     // ... rest of implementation
 }
@@ -2464,15 +2590,15 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     RequestFailedException reqEx when reqEx.Status == 401 =>
         "Authentication failed. In remote mode, ensure your token has the required " +
         "Mcp.Tools.ReadWrite scope and sufficient RBAC permissions on Azure resources.",
-    
+
     RequestFailedException reqEx when reqEx.Status == 403 =>
         "Authorization failed. Your user account lacks the required RBAC permissions. " +
         "In remote mode with On Behalf Of flow, permissions come from the authenticated user's identity. Learn more at https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow",
-    
+
     InvalidOperationException invEx when invEx.Message.Contains("tenant") =>
         "Tenant mismatch. In remote OBO mode, the requested tenant must match your " +
         "authenticated user's tenant ID.",
-    
+
     _ => base.GetErrorMessage(ex)
 };
 ```
@@ -2499,16 +2625,16 @@ When writing tests, consider both transport modes:
 public class StorageCommandLiveTests : IAsyncLifetime
 {
     private readonly TestSettings _settings;
-    
+
     public async Task InitializeAsync()
     {
         _settings = TestSettings.Load();
-        
+
         // Test infrastructure supports both modes:
         // - Stdio mode: Uses Azure CLI/VS Code credentials
         // - HTTP mode: Can simulate OBO or hosting environment identity
     }
-    
+
     [Fact]
     public async Task ListStorageAccounts_ReturnsAccounts()
     {
@@ -2516,7 +2642,7 @@ public class StorageCommandLiveTests : IAsyncLifetime
         var result = await CallToolAsync(
             "azmcp_storage_account_list",
             new { subscription = _settings.SubscriptionId });
-        
+
         Assert.NotNull(result);
     }
 }
@@ -2617,6 +2743,7 @@ Before submitting:
 ### Azure SDK Integration
 - [ ] All Azure SDK property names verified and correct
 - [ ] Resource access patterns use collections (e.g., `.GetSqlServers().GetAsync()`)
+- [ ] Use cancellation token when using async methods (e.g., `GetAsync(serverName, cancellationToken: cancellationToken)`)
 - [ ] Subscription resolution uses `ISubscriptionService.GetSubscription()`
 - [ ] Service constructor includes `ISubscriptionService` injection for Azure resources
 

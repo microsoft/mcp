@@ -7,8 +7,8 @@ using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
 
@@ -19,12 +19,13 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// </summary>
 public class FastTranscriptionRecognizer(
     ITenantService tenantService,
-    IHttpClientService httpClientService,
+    IHttpClientFactory httpClientFactory,
     ILogger<FastTranscriptionRecognizer> logger)
     : BaseAzureService(tenantService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
-    private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly ITenantService _tenantService = tenantService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc/>
     public async Task<FastTranscriptionResult> RecognizeAsync(
@@ -66,8 +67,7 @@ public class FastTranscriptionRecognizer(
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-                var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
+                var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
                 // Build the Fast Transcription API URL
                 var apiVersion = "2024-11-15";
@@ -121,11 +121,12 @@ public class FastTranscriptionRecognizer(
                 using var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
                 {
                     Content = formContent,
-                    Headers = { Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token) }
+                    Headers = { Authorization = new("Bearer", accessToken.Token) }
                 };
 
-                // Make the request using HttpClient from service
-                var response = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
+                // Make the request using HttpClient from factory
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
@@ -243,6 +244,17 @@ public class FastTranscriptionRecognizer(
             ".wma" => "audio/x-ms-wma",
             ".webm" => "audio/webm",
             _ => "application/octet-stream"
+        };
+    }
+
+    private string GetCognitiveServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
+            _ => "https://cognitiveservices.azure.com/.default"
         };
     }
 }

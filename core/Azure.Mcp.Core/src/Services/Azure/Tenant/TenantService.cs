@@ -17,18 +17,23 @@ public class TenantService : BaseAzureService, ITenantService
     private readonly IHttpClientFactory _httpClientFactory;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.Tenant;
 
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,
         ICacheService cacheService,
-        IHttpClientFactory clientFactory)
+        IHttpClientFactory clientFactory,
+        IAzureCloudConfiguration cloudConfiguration)
     {
         _credentialProvider = credentialProvider;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _httpClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+        CloudConfiguration = cloudConfiguration ?? throw new ArgumentNullException(nameof(cloudConfiguration));
         TenantService = this;
     }
+
+    /// <inheritdoc/>
+    public IAzureCloudConfiguration CloudConfiguration { get; }
 
     /// <inheritdoc/>
     public async Task<List<TenantResource>> GetTenants(CancellationToken cancellationToken)
@@ -45,9 +50,10 @@ public class TenantService : BaseAzureService, ITenantService
 
         var options = AddDefaultPolicies(new ArmClientOptions());
         options.Transport = new HttpClientTransport(GetClient());
+        options.Environment = CloudConfiguration.ArmEnvironment;
         var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
-        await foreach (var tenant in client.GetTenants())
+        await foreach (var tenant in client.GetTenants().WithCancellation(cancellationToken))
         {
             results.Add(tenant);
         }

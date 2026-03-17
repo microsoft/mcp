@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -207,6 +209,123 @@ public class RegistryToolLoaderTests
         var writeToolResult = result.Tools.First(t => t.Name == "write-tool");
         Assert.True(readOnlyToolResult.Annotations?.ReadOnlyHint == true);
         Assert.True(writeToolResult.Annotations?.ReadOnlyHint == false);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_FiltersProperly()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "localrequired-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = true } // Simulate a tool that requires local access (not suitable for HTTP mode)
+        };
+
+        var notLocalRequiredTool = new Tool
+        {
+            Name = "not-localrequired-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local required result" }], IsError = false })
+            .AddTool(notLocalRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Not local required result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(isHttpOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When IsHttpMode is enabled, only tools with LocalRequiredHint = false should be returned
+        Assert.Single(result.Tools);
+        var returnedTool = result.Tools.First();
+        Assert.Equal(notLocalRequiredTool.Name, returnedTool.Name);
+        Assert.NotNull(returnedTool.Meta);
+        Assert.Equal(JsonValueKind.False, returnedTool.Meta["LocalRequiredHint"]?.GetValueKind());
+
+        // Verify that the write tool was filtered out
+        Assert.DoesNotContain(result.Tools, t => t.Name == localRequiredTool.Name);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpDisabled_ReturnsAllTools()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "localrequired-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = true } // Simulate a tool that requires local access (not suitable for HTTP mode)
+        };
+
+        var notLocalRequiredTool = new Tool
+        {
+            Name = "not-localrequired-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local required result" }], IsError = false })
+            .AddTool(notLocalRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Not local required result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: false);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(isHttpOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When IsHttpMode is disabled, all tools should be returned regardless of LocalRequiredHint
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == localRequiredTool.Name);
+        Assert.Contains(result.Tools, t => t.Name == notLocalRequiredTool.Name);
+
+        // Verify annotations are preserved
+        var localRequiredToolResult = result.Tools.First(t => t.Name == localRequiredTool.Name);
+        var notLocalRequiredToolResult = result.Tools.First(t => t.Name == notLocalRequiredTool.Name);
+        Assert.NotNull(localRequiredToolResult.Meta);
+        Assert.Equal(JsonValueKind.True, localRequiredToolResult.Meta["LocalRequiredHint"]?.GetValueKind());
+        Assert.NotNull(notLocalRequiredToolResult.Meta);
+        Assert.Equal(JsonValueKind.False, notLocalRequiredToolResult.Meta["LocalRequiredHint"]?.GetValueKind());
     }
 
     [Fact]
@@ -502,5 +621,244 @@ public class RegistryToolLoaderTests
         // Assert - This tests that the semaphore is disposed
         // If the semaphore wasn't disposed properly, subsequent operations might have issues
         // but this is mainly for coverage and resource cleanup verification
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleServers_InitializesConcurrently()
+    {
+        // Arrange - Create multiple servers with controlled async initialization
+        var tcs1 = new TaskCompletionSource<bool>();
+        var tcs2 = new TaskCompletionSource<bool>();
+        var tcs3 = new TaskCompletionSource<bool>();
+
+        var client1Builder = new MockMcpClientBuilder()
+            .AddTool("tool-1", "Tool from server 1", "Response 1");
+        var client2Builder = new MockMcpClientBuilder()
+            .AddTool("tool-2", "Tool from server 2", "Response 2");
+        var client3Builder = new MockMcpClientBuilder()
+            .AddTool("tool-3", "Tool from server 3", "Response 3");
+
+        // Create a mock discovery strategy that delays client creation
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+
+        var server1 = Substitute.For<IMcpServerProvider>();
+        server1.CreateMetadata().Returns(new McpServerMetadata("server-1", "server-1", "Server 1"));
+        var server2 = Substitute.For<IMcpServerProvider>();
+        server2.CreateMetadata().Returns(new McpServerMetadata("server-2", "server-2", "Server 2"));
+        var server3 = Substitute.For<IMcpServerProvider>();
+        server3.CreateMetadata().Returns(new McpServerMetadata("server-3", "server-3", "Server 3"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server1, server2, server3]));
+
+        // Set up GetOrCreateClientAsync to wait on TaskCompletionSource to simulate concurrent operations
+        var client1 = client1Builder.Build();
+        var client2 = client2Builder.Build();
+        var client3 = client3Builder.Build();
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs1.Task; // Wait for signal
+                return client1;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs2.Task; // Wait for signal
+                return client2;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs3.Task; // Wait for signal
+                return client3;
+            });
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act - Start initialization (it will block on TaskCompletionSources)
+        var listToolsTask = toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Give time for all GetOrCreateClientAsync calls to be invoked concurrently
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+
+        // Verify all three GetOrCreateClientAsync were called (proving concurrent execution)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+
+        // Release all servers concurrently in reverse order to test proper synchronization
+        tcs3.SetResult(true);
+        tcs1.SetResult(true);
+        tcs2.SetResult(true);
+
+        // Wait for initialization to complete
+        var result = await listToolsTask;
+
+        // Assert - All tools should be loaded successfully
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(3, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "tool-1");
+        Assert.Contains(result.Tools, t => t.Name == "tool-2");
+        Assert.Contains(result.Tools, t => t.Name == "tool-3");
+
+        // Verify no race conditions - calling again should use cached results without re-initialization
+        var cachedRequest = CreateListToolsRequest();
+        var cachedResult = await toolLoader.ListToolsHandler(cachedRequest, TestContext.Current.CancellationToken);
+        Assert.Equal(3, cachedResult.Tools.Count);
+
+        // Verify GetOrCreateClientAsync was NOT called again (proves caching works)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WhenCancellationOccursDuringInitialization_AllowsRetry()
+    {
+        // Arrange - Create a server with controlled cancellation
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("test-tool", "Test Tool", "Response");
+
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var server = Substitute.For<IMcpServerProvider>();
+        server.CreateMetadata().Returns(new McpServerMetadata("test-server", "test-server", "Test Server"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server]));
+
+        // First call: throw OperationCanceledException
+        var firstCall = true;
+        mockDiscoveryStrategy.GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                if (firstCall)
+                {
+                    firstCall = false;
+                    throw new OperationCanceledException("Initialization canceled");
+                }
+                return Task.FromResult(clientBuilder.Build());
+            });
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
+        var request = CreateListToolsRequest();
+
+        // Act & Assert - First call should throw OperationCanceledException
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken));
+
+        // Act & Assert - Second call should succeed (proving initialization wasn't marked complete)
+        var retryRequest = CreateListToolsRequest();
+        var result = await toolLoader.ListToolsHandler(retryRequest, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Single(result.Tools);
+        Assert.Equal("test-tool", result.Tools.First().Name);
+
+        // Verify GetOrCreateClientAsync was called twice (once failed, once succeeded)
+        _ = mockDiscoveryStrategy.Received(2).GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithToolPrefix_ExposesToolsWithPrefix()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("create_agent", "Create an agent", "Created")
+            .AddTool("list_agents", "List agents", "Agents");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — exposed names have the prefix
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "foundry_create_agent");
+        Assert.Contains(result.Tools, t => t.Name == "foundry_list_agents");
+        // Original names must NOT appear
+        Assert.DoesNotContain(result.Tools, t => t.Name == "create_agent");
+        Assert.DoesNotContain(result.Tools, t => t.Name == "list_agents");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolPrefix_RoutesUsingOriginalName()
+    {
+        // Arrange — the upstream tool is "create_agent"; the client gets exposed as "foundry_create_agent"
+        const string upstreamToolName = "create_agent";
+        const string prefixedToolName = "foundry_create_agent";
+        const string expectedResponse = "Agent created successfully";
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(upstreamToolName, "Create an agent", _ => new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = expectedResponse }],
+                IsError = false
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act — call using the prefixed name
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequest(prefixedToolName),
+            TestContext.Current.CancellationToken);
+
+        // Assert — response comes back correctly
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(text);
+        Assert.Equal(expectedResponse, text.Text);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNoToolPrefix_ExposesToolsUnchanged()
+    {
+        // Arrange — server with no toolPrefix configured
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("search_docs", "Search documentation", "Results");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("docs", "docs", "Docs server", clientBuilder)
+            .Build();
+
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — tool name is unchanged
+        Assert.Single(result.Tools);
+        Assert.Equal("search_docs", result.Tools[0].Name);
     }
 }

@@ -3,11 +3,11 @@
 
 [CmdletBinding()]
 param(
-    [string] $TestResultsPath,
     [string[]] $Paths,
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
     [switch] $TestNativeBuild,
@@ -110,13 +110,20 @@ function CreateTestSolution {
     Push-Location $workPath
     try {
         dotnet new sln -n "Tests" | Out-Null
-        dotnet sln add $testProjects --in-root | Out-Host
+        dotnet sln add $testProjects --in-root --include-references false | Out-Host
     }
     finally {
         Pop-Location
     }
 
-    return "$workPath/Tests.sln"
+    # .NET 10+ creates .slnx by default instead of .sln
+    $slnFile = Get-ChildItem -Path $workPath -Filter "Tests.sln*" -File | Select-Object -First 1
+    if (-not $slnFile) {
+        Write-Error "Failed to create temporary solution file in $workPath"
+        return $null
+    }
+
+    return $slnFile.FullName.Replace('\', '/')
 }
 
 function Create-CoverageReport {

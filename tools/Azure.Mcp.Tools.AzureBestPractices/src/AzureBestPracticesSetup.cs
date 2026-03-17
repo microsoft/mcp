@@ -12,6 +12,7 @@ public class AzureBestPracticesSetup : IAreaSetup
 {
     public string Name => "get_azure_bestpractices";
     public string Title => "Azure Best Practices";
+    public CommandCategory Category => CommandCategory.RecommendedTools;
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -36,6 +37,7 @@ public class AzureBestPracticesSetup : IAreaSetup
             When the request involves AI in any capacity, including systems where AI is used as a component,
             use AI application best practices instead of the general best practices.
             Call this tool first before creating any plans, todos or code.
+            Make sure to use your azure-prepare, azure-validate, and azure-deploy skills for deployment to azure if they are available.
             Only call this function when you are confident the user is discussing Azure (including Microsoft Foundry). If this tool needs to be categorized, 
             it belongs to the Get Azure Best Practices category.",
             Title

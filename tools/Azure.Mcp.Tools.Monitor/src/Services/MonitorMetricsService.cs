@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
@@ -125,10 +124,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         }
 
         // Query metrics using new API
-        var metricsPageable = armClient.GetMonitorMetricsAsync(
-            new ResourceIdentifier(resourceId!),
-            options,
-            cancellationToken);
+        var metricsPageable = armClient.GetMonitorMetricsAsync(new(resourceId!), options, cancellationToken);
 
         // Convert response directly to compact format
         var results = new List<MetricResult>();
@@ -138,7 +134,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             {
                 Name = metric.Name?.Value ?? string.Empty,
                 Unit = metric.Unit.ToString(),
-                TimeSeries = new List<MetricTimeSeries>()
+                TimeSeries = []
             };
 
             foreach (var timeSeries in metric.Timeseries)
@@ -148,7 +144,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
                 var compactTimeSeries = new MetricTimeSeries
                 {
-                    Metadata = new Dictionary<string, string>(),
+                    Metadata = [],
                     Start = timeSeries.Data.First().TimeStamp.UtcDateTime,
                     End = timeSeries.Data.Last().TimeStamp.UtcDateTime,
                     Interval = interval ?? "PT1M"
@@ -233,7 +229,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
         // List metric definitions using the new API
         var definitionsPageable = armClient.GetMonitorMetricDefinitionsAsync(
-            new ResourceIdentifier(resourceId!),
+            new(resourceId!),
             metricNamespace,
             cancellationToken);
 
@@ -253,7 +249,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             }
             var metricDef = new MetricDefinition
             {
-                Dimensions = definition.Dimensions?.Select(d => d.Value).ToList() ?? new(),
+                Dimensions = definition.Dimensions?.Select(d => d.Value).ToList() ?? [],
                 Name = definitionName,
                 MetricNamespace = definition.Namespace,
                 Description = definition.DisplayDescription,
@@ -304,9 +300,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
         // List metric namespaces using the new API
-        var namespacesPageable = armClient.GetMonitorMetricNamespacesAsync(
-            new ResourceIdentifier(resourceId!),
-            cancellationToken: cancellationToken);
+        var namespacesPageable = armClient.GetMonitorMetricNamespacesAsync(new(resourceId!), cancellationToken: cancellationToken);
 
         var results = new List<MetricNamespace>();
         await foreach (var ns in namespacesPageable.WithCancellation(cancellationToken))
@@ -319,7 +313,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
                 continue;
             }
 
-            results.Add(new MetricNamespace
+            results.Add(new()
             {
                 Name = ns.MetricNamespaceNameValue ?? namespaceName ?? string.Empty,
                 Type = ns.ResourceType.ToString(),
@@ -330,7 +324,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         return results;
     }
 
-    private string ToIsoString(DateTimeOffset dto)
+    private static string ToIsoString(DateTimeOffset dto)
     {
         if (dto.Offset == TimeSpan.Zero)
         {

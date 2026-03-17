@@ -5,6 +5,7 @@ using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
@@ -15,7 +16,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
     : BaseAzureService(tenantService), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
-    private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
@@ -43,14 +44,14 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
         var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
         var response = operation.GetRawResponse();
 
-        return new AppendEntryResult
+        return new()
         {
             TransactionId = operation.Id,
             State = operation.HasCompleted ? "Committed" : "Pending"
@@ -74,9 +75,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
 
-        Response? getByCollectionResponse = null;
         bool loaded = false;
         string? contents = null;
         string? actualTransactionId = null;
@@ -88,7 +88,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             {
                 throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
             }
-            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            var getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
             using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
             {
                 loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
@@ -108,11 +108,26 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             }
         }
 
-        return new LedgerEntryGetResult
+        return new()
         {
             LedgerName = ledgerName,
             TransactionId = actualTransactionId ?? transactionId,
             Contents = contents ?? string.Empty,
+        };
+    }
+
+    private string GetLedgerUri(string ledgerName)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.com",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                $"https://{ledgerName}.confidential-ledger.azure.us",
+            _ =>
+                $"https://{ledgerName}.confidential-ledger.azure.com"
         };
     }
 }

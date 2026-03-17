@@ -59,16 +59,16 @@ public class WebTestsGetCommandTests
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Get details of a specific web test", _command.Title);
+        Assert.Equal("Get or list web tests", _command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
         var description = _command.Description;
-        Assert.Contains("resource group", description);
-        Assert.Contains("webtest resource name", description);
-        Assert.Contains("detailed information", description);
+        Assert.Contains("specific web test or lists all web tests", description);
+        Assert.Contains("--webtest-resource is provided", description);
+        Assert.Contains("--webtest-resource is omitted", description);
     }
 
     [Fact]
@@ -100,9 +100,9 @@ public class WebTestsGetCommandTests
         Assert.Contains("--resource-group", options);
         Assert.Contains("--webtest-resource", options);
 
-        // Verify required options are marked as required
+        // Verify webtest-resource is optional (for list functionality)
         var requiredOptions = command.Options.Where(o => o.Required).Select(o => o.Name).ToList();
-        Assert.Contains("--webtest-resource", requiredOptions);
+        Assert.DoesNotContain("--webtest-resource", requiredOptions);
     }
 
     #endregion
@@ -235,10 +235,9 @@ public class WebTestsGetCommandTests
     #region ExecuteAsync Tests - Validation Failures
 
     [Theory]
-    [InlineData("")]                                                        // Missing all required options
-    [InlineData("--subscription sub1")]                                    // Missing resource-group and resource-name
-    [InlineData("--subscription sub1 --resource-group rg1")]              // Missing resource-name
-    [InlineData("--resource-group rg1 --webtest-resource webtest1")]         // Missing subscription
+    [InlineData("")]                                                        // Missing subscription (required)
+    [InlineData("--resource-group rg1")]                                   // Missing subscription
+    [InlineData("--webtest-resource webtest1")]                            // Missing subscription
     public async Task ExecuteAsync_InvalidInput_ReturnsBadRequest(string args)
     {
         // Arrange
@@ -252,6 +251,104 @@ public class WebTestsGetCommandTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.NotEmpty(response.Message);
         Assert.Null(response.Results);
+    }
+
+    #endregion
+
+    #region ExecuteAsync Tests - List Scenarios
+
+    [Fact]
+    public async Task ExecuteAsync_ListAllWebTests_ReturnsSuccess()
+    {
+        // Arrange
+        var args = new string[] { "--subscription", "sub1" };
+        var expectedResults = new List<WebTestSummaryInfo>
+        {
+            new()
+            {
+                ResourceName = "webtest1",
+                Location = "eastus",
+                ResourceGroup = "rg1"
+            },
+            new()
+            {
+                ResourceName = "webtest2",
+                Location = "westus",
+                ResourceGroup = "rg2"
+            }
+        };
+
+        _service.ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResults);
+
+        var parseResult = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify the actual content of the results
+        var results = GetListResult(response.Results);
+        Assert.NotNull(results);
+        Assert.Equal(2, results.Count);
+        Assert.Equal("webtest1", results[0].ResourceName);
+        Assert.Equal("webtest2", results[1].ResourceName);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListWebTestsWithResourceGroup_ReturnsFilteredResults()
+    {
+        // Arrange
+        var args = new string[] { "--subscription", "sub1", "--resource-group", "rg1" };
+        var expectedResults = new List<WebTestSummaryInfo>
+        {
+            new()
+            {
+                ResourceName = "webtest1",
+                Location = "eastus",
+                ResourceGroup = "rg1"
+            }
+        };
+
+        _service.ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResults);
+
+        var parseResult = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var results = GetListResult(response.Results);
+        Assert.NotNull(results);
+        Assert.Single(results);
+        Assert.Equal("webtest1", results[0].ResourceName);
+        Assert.Equal("rg1", results[0].ResourceGroup);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListCallsServiceWithCorrectParameters()
+    {
+        // Arrange
+        var expectedResults = new List<WebTestSummaryInfo>();
+
+        _service.ListWebTests(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResults);
+
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1"]);
+
+        // Act
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        await _service.Received(1).ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -325,7 +422,18 @@ public class WebTestsGetCommandTests
         return JsonSerializer.Deserialize<WebTestsGetCommandResult>(json)?.webTest;
     }
 
+    private List<WebTestSummaryInfo>? GetListResult(ResponseResult? result)
+    {
+        if (result == null)
+        {
+            return null;
+        }
+        var json = JsonSerializer.Serialize(result);
+        return JsonSerializer.Deserialize<WebTestsGetCommandListResult>(json)?.webTests;
+    }
+
     private record WebTestsGetCommandResult(WebTestDetailedInfo webTest);
+    private record WebTestsGetCommandListResult(List<WebTestSummaryInfo> webTests);
 
     #endregion
 }

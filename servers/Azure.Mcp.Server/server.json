@@ -40,6 +40,24 @@
                     "value": "start"
                 }
             ]
+        },
+        {
+            "registryType": "pypi",
+            "identifier": "<<PypiPackageName>>",
+            "version": "<<Version>>",
+            "transport": {
+                "type": "stdio"
+            },
+            "packageArguments": [
+                {
+                    "type": "positional",
+                    "value": "server"
+                },
+                {
+                    "type": "positional",
+                    "value": "start"
+                }
+            ]
         }
     ],
     "repository": {

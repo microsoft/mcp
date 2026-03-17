@@ -1,0 +1,4 @@
+pr: 1880
+changes:
+  - section: "Other Changes"
+    description: "Storage: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync"

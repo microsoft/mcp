@@ -3,26 +3,34 @@
 
 namespace Azure.Mcp.Tools.ManagedLustre.Models;
 
-public sealed record AutoexportJob
+public class AutoexportJob
 {
-    public required string Name { get; init; }
-    public required string Id { get; init; }
-    public required string ProvisioningState { get; init; }
-    public string? AdminStatus { get; init; }
-    public string[]? AutoExportPrefixes { get; init; }
-    public string? State { get; init; }
-    public string? StatusCode { get; init; }
-    public string? StatusMessage { get; init; }
-    public long? TotalFilesExported { get; init; }
-    public long? TotalMiBExported { get; init; }
-    public long? TotalFilesFailed { get; init; }
-    public int? ExportIterationCount { get; init; }
-    public DateTimeOffset? LastSuccessfulIterationCompletionTimeUTC { get; init; }
-    public long? CurrentIterationFilesDiscovered { get; init; }
-    public long? CurrentIterationMiBDiscovered { get; init; }
-    public long? CurrentIterationFilesExported { get; init; }
-    public long? CurrentIterationMiBExported { get; init; }
-    public long? CurrentIterationFilesFailed { get; init; }
-    public DateTimeOffset? LastStartedTimeUTC { get; init; }
-    public DateTimeOffset? LastCompletionTimeUTC { get; init; }
+    public string? Name { get; set; }
+    public string? Id { get; set; }
+    public string? Type { get; set; }
+    public string? Location { get; set; }
+    public AutoexportJobProperties? Properties { get; set; }
+}
+
+public class AutoexportJobProperties
+{
+    public string? ProvisioningState { get; set; }
+    public string[]? AutoExportPrefixes { get; set; }
+    public string? AdminStatus { get; set; }
+    public AutoexportJobStatus? Status { get; set; }
+}
+
+public class AutoexportJobStatus
+{
+    public string? State { get; set; }
+    public long? TotalFilesExported { get; set; }
+    public long? TotalMiBExported { get; set; }
+    public long? TotalFilesFailed { get; set; }
+    public int? ExportIterationCount { get; set; }
+    public long? CurrentIterationFilesDiscovered { get; set; }
+    public long? CurrentIterationMiBDiscovered { get; set; }
+    public long? CurrentIterationFilesExported { get; set; }
+    public long? CurrentIterationMiBExported { get; set; }
+    public long? CurrentIterationFilesFailed { get; set; }
+    public DateTime? LastStartedTime { get; set; }
 }

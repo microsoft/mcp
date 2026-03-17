@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
 {
 
     [Fact]
@@ -122,4 +123,16 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        .. base.BodyRegexSanitizers,
+        // Sanitize tag contents
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody
+        {
+            Regex = @"(?is)""tags""\s*:\s*{(.*?)}",
+            GroupForReplace = "1",
+            Value = ""
+        })
+    ];
 }

@@ -109,7 +109,7 @@ resource fileSharePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-06-01
           groupIds: [
             'FileShare'
           ]
-          requestMessage: 'Approved Private Endpoint'
+          requestMessage: 'Auto-approved Private Endpoint Connection'
         }
       }
     ]
@@ -139,4 +139,6 @@ output subnetId string = '${virtualNetwork.id}/subnets/${subnetName}'
 // Private Endpoint outputs
 output privateEndpointName string = fileSharePrivateEndpoint.name
 output privateEndpointId string = fileSharePrivateEndpoint.id
+output resourceGroupName string = resourceGroup().name
+output subscriptionId string = subscription().subscriptionId
 

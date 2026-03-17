@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Models;
@@ -32,10 +33,9 @@ public class AccountListCommandTests
         _appConfigService = Substitute.For<IAppConfigService>();
         _logger = Substitute.For<ILogger<AccountListCommand>>();
 
-        _command = new(_logger);
+        _command = new(_logger, _appConfigService);
         _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
-            .AddSingleton(_appConfigService)
             .BuildServiceProvider();
         _context = new(_serviceProvider);
     }
@@ -44,11 +44,11 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist()
     {
         // Arrange
-        var expectedAccounts = new List<AppConfigurationAccount>
-        {
+        var expectedAccounts = new ResourceQueryResults<AppConfigurationAccount>(
+        [
             new() { Name = "account1", Location = "East US", Endpoint = "https://account1.azconfig.io" },
             new() { Name = "account2", Location = "West US", Endpoint = "https://account2.azconfig.io" }
-        };
+        ], false);
         _appConfigService.GetAppConfigAccounts(
             "sub123",
             Arg.Any<string?>(),
@@ -83,7 +83,7 @@ public class AccountListCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
@@ -110,7 +110,7 @@ public class AccountListCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<AppConfigurationAccount>>(new Exception("Service error")));
+            .ThrowsAsync(new Exception("Service error"));
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 

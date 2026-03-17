@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Models;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
 public interface IAppConfigService
 {
-    Task<List<AppConfigurationAccount>> GetAppConfigAccounts(
+    Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `azmcp postgres list` incorrectly requiring `--resource-group` and `--user` when listing servers at subscription scope. Both parameters are now optional as intended."
