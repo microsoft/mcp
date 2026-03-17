@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobDeleteCommand(ILogger<ImportJobDeleteCommand> logger)
+public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogger<ImportJobDeleteCommand> logger)
     : BaseManagedLustreCommand<ImportJobDeleteOptions>(logger)
 {
     private const string CommandTitle = "Delete Azure Managed Lustre Import Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<ImportJobDeleteCommand> _logger = logger;
 
     public override string Id => "e4i6f8h0-2g5b-7e9f-1h3d-5g7b9e1g3f5h";
@@ -72,9 +73,8 @@ public sealed class ImportJobDeleteCommand(ILogger<ImportJobDeleteCommand> logge
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
-            await svc.DeleteImportJobAsync(
+            await _service.DeleteImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
