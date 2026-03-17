@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : SubscriptionCommand<ProductGetOptions>
+public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions>
 {
     private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
+    private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
     public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
 
@@ -81,12 +82,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
         try
         {
-
-            // Get the marketplace service from DI
-            var marketplaceService = context.GetService<IMarketplaceService>();
-
             // Call service operation with required parameters
-            var result = await marketplaceService.GetProduct(
+            var result = await _marketplaceService.GetProduct(
                 options.ProductId!,
                 options.Subscription!,
                 options.IncludeStopSoldPlans,

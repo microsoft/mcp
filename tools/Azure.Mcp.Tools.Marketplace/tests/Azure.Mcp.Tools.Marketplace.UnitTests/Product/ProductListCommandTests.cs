@@ -28,10 +28,10 @@ public class ProductListCommandTests
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _marketplaceService);
         _context = new(_serviceProvider);
     }
 
