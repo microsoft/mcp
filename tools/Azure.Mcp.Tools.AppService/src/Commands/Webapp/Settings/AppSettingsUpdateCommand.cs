@@ -11,11 +11,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
-public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger)
+public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
     public override string Id => "08ca52a3-f766-4c62-9597-702f629efaf6";
     public override string Name => "update-appsettings";
 
@@ -113,8 +114,7 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var updateResult = await appServiceService.UpdateAppSettingsAsync(
+            var updateResult = await _appServiceService.UpdateAppSettingsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
