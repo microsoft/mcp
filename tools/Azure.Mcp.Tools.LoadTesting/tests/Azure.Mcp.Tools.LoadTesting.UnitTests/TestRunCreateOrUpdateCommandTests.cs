@@ -28,11 +28,9 @@ public class TestRunCreateOrUpdateCommandTests
         _service = Substitute.For<ILoadTestingService>();
         _logger = Substitute.For<ILogger<TestRunCreateOrUpdateCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -63,7 +61,7 @@ public class TestRunCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunCreateOrUpdateCommand(_logger);
+        var command = new TestRunCreateOrUpdateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -98,7 +96,7 @@ public class TestRunCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunCreateOrUpdateCommand(_logger);
+        var command = new TestRunCreateOrUpdateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -130,7 +128,7 @@ public class TestRunCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunCreateOrUpdateCommand(_logger);
+        var command = new TestRunCreateOrUpdateCommand(_logger, _service);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1 --display-name displayName");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -166,7 +164,7 @@ public class TestRunCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunCreateOrUpdateCommand(_logger);
+        var command = new TestRunCreateOrUpdateCommand(_logger, _service);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1 --old-testrun-id oldId1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -201,7 +199,7 @@ public class TestRunCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<TestRun>(new Exception("Test error")));
 
-        var command = new TestRunCreateOrUpdateCommand(_logger);
+        var command = new TestRunCreateOrUpdateCommand(_logger, _service);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);

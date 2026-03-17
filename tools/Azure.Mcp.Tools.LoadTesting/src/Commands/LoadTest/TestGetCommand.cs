@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
+public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestGetOptions>
 {
     private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
     public override string Name => "get";
@@ -64,12 +65,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
 
         try
         {
-
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.GetTestAsync(
+            var results = await _loadTestingService.GetTestAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,

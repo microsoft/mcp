@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
-public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger)
+public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestResourceCreateOptions>
 {
     private const string _commandTitle = "Test Resource Create";
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "c39f6e9c-86a7-4cba-b267-0fa71f1ac743";
     public override string Name => "create";
     public override string Description =>
@@ -55,11 +56,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.CreateOrUpdateLoadTestingResourceAsync(
+            var results = await _loadTestingService.CreateOrUpdateLoadTestingResourceAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.TestResourceName!,
