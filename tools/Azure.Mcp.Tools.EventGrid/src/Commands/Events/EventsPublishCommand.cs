@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
-public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger) : BaseEventGridCommand<EventsPublishOptions>
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions>
 {
     private const string CommandTitle = "Publish Events to Event Grid Topic";
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
+    private readonly IEventGridService _eventGridService = eventGridService;
     public override string Id => "d5f216a4-c45e-4c29-a414-d3feaa5929e2";
 
     public override string Name => "publish";
@@ -84,9 +85,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
 
         try
         {
-            var eventGridService = context.GetService<IEventGridService>();
-
-            var result = await eventGridService.PublishEventAsync(
+            var result = await _eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.TopicName!,

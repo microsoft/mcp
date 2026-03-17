@@ -34,7 +34,7 @@ public class TopicListCommandTests
         var collection = new ServiceCollection().AddSingleton(_eventGridService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _eventGridService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
