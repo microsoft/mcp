@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -46,6 +47,10 @@ public class TemplateGetCommandLiveTests(
 
     #region Template List Tests - All Languages
 
+    /// <summary>
+    /// Primary test that fetches from CDN and can be recorded.
+    /// Other list tests depend on cached manifest and are marked [LiveTestOnly].
+    /// </summary>
     [Fact]
     public async Task ExecuteAsync_ListTemplates_Python_ReturnsTemplates()
     {
@@ -58,6 +63,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ListTemplates_TypeScript_ReturnsTemplates()
     {
         var templateList = await GetTemplateListAsync("typescript");
@@ -69,6 +75,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ListTemplates_JavaScript_ReturnsTemplates()
     {
         var templateList = await GetTemplateListAsync("javascript");
@@ -80,6 +87,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ListTemplates_CSharp_ReturnsTemplates()
     {
         var templateList = await GetTemplateListAsync("csharp");
@@ -91,6 +99,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ListTemplates_Java_ReturnsTemplates()
     {
         var templateList = await GetTemplateListAsync("java");
@@ -102,6 +111,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ListTemplates_PowerShell_ReturnsTemplates()
     {
         var templateList = await GetTemplateListAsync("powershell");
@@ -117,6 +127,7 @@ public class TemplateGetCommandLiveTests(
     #region HTTP Trigger Tests - Template File Retrieval
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_HttpTrigger_Python_ReturnsTemplateWithFiles()
     {
         // Arrange
@@ -142,6 +153,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_HttpTrigger_TypeScript_ReturnsTemplateWithFiles()
     {
         // Arrange
@@ -166,6 +178,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_HttpTrigger_CSharp_ReturnsTemplateWithFiles()
     {
         // Arrange
@@ -194,6 +207,7 @@ public class TemplateGetCommandLiveTests(
     #region Caching Tests
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_LanguageListThenTemplate_UsesSharedCache()
     {
         // This test verifies that the manifest cache is shared between commands.
@@ -228,6 +242,7 @@ public class TemplateGetCommandLiveTests(
     #region Runtime Version Replacement
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_WithRuntimeVersion_ReplacesPlaceholders()
     {
         // Get valid runtime version from language list
@@ -272,6 +287,7 @@ public class TemplateGetCommandLiveTests(
     #region Error Handling
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_InvalidLanguage_ReturnsError()
     {
         // Act - Invalid language returns validation error (no "results" property)
@@ -284,6 +300,7 @@ public class TemplateGetCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_InvalidTemplate_ReturnsError()
     {
         // Act - Invalid template name returns error with details

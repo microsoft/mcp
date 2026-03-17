@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -46,6 +47,10 @@ public class LanguageListCommandLiveTests(
 
     #region Core Language List Tests
 
+    /// <summary>
+    /// Primary test that fetches from CDN and can be recorded.
+    /// All other tests depend on cached manifest and are marked [LiveTestOnly].
+    /// </summary>
     [Fact]
     public async Task ExecuteAsync_ReturnsAllSupportedLanguages()
     {
@@ -66,6 +71,7 @@ public class LanguageListCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ReturnsCorrectLanguageInfo_AllLanguages()
     {
         // Act
@@ -98,6 +104,7 @@ public class LanguageListCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_ReturnsRuntimeVersions_AllLanguages()
     {
         // Act
@@ -127,6 +134,7 @@ public class LanguageListCommandLiveTests(
     #region Template Parameters Tests
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_TypeScript_HasNodeVersionParameter()
     {
         var languageList = await GetLanguageListAsync();
@@ -150,6 +158,7 @@ public class LanguageListCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_JavaScript_HasNodeVersionParameter()
     {
         var languageList = await GetLanguageListAsync();
@@ -166,6 +175,7 @@ public class LanguageListCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_Java_HasJavaVersionParameter()
     {
         var languageList = await GetLanguageListAsync();
@@ -182,6 +192,7 @@ public class LanguageListCommandLiveTests(
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task ExecuteAsync_LanguagesWithoutTemplateParameters()
     {
         var languageList = await GetLanguageListAsync();
