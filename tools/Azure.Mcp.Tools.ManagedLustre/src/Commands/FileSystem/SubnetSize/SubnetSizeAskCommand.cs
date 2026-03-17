@@ -80,8 +80,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
 
         try
         {
-            var svc = _service;
-            var result = await svc.GetRequiredAmlFSSubnetsSize(
+            var result = await _service.GetRequiredAmlFSSubnetsSize(
                 options.Subscription!,
                 options.Sku!, options.Size,
                 options.Tenant,

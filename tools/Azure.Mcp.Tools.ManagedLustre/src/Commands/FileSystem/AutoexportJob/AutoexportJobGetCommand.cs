@@ -77,12 +77,11 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
 
         try
         {
-            var svc = _service;
 
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
-                var result = await svc.GetAutoexportJobAsync(
+                var result = await _service.GetAutoexportJobAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,
@@ -96,7 +95,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
             else
             {
                 // List all jobs
-                var results = await svc.ListAutoexportJobsAsync(
+                var results = await _service.ListAutoexportJobsAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,

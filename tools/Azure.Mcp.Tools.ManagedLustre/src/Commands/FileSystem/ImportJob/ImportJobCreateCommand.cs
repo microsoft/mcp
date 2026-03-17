@@ -83,7 +83,6 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
 
         try
         {
-            var svc = _service;
 
             // Log the prefixes for debugging
             if (options.ImportPrefixes != null && options.ImportPrefixes.Length > 0)
@@ -95,7 +94,7 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
                 _logger.LogInformation("No import prefixes received, will import all data");
             }
 
-            var job = await svc.CreateImportJobAsync(
+            var job = await _service.CreateImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

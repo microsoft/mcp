@@ -112,8 +112,7 @@ public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogg
 
             var options = BindOptions(parseResult);
 
-            var svc = _service;
-            var fs = await svc.CreateFileSystemAsync(
+            var fs = await _service.CreateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,

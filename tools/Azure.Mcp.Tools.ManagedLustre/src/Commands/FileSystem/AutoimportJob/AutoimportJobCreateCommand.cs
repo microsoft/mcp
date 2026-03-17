@@ -92,7 +92,6 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
 
         try
         {
-            var svc = _service;
 
             // Log the prefixes for debugging
             if (options.AutoimportPrefixes != null && options.AutoimportPrefixes.Length > 0)
@@ -104,7 +103,7 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
                 _logger.LogInformation("No autoimport prefixes received, will use default");
             }
 
-            var job = await svc.CreateAutoimportJobAsync(
+            var job = await _service.CreateAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

@@ -79,8 +79,7 @@ public sealed class AutoexportJobCreateCommand(IManagedLustreService service, IL
 
         try
         {
-            var svc = _service;
-            var job = await svc.CreateAutoexportJobAsync(
+            var job = await _service.CreateAutoexportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

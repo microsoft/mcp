@@ -76,8 +76,7 @@ public sealed class AutoexportJobDeleteCommand(IManagedLustreService service, IL
 
         try
         {
-            var svc = _service;
-            await svc.DeleteAutoexportJobAsync(
+            await _service.DeleteAutoexportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

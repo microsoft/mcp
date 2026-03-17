@@ -76,8 +76,7 @@ public sealed class AutoexportJobCancelCommand(IManagedLustreService service, IL
 
         try
         {
-            var svc = _service;
-            await svc.CancelAutoexportJobAsync(
+            await _service.CancelAutoexportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

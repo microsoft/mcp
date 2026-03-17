@@ -64,8 +64,7 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
 
         try
         {
-            var svc = _service;
-            var fileSystems = await svc.ListFileSystemsAsync(
+            var fileSystems = await _service.ListFileSystemsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,

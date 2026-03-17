@@ -76,8 +76,7 @@ public sealed class AutoimportJobDeleteCommand(IManagedLustreService service, IL
 
         try
         {
-            var svc = _service;
-            await svc.DeleteAutoimportJobAsync(
+            await _service.DeleteAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

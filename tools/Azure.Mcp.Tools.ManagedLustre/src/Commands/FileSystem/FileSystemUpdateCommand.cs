@@ -84,8 +84,7 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
             }
             var options = BindOptions(parseResult);
 
-            var svc = _service;
-            var fs = await svc.UpdateFileSystemAsync(
+            var fs = await _service.UpdateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,

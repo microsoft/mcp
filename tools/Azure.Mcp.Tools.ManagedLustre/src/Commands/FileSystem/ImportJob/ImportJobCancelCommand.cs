@@ -73,9 +73,8 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
 
         try
         {
-            var svc = _service;
 
-            var cancelledJob = await svc.CancelImportJobAsync(
+            var cancelledJob = await _service.CancelImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

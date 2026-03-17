@@ -74,12 +74,11 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
 
         try
         {
-            var svc = _service;
 
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
-                var result = await svc.GetImportJobAsync(
+                var result = await _service.GetImportJobAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,
@@ -93,7 +92,7 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
             else
             {
                 // List all jobs
-                var results = await svc.ListImportJobsAsync(
+                var results = await _service.ListImportJobsAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,

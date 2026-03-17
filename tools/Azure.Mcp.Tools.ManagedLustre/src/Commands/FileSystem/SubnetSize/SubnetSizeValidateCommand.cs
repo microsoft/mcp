@@ -81,8 +81,7 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
                 return context.Response;
 
             var options = BindOptions(parseResult);
-            var svc = _service;
-            var subnetIsValid = await svc.CheckAmlFSSubnetAsync(
+            var subnetIsValid = await _service.CheckAmlFSSubnetAsync(
                                 options.Subscription!,
                                 options.Sku!,
                                 options.Size,

@@ -73,9 +73,8 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
 
         try
         {
-            var svc = _service;
 
-            await svc.DeleteImportJobAsync(
+            await _service.DeleteImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
