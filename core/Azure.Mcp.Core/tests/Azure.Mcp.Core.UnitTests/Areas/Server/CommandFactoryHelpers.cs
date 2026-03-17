@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -171,7 +172,8 @@ internal class CommandFactoryHelpers
             .AddSingleton(Substitute.For<ISubscriptionService>())
             .AddSingleton(Substitute.For<ITenantService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
-            .AddSingleton(Substitute.For<ICacheService>());
+            .AddSingleton(Substitute.For<ICacheService>())
+            .AddSingleton(Substitute.For<IResourceGroupService>());
 
         foreach (var area in areaSetups)
         {
