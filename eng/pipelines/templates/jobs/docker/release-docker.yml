@@ -70,12 +70,33 @@ jobs:
           name: SetReleaseVariables
 
         - task: PowerShell@2
-          displayName: Load, tag, and push Docker images
+          displayName: Load Docker images from tarballs
           inputs:
             pwsh: true
-            filePath: $(Pipeline.Workspace)/docker_staging/Publish-DockerImages.ps1
+            filePath: $(Pipeline.Workspace)/docker_staging/Load-DockerImages.ps1
             arguments: >
               -CliName '$(SetReleaseVariables.CliName)'
+              -ImageName '$(SetReleaseVariables.DockerImageName)'
+              -TarDirectory '$(Pipeline.Workspace)/docker_output'
+
+        - task: 1ES.PushContainerImage@1
+          displayName: Push Docker image (amd64)
+          inputs:
+            image: $(SetReleaseVariables.DockerImageName):amd64
+            remoteImage: ${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName):$(SetReleaseVariables.DockerImageVersion)-amd64
+
+        - task: 1ES.PushContainerImage@1
+          displayName: Push Docker image (arm64)
+          inputs:
+            image: $(SetReleaseVariables.DockerImageName):arm64
+            remoteImage: ${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName):$(SetReleaseVariables.DockerImageVersion)-arm64
+
+        - task: PowerShell@2
+          displayName: Create and push multi-arch manifests
+          inputs:
+            pwsh: true
+            filePath: $(Pipeline.Workspace)/docker_staging/Publish-DockerManifests.ps1
+            arguments: >
               -Version '$(SetReleaseVariables.DockerImageVersion)'
               -BaseRepo '${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName)'
-              -TarDirectory '$(Pipeline.Workspace)/docker_output'
+              -Architectures 'amd64','arm64'
