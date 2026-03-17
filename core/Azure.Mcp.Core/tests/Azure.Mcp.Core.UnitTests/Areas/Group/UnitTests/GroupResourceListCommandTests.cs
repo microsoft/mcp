@@ -73,7 +73,7 @@ public class GroupResourceListCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+        var listResult = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.GroupResourceListCommandResult));
         var resourcesArray = jsonDoc.RootElement.GetProperty("resources");
 
         Assert.Equal(2, resourcesArray.GetArrayLength());
