@@ -77,7 +77,7 @@ public class GeneratorConfigLoader
 
         var assembly = Assembly.GetExecutingAssembly();
         // Replace hyphens with underscores for embedded resource naming
-        var resourceName = $"Azure.Mcp.Tools.MonitorInstrumentation.Resources.generator_configs.{generatorType}.json";
+        var resourceName = $"Azure.Mcp.Tools.Monitor.Instrumentation.Resources.generator_configs.{generatorType}.json";
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)
@@ -108,7 +108,7 @@ public class GeneratorConfigLoader
         var assembly = Assembly.GetExecutingAssembly();
         // Replace slashes with dots for embedded resource naming (hyphens are kept as-is)
         // Note: templatePath already includes "templates/" prefix from JSON config
-        var resourceName = $"Azure.Mcp.Tools.MonitorInstrumentation.Resources.generator_configs.{templatePath.Replace('/', '.')}";
+        var resourceName = $"Azure.Mcp.Tools.Monitor.Instrumentation.Resources.generator_configs.{templatePath.Replace('/', '.')}";
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)

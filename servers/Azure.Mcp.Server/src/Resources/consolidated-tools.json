@@ -3489,11 +3489,11 @@
         }
       },
       "mappedToolList": [
-        "monitorinstrumentation_list_learning_resources",
-        "monitorinstrumentation_get_learning_resource",
-        "monitorinstrumentation_orchestrator_start",
-        "monitorinstrumentation_orchestrator_next",
-        "monitorinstrumentation_send_brownfield_analysis"
+        "monitor_instrumentation_list_learning_resources",
+        "monitor_instrumentation_get_learning_resource",
+        "monitor_instrumentation_orchestrator_start",
+        "monitor_instrumentation_orchestrator_next",
+        "monitor_instrumentation_send_brownfield_analysis"
       ]
     }
     ,

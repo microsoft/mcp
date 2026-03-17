@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -9,7 +10,11 @@ using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
+using Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -29,6 +34,17 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
+        services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
+        services.AddSingleton<IAppTypeDetector, DotNetAppTypeDetector>();
+        services.AddSingleton<IInstrumentationDetector, DotNetInstrumentationDetector>();
+
+        services.AddSingleton<IGenerator, AspNetCoreGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
+
+        services.AddSingleton<WorkspaceAnalyzer>();
+        services.AddSingleton<OrchestratorTool>();
+        services.AddSingleton<SendBrownfieldAnalysisTool>();
+
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
@@ -46,6 +62,12 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
+
+        services.AddSingleton<ListLearningResourcesCommand>();
+        services.AddSingleton<GetLearningResourceCommand>();
+        services.AddSingleton<OrchestratorStartCommand>();
+        services.AddSingleton<OrchestratorNextCommand>();
+        services.AddSingleton<SendBrownfieldAnalysisCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -119,6 +141,15 @@ public class MonitorSetup : IAreaSetup
         webTests.AddCommand(webTestGet.Name, webTestGet);
         var webTestCreateOrUpdate = serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>();
         webTests.AddCommand(webTestCreateOrUpdate.Name, webTestCreateOrUpdate);
+
+        var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
+        monitor.AddSubGroup(instrumentation);
+
+        instrumentation.AddCommand("list_learning_resources", serviceProvider.GetRequiredService<ListLearningResourcesCommand>());
+        instrumentation.AddCommand("get_learning_resource", serviceProvider.GetRequiredService<GetLearningResourceCommand>());
+        instrumentation.AddCommand("orchestrator_start", serviceProvider.GetRequiredService<OrchestratorStartCommand>());
+        instrumentation.AddCommand("orchestrator_next", serviceProvider.GetRequiredService<OrchestratorNextCommand>());
+        instrumentation.AddCommand("send_brownfield_analysis", serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>());
 
         return monitor;
     }

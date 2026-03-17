@@ -5,7 +5,7 @@ public sealed class ListLearningResourcesTool
     public static string ListLearningResources()
     {
         var baseDirectory = AppContext.BaseDirectory;
-        var resourcesPath = Path.Combine(baseDirectory, "Resources");
+        var resourcesPath = Path.Combine(baseDirectory, "Instrumentation", "Resources");
 
         if (!Directory.Exists(resourcesPath))
         {
@@ -26,7 +26,7 @@ public sealed class ListLearningResourcesTool
     }
 
     // Embedded resources approach (commented out):
-    // private const string ResourcePrefix = "Azure.Mcp.Tools.MonitorInstrumentation.Resources.";
+    // private const string ResourcePrefix = "Azure.Mcp.Tools.Monitor.Resources.";
     //
     // public static string ListLearningResources()
     // {

@@ -57,7 +57,7 @@ public sealed class GetLearningResourceToolTests
 
     private static string CreateResourceFile(string relativePath, string content)
     {
-        var resourcesRoot = Path.Combine(AppContext.BaseDirectory, "Resources");
+        var resourcesRoot = Path.Combine(AppContext.BaseDirectory, "Instrumentation", "Resources");
         var filePath = Path.Combine(resourcesRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))

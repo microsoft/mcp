@@ -23,7 +23,7 @@ public sealed class GetLearningResourceTool
 
         // File-based approach: Read from copied resources in output directory
         var baseDirectory = AppContext.BaseDirectory;
-        var resourcesRoot = Path.GetFullPath(Path.Combine(baseDirectory, "Resources"));
+        var resourcesRoot = Path.GetFullPath(Path.Combine(baseDirectory, "Instrumentation", "Resources"));
         var resourcePath = Path.GetFullPath(Path.Combine(resourcesRoot, path));
 
         // Additional check: ensure resolved path is within Resources directory
