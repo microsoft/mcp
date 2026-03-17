@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
-public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger)
+public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger, IEventHubsService service)
     : BaseEventHubsCommand<ConsumerGroupDeleteOptions>
 {
     private const string CommandTitle = "Delete Event Hubs Consumer Group";
 
+    private readonly IEventHubsService _service = service;
     private readonly ILogger<ConsumerGroupDeleteCommand> _logger = logger;
     public override string Id => "08980fd4-c7c2-41cd-a3c2-eda5303bd458";
 
@@ -74,9 +75,7 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
-            var deleted = await eventHubsService.DeleteConsumerGroupAsync(
+            var deleted = await _service.DeleteConsumerGroupAsync(
                 options.ConsumerGroup!,
                 options.EventHub!,
                 options.Namespace!,
