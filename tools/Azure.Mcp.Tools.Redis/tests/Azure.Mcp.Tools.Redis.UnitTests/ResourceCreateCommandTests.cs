@@ -393,4 +393,4 @@ public class ResourceCreateCommandTests
         return JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult)!;
     }
 
-}   
+}
