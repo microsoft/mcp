@@ -68,19 +68,15 @@ public class UsageGuideGetCommandTests
         }
         else
         {
-            // For failure cases, check if there are parse errors
-            if (parseResult.Errors.Count > 0)
-            {
-                // Parse-time validation errors
-                Assert.True(parseResult.Errors.Count > 0);
-            }
-            else
+            // For failure cases, verify either parse errors or runtime validation failure
+            if (parseResult.Errors.Count == 0)
             {
                 var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
                 // Runtime validation errors
                 Assert.NotEqual(HttpStatusCode.OK, response.Status);
             }
+            // Parse errors are also acceptable for failure cases
         }
     }
 
@@ -128,20 +124,5 @@ public class UsageGuideGetCommandTests
         Assert.NotNull(response);
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
-    }
-
-    [Fact]
-    public void BindOptions_BindsOptionsCorrectly()
-    {
-        // Arrange
-        var args = _commandDefinition.Parse("");
-
-        // Act
-        var options = typeof(UsageGuideGetCommand)
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, new object[] { args }) as Azure.Mcp.Tools.WellArchitectedFramework.Options.UsageGuide.UsageGuideGetOptions;
-
-        // Assert
-        Assert.NotNull(options);
     }
 }

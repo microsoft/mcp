@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
-using Azure.Mcp.Tools.WellArchitectedFramework.Options.UsageGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.UsageGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.UsageGuide;
 
 public sealed class UsageGuideGetCommand(ILogger<UsageGuideGetCommand> logger, IUsageGuideService usageGuideService)
-    : BaseCommand<UsageGuideGetOptions>
+    : BaseCommand<GlobalOptions>
 {
     private const string CommandTitle = "Get Well-Architected Framework Usage Guide";
     private readonly ILogger<UsageGuideGetCommand> _logger = logger;
@@ -41,9 +41,9 @@ public sealed class UsageGuideGetCommand(ILogger<UsageGuideGetCommand> logger, I
         Secret = false
     };
 
-    protected override UsageGuideGetOptions BindOptions(ParseResult parseResult)
+    protected override GlobalOptions BindOptions(ParseResult parseResult)
     {
-        return new UsageGuideGetOptions();
+        return new GlobalOptions();
     }
 
     public override Task<CommandResponse> ExecuteAsync(
