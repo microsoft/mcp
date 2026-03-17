@@ -21,9 +21,9 @@ public class OneLakeItemListCommandTests
         var command = new OneLakeItemListCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("list", command.Name);
+        Assert.Equal("list_items", command.Name);
         Assert.Equal("List OneLake Items", command.Title);
-        Assert.Contains("List OneLake items in a workspace", command.Description);
+        Assert.Contains("Lists OneLake items in a Fabric workspace", command.Description);
         Assert.True(command.Metadata.ReadOnly);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
@@ -42,7 +42,7 @@ public class OneLakeItemListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
+        Assert.Equal("list_items", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

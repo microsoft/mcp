@@ -21,9 +21,9 @@ public class DirectoryDeleteCommandTests
         var command = new DirectoryDeleteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("delete", command.Name);
+        Assert.Equal("delete_directory", command.Name);
         Assert.Equal("Delete OneLake Directory", command.Title);
-        Assert.Contains("Delete a directory from OneLake storage", command.Description);
+        Assert.Contains("Deletes a directory from OneLake storage", command.Description);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
@@ -42,7 +42,7 @@ public class DirectoryDeleteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("delete", systemCommand.Name);
+        Assert.Equal("delete_directory", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
