@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
@@ -84,11 +82,9 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
             var service = context.GetService<IFunctionsService>();
             var result = await service.GetProjectTemplateAsync(options.Language!, cancellationToken);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
                 [result],
                 FunctionsJsonContext.Default.ListProjectTemplateResult);
-            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

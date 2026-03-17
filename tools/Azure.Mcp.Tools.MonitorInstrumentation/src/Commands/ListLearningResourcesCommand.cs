@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.MonitorInstrumentation.Options;
 using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 using Microsoft.Extensions.Logging;
@@ -42,9 +41,7 @@ public sealed class ListLearningResourcesCommand(ILogger<ListLearningResourcesCo
         {
             var result = ListLearningResourcesTool.ListLearningResources();
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
-            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

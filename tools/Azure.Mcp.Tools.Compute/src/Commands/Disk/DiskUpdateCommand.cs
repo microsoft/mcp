@@ -208,9 +208,7 @@ public sealed class DiskUpdateCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new DiskUpdateCommandResult(disk),
-                ComputeJsonContext.Default.DiskUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -224,8 +222,8 @@ public sealed class DiskUpdateCommand(
     /// <inheritdoc/>
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
@@ -233,13 +231,13 @@ public sealed class DiskUpdateCommand(
     /// <inheritdoc/>
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Disk not found. Verify the disk name and resource group are correct.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             $"Conflict updating disk. The disk may be in use or the requested change is not allowed. Details: {reqEx.Message}",
-        Azure.Identity.AuthenticationFailedException =>
+        Identity.AuthenticationFailedException =>
             "Authentication failed. Please run 'az login' to sign in.",
         ArgumentException argEx =>
             $"Invalid parameter: {argEx.Message}",

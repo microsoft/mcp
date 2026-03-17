@@ -3,12 +3,10 @@
 
 using System.Net;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -90,6 +88,31 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.UploadType);
         command.Options.Add(ComputeOptionDefinitions.UploadSizeBytes);
         command.Options.Add(ComputeOptionDefinitions.SecurityType);
+        command.Validators.Add(result =>
+        {
+            var source = result.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
+            var sizeGb = result.GetValueOrDefault<int?>(ComputeOptionDefinitions.SizeGb.Name);
+            var galleryImageReference = result.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
+            var uploadType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
+            var uploadSizeBytes = result.GetValueOrDefault<long?>(ComputeOptionDefinitions.UploadSizeBytes.Name);
+            var securityType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
+
+            if (string.IsNullOrEmpty(source) && !sizeGb.HasValue && string.IsNullOrEmpty(galleryImageReference) && string.IsNullOrEmpty(uploadType))
+            {
+                result.AddError("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
+            }
+
+            if (!string.IsNullOrEmpty(uploadType) && !uploadSizeBytes.HasValue)
+            {
+                result.AddError("--upload-size-bytes is required when --upload-type is specified.");
+            }
+
+            if (string.Equals(uploadType, "UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(securityType))
+            {
+                result.AddError("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
+            }
+        });
     }
 
     /// <inheritdoc/>
@@ -150,22 +173,6 @@ public sealed class DiskCreateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrEmpty(options.Source) && !options.SizeGb.HasValue && string.IsNullOrEmpty(options.GalleryImageReference) && string.IsNullOrEmpty(options.UploadType))
-            {
-                throw new ArgumentException("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
-            }
-
-            if (!string.IsNullOrEmpty(options.UploadType) && !options.UploadSizeBytes.HasValue)
-            {
-                throw new ArgumentException("--upload-size-bytes is required when --upload-type is specified.");
-            }
-
-            if (string.Equals(options.UploadType, "UploadWithSecurityData", StringComparison.OrdinalIgnoreCase)
-                && string.IsNullOrEmpty(options.SecurityType))
-            {
-                throw new ArgumentException("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
-            }
-
             _logger.LogInformation(
                 "Creating disk {DiskName} in resource group {ResourceGroup}, location {Location}, source {Source}",
                 options.Disk, options.ResourceGroup, options.Location ?? "(default)", options.Source ?? "(none)");
@@ -201,9 +208,7 @@ public sealed class DiskCreateCommand(
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new DiskCreateCommandResult(disk),
-                ComputeJsonContext.Default.DiskCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -217,8 +222,8 @@ public sealed class DiskCreateCommand(
     /// <inheritdoc/>
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
         ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
@@ -226,13 +231,13 @@ public sealed class DiskCreateCommand(
     /// <inheritdoc/>
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             "A disk with this name already exists in the resource group.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource group not found. Verify the resource group name is correct.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed. Details: {reqEx.Message}",
-        Azure.Identity.AuthenticationFailedException =>
+        Identity.AuthenticationFailedException =>
             "Authentication failed. Please run 'az login' to sign in.",
         ArgumentException argEx =>
             $"Invalid parameter: {argEx.Message}",

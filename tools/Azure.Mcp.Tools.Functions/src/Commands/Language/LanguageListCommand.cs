@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -54,11 +53,9 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : B
             var service = context.GetService<IFunctionsService>();
             var result = await service.GetLanguageListAsync(cancellationToken);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
                 [result],
                 FunctionsJsonContext.Default.ListLanguageListResult);
-            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

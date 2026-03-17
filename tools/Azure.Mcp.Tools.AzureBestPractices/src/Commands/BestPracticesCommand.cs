@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Extensions;
@@ -103,19 +102,10 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
         try
         {
-            if (string.IsNullOrEmpty(options.Resource) || string.IsNullOrEmpty(options.Action))
-            {
-                context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "Both resource and action parameters are required.";
-                return Task.FromResult(context.Response);
-            }
-
-            var resourceFileName = GetResourceFileName(options.Resource, options.Action);
+            var resourceFileName = GetResourceFileName(options.Resource!, options.Action!);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
-            context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);
             context.Activity?.AddTag("BestPractices_Action", options.Action);
@@ -146,7 +136,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         };
     }
 
-    private string GetBestPracticesText(string resourceFileName)
+    private static string GetBestPracticesText(string resourceFileName)
     {
         if (string.IsNullOrEmpty(resourceFileName))
         {
@@ -161,7 +151,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         return bestPractices;
     }
 
-    private string LoadBestPracticesText(string resourceFileName)
+    private static string LoadBestPracticesText(string resourceFileName)
     {
         Assembly assembly = typeof(BestPracticesCommand).Assembly;
 

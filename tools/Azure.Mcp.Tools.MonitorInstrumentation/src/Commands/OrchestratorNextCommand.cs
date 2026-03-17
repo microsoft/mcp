@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.MonitorInstrumentation.Options;
 using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
 
@@ -54,8 +52,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     {
         return new OrchestratorNextOptions
         {
-            SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
-            CompletionNote = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.CompletionNote)
+            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
+            CompletionNote = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.CompletionNote.Name)
         };
     }
 
@@ -73,9 +71,7 @@ Returns: The next action to execute, or 'complete' status when all steps are don
             var tool = context.GetService<OrchestratorTool>();
             var result = tool.Next(options.SessionId!, options.CompletionNote!);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
-            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

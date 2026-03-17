@@ -75,11 +75,9 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
 
         try
         {
-            ArgumentNullException.ThrowIfNull(options.Subscription);
-
             var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
 
-            var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, cancellationToken: cancellationToken);
+            var subscription = await _subscriptionService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";
@@ -119,7 +117,6 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
             }
             var resultObj = new AzqrReportResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
             response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrReportResult);
-            response.Status = HttpStatusCode.OK;
             response.Message = "azqr report generated successfully.";
             return response;
         }

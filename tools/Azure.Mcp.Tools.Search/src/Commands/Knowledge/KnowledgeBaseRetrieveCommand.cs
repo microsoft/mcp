@@ -119,7 +119,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return context.Response;
     }
 
-    internal (string role, string content) ParseMessage(string message)
+    internal static (string role, string content) ParseMessage(string message)
     {
         var idx = message.IndexOf(':');
         if (idx <= 0 || idx == message.Length - 1)

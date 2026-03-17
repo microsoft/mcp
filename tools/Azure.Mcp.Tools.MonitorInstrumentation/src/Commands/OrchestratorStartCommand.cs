@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.MonitorInstrumentation.Options;
 using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
 
@@ -45,7 +43,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     {
         return new OrchestratorStartOptions
         {
-            WorkspacePath = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.WorkspacePath)
+            WorkspacePath = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.WorkspacePath.Name)
         };
     }
 
@@ -63,9 +61,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
             var tool = context.GetService<OrchestratorTool>();
             var result = tool.Start(options.WorkspacePath!);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
-            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {
