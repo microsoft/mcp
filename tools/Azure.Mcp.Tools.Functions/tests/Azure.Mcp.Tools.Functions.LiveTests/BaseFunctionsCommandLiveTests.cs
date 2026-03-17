@@ -17,7 +17,10 @@ public abstract class BaseFunctionsCommandLiveTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    // No additional sanitizers needed for Functions tests since they don't
-    // contain Azure resource-specific sensitive data like subscription IDs
-    // or IP addresses. The base class sanitizers handle standard patterns.
+    /// <summary>
+    /// Disable default sanitizer additions since Functions tests don't have
+    /// Azure resources (no ResourceBaseName or SubscriptionId environment variables).
+    /// Using empty strings in regex sanitizers causes test proxy 400 errors.
+    /// </summary>
+    public override bool EnableDefaultSanitizerAdditions => false;
 }

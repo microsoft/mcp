@@ -29,6 +29,7 @@ public sealed class FunctionsService(
 
     private const string DefaultBranch = "main";
     private const long MaxFileSizeBytes = 1_048_576; // 1 MB
+    private const long MaxTreeSizeBytes = 5_242_880; // 5 MB for tree API response
 
     private const string FunctionTemplateMergeInstructions =
         """
@@ -406,8 +407,10 @@ public sealed class FunctionsService(
 
         using (response)
         {
-            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden ||
-                response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            // Check for rate limiting - verify via X-RateLimit-Remaining header
+            // HTTP 403 can also mean permission denied, so we check the header
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
+                (response.StatusCode == System.Net.HttpStatusCode.Forbidden && IsRateLimited(response)))
             {
                 var resetHeader = response.Headers.TryGetValues("X-RateLimit-Reset", out var values)
                     ? values.FirstOrDefault() : null;
@@ -419,13 +422,21 @@ public sealed class FunctionsService(
                     $"GitHub API rate limit exceeded.{resetInfo} Try again later.");
             }
 
+            // Handle other 403 errors (permissions, not found for private repos, etc.)
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                throw new InvalidOperationException(
+                    "GitHub API access forbidden. The repository may be private or you may lack permissions.");
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException(
                     $"GitHub API returned {(int)response.StatusCode} {response.ReasonPhrase}. Unable to fetch template files.");
             }
 
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            // Use size-limited read to prevent OOM attacks
+            var json = await GitHubUrlValidator.ReadSizeLimitedStringAsync(response.Content, MaxTreeSizeBytes, cancellationToken);
             GitHubTreeResponse? tree;
 
             try
@@ -446,8 +457,31 @@ public sealed class FunctionsService(
                     $"GitHub returned empty file tree for '{repoPath}'. The repository may be empty or inaccessible.");
             }
 
+            // Check for truncated response - GitHub may not return all files for large repos
+            if (tree.Truncated)
+            {
+                logger.LogWarning("GitHub tree response was truncated for {Repo}. Some files may be missing.", repoPath);
+            }
+
             return tree;
         }
+    }
+
+    /// <summary>
+    /// Checks if a 403 response indicates GitHub rate limiting by examining the X-RateLimit-Remaining header.
+    /// GitHub returns 403 with X-RateLimit-Remaining: 0 when rate limited (unlike standard 429).
+    /// </summary>
+    private static bool IsRateLimited(HttpResponseMessage response)
+    {
+        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var values))
+        {
+            var remaining = values.FirstOrDefault();
+            if (remaining != null && int.TryParse(remaining, out var count) && count == 0)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -596,30 +630,6 @@ public sealed class FunctionsService(
     /// Always uses entry.Id for consistency - folderPath is only used for download logic.
     /// </summary>
     internal static string ExtractTemplateName(TemplateManifestEntry entry) => entry.Id ?? string.Empty;
-}
-
-/// <summary>
-/// GitHub Tree API response model.
-/// </summary>
-internal sealed class GitHubTreeResponse
-{
-    public string? Sha { get; set; }
-    public string? Url { get; set; }
-    public List<GitHubTreeItem> Tree { get; set; } = [];
-    public bool Truncated { get; set; }
-}
-
-/// <summary>
-/// Individual item in GitHub Tree API response.
-/// </summary>
-internal sealed class GitHubTreeItem
-{
-    public string? Path { get; set; }
-    public string? Mode { get; set; }
-    public string? Type { get; set; }  // "blob" for files, "tree" for directories
-    public string? Sha { get; set; }
-    public long Size { get; set; }
-    public string? Url { get; set; }
 }
 
 /// <summary>

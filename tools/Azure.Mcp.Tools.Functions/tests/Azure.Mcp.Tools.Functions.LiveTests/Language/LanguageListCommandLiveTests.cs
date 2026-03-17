@@ -23,19 +23,36 @@ public class LanguageListCommandLiveTests(
 {
     private static readonly string[] ExpectedLanguages = ["python", "typescript", "javascript", "csharp", "java", "powershell"];
 
-    [Fact]
-    public async Task ExecuteAsync_ReturnsAllSupportedLanguages()
-    {
-        // Act
-        var result = await CallToolAsync("functions_language_list", new());
+    #region Helper Methods
 
-        // Assert
+    private async Task<LanguageListResult> GetLanguageListAsync()
+    {
+        var result = await CallToolAsync("functions_language_list", new());
         Assert.NotNull(result);
         var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
         Assert.NotNull(languageResults);
         Assert.Single(languageResults);
+        return languageResults[0];
+    }
 
-        var languageList = languageResults[0];
+    private static LanguageDetails GetLanguage(LanguageListResult languageList, string languageKey)
+    {
+        var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
+        Assert.NotNull(language);
+        return language;
+    }
+
+    #endregion
+
+    #region Core Language List Tests
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsAllSupportedLanguages()
+    {
+        // Act
+        var languageList = await GetLanguageListAsync();
+
+        // Assert
         Assert.NotEmpty(languageList.FunctionsRuntimeVersion);
         Assert.NotEmpty(languageList.ExtensionBundleVersion);
 
@@ -48,141 +65,135 @@ public class LanguageListCommandLiveTests(
         }
     }
 
-    [Theory]
-    [InlineData("python", "Python", "python", "v2 (Decorator-based)")]
-    [InlineData("typescript", "Node.js - TypeScript", "node", "v4 (Schema-based)")]
-    [InlineData("javascript", "Node.js - JavaScript", "node", "v4 (Schema-based)")]
-    [InlineData("java", "Java", "java", "Annotations-based")]
-    [InlineData("csharp", "dotnet-isolated - C#", "dotnet", "Isolated worker process")]
-    [InlineData("powershell", "PowerShell", "powershell", "Script-based")]
-    public async Task ExecuteAsync_ReturnsCorrectLanguageInfo(
-        string languageKey,
-        string expectedName,
-        string expectedRuntime,
-        string expectedModel)
+    [Fact]
+    public async Task ExecuteAsync_ReturnsCorrectLanguageInfo_AllLanguages()
     {
         // Act
-        var result = await CallToolAsync("functions_language_list", new());
+        var languageList = await GetLanguageListAsync();
 
-        // Assert
-        Assert.NotNull(result);
-        var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
-        Assert.NotNull(languageResults);
+        // Assert - Verify each language has correct metadata
+        var expectations = new Dictionary<string, (string Name, string Runtime, string Model)>
+        {
+            ["python"] = ("Python", "python", "v2 (Decorator-based)"),
+            ["typescript"] = ("Node.js - TypeScript", "node", "v4 (Schema-based)"),
+            ["javascript"] = ("Node.js - JavaScript", "node", "v4 (Schema-based)"),
+            ["java"] = ("Java", "java", "Annotations-based"),
+            ["csharp"] = ("dotnet-isolated - C#", "dotnet", "Isolated worker process"),
+            ["powershell"] = ("PowerShell", "powershell", "Script-based")
+        };
 
-        var languageList = languageResults[0];
-        var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
-        Assert.NotNull(language);
-
-        // Verify LanguageInfo properties
-        Assert.Equal(expectedName, language.Info.Name);
-        Assert.Equal(expectedRuntime, language.Info.Runtime);
-        Assert.Equal(expectedModel, language.Info.ProgrammingModel);
-        Assert.NotEmpty(language.Info.Prerequisites);
-        Assert.NotEmpty(language.Info.DevelopmentTools);
-        Assert.NotEmpty(language.Info.InitCommand);
-        Assert.NotEmpty(language.Info.RunCommand);
-        Assert.NotEmpty(language.Info.InitInstructions);
-        Assert.NotEmpty(language.Info.ProjectStructure);
+        foreach (var (languageKey, expected) in expectations)
+        {
+            var language = GetLanguage(languageList, languageKey);
+            Assert.Equal(expected.Name, language.Info.Name);
+            Assert.Equal(expected.Runtime, language.Info.Runtime);
+            Assert.Equal(expected.Model, language.Info.ProgrammingModel);
+            Assert.NotEmpty(language.Info.Prerequisites);
+            Assert.NotEmpty(language.Info.DevelopmentTools);
+            Assert.NotEmpty(language.Info.InitCommand);
+            Assert.NotEmpty(language.Info.RunCommand);
+            Assert.NotEmpty(language.Info.InitInstructions);
+            Assert.NotEmpty(language.Info.ProjectStructure);
+        }
     }
 
-    [Theory]
-    [InlineData("python")]
-    [InlineData("typescript")]
-    [InlineData("javascript")]
-    [InlineData("java")]
-    [InlineData("csharp")]
-    [InlineData("powershell")]
-    public async Task ExecuteAsync_ReturnsRuntimeVersionsFromManifest(string languageKey)
+    [Fact]
+    public async Task ExecuteAsync_ReturnsRuntimeVersions_AllLanguages()
     {
         // Act
-        var result = await CallToolAsync("functions_language_list", new());
+        var languageList = await GetLanguageListAsync();
 
-        // Assert
-        Assert.NotNull(result);
-        var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
-        Assert.NotNull(languageResults);
+        // Assert - All languages have valid runtime versions
+        foreach (var languageKey in ExpectedLanguages)
+        {
+            var language = GetLanguage(languageList, languageKey);
 
-        var languageList = languageResults[0];
-        var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
-        Assert.NotNull(language);
+            Assert.NotNull(language.RuntimeVersions);
+            Assert.NotEmpty(language.RuntimeVersions.Supported);
+            Assert.NotEmpty(language.RuntimeVersions.Default);
 
-        // Verify RuntimeVersions from manifest - don't hardcode specific versions
-        Assert.NotNull(language.RuntimeVersions);
-        Assert.NotEmpty(language.RuntimeVersions.Supported);
-        Assert.NotEmpty(language.RuntimeVersions.Default);
+            // Default should be one of the supported versions
+            Assert.Contains(language.RuntimeVersions.Default, language.RuntimeVersions.Supported);
 
-        // Default should be one of the supported versions
-        Assert.Contains(language.RuntimeVersions.Default, language.RuntimeVersions.Supported);
-
-        // Same versions should be in Info.RuntimeVersions
-        Assert.NotNull(language.Info.RuntimeVersions);
-        Assert.Equal(language.RuntimeVersions.Default, language.Info.RuntimeVersions.Default);
-        Assert.Equal(language.RuntimeVersions.Supported, language.Info.RuntimeVersions.Supported);
+            // Same versions should be in Info.RuntimeVersions
+            Assert.NotNull(language.Info.RuntimeVersions);
+            Assert.Equal(language.RuntimeVersions.Default, language.Info.RuntimeVersions.Default);
+            Assert.Equal(language.RuntimeVersions.Supported, language.Info.RuntimeVersions.Supported);
+        }
     }
 
-    [Theory]
-    [InlineData("typescript", "nodeVersion")]
-    [InlineData("javascript", "nodeVersion")]
-    [InlineData("java", "javaVersion")]
-    public async Task ExecuteAsync_ReturnsTemplateParametersWithValidValues(string languageKey, string expectedParamName)
+    #endregion
+
+    #region Template Parameters Tests
+
+    [Fact]
+    public async Task ExecuteAsync_TypeScript_HasNodeVersionParameter()
     {
-        // Act
-        var result = await CallToolAsync("functions_language_list", new());
+        var languageList = await GetLanguageListAsync();
+        var language = GetLanguage(languageList, "typescript");
 
-        // Assert
-        Assert.NotNull(result);
-        var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
-        Assert.NotNull(languageResults);
-
-        var languageList = languageResults[0];
-        var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
-        Assert.NotNull(language);
-
-        // Verify TemplateParameters are populated from runtime versions
         Assert.NotNull(language.Info.TemplateParameters);
         Assert.Single(language.Info.TemplateParameters);
 
         var param = language.Info.TemplateParameters[0];
-        Assert.Equal(expectedParamName, param.Name);
+        Assert.Equal("nodeVersion", param.Name);
         Assert.NotEmpty(param.Description);
         Assert.NotEmpty(param.DefaultValue);
         Assert.NotNull(param.ValidValues);
         Assert.NotEmpty(param.ValidValues);
 
-        // ValidValues should include all supported + preview versions
-        var runtimeVersions = language.RuntimeVersions;
-        foreach (var supported in runtimeVersions.Supported)
+        // ValidValues should include all supported versions
+        foreach (var supported in language.RuntimeVersions.Supported)
         {
             Assert.Contains(supported, param.ValidValues);
         }
-        if (runtimeVersions.Preview is not null)
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_JavaScript_HasNodeVersionParameter()
+    {
+        var languageList = await GetLanguageListAsync();
+        var language = GetLanguage(languageList, "javascript");
+
+        Assert.NotNull(language.Info.TemplateParameters);
+        Assert.Single(language.Info.TemplateParameters);
+
+        var param = language.Info.TemplateParameters[0];
+        Assert.Equal("nodeVersion", param.Name);
+        Assert.NotEmpty(param.DefaultValue);
+        Assert.NotNull(param.ValidValues);
+        Assert.NotEmpty(param.ValidValues);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Java_HasJavaVersionParameter()
+    {
+        var languageList = await GetLanguageListAsync();
+        var language = GetLanguage(languageList, "java");
+
+        Assert.NotNull(language.Info.TemplateParameters);
+        Assert.Single(language.Info.TemplateParameters);
+
+        var param = language.Info.TemplateParameters[0];
+        Assert.Equal("javaVersion", param.Name);
+        Assert.NotEmpty(param.DefaultValue);
+        Assert.NotNull(param.ValidValues);
+        Assert.NotEmpty(param.ValidValues);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LanguagesWithoutTemplateParameters()
+    {
+        var languageList = await GetLanguageListAsync();
+
+        // Python, C#, and PowerShell don't have template parameters
+        var languagesWithoutParams = new[] { "python", "csharp", "powershell" };
+        foreach (var languageKey in languagesWithoutParams)
         {
-            foreach (var preview in runtimeVersions.Preview)
-            {
-                Assert.Contains(preview, param.ValidValues);
-            }
+            var language = GetLanguage(languageList, languageKey);
+            Assert.Null(language.Info.TemplateParameters);
         }
     }
 
-    [Theory]
-    [InlineData("python")]
-    [InlineData("csharp")]
-    [InlineData("powershell")]
-    public async Task ExecuteAsync_LanguagesWithoutTemplateParameters_ReturnsNull(string languageKey)
-    {
-        // Act
-        var result = await CallToolAsync("functions_language_list", new());
-
-        // Assert
-        Assert.NotNull(result);
-        var languageResults = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.ListLanguageListResult);
-        Assert.NotNull(languageResults);
-
-        var languageList = languageResults[0];
-        var language = languageList.Languages.FirstOrDefault(l => l.Language == languageKey);
-        Assert.NotNull(language);
-
-        // These languages don't have template parameters
-        Assert.Null(language.Info.TemplateParameters);
-    }
+    #endregion
 }

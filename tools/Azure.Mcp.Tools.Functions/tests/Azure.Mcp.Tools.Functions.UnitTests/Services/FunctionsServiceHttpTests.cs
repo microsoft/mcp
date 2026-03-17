@@ -356,10 +356,15 @@ public sealed class FunctionsServiceHttpTests
     public async Task GetFunctionTemplateAsync_ThrowsInvalidOperationException_WhenRateLimited()
     {
         // Arrange - mock rate limit response for Tree API
+        // Include X-RateLimit-Remaining: 0 to indicate rate limiting (not just permission denied)
         var handler = new MockHttpMessageHandlerWithHeaders(
             "Rate limit exceeded",
             HttpStatusCode.Forbidden,
-            new Dictionary<string, string> { ["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds().ToString() });
+            new Dictionary<string, string>
+            {
+                ["X-RateLimit-Remaining"] = "0",
+                ["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds().ToString()
+            });
 
         var httpClientFactory = CreateHttpClientFactory(handler);
 

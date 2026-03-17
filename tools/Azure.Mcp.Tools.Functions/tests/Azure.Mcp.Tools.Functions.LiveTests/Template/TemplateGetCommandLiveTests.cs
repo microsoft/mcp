@@ -11,8 +11,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.Functions.LiveTests.Template;
 
 /// <summary>
-/// Live tests for the TemplateGetCommand. Minimized test set to avoid GitHub API rate limits.
-/// Tests focus on: all languages work, basic triggers, caching, and error handling.
+/// Live tests for the TemplateGetCommand. Tests template listing and file retrieval
+/// for all supported languages.
 /// </summary>
 [Trait("Command", "TemplateGetCommand")]
 public class TemplateGetCommandLiveTests(
@@ -44,29 +44,77 @@ public class TemplateGetCommandLiveTests(
 
     #endregion
 
-    #region All Languages - Template List
+    #region Template List Tests - All Languages
 
-    [Theory]
-    [InlineData("python")]
-    [InlineData("typescript")]
-    [InlineData("javascript")]
-    [InlineData("csharp")]
-    [InlineData("java")]
-    public async Task ExecuteAsync_ListTemplates_AllLanguages_ReturnsTemplates(string language)
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_Python_ReturnsTemplates()
     {
-        // Act - List templates for each language (no file download, just manifest read)
-        var templateList = await GetTemplateListAsync(language);
+        var templateList = await GetTemplateListAsync("python");
 
-        // Assert
-        Assert.Equal(language, templateList.Language);
+        Assert.Equal("python", templateList.Language);
         Assert.NotNull(templateList.Triggers);
         Assert.NotEmpty(templateList.Triggers);
-        Output.WriteLine($"{language}: {templateList.Triggers.Count} templates available");
+        Output.WriteLine($"python: {templateList.Triggers.Count} templates available");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_TypeScript_ReturnsTemplates()
+    {
+        var templateList = await GetTemplateListAsync("typescript");
+
+        Assert.Equal("typescript", templateList.Language);
+        Assert.NotNull(templateList.Triggers);
+        Assert.NotEmpty(templateList.Triggers);
+        Output.WriteLine($"typescript: {templateList.Triggers.Count} templates available");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_JavaScript_ReturnsTemplates()
+    {
+        var templateList = await GetTemplateListAsync("javascript");
+
+        Assert.Equal("javascript", templateList.Language);
+        Assert.NotNull(templateList.Triggers);
+        Assert.NotEmpty(templateList.Triggers);
+        Output.WriteLine($"javascript: {templateList.Triggers.Count} templates available");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_CSharp_ReturnsTemplates()
+    {
+        var templateList = await GetTemplateListAsync("csharp");
+
+        Assert.Equal("csharp", templateList.Language);
+        Assert.NotNull(templateList.Triggers);
+        Assert.NotEmpty(templateList.Triggers);
+        Output.WriteLine($"csharp: {templateList.Triggers.Count} templates available");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_Java_ReturnsTemplates()
+    {
+        var templateList = await GetTemplateListAsync("java");
+
+        Assert.Equal("java", templateList.Language);
+        Assert.NotNull(templateList.Triggers);
+        Assert.NotEmpty(templateList.Triggers);
+        Output.WriteLine($"java: {templateList.Triggers.Count} templates available");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListTemplates_PowerShell_ReturnsTemplates()
+    {
+        var templateList = await GetTemplateListAsync("powershell");
+
+        Assert.Equal("powershell", templateList.Language);
+        Assert.NotNull(templateList.Triggers);
+        Assert.NotEmpty(templateList.Triggers);
+        Output.WriteLine($"powershell: {templateList.Triggers.Count} templates available");
     }
 
     #endregion
 
-    #region Basic Trigger Tests - One Language Each
+    #region HTTP Trigger Tests - Template File Retrieval
 
     [Fact]
     public async Task ExecuteAsync_HttpTrigger_Python_ReturnsTemplateWithFiles()
@@ -146,50 +194,33 @@ public class TemplateGetCommandLiveTests(
     #region Caching Tests
 
     [Fact]
-    public async Task ExecuteAsync_SameTemplate_TwoCalls_SecondUsesCache()
+    public async Task ExecuteAsync_LanguageListThenTemplate_UsesSharedCache()
     {
-        // Arrange - Get template list for Python
-        var templateList = await GetTemplateListAsync("python");
-        var httpTemplate = FindTemplateByPattern(templateList, "http-trigger-python");
-        Assert.NotNull(httpTemplate);
+        // This test verifies that the manifest cache is shared between commands.
+        // First call fetches and caches the manifest, second call uses cached manifest.
+        //
+        // IMPLICIT VERIFICATION: The test proxy records all HTTP calls during Record mode.
+        // If caching didn't work, template_get would make a CDN manifest call that gets recorded.
+        // In Playback mode, if caching breaks, it would try to make a CDN call that wasn't
+        // recorded, causing the test to fail. This implicitly asserts no CDN call is made.
 
-        // Act - First call (fetches from GitHub)
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result1 = await CallToolAsync(
-            "functions_template_get",
-            new()
-            {
-                { "language", "python" },
-                { "template", httpTemplate }
-            });
-        stopwatch.Stop();
-        var firstCallMs = stopwatch.ElapsedMilliseconds;
+        // Act - First call: language_list fetches and caches the manifest
+        var langResult = await CallToolAsync("functions_language_list", new());
 
-        // Act - Second call (should use cache)
-        stopwatch.Restart();
-        var result2 = await CallToolAsync(
+        Assert.NotNull(langResult);
+        var langList = JsonSerializer.Deserialize(langResult.Value, FunctionsJsonContext.Default.ListLanguageListResult);
+        Assert.NotNull(langList);
+
+        // Act - Second call: template_get should use cached manifest (no CDN call)
+        var templateResult = await CallToolAsync(
             "functions_template_get",
-            new()
-            {
-                { "language", "python" },
-                { "template", httpTemplate }
-            });
-        stopwatch.Stop();
-        var secondCallMs = stopwatch.ElapsedMilliseconds;
+            new() { { "language", "python" } });
 
         // Assert - Both return valid results
-        Assert.NotNull(result1);
-        Assert.NotNull(result2);
-
-        // Second call should be faster (cached) - log times for debugging
-        Output.WriteLine($"First call: {firstCallMs}ms, Second call: {secondCallMs}ms");
-
-        // Verify content is identical
-        var template1 = JsonSerializer.Deserialize(result1.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
-        var template2 = JsonSerializer.Deserialize(result2.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
-        Assert.NotNull(template1?.FunctionTemplate);
-        Assert.NotNull(template2?.FunctionTemplate);
-        Assert.Equal(template1.FunctionTemplate.FunctionFiles?.Count, template2.FunctionTemplate.FunctionFiles?.Count);
+        Assert.NotNull(templateResult);
+        var template = JsonSerializer.Deserialize(templateResult.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
+        Assert.NotNull(template?.TemplateList);
+        Assert.Equal("python", template.TemplateList.Language);
     }
 
     #endregion
