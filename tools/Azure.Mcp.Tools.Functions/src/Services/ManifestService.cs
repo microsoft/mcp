@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
@@ -77,13 +78,12 @@ public sealed class ManifestService(
 
         try
         {
-            using var client = httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
+            using var client = HttpClientHelper.CreateClientWithUserAgent(httpClientFactory);
             using var response = await client.GetAsync(uri, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var json = await GitHubUrlValidator.ReadSizeLimitedStringAsync(response.Content, MaxManifestSizeBytes, cancellationToken);
-            var manifest = JsonSerializer.Deserialize(json, FunctionTemplatesManifestJsonContext.Default.TemplateManifest);
+            var manifest = JsonSerializer.Deserialize(json, FunctionsJsonContext.Default.TemplateManifest);
 
             if (manifest is null)
             {
@@ -106,6 +106,11 @@ public sealed class ManifestService(
         {
             logger.LogError(ex, "Request timed out fetching manifest from {Url}", url);
             return ManifestFetchResult.Failure("Request timed out");
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogError(ex, "Manifest response from {Url} exceeded size limit", url);
+            return ManifestFetchResult.Failure(ex.Message);
         }
     }
 }

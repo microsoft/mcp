@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.IO.Compression;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Microsoft.Extensions.Logging;
@@ -21,9 +22,11 @@ public sealed class FunctionsService(
     ICacheService cacheService,
     ILogger<FunctionsService> logger) : IFunctionsService
 {
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILanguageMetadataProvider _languageMetadata = languageMetadata ?? throw new ArgumentNullException(nameof(languageMetadata));
     private readonly IManifestService _manifestService = manifestService ?? throw new ArgumentNullException(nameof(manifestService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<FunctionsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "functions-templates";
 
@@ -228,27 +231,18 @@ public sealed class FunctionsService(
     }
 
     /// <summary>
-    /// Converts a GitHub repository URL and folder path into a raw.githubusercontent.com URL.
+    /// Builds a raw.githubusercontent.com URL from pre-validated repo path and file path.
+    /// Raw URLs have higher rate limits (~5000/hour) compared to API (60/hour unauthenticated).
     /// </summary>
-    internal static string ConvertToRawGitHubUrl(string repositoryUrl, string folderPath)
+    internal static string BuildRawGitHubUrl(string repoPath, string filePath)
     {
-        // repositoryUrl: "https://github.com/Azure/azure-functions-templates-mcp-server"
-        // folderPath: "templates/python/BlobTriggerWithEventGrid"
-        // result: "https://raw.githubusercontent.com/Azure/azure-functions-templates-mcp-server/main/templates/python/..."
-
-        var repoPath = GitHubUrlValidator.ExtractGitHubRepoPath(repositoryUrl)
-            ?? throw new ArgumentException("Invalid repository URL format.", nameof(repositoryUrl));
-
-        var normalizedPath = GitHubUrlValidator.NormalizeFolderPath(folderPath)
-            ?? throw new ArgumentException("Folder path must specify a valid subdirectory, not the repository root.", nameof(folderPath));
-
-        return $"https://raw.githubusercontent.com/{repoPath}/{DefaultBranch}/{normalizedPath}";
+        return $"https://raw.githubusercontent.com/{repoPath}/{DefaultBranch}/{filePath}";
     }
 
     /// <summary>
     /// Fetches all files from a template directory. Results are cached.
     /// </summary>
-    internal async Task<IReadOnlyList<ProjectTemplateFile>> FetchTemplateFilesAsync(
+    private async Task<IReadOnlyList<ProjectTemplateFile>> FetchTemplateFilesAsync(
         TemplateManifestEntry template,
         string language,
         string? runtimeVersion,
@@ -263,12 +257,12 @@ public sealed class FunctionsService(
 
         if (cachedFiles is not null && cachedFiles.Count > 0)
         {
-            logger.LogDebug("Using cached template files for {Language}/{Path}", language, normalizedPath);
+            _logger.LogDebug("Using cached template files for {Language}/{Path}", language, normalizedPath);
             files = cachedFiles;
         }
         else
         {
-            logger.LogDebug("Fetching template files from GitHub for {Language}/{Path}", language, normalizedPath);
+            _logger.LogDebug("Fetching template files from GitHub for {Language}/{Path}", language, normalizedPath);
             files = isRootOrLarge
                 ? await FetchTemplateFilesViaArchiveAsync(template.RepositoryUrl, normalizedPath, cancellationToken)
                 : await FetchTemplateFilesViaTreeApiAsync(template.RepositoryUrl, template.FolderPath, cancellationToken);
@@ -317,12 +311,12 @@ public sealed class FunctionsService(
         GitHubTreeResponse treeResponse;
         if (cachedTree is not null)
         {
-            logger.LogDebug("Using cached tree for {Repo}", repoPath);
+            _logger.LogDebug("Using cached tree for {Repo}", repoPath);
             treeResponse = cachedTree;
         }
         else
         {
-            logger.LogDebug("Fetching tree from GitHub for {Repo}", repoPath);
+            _logger.LogDebug("Fetching tree from GitHub for {Repo}", repoPath);
             var treeUrl = $"https://api.github.com/repos/{repoPath}/git/trees/{DefaultBranch}?recursive=1";
             treeResponse = await FetchTreeFromGitHubAsync(treeUrl, repoPath, cancellationToken);
             await _cacheService.SetAsync(CacheGroup, treeCacheKey, treeResponse, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
@@ -336,18 +330,17 @@ public sealed class FunctionsService(
         }
 
         var files = new List<ProjectTemplateFile>();
-        using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
+        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
 
         foreach (var (fullPath, relativePath, size) in filePaths)
         {
             if (size > MaxFileSizeBytes)
             {
-                logger.LogWarning("Skipping file {Name} ({Size} bytes) - exceeds max size", relativePath, size);
+                _logger.LogWarning("Skipping file {Name} ({Size} bytes) - exceeds max size", relativePath, size);
                 continue;
             }
 
-            var rawUrl = $"https://raw.githubusercontent.com/{repoPath}/{DefaultBranch}/{fullPath}";
+            var rawUrl = BuildRawGitHubUrl(repoPath, fullPath);
 
             try
             {
@@ -355,7 +348,7 @@ public sealed class FunctionsService(
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    logger.LogWarning("Failed to fetch {Name} from raw URL (HTTP {Status})", relativePath, response.StatusCode);
+                    _logger.LogWarning("Failed to fetch {Name} from raw URL (HTTP {Status})", relativePath, response.StatusCode);
                     continue;
                 }
 
@@ -366,7 +359,7 @@ public sealed class FunctionsService(
                 }
                 catch (InvalidOperationException)
                 {
-                    logger.LogWarning("Skipping file {Name} - size exceeds limit", relativePath);
+                    _logger.LogWarning("Skipping file {Name} - size exceeds limit", relativePath);
                     continue;
                 }
 
@@ -378,7 +371,7 @@ public sealed class FunctionsService(
             }
             catch (HttpRequestException ex)
             {
-                logger.LogWarning(ex, "Error fetching template file {Name}", relativePath);
+                _logger.LogWarning(ex, "Error fetching template file {Name}", relativePath);
             }
         }
 
@@ -390,8 +383,7 @@ public sealed class FunctionsService(
     /// </summary>
     private async Task<GitHubTreeResponse> FetchTreeFromGitHubAsync(string treeUrl, string repoPath, CancellationToken cancellationToken)
     {
-        using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
+        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
 
         HttpResponseMessage response;
         try
@@ -400,7 +392,7 @@ public sealed class FunctionsService(
         }
         catch (HttpRequestException ex)
         {
-            logger.LogError(ex, "Failed to fetch tree from {Url}", treeUrl);
+            _logger.LogError(ex, "Failed to fetch tree from {Url}", treeUrl);
             throw new InvalidOperationException(
                 $"Failed to fetch template files from GitHub. Check your network connection. Details: {ex.Message}", ex);
         }
@@ -409,8 +401,8 @@ public sealed class FunctionsService(
         {
             // Check for rate limiting - verify via X-RateLimit-Remaining header
             // HTTP 403 can also mean permission denied, so we check the header
-            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
-                (response.StatusCode == System.Net.HttpStatusCode.Forbidden && IsRateLimited(response)))
+            if (response.StatusCode == HttpStatusCode.TooManyRequests ||
+                (response.StatusCode == HttpStatusCode.Forbidden && IsRateLimited(response)))
             {
                 var resetHeader = response.Headers.TryGetValues("X-RateLimit-Reset", out var values)
                     ? values.FirstOrDefault() : null;
@@ -423,7 +415,7 @@ public sealed class FunctionsService(
             }
 
             // Handle other 403 errors (permissions, not found for private repos, etc.)
-            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            if (response.StatusCode == HttpStatusCode.Forbidden)
             {
                 throw new InvalidOperationException(
                     "GitHub API access forbidden. The repository may be private or you may lack permissions.");
@@ -441,18 +433,18 @@ public sealed class FunctionsService(
 
             try
             {
-                tree = JsonSerializer.Deserialize(json, FunctionTemplatesManifestJsonContext.Default.GitHubTreeResponse);
+                tree = JsonSerializer.Deserialize(json, FunctionsJsonContext.Default.GitHubTreeResponse);
             }
             catch (JsonException ex)
             {
-                logger.LogError(ex, "Failed to parse tree response from {Url}", treeUrl);
+                _logger.LogError(ex, "Failed to parse tree response from {Url}", treeUrl);
                 throw new InvalidOperationException(
                     $"Failed to parse GitHub response. Details: {ex.Message}", ex);
             }
 
             if (tree?.Tree is null || tree.Tree.Count == 0)
             {
-                logger.LogWarning("Empty tree response from {Repo}", repoPath);
+                _logger.LogWarning("Empty tree response from {Repo}", repoPath);
                 throw new InvalidOperationException(
                     $"GitHub returned empty file tree for '{repoPath}'. The repository may be empty or inaccessible.");
             }
@@ -460,7 +452,7 @@ public sealed class FunctionsService(
             // Check for truncated response - GitHub may not return all files for large repos
             if (tree.Truncated)
             {
-                logger.LogWarning("GitHub tree response was truncated for {Repo}. Some files may be missing.", repoPath);
+                _logger.LogWarning("GitHub tree response was truncated for {Repo}. Some files may be missing.", repoPath);
             }
 
             return tree;
@@ -527,10 +519,9 @@ public sealed class FunctionsService(
         var zipUrl = $"https://api.github.com/repos/{repoPath}/zipball/{DefaultBranch}";
         var normalizedFolder = GitHubUrlValidator.NormalizeFolderPath(folderPath, allowRoot: true) ?? string.Empty;
 
-        using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-MCP-Server/1.0");
+        using var client = HttpClientHelper.CreateClientWithUserAgent(_httpClientFactory);
 
-        logger.LogInformation("Downloading repository archive from {Url}", zipUrl);
+        _logger.LogInformation("Downloading repository archive from {Url}", zipUrl);
 
         using var response = await client.GetAsync(new Uri(zipUrl), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
@@ -573,13 +564,13 @@ public sealed class FunctionsService(
 
             if (relativePath.Contains("..", StringComparison.Ordinal))
             {
-                logger.LogWarning("Skipping file {Name} - path traversal detected", entry.FullName);
+                _logger.LogWarning("Skipping file {Name} - path traversal detected", entry.FullName);
                 continue;
             }
 
             if (entry.Length > MaxFileSizeBytes)
             {
-                logger.LogWarning("Skipping file {Name} - exceeds max size", relativePath);
+                _logger.LogWarning("Skipping file {Name} - exceeds max size", relativePath);
                 continue;
             }
 
@@ -593,7 +584,7 @@ public sealed class FunctionsService(
 
                 if (charsRead > MaxFileSizeBytes)
                 {
-                    logger.LogWarning("Skipping file {Name} - exceeds max size", relativePath);
+                    _logger.LogWarning("Skipping file {Name} - exceeds max size", relativePath);
                     continue;
                 }
 
@@ -607,11 +598,11 @@ public sealed class FunctionsService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Error reading file {Name} from archive", entry.FullName);
+                _logger.LogWarning(ex, "Error reading file {Name} from archive", entry.FullName);
             }
         }
 
-        logger.LogInformation("Extracted {Count} files from archive", files.Count);
+        _logger.LogInformation("Extracted {Count} files from archive", files.Count);
         return files;
     }
 
@@ -631,15 +622,3 @@ public sealed class FunctionsService(
     /// </summary>
     internal static string ExtractTemplateName(TemplateManifestEntry entry) => entry.Id ?? string.Empty;
 }
-
-/// <summary>
-/// AOT-safe JSON serialization context for CDN manifest and GitHub API deserialization.
-/// </summary>
-[JsonSerializable(typeof(TemplateManifest))]
-[JsonSerializable(typeof(TemplateManifestEntry))]
-[JsonSerializable(typeof(Dictionary<string, RuntimeVersionInfo>))]
-[JsonSerializable(typeof(GitHubTreeResponse))]
-[JsonSerializable(typeof(GitHubTreeItem))]
-[JsonSerializable(typeof(List<GitHubTreeItem>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class FunctionTemplatesManifestJsonContext : JsonSerializerContext;

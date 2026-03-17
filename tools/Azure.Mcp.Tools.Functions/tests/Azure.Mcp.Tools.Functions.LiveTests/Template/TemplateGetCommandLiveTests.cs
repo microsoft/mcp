@@ -14,6 +14,10 @@ namespace Azure.Mcp.Tools.Functions.LiveTests.Template;
 /// <summary>
 /// Live tests for the TemplateGetCommand. Tests template listing and file retrieval
 /// for all supported languages.
+/// 
+/// Note: Most tests are marked [LiveTestOnly] because they depend on in-memory cached
+/// CDN manifest data. Only the first test (ExecuteAsync_ReturnsAllSupportedLanguages)
+/// fetches from CDN and can be recorded. Recorded tests with non-deterministic execution order would fail.
 /// </summary>
 [Trait("Command", "TemplateGetCommand")]
 public class TemplateGetCommandLiveTests(

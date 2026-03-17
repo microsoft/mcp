@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
@@ -72,7 +73,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "1.0",
             Templates = [CreateTestEntry()]
         };
-        var json = JsonSerializer.Serialize(manifest);
+        var json = JsonSerializer.Serialize(manifest, FunctionsJsonContext.Default.TemplateManifest);
         var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateManifestService(httpClientFactory);
@@ -150,7 +151,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fresh",
             Templates = [CreateTestEntry()]
         };
-        var json = JsonSerializer.Serialize(freshManifest);
+        var json = JsonSerializer.Serialize(freshManifest, FunctionsJsonContext.Default.TemplateManifest);
         var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateManifestService(httpClientFactory);
@@ -173,7 +174,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fallback",
             Templates = [CreateTestEntry("fallback-lang")]
         };
-        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -202,7 +203,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fallback-after-malformed",
             Templates = [CreateTestEntry()]
         };
-        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -251,7 +252,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "primary",
             Templates = [CreateTestEntry("primary-lang")]
         };
-        var primaryJson = JsonSerializer.Serialize(primaryManifest);
+        var primaryJson = JsonSerializer.Serialize(primaryManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -412,8 +413,8 @@ public sealed class FunctionsServiceHttpTests
     public async Task GetFunctionTemplateAsync_ThrowsInvalidOperationException_WhenEmptyTreeReturned()
     {
         // Arrange - mock empty tree response
-        var emptyTree = new { sha = "abc", tree = Array.Empty<object>(), truncated = false };
-        var json = JsonSerializer.Serialize(emptyTree);
+        var emptyTree = new GitHubTreeResponse { Sha = "abc", Tree = [], Truncated = false };
+        var json = JsonSerializer.Serialize(emptyTree, FunctionsJsonContext.Default.GitHubTreeResponse);
         var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
 

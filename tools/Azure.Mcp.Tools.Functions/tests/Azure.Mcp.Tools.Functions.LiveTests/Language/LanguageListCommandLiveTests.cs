@@ -14,6 +14,10 @@ namespace Azure.Mcp.Tools.Functions.LiveTests.Language;
 /// <summary>
 /// Live tests for the LanguageListCommand which fetches supported languages
 /// and runtime versions from the Azure Functions manifest.
+/// 
+/// Note: Most tests are marked [LiveTestOnly] because they depend on in-memory cached
+/// CDN manifest data. Only the first test (ExecuteAsync_ReturnsAllSupportedLanguages)
+/// fetches from CDN and can be recorded. Recorded tests with non-deterministic execution order would fail.
 /// </summary>
 [Trait("Command", "LanguageListCommand")]
 public class LanguageListCommandLiveTests(
