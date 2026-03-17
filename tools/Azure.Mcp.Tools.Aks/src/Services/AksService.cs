@@ -26,7 +26,7 @@ public sealed class AksService(
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
     private const string AksNodePoolsCacheKey = "nodepools";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<List<Cluster>> GetClusters(
         string subscription,

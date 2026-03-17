@@ -17,7 +17,7 @@ public class TenantService : BaseAzureService, ITenantService
     private readonly IHttpClientFactory _httpClientFactory;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.Tenant;
 
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,

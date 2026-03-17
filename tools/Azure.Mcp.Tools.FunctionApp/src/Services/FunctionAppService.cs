@@ -28,7 +28,7 @@ public sealed class FunctionAppService(
     private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "functionapp";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     private static readonly HashSet<string> SupportedRuntimes = new()
     {

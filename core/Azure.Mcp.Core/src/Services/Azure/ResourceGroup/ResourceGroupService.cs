@@ -20,7 +20,7 @@ public class ResourceGroupService(
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private const string CacheGroup = "resourcegroup";
     private const string CacheKey = "resourcegroups";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {

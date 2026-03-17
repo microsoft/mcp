@@ -26,7 +26,8 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private const string CosmosClientsCacheKeyPrefix = "clients_";
     private const string CosmosDatabasesCacheKeyPrefix = "databases_";
     private const string CosmosContainersCacheKeyPrefix = "containers_";
-    private static readonly TimeSpan s_cacheDurationResources = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
+    private static readonly TimeSpan s_cacheDurationResources = CacheDurations.ServiceData;
     private bool _disposed;
 
     private async Task<CosmosDBAccountResource> GetCosmosAccountAsync(
@@ -121,7 +122,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var key = CosmosClientsCacheKeyPrefix + accountName;
-        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationResources, cancellationToken);
+        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
 
@@ -136,7 +137,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 retryPolicy,
                 cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
             return cosmosClient;
         }
         catch (Exception ex) when (
@@ -152,7 +153,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
                 retryPolicy,
                 cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
             return cosmosClient;
         }
 

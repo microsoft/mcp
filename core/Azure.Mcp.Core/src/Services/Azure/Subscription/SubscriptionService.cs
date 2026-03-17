@@ -15,7 +15,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
     private const string CacheGroup = "subscription";
     private const string CacheKey = "subscriptions";
     private const string SubscriptionCacheKey = "subscription";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.Subscription;
 
     public async Task<List<SubscriptionData>> GetSubscriptions(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
