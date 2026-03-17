@@ -14,7 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Removed foundryextensions_agents_get-sdk-sample, foundryextensions_threads_create, foundryextensions_threads_list, and foundryextensions_threads_get-messages tools from the foundryextensions namespace. [[#2937](https://github.com/microsoft/mcp/pull/2037)]
+- Removed `foundryextensions_agents_get-sdk-sample`, `foundryextensions_threads_create`, `foundryextensions_threads_list`, and `foundryextensions_threads_get-messages` tools from the foundryextensions namespace. [[#2037](https://github.com/microsoft/mcp/pull/2037)]
 
 ### Bugs Fixed
 
@@ -28,7 +28,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - FoundryExtensions: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1990](https://github.com/microsoft/mcp/pull/1990)]
-- Storage: Improve testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1880](https://github.com/microsoft/mcp/pull/1880)]
+- Storage: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1880](https://github.com/microsoft/mcp/pull/1880)]
 - Redis: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1888](https://github.com/microsoft/mcp/pull/1888)]
 - AppService: Improved testability by removing dependency on CommandContext.ServiceProvider in ExecuteAsync. [[#1900](https://github.com/microsoft/mcp/pull/1900)]
 - Refactored Azure.Mcp.Tools.Communication commands to use constructor dependency injection instead of resolving services via context.GetService<T>() in ExecuteAsync. [[#1913](https://github.com/microsoft/mcp/pull/1913)]
@@ -38,10 +38,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Centralized ARM access token acquisition in BaseAzureService via GetArmAccessTokenAsync, eliminating duplicated inline credential and token fetching logic across service implementations. [[#2033](https://github.com/microsoft/mcp/pull/2033)]
 - Updated .NET SDK from 10.0.103 to 10.0.201. [[#2072](https://github.com/microsoft/mcp/pull/2072)]
 - Updated Landing Zone URL in Azure Migrate Tool to use aka.ms links. [[#2028](https://github.com/microsoft/mcp/pull/2028)]
-- Updated the description for the \"azuremigrate\" tool namespace for better LLM selection accuracy. [[#2043](https://github.com/microsoft/mcp/pull/2043)]
+- Updated the description for the "azuremigrate" tool namespace for better LLM selection accuracy. [[#2043](https://github.com/microsoft/mcp/pull/2043)]
 - Improved Search tool descriptions to improve matching and differentiating the tools from each other. [[#2071](https://github.com/microsoft/mcp/pull/2071)]
 - Standardized CacheService TTLs across services by introducing centralized CacheDurations tiers (subscription 12h→2h; service data 1h→5m). [[#1973](https://github.com/microsoft/mcp/pull/1973)]
-- Switched Docker publishing to 1ES tasks for pushing images to ACR and split the release process into separate load and multi-arch manifest publish steps [[#2069](https://github.com/microsoft/mcp/pull/2069)]
+- Switched Docker publishing to 1ES tasks for pushing images to ACR and split the release process into separate load and multi-arch manifest publish steps. [[#2069](https://github.com/microsoft/mcp/pull/2069)]
 
 #### Dependency Updates
 
