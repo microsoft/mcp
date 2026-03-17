@@ -19,7 +19,7 @@ public sealed class GroupSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<GroupListCommand>();
-        services.AddSingleton<GroupResourceListCommand>();
+        services.AddSingleton<ResourceListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -34,7 +34,7 @@ public sealed class GroupSetup : IAreaSetup
         var resource = new CommandGroup("resource", "Resource operations - Commands for listing resources within a resource group.");
         group.AddSubGroup(resource);
 
-        var resourceListCommand = serviceProvider.GetRequiredService<GroupResourceListCommand>();
+        var resourceListCommand = serviceProvider.GetRequiredService<ResourceListCommand>();
         resource.AddCommand(resourceListCommand.Name, resourceListCommand);
 
         return group;

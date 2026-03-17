@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
-public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> logger) : SubscriptionCommand<ResourceListOptions>()
+public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger, IResourceGroupService resourceGroupService) : SubscriptionCommand<ResourceListOptions>()
 {
     private const string CommandTitle = "List Resources in Resource Group";
-    private readonly ILogger<GroupResourceListCommand> _logger = logger;
+    private readonly ILogger<ResourceListCommand> _logger = logger;
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
 
     public override string Id => "b1c2d3e4-f5a6-7890-abcd-ef1234567890";
 
@@ -67,15 +68,14 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
 
         try
         {
-            var resourceGroupService = context.GetService<IResourceGroupService>();
-            var resources = await resourceGroupService.GetGenericResources(
+            var resources = await _resourceGroupService.GetGenericResources(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Tenant,
                 options.RetryPolicy,
-                cancellationToken);
+                cancellationToken).ToListAsync(cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(resources ?? []), GroupJsonContext.Default.GroupResourceListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(resources), GroupJsonContext.Default.ResourceListCommandResult);
         }
         catch (Exception ex)
         {
@@ -86,5 +86,5 @@ public sealed class GroupResourceListCommand(ILogger<GroupResourceListCommand> l
         return context.Response;
     }
 
-    internal record class GroupResourceListCommandResult(List<GenericResourceInfo> Resources);
+    internal record class ResourceListCommandResult(List<GenericResourceInfo> Resources);
 }
