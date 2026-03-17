@@ -13,10 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
+public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetCommand> logger)
     : BaseManagedLustreCommand<SkuGetOptions>(logger)
 {
     private const string CommandTitle = "Get AMLFS SKU information";
+
+    private readonly IManagedLustreService _service = service;
 
     public override string Id => "43f679ba-1b6e-4851-9315-f8ad16b789e5";
     public override string Name => "get";
@@ -59,8 +61,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
                 return context.Response;
 
             var options = BindOptions(parseResult);
-            var service = context.GetService<IManagedLustreService>();
-            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
+            var skus = await _service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
         }

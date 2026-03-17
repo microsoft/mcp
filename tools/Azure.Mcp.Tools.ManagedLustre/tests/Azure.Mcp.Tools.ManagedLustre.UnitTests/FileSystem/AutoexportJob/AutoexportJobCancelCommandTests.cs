@@ -39,7 +39,7 @@ public class AutoexportJobCancelCommandTests
         var services = new ServiceCollection().AddSingleton(_managedLustreService);
         _serviceProvider = services.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_managedLustreService, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

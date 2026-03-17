@@ -12,10 +12,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
+public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<SubnetSizeAskCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeAskOptions>(logger)
 {
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
+
+    private readonly IManagedLustreService _service = service;
 
     public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
 
@@ -78,8 +80,7 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            var result = await svc.GetRequiredAmlFSSubnetsSize(
+            var result = await _service.GetRequiredAmlFSSubnetsSize(
                 options.Subscription!,
                 options.Sku!, options.Size,
                 options.Tenant,

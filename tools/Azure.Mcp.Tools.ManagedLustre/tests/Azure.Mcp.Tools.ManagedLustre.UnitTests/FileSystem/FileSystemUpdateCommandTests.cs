@@ -40,7 +40,7 @@ public class FileSystemUpdateCommandTests
         _logger = Substitute.For<ILogger<FileSystemUpdateCommand>>();
         var services = new ServiceCollection().AddSingleton(_svc);
         _serviceProvider = services.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_svc, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
