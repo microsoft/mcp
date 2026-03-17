@@ -12,6 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Fixed connection string injection vulnerability in PostgreSQL and MySQL tools by using `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder` instead of raw string interpolation, preventing parameter override attacks via user-controlled inputs.
 - Expanded PostgreSQL SQL query validator blocklist with additional dangerous functions and system catalogs.
+- Fixed KQL injection vulnerabilities in Kusto tools where user-controlled table names were directly interpolated into KQL commands without escaping, allowing arbitrary command execution.
 
 ### Other Changes
 
