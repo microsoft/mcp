@@ -35,10 +35,8 @@ public class CertificateImportCommandTests
         _keyVaultService = Substitute.For<IKeyVaultService>();
         _logger = Substitute.For<ILogger<CertificateImportCommand>>();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(_keyVaultService);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _keyVaultService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

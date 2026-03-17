@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
-public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : SubscriptionCommand<KeyCreateOptions>
+public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyCreateOptions>
 {
     private const string CommandTitle = "Create Key Vault Key";
     private readonly ILogger<KeyCreateCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "ef27bda9-8a1f-4288-b68b-12308ab8e607";
 
@@ -64,8 +65,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-            var key = await keyVaultService.CreateKey(
+            var key = await _keyVaultService.CreateKey(
                 options.VaultName!,
                 options.KeyName!,
                 options.KeyType!,

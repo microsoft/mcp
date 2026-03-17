@@ -39,11 +39,8 @@ public class KeyCreateCommandTests
         _keyVaultService = Substitute.For<IKeyVaultService>();
         _logger = Substitute.For<ILogger<KeyCreateCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_keyVaultService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _keyVaultService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
 
