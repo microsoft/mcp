@@ -36,7 +36,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             ConvertToRoleAssignmentModel,
             "authorizationresources",
             additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
-            tenant: tenant,
+            tenant: tenantId,
             cancellationToken: cancellationToken);
     }
 
