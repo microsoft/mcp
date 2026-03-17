@@ -60,13 +60,24 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private static readonly string[] ObfuscationFunctions =
     [
-        "CHAR(", "CHR(", "ASCII(", "ORD(", "HEX(", "UNHEX(", "CONV(",
-        "CONVERT(", "CAST(", "BINARY(", "CONCAT_WS(", "MAKE_SET(",
-        "ELT(", "FIELD(", "FIND_IN_SET(", "EXPORT_SET(", "LOAD_FILE(",
-        "FROM_BASE64(", "TO_BASE64(", "COMPRESS(", "UNCOMPRESS(",
-        "AES_ENCRYPT(", "AES_DECRYPT(", "DES_ENCRYPT(", "DES_DECRYPT(",
-        "ENCODE(", "DECODE(", "PASSWORD(", "OLD_PASSWORD("
+        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
+        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
+        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
+        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
+        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
+        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
     ];
+
+    // Pre-compiled regex patterns for word-boundary keyword matching
+    private static readonly Regex DangerousKeywordsPattern = new(
+        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        TimeSpan.FromSeconds(3));
+
+    private static readonly Regex ObfuscationFunctionsPattern = new(
+        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        TimeSpan.FromSeconds(3));
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -177,34 +188,28 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
         }
 
-        // List of dangerous SQL keywords that should be blocked
-        var queryUpper = cleanedQuery.ToUpperInvariant();
-
-        foreach (var keyword in DangerousKeywords)
+        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
+        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
+        if (keywordMatch.Success)
         {
-            if (queryUpper.Contains(keyword))
-            {
-                throw new InvalidOperationException($"Query contains dangerous keyword '{keyword}' which is not allowed for security reasons.");
-            }
+            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
         }
 
         // Check for character conversion functions that may be used for obfuscation
-        foreach (var func in ObfuscationFunctions)
+        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
+        if (funcMatch.Success)
         {
-            if (queryUpper.Contains(func))
-            {
-                throw new InvalidOperationException($"Character conversion and obfuscation functions like '{func.TrimEnd('(')}' are not allowed for security reasons.");
-            }
+            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
         }
 
         // Additional validation: Only allow SELECT statements
-        var trimmedQuery = queryUpper.Trim();
+        var trimmedQuery = cleanedQuery.Trim();
         var allowedStartPatterns = new[]
         {
             "SELECT"
         };
 
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern));
+        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
 
         if (!isAllowed)
         {

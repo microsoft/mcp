@@ -17,6 +17,14 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT * FROM users WHERE name = 'foo--bar'")]
     [InlineData("SELECT * FROM users WHERE name = 'it\\'s a test -- ok'")]
     [InlineData("SELECT * FROM users WHERE name = 'back\\\\slash'")]
+    [InlineData("SELECT * FROM user_deletions")]
+    [InlineData("SELECT * FROM datasets")]
+    [InlineData("SELECT * FROM skills")]
+    [InlineData("SELECT * FROM grants")]
+    [InlineData("SELECT * FROM reunion_events")]
+    [InlineData("SELECT preset FROM config")]
+    [InlineData("SELECT * FROM committees")]
+    [InlineData("SELECT VARCHAR(col) FROM t")]
     public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
     {
         // Act & Assert - Should not throw any exception
