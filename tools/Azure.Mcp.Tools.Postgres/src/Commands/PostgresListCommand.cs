@@ -13,8 +13,9 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
-public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
+public sealed class PostgresListCommand(IPostgresService postgresService, ILogger<PostgresListCommand> logger) : BasePostgresCommand<BasePostgresOptions>(logger)
 {
+    private readonly IPostgresService _postgresService = postgresService;
     public override string Id => "8a12c3f4-2e5d-4b3a-9f2c-5e6d7f8a9b0c";
 
     public override string Name => "list";
@@ -73,13 +74,11 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
             var options = BindOptions(parseResult);
 
-            IPostgresService postgresService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await postgresService.ListTablesAsync(
+                List<string> tables = await _postgresService.ListTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.AuthType!,
@@ -96,7 +95,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await postgresService.ListDatabasesAsync(
+                List<string> databases = await _postgresService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.AuthType!,
@@ -112,7 +111,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
             else
             {
                 // List all servers in the subscription (optionally scoped to a resource group)
-                List<string> servers = await postgresService.ListServersAsync(
+                List<string> servers = await _postgresService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     cancellationToken);
