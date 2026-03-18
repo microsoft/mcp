@@ -25,19 +25,14 @@ public sealed class DiskGetCommand(
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <inheritdoc/>
     public override string Id => "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e";
 
-    /// <inheritdoc/>
     public override string Name => "get";
 
-    /// <inheritdoc/>
     public override string Title => CommandTitle;
 
-    /// <inheritdoc/>
     public override string Description => CommandDescription;
 
-    /// <inheritdoc/>
     public override ToolMetadata Metadata => new()
     {
         OpenWorld = false,
@@ -48,14 +43,12 @@ public sealed class DiskGetCommand(
         LocalRequired = false
     };
 
-    /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(ComputeOptionDefinitions.Disk.AsOptional());
     }
 
-    /// <inheritdoc/>
     protected override DiskGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
@@ -63,7 +56,6 @@ public sealed class DiskGetCommand(
         return options;
     }
 
-    /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -138,7 +130,6 @@ public sealed class DiskGetCommand(
         return $"^{pattern}$";
     }
 
-    /// <inheritdoc/>
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
@@ -147,7 +138,6 @@ public sealed class DiskGetCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    /// <inheritdoc/>
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
