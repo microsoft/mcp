@@ -31,8 +31,8 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
         command.Validators.Add(result =>
         {
             // Validate that --server is provided when --database is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(MySqlOptionDefinitions.Database.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string>(MySqlOptionDefinitions.Server.Name)))
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.DatabaseOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.ServerOptional.Name)))
             {
                 result.AddError("The --server parameter is required when --database is specified.");
             }

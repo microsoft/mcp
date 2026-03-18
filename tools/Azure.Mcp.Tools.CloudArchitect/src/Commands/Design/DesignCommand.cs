@@ -121,7 +121,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
             var state = JsonSerializer.Deserialize(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
             return state ?? new();
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
             throw new InvalidOperationException($"Failed to deserialize state JSON: {ex.Message}", ex);
         }
