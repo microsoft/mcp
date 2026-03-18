@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands;
+using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
