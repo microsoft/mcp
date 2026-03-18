@@ -142,7 +142,7 @@ internal static class SqlQueryValidator
         // E-prefixed strings (E'...') additionally support backslash escapes (e.g., \').
         // The E-string pattern must appear first so the alternation matches it before
         // the standard pattern consumes the opening quote.
-        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.None, RegexTimeout);
+        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
 
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
