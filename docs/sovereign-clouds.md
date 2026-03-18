@@ -110,7 +110,7 @@ az login
 # Azure US Government
 az cloud set --name AzureUSGovernment
 az login
-
+```
 
 #### Azure PowerShell
 
