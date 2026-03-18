@@ -145,11 +145,16 @@ public class MonitorSetup : IAreaSetup
         var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
         monitor.AddSubGroup(instrumentation);
 
-        instrumentation.AddCommand("list_learning_resources", serviceProvider.GetRequiredService<ListLearningResourcesCommand>());
-        instrumentation.AddCommand("get_learning_resource", serviceProvider.GetRequiredService<GetLearningResourceCommand>());
-        instrumentation.AddCommand("orchestrator_start", serviceProvider.GetRequiredService<OrchestratorStartCommand>());
-        instrumentation.AddCommand("orchestrator_next", serviceProvider.GetRequiredService<OrchestratorNextCommand>());
-        instrumentation.AddCommand("send_brownfield_analysis", serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>());
+        var listLearningResources = serviceProvider.GetRequiredService<ListLearningResourcesCommand>();
+        instrumentation.AddCommand(listLearningResources.Name, listLearningResources);
+        var getLearningResource = serviceProvider.GetRequiredService<GetLearningResourceCommand>();
+        instrumentation.AddCommand(getLearningResource.Name, getLearningResource);
+        var orchestratorStart = serviceProvider.GetRequiredService<OrchestratorStartCommand>();
+        instrumentation.AddCommand(orchestratorStart.Name, orchestratorStart);
+        var orchestratorNext = serviceProvider.GetRequiredService<OrchestratorNextCommand>();
+        instrumentation.AddCommand(orchestratorNext.Name, orchestratorNext);
+        var sendBrownfieldAnalysis = serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>();
+        instrumentation.AddCommand(sendBrownfieldAnalysis.Name, sendBrownfieldAnalysis);
 
         return monitor;
     }
