@@ -56,4 +56,42 @@ public static class CosmosOptionDefinitions
         Required = false,
         DefaultValueFactory = _ => "SELECT * FROM c"
     };
+
+    // Copy Job option definitions
+    public const string JobNameConst = "job-name";
+    public const string JobPropertiesConst = "job-properties";
+    public const string ModeConst = "mode";
+    public const string WorkerCountConst = "worker-count";
+
+    public static readonly Option<string> JobName = new(
+        $"--{JobNameConst}"
+    )
+    {
+        Description = "The name of the copy job (e.g., my-copy-job-1).",
+        Required = true
+    };
+
+    public static readonly Option<string> JobProperties = new(
+        $"--{JobPropertiesConst}"
+    )
+    {
+        Description = "JSON string describing the copy job type and tasks. Must include 'jobType' and 'tasks' array. " +
+            "Supported jobTypes: NoSqlRUToNoSqlRU, CassandraRUToCassandraRU, MongoRUToMongoRU, " +
+            "MongoRUToMongoVCore, CassandraRUToAzureBlobStorage, AzureBlobStorageToCassandraRU.",
+        Required = true
+    };
+
+    public static readonly Option<string?> Mode = new(
+        $"--{ModeConst}"
+    )
+    {
+        Description = "Copy mode: 'Offline' (one-time, default) or 'Online' (continuous sync until completed)."
+    };
+
+    public static readonly Option<int?> WorkerCount = new(
+        $"--{WorkerCountConst}"
+    )
+    {
+        Description = "Number of workers for the copy job. Set to 0 for auto-scaling (default)."
+    };
 }

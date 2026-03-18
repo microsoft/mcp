@@ -3529,6 +3529,45 @@
       "mappedToolList": [
         "deviceregistry_namespace_list"
       ]
+    },
+    {
+      "name": "manage_azure_cosmos_copy_jobs",
+      "description": "Create, monitor, and manage Cosmos DB container copy jobs (same as 'az cosmosdb copy'). Supports NoSQL-to-NoSQL, Cassandra-to-Cassandra, Mongo-to-Mongo, Mongo-to-MongoVCore, Cassandra-to-AzureBlob, and AzureBlob-to-Cassandra copy job types. Multi-task jobs can copy multiple container pairs in a single operation. Supports Offline and Online modes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can create and cancel copy jobs which move data between containers."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Creating a job with the same name may fail if a job already exists."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain is limited to Cosmos DB Copy Job operations."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can create jobs that copy data between containers."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "cosmos_copyjob_create",
+        "cosmos_copyjob_get",
+        "cosmos_copyjob_list",
+        "cosmos_copyjob_cancel",
+        "cosmos_copyjob_pause",
+        "cosmos_copyjob_resume",
+        "cosmos_copyjob_complete"
+      ]
     }
   ]
 }
