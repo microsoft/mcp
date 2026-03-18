@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -186,7 +187,7 @@ public static class EndpointValidator
     /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources.
     /// Performs DNS resolution to detect hostnames that resolve to private/reserved IPs.
     /// </summary>
-    public static void ValidatePublicTargetUrl(string url)
+    public static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -261,9 +262,10 @@ public static class EndpointValidator
             {
                 throw; // Re-throw SecurityException from private IP check
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // DNS resolution failure - treat as invalid for security
+                logger?.LogWarning(ex, "DNS resolution failed for '{Host}': {Message}", uri.Host, ex.Message);
                 throw new SecurityException(
                     $"Unable to resolve hostname '{uri.Host}' for security validation. " +
                     "Ensure the hostname is publicly resolvable.");
