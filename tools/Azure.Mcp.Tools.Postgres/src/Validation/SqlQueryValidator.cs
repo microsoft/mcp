@@ -137,9 +137,12 @@ internal static class SqlQueryValidator
 
         // Strip single-quoted string literals before checking for comment markers to avoid
         // false positives (e.g., 'foo--bar' or '/* not a comment */' are not comments).
-        // The pattern handles both SQL-standard doubled quotes ('') and
-        // PostgreSQL's backslash escaping (\') inside string literals.
-        var withoutStrings = Regex.Replace(core, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, RegexTimeout);
+        // Standard literals use only doubled quotes ('') as escape; backslash is literal
+        // (standard_conforming_strings = on, the default since PostgreSQL 9.1).
+        // E-prefixed strings (E'...') additionally support backslash escapes (e.g., \').
+        // The E-string pattern must appear first so the alternation matches it before
+        // the standard pattern consumes the opening quote.
+        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.None, RegexTimeout);
 
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))

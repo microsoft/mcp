@@ -14,8 +14,9 @@ public class SqlQueryValidatorTests
     [InlineData("SELECT COUNT(*) FROM products LIMIT 1")]
     [InlineData("SELECT COUNT(*) FROM products;")]
     [InlineData("SELECT * FROM users WHERE name = 'foo--bar'")]
-    [InlineData("SELECT * FROM users WHERE name = 'it\\'s a test -- ok'")]
     [InlineData("SELECT * FROM users WHERE name = 'back\\\\slash'")]
+    [InlineData("SELECT * FROM users WHERE name = E'it\\'s a test'")]
+    [InlineData("SELECT * FROM users WHERE name = E'back\\\\slash'")]
     [InlineData("SELECT * FROM users WHERE data = '/* not a comment */'")]
     [InlineData("SELECT * FROM user_deletions")]
     [InlineData("SELECT * FROM datasets")]
@@ -31,6 +32,8 @@ public class SqlQueryValidatorTests
     [Theory]
     [InlineData("SELECT 1 -- line comment")]
     [InlineData("SELECT 1 /* block comment */")]
+    [InlineData("SELECT 'foo\\' /* ' FROM pg_shadow --'")]  // backslash does not escape quotes in standard strings
+    [InlineData("SELECT * FROM users WHERE name = 'it\\'s a test -- ok'")]  // \' is not an escape in standard SQL
     public void EnsureReadOnlySelect_WithComments_ShouldThrow(string query)
     {
         var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
