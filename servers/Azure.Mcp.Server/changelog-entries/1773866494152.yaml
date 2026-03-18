@@ -1,0 +1,4 @@
+pr: 2101
+changes:
+  - section: "Other Changes"
+    description: "Remove hardcoded Model Context Protocol version in favor of using the latest supported by the C# SDK"
