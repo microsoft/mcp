@@ -31,7 +31,6 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
 
-        services.AddSingleton<ListLearningResourcesCommand>();
         services.AddSingleton<GetLearningResourceCommand>();
         services.AddSingleton<OrchestratorStartCommand>();
         services.AddSingleton<OrchestratorNextCommand>();
@@ -45,7 +44,6 @@ public sealed class MonitorInstrumentationSetup : IAreaSetup
             "Azure Monitor instrumentation operations for orchestrated onboarding and migration steps.",
             Title);
 
-        group.AddCommand("list_learning_resources", serviceProvider.GetRequiredService<ListLearningResourcesCommand>());
         group.AddCommand("get_learning_resource", serviceProvider.GetRequiredService<GetLearningResourceCommand>());
         group.AddCommand("orchestrator_start", serviceProvider.GetRequiredService<OrchestratorStartCommand>());
         group.AddCommand("orchestrator_next", serviceProvider.GetRequiredService<OrchestratorNextCommand>());

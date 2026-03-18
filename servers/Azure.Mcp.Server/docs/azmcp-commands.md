@@ -2495,11 +2495,9 @@ azmcp monitor webtests update --subscription <subscription> \
 ### Azure Monitor Instrumentation Operations
 
 ```bash
-# List available Azure Monitor onboarding learning resources
-azmcp monitorinstrumentation list_learning_resources
 
-# Get a specific learning resource by path
-azmcp monitorinstrumentation get_learning_resource --path <resource-path>
+# Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
+azmcp monitorinstrumentation get_learning_resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
 azmcp monitorinstrumentation orchestrator_start --workspace-path <absolute-workspace-path>

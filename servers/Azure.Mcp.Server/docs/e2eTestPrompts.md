@@ -691,9 +691,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitorinstrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
 | monitorinstrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
 | monitorinstrumentation_get_learning_resource | Retrieve the Azure Monitor instrumentation guidance document at <resource_path> |
-| monitorinstrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
-| monitorinstrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
-| monitorinstrumentation_list_learning_resources | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitorinstrumentation_get_learning_resource | List all available Azure Monitor onboarding learning resources |
+| monitorinstrumentation_get_learning_resource | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitorinstrumentation_get_learning_resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
 | monitorinstrumentation_orchestrator_next | Continue my Azure Monitor instrumentation session <session_id> with completion note <completion_note> |
 | monitorinstrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
 | monitorinstrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |

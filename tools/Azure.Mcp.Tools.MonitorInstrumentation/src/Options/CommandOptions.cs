@@ -8,8 +8,6 @@ public sealed class GetLearningResourceOptions
     public string? Path { get; set; }
 }
 
-public sealed class ListLearningResourcesOptions;
-
 public sealed class OrchestratorStartOptions
 {
     public string? WorkspacePath { get; set; }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MonitorInstrumentation.Commands;
 
@@ -21,7 +22,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
     public override string Name => "get_learning_resource";
 
     public override string Description =>
-        "Get the content of a learning resource by path. Use list_learning_resources to see available paths. Note: For instrumenting an application, use orchestrator_start instead.";
+        "List all available learning resources for Azure Monitor instrumentation or get the content of a specific resource by path. Returns all resource paths by default, or retrieves the full content when a path is specified. Note: For instrumenting an application, use orchestrator_start instead.";
 
     public override string Title => "Get Azure Monitor Learning Resource";
 
@@ -37,7 +38,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
     protected override void RegisterOptions(Command command)
     {
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.Path);
+        command.Options.Add(MonitorInstrumentationOptionDefinitions.Path.AsOptional());
     }
 
     protected override GetLearningResourceOptions BindOptions(ParseResult parseResult)
@@ -59,10 +60,27 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
         try
         {
-            var result = GetLearningResourceTool.GetLearningResource(options.Path!);
+            if (string.IsNullOrEmpty(options.Path))
+            {
+                // List all learning resources
+                var resources = ListLearningResourcesTool.ListLearningResources();
 
-            context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+                context.Response.Status = HttpStatusCode.OK;
+                context.Response.Results = ResponseResult.Create(
+                    new GetLearningResourceCommandResult(Resources: resources, Content: null),
+                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+            }
+            else
+            {
+                // Get specific learning resource content
+                var content = GetLearningResourceTool.GetLearningResource(options.Path);
+
+                context.Response.Status = HttpStatusCode.OK;
+                context.Response.Results = ResponseResult.Create(
+                    new GetLearningResourceCommandResult(Resources: null, Content: content),
+                    MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
+            }
+
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -73,4 +91,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
         return Task.FromResult(context.Response);
     }
+
+    internal record GetLearningResourceCommandResult(string? Resources, string? Content);
+
 }
