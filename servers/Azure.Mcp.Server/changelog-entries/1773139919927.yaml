@@ -1,4 +1,0 @@
-pr: 1986
-changes:
-  - section: "Other Changes"
-    description: "Refactored `Azure.Mcp.Tools.EventHubs` commands to use constructor dependency injection for `IEventHubsService` instead of resolving services via `context.GetService<T>()` in `ExecuteAsync`."

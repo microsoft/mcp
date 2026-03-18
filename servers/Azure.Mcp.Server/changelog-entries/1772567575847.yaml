@@ -1,4 +1,0 @@
-pr: 1913
-changes:
-  - section: "Other Changes"
-    description: "Refactored Azure.Mcp.Tools.Communication commands to use constructor dependency injection instead of resolving services via context.GetService<T>() in ExecuteAsync."

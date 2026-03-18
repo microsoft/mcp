@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed foundryextensions_agents_get-sdk-sample, foundryextensions_threads_create, foundryextensions_threads_list, and foundryextensions_threads_get-messages tools from the foundryextensions namespace."

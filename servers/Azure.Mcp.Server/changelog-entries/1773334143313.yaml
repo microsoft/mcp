@@ -1,4 +1,0 @@
-pr: 2018
-changes:
-  - section: "Bugs Fixed"
-    description: "Improved AppLens diagnose tool to use ARG-based resource discovery with optional subscription, resource group, and resource type parameters"

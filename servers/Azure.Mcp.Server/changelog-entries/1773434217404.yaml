@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Enhanced 'wellarchitectedframework_serviceguide_get' command to act as a list command when no service parameter is provided, reducing the number of tools needed."

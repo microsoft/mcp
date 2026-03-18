@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Expanded PostgreSQL SQL query validator blocklist with additional dangerous functions and system catalogs"
