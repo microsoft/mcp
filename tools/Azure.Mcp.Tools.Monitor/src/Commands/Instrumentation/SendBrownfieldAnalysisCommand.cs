@@ -82,7 +82,8 @@ After this call succeeds, continue with orchestrator_next as usual.";
                 findings.Processors,
                 findings.ClientUsage,
                 findings.Sampling,
-                findings.TelemetryPipeline);
+                findings.TelemetryPipeline,
+                findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);

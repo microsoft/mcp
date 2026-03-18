@@ -28,3 +28,10 @@ public sealed class SendBrownfieldAnalysisOptions
 
     public string? FindingsJson { get; set; }
 }
+
+public sealed class SendEnhancedSelectionOptions
+{
+    public string? SessionId { get; set; }
+
+    public string? EnhancementKeys { get; set; }
+}

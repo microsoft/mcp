@@ -23,6 +23,10 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         var configEvidence = CheckConfigFiles(workspacePath);
         evidence.AddRange(configEvidence);
 
+        // Check packages.config for classic .NET Framework projects
+        var packagesConfigEvidence = CheckPackagesConfig(workspacePath);
+        evidence.AddRange(packagesConfigEvidence);
+
         if (evidence.Count == 0)
         {
             return new InstrumentationResult(InstrumentationState.Greenfield, null);
@@ -31,6 +35,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         // Determine instrumentation type from evidence
         var instrumentationType = DetermineInstrumentationType(evidence);
         var version = ExtractVersion(evidence);
+        var isTargetVersion = IsAlreadyOnTargetVersion(instrumentationType, version);
 
         return new InstrumentationResult(
             InstrumentationState.Brownfield,
@@ -38,9 +43,46 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
             {
                 Type = instrumentationType,
                 Version = version,
+                IsTargetVersion = isTargetVersion,
                 Evidence = evidence
             }
         );
+    }
+
+    private List<Evidence> CheckPackagesConfig(string workspacePath)
+    {
+        var evidence = new List<Evidence>();
+        var packagesConfigs = Directory.GetFiles(workspacePath, "packages.config", SearchOption.AllDirectories);
+
+        foreach (var configFile in packagesConfigs)
+        {
+            try
+            {
+                var doc = XDocument.Load(configFile);
+                var packages = doc.Descendants("package");
+
+                foreach (var pkg in packages)
+                {
+                    var id = pkg.Attribute("id")?.Value ?? string.Empty;
+                    var version = pkg.Attribute("version")?.Value ?? "unknown";
+
+                    if (PackageDetection.AiSdkPackages.Any(p => id.Equals(p, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        evidence.Add(new Evidence
+                        {
+                            File = configFile,
+                            Indicator = $"PackageReference: {id} {version}"
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                // Skip files we can't parse
+            }
+        }
+
+        return evidence;
     }
 
     private List<Evidence> AnalyzeProjectReferences(string csprojPath)
@@ -173,5 +215,41 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Determines if the detected SDK is already on the target version:
+    /// - ApplicationInsightsSdk: 3.x is target (2.x needs migration)
+    /// - AzureMonitorDistro: any version is target (already on the recommended path)
+    /// </summary>
+    private static bool IsAlreadyOnTargetVersion(InstrumentationType type, string? version)
+    {
+        if (type == InstrumentationType.AzureMonitorDistro)
+        {
+            return true;
+        }
+
+        if (type != InstrumentationType.ApplicationInsightsSdk || string.IsNullOrWhiteSpace(version))
+        {
+            return false;
+        }
+
+        // Handle wildcard versions like "3.*"
+        if (version.StartsWith("3.", StringComparison.Ordinal) || version.StartsWith("3-", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Try to parse as a real version.
+        var versionToParse = version.TrimStart('v');
+        var dashIndex = versionToParse.IndexOf('-');
+        var versionCore = dashIndex > 0 ? versionToParse[..dashIndex] : versionToParse;
+
+        if (Version.TryParse(versionCore, out var parsed))
+        {
+            return parsed.Major >= 3;
+        }
+
+        return false;
     }
 }

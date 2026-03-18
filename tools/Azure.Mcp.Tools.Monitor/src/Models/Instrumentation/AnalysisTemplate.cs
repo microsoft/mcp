@@ -7,6 +7,8 @@ public sealed record AnalysisTemplate
     public required ProcessorTemplate Processors { get; init; }
     public required ClientUsageTemplate ClientUsage { get; init; }
     public required SamplingTemplate Sampling { get; init; }
+    public required TelemetryPipelineTemplate TelemetryPipeline { get; init; }
+    public required LoggingTemplate Logging { get; init; }
 
     public static AnalysisTemplate CreateDefault()
     {
@@ -25,12 +27,17 @@ public sealed record AnalysisTemplate
                 EnableDebugLogger = "(bool|null) - REMOVED in 3.x",
                 RequestCollectionOptions = "(string|null) - REMOVED in 3.x",
                 DependencyCollectionOptions = "(string|null) - REMOVED in 3.x",
+                EnableEventCounterCollectionModule = "(bool|null) - REMOVED in 3.x (Worker Service only)",
+                EnableAppServicesHeartbeatTelemetryModule = "(bool|null) - REMOVED in 3.x (Worker Service only)",
+                EnableAzureInstanceMetadataTelemetryModule = "(bool|null) - REMOVED in 3.x (Worker Service only)",
+                EnableDiagnosticsTelemetryModule = "(bool|null) - REMOVED in 3.x (Worker Service only)",
                 SamplingRatio = "(number|null) - New in 3.x, already correct if set",
                 TracesPerSecond = "(number|null) - New in 3.x, already correct if set",
                 EnableQuickPulseMetricStream = "(bool|null) - unchanged",
                 UseApplicationInsights = "(bool) true if UseApplicationInsights() call found - REMOVED in 3.x",
                 AddTelemetryProcessor = "(bool) true if AddApplicationInsightsTelemetryProcessor<T>() found - REMOVED in 3.x",
-                ConfigureTelemetryModule = "(bool) true if ConfigureTelemetryModule<T>() found - REMOVED in 3.x"
+                ConfigureTelemetryModule = "(bool) true if ConfigureTelemetryModule<T>() found - REMOVED in 3.x",
+                UsesInstrumentationKeyOverload = "(bool) true if string overload e.g. AddApplicationInsightsTelemetry(\"ikey\") or AddApplicationInsightsTelemetryWorkerService(\"ikey\") found - REMOVED in 3.x"
             },
             Initializers = new InitializerTemplate
             {
@@ -79,6 +86,22 @@ public sealed record AnalysisTemplate
                 Type = "(string|null) e.g. adaptive, fixed-rate",
                 Details = "(string|null) description of what was found",
                 File = "(string|null) file where sampling is configured"
+            },
+            TelemetryPipeline = new TelemetryPipelineTemplate
+            {
+                Found = "(bool) true if any custom ITelemetryChannel, TelemetryConfiguration.TelemetryChannel assignment, TelemetrySinks, or DefaultTelemetrySink usage exists",
+                HasCustomChannel = "(bool) true if custom ITelemetryChannel implementation or TelemetryChannel assignment found",
+                HasTelemetrySinks = "(bool) true if TelemetrySinks or DefaultTelemetrySink usage found",
+                ClassName = "(string|null) class name if custom channel implementation found",
+                File = "(string|null) file path",
+                Details = "(string|null) description of what was found"
+            },
+            Logging = new LoggingTemplate
+            {
+                Found = "(bool) true if any explicit Application Insights logger provider configuration exists",
+                HasExplicitLoggerProvider = "(bool) true if AddApplicationInsights() on ILoggingBuilder found (e.g. loggingBuilder.AddApplicationInsights() or services.AddLogging(b => b.AddApplicationInsights(...)))",
+                LogFilters = ["(string) each AddFilter<ApplicationInsightsLoggerProvider>(...) line found"],
+                File = "(string|null) file where the logging configuration is located"
             }
         };
     }
