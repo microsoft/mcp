@@ -73,6 +73,7 @@ public sealed class KustoService(
             subscriptionId,
             retryPolicy,
             item => ConvertToClusterModel(item).ClusterName,
+            tenant: tenant,
             cancellationToken: cancellationToken);
 
         return clusters;
@@ -94,6 +95,7 @@ public sealed class KustoService(
             retryPolicy: retryPolicy,
             converter: ConvertToClusterModel,
             additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
+            tenant: tenant,
             cancellationToken: cancellationToken);
 
         if (cluster == null)

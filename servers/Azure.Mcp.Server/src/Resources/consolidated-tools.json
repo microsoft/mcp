@@ -68,8 +68,8 @@
       ]
     },
     {
-      "name": "get_azure_functions_template_info",
-      "description": "Get Azure Functions project templates, supported languages, and template source code for bootstrapping new Azure Functions projects.",
+      "name": "get_azure_functions_info",
+      "description": "Get Azure Functions project samples and templates, supported languages, and source code for bootstrapping new Azure Functions projects.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -81,7 +81,7 @@
         },
         "openWorld": {
           "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions templates."
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions samples and templates."
         },
         "readOnly": {
           "value": true,
@@ -1594,6 +1594,39 @@
         "compute_disk_update",
         "compute_vm_update",
         "compute_vmss_update"
+      ]
+    },
+    {
+      "name": "delete_azure_managed_disk",
+      "description": "Delete an Azure managed disk from a resource group. This is an idempotent operation that returns whether the disk was successfully removed. The disk must not be attached to a virtual machine; detach it first before deleting.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool deletes Azure managed disks."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool deletes Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive operations requiring extra confirmation."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_delete"
       ]
     },
     {

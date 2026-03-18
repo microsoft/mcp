@@ -335,6 +335,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+
     // VM update options
     public const string LicenseTypeName = "license-type";
     public const string BootDiagnosticsName = "boot-diagnostics";

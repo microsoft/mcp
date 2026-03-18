@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Improved deploy tool descriptions for better LLM selection accuracy: clarified that `deploy_plan_get` generates a plan from caller-provided options and does not scan the workspace, and that `deploy_architecture_diagram_generate` renders from a provided AppTopology input."
