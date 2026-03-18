@@ -1045,30 +1045,26 @@ azmcp compute vm update --subscription "my-subscription" \
 azmcp compute vm delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --vm-name <vm-name> \
-                        [--force] \
                         [--force-deletion]
 
 # Examples:
 
-# Delete a VM (requires --force confirmation)
+# Delete a VM
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm delete --subscription "my-subscription" \
                         --resource-group "my-rg" \
-                        --vm-name "my-vm" \
-                        --force
+                        --vm-name "my-vm"
 
 # Force delete a VM even if it is in a running or failed state
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm delete --subscription "my-subscription" \
                         --resource-group "my-rg" \
                         --vm-name "my-vm" \
-                        --force \
                         --force-deletion
 ```
 
 **Command Behavior:**
-- **Without `--force`**: Returns a warning message and does NOT delete the VM. This is a safety guard.
-- **With `--force`**: Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
+- Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
 
 **Parameters:**
@@ -1077,7 +1073,6 @@ azmcp compute vm delete --subscription "my-subscription" \
 | `--subscription` | Yes | Azure subscription ID |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vm-name` | Yes | Name of the virtual machine to delete |
-| `--force` | No | Bypass confirmation prompt and proceed with deletion |
 | `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
 
 #### Virtual Machine Scale Sets
@@ -1259,30 +1254,26 @@ azmcp compute vmss update --subscription "my-subscription" \
 azmcp compute vmss delete --subscription <subscription> \
                           --resource-group <resource-group> \
                           --vmss-name <vmss-name> \
-                          [--force] \
                           [--force-deletion]
 
 # Examples:
 
-# Delete a VMSS (requires --force confirmation)
+# Delete a VMSS
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss delete --subscription "my-subscription" \
                           --resource-group "my-rg" \
-                          --vmss-name "my-vmss" \
-                          --force
+                          --vmss-name "my-vmss"
 
 # Force delete a VMSS even if it is in a running or failed state
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vmss delete --subscription "my-subscription" \
                           --resource-group "my-rg" \
                           --vmss-name "my-vmss" \
-                          --force \
                           --force-deletion
 ```
 
 **Command Behavior:**
-- **Without `--force`**: Returns a warning message and does NOT delete the VMSS. This is a safety guard.
-- **With `--force`**: Deletes the VMSS and all its VM instances. This operation is irreversible.
+- Deletes the VMSS and all its VM instances. This operation is irreversible.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
 
 **Parameters:**
@@ -1291,7 +1282,6 @@ azmcp compute vmss delete --subscription "my-subscription" \
 | `--subscription` | Yes | Azure subscription ID |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--vmss-name` | Yes | Name of the VMSS to delete |
-| `--force` | No | Bypass confirmation prompt and proceed with deletion |
 | `--force-deletion` | No | Force delete the VMSS even if running or failed (Azure API forceDeletion) |
 
 #### Disks

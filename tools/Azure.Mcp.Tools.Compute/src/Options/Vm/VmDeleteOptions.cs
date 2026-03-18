@@ -7,7 +7,5 @@ public class VmDeleteOptions : BaseComputeOptions
 {
     public string? VmName { get; set; }
 
-    public bool Force { get; set; }
-
     public bool ForceDeletion { get; set; }
 }

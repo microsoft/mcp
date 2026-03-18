@@ -52,10 +52,10 @@ public class VmssDeleteCommandTests
     }
 
     [Theory]
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --force", true)]
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --force --force-deletion", true)]
-    [InlineData("--resource-group test-rg --subscription sub123 --force", false)] // Missing vmss-name
-    [InlineData("--vmss-name test-vmss --subscription sub123 --force", false)] // Missing resource-group
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --force-deletion", true)]
+    [InlineData("--resource-group test-rg --subscription sub123", false)] // Missing vmss-name
+    [InlineData("--vmss-name test-vmss --subscription sub123", false)] // Missing resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -96,44 +96,7 @@ public class VmssDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutForce_ReturnsWarning()
-    {
-        // Arrange - no --force flag
-        var parseResult = _commandDefinition.Parse([
-            "--vmss-name", _knownVmssName,
-            "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssDeleteCommandResult);
-
-        Assert.NotNull(result);
-        Assert.False(result.Success);
-        Assert.Contains("WARNING", result.Message);
-        Assert.Contains("--force", result.Message);
-        Assert.Contains(_knownVmssName, result.Message);
-
-        // Verify the service was never called
-        await _computeService.DidNotReceive().DeleteVmssAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithForce_DeletesVmss()
+    public async Task ExecuteAsync_DeletesVmss()
     {
         // Arrange
         _computeService.DeleteVmssAsync(
@@ -149,8 +112,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -188,7 +150,6 @@ public class VmssDeleteCommandTests
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--force",
             "--force-deletion"
         ]);
 
@@ -225,8 +186,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -256,8 +216,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -287,8 +246,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -318,8 +276,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -347,8 +304,7 @@ public class VmssDeleteCommandTests
         var parseResult = _commandDefinition.Parse([
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription,
-            "--force"
+            "--subscription", _knownSubscription
         ]);
 
         // Act
@@ -368,7 +324,7 @@ public class VmssDeleteCommandTests
     {
         // Arrange
         var parseResult = _commandDefinition.Parse(
-            $"--vmss-name {_knownVmssName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --force --force-deletion");
+            $"--vmss-name {_knownVmssName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --force-deletion");
 
         // Assert parse was successful
         Assert.Empty(parseResult.Errors);

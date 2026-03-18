@@ -515,26 +515,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #region VM Delete Tests
 
     [Fact]
-    public async Task Should_return_warning_when_deleting_vm_without_force()
-    {
-        var result = await CallToolAsync(
-            "compute_vm_delete",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", VmName }
-            });
-
-        var message = result.AssertProperty("Message");
-        Assert.Contains("WARNING", message.GetString());
-        Assert.Contains("--force", message.GetString());
-
-        var success = result.AssertProperty("Success");
-        Assert.Equal(JsonValueKind.False, success.ValueKind);
-    }
-
-    [Fact]
     public async Task Should_delete_vm_with_force()
     {
         // Create a dedicated VM to delete
@@ -554,15 +534,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "no-public-ip", true }
             });
 
-        // Delete the VM with --force
+        // Delete the VM
         var result = await CallToolAsync(
             "compute_vm_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", deleteVmName },
-                { "force", true }
+                { "vm-name", deleteVmName }
             });
 
         var message = result.AssertProperty("Message");
@@ -583,8 +562,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", nonExistentVmName },
-                { "force", true }
+                { "vm-name", nonExistentVmName }
             },
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -599,26 +577,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #endregion
 
     #region VMSS Delete Tests
-
-    [Fact]
-    public async Task Should_return_warning_when_deleting_vmss_without_force()
-    {
-        var result = await CallToolAsync(
-            "compute_vmss_delete",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", VmssName }
-            });
-
-        var message = result.AssertProperty("Message");
-        Assert.Contains("WARNING", message.GetString());
-        Assert.Contains("--force", message.GetString());
-
-        var success = result.AssertProperty("Success");
-        Assert.Equal(JsonValueKind.False, success.ValueKind);
-    }
 
     [Fact]
     public async Task Should_delete_vmss_with_force()
@@ -640,15 +598,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "instance-count", 1 }
             });
 
-        // Delete the VMSS with --force
+        // Delete the VMSS
         var result = await CallToolAsync(
             "compute_vmss_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", deleteVmssName },
-                { "force", true }
+                { "vmss-name", deleteVmssName }
             });
 
         var message = result.AssertProperty("Message");
@@ -669,8 +626,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", nonExistentVmssName },
-                { "force", true }
+                { "vmss-name", nonExistentVmssName }
             },
             cancellationToken: TestContext.Current.CancellationToken);
 

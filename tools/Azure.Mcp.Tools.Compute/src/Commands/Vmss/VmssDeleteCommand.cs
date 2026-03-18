@@ -30,8 +30,8 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         Delete, remove, or destroy an Azure Virtual Machine Scale Set (VMSS) and all its VM instances.
         Use this to permanently remove a scale set that is no longer needed.
         Equivalent to 'az vmss delete'. This operation is irreversible and all VMSS instances will be lost.
-        Use --force to bypass the confirmation prompt. Use --force-deletion to force delete the VMSS
-        even if it is in a running or failed state (passes forceDeletion=true to the Azure API).
+        Use --force-deletion to force delete the VMSS even if it is in a running or failed state
+        (passes forceDeletion=true to the Azure API).
         Do not use this to delete a single VM (use VM delete instead).
         """;
 
@@ -53,7 +53,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
 
         // Required options
         command.Options.Add(ComputeOptionDefinitions.VmssName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.Force);
         command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
     }
 
@@ -61,7 +60,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
     {
         var options = base.BindOptions(parseResult);
         options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.Force = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Force);
         options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
         return options;
     }
@@ -74,19 +72,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         }
 
         var options = BindOptions(parseResult);
-
-        // If --force is not specified, return a warning message
-        if (!options.Force)
-        {
-            context.Response.Results = ResponseResult.Create(
-                new VmssDeleteCommandResult(
-                    $"WARNING: This will permanently delete VMSS '{options.VmssName}' and all its VM instances in resource group '{options.ResourceGroup}'. " +
-                    "This operation cannot be undone. " +
-                    "Use --force to confirm deletion.",
-                    false),
-                ComputeJsonContext.Default.VmssDeleteCommandResult);
-            return context.Response;
-        }
 
         var computeService = context.GetService<IComputeService>();
 

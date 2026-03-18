@@ -7,7 +7,5 @@ public class VmssDeleteOptions : BaseComputeOptions
 {
     public string? VmssName { get; set; }
 
-    public bool Force { get; set; }
-
     public bool ForceDeletion { get; set; }
 }

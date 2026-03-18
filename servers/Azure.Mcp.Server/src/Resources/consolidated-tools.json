@@ -2433,7 +2433,7 @@
     },
     {
       "name": "delete_azure_compute_vm_and_vmss",
-      "description": "Delete Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Permanently remove a VM or VMSS that is no longer needed. Requires --force to confirm deletion. Use --force-deletion to force delete even if the resource is in a running or failed state. This operation is irreversible. Associated resources like disks, NICs, and public IPs are NOT automatically deleted for VMs.",
+      "description": "Delete Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Permanently remove a VM or VMSS that is no longer needed. Use --force-deletion to force delete even if the resource is in a running or failed state. This operation is irreversible. Associated resources like disks, NICs, and public IPs are NOT automatically deleted for VMs.",
       "toolMetadata": {
         "destructive": {
           "value": true,

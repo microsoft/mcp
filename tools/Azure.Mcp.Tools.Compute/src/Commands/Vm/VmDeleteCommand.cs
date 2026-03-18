@@ -30,8 +30,8 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         Delete, remove, or destroy an Azure Virtual Machine (VM).
         Use this to permanently remove a VM that is no longer needed.
         Equivalent to 'az vm delete'. This operation is irreversible and the VM data will be lost.
-        Use --force to bypass the confirmation prompt. Use --force-deletion to force delete the VM
-        even if it is in a running or failed state (passes forceDeletion=true to the Azure API).
+        Use --force-deletion to force delete the VM even if it is in a running or failed state
+        (passes forceDeletion=true to the Azure API).
         Associated resources like disks, NICs, and public IPs are NOT automatically deleted.
         Do not use this to delete Virtual Machine Scale Sets (use VMSS delete instead).
         """;
@@ -54,7 +54,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
         // Required options
         command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.Force);
         command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
     }
 
@@ -62,7 +61,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
     {
         var options = base.BindOptions(parseResult);
         options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.Force = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Force);
         options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
         return options;
     }
@@ -75,19 +73,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         }
 
         var options = BindOptions(parseResult);
-
-        // If --force is not specified, return a warning message
-        if (!options.Force)
-        {
-            context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(
-                    $"WARNING: This will permanently delete VM '{options.VmName}' in resource group '{options.ResourceGroup}'. " +
-                    "This operation cannot be undone. Associated resources (disks, NICs, public IPs) will NOT be automatically deleted. " +
-                    "Use --force to confirm deletion.",
-                    false),
-                ComputeJsonContext.Default.VmDeleteCommandResult);
-            return context.Response;
-        }
 
         var computeService = context.GetService<IComputeService>();
 
