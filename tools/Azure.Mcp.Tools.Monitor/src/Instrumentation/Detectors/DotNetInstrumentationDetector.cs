@@ -240,7 +240,8 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
             return true;
         }
 
-        // Try to parse as a real version.
+        // Try to parse as a real version
+        // Strip leading 'v' if present, handle pre-release suffix
         var versionToParse = version.TrimStart('v');
         var dashIndex = versionToParse.IndexOf('-');
         var versionCore = dashIndex > 0 ? versionToParse[..dashIndex] : versionToParse;
