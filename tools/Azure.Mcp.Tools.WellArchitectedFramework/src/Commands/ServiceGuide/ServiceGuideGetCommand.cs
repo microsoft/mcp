@@ -55,7 +55,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
     {
         var modeString = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Mode.Name);
         var mode = ServiceGuideOutputMode.Summary; // Default
-        
+
         if (!string.IsNullOrWhiteSpace(modeString))
         {
             if (Enum.TryParse<ServiceGuideOutputMode>(modeString, ignoreCase: true, out var parsedMode))
@@ -67,7 +67,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                 throw new ArgumentException($"Invalid mode '{modeString}'. Valid values are: {string.Join(", ", Enum.GetNames<ServiceGuideOutputMode>())}");
             }
         }
-        
+
         return new ServiceGuideGetOptions
         {
             Service = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Service.Name),

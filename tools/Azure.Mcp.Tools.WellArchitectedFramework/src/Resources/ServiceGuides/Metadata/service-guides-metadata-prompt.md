@@ -13,7 +13,7 @@ REQUIRED JSON STRUCTURE:
   "<service-key>": {
     "serviceNameVariationsNormalized": ["<variation1>", "<variation2>", ...],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>",
-    "serviceGuideFile": "./Guides/<service-key>.json"
+    "serviceGuideFile": "../Guides/<service-key>.json"
   }
 }
 
@@ -38,8 +38,8 @@ RULES FOR GENERATION:
    - Append the href value from TOC.yml (e.g., "service-guides/azure-blob-storage.md")
 
 4. **serviceGuideFile**: Construct as:
-   - Format: "./Guides/<service-key>.json"
-   - Use the same service-key as the top-level key (e.g., "./Guides/azure-blob-storage.json")
+   - Format: "../Guides/<service-key>.json"
+   - Use the same service-key as the top-level key (e.g., "../Guides/azure-blob-storage.json")
 
 SPECIAL HANDLING:
 - If a service has nested items (like Azure SQL Managed Instance with "reliability" and "operational excellence" sub-pages), skip it or handle it separately
@@ -55,12 +55,12 @@ EXAMPLE OUTPUT:
   "application-insights": {
     "serviceNameVariationsNormalized": ["applicationinsights", "appinsights", "insights"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md",
-    "serviceGuideFile": "./Guides/application-insights.json"
+    "serviceGuideFile": "../Guides/application-insights.json"
   },
   "azure-blob-storage": {
     "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md",
-    "serviceGuideFile": "./Guides/azure-blob-storage.json"
+    "serviceGuideFile": "../Guides/azure-blob-storage.json"
   }
 }
 

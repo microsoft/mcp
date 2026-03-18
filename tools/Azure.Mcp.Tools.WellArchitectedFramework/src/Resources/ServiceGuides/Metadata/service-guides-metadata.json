@@ -2,156 +2,156 @@
   "azure-api-management": {
     "serviceNameVariationsNormalized": ["apim", "apimanagement", "azureapim", "azureapimanagement"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-api-management.md",
-    "serviceGuideFile": "./Guides/azure-api-management.json"
+    "serviceGuideFile": "../Guides/azure-api-management.json"
   },
   "azure-application-gateway": {
     "serviceNameVariationsNormalized": ["agw", "appgateway", "appgw", "applicationgateway", "azureappgateway", "azureapplicationgateway"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-application-gateway.md",
-    "serviceGuideFile": "./Guides/azure-application-gateway.json"
+    "serviceGuideFile": "../Guides/azure-application-gateway.json"
   },
   "application-insights": {
     "serviceNameVariationsNormalized": ["appinsights", "applicationinsights", "insights"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md",
-    "serviceGuideFile": "./Guides/application-insights.json"
+    "serviceGuideFile": "../Guides/application-insights.json"
   },
   "app-service-web-apps": {
     "serviceNameVariationsNormalized": ["appservice", "appservicewebapps", "azureappservice", "azurewebapp", "azurewebapps", "webapp", "webapps"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/app-service-web-apps.md",
-    "serviceGuideFile": "./Guides/app-service-web-apps.json"
+    "serviceGuideFile": "../Guides/app-service-web-apps.json"
   },
   "azure-blob-storage": {
     "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md",
-    "serviceGuideFile": "./Guides/azure-blob-storage.json"
+    "serviceGuideFile": "../Guides/azure-blob-storage.json"
   },
   "azure-container-apps": {
     "serviceNameVariationsNormalized": ["aca", "azureaca", "azurecontainerapps", "containerapps"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-container-apps.md",
-    "serviceGuideFile": "./Guides/azure-container-apps.json"
+    "serviceGuideFile": "../Guides/azure-container-apps.json"
   },
   "cosmos-db": {
     "serviceNameVariationsNormalized": ["azurecosmos", "azurecosmosdb", "cosmos", "cosmosdatabase", "cosmosdb"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/cosmos-db.md",
-    "serviceGuideFile": "./Guides/cosmos-db.json"
+    "serviceGuideFile": "../Guides/cosmos-db.json"
   },
   "azure-databricks": {
     "serviceNameVariationsNormalized": ["adb", "azuredatabricks", "databricks"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-databricks.md",
-    "serviceGuideFile": "./Guides/azure-databricks.json"
+    "serviceGuideFile": "../Guides/azure-databricks.json"
   },
   "azure-database-for-mysql": {
     "serviceNameVariationsNormalized": ["azuredatabaseformysql", "azuredbformysql", "azuremysql", "databaseformysql", "dbformysql", "mysql"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-database-for-mysql.md",
-    "serviceGuideFile": "./Guides/azure-database-for-mysql.json"
+    "serviceGuideFile": "../Guides/azure-database-for-mysql.json"
   },
   "postgresql": {
     "serviceNameVariationsNormalized": ["azuredatabaseforpostgresql", "azuredbforpostgresql", "azurepostgres", "azurepostgresql", "databaseforpostgresql", "dbforpostgresql", "postgres", "postgresql"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/postgresql.md",
-    "serviceGuideFile": "./Guides/postgresql.json"
+    "serviceGuideFile": "../Guides/postgresql.json"
   },
   "azure-disk-storage": {
     "serviceNameVariationsNormalized": ["azuredisk", "azurediskstorage", "disk", "diskstorage", "manageddisk"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-disk-storage.md",
-    "serviceGuideFile": "./Guides/azure-disk-storage.json"
+    "serviceGuideFile": "../Guides/azure-disk-storage.json"
   },
   "azure-event-grid": {
     "serviceNameVariationsNormalized": ["aeg", "azureeventgrid", "eventgrid"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-event-grid.md",
-    "serviceGuideFile": "./Guides/azure-event-grid.json"
+    "serviceGuideFile": "../Guides/azure-event-grid.json"
   },
   "azure-event-hubs": {
     "serviceNameVariationsNormalized": ["aeh", "azureeventhub", "azureeventhubs", "eventhub", "eventhubs"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-event-hubs.md",
-    "serviceGuideFile": "./Guides/azure-event-hubs.json"
+    "serviceGuideFile": "../Guides/azure-event-hubs.json"
   },
   "azure-expressroute": {
     "serviceNameVariationsNormalized": ["azureexpressroute", "er", "expressroute", "exr"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-expressroute.md",
-    "serviceGuideFile": "./Guides/azure-expressroute.json"
+    "serviceGuideFile": "../Guides/azure-expressroute.json"
   },
   "azure-files": {
     "serviceNameVariationsNormalized": ["azurefile", "azurefiles", "azurefileshare", "azurefilestorage", "files", "fileshare", "fileshares"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-files.md",
-    "serviceGuideFile": "./Guides/azure-files.json"
+    "serviceGuideFile": "../Guides/azure-files.json"
   },
   "azure-firewall": {
     "serviceNameVariationsNormalized": ["azurefirewall", "azurefw", "firewall", "fw"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-firewall.md",
-    "serviceGuideFile": "./Guides/azure-firewall.json"
+    "serviceGuideFile": "../Guides/azure-firewall.json"
   },
   "azure-front-door": {
     "serviceNameVariationsNormalized": ["afd", "azureafd", "azurefrontdoor", "frontdoor"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-front-door.md",
-    "serviceGuideFile": "./Guides/azure-front-door.json"
+    "serviceGuideFile": "../Guides/azure-front-door.json"
   },
   "azure-functions": {
     "serviceNameVariationsNormalized": ["azurefunction", "azurefunctions", "function", "functions"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-functions.md",
-    "serviceGuideFile": "./Guides/azure-functions.json"
+    "serviceGuideFile": "../Guides/azure-functions.json"
   },
   "azure-kubernetes-service": {
     "serviceNameVariationsNormalized": ["aks", "azurek8s", "azurekubernetes", "azurekubernetesservice", "k8s", "kubernetes"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-kubernetes-service.md",
-    "serviceGuideFile": "./Guides/azure-kubernetes-service.json"
+    "serviceGuideFile": "../Guides/azure-kubernetes-service.json"
   },
   "azure-load-balancer": {
     "serviceNameVariationsNormalized": ["alb", "azurelb", "azureloadbalancer", "lb", "loadbalancer"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-load-balancer.md",
-    "serviceGuideFile": "./Guides/azure-load-balancer.json"
+    "serviceGuideFile": "../Guides/azure-load-balancer.json"
   },
   "azure-local": {
     "serviceNameVariationsNormalized": ["azurelocal", "azurestackhci", "hci", "local", "stackhci"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-local.md",
-    "serviceGuideFile": "./Guides/azure-local.json"
+    "serviceGuideFile": "../Guides/azure-local.json"
   },
   "azure-log-analytics": {
     "serviceNameVariationsNormalized": ["azureloganalytics", "azurelogs", "loganalytics", "logs"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-log-analytics.md",
-    "serviceGuideFile": "./Guides/azure-log-analytics.json"
+    "serviceGuideFile": "../Guides/azure-log-analytics.json"
   },
   "azure-machine-learning": {
     "serviceNameVariationsNormalized": ["aml", "azureaml", "azuremachinelearning", "machinelearning", "ml"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-machine-learning.md",
-    "serviceGuideFile": "./Guides/azure-machine-learning.json"
+    "serviceGuideFile": "../Guides/azure-machine-learning.json"
   },
   "azure-netapp-files": {
     "serviceNameVariationsNormalized": ["anf", "azureanf", "azurenetappfiles", "netapp", "netappfiles"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-netapp-files.md",
-    "serviceGuideFile": "./Guides/azure-netapp-files.json"
+    "serviceGuideFile": "../Guides/azure-netapp-files.json"
   },
   "azure-service-bus": {
     "serviceNameVariationsNormalized": ["asb", "azureasb", "azureservicebus", "servicebus"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-service-bus.md",
-    "serviceGuideFile": "./Guides/azure-service-bus.json"
+    "serviceGuideFile": "../Guides/azure-service-bus.json"
   },
   "azure-service-fabric": {
     "serviceNameVariationsNormalized": ["asf", "azureasf", "azureservicefabric", "servicefabric"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-service-fabric.md",
-    "serviceGuideFile": "./Guides/azure-service-fabric.json"
+    "serviceGuideFile": "../Guides/azure-service-fabric.json"
   },
   "azure-sql-database": {
     "serviceNameVariationsNormalized": ["azuresql", "azuresqldatabase", "sql", "sqldatabase", "sqldb"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-sql-database.md",
-    "serviceGuideFile": "./Guides/azure-sql-database.json"
+    "serviceGuideFile": "../Guides/azure-sql-database.json"
   },
   "azure-traffic-manager": {
     "serviceNameVariationsNormalized": ["azuretm", "azuretrafficmanager", "tm", "trafficmanager"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-traffic-manager.md",
-    "serviceGuideFile": "./Guides/azure-traffic-manager.json"
+    "serviceGuideFile": "../Guides/azure-traffic-manager.json"
   },
   "virtual-machines": {
     "serviceNameVariationsNormalized": ["azurevirtualmachines", "azurevm", "azurevms", "virtualmachines", "vm", "vms"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/virtual-machines.md",
-    "serviceGuideFile": "./Guides/virtual-machines.json"
+    "serviceGuideFile": "../Guides/virtual-machines.json"
   },
   "virtual-network": {
     "serviceNameVariationsNormalized": ["azurevirtualnetwork", "azurevnet", "azurevnets", "network", "virtualnetwork", "vnet", "vnets"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/virtual-network.md",
-    "serviceGuideFile": "./Guides/virtual-network.json"
+    "serviceGuideFile": "../Guides/virtual-network.json"
   },
   "azure-virtual-wan": {
     "serviceNameVariationsNormalized": ["azurevirtualwan", "virtualwan", "vwan", "wan"],
     "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-virtual-wan.md",
-    "serviceGuideFile": "./Guides/azure-virtual-wan.json"
+    "serviceGuideFile": "../Guides/azure-virtual-wan.json"
   }
 }

@@ -1,0 +1,562 @@
+{
+  "$schema": "https://azure.microsoft.com/schemas/well-architected/service-guide.json",
+  "metadata": {
+    "sourceUrl": "https://github.com/MicrosoftDocs/well-architected/blob/main/well-architected/service-guides/virtual-machines.md",
+    "lastUpdated": "2025-11-21",
+    "version": "1.0",
+    "generatedDate": "2026-03-17T00:00:00Z"
+  },
+  "serviceInfo": {
+    "serviceName": "Azure Virtual Machines",
+    "description": "Azure Virtual Machines is a type of compute service that you can use to create and run virtual machines (VMs) on the Azure platform. It provides flexibility in different SKUs, operating systems, and configurations with various billing models.",
+    "technologyScope": [
+      "Virtual Machines",
+      "Azure Virtual Machine Scale Sets"
+    ],
+    "category": "compute"
+  },
+  "pillars": {
+    "reliability": {
+      "purpose": "Provide continued functionality by building enough resilience and the ability to recover fast from failures",
+      "designPrinciples": "https://learn.microsoft.com/azure/well-architected/resiliency/principles",
+      "designChecklist": [
+        {
+          "item": "Review Virtual Machines quotas and limits that might pose design restrictions",
+          "rationale": "VMs have specific limits and quotas, which vary based on the type of VM or the region. There might be subscription restrictions, such as the number of VMs per subscription or the number of cores per VM. If other workloads share your subscription, then your ability to consume data might be reduced."
+        },
+        {
+          "item": "Conduct a failure mode analysis to minimize points of failure",
+          "rationale": "Analyzing VM interactions with network and storage components helps choose configurations like ephemeral OS disks to localize disk access and avoid network hops. Adding a load balancer enhances self-preservation by distributing network traffic across multiple VMs."
+        },
+        {
+          "item": "Calculate your composite service-level objectives (SLOs) based on Azure service-level agreements (SLAs)",
+          "rationale": "Ensure that your SLO isn't higher than the Azure SLAs to avoid unrealistic expectations and potential problems. Factor in the critical dependencies of VMs on components like disks and networking components."
+        },
+        {
+          "item": "Create state isolation",
+          "rationale": "Workload data should be on a separate data disk to prevent interference with the OS disk. If a VM fails, you can create a new OS disk with the same data disk, which ensures resilience and fault isolation."
+        },
+        {
+          "item": "Make VMs and their dependencies redundant across zones",
+          "rationale": "If a VM fails, the workload should continue to function because of redundancy. Include dependencies in your redundancy choices. Avoid workload designs that depend on a single VM.",
+          "examples": [
+            {
+              "scenario": "Zone-redundant deployment",
+              "details": "Use built-in redundancy options available with disks and zone-redundant IP addresses to ensure data availability and high uptime"
+            }
+          ]
+        },
+        {
+          "item": "Be ready to scale up and scale out to prevent service-level degradation",
+          "rationale": "Virtual Machine Scale Sets have autoscale capabilities that create new instances as required and distribute the load across multiple VMs and availability zones."
+        },
+        {
+          "item": "Explore automatic recovery options",
+          "rationale": "Azure supports health degradation monitoring and self-healing features for VMs. Scale sets provide automatic instance repairs. In more advanced scenarios, self-healing involves using Azure Site Recovery or redeploying from infrastructure as code (IaC)."
+        },
+        {
+          "item": "Rightsize the VMs and their dependencies",
+          "rationale": "Understand your VM's expected work to ensure that it's not undersized and can handle the maximum load. Have extra capacity to mitigate failures."
+        },
+        {
+          "item": "Ensure always-on VMs stay running",
+          "rationale": "Use a ReadOnly resource lock to prevent accidental stopping of the VM. This will not prevent the OS from rebooting if needed for updates, but will prevent operator error."
+        },
+        {
+          "item": "Create a comprehensive disaster recovery plan",
+          "rationale": "Disaster preparedness involves creating a comprehensive plan and deciding on a technology for recovery. Dependencies and stateful components, such as attached storage, can complicate recovery."
+        },
+        {
+          "item": "Distribute applications across VMs",
+          "rationale": "In an N-tier workload, don't put applications or storage services from different tiers on the same VMs. Design your workload with a single responsibility principal in mind."
+        },
+        {
+          "item": "Run operations with rigor",
+          "rationale": "Reliability design choices must be supported by effective operations based on the principles of monitoring, resiliency testing in production, automated application VM patches and upgrades, and consistency of deployments."
+        }
+      ],
+      "configurationRecommendations": [
+        {
+          "recommendation": "Use Virtual Machine Scale Sets in Flexible orchestration mode to deploy VMs",
+          "benefit": "Future-proof your application for scaling and take advantage of the high availability guarantees that spread VMs across fault domains in a region or an availability zone",
+          "applicability": "Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Implement health endpoints that emit instance health statuses on VMs and enable automatic repairs on scale sets",
+          "benefit": "Maintain availability even if an instance is deemed unhealthy. Automatic repairs initiate recovery by replacing the faulty instance",
+          "applicability": "VMs, Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Enable overprovisioning on scale sets",
+          "benefit": "Overprovisioning reduces deployment times and has a cost benefit because the extra VMs aren't billed",
+          "applicability": "Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Preallocate instances with standby pools",
+          "benefit": "Standby pool instances remain dormant but are ready to take over workloads if a failure occurs, enhancing the system's reliability",
+          "applicability": "Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Allow Flexible orchestration to spread the VM instances across as many fault domains as possible",
+          "benefit": "This option isolates fault domains. During maintenance periods, when one fault domain is updated, VM instances are available in the other fault domains",
+          "applicability": "Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Deploy across availability zones on scale sets with at least two instances in each zone",
+          "benefit": "The VM instances are provisioned in physically separate locations within each Azure region that are tolerant to local failures. Zone balancing ensures sufficient instances if one zone is down",
+          "applicability": "Scale set",
+          "priority": "critical"
+        },
+        {
+          "recommendation": "Enable MaxSurge to enhance service uptime during upgrades",
+          "benefit": "New instances are created in batches using the latest scale model. After the new instances are healthy, old instances are deleted in batches, ensuring no downtime during updates",
+          "applicability": "Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Protect VMs that cannot be easily rebuilt from IaC with Azure Backup Instant Restore",
+          "benefit": "Having virtual machine snapshots in an Azure Recovery Services vault allows you implement your RPO requirements to recover state on disks attached to a faulted VM",
+          "applicability": "VMs",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Take advantage of the capacity reservations feature",
+          "benefit": "Capacity is reserved for your use and is available within the scope of the applicable SLAs. You can delete capacity reservations when you no longer need them",
+          "applicability": "VMs",
+          "priority": "medium"
+        }
+      ]
+    },
+    "security": {
+      "purpose": "Provide confidentiality, integrity, and availability guarantees to the workload",
+      "designPrinciples": "https://learn.microsoft.com/azure/well-architected/security/security-principles",
+      "designChecklist": [
+        {
+          "item": "Review the security baselines for Linux and Windows VMs and Virtual Machine Scale Sets",
+          "rationale": "As part of your baseline technology choices, consider the security features of the VM SKUs that support your workload."
+        },
+        {
+          "item": "Ensure timely and automated security patching and upgrades",
+          "rationale": "Make sure updates are automatically rolled out and validated by using a well-defined process. Use solutions like Azure Automation to manage OS updates and maintain security compliance."
+        },
+        {
+          "item": "Identify the VMs that hold state and classify data according to sensitivity",
+          "rationale": "Protect data by using security controls like appropriate levels of at-rest and in-transit encryption. If you have high sensitivity requirements, consider using high-security controls like double encryption and Azure confidential computing."
+        },
+        {
+          "item": "Provide segmentation to the VMs and scale sets by setting network boundaries",
+          "rationale": "Place VMs in resource groups that share the same lifecycle and set network boundaries and access controls."
+        },
+        {
+          "item": "Apply access controls to the identities that try to reach the VMs",
+          "rationale": "Use Microsoft Entra ID for authentication and authorization needs. Put strong passwords, multifactor authentication, and role-based access control (RBAC) in place for your VMs and their dependencies."
+        },
+        {
+          "item": "Use network controls to restrict ingress and egress traffic",
+          "rationale": "Isolate VMs and scale sets in Azure Virtual Network and define network security groups to filter traffic. Protect against DDoS attacks. Use Azure Bastion for secure connectivity and private endpoints for communication with PaaS solutions."
+        },
+        {
+          "item": "Reduce the attack surface by hardening OS images",
+          "rationale": "Use smaller images and remove binaries that aren't required to run the workload. Tighten the VM configurations by removing features, like default accounts and ports, that you don't need."
+        },
+        {
+          "item": "Protect secrets such as certificates",
+          "rationale": "Consider using the Azure Key Vault extension for Windows or Linux that automatically refreshes the certificates stored in a key vault."
+        },
+        {
+          "item": "Implement threat detection",
+          "rationale": "Monitor VMs for threats and misconfigurations. Use Defender for Servers to capture VM and OS changes, and maintain an audit trail of access, new accounts, and changes in permissions."
+        },
+        {
+          "item": "Implement threat prevention",
+          "rationale": "Protect against malware attacks and malicious actors by implementing security controls like firewalls, antivirus software, and intrusion detection systems."
+        }
+      ],
+      "configurationRecommendations": [
+        {
+          "recommendation": "Assign a managed identity to scale sets and individual VMs",
+          "benefit": "When VMs communicate with other resources, they cross a trust boundary. Microsoft Entra ID handles authentication by using managed identities",
+          "applicability": "VMs, Scale set",
+          "priority": "critical"
+        },
+        {
+          "recommendation": "Choose VM SKUs that have security features like BitLocker encryption and confidential computing",
+          "benefit": "Azure-provided features are based on signals captured across many tenants and can protect resources better than custom controls. You can also use policies to enforce those controls",
+          "applicability": "VMs, Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Apply organization-recommended tags in the provisioned resources",
+          "benefit": "Tagging is a common way to segment and organize resources and can be crucial during incident management",
+          "applicability": "VMs, Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Set a security profile with security features like encryption at host",
+          "benefit": "The features in the security profile are automatically enabled when the VM is created",
+          "applicability": "VMs, Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Enable Trusted Launch on your Virtual Machines with secure boot and vTPM",
+          "benefit": "Enhanced security through hardware-based security capabilities that can be retrofitted to existing infrastructure without service disruption",
+          "applicability": "VMs, Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machines/trusted-launch"
+        },
+        {
+          "recommendation": "Choose secure networking options - don't directly associate public IP addresses to your VMs and don't enable IP forwarding",
+          "benefit": "Attackers scan public IP addresses. This activity makes VMs vulnerable to threats. Segmentation controls help prevent unauthorized access",
+          "applicability": "VMs",
+          "priority": "critical"
+        },
+        {
+          "recommendation": "Choose secure storage options - enable disk encryption and data-at-rest encryption by default, disable public network access to VM disks",
+          "benefit": "Disabling public network access helps prevent unauthorized access to your data and resources",
+          "applicability": "VMs",
+          "priority": "critical"
+        },
+        {
+          "recommendation": "Include extensions in your VMs that protect against threats (Key Vault, Microsoft Entra ID, Antimalware, Disk Encryption)",
+          "benefit": "The extensions are used to bootstrap the VMs with the right software that protects access to and from the VMs. Microsoft-provided extensions are updated frequently",
+          "applicability": "VMs, Scale set",
+          "priority": "high"
+        }
+      ]
+    },
+    "costOptimization": {
+      "purpose": "Detect spend patterns, prioritize investments in critical areas, and optimize in others to meet the organization's budget while meeting business requirements",
+      "designPrinciples": "https://learn.microsoft.com/azure/well-architected/cost-optimization/principles",
+      "designChecklist": [
+        {
+          "item": "Estimate realistic costs using the pricing calculator",
+          "rationale": "Identify the best VM for your workload by using the VM selector to understand the costs of your VMs."
+        },
+        {
+          "item": "Implement cost guardrails",
+          "rationale": "Use governance policies to restrict resource types, configurations, and locations. Use RBAC to block actions that can lead to overspending."
+        },
+        {
+          "item": "Choose the right resources based on workload characteristics",
+          "rationale": "Your selection of VM plan sizes and SKUs directly affects the overall cost. Choose VMs based on workload characteristics like CPU intensive or interruptible processes."
+        },
+        {
+          "item": "Choose the right capabilities for dependent resources",
+          "rationale": "Save on backup storage costs with reserved capacity. Consider using zone-to-zone disaster recovery for VMs to reduce complexity and costs."
+        },
+        {
+          "item": "Choose the right billing model",
+          "rationale": "Evaluate whether commitment-based models for computing optimize costs based on business requirements. Consider Azure reservations, savings plans, and Azure Hybrid Benefit.",
+          "examples": [
+            {
+              "scenario": "Azure reservations",
+              "details": "Prepay for predictable workloads to reduce costs compared to consumption-based pricing"
+            },
+            {
+              "scenario": "Savings plan",
+              "details": "Commit to spend a fixed hourly amount on compute services for one or three years to reduce costs"
+            },
+            {
+              "scenario": "Azure Hybrid Benefit",
+              "details": "Save when you migrate your on-premises VMs to Azure"
+            }
+          ]
+        },
+        {
+          "item": "Monitor usage continuously",
+          "rationale": "Detect unused or underutilized VMs. For those instances, shut down VM instances when they're not in use."
+        },
+        {
+          "item": "Look for ways to optimize",
+          "rationale": "Choose the most cost-effective approach between scaling up (increasing resources) and scaling out (adding more instances). Offload demand by distributing it or reduce demand by implementing priority queues, gateway offloading, buffering, and rate limiting."
+        }
+      ],
+      "configurationRecommendations": [
+        {
+          "recommendation": "Choose the right VM plan size and SKU - consider Azure Spot Virtual Machines for interruptible workloads",
+          "benefit": "SKUs are priced according to the capabilities they offer. Spot virtual machines take advantage of surplus capacity in Azure at a lower cost",
+          "applicability": "VMs, Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machines/sizes"
+        },
+        {
+          "recommendation": "Mix regular VMs with spot virtual machines using Flexible orchestration and use Spot Placement Score",
+          "benefit": "Reduce compute infrastructure costs by applying the deep discounts of spot virtual machines. Spot Placement Score can help improve success rate",
+          "applicability": "Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Set a scale-in policy based on criteria to reduce VM instances when demand decreases",
+          "benefit": "Scaling in resources when they're not in use reduces the number of VMs that run in the scale set, which saves costs",
+          "applicability": "Scale set",
+          "priority": "high"
+        },
+        {
+          "recommendation": "Stop VMs during off-hours using Azure Automation Start/Stop feature",
+          "benefit": "The Start/Stop feature is a low-cost automation option that can significantly affect your idle instance costs",
+          "applicability": "VMs",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Free up CPU resources by using Azure Boost",
+          "benefit": "Offloading back-end virtualization processes frees up CPU resources for guest virtual machines, resulting in improved performance",
+          "applicability": "VMs",
+          "priority": "medium",
+          "documentationUrl": "https://learn.microsoft.com/azure/azure-boost/overview"
+        },
+        {
+          "recommendation": "Take advantage of license mobility by using Azure Hybrid Benefit for Windows Server OS licenses and certain Linux subscriptions",
+          "benefit": "You can maximize your on-premises licenses while getting the benefits of the cloud",
+          "applicability": "VMs, Scale set",
+          "priority": "high"
+        }
+      ]
+    },
+    "operationalExcellence": {
+      "purpose": "Focus on procedures for development practices, observability, and release management",
+      "designPrinciples": "https://learn.microsoft.com/azure/well-architected/operational-excellence/principles",
+      "designChecklist": [
+        {
+          "item": "Monitor the VM instances",
+          "rationale": "Collect logs and metrics from VM instances to monitor resource usage and measure the health of the instances. Set up Azure Monitor alerts to be notified about problems and to detect configuration changes."
+        },
+        {
+          "item": "Monitor the health of the VMs and their dependencies",
+          "rationale": "Deploy monitoring components to collect logs and metrics. Virtual Machine Scale Sets roll up telemetry for comprehensive views. Take advantage of networking components like Azure Load Balancer that check health status."
+        },
+        {
+          "item": "Create a maintenance plan that includes regular system patching",
+          "rationale": "Include emergency processes that allow for immediate patch application. Azure provides features for individual VM maintenance with maintenance windows to minimize disruptions."
+        },
+        {
+          "item": "Automate processes for bootstrapping, running scripts, and configuring VMs",
+          "rationale": "Use extensions or custom scripts to automate processes. Consider Key Vault VM extension, Azure Custom Script Extension, and cloud-init for Linux VMs."
+        },
+        {
+          "item": "Have processes for installing automatic updates",
+          "rationale": "Consider using Automatic VM guest patching for timely rollout of critical patches. Use Azure Update Manager to manage OS updates."
+        },
+        {
+          "item": "Build a test environment that closely matches production",
+          "rationale": "Test updates and changes before deploying to production. Have processes to test security updates, performance baselines, and reliability faults. Use Azure Chaos Studio for fault injection."
+        },
+        {
+          "item": "Manage your quota",
+          "rationale": "Plan what level of quota your workload requires and review regularly as the workload evolves. Request changes early if needed."
+        }
+      ],
+      "configurationRecommendations": [
+        {
+          "recommendation": "Use Virtual Machine Scale Sets in Flexible orchestration mode to simplify deployment and management",
+          "benefit": "Flexible orchestration can manage VM instances at scale. You can use standard VM APIs, spread across multiple fault domains, and manage both Linux and Windows VMs in the same scale set",
+          "applicability": "Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-orchestration-modes"
+        },
+        {
+          "recommendation": "Attach or detach single instance VMs to/from Virtual Machine Scale Sets in Flexible orchestration mode",
+          "benefit": "Attaching enables centralized control over updates, scaling, and monitoring. Detaching lets you isolate a VM for troubleshooting without disrupting the scale set",
+          "applicability": "Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Keep your VMs up to date by setting an upgrade policy - recommend rolling upgrades for scale sets",
+          "benefit": "Security is the primary reason for upgrades. Rolling upgrades are done in batches ensuring all instances aren't down at the same time",
+          "applicability": "Scale set",
+          "priority": "critical"
+        },
+        {
+          "recommendation": "Automatically deploy VM applications from the Azure Compute Gallery by defining applications in the profile",
+          "benefit": "The VMs in the scale set are created and the specified apps are preinstalled, making management easier",
+          "applicability": "VMs, Scale set",
+          "priority": "medium"
+        },
+        {
+          "recommendation": "Install prebuilt software components as extensions and enable automatic upgrades on extensions",
+          "benefit": "Extensions can help simplify the software installation at scale without manually installing, configuring, or upgrading on each VM",
+          "applicability": "VMs, Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machines/extensions/overview"
+        },
+        {
+          "recommendation": "Deploy the Monitor agent extension to VMs with data collection rules, enable VM insights, and use boot diagnostics",
+          "benefit": "Monitoring data is at the core of incident resolution. Comprehensive monitoring provides information about VM performance and health for proactive failure prevention",
+          "applicability": "VMs, Scale set",
+          "priority": "critical",
+          "documentationUrl": "https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview"
+        }
+      ]
+    },
+    "performanceEfficiency": {
+      "purpose": "Maintain user experience even when there's an increase in load by managing capacity",
+      "designPrinciples": "https://learn.microsoft.com/azure/well-architected/performance-efficiency/principles",
+      "designChecklist": [
+        {
+          "item": "Define performance targets",
+          "rationale": "Identify VM metrics to track and measure against performance indicators such as response time, CPU utilization, memory utilization, transactions per second, concurrent users, availability and health."
+        },
+        {
+          "item": "Factor in the performance profile of VMs, scale sets, and disk configuration in capacity planning",
+          "rationale": "Each SKU has a different profile of memory and CPU and behaves differently depending on the type of workload. Conduct pilots and proofs of concept to understand performance behavior."
+        },
+        {
+          "item": "VM performance tuning",
+          "rationale": "Take advantage of performance optimization features. Use locally attached NVMe for high performance, accelerated networking, and Premium SSD v2 for better performance and scalability."
+        },
+        {
+          "item": "Take the dependent services into account",
+          "rationale": "Workload dependencies like caching, network traffic, and content delivery networks that interact with VMs can affect performance. Consider geographical distribution which can add latency."
+        },
+        {
+          "item": "Collect performance data",
+          "rationale": "Follow operational excellence best practices for monitoring and deploy appropriate extensions to view metrics that track against performance indicators."
+        },
+        {
+          "item": "Use proximity placement groups for low-latency workloads",
+          "rationale": "Ensure that VMs are physically located close to each other in workloads where low latency is required."
+        }
+      ],
+      "configurationRecommendations": [
+        {
+          "recommendation": "Choose SKUs for VMs that align with your capacity planning based on workload requirements",
+          "benefit": "Rightsizing VMs is fundamental for performance. Without appropriately sized VMs, you might experience performance problems or accrue unnecessary costs",
+          "applicability": "VMs, Scale set",
+          "priority": "critical",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machines/sizes"
+        },
+        {
+          "recommendation": "Deploy latency-sensitive workload VMs in proximity placement groups",
+          "benefit": "Proximity placement groups reduce physical distance between Azure compute resources, improving performance and reducing network latency",
+          "applicability": "VMs, Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machine-scale-sets/proximity-placement-groups"
+        },
+        {
+          "recommendation": "Consider enabling accelerated networking",
+          "benefit": "Enables single root I/O virtualization (SR-IOV) to a VM, which greatly improves its networking performance",
+          "applicability": "VMs",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-network/accelerated-networking-overview"
+        },
+        {
+          "recommendation": "Set autoscale rules to increase or decrease VM instances based on demand",
+          "benefit": "If application demand increases, autoscale rules ensure you have enough resources to meet the demand",
+          "applicability": "Scale set",
+          "priority": "high",
+          "documentationUrl": "https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-autoscale-portal"
+        }
+      ]
+    }
+  },
+  "azurePolicies": {
+    "overview": "Azure provides an extensive set of built-in policies related to Virtual Machines and its dependencies to ensure compliance, security, and operational excellence.",
+    "policyCategories": [
+      {
+        "category": "Encryption",
+        "description": "Ensures that encryption is enabled at the host level to provide extra security for VM data",
+        "examples": [
+          "Encryption at host should be enabled for Virtual Machines"
+        ]
+      },
+      {
+        "category": "Security Extensions",
+        "description": "Verifies that anti-malware extensions are deployed on VMs running Windows Server and set for automatic updates",
+        "examples": [
+          "Microsoft Antimalware for Azure should be configured to automatically update protection signatures"
+        ]
+      },
+      {
+        "category": "Patching",
+        "description": "Checks that automatic OS image patching is enabled on scale sets to ensure VMs stay updated with security patches",
+        "examples": [
+          "Automatic OS image patching should be enabled on Virtual Machine Scale Sets"
+        ]
+      },
+      {
+        "category": "Extension Management",
+        "description": "Verifies that only approved extensions are installed on VMs to minimize risk of security vulnerabilities",
+        "examples": [
+          "Only approved VM extensions should be installed"
+        ]
+      },
+      {
+        "category": "Monitoring",
+        "description": "Ensures that the Monitor agent and dependency agents are enabled on all new VMs",
+        "examples": [
+          "Azure Monitor agent should be enabled for virtual machine scale sets",
+          "Dependency agent should be enabled for listed virtual machine images"
+        ]
+      },
+      {
+        "category": "Resource Compliance",
+        "description": "Confirms that only approved VM SKUs are deployed according to cost constraints and resource requirements",
+        "examples": [
+          "Allowed virtual machine size SKUs"
+        ]
+      },
+      {
+        "category": "Network Security",
+        "description": "Ensures that private endpoints are used to securely access disk resources",
+        "examples": [
+          "Disk access resources should use private link"
+        ]
+      },
+      {
+        "category": "Vulnerability Management",
+        "description": "Enables vulnerability detection for VMs with daily scans using Microsoft Defender Antivirus",
+        "examples": [
+          "Guest Attestation extension should be installed on supported Windows VMs",
+          "Microsoft Defender for Servers should be enabled"
+        ]
+      }
+    ],
+    "referenceUrl": "https://learn.microsoft.com/azure/virtual-machines/policy-reference"
+  },
+  "exampleArchitectures": [
+    {
+      "title": "Virtual Machines baseline architecture",
+      "description": "Foundational architecture that demonstrates the key recommendations for Azure Virtual Machines",
+      "url": "https://learn.microsoft.com/azure/architecture/virtual-machines/baseline",
+      "isFoundational": true
+    },
+    {
+      "title": "Linux VM architecture",
+      "description": "Single VM architecture example for Linux workloads",
+      "url": "https://learn.microsoft.com/azure/architecture/reference-architectures/n-tier/linux-vm",
+      "isFoundational": false
+    },
+    {
+      "title": "Windows VM architecture",
+      "description": "Single VM architecture example for Windows workloads",
+      "url": "https://learn.microsoft.com/azure/architecture/reference-architectures/n-tier/windows-vm",
+      "isFoundational": false
+    }
+  ],
+  "relatedResources": [
+    {
+      "title": "Virtual Machines Documentation",
+      "url": "https://learn.microsoft.com/azure/virtual-machines/",
+      "type": "documentation"
+    },
+    {
+      "title": "Virtual Machine Scale Sets Overview",
+      "url": "https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview",
+      "type": "documentation"
+    },
+    {
+      "title": "Azure Disk Storage Best Practices",
+      "url": "https://learn.microsoft.com/azure/well-architected/service-guides/azure-disk-storage",
+      "type": "best-practices"
+    },
+    {
+      "title": "Compute Decision Tree",
+      "url": "https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree",
+      "type": "reference-architecture"
+    }
+  ]
+}

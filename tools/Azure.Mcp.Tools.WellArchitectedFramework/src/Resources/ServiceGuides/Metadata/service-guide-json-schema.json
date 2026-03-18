@@ -1,0 +1,295 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://azure.microsoft.com/schemas/well-architected/service-guide.json",
+  "title": "Azure Well-Architected Framework Service Guide",
+  "description": "JSON Schema for Azure Well-Architected Framework service guides, capturing architectural recommendations across the five pillars for AI agent consumption and cross-service analysis",
+  "type": "object",
+  "required": ["metadata", "serviceInfo", "pillars"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "description": "Document provenance and versioning information",
+      "type": "object",
+      "required": ["sourceUrl", "lastUpdated", "version"],
+      "properties": {
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the source markdown file in the well-architected repository"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when the service guide was last updated (ISO 8601 format)"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version identifier for the service guide document",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "generatedDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this JSON document was generated"
+        }
+      }
+    },
+    "serviceInfo": {
+      "description": "Core information about the Azure service",
+      "type": "object",
+      "required": ["serviceName", "description"],
+      "properties": {
+        "serviceName": {
+          "type": "string",
+          "description": "Official name of the Azure service",
+          "examples": ["Azure Kubernetes Service", "Azure SQL Database", "Azure Cosmos DB"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief overview of what the service provides"
+        },
+        "technologyScope": {
+          "type": "array",
+          "description": "List of Azure resources covered in this guide",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["Azure Kubernetes Service", "AKS clusters"]]
+        },
+        "category": {
+          "type": "string",
+          "description": "Azure service category",
+          "enum": ["compute", "storage", "databases", "networking", "containers", "analytics", "ai-ml", "integration", "security", "monitoring", "web-mobile"]
+        }
+      }
+    },
+    "pillars": {
+      "description": "Well-Architected Framework pillars with service-specific guidance",
+      "type": "object",
+      "required": ["reliability", "security", "costOptimization", "operationalExcellence", "performanceEfficiency"],
+      "properties": {
+        "reliability": {
+          "$ref": "#/definitions/pillar",
+          "description": "Guidance for building resilience and recovering from failures"
+        },
+        "security": {
+          "$ref": "#/definitions/pillar",
+          "description": "Guidance for confidentiality, integrity, and availability"
+        },
+        "costOptimization": {
+          "$ref": "#/definitions/pillar",
+          "description": "Guidance for managing costs while meeting business requirements"
+        },
+        "operationalExcellence": {
+          "$ref": "#/definitions/pillar",
+          "description": "Guidance for development practices, observability, and release management"
+        },
+        "performanceEfficiency": {
+          "$ref": "#/definitions/pillar",
+          "description": "Guidance for maintaining user experience under increased load"
+        }
+      }
+    },
+    "tradeoffs": {
+      "description": "Design tradeoffs and their implications across pillars",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "description"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Name of the tradeoff scenario"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed explanation of the tradeoff, advantages, and disadvantages"
+          },
+          "affectedPillars": {
+            "type": "array",
+            "description": "Pillars impacted by this tradeoff",
+            "items": {
+              "type": "string",
+              "enum": ["reliability", "security", "costOptimization", "operationalExcellence", "performanceEfficiency"]
+            }
+          }
+        }
+      }
+    },
+    "azurePolicies": {
+      "description": "Azure Policy information for governance and compliance",
+      "type": "object",
+      "properties": {
+        "overview": {
+          "type": "string",
+          "description": "Summary of available built-in policies for this service"
+        },
+        "policies": {
+          "type": "array",
+          "description": "Categories of policies applicable to this service",
+          "items": {
+            "type": "object",
+            "required": ["category",  "policy", "description"],
+            "properties": {
+              "category": {
+                "type": "string",
+                "description": "Policy category name"
+              },
+              "policy": {
+                "type": "string",
+                "description": "Policy definition"
+              },
+              "description": {
+                "type": "string",
+                "description": "What this category of policies enforces or audits"
+              }
+            }
+          }
+        },
+        "referenceUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Link to Azure Policy built-in definitions for this service"
+        }
+      }
+    },
+    "exampleArchitectures": {
+      "description": "Reference architectures demonstrating best practices",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Name of the reference architecture"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief overview of what the architecture demonstrates"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link to the architectural documentation"
+          },
+          "isFoundational": {
+            "type": "boolean",
+            "description": "Whether this is a baseline/foundational architecture",
+            "default": false
+          }
+        }
+      }
+    },
+    "relatedResources": {
+      "description": "Additional documentation and learning resources",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Resource title"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link to the resource"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of resource",
+            "enum": ["documentation", "tutorial", "reference-architecture", "best-practices", "learn-module", "video", "sample-code"]
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "pillar": {
+      "type": "object",
+      "required": ["purpose", "designChecklist", "configurationRecommendations"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "description": "High-level goal this pillar achieves for the service"
+        },
+        "designChecklist": {
+          "description": "Strategic design considerations and approaches",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["item"],
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "Design checklist item or recommendation"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Explanation of why this is important"
+              },
+              "examples": {
+                "type": "array",
+                "description": "Concrete examples or failure scenarios",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "scenario": {
+                      "type": "string",
+                      "description": "Example scenario or use case"
+                    },
+                    "details": {
+                      "type": "string",
+                      "description": "Additional context or implementation details"
+                    }
+                  }
+                }
+              },
+              "relatedPatterns": {
+                "type": "array",
+                "description": "Design patterns or architectural patterns referenced",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "configurationRecommendations": {
+          "description": "Tactical, actionable configuration steps",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["recommendation", "benefit"],
+            "properties": {
+              "recommendation": {
+                "type": "string",
+                "description": "Specific configuration action to take"
+              },
+              "benefit": {
+                "type": "string",
+                "description": "What this configuration achieves or improves"
+              },
+              "applicability": {
+                "type": "string",
+                "description": "Scope of where this applies (e.g., 'VMs', 'Scale set', 'Cluster')"
+              },
+              "priority": {
+                "type": "string",
+                "description": "Implementation priority",
+                "enum": ["critical", "high", "medium", "low"]
+              },
+              "documentationUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "Link to detailed documentation for implementing this recommendation"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
