@@ -215,7 +215,6 @@ public static class ServiceCollectionExtensions
             {
                 var configuration = serverConfiguration.Value;
 
-                mcpServerOptions.ProtocolVersion = "2024-11-05";
                 mcpServerOptions.ServerInfo = new Implementation
                 {
                     Name = configuration.DisplayName,

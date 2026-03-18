@@ -180,7 +180,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify server options are configured
         Assert.NotNull(mcpServerOptions);
-        Assert.Equal("2024-11-05", mcpServerOptions.ProtocolVersion);
+        Assert.Null(mcpServerOptions.ProtocolVersion);
         Assert.NotNull(mcpServerOptions.ServerInfo);
         Assert.NotNull(mcpServerOptions.Handlers);
         Assert.NotNull(mcpServerOptions.Handlers.ListToolsHandler);
