@@ -52,7 +52,9 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var bestPractices = GetBestPracticesText();
+        context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
+        context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }
 }

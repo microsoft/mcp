@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Extensions;
@@ -105,7 +106,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var resourceFileName = GetResourceFileName(options.Resource!, options.Action!);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);
             context.Activity?.AddTag("BestPractices_Action", options.Action);

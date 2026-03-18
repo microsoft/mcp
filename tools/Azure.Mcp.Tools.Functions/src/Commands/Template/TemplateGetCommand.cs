@@ -96,9 +96,11 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
                 // List mode: return all templates grouped by binding type
                 var templateList = await service.GetTemplateListAsync(options.Language!, cancellationToken);
 
+                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
                     new(TemplateList: templateList, FunctionTemplate: null),
                     FunctionsJsonContext.Default.TemplateGetCommandResult);
+                context.Response.Message = string.Empty;
             }
             else
             {
@@ -106,9 +108,11 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
                 var functionTemplate = await service.GetFunctionTemplateAsync(
                     options.Language!, options.Template, options.RuntimeVersion, cancellationToken);
 
+                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
                     new(TemplateList: null, FunctionTemplate: functionTemplate),
                     FunctionsJsonContext.Default.TemplateGetCommandResult);
+                context.Response.Message = string.Empty;
             }
         }
         catch (Exception ex)

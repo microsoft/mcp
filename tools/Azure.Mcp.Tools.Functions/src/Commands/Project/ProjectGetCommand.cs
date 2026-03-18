@@ -82,9 +82,11 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
             var service = context.GetService<IFunctionsService>();
             var result = await service.GetProjectTemplateAsync(options.Language!, cancellationToken);
 
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(
                 [result],
                 FunctionsJsonContext.Default.ListProjectTemplateResult);
+            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

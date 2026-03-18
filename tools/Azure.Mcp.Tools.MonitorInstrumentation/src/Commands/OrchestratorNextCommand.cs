@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Tools.MonitorInstrumentation.Options;
 using Azure.Mcp.Tools.MonitorInstrumentation.Tools;
 using Microsoft.Extensions.Logging;
@@ -71,7 +72,9 @@ Returns: The next action to execute, or 'complete' status when all steps are don
             var tool = context.GetService<OrchestratorTool>();
             var result = tool.Next(options.SessionId!, options.CompletionNote!);
 
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Message = string.Empty;
         }
         catch (Exception ex)
         {

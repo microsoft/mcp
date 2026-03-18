@@ -83,7 +83,9 @@ After this call succeeds, continue with orchestrator_next as usual.";
                 findings.Sampling,
                 findings.TelemetryPipeline);
 
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Message = string.Empty;
         }
         catch (JsonException ex)
         {

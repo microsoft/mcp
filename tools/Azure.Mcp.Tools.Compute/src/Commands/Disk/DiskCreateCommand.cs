@@ -85,18 +85,18 @@ public sealed class DiskCreateCommand(
         command.Validators.Add(result =>
         {
             var source = result.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
-            var sizeGb = result.GetValueOrDefault<int?>(ComputeOptionDefinitions.SizeGb.Name);
+            var sizeGb = result.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
             var galleryImageReference = result.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
             var uploadType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
-            var uploadSizeBytes = result.GetValueOrDefault<long?>(ComputeOptionDefinitions.UploadSizeBytes.Name);
+            var uploadSizeBytes = result.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
             var securityType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
 
-            if (string.IsNullOrEmpty(source) && !sizeGb.HasValue && string.IsNullOrEmpty(galleryImageReference) && string.IsNullOrEmpty(uploadType))
+            if (string.IsNullOrEmpty(source) && sizeGb <= 0 && string.IsNullOrEmpty(galleryImageReference) && string.IsNullOrEmpty(uploadType))
             {
                 result.AddError("Either --source, --size-gb, --gallery-image-reference, or --upload-type must be specified.");
             }
 
-            if (!string.IsNullOrEmpty(uploadType) && !uploadSizeBytes.HasValue)
+            if (!string.IsNullOrEmpty(uploadType) && uploadSizeBytes <= 0)
             {
                 result.AddError("--upload-size-bytes is required when --upload-type is specified.");
             }
