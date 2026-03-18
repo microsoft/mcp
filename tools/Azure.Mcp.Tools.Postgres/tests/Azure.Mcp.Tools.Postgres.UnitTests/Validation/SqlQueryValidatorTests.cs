@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Postgres.Validation;
 using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Tools.Postgres.Validation;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Validation;
