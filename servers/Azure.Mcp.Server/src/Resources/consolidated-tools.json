@@ -68,8 +68,8 @@
       ]
     },
     {
-      "name": "get_azure_functions_template_info",
-      "description": "Get Azure Functions project templates, supported languages, and template source code for bootstrapping new Azure Functions projects.",
+      "name": "get_azure_functions_info",
+      "description": "Get Azure Functions project samples and templates, supported languages, and source code for bootstrapping new Azure Functions projects.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -81,7 +81,7 @@
         },
         "openWorld": {
           "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions templates."
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions samples and templates."
         },
         "readOnly": {
           "value": true,

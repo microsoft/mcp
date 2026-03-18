@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Functions.Models;
 
 /// <summary>
@@ -11,12 +9,9 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// </summary>
 public sealed class LanguageListResult
 {
-    [JsonPropertyName("functionsRuntimeVersion")]
     public required string FunctionsRuntimeVersion { get; init; }
 
-    [JsonPropertyName("extensionBundleVersion")]
     public required string ExtensionBundleVersion { get; init; }
 
-    [JsonPropertyName("languages")]
     public required IReadOnlyList<LanguageDetails> Languages { get; init; }
 }

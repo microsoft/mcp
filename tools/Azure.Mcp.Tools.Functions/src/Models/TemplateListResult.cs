@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Functions.Models;
 
 /// <summary>
@@ -11,15 +9,11 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// </summary>
 public sealed class TemplateListResult
 {
-    [JsonPropertyName("language")]
     public required string Language { get; init; }
 
-    [JsonPropertyName("triggers")]
     public IReadOnlyList<TemplateSummary> Triggers { get; init; } = [];
 
-    [JsonPropertyName("inputBindings")]
     public IReadOnlyList<TemplateSummary> InputBindings { get; init; } = [];
 
-    [JsonPropertyName("outputBindings")]
     public IReadOnlyList<TemplateSummary> OutputBindings { get; init; } = [];
 }

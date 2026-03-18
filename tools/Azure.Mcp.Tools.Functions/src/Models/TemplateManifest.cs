@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Functions.Models;
 
 /// <summary>
@@ -11,18 +9,19 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// </summary>
 public sealed class TemplateManifest
 {
-    [JsonPropertyName("generatedAt")]
     public string? GeneratedAt { get; init; }
 
-    [JsonPropertyName("version")]
     public string? Version { get; init; }
 
-    [JsonPropertyName("totalTemplates")]
     public int TotalTemplates { get; init; }
 
-    [JsonPropertyName("languages")]
     public IReadOnlyList<string> Languages { get; init; } = [];
 
-    [JsonPropertyName("templates")]
     public IReadOnlyList<TemplateManifestEntry> Templates { get; init; } = [];
+
+    /// <summary>
+    /// Runtime version information for each supported language.
+    /// Keys are language names (e.g., "Python", "JavaScript", "TypeScript", "Java", "CSharp", "PowerShell").
+    /// </summary>
+    public IReadOnlyDictionary<string, RuntimeVersionInfo>? RuntimeVersions { get; init; }
 }

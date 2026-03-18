@@ -182,12 +182,29 @@ public sealed class LanguageListCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange - use the real service to verify actual data shape
-        // GetLanguageListAsync uses only static data, no HTTP calls needed
+        // GetLanguageListAsync now fetches manifest for runtime versions
         var mockHttpClientFactory = Substitute.For<IHttpClientFactory>();
         var languageMetadata = new LanguageMetadataProvider();
         var mockManifestService = Substitute.For<IManifestService>();
         var mockLogger = Substitute.For<ILogger<FunctionsService>>();
-        var realService = new FunctionsService(mockHttpClientFactory, languageMetadata, mockManifestService, mockLogger);
+
+        // Set up manifest with runtime versions
+        var manifest = new TemplateManifest
+        {
+            RuntimeVersions = new Dictionary<string, RuntimeVersionInfo>
+            {
+                ["Python"] = new RuntimeVersionInfo { Supported = ["3.10", "3.11", "3.12", "3.13"], Preview = ["3.14"], Default = "3.11" },
+                ["TypeScript"] = new RuntimeVersionInfo { Supported = ["20", "22"], Preview = ["24"], Default = "22" },
+                ["JavaScript"] = new RuntimeVersionInfo { Supported = ["20", "22"], Preview = ["24"], Default = "22" },
+                ["Java"] = new RuntimeVersionInfo { Supported = ["8", "11", "17", "21"], Preview = ["25"], Default = "21" },
+                ["CSharp"] = new RuntimeVersionInfo { Supported = ["8", "9", "10"], FrameworkSupported = ["4.8.1"], Default = "8" },
+                ["PowerShell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" }
+            }
+        };
+        mockManifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+
+        var mockCacheService = Substitute.For<ICacheService>();
+        var realService = new FunctionsService(mockHttpClientFactory, languageMetadata, mockManifestService, mockCacheService, mockLogger);
         var realResult = await realService.GetLanguageListAsync(TestContext.Current.CancellationToken);
         _service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(realResult));
 

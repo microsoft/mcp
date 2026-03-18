@@ -34,17 +34,19 @@ public interface ILanguageMetadataProvider
     bool IsValidLanguage(string language);
 
     /// <summary>
-    /// Gets the language info for a specific language.
+    /// Gets the language info for a specific language, optionally applying manifest runtime versions.
     /// </summary>
     /// <param name="language">The language key (case-insensitive).</param>
+    /// <param name="manifestRuntimeVersions">Optional runtime versions from manifest to override defaults.</param>
     /// <returns>The language info or null if not found.</returns>
-    LanguageInfo? GetLanguageInfo(string language);
+    LanguageInfo? GetLanguageInfo(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null);
 
     /// <summary>
-    /// Gets all language info entries.
+    /// Gets all language info entries, optionally applying manifest runtime versions.
     /// </summary>
+    /// <param name="manifestRuntimeVersions">Optional runtime versions from manifest to override defaults.</param>
     /// <returns>All language info entries as key-value pairs.</returns>
-    IEnumerable<KeyValuePair<string, LanguageInfo>> GetAllLanguages();
+    IEnumerable<KeyValuePair<string, LanguageInfo>> GetAllLanguages(IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null);
 
     /// <summary>
     /// Gets the set of known project-level filenames (e.g., requirements.txt, package.json).
@@ -57,8 +59,9 @@ public interface ILanguageMetadataProvider
     /// </summary>
     /// <param name="language">The language (case-insensitive).</param>
     /// <param name="runtimeVersion">The runtime version to validate.</param>
+    /// <param name="manifestRuntimeVersions">Optional runtime versions from manifest to use for validation.</param>
     /// <exception cref="ArgumentException">Thrown if the runtime version is invalid.</exception>
-    void ValidateRuntimeVersion(string language, string runtimeVersion);
+    void ValidateRuntimeVersion(string language, string runtimeVersion, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null);
 
     /// <summary>
     /// Replaces runtime version placeholders in template content.

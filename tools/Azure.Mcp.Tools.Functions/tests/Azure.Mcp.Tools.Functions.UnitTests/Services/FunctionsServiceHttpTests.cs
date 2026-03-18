@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
@@ -42,7 +43,7 @@ public sealed class FunctionsServiceHttpTests
     }
 
     private FunctionsService CreateService(IHttpClientFactory httpClientFactory) =>
-        new(httpClientFactory, _languageMetadata, _manifestService, _logger);
+        new(httpClientFactory, _languageMetadata, _manifestService, _cacheService, _logger);
 
     private ManifestService CreateManifestService(IHttpClientFactory httpClientFactory)
     {
@@ -50,10 +51,10 @@ public sealed class FunctionsServiceHttpTests
         return new ManifestService(httpClientFactory, _cacheService, _functionsOptions, manifestLogger);
     }
 
-    private static TemplateManifestEntry CreateTestEntry(string language = "python", string folderPath = "templates/python/HttpTrigger") =>
+    private static TemplateManifestEntry CreateTestEntry(string language = "python", string folderPath = "templates/python/HttpTrigger", string id = "HttpTrigger") =>
         new()
         {
-            Id = "test-id",
+            Id = id,
             DisplayName = "Test Template",
             Language = language,
             RepositoryUrl = "https://github.com/Azure/templates",
@@ -72,7 +73,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "1.0",
             Templates = [CreateTestEntry()]
         };
-        var json = JsonSerializer.Serialize(manifest);
+        var json = JsonSerializer.Serialize(manifest, FunctionsJsonContext.Default.TemplateManifest);
         var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateManifestService(httpClientFactory);
@@ -150,7 +151,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fresh",
             Templates = [CreateTestEntry()]
         };
-        var json = JsonSerializer.Serialize(freshManifest);
+        var json = JsonSerializer.Serialize(freshManifest, FunctionsJsonContext.Default.TemplateManifest);
         var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
         var service = CreateManifestService(httpClientFactory);
@@ -173,7 +174,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fallback",
             Templates = [CreateTestEntry("fallback-lang")]
         };
-        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -202,7 +203,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "fallback-after-malformed",
             Templates = [CreateTestEntry()]
         };
-        var fallbackJson = JsonSerializer.Serialize(fallbackManifest);
+        var fallbackJson = JsonSerializer.Serialize(fallbackManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -251,7 +252,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "primary",
             Templates = [CreateTestEntry("primary-lang")]
         };
-        var primaryJson = JsonSerializer.Serialize(primaryManifest);
+        var primaryJson = JsonSerializer.Serialize(primaryManifest, FunctionsJsonContext.Default.TemplateManifest);
 
         var responses = new Dictionary<string, (string Content, HttpStatusCode Status)>
         {
@@ -268,67 +269,6 @@ public sealed class FunctionsServiceHttpTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("primary", result.Version);
-    }
-
-    #endregion
-
-    #region ListGitHubDirectoryAsync Tests
-
-    [Fact]
-    public async Task ListGitHubDirectoryAsync_ReturnsFiles_WhenGitHubReturnsValidJson()
-    {
-        // Arrange
-        var entries = new[]
-        {
-            new { name = "function.py", path = "templates/python/HttpTrigger/function.py", type = "file", size = 100, download_url = "https://raw.github.com/file.py" }
-        };
-        var json = JsonSerializer.Serialize(entries);
-        var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
-        var httpClientFactory = CreateHttpClientFactory(handler);
-        var service = CreateService(httpClientFactory);
-
-        // Act
-        var result = await service.ListGitHubDirectoryAsync(
-            "https://api.github.com/repos/Azure/test/contents/templates",
-            CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Single(result);
-    }
-
-    [Fact]
-    public async Task ListGitHubDirectoryAsync_ReturnsEmpty_WhenGitHubReturns404()
-    {
-        // Arrange
-        var handler = new MockHttpMessageHandler("Not Found", HttpStatusCode.NotFound);
-        var httpClientFactory = CreateHttpClientFactory(handler);
-        var service = CreateService(httpClientFactory);
-
-        // Act
-        var result = await service.ListGitHubDirectoryAsync(
-            "https://api.github.com/repos/Azure/test/contents/nonexistent",
-            CancellationToken.None);
-
-        // Assert
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public async Task ListGitHubDirectoryAsync_ReturnsEmpty_WhenJsonMalformed()
-    {
-        // Arrange
-        var handler = new MockHttpMessageHandler("{ not an array }", HttpStatusCode.OK);
-        var httpClientFactory = CreateHttpClientFactory(handler);
-        var service = CreateService(httpClientFactory);
-
-        // Act
-        var result = await service.ListGitHubDirectoryAsync(
-            "https://api.github.com/repos/Azure/test/contents/templates",
-            CancellationToken.None);
-
-        // Assert
-        Assert.Empty(result);
     }
 
     #endregion
@@ -407,6 +347,91 @@ public sealed class FunctionsServiceHttpTests
         // Assert - should skip the oversized file
         Assert.Single(result);
         Assert.Equal("small.txt", result[0].FileName);
+    }
+
+    #endregion
+
+    #region Tree API Error Handling Tests
+
+    [Fact]
+    public async Task GetFunctionTemplateAsync_ThrowsInvalidOperationException_WhenRateLimited()
+    {
+        // Arrange - mock rate limit response for Tree API
+        // Include X-RateLimit-Remaining: 0 to indicate rate limiting (not just permission denied)
+        var handler = new MockHttpMessageHandlerWithHeaders(
+            "Rate limit exceeded",
+            HttpStatusCode.Forbidden,
+            new Dictionary<string, string>
+            {
+                ["X-RateLimit-Remaining"] = "0",
+                ["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds().ToString()
+            });
+
+        var httpClientFactory = CreateHttpClientFactory(handler);
+
+        // Set up manifest with a template entry
+        var manifest = new TemplateManifest
+        {
+            Version = "1.0",
+            Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
+        };
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+
+        var service = CreateService(httpClientFactory);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+
+        Assert.Contains("rate limit", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetFunctionTemplateAsync_ThrowsInvalidOperationException_WhenNetworkFails()
+    {
+        // Arrange - mock network failure
+        var handler = new ThrowingHttpMessageHandler(new HttpRequestException("Connection refused"));
+        var httpClientFactory = CreateHttpClientFactory(handler);
+
+        var manifest = new TemplateManifest
+        {
+            Version = "1.0",
+            Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
+        };
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+
+        var service = CreateService(httpClientFactory);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+
+        Assert.Contains("network", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetFunctionTemplateAsync_ThrowsInvalidOperationException_WhenEmptyTreeReturned()
+    {
+        // Arrange - mock empty tree response
+        var emptyTree = new GitHubTreeResponse { Sha = "abc", Tree = [], Truncated = false };
+        var json = JsonSerializer.Serialize(emptyTree, FunctionsJsonContext.Default.GitHubTreeResponse);
+        var handler = new MockHttpMessageHandler(json, HttpStatusCode.OK);
+        var httpClientFactory = CreateHttpClientFactory(handler);
+
+        var manifest = new TemplateManifest
+        {
+            Version = "1.0",
+            Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
+        };
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+
+        var service = CreateService(httpClientFactory);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+
+        Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -509,6 +534,56 @@ public sealed class FunctionsServiceHttpTests
             {
                 Content = new StringContent("Not Found")
             });
+        }
+    }
+
+    /// <summary>
+    /// Mock HTTP handler with custom response headers (for rate limit testing).
+    /// </summary>
+    private sealed class MockHttpMessageHandlerWithHeaders : HttpMessageHandler
+    {
+        private readonly string _content;
+        private readonly HttpStatusCode _statusCode;
+        private readonly Dictionary<string, string> _headers;
+
+        public MockHttpMessageHandlerWithHeaders(string content, HttpStatusCode statusCode, Dictionary<string, string> headers)
+        {
+            _content = content;
+            _statusCode = statusCode;
+            _headers = headers;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage(_statusCode)
+            {
+                Content = new StringContent(_content, Encoding.UTF8, "application/json")
+            };
+
+            foreach (var (key, value) in _headers)
+            {
+                response.Headers.TryAddWithoutValidation(key, value);
+            }
+
+            return Task.FromResult(response);
+        }
+    }
+
+    /// <summary>
+    /// Mock HTTP handler that throws an exception (for network failure testing).
+    /// </summary>
+    private sealed class ThrowingHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Exception _exception;
+
+        public ThrowingHttpMessageHandler(Exception exception)
+        {
+            _exception = exception;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            throw _exception;
         }
     }
 
