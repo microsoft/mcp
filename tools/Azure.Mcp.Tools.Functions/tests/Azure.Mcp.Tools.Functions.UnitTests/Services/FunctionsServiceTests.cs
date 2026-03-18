@@ -10,118 +10,19 @@ namespace Azure.Mcp.Tools.Functions.UnitTests.Services;
 
 public sealed class FunctionsServiceTests
 {
-    #region ConstructGitHubContentsApiUrl Tests
-
-    [Fact]
-    public void ConstructGitHubContentsApiUrl_ValidInputs_ReturnsCorrectUrl()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/azure-functions-templates";
-        var folderPath = "templates/python/HttpTrigger";
-
-        // Act
-        var result = FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, folderPath);
-
-        // Assert
-        Assert.Equal("https://api.github.com/repos/Azure/azure-functions-templates/contents/templates/python/HttpTrigger", result);
-    }
-
-    [Fact]
-    public void ConstructGitHubContentsApiUrl_TrimsLeadingSlash()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/repo";
-        var folderPath = "/templates/python";
-
-        // Act
-        var result = FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, folderPath);
-
-        // Assert
-        Assert.Equal("https://api.github.com/repos/Azure/repo/contents/templates/python", result);
-    }
+    #region BuildRawGitHubUrl Tests
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("not-a-github-url")]
-    public void ConstructGitHubContentsApiUrl_InvalidRepoUrl_ThrowsArgumentException(string repoUrl)
+    [InlineData("Azure/repo", "templates/python/file.py", "https://raw.githubusercontent.com/Azure/repo/main/templates/python/file.py")]
+    [InlineData("Azure/azure-functions-templates", "path/to/file.txt", "https://raw.githubusercontent.com/Azure/azure-functions-templates/main/path/to/file.txt")]
+    [InlineData("Azure-Samples/repo", "folder/file.json", "https://raw.githubusercontent.com/Azure-Samples/repo/main/folder/file.json")]
+    public void BuildRawGitHubUrl_ValidInputs_ReturnsCorrectUrl(string repoPath, string filePath, string expected)
     {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConstructGitHubContentsApiUrl(repoUrl, "templates/python"));
-        Assert.Equal("repositoryUrl", ex.ParamName);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(".")]
-    [InlineData("..")]
-    public void ConstructGitHubContentsApiUrl_RootFolderPath_ThrowsArgumentException(string folderPath)
-    {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConstructGitHubContentsApiUrl("https://github.com/Azure/repo", folderPath));
-        Assert.Equal("folderPath", ex.ParamName);
-        Assert.Contains("subdirectory", ex.Message);
-    }
-
-    #endregion
-
-    #region ConvertToRawGitHubUrl Tests
-
-    [Fact]
-    public void ConvertToRawGitHubUrl_ValidInputs_ReturnsCorrectUrl()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/azure-functions-templates-mcp-server";
-        var folderPath = "templates/python/BlobTrigger";
-
         // Act
-        var result = FunctionsService.ConvertToRawGitHubUrl(repoUrl, folderPath);
+        var result = FunctionsService.BuildRawGitHubUrl(repoPath, filePath);
 
         // Assert
-        Assert.Equal("https://raw.githubusercontent.com/Azure/azure-functions-templates-mcp-server/main/templates/python/BlobTrigger", result);
-    }
-
-    [Fact]
-    public void ConvertToRawGitHubUrl_TrimsLeadingSlash()
-    {
-        // Arrange
-        var repoUrl = "https://github.com/Azure/repo";
-        var folderPath = "/templates/typescript";
-
-        // Act
-        var result = FunctionsService.ConvertToRawGitHubUrl(repoUrl, folderPath);
-
-        // Assert
-        Assert.Equal("https://raw.githubusercontent.com/Azure/repo/main/templates/typescript", result);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("invalid-url")]
-    public void ConvertToRawGitHubUrl_InvalidRepoUrl_ThrowsArgumentException(string repoUrl)
-    {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConvertToRawGitHubUrl(repoUrl, "templates/python"));
-        Assert.Equal("repositoryUrl", ex.ParamName);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(".")]
-    [InlineData("..")]
-    public void ConvertToRawGitHubUrl_RootFolderPath_ThrowsArgumentException(string folderPath)
-    {
-        // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            FunctionsService.ConvertToRawGitHubUrl("https://github.com/Azure/repo", folderPath));
-        Assert.Equal("folderPath", ex.ParamName);
-        Assert.Contains("subdirectory", ex.Message);
+        Assert.Equal(expected, result);
     }
 
     #endregion

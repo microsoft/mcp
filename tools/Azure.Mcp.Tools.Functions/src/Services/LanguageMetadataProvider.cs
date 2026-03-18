@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Functions.Services;
 
 /// <summary>
 /// Provides language metadata for Azure Functions development.
-/// This is the single source of truth for all language-related data.
+/// Static language info is defined here; runtime versions come from manifest.json.
 /// </summary>
 public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
 {
@@ -28,18 +28,28 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
         ["host.json", "local.settings.json", ".funcignore", ".gitignore"];
 
     /// <summary>
-    /// Complete language information including runtime versions, setup instructions,
-    /// project structure, and template parameters.
+    /// Maps language keys to manifest runtime version keys.
+    /// Manifest uses PascalCase keys (e.g., "Python", "CSharp").
     /// </summary>
-    /// <remarks>
-    /// Update these values when new runtime versions are released or deprecated.
-    /// @see https://learn.microsoft.com/azure/azure-functions/functions-versions
-    /// @see https://learn.microsoft.com/azure/azure-functions/supported-languages
-    /// </remarks>
-    private static readonly IReadOnlyDictionary<string, LanguageInfo> s_languageInfo =
-        new Dictionary<string, LanguageInfo>(StringComparer.OrdinalIgnoreCase)
+    private static readonly IReadOnlyDictionary<string, string> s_languageToManifestKey =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["python"] = new LanguageInfo
+            ["python"] = "Python",
+            ["typescript"] = "TypeScript",
+            ["javascript"] = "JavaScript",
+            ["java"] = "Java",
+            ["csharp"] = "CSharp",
+            ["powershell"] = "PowerShell"
+        };
+
+    /// <summary>
+    /// Static language information excluding runtime versions.
+    /// Runtime versions are provided by manifest.json.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, LanguageInfoStatic> s_languageInfo =
+        new Dictionary<string, LanguageInfoStatic>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["python"] = new LanguageInfoStatic
             {
                 Name = "Python",
                 Runtime = "python",
@@ -50,12 +60,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "func start",
                 BuildCommand = null,
                 ProjectFiles = ["requirements.txt"],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["3.10", "3.11", "3.12", "3.13"],
-                    Preview = ["3.14"],
-                    Default = "3.11"
-                },
                 InitInstructions = """
                     ## Python Azure Functions Project Setup
 
@@ -87,9 +91,10 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
-                TemplateParameters = null
+                TemplateParameterName = null,
+                RecommendationNotes = null
             },
-            ["typescript"] = new LanguageInfo
+            ["typescript"] = new LanguageInfoStatic
             {
                 Name = "Node.js - TypeScript",
                 Runtime = "node",
@@ -100,12 +105,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "npm start",
                 BuildCommand = "npm run build",
                 ProjectFiles = ["package.json", "tsconfig.json"],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["20", "22"],
-                    Preview = ["24"],
-                    Default = "22"
-                },
                 InitInstructions = """
                     ## TypeScript Azure Functions Project Setup
 
@@ -138,19 +137,10 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
-                TemplateParameters =
-                [
-                    new TemplateParameter
-                    {
-                        Name = "nodeVersion",
-                        Description = "Node.js version for @types/node. Detect from user environment or ask preference.",
-                        DefaultValue = "20",
-                        ValidValues = ["20", "22", "24"]
-                    }
-                ],
+                TemplateParameterName = "nodeVersion",
                 RecommendationNotes = "Recommended for Node.js runtime for type safety and better tooling support."
             },
-            ["javascript"] = new LanguageInfo
+            ["javascript"] = new LanguageInfoStatic
             {
                 Name = "Node.js - JavaScript",
                 Runtime = "node",
@@ -161,12 +151,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "npm start",
                 BuildCommand = null,
                 ProjectFiles = ["package.json"],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["20", "22"],
-                    Preview = ["24"],
-                    Default = "22"
-                },
                 InitInstructions = """
                     ## JavaScript Azure Functions Project Setup
 
@@ -197,18 +181,10 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
-                TemplateParameters =
-                [
-                    new TemplateParameter
-                    {
-                        Name = "nodeVersion",
-                        Description = "Node.js version. Detect from user environment or ask preference.",
-                        DefaultValue = "20",
-                        ValidValues = ["20", "22", "24"]
-                    }
-                ]
+                TemplateParameterName = "nodeVersion",
+                RecommendationNotes = null
             },
-            ["java"] = new LanguageInfo
+            ["java"] = new LanguageInfoStatic
             {
                 Name = "Java",
                 Runtime = "java",
@@ -219,12 +195,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "mvn clean package && mvn azure-functions:run",
                 BuildCommand = "mvn clean package",
                 ProjectFiles = ["pom.xml"],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["8", "11", "17", "21"],
-                    Preview = ["25"],
-                    Default = "21"
-                },
                 InitInstructions = """
                     ## Java Azure Functions Project Setup
 
@@ -252,18 +222,10 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore        # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
-                TemplateParameters =
-                [
-                    new TemplateParameter
-                    {
-                        Name = "javaVersion",
-                        Description = "Java version for compilation and runtime. Detect from user environment or ask preference.",
-                        DefaultValue = "21",
-                        ValidValues = ["8", "11", "17", "21", "25"]
-                    }
-                ]
+                TemplateParameterName = "javaVersion",
+                RecommendationNotes = null
             },
-            ["csharp"] = new LanguageInfo
+            ["csharp"] = new LanguageInfoStatic
             {
                 Name = "dotnet-isolated - C#",
                 Runtime = "dotnet",
@@ -274,13 +236,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "func start",
                 BuildCommand = "dotnet build",
                 ProjectFiles = [],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["8", "9", "10"],
-                    Deprecated = ["6", "7"],
-                    Default = "8",
-                    FrameworkSupported = ["4.8.1"]
-                },
                 InitInstructions = """
                     ## C# Azure Functions Project Setup
 
@@ -311,9 +266,10 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore          # Git ignore patterns",
                     ".funcignore         # Files to exclude from deployment"
                 ],
-                TemplateParameters = null
+                TemplateParameterName = null,
+                RecommendationNotes = null
             },
-            ["powershell"] = new LanguageInfo
+            ["powershell"] = new LanguageInfoStatic
             {
                 Name = "PowerShell",
                 Runtime = "powershell",
@@ -324,12 +280,6 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 RunCommand = "func start",
                 BuildCommand = null,
                 ProjectFiles = ["requirements.psd1", "profile.ps1"],
-                RuntimeVersions = new RuntimeVersionInfo
-                {
-                    Supported = ["7.4"],
-                    Deprecated = ["7.2"],
-                    Default = "7.4"
-                },
                 InitInstructions = """
                     ## PowerShell Azure Functions Project Setup
 
@@ -358,8 +308,23 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                     ".gitignore         # Git ignore patterns",
                     ".funcignore        # Files to exclude from deployment"
                 ],
-                TemplateParameters = null
+                TemplateParameterName = null,
+                RecommendationNotes = null
             }
+        };
+
+    /// <summary>
+    /// Fallback runtime versions used when manifest doesn't provide them.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, RuntimeVersionInfo> s_fallbackRuntimeVersions =
+        new Dictionary<string, RuntimeVersionInfo>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["python"] = new RuntimeVersionInfo { Supported = ["3.13"], Default = "3.13" },
+            ["typescript"] = new RuntimeVersionInfo { Supported = ["20"], Default = "20" },
+            ["javascript"] = new RuntimeVersionInfo { Supported = ["20"], Default = "20" },
+            ["java"] = new RuntimeVersionInfo { Supported = ["21"], Default = "21" },
+            ["csharp"] = new RuntimeVersionInfo { Supported = ["8"], Default = "8" },
+            ["powershell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" }
         };
 
     /// <summary>
@@ -380,25 +345,40 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
         s_languageInfo.ContainsKey(language);
 
     /// <inheritdoc />
-    public LanguageInfo? GetLanguageInfo(string language) =>
-        s_languageInfo.TryGetValue(language, out var info) ? info : null;
+    public LanguageInfo? GetLanguageInfo(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null)
+    {
+        if (!s_languageInfo.TryGetValue(language, out var staticInfo))
+        {
+            return null;
+        }
+
+        var runtimeVersions = GetRuntimeVersions(language, manifestRuntimeVersions);
+        return BuildLanguageInfo(staticInfo, runtimeVersions);
+    }
 
     /// <inheritdoc />
-    public IEnumerable<KeyValuePair<string, LanguageInfo>> GetAllLanguages() =>
-        s_languageInfo;
+    public IEnumerable<KeyValuePair<string, LanguageInfo>> GetAllLanguages(IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null)
+    {
+        foreach (var kvp in s_languageInfo)
+        {
+            var runtimeVersions = GetRuntimeVersions(kvp.Key, manifestRuntimeVersions);
+            var languageInfo = BuildLanguageInfo(kvp.Value, runtimeVersions);
+            yield return new KeyValuePair<string, LanguageInfo>(kvp.Key, languageInfo);
+        }
+    }
 
     /// <inheritdoc />
     public IReadOnlySet<string> KnownProjectFiles => s_knownProjectFiles.Value;
 
     /// <inheritdoc />
-    public void ValidateRuntimeVersion(string language, string runtimeVersion)
+    public void ValidateRuntimeVersion(string language, string runtimeVersion, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null)
     {
-        if (!s_languageInfo.TryGetValue(language, out var languageInfo))
+        if (!s_languageInfo.ContainsKey(language))
         {
             return;
         }
 
-        var runtime = languageInfo.RuntimeVersions;
+        var runtime = GetRuntimeVersions(language, manifestRuntimeVersions);
         var allVersions = new List<string>(runtime.Supported);
         if (runtime.Preview is not null)
         {
@@ -440,5 +420,92 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
         }
 
         return content;
+    }
+
+    /// <summary>
+    /// Gets runtime versions for a language, preferring manifest data over fallback.
+    /// </summary>
+    private RuntimeVersionInfo GetRuntimeVersions(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions)
+    {
+        // Try manifest first using the PascalCase key mapping
+        if (manifestRuntimeVersions is not null &&
+            s_languageToManifestKey.TryGetValue(language, out var manifestKey) &&
+            manifestRuntimeVersions.TryGetValue(manifestKey, out var manifestVersions))
+        {
+            return manifestVersions;
+        }
+
+        // Fall back to hardcoded defaults
+        return s_fallbackRuntimeVersions.TryGetValue(language, out var fallback)
+            ? fallback
+            : new RuntimeVersionInfo { Supported = [], Default = string.Empty };
+    }
+
+    /// <summary>
+    /// Builds a LanguageInfo from static data and runtime versions.
+    /// </summary>
+    private static LanguageInfo BuildLanguageInfo(LanguageInfoStatic staticInfo, RuntimeVersionInfo runtimeVersions)
+    {
+        // Build template parameters with valid values from runtime versions
+        IReadOnlyList<TemplateParameter>? templateParameters = null;
+        if (staticInfo.TemplateParameterName is not null)
+        {
+            var allVersions = new List<string>(runtimeVersions.Supported);
+            if (runtimeVersions.Preview is not null)
+            {
+                allVersions.AddRange(runtimeVersions.Preview);
+            }
+
+            templateParameters =
+            [
+                new TemplateParameter
+                {
+                    Name = staticInfo.TemplateParameterName,
+                    Description = staticInfo.TemplateParameterName == "javaVersion"
+                        ? "Java version for compilation and runtime. Detect from user environment or ask preference."
+                        : "Node.js version. Detect from user environment or ask preference.",
+                    DefaultValue = runtimeVersions.Default,
+                    ValidValues = allVersions
+                }
+            ];
+        }
+
+        return new LanguageInfo
+        {
+            Name = staticInfo.Name,
+            Runtime = staticInfo.Runtime,
+            ProgrammingModel = staticInfo.ProgrammingModel,
+            Prerequisites = staticInfo.Prerequisites,
+            DevelopmentTools = staticInfo.DevelopmentTools,
+            InitCommand = staticInfo.InitCommand,
+            RunCommand = staticInfo.RunCommand,
+            BuildCommand = staticInfo.BuildCommand,
+            ProjectFiles = staticInfo.ProjectFiles,
+            RuntimeVersions = runtimeVersions,
+            InitInstructions = staticInfo.InitInstructions,
+            ProjectStructure = staticInfo.ProjectStructure,
+            TemplateParameters = templateParameters,
+            RecommendationNotes = staticInfo.RecommendationNotes
+        };
+    }
+
+    /// <summary>
+    /// Internal record for static language info without runtime versions.
+    /// </summary>
+    private sealed record LanguageInfoStatic
+    {
+        public required string Name { get; init; }
+        public required string Runtime { get; init; }
+        public required string ProgrammingModel { get; init; }
+        public required IReadOnlyList<string> Prerequisites { get; init; }
+        public required IReadOnlyList<string> DevelopmentTools { get; init; }
+        public required string InitCommand { get; init; }
+        public required string RunCommand { get; init; }
+        public string? BuildCommand { get; init; }
+        public required IReadOnlyList<string> ProjectFiles { get; init; }
+        public required string InitInstructions { get; init; }
+        public required IReadOnlyList<string> ProjectStructure { get; init; }
+        public string? TemplateParameterName { get; init; }
+        public string? RecommendationNotes { get; init; }
     }
 }
