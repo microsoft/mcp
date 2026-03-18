@@ -1,0 +1,4 @@
+pr: 2087
+changes:
+  - section: "Features Added"
+    description: "Merged Azure Monitor Instrumentation into the Azure Monitor toolset and removed the standalone MonitorInstrumentation area setup."
