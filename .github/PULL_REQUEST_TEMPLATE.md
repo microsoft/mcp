@@ -16,14 +16,14 @@
 - [ ] For MCP tool changes:
     - [ ] **One tool per PR**: This PR adds or modifies only one MCP tool for faster review cycles
     - [ ] Updated `servers/Azure.Mcp.Server/README.md` and/or `servers/Fabric.Mcp.Server/README.md` documentation
-    - [ ] Validate `README.md` changes using script at `eng/scripts/Process-PackageReadMe.ps1`. See [Package README](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#package-readme)
+    - [ ] Validate `README.md` changes running the script `./eng/scripts/Process-PackageReadMe.ps1`. See [Package README](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#package-readme)
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
-    - [ ] For tools with new names, including new tools or renamed tools, update [`consolidated-tools.json`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json)
+    - [ ] For tools with new names, including new tools or renamed tools, update [`consolidated-tools.json`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json)
     - [ ] For **renamed** tools, follow the [Tool Rename Checklist](https://github.com/microsoft/mcp/blob/main/docs/tool-rename-checklist.md) and tag the PR with the `breaking-change` label
     - [ ] For new tools associated with Azure services or publicly available tools/APIs/products, add URL to documentation in the PR description
 - [ ] Extra steps for **Azure MCP Server** tool changes:
     - [ ] Updated command list in [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-    - [ ] Ran `eng/scripts/Update-AzCommandsMetadata.ps1` to update tool metadata in [`azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) (required for CI)
+    - [ ] Ran `./eng/scripts/Update-AzCommandsMetadata.ps1` to update tool metadata in [`azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) (required for CI)
     - [ ] Updated test prompts in [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
     - [ ] 👉 For Community (non-Microsoft team member) PRs:
         - [ ] **Security review**: Reviewed code for security vulnerabilities, malicious code, or suspicious activities before running tests (`crypto mining, spam, data exfiltration, etc.`)
