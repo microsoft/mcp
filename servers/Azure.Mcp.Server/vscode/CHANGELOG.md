@@ -1,5 +1,13 @@
 # Release History
 
+## 1.0.3 (2026-03-17)
+
+### Fixed
+
+- Fixed a connection string injection vulnerability in `PostgreSQL` and `MySQL` tools by replacing raw string interpolation with `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder`, preventing parameter override attacks from user-controlled inputs. [[#2057](https://github.com/microsoft/mcp/pull/2057)]
+- Expanded the `PostgreSQL` query validator blocklist to include additional dangerous functions and system catalogs. [[#2074](https://github.com/microsoft/mcp/pull/2074)]
+- Addressed a KQL injection vulnerability in `Kusto` tools caused by directly interpolating user-controlled table names into queries without proper escaping, which could enable arbitrary command execution. [[#2084](https://github.com/microsoft/mcp/pull/2084)]
+
 ## 1.0.2 (2026-03-05)
 
 ### Changed

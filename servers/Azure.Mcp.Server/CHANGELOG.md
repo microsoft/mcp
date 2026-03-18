@@ -2,19 +2,13 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 1.0.3-beta.1 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 1.0.3 (2026-03-17)
 
 ### Bugs Fixed
 
-- Fixed connection string injection vulnerability in PostgreSQL and MySQL tools by using `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder` instead of raw string interpolation, preventing parameter override attacks via user-controlled inputs.
-- Expanded PostgreSQL SQL query validator blocklist with additional dangerous functions and system catalogs.
-- Fixed KQL injection vulnerabilities in Kusto tools where user-controlled table names were directly interpolated into KQL commands without escaping, allowing arbitrary command execution.
-
-### Other Changes
+- Fixed a connection string injection vulnerability in `PostgreSQL` and `MySQL` tools by replacing raw string interpolation with `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder`, preventing parameter override attacks from user-controlled inputs. [[#2057](https://github.com/microsoft/mcp/pull/2057)]
+- Expanded the `PostgreSQL` query validator blocklist to include additional dangerous functions and system catalogs. [[#2074](https://github.com/microsoft/mcp/pull/2074)]
+- Addressed a KQL injection vulnerability in `Kusto` tools caused by directly interpolating user-controlled table names into queries without proper escaping, which could enable arbitrary command execution. [[#2084](https://github.com/microsoft/mcp/pull/2084)]
 
 ## 1.0.2 (2026-03-05)
 
