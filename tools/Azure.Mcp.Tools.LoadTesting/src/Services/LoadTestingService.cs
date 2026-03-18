@@ -14,13 +14,15 @@ using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
 public class LoadTestingService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<LoadTestingService> logger)
     : BaseAzureService(tenantService), ILoadTestingService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
@@ -316,7 +318,7 @@ public class LoadTestingService(
 
         if (!string.IsNullOrEmpty(endpointUrl))
         {
-            EndpointValidator.ValidatePublicTargetUrl(endpointUrl);
+            EndpointValidator.ValidatePublicTargetUrl(endpointUrl, logger);
         }
 
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
