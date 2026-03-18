@@ -49,6 +49,7 @@ public class StorageService(
                 subscription,
                 retryPolicy,
                 ConvertToAccountInfoModel,
+                tenant: tenant,
                 cancellationToken: cancellationToken);
         }
         else
@@ -60,6 +61,7 @@ public class StorageService(
                 retryPolicy: retryPolicy,
                 converter: ConvertToAccountInfoModel,
                 additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
+                tenant: tenant,
                 cancellationToken: cancellationToken);
 
             if (storageAccount == null)

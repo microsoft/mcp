@@ -462,7 +462,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         // Use subscriptionResource for write operations
     }
 }
@@ -640,7 +640,7 @@ Azure MCP Server supports **stdio** (local) and **HTTP** (remote) transports wit
 **Key Patterns:**
 ```csharp
 // ✅ Correct: Authentication provider handles both modes
-var credential = await GetCredentialAsync(null, CancellationToken.None);
+var credential = await GetCredentialAsync(tenant, CancellationToken.None);
 var armClient = new ArmClient(credential);
 
 // ❌ Wrong: Don't check transport type or access HttpContext
