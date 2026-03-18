@@ -26,8 +26,8 @@ public sealed class KustoService(
 
     private const string CacheGroup = "kusto";
     private const string KustoClustersCacheKey = "clusters";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
-    private static readonly TimeSpan s_providerCacheDuration = TimeSpan.FromHours(2);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
+    private static readonly TimeSpan s_providerCacheDuration = CacheDurations.AuthenticatedClient;
 
     /// <summary>
     /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.

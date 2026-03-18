@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateCommand> logger)
+public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger)
     : BaseManagedLustreCommand<AutoimportJobCreateOptions>(logger)
 {
     private const string CommandTitle = "Create Azure Managed Lustre Autoimport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoimportJobCreateCommand> _logger = logger;
 
     public override string Id => "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d";
@@ -91,7 +92,6 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
             // Log the prefixes for debugging
             if (options.AutoimportPrefixes != null && options.AutoimportPrefixes.Length > 0)
@@ -103,7 +103,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
                 _logger.LogInformation("No autoimport prefixes received, will use default");
             }
 
-            var job = await svc.CreateAutoimportJobAsync(
+            var job = await _service.CreateAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
