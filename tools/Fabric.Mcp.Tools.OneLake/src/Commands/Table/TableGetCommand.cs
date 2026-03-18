@@ -24,9 +24,9 @@ public sealed class TableGetCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "19bb5a6a-2a09-410c-bfa0-312986c6acc6";
-    public override string Name => "get";
+    public override string Name => "get_table";
     public override string Title => "Get OneLake Table";
-    public override string Description => "Retrieve detailed metadata for a specific table exposed by the OneLake table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse'). Returns complete schema including column names, types, row counts, and statistics. Use this when asked about 'columns', 'schema', or 'table structure'.";
+    public override string Description => "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.";
 
     public override ToolMetadata Metadata => new()
     {

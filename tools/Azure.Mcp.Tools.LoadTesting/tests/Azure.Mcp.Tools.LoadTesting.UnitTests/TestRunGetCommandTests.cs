@@ -28,11 +28,9 @@ public class TestRunGetCommandTests
         _service = Substitute.For<ILoadTestingService>();
         _logger = Substitute.For<ILogger<TestRunGetCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -58,7 +56,7 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunGetCommand(_logger);
+        var command = new TestRunGetCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -97,7 +95,7 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunGetCommand(_logger);
+        var command = new TestRunGetCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--tenant", "tenant123"
         ]);
@@ -120,7 +118,7 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<TestRun>(new Exception("Test error")));
 
-        var command = new TestRunGetCommand(_logger);
+        var command = new TestRunGetCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -153,7 +151,7 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunGetCommand(_logger);
+        var command = new TestRunGetCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -190,7 +188,7 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<TestRun>>(new Exception("Test error")));
 
-        var command = new TestRunGetCommand(_logger);
+        var command = new TestRunGetCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",

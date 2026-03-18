@@ -205,6 +205,7 @@ Choose the appropriate base class for your service based on the operations neede
        public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
@@ -214,6 +215,7 @@ Choose the appropriate base class for your service based on the operations neede
                subscription,
                retryPolicy,
                ConvertToMyResourceModel,
+               tenant: tenant,
                cancellationToken: cancellationToken);
        }
 
@@ -221,6 +223,7 @@ Choose the appropriate base class for your service based on the operations neede
            string resourceName,
            string resourceGroup,
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
@@ -231,6 +234,7 @@ Choose the appropriate base class for your service based on the operations neede
                retryPolicy,
                ConvertToMyResourceModel,
                additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
+               tenant: tenant,
                cancellationToken: cancellationToken);
        }
 
@@ -258,10 +262,11 @@ Choose the appropriate base class for your service based on the operations neede
 
        public async Task<MyResource> CreateResourceAsync(
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -315,6 +320,7 @@ var resources = await ExecuteResourceQueryAsync(
     retryPolicy,
     ConvertToSqlDatabaseModel,
     additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+    tenant: tenant,
     cancellationToken: cancellationToken);
 
 // Direct ARM client pattern - CRITICAL: Use GetResourceGroupAsync with await
@@ -1008,6 +1014,7 @@ public interface IMyService
         string resourceName,
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
@@ -1140,11 +1147,12 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
         string subscription,
         string resourceGroup,
         string resourceName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         // Always use subscription service for resolution
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -2032,7 +2040,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 ```
 
 ### Command Option Patterns
@@ -2280,10 +2288,10 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
-var armClient = await CreateArmClientAsync(null, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, retryPolicy);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -2576,11 +2584,12 @@ public class StorageService : BaseAzureService, IStorageService
     public async Task<List<StorageAccount>> GetStorageAccountsAsync(
         string subscription,
         string? resourceGroup,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf

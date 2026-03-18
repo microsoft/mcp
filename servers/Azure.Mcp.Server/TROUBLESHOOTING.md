@@ -18,7 +18,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
-  - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+  - [Remote MCP Server](#remote-mcp-server)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Support Logging](#support-logging)
@@ -30,9 +30,12 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Authentication](#authentication)
     - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
     - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+    - [Service Principal Returns 403 for OneLake Operations in VS Code](#service-principal-returns-403-for-onelake-operations-in-vs-code)
     - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
     - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
     - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
+    - [Azure Cosmos DB (RBAC for SQL Data Plane)](#azure-cosmos-db-rbac-for-sql-data-plane)
+    - [Working with Administrators](#working-with-administrators)
     - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
     - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
   - [Sovereign Cloud Support](#sovereign-cloud-support)
@@ -371,6 +374,51 @@ This error indicates that the access token doesn't have sufficient permissions t
 
     This will prompt you to select your desired account for authentication.
 
+### Service Principal Returns 403 for OneLake Operations in VS Code
+
+When using Azure MCP Server inside VS Code with a Service Principal authenticated via Azure CLI (`az login --service-principal`), OneLake DFS operations (such as `directory_create`, `upload_file`) may return `403 Forbidden`, even though the Service Principal has the correct permissions (e.g., Workspace Admin in Microsoft Fabric).
+
+#### Symptoms
+
+- OneLake **blob** operations (e.g., `file_list` without a path) may succeed with `200 OK`
+- OneLake **DFS** operations (e.g., `directory_create`, `upload_file`) fail with `403 Forbidden`
+- The same Service Principal works correctly when used from Python scripts or other tools outside VS Code
+- Fabric REST API operations (e.g., `item_create`) may also fail with `401 Unauthorized`
+
+#### Root Cause
+
+When running inside VS Code, the `VSCODE_PID` environment variable is automatically set for all child processes. The Azure MCP Server's credential chain detects this variable and reorders authentication to prioritize `VisualStudioCodeCredential` (the account signed into VS Code) over other credentials like `AzureCliCredential`.
+
+This means even if you have logged in via `az login --service-principal`, the MCP Server will use your VS Code account's token instead. If that account lacks the required data plane permissions on the target resource, operations will fail with 403.
+
+The credential chain when `VSCODE_PID` is detected becomes:
+
+```
+VisualStudioCodeCredential → EnvironmentCredential → VisualStudioCredential → AzureCliCredential → ...
+```
+
+#### Resolution
+
+Set the `AZURE_TOKEN_CREDENTIALS` environment variable to explicitly use `AzureCliCredential`, bypassing the VS Code credential prioritization:
+
+**Windows (User-level, persistent):**
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('AZURE_TOKEN_CREDENTIALS', 'AzureCliCredential', 'User')
+```
+
+**macOS/Linux:**
+
+```bash
+# Add to ~/.bashrc, ~/.zshrc, or equivalent
+export AZURE_TOKEN_CREDENTIALS=AzureCliCredential
+```
+
+> [!IMPORTANT]
+> After setting this environment variable, you must **fully close and reopen VS Code** (not just reload the window). The `Developer: Reload Window` command reuses the same VS Code process, which was started before the new environment variable was set. Only a complete restart creates a new process that inherits the updated environment.
+
+For more details on available credential options, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](#controlling-authentication-methods-with-azure_token_credentials).
+
 ### Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS
 
 The Azure Identity SDK supports fine-grained control over which authentication methods are attempted through the `AZURE_TOKEN_CREDENTIALS` environment variable. This can help resolve authentication issues by excluding problematic credential types or focusing on specific authentication methods.
@@ -548,26 +596,29 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
 
 #### Troubleshooting Network Connectivity
 
-1. **Test Basic Connectivity:**
-   ```bash
-   # Test authentication endpoint
-   curl -I https://login.microsoftonline.com
+**Test basic connectivity:**
+```bash
+curl -I https://login.microsoftonline.com
+curl -I https://management.azure.com
+```
 
-   # Test resource management endpoint
-   curl -I https://management.azure.com
-   ```
+**Check private endpoint DNS resolution:**
+```bash
+# Should resolve to a private IP (10.x.x.x) if using private endpoints
+nslookup mystorageaccount.blob.core.windows.net
+```
 
-2. **Check Private Endpoint DNS Resolution:**
-   ```bash
-   # Should resolve to private IP (10.x.x.x) if using private endpoints
-   nslookup mystorageaccount.blob.core.windows.net
-   ```
+**Verify certificate trust:**
+```bash
+openssl s_client -connect login.microsoftonline.com:443 \
+  -servername login.microsoftonline.com
+```
 
-3. **Verify Certificate Trust:**
-   ```bash
-   # Check if corporate certificates are trusted
-   openssl s_client -connect login.microsoftonline.com:443 -servername login.microsoftonline.com
-   ```
+**Private endpoint network access options:**
+- VPN connection to the corporate network
+- ExpressRoute connectivity
+- Point-to-site VPN configuration
+- Bastion host or jump server access
 
 #### Questions to Ask Your Network Administrator
 
@@ -667,6 +718,140 @@ When resources are heavily restricted:
    **Level 3: Identity Administrator**
    - Conditional Access policies
    - Service principal creation
+
+### Azure Cosmos DB (RBAC for SQL Data Plane)
+
+Azure Cosmos DB supports data plane access via Microsoft Entra ID (RBAC). If key-based authentication is disabled (recommended), grant a Microsoft Entra user or service principal a built-in data role at the Cosmos account scope.
+
+**Prerequisites:**
+- Azure CLI installed (`az version`)
+- Logged in to the correct tenant/subscription (`az login`)
+- Resource group and account name for the Cosmos DB account
+
+**Built-in roles:**
+
+| Role | Role ID | Access |
+|---|---|---|
+| Data Reader | `00000000-0000-0000-0000-000000000001` | Read-only |
+| Data Contributor | `00000000-0000-0000-0000-000000000002` | Read/write |
+
+**PowerShell — assign Data Contributor to a user:**
+
+```powershell
+$user = 'user@contoso.com'
+$resourceGroup = 'rg-name'
+$account = 'cosmos-account-name'
+
+$resourceId = az cosmosdb show -g $resourceGroup -n $account --query "id" -o tsv
+
+$roleId = az cosmosdb sql role definition show -a $account -g $resourceGroup `
+  -i 00000000-0000-0000-0000-000000000002 --query id -o tsv
+
+$principalId = az ad user show --id $user --query 'id' -o tsv
+
+az cosmosdb sql role assignment create `
+  --resource-group $resourceGroup `
+  --account-name $account `
+  --principal-id $principalId `
+  --role-definition-id $roleId `
+  --scope $resourceId
+```
+
+**Bash — assign Data Reader to a service principal:**
+
+```bash
+spAppId="00000000-0000-0000-0000-000000000000" # replace with your app (client) ID
+resourceGroup="rg-name"
+account="cosmos-account-name"
+
+resourceId=$(az cosmosdb show -g "$resourceGroup" -n "$account" --query id -o tsv)
+
+roleId=$(az cosmosdb sql role definition show -a "$account" -g "$resourceGroup" \
+  -i 00000000-0000-0000-0000-000000000001 --query id -o tsv)
+
+principalId=$(az ad sp show --id "$spAppId" --query id -o tsv)
+
+az cosmosdb sql role assignment create \
+  --resource-group "$resourceGroup" \
+  --account-name "$account" \
+  --principal-id "$principalId" \
+  --role-definition-id "$roleId" \
+  --scope "$resourceId"
+```
+
+**Notes:**
+- Scope can be narrowed to database or container level if needed.
+- RBAC propagation may take several minutes after assignment.
+- Authenticate via a supported credential (for example, `az login`) before using Cosmos DB tools in Azure MCP.
+
+### Working with Administrators
+
+When escalating authentication or access issues, provide the following information to speed up resolution.
+
+#### Information to Provide
+
+**To your resource administrator:**
+```
+Application name: Azure MCP Server
+Required roles: resource-specific data plane roles
+  - Storage:     Storage Blob Data Reader / Contributor / Owner
+  - Cosmos DB:   Cosmos DB Built-in Data Reader / Contributor
+  - Key Vault:   Key Vault Secrets User / Crypto User
+  - Service Bus: Azure Service Bus Data Receiver / Sender
+Scope: subscription / resource group / specific resource
+Principal: your user account or service principal
+```
+
+**To your network administrator:**
+```
+Required endpoints (outbound HTTPS/443):
+  - login.microsoftonline.com
+  - login.windows.net
+  - management.azure.com
+  - graph.microsoft.com
+
+Resource-specific endpoints:
+  - Storage:     *.blob.core.windows.net, *.table.core.windows.net
+  - Key Vault:   *.vault.azure.net
+  - Cosmos DB:   *.documents.azure.com
+  - Service Bus: *.servicebus.windows.net
+```
+
+**To your identity administrator:**
+```
+Issue: Conditional Access policy may be blocking authentication
+Device compliance status: [provide your device status]
+Authentication method: Azure MCP Server uses Azure Identity SDK
+                       with DefaultAzureCredential chain
+Affected tenant: [your tenant ID]
+```
+
+#### Escalation Path
+
+| Level | Administrator | Handles |
+|---|---|---|
+| 1 | Resource administrator | RBAC role assignments, resource-specific permissions |
+| 2 | Network administrator | Firewall rules, private endpoints, proxy configuration |
+| 3 | Identity administrator | Conditional Access policies, service principal creation |
+
+#### Questions to Ask
+
+**Resource administrator:**
+- Is local authentication disabled on this resource?
+- What RBAC roles are available for data plane access?
+- Should I use user authentication or a service principal?
+
+**Network administrator:**
+- Are there firewall rules blocking outbound HTTPS to Azure endpoints?
+- Is a corporate proxy required for internet access?
+- Do resources use private endpoints that require VPN access?
+- Are corporate CA certificates properly installed and trusted?
+
+**Identity administrator:**
+- Are there Conditional Access policies affecting my authentication?
+- Is my device compliant with organizational policies?
+- Can I get an exception for development scenarios?
+- Do I need to use a specific authentication method?
 
 ### AADSTS500200 error: User account is a personal Microsoft account
 
@@ -860,10 +1045,11 @@ When authenicating in remote, the following environment variables need to be set
 If encountering authentication issues in remote, verify these environment variables are set correctly.
 For more information, see the [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md).
 
-## Remote MCP Server (preview)
+## Remote MCP Server
 
-Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
-- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md) 
+Azure MCP Server supports being deployed as a Remote MCP Server using HTTP transport. Detailed setup instructions on how to self-host the Azure MCP server can be found here:
+
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md)
 - [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
 
 ### HTTPS redirection issues

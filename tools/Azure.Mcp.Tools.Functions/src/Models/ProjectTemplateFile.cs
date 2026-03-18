@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Functions.Models;
 
 /// <summary>
@@ -11,9 +9,7 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// </summary>
 public sealed class ProjectTemplateFile
 {
-    [JsonPropertyName("fileName")]
     public required string FileName { get; init; }
 
-    [JsonPropertyName("content")]
     public required string Content { get; init; }
 }
