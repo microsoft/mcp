@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Hardened Postgres SQL query validator to block set-operation keywords (UNION, INTERSECT, EXCEPT), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals"
