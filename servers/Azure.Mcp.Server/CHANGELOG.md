@@ -2,15 +2,24 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.29 (Unreleased)
+## 2.0.0-beta.29 (2026-03-18)
 
 ### Features Added
 
-### Breaking Changes
+- Added new `compute` tool for deleting Azure managed disks: [[#2059](https://github.com/microsoft/mcp/pull/2059)]
+  - `compute_disk_delete`
 
 ### Bugs Fixed
 
+- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2083](https://github.com/microsoft/mcp/pull/2083)]
+- Hardened Postgres SQL query validator to block set-operation keywords (UNION, INTERSECT, EXCEPT), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2096](https://github.com/microsoft/mcp/pull/2096)]
+- Hardened SSRF protection in EndpointValidator against IPv6 transition mechanism bypass vectors (IPv4-mapped, 6to4, Teredo, NAT64, NAT64v2, IPv4-compatible), added wildcard DNS blocklist, trailing-dot FQDN normalization, and sanitized error messages to prevent IP address leakage. [[#2066](https://github.com/microsoft/mcp/pull/2066)]
+
 ### Other Changes
+
+- Added GitHub API rate limiting handling, runtime configuration support, and live test infrastructure for the `Azure.Mcp.Tools.Functions` toolset. [[#2071](https://github.com/microsoft/mcp/pull/2071)]
+- Removed hardcoded Model Context Protocol version in favor of using the latest supported by the C# SDK. [[#2101](https://github.com/microsoft/mcp/pull/2101)]
+- Added tenant parameter support to Azure Resource Graph queries in BaseAzureResourceService, enabling queries to run against the intended tenant context. [[#1945](https://github.com/microsoft/mcp/pull/1945)]
 
 ## 2.0.0-beta.28 (2026-03-17)
 
