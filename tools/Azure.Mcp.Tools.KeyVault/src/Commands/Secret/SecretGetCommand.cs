@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : SubscriptionCommand<SecretGetOptions>
+public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretGetOptions>
 {
     private const string _commandTitle = "Get Key Vault Secret";
     private readonly ILogger<SecretGetCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "933bcb29-87e6-4f78-94ad-8ad0c8c60002";
 
@@ -63,12 +64,10 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
             if (string.IsNullOrEmpty(options.SecretName))
             {
                 // List all secrets
-                var secrets = await keyVaultService.ListSecrets(
+                var secrets = await _keyVaultService.ListSecrets(
                     options.VaultName!,
                     options.Subscription!,
                     options.Tenant,
@@ -80,7 +79,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
             else
             {
                 // Get specific secret
-                var secret = await keyVaultService.GetSecret(
+                var secret = await _keyVaultService.GetSecret(
                     options.VaultName!,
                     options.SecretName,
                     options.Subscription!,

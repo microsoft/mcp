@@ -41,7 +41,7 @@ public class FileSystemCreateCommandTests
         _logger = Substitute.For<ILogger<FileSystemCreateCommand>>();
         var services = new ServiceCollection().AddSingleton(_svc);
         _serviceProvider = services.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_svc, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -13,6 +13,7 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 /// JSON serialization context for Compute commands.
 /// </summary>
 [JsonSerializable(typeof(DiskCreateCommand.DiskCreateCommandResult))]
+[JsonSerializable(typeof(DiskDeleteCommand.DiskDeleteCommandResult))]
 [JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
 [JsonSerializable(typeof(DiskUpdateCommand.DiskUpdateCommandResult))]
 [JsonSerializable(typeof(Models.DiskInfo))]

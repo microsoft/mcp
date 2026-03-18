@@ -11,8 +11,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexListOptions>
+public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "List Knowledge Indexes in Microsoft Foundry";
 
     public override string Id => "b2c3d4e5-2345-6789-bcde-f01234567890";
@@ -72,8 +74,7 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
-            var indexes = await service.ListKnowledgeIndexes(
+            var indexes = await _foundryExtensionsService.ListKnowledgeIndexes(
                 options.Endpoint!,
                 options.Tenant,
                 options.RetryPolicy,

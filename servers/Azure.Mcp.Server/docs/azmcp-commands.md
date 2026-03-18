@@ -1433,6 +1433,30 @@ azmcp compute disk create --subscription <subscription> \
 | `--security-type` | Conditional | Security type for the disk. Accepted values: ConfidentialVM_DiskEncryptedWithCustomerKey, ConfidentialVM_DiskEncryptedWithPlatformKey, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey, Standard, TrustedLaunch. Required when `--upload-type` is UploadWithSecurityData. |
 
 ```bash
+# Delete a managed disk
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute disk delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name>
+```
+
+**Command Behavior:**
+- Deletes an Azure managed disk from the specified resource group.
+- This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
+- The disk must not be attached to a virtual machine. Detach it first before deleting.
+
+**Returns:**
+- `Deleted`: Boolean indicating whether the disk was deleted.
+- `DiskName`: Name of the disk that was targeted for deletion.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--disk-name` | Yes | Name of the managed disk to delete |
+
+```bash
 # Update a managed disk's size
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk update --subscription <subscription> \
@@ -1957,6 +1981,24 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 ```
 
 ```bash
+# Get a specific private endpoint connection or list all private endpoint connections for a file share
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --file-share-name <file-share-name> \
+                                            [--connection-name <connection-name>]
+
+# Update the state of a private endpoint connection for a file share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection update --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --file-share-name <file-share-name> \
+                                               --connection-name <connection-name> \
+                                               --status <Approved|Rejected> \
+                                               [--description <description>]
+```
+
+```bash
 # Get File Shares limits and quotas for a region
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares limits --subscription <subscription> \
@@ -1977,11 +2019,6 @@ azmcp fileshares usage --subscription <subscription> \
 ### Microsoft Foundry Extensions Operations
 
 ```bash
-# Get code samples to interact with a Foundry Agent using the Microsoft Foundry SDK
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions agents get-sdk-sample \
-    [--programming-language <language>]
-
 # List knowledge indexes in a Microsoft Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions knowledge index list \
@@ -2033,23 +2070,6 @@ azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
     [--resource-name <resource-name>]
-
-# Create a thread in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads create \
-    --endpoint <project-endpoint> \
-    --user-message <initial-message>
-
-# Get messages from a Microsoft Foundry thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads get-messages \
-    --endpoint <project-endpoint> \
-    --thread-id <thread-id>
-
-# List threads in a Microsoft Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads list \
-    --endpoint <project-endpoint>
 ```
 
 ### Azure Function App Operations

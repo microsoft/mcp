@@ -35,19 +35,14 @@ public sealed class DiskUpdateCommand(
 
     private readonly ILogger<DiskUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    /// <inheritdoc/>
     public override string Id => "4a9b2c3d-6e7f-5b8c-9d0e-1f2a3b4c5d6e";
 
-    /// <inheritdoc/>
     public override string Name => "update";
 
-    /// <inheritdoc/>
     public override string Title => CommandTitle;
 
-    /// <inheritdoc/>
     public override string Description => CommandDescription;
 
-    /// <inheritdoc/>
     public override ToolMetadata Metadata => new()
     {
         OpenWorld = false,
@@ -58,7 +53,6 @@ public sealed class DiskUpdateCommand(
         LocalRequired = false
     };
 
-    /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -100,7 +94,6 @@ public sealed class DiskUpdateCommand(
         });
     }
 
-    /// <inheritdoc/>
     protected override DiskUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
@@ -131,7 +124,6 @@ public sealed class DiskUpdateCommand(
         return options;
     }
 
-    /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -221,7 +213,6 @@ public sealed class DiskUpdateCommand(
         return context.Response;
     }
 
-    /// <inheritdoc/>
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
@@ -230,7 +221,6 @@ public sealed class DiskUpdateCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    /// <inheritdoc/>
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx when reqEx.Status == 404 =>

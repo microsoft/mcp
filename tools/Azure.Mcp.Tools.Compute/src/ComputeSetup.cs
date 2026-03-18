@@ -38,6 +38,7 @@ public class ComputeSetup : IAreaSetup
 
         // Disk commands
         services.AddSingleton<DiskCreateCommand>();
+        services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
         services.AddSingleton<DiskUpdateCommand>();
     }
@@ -100,6 +101,9 @@ public class ComputeSetup : IAreaSetup
         // Register Disk commands
         var diskCreate = serviceProvider.GetRequiredService<DiskCreateCommand>();
         disk.AddCommand(diskCreate.Name, diskCreate);
+
+        var diskDelete = serviceProvider.GetRequiredService<DiskDeleteCommand>();
+        disk.AddCommand(diskDelete.Name, diskDelete);
 
         var diskGet = serviceProvider.GetRequiredService<DiskGetCommand>();
         disk.AddCommand(diskGet.Name, diskGet);

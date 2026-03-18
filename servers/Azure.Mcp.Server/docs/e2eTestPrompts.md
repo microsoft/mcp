@@ -225,23 +225,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_delete | Remove VMSS <vmss-name> from resource group <resource-group-name> |
 | compute_vmss_delete | Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_delete | Force delete VMSS <vmss-name> in resource group <resource-group-name> using force-deletion |
-
-## Azure Confidential Ledger
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
-| confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
-| confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
-| confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
-| confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
-| confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
-| confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
-
-## Azure Compute
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
 | compute_disk_get | List all managed disks in my subscription |
 | compute_disk_get | Show me all disks in resource group <resource-group> |
 | compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
@@ -267,6 +250,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled |
 | compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys |
 | compute_disk_create | Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB |
+| compute_disk_delete | Delete the managed disk <disk-name> in resource group <resource-group> |
+| compute_disk_delete | Remove managed disk <disk-name> from resource group <resource-group> |
+| compute_disk_delete | Delete disk <disk-name> in resource group <resource-group> in my subscription |
 | compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
 | compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
 | compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |
@@ -281,6 +267,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys |
 | compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate |
 | compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev |
+
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
+| confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
+| confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
 ## Azure Cosmos DB
 
@@ -437,6 +435,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
 | fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | Show me the private endpoint connections for file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | What private endpoint connections exist for file share <file_share_name>? |
+| fileshares_fileshare_peconnection_update | Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_update | Reject private endpoint connection <connection_name> for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Update private endpoint connection <connection_name> status to Approved for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
@@ -1008,6 +1014,3 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription |
 | foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
 | foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundryextensions_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundryextensions_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundryextensions_threads_list | List my Microsoft Foundry threads |

@@ -30,6 +30,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Authentication](#authentication)
     - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
     - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+    - [Service Principal Returns 403 for OneLake Operations in VS Code](#service-principal-returns-403-for-onelake-operations-in-vs-code)
     - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
     - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
     - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
@@ -369,6 +370,51 @@ This error indicates that the access token doesn't have sufficient permissions t
     ```
 
     This will prompt you to select your desired account for authentication.
+
+### Service Principal Returns 403 for OneLake Operations in VS Code
+
+When using Azure MCP Server inside VS Code with a Service Principal authenticated via Azure CLI (`az login --service-principal`), OneLake DFS operations (such as `directory_create`, `upload_file`) may return `403 Forbidden`, even though the Service Principal has the correct permissions (e.g., Workspace Admin in Microsoft Fabric).
+
+#### Symptoms
+
+- OneLake **blob** operations (e.g., `file_list` without a path) may succeed with `200 OK`
+- OneLake **DFS** operations (e.g., `directory_create`, `upload_file`) fail with `403 Forbidden`
+- The same Service Principal works correctly when used from Python scripts or other tools outside VS Code
+- Fabric REST API operations (e.g., `item_create`) may also fail with `401 Unauthorized`
+
+#### Root Cause
+
+When running inside VS Code, the `VSCODE_PID` environment variable is automatically set for all child processes. The Azure MCP Server's credential chain detects this variable and reorders authentication to prioritize `VisualStudioCodeCredential` (the account signed into VS Code) over other credentials like `AzureCliCredential`.
+
+This means even if you have logged in via `az login --service-principal`, the MCP Server will use your VS Code account's token instead. If that account lacks the required data plane permissions on the target resource, operations will fail with 403.
+
+The credential chain when `VSCODE_PID` is detected becomes:
+
+```
+VisualStudioCodeCredential → EnvironmentCredential → VisualStudioCredential → AzureCliCredential → ...
+```
+
+#### Resolution
+
+Set the `AZURE_TOKEN_CREDENTIALS` environment variable to explicitly use `AzureCliCredential`, bypassing the VS Code credential prioritization:
+
+**Windows (User-level, persistent):**
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('AZURE_TOKEN_CREDENTIALS', 'AzureCliCredential', 'User')
+```
+
+**macOS/Linux:**
+
+```bash
+# Add to ~/.bashrc, ~/.zshrc, or equivalent
+export AZURE_TOKEN_CREDENTIALS=AzureCliCredential
+```
+
+> [!IMPORTANT]
+> After setting this environment variable, you must **fully close and reopen VS Code** (not just reload the window). The `Developer: Reload Window` command reuses the same VS Code process, which was started before the new environment variable was set. Only a complete restart creates a new process that inherits the updated environment.
+
+For more details on available credential options, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](#controlling-authentication-methods-with-azure_token_credentials).
 
 ### Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS
 

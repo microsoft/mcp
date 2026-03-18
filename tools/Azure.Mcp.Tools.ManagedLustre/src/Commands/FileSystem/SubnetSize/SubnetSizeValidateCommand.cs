@@ -12,10 +12,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand> logger)
+public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeValidateOptions>(logger)
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
+
+    private readonly IManagedLustreService _service = service;
 
     public override string Id => "b6317bba-e28c-445b-9133-9cfbfe677698";
 
@@ -79,8 +81,7 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
                 return context.Response;
 
             var options = BindOptions(parseResult);
-            var svc = context.GetService<IManagedLustreService>();
-            var subnetIsValid = await svc.CheckAmlFSSubnetAsync(
+            var subnetIsValid = await _service.CheckAmlFSSubnetAsync(
                                 options.Subscription!,
                                 options.Sku!,
                                 options.Size,

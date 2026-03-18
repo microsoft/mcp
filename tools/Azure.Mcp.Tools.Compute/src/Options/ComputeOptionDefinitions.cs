@@ -335,7 +335,7 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
-    // Delete options
+// Delete options
     public const string ForceDeletionName = "force-deletion";
 
     public static readonly Option<bool> ForceDeletion = new($"--{ForceDeletionName}")

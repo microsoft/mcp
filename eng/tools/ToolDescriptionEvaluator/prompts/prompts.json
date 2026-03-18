@@ -15,9 +15,6 @@
   "foundry_agents_evaluate": [
     "Evaluate the full query and response I got from my agent for task_adherence"
   ],
-  "foundryextensions_agents_get-sdk-sample": [
-    "Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK"
-  ],
   "foundry_agents_list": [
     "List all agents in my Microsoft Foundry resource",
     "Show me the available agents in my Microsoft Foundry resource"
@@ -62,15 +59,6 @@
     "List all Microsoft Foundry resources in my subscription",
     "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
     "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "foundryextensions_threads_create": [
-    "Create a Microsoft Foundry thread to hold the conversation"
-  ],
-  "foundryextensions_threads_get-messages": [
-    "Show me the messages in the Microsoft Foundry thread with id <thread_id>"
-  ],
-  "foundryextensions_threads_list": [
-    "List my Microsoft Foundry threads"
   ],
   "search_knowledge_base_get": [
     "List all knowledge bases in the Azure AI Search service <service-name>",
@@ -834,9 +822,6 @@
   "foundry_agents_evaluate": [
     "Evaluate the full query and response I got from my agent for task_adherence"
   ],
-  "foundryextensions_agents_get-sdk-sample": [
-    "Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK"
-  ],
   "foundry_agents_list": [
     "List all agents in my Microsoft Foundry resource",
     "Show me the available agents in my Microsoft Foundry resource"
@@ -881,15 +866,6 @@
     "List all Microsoft Foundry resources in my subscription",
     "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
     "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "foundryextensions_threads_create": [
-    "Create a Microsoft Foundry thread to hold the conversation"
-  ],
-  "foundryextensions_threads_get-messages": [
-    "Show me the messages in the Microsoft Foundry thread with id <thread_id>"
-  ],
-  "foundryextensions_threads_list": [
-    "List my Microsoft Foundry threads"
   ],
   "advisor_recommendations_list": [
     "List all recommendations in my subscription",
