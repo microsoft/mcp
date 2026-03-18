@@ -122,6 +122,13 @@
     <Project Path="tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.LiveTests/Azure.Mcp.Tools.Authorization.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.Authorization/tests/Azure.Mcp.Tools.Authorization.UnitTests/Azure.Mcp.Tools.Authorization.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/src/">
+    <Project Path="tools/Azure.Mcp.Tools.AzureBackup/src/Azure.Mcp.Tools.AzureBackup.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/Azure.Mcp.Tools.AzureBackup.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/src/">
     <Project Path="tools/Azure.Mcp.Tools.AzureBestPractices/src/Azure.Mcp.Tools.AzureBestPractices.csproj" />
