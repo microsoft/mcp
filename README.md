@@ -131,13 +131,6 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Fabric RTI MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=ms-fabric-rti&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22microsoft-fabric-rti-mcp%22%5D%7D) [![Install Fabric RTI MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=ms-fabric-rti&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22microsoft-fabric-rti-mcp%22%5D%7D&quality=insiders) [![Install Fabric RTI MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22ms-fabric-rti%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22microsoft-fabric-rti-mcp%22%5D%7D)
 
-### 📁 Microsoft Files
-- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
-- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
-- **CATEGORY**: `DEVELOPER TOOLS`
-- **TYPE**: `Local`
-- **INSTALL**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
-
 ### 📚 Microsoft Learn
 - **REPOSITORY**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
 - **DESCRIPTION**: AI assistant with real-time access to official Microsoft documentation.
