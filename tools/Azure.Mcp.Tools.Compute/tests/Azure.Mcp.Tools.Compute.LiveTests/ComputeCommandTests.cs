@@ -1169,26 +1169,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     #region Disk Delete Tests
 
     [Fact]
-    public async Task DiskDelete_WithoutForce_ReturnsWarning()
-    {
-        JsonElement? result = await CallToolAsync(
-            "compute_disk_delete",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", DiskName }
-            });
-
-        Assert.NotNull(result);
-        var message = result.Value.AssertProperty("Message");
-        Assert.Contains("WARNING", message.GetString());
-        Assert.Contains("--force", message.GetString());
-
-        Assert.False(result.Value.AssertProperty("Deleted").GetBoolean());
-    }
-
-    [Fact]
     public async Task DiskDelete_ExistingDisk_DeletesSuccessfully()
     {
         var deleteDiskName = $"{Settings.ResourceBaseName}-del-test";
@@ -1210,16 +1190,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", deleteDiskName },
-                { "force", true }
+                { "disk-name", deleteDiskName }
             });
 
         Assert.NotNull(result);
         Assert.True(result.Value.AssertProperty("Deleted").GetBoolean());
         Assert.NotNull(result.Value.AssertProperty("DiskName").GetString());
-
-        var message = result.Value.AssertProperty("Message");
-        Assert.Contains("successfully deleted", message.GetString());
     }
 
     [Fact]
@@ -1227,23 +1203,19 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var invalidDiskName = RegisterOrRetrieveVariable("deleteInvalidDiskName", "nonexistent-disk-" + Guid.NewGuid().ToString("N")[..8]);
 
-        // Delete a disk that doesn't exist (with --force)
+        // Delete a disk that doesn't exist
         JsonElement? result = await CallToolAsync(
             "compute_disk_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", invalidDiskName },
-                { "force", true }
+                { "disk-name", invalidDiskName }
             });
 
         // Idempotent operation should return Deleted = false for non-existent disk
         Assert.NotNull(result);
         Assert.False(result.Value.AssertProperty("Deleted").GetBoolean());
-
-        var message = result.Value.AssertProperty("Message");
-        Assert.Contains("was not found", message.GetString());
     }
 
     [Fact]
@@ -1268,8 +1240,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", deleteDiskName },
-                { "force", true }
+                { "disk-name", deleteDiskName }
             });
 
         Assert.NotNull(deleteResult);
@@ -1312,8 +1283,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", deleteDiskName },
-                { "force", true }
+                { "disk-name", deleteDiskName }
             });
 
         JsonElement? secondResult = await CallToolAsync(
@@ -1322,8 +1292,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "disk-name", deleteDiskName },
-                { "force", true }
+                { "disk-name", deleteDiskName }
             });
 
         // First delete should succeed, second should return false (already deleted)

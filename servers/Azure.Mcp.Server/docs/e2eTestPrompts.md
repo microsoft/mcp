@@ -245,8 +245,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_disk_delete | Delete the managed disk <disk-name> in resource group <resource-group> |
 | compute_disk_delete | Remove managed disk <disk-name> from resource group <resource-group> |
 | compute_disk_delete | Delete disk <disk-name> in resource group <resource-group> in my subscription |
-| compute_disk_delete | Force delete the managed disk <disk-name> in resource group <resource-group> |
-| compute_disk_delete | Delete disk <disk-name> in resource group <resource-group> with --force |
 | compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
 | compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
 | compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |
