@@ -14,9 +14,11 @@ The following cloud names are recognized and automatically mapped to their respe
 
 | Cloud Name | Authority Host | Aliases |
 |------------|----------------|---------|
-| Azure Public Cloud | `https://login.microsoftonline.com` | `AzureCloud`, `AzurePublicCloud`, `public` |
-| Azure China Cloud | `https://login.chinacloudapi.cn` | `AzureChinaCloud`, `china` |
-| Azure US Government | `https://login.microsoftonline.us` | `AzureUSGovernment`, `AzureUSGovernmentCloud`, `usgov`, `usgovernment` |
+| Azure Public Cloud | `https://login.microsoftonline.com` | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` |
+| Azure China Cloud | `https://login.chinacloudapi.cn` | `AzureChinaCloud`, `China`, `AzureChina` |
+| Azure US Government | `https://login.microsoftonline.us` | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
+
+*_The aliases are case insensitive._
 
 ## Configuration Methods
 

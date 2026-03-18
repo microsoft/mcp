@@ -850,6 +850,16 @@ If authentication still fails after switching clouds, check the following:
   | Azure China Cloud | `https://login.chinacloudapi.cn` |
   | Azure US Government | `https://login.microsoftonline.us` |
 
+#### Sovereign cloud in Remote (using Azure Container Apps)
+
+When authenicating in remote, the following environment variables need to be set on the container:
+
+- AZURE_CLOUD
+- AzureAd__ClientCredentials__0__TokenExchangeUrl
+
+If encountering authentication issues in remote, verify these environment variables are set correctly.
+For more information, see the [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md).
+
 ## Remote MCP Server (preview)
 
 Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:

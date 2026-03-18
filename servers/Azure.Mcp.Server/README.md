@@ -835,9 +835,11 @@ Azure MCP Server supports connecting to Azure sovereign clouds. By default, it a
 
 | Cloud | Aliases |
 |-------|---------|
-| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `public` |
-| Azure China Cloud | `AzureChinaCloud`, `china` |
-| Azure US Government | `AzureUSGovernment`, `usgov` |
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
+| Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
+
+*_The aliases are case insensitive._
 
 Use the `--cloud` option when starting the server, or set the `AZURE_CLOUD` environment variable:
 
