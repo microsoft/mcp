@@ -165,7 +165,7 @@ internal static class SqlQueryValidator
         }
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.None, RegexTimeout);
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
         if (matches.Count == 0)
         {
             throw new CommandValidationException("Query must contain a SELECT statement.", HttpStatusCode.BadRequest);
