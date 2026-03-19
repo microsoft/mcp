@@ -354,6 +354,28 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deviceregistry_namespace_list | List Device Registry namespaces in resource group <resource_group_name> |
 | deviceregistry_namespace_list | What Device Registry namespaces do I have in my Azure subscription? |
 
+## Azure DocumentDB (with MongoDB compatibility)
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| documentdb_index_list_indexes | List indexes for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_list_indexes | Show me all indexes on collection <collection-name> in database <db-name> |
+| documentdb_index_create_index | Create an index on collection <collection-name> in DocumentDB database <db-name> using keys <keys> |
+| documentdb_index_create_index | Add a DocumentDB index for collection <collection-name> in database <db-name> with keys <keys> and options <options> |
+| documentdb_index_drop_index | Drop index <index-name> from collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_drop_index | Remove the <index-name> index from DocumentDB collection <collection-name> in database <db-name> |
+| documentdb_others_get_stats | Show index statistics for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_others_get_stats | Get DocumentDB index stats for collection <collection-name> in database <db-name> |
+| documentdb_others_current_ops | Show current DocumentDB operations |
+| documentdb_others_current_ops | Get current DocumentDB operations filtered by <ops> |
+| documentdb_others_get_stats | Get statistics for database <db-name> |
+| documentdb_others_get_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_database_drop_database | Drop database <db-name> |
+| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB |
+| documentdb_database_list_databases | List all databases in DocumentDB |
+| documentdb_database_list_databases | Show me all DocumentDB databases |
+| documentdb_database_list_databases | Get details for database <db-name> in DocumentDB |
+
 ## Azure Event Grid
 
 | Tool Name | Test Prompt |

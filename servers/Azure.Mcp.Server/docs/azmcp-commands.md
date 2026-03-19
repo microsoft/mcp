@@ -1718,6 +1718,86 @@ azmcp deviceregistry namespace list --subscription <subscription> \
                                     [--resource-group <resource-group>]
 ```
 
+### Azure DocumentDB (with MongoDB compatibility) Operations
+
+```bash
+# List all indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index list indexes --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name>
+
+# Create an index on a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index create index --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name> \
+                                    --keys <json-index-keys> \
+                                    [--options <json-index-options>]
+
+# Drop an index from a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index drop index --connection-string <connection-string> \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name> \
+                                  --index-name <index-name>
+
+# List all databases or inspect a single database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database list databases --connection-string <connection-string> \
+                                         [--db-name <db-name>]
+
+# Rename a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection rename collection --connection-string <connection-string> \
+                                              --db-name <db-name> \
+                                              --collection-name <collection-name> \
+                                              --new-collection-name <new-collection-name>
+
+# Drop a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection drop collection --connection-string <connection-string> \
+                                            --db-name <db-name> \
+                                            --collection-name <collection-name>
+
+# Sample documents from a collection
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection sample documents --connection-string <connection-string> \
+                                             --db-name <db-name> \
+                                             --collection-name <collection-name> \
+                                             [--sample-size <sample-size>]
+
+# Get DocumentDB statistics for a database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type database \
+                                  --db-name <db-name>
+
+# Get DocumentDB statistics for a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type collection \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get DocumentDB statistics for indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type index \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get current DocumentDB operations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others current ops --connection-string <connection-string> \
+                                    [--ops <json-filter>]
+
+# Drop a database
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database drop database --connection-string <connection-string> \
+                                        --db-name <db-name>
+```
+
 ### Azure Event Grid Operations
 
 ```bash
