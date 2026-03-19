@@ -10,6 +10,9 @@ public static class PluginTelemetryOptionDefinitions
     public const string SessionIdName = "session-id";
     public const string ClientTypeName = "client-type";
     public const string PluginNameName = "plugin-name";
+    public const string PluginVersionName = "plugin-version";
+    public const string SkillNameName = "skill-name";
+    public const string SkillVersionName = "skill-version";
     public const string ToolNameName = "tool-name";
     public const string FileReferenceName = "file-reference";
 
@@ -45,11 +48,35 @@ public static class PluginTelemetryOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> PluginName = new(
+        $"--{PluginNameName}"
+    )
+    {
+        Description = "Name of the plugin being invoked.",
+        Required = false
+    };
+
+    public static readonly Option<string> PluginVersion = new(
+        $"--{PluginVersionName}"
+    )
+    {
+        Description = "Version of the plugin being invoked.",
+        Required = false
+    };
+
     public static readonly Option<string> SkillName = new(
-        $"--{SkillName}"
+        $"--{SkillNameName}"
     )
     {
         Description = "Name of the skill being invoked.",
+        Required = false
+    };
+
+    public static readonly Option<string> SkillVersion = new(
+        $"--{SkillVersionName}"
+    )
+    {
+        Description = "Version of the skill being invoked.",
         Required = false
     };
 

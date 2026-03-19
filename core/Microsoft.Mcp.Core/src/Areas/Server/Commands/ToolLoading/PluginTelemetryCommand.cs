@@ -34,8 +34,8 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         """
         Publish plugin-related telemetry events from agent hooks.
         Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type',
-        '--plugin-name', '--tool-name', and '--file-reference'. Use this command from agent hooks in clients
-        like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
+        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
+        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
         """;
 
     public override string Title => CommandTitle;
@@ -80,7 +80,10 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         command.Options.Add(PluginTelemetryOptionDefinitions.EventType);
         command.Options.Add(PluginTelemetryOptionDefinitions.SessionId);
         command.Options.Add(PluginTelemetryOptionDefinitions.ClientType);
+        command.Options.Add(PluginTelemetryOptionDefinitions.PluginName);
+        command.Options.Add(PluginTelemetryOptionDefinitions.PluginVersion);
         command.Options.Add(PluginTelemetryOptionDefinitions.SkillName);
+        command.Options.Add(PluginTelemetryOptionDefinitions.SkillVersion);
         command.Options.Add(PluginTelemetryOptionDefinitions.ToolName);
         command.Options.Add(PluginTelemetryOptionDefinitions.FileReference);
     }
@@ -93,7 +96,10 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
             EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
             SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
             ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
-            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
+            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
+            PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
+            SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
+            SkillVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillVersion.Name),
             ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
             FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
         };
@@ -175,6 +181,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
                 ("Plugins_SessionId", options.SessionId),
                 ("Plugins_ClientType", options.ClientType),
                 ("Plugins_PluginName", options.PluginName),
+                ("Plugins_PluginVersion", options.PluginVersion),
+                ("Plugins_SkillName", options.SkillName),
+                ("Plugins_SkillVersion", options.SkillVersion),
                 ("Plugins_ToolName", options.ToolName),
                 ("Plugins_Timestamp", options.Timestamp),
                 ("Plugins_FileReference", options.FileReference)
