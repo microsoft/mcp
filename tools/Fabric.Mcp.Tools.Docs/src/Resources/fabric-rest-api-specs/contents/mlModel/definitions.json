@@ -54,6 +54,11 @@
           "type": "string",
           "format": "uuid",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the machine learning model.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },

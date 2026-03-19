@@ -53,6 +53,11 @@
           "description": "The [DigitalTwinBuilder public definition](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-definition).",
           "$ref": "#/definitions/DigitalTwinBuilderDefinition",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the DigitalTwinBuilder.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -76,7 +81,7 @@
       }
     },
     "DigitalTwinBuilderDefinition": {
-      "description": "DigitalTwinBuilder public definition object.",
+      "description": "DigitalTwinBuilder public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-definition) for more details on the structure of the DigitalTwinBuilder definition.",
       "type": "object",
       "required": [ "parts" ],
       "properties": {

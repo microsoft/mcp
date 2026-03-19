@@ -86,6 +86,11 @@
                     "description": "The Digital Twin Builder Flow public definition.",
                     "$ref": "#/definitions/DigitalTwinBuilderFlowPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Digital Twin Builder Flow.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -109,7 +114,7 @@
             }
         },
         "DigitalTwinBuilderFlowPublicDefinition" : {
-            "description": "The Digital Twin Builder Flow public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) for more details on how to craft a Digital Twin Builder Flow public definition.",
+            "description": "The Digital Twin Builder Flow public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) for more details on the structure of the Digital Twin Builder Flow definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

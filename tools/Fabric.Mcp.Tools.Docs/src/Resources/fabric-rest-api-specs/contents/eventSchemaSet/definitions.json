@@ -70,6 +70,11 @@
           "description": "The EventSchemaSet public definition.",
           "$ref": "#/definitions/EventSchemaSetPublicDefinition",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the EventSchemaSet.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -97,7 +102,7 @@
       "type": "string"
     },
       "EventSchemaSetPublicDefinition": {
-        "description": "EventSchemaSet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/event-schema-set) for more details on how to craft a EventSchemaSet public definition.",
+        "description": "EventSchemaSet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/eventschemaset-definition) for more details on the structure of the EventSchemaSet definition.",
         "type": "object",
         "required": [ "parts" ],
         "properties": {

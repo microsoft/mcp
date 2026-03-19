@@ -85,6 +85,11 @@
                     "description": "The Warehouse snapshot creation payload.",
                     "$ref": "#/definitions/WarehouseSnapshotCreationPayload",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Warehouse snapshot.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },

@@ -170,6 +170,11 @@
         "definition": {
           "description": "The definition for the Snowflake Database.",
           "$ref": "#/definitions/SnowflakeDatabaseDefinition"
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the Snowflake Database.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -226,7 +231,7 @@
       }
     },
     "SnowflakeDatabaseDefinition": {
-      "description": "Snowflake Database public definition object.",
+      "description": "Snowflake Database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/snowflake-database-definition) for more details on the structure of the Snowflake Database definition.",
       "type": "object",
       "required": [
         "parts"

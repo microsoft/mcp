@@ -59,6 +59,11 @@
                     "description": "The AnomalyDetector definition.",
                     "$ref": "#/definitions/AnomalyDetectorDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the AnomalyDetector.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -82,7 +87,7 @@
             }
         },
         "AnomalyDetectorDefinition" : {
-            "description": "AnomalyDetector definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details on how to craft a AnomalyDetector public definition.",
+            "description": "AnomalyDetector definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details on the structure of the AnomalyDetector definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {
@@ -98,7 +103,7 @@
                         "values": [
                             {
                             "value": "AnomalyDetectorV1",
-                            "description": "Custom format for the AnomalyDetector definition, specifically designed to support CI/CD scenarios in Fabric. see [AnomalyDetector - AnomalyDetectorV1 specification](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details."
+                            "description": "Custom format for the AnomalyDetector definition, specifically designed to support CI/CD scenarios in Fabric. See [AnomalyDetector - AnomalyDetectorV1 specification](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details."
                             }
                         ]
                         },

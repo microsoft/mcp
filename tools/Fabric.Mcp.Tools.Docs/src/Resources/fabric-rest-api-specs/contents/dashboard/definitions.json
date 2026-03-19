@@ -59,6 +59,11 @@
                   "description": "The dashboard public definition.",
                   "$ref": "#/definitions/DashboardDefinition",
                   "readOnly": false
+              },
+              "sensitivityLabelSettings": {
+                  "description": "The sensitivity label settings for the dashboard.",
+                  "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                  "readOnly": false
               }
           }
       },

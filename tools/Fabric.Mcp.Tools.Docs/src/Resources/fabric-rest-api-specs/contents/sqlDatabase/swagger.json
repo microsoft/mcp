@@ -13,7 +13,7 @@
     "/workspaces/{workspaceId}/sqlDatabases": {
       "get": {
         "summary": "Returns a list of SQL databases from the specified workspace.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have a *viewer* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have a *viewer* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -91,7 +91,7 @@
       },
       "post": {
         "summary": "Creates a SQL database in the specified workspace.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create a SQL database with a public definition, refer to [SQLDatabase definition](/rest/api/fabric/articles/item-management/definitions/sql-database) article. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a SQL database the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create a SQL database with a public definition, refer to [SQLDatabase definition](/rest/api/fabric/articles/item-management/definitions/sql-database-definition) article. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a SQL database the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -180,10 +180,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}": {
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}": {
       "get": {
         "summary": "Returns properties of the specified SQL database.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\nThe caller must have *read* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.Read.All or SQLDatabase.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *read* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.Read.All or SQLDatabase.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -202,7 +202,7 @@
           },
           {
             "in": "path",
-            "name": "SQLDatabaseId",
+            "name": "sqlDatabaseId",
             "description": "The SQL database ID.",
             "type": "string",
             "format": "uuid",
@@ -244,7 +244,7 @@
       },
       "patch": {
         "summary": "Updates the properties of the specified SQL database.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\nThe caller must have *read and write* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *read and write* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -266,7 +266,7 @@
           },
           {
             "in": "path",
-            "name": "SQLDatabaseId",
+            "name": "sqlDatabaseId",
             "description": "The SQL database ID.",
             "type": "string",
             "format": "uuid",
@@ -317,7 +317,7 @@
       },
       "delete": {
         "summary": "Deletes the specified SQL database.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\nThe caller must have *write* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *write* permissions for the SQL database.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -336,11 +336,18 @@
           },
           {
             "in": "path",
-            "name": "SQLDatabaseId",
+            "name": "sqlDatabaseId",
             "description": "The SQL database ID.",
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -361,7 +368,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -370,14 +377,17 @@
         "x-ms-examples": {
           "Delete a SQLDatabase example": {
             "$ref": "./examples/DeleteSQLDatabase.json"
+          },
+          "Hard delete a SQLDatabase example": {
+            "$ref": "./examples/HardDeleteSQLDatabase.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/getDefinition": {
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/getDefinition": {
       "post": {
         "summary": "Returns the specified SQL database public definition.",
-        "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a SQL database's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a SQL database's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -397,7 +407,7 @@
           },
           {
             "in": "path",
-            "name": "SQLDatabaseId",
+            "name": "sqlDatabaseId",
             "description": "The SQL database ID.",
             "type": "string",
             "format": "uuid",
@@ -456,10 +466,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/updateDefinition": {
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified SQL database.",
-        "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n Updating the SQL database's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n Updating the SQL database's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -479,7 +489,7 @@
           },
           {
             "in": "path",
-            "name": "SQLDatabaseId",
+            "name": "sqlDatabaseId",
             "description": "The SQL database ID.",
             "type": "string",
             "format": "uuid",
@@ -551,126 +561,337 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/startMirroring": {
-        "post": {
-            "tags": [
-                "Mirroring"
-            ],
-            "operationId": "Mirroring_StartMirroring",
-            "summary": "Starts the mirroring of the specified SQL database..",
-            "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-            "produces": [
-                "application/json"
-            ],
-            "parameters": [
-                {
-                    "in": "path",
-                    "name": "workspaceId",
-                    "description": "The workspace identifier.",
-                    "type": "string",
-                    "format": "uuid",
-                    "required": true
-                },
-                {
-                    "in": "path",
-                    "name": "SQLDatabaseId",
-                    "description": "The SQL database ID.",
-                    "type": "string",
-                    "format": "uuid",
-                    "required": true
-                }
-            ],
-            "responses": {
-                "200": {
-                  "description": "Request completed successfully."
-                },
-                "429": {
-                  "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
-                  "x-ms-error-response": true,
-                  "headers": {
-                    "Retry-After": {
-                      "type": "integer",
-                      "description": "The number of seconds to wait before retrying the request."
-                    }
-                  },
-                  "schema": {
-                    "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-                },
-                "default": {
-                    "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
-                    "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                    }
-                }
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/startMirroring": {
+      "post": {
+        "tags": [
+          "Mirroring"
+        ],
+        "operationId": "Mirroring_StartMirroring",
+        "summary": "Starts the mirroring of the specified SQL database..",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
             },
-            "x-ms-examples": {
-                "Start mirroring example": {
-                    "$ref": "./examples/StartMirroring.json"
-                }
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Start mirroring example": {
+            "$ref": "./examples/StartMirroring.json"
+          }
         }
-     },
-    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/stopMirroring": {
-        "post": {
-            "tags": [
-                "Mirroring"
-            ],
-            "operationId": "Mirroring_StopMirroring",
-            "summary": "Stops the mirroring of the specified SQL database.",
-            "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-            "produces": [
-                "application/json"
-            ],
-            "parameters": [
-                {
-                    "in": "path",
-                    "name": "workspaceId",
-                    "description": "The workspace identifier.",
-                    "type": "string",
-                    "format": "uuid",
-                    "required": true
-                },
-                {
-                    "in": "path",
-                    "name": "SQLDatabaseId",
-                    "description": "The SQL database ID.",
-                    "type": "string",
-                    "format": "uuid",
-                    "required": true
-                }
-            ],
-            "responses": {
-                "200": {
-                  "description": "Request completed successfully."
-                },
-                "429": {
-                  "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
-                  "x-ms-error-response": true,
-                  "headers": {
-                    "Retry-After": {
-                      "type": "integer",
-                      "description": "The number of seconds to wait before retrying the request."
-                    }
-                  },
-                  "schema": {
-                    "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-                },
-                "default": {
-                    "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
-                    "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                    }
-                }
-            },
-            "x-ms-examples": {
-                "Stop mirroring example": {
-                    "$ref": "./examples/StopMirroring.json"
-                }
-            }
-         }
       }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/stopMirroring": {
+      "post": {
+        "tags": [
+          "Mirroring"
+        ],
+        "operationId": "Mirroring_StopMirroring",
+        "summary": "Stops the mirroring of the specified SQL database.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Stop mirroring example": {
+            "$ref": "./examples/StopMirroring.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/revalidateCMK": {
+      "post": {
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_RevalidateCMK",
+        "summary": "Revalidate Customer‑Managed Key (CMK) of the specified SQL database.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n Revalidating Customer‑Managed Key (CMK) of the specified SQL database, which checks that the currently configured Azure Key Vault (AKV) key is still accessible, valid, and authorized for encryption operations. \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Revalidate CMK is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\nFor more error codes, refer to: https://learn.microsoft.com/en-us/rest/api/sql/encryption-protectors/revalidate?view=rest-sql-2023-08-01&tabs=HTTP",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Revalidate CMK example": {
+            "$ref": "./examples/RevalidateCMK.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{sqlDatabaseId}/settings/sqlAudit": {
+      "get": {
+        "tags": [
+          "SQLAuditSettings"
+        ],
+        "operationId": "SQLAuditSettings_GetSQLAuditSettings",
+        "summary": "Gets the auditing settings on the specified SQL database.",
+        "description": "## Permissions\n\nThe caller must have reader or higher item permission.\n\n## Required Delegated Scopes\n\nSQLDatabase.Read.All or SQLDatabase.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SqlDatabaseAuditSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get SQL audit settings example": {
+            "$ref": "./examples/GetSqlAuditSettings.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "SQLAuditSettings"
+        ],
+        "operationId": "SQLAuditSettings_UpdateSQLAuditSettings",
+        "summary": "Updates the auditing settings on the specified SQL database.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sqlDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateAuditSettingsRequest",
+            "description": "Update SQL audit settings request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SqlDatabaseAuditSettingsUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SqlDatabaseAuditSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update SQL audit settings example": {
+            "$ref": "./examples/UpdateSqlAuditSettings.json"
+          }
+        }
+      }
+    }
   },
   "responses": {},
   "security": [],

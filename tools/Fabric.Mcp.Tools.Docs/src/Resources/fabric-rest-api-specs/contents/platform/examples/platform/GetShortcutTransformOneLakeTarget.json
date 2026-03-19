@@ -20,6 +20,7 @@
         },
         "transform": {
           "type": "csvToDelta",
+          "includeSubfolders": true,
           "properties": {
             "useFirstRowAsHeader": false,
             "delimiter": ",",

@@ -59,6 +59,11 @@
 			  "description": "The data pipeline public definition.",
 			  "$ref": "#/definitions/DataPipelineDefinition",
 			  "readOnly": false
+			},
+			"sensitivityLabelSettings": {
+			  "description": "The sensitivity label settings for the data pipeline.",
+			  "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+			  "readOnly": false
 			}
         }
       },
@@ -82,7 +87,7 @@
           }
       },
       "DataPipelineDefinition" : {
-          "description": "Data pipeline public definition object.",
+          "description": "Data pipeline public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/datapipeline-definition) for more details on the structure of the Data pipeline definition.",
           "type": "object",
           "required": ["parts"],
           "properties": {

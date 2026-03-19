@@ -18,15 +18,18 @@
                 "AzureDataExplorer",
                 "AzureEventGridNamespace",
                 "AzureEventHub",
+                "AzureEventHubExtended",
                 "AzureIoTHub",
                 "AzureSQLDBCDC",
                 "AzureSQLMIDBCDC",
                 "ConfluentCloud",
                 "CustomEndpoint",
+                "FabricCapacityOverviewEvents",
                 "FabricJobEvents",
                 "FabricOneLakeEvents",
                 "FabricWorkspaceItemEvents",
                 "GooglePubSub",
+                "Http",
                 "Mqtt",
                 "MySQLCDC",
                 "PostgreSQLCDC",
@@ -72,6 +75,10 @@
                         "description": "The Azure Event Hub source type."
                     },
                     {
+                        "value": "AzureEventHubExtended",
+                        "description": "The Azure Event Hub Extended source type."
+                    },
+                    {
                         "value": "AzureIoTHub",
                         "description": "The Azure IoT Hub source type."
                     },
@@ -92,12 +99,16 @@
                         "description": "The Custom Endpoint source type."
                     },
                     {
+                        "value": "FabricCapacityOverviewEvents",
+                        "description": "The Fabric Capacity Overview Events source type."
+                    },
+                    {
                         "value": "FabricJobEvents",
                         "description": "The Fabric Job Events source type."
                     },
                     {
                         "value": "FabricOneLakeEvents",
-                        "description": "The Fabric One Lake Events source type."
+                        "description": "The Fabric OneLake Events source type."
                     },
                     {
                         "value": "FabricWorkspaceItemEvents",
@@ -106,6 +117,10 @@
                     {
                         "value": "GooglePubSub",
                         "description": "The Google PubSub source type."
+                    },
+                    {
+                        "value": "Http",
+                        "description": "The HTTP source type."
                     },
                     {
                         "value": "Mqtt",
@@ -232,6 +247,25 @@
             ],
             "x-ms-discriminator-value": "AzureEventHub"
         },
+        "AzureEventHubExtendedSourceResponse": {
+            "type": "object",
+            "description": "Azure Event Hub Extended source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Event Hub Extended source.",
+                    "$ref": "#/definitions/AzureEventHubExtendedSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureEventHubExtended"
+        },
         "AzureIoTHubSourceResponse": {
             "type": "object",
             "description": "Azure IoT Hub source response.",
@@ -288,6 +322,25 @@
                 }
             ],
             "x-ms-discriminator-value": "CustomEndpoint"
+        },
+        "FabricCapacityOverviewEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric Capacity Overview Events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric Capacity Overview Events source.",
+                    "$ref": "#/definitions/FabricCapacityOverviewEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricCapacityOverviewEvents"
         },
         "SampleDataSourceResponse": {
             "type": "object",
@@ -567,6 +620,25 @@
             ],
             "x-ms-discriminator-value": "GooglePubSub"
         },
+        "HttpSourceResponse": {
+            "type": "object",
+            "description": "HTTP source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the HTTP source.",
+                    "$ref": "#/definitions/HttpSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Http"
+        },
         "MqttSourceResponse": {
             "type": "object",
             "description": "MQTT source response.",
@@ -588,13 +660,13 @@
         },
         "FabricJobEventsSourceResponse": {
             "type": "object",
-            "description": "Fabric Job events source response.",
+            "description": "Fabric Job Events source response.",
             "required": [
                 "properties"
             ],
             "properties": {
                 "properties": {
-                    "description": "The properties of the Fabric Job events source.",
+                    "description": "The properties of the Fabric Job Events source.",
                     "$ref": "#/definitions/FabricJobEventsSourceProperties"
                 }
             },
@@ -607,13 +679,13 @@
         },
         "FabricOneLakeEventsSourceResponse": {
             "type": "object",
-            "description": "Fabric OneLake events source response.",
+            "description": "Fabric OneLake Events source response.",
             "required": [
                 "properties"
             ],
             "properties": {
                 "properties": {
-                    "description": "The properties of the Fabric OneLake events source.",
+                    "description": "The properties of the Fabric OneLake Events source.",
                     "$ref": "#/definitions/FabricOneLakeEventsSourceProperties"
                 }
             },
@@ -626,13 +698,13 @@
         },
         "FabricWorkspaceItemEventsSourceResponse": {
             "type": "object",
-            "description": "Fabric Workspace Item events source response.",
+            "description": "Fabric Workspace Item Events source response.",
             "required": [
                 "properties"
             ],
             "properties": {
                 "properties": {
-                    "description": "The properties of the Fabric Workspace Item events source.",
+                    "description": "The properties of the Fabric Workspace Item Events source.",
                     "$ref": "#/definitions/FabricWorkspaceItemEventsSourceProperties"
                 }
             },
@@ -681,6 +753,48 @@
                 },
                 "inputSerialization": {
                     "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "AzureEventHubExtendedSourceProperties": {
+            "type": "object",
+            "description": "Azure Event Hub Extended source properties.",
+            "required": [
+                "dataConnectionId",
+                "consumerGroupName",
+                "startPosition"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure Event Hub data connection identifier.",
+                    "format": "uuid"
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "startPosition": {
+                    "type": "string",
+                    "description": "The start position in the Azure Event Hub stream.",
+                    "enum": [
+                        "Earliest",
+                        "Latest"
+                    ],
+                    "x-ms-enum": {
+                        "name": "StartPosition",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Earliest",
+                                "description": "Start from the earliest event."
+                            },
+                            {
+                                "value": "Latest",
+                                "description": "Start from the latest event."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -816,6 +930,71 @@
             "type": "object",
             "description": "Custom endpoint events source properties.",
             "properties": {}
+        },
+        "FabricCapacityOverviewEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric Capacity Overview Events source properties.",
+            "required": [
+                "eventScope",
+                "capacityId"
+            ],
+            "properties": {
+                "eventScope": {
+                    "type": "string",
+                    "enum": [
+                        "Tenant",
+                        "Capacity",
+                        "Workspace",
+                        "Item",
+                        "SubItem"
+                    ],
+                    "x-ms-enum": {
+                        "name": "EventScope",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Tenant",
+                                "description": "The event scope is Tenant."
+                            },
+                            {
+                                "value": "Capacity",
+                                "description": "The event scope is Capacity."
+                            },
+                            {
+                                "value": "Workspace",
+                                "description": "The event scope is Workspace."
+                            },
+                            {
+                                "value": "Item",
+                                "description": "The event scope is Item."
+                            },
+                            {
+                                "value": "SubItem",
+                                "description": "The event scope is SubItem."
+                            }
+                        ]
+                    }
+                },
+                "capacityId": {
+                    "type": "string",
+                    "description": "The capacity identifier.",
+                    "format": "uuid"
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The list of event types to include. Supported values: Microsoft.Fabric.Capacity.State, Microsoft.Fabric.Capacity.Summary. Additional event types may be added over time.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "array",
+                    "description": "The Azure Event Grid advanced filters to apply. Each entry is an advanced filter object as defined by Azure Event Grid. For details, see https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering.",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
         },
         "SampleDataSourceProperties": {
             "type": "object",
@@ -1467,11 +1646,6 @@
             "required": [
                 "slotName"
             ],
-            "allOf": [
-                {
-                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
-                }
-            ],
             "properties": {
                 "slotName": {
                     "type": "string",
@@ -1482,7 +1656,12 @@
                     "description": "The port number. Default is 5432.",
                     "default": 5432
                 }
-            }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            ]
         },
         "RealTimeWeatherSourceProperties": {
             "type": "object",
@@ -1513,6 +1692,77 @@
                     "type": "string",
                     "description": "The Google Pub/Sub data connection identifier.",
                     "format": "uuid"
+                }
+            }
+        },
+        "HttpSourceProperties": {
+            "type": "object",
+            "description": "HTTP source properties.",
+            "required": [
+                "dataConnectionId",
+                "method"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The HTTP data connection identifier.",
+                    "format": "uuid"
+                },
+                "method": {
+                    "type": "string",
+                    "description": "The HTTP method. Additional methods may be added over time.",
+                    "enum": [
+                        "GET",
+                        "POST"
+                    ],
+                    "x-ms-enum": {
+                        "name": "HttpMethod",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "GET",
+                                "description": "The HTTP GET method."
+                            },
+                            {
+                                "value": "POST",
+                                "description": "The HTTP POST method."
+                            }
+                        ]
+                    }
+                },
+                "requestHeaders": {
+                    "type": "array",
+                    "description": "The HTTP request headers.",
+                    "items": {
+                        "$ref": "common.json#/definitions/KeyStringValuePair"
+                    }
+                },
+                "requestParameters": {
+                    "type": "array",
+                    "description": "The HTTP request parameters.",
+                    "items": {
+                        "$ref": "common.json#/definitions/KeyStringValuePair"
+                    }
+                },
+                "requestBody": {
+                    "type": "string",
+                    "description": "The HTTP request body."
+                },
+                "pollIntervalMs": {
+                    "type": "integer",
+                    "description": "The polling interval in milliseconds."
+                },
+                "maxRetries": {
+                    "type": "integer",
+                    "description": "The maximum number of retries for failed requests."
+                },
+                "retryBackoffMs": {
+                    "type": "integer",
+                    "description": "The retry backoff time in milliseconds."
+                },
+                "retriableHttpStatusCodes": {
+                    "type": "string",
+                    "description": "The retriable HTTP status codes as a comma-separated string."
                 }
             }
         },
@@ -1560,7 +1810,7 @@
         },
         "FabricJobEventsSourceProperties": {
             "type": "object",
-            "description": "Fabric Job events source properties.",
+            "description": "Fabric Job Events source properties.",
             "required": [
                 "eventScope",
                 "workspaceId",
@@ -1615,7 +1865,7 @@
                 },
                 "includedEventTypes": {
                     "type": "array",
-                    "description": "The included event types.",
+                    "description": "The list of event types to include. Supported values: Microsoft.Fabric.JobEvents.ItemJobCreated, Microsoft.Fabric.JobEvents.ItemJobStatusChanged, Microsoft.Fabric.JobEvents.ItemJobSucceeded, Microsoft.Fabric.JobEvents.ItemJobFailed. Additional event types may be added over time.",
                     "items": {
                         "type": "string"
                     }
@@ -1628,7 +1878,7 @@
         },
         "FabricOneLakeEventsSourceProperties": {
             "type": "object",
-            "description": "Fabric OneLake events source properties.",
+            "description": "Fabric OneLake Events source properties.",
             "required": [
                 "tenantId",
                 "workspaceId",
@@ -1660,7 +1910,7 @@
                 },
                 "includedEventTypes": {
                     "type": "array",
-                    "description": "The included event types.",
+                    "description": "The list of event types to include. Supported values: Microsoft.Fabric.OneLake.FileCreated, Microsoft.Fabric.OneLake.FileDeleted, Microsoft.Fabric.OneLake.FileRenamed, Microsoft.Fabric.OneLake.FolderCreated, Microsoft.Fabric.OneLake.FolderDeleted, Microsoft.Fabric.OneLake.FolderRenamed. Additional event types may be added over time.",
                     "items": {
                         "type": "string"
                     }
@@ -1673,7 +1923,7 @@
         },
         "FabricWorkspaceItemEventsSourceProperties": {
             "type": "object",
-            "description": "Fabric Workspace Item events source properties.",
+            "description": "Fabric Workspace Item Events source properties.",
             "required": [
                 "eventScope",
                 "workspaceId"
@@ -1727,7 +1977,7 @@
                 },
                 "includedEventTypes": {
                     "type": "array",
-                    "description": "The included event types.",
+                    "description": "The list of event types to include. Supported values: Microsoft.Fabric.ItemCreateSucceeded, Microsoft.Fabric.ItemCreateFailed, Microsoft.Fabric.ItemUpdateSucceeded, Microsoft.Fabric.ItemUpdateFailed, Microsoft.Fabric.ItemDeleteSucceeded, Microsoft.Fabric.ItemDeleteFailed. Additional event types may be added over time.",
                     "items": {
                         "type": "string"
                     }

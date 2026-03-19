@@ -1,7 +1,7 @@
 {
     "parameters": {
         "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
-        "GraphQuerySetId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+        "graphQuerySetId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
     },
     "responses": {
         "200": {
@@ -10,7 +10,10 @@
                 "displayName": "GraphQuerySet 1",
                 "description": "A GraphQuerySet description.",
                 "type": "GraphQuerySet",
-                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "sensitivityLabel": {
+                    "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                }
             }
         }
     }

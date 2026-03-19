@@ -91,7 +91,7 @@
       },
       "post": {
         "summary": "Creates a spark job definition in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for `SparkJobDefinitionV2` format. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a spark job definition the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv2) article for `SparkJobDefinitionV2` format. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a spark job definition the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -341,6 +341,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -361,7 +368,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -370,6 +377,9 @@
         "x-ms-examples": {
           "Delete a spark job definition example": {
             "$ref": "./examples/DeleteSparkJobDefinition.json"
+          },
+          "Hard delete a spark job definition example": {
+            "$ref": "./examples/HardDeleteSparkJobDefinition.json"
           }
         }
       }
@@ -408,20 +418,23 @@
             "name": "format",
             "type": "string",
             "description": "The format of the request. Can be either `SparkJobDefinitionV1` or `SparkJobDefinitionV2`. Additional Format types may be added over time.",
-            "enum": ["SparkJobDefinitionV1", "SparkJobDefinitionV2"],
+            "enum": [
+              "SparkJobDefinitionV1",
+              "SparkJobDefinitionV2"
+            ],
             "x-ms-enum": {
-                "name": "SparkJobDefinitionFormat",
-                "modelAsString": true,
-                "values": [
-                    {
-                        "value": "SparkJobDefinitionV1",
-                        "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for more details."
-                    },
-                    {
-                        "value": "SparkJobDefinitionV2",
-                        "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for more details."
-                    }
-                ]
+              "name": "SparkJobDefinitionFormat",
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "SparkJobDefinitionV1",
+                  "description": "The default format for spark job definitions. Does not support Main/Libs file parts. Refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv1) article for more details."
+                },
+                {
+                  "value": "SparkJobDefinitionV2",
+                  "description": "The new format for spark job definitions. Supports Main/Libs file parts. Refer to [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv2) article for more details."
+                }
+              ]
             },
             "required": false
           }
@@ -434,7 +447,7 @@
             }
           },
           "202": {
-            "description": "Request accepted. Retrieving the definition is in progress. For details on how to retrieve the long-running operation result, see [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result). For details on what the response contains, see [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article. Note that the `format` field will not be included in the response payload.",
+            "description": "Request accepted. Retrieving the definition is in progress. For details on how to retrieve the long-running operation result, see [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result). For details on what the response contains, see [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv2) article. Note that the `format` field will not be included in the response payload.",
             "headers": {
               "Location": {
                 "description": "The URL of the operation status, which can be used to track the operation state.",
@@ -484,7 +497,7 @@
     "/workspaces/{workspaceId}/sparkJobDefinitions/{sparkJobDefinitionId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified spark job definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To update spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition-v2) article for `SparkJobDefinitionV2` format. \n\n \nUpdating the spark job definition's definition does not affect its sensitivity label. \n\n## Permissions\n\nThe caller must have *read and write* permissions for the spark job definition.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To update spark job definition with a public definition, refer to [SparkJobDefinitionV1](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv1) article for `SparkJobDefinitionV1` format and [SparkJobDefinitionV2](/rest/api/fabric/articles/item-management/definitions/spark-job-definition#sparkjobdefinitionv2) article for `SparkJobDefinitionV2` format. \n\n \nUpdating the spark job definition's definition does not affect its sensitivity label. \n\n## Permissions\n\nThe caller must have *read and write* permissions for the spark job definition.\n\n## Required Delegated Scopes\n\n SparkJobDefinition.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -766,42 +779,42 @@
             "required": true
           },
           {
-              "in": "query",
-              "name": "beta",
-              "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
-              "type": "boolean",
-              "required": true
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
           },
           {
-              "in": "query",
-              "name": "submittedDateTime",
-              "description": "Submitted date time filter. Filter the sessions based on the submitted date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
-              "type": "string",
-              "format": "date-time",
-              "required": false
+            "in": "query",
+            "name": "submittedDateTime",
+            "description": "Submitted date time filter. Filter the sessions based on the submitted date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+            "type": "string",
+            "format": "date-time",
+            "required": false
           },
           {
-              "in": "query",
-              "name": "endDateTime",
-              "description": "Ended date time filter. Filter the sessions based on the ended date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
-              "type": "string",
-              "format": "date-time",
-              "required": false
+            "in": "query",
+            "name": "endDateTime",
+            "description": "Ended date time filter. Filter the sessions based on the ended date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+            "type": "string",
+            "format": "date-time",
+            "required": false
           },
           {
-              "in": "query",
-              "name": "submitter.Id",
-              "description": "The GUID value of the user who submitted the session.",
-              "type": "string",
-              "format": "uuid",
-              "required": false
+            "in": "query",
+            "name": "submitter.Id",
+            "description": "The GUID value of the user who submitted the session.",
+            "type": "string",
+            "format": "uuid",
+            "required": false
           },
           {
-              "in": "query",
-              "name": "state",
-              "description": "The state of the session. Possible values are: `NotStarted`, `InProgress`, `Cancelled`, `Failed`, `Succeeded`, `Unknown`. This value maps to the `state` field in the response.",
-              "type": "string",
-              "required": false
+            "in": "query",
+            "name": "state",
+            "description": "The state of the session. Possible values are: `NotStarted`, `InProgress`, `Cancelled`, `Failed`, `Succeeded`, `Unknown`. This value maps to the `state` field in the response.",
+            "type": "string",
+            "required": false
           },
           {
             "in": "query",

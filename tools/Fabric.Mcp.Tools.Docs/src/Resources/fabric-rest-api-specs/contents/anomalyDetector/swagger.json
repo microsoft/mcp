@@ -10,7 +10,7 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/anomalydetectors": {
+    "/workspaces/{workspaceId}/anomalyDetectors": {
       "get": {
         "summary": "Returns a list of AnomalyDetectors from the specified workspace.",
         "description": "> [!NOTE]\n> AnomalyDetector item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -177,7 +177,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/anomalydetectors/{anomalyDetectorId}": {
+    "/workspaces/{workspaceId}/anomalyDetectors/{anomalyDetectorId}": {
       "get": {
         "summary": "Returns properties of the specified AnomalyDetector.",
         "description": "> [!NOTE]\n> AnomalyDetector item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the AnomalyDetector. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -338,6 +338,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -358,20 +365,23 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           }
         },
         "x-ms-examples": {
-          "Delete a AnomalyDetector example": {
+          "Delete an AnomalyDetector example": {
             "$ref": "./examples/DeleteAnomalyDetector.json"
+          },
+          "Hard delete an AnomalyDetector example": {
+            "$ref": "./examples/HardDeleteAnomalyDetector.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/anomalydetectors/{anomalyDetectorId}/getDefinition": {
+    "/workspaces/{workspaceId}/anomalyDetectors/{anomalyDetectorId}/getDefinition": {
       "post": {
         "summary": "Returns the specified AnomalyDetector definition.",
         "description": "> [!NOTE]\n> AnomalyDetector item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a AnomalyDetector's definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the AnomalyDetector. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -473,7 +483,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/anomalydetectors/{anomalyDetectorId}/updateDefinition": {
+    "/workspaces/{workspaceId}/anomalyDetectors/{anomalyDetectorId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified AnomalyDetector.",
         "description": "> [!NOTE]\n> AnomalyDetector item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the AnomalyDetector's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the AnomalyDetector. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",

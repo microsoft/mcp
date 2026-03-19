@@ -59,6 +59,11 @@
                     "description": "The MountedDataFactory public definition.",
                     "$ref": "#/definitions/MountedDataFactoryDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the MountedDataFactory.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -82,7 +87,7 @@
             }
         },
         "MountedDataFactoryDefinition" : {
-            "description": "MountedDataFactory public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mounted-data-factory-definition) for more details on how to craft a MountedDataFactory public definition.",
+            "description": "MountedDataFactory public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mounted-data-factory-definition) for more details on the structure of the MountedDataFactory definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

@@ -10,10 +10,10 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/GraphModels": {
+    "/workspaces/{workspaceId}/graphModels": {
       "get": {
         "summary": "Returns a list of GraphModels from the specified workspace.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -91,7 +91,7 @@
       },
       "post": {
         "summary": "Creates a GraphModel in the specified workspace.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create GraphModel with a public definition, refer to [GraphModel](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a GraphModel the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create GraphModel with a public definition, refer to [GraphModel](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a GraphModel the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -177,10 +177,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}": {
       "get": {
         "summary": "Returns properties of the specified GraphModel.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -199,7 +199,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
@@ -241,7 +241,7 @@
       },
       "patch": {
         "summary": "Updates the properties of the specified GraphModel.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel.\n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel.\n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -263,7 +263,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
@@ -314,7 +314,7 @@
       },
       "delete": {
         "summary": "Deletes the specified GraphModel.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -333,11 +333,18 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -358,7 +365,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -367,14 +374,17 @@
         "x-ms-examples": {
           "Delete a GraphModel example": {
             "$ref": "./examples/DeleteGraphModel.json"
+          },
+          "Hard delete a GraphModel example": {
+            "$ref": "./examples/HardDeleteGraphModel.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/getDefinition": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}/getDefinition": {
       "post": {
         "summary": "Returns the specified GraphModel public definition.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a GraphModel's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a GraphModel's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -394,7 +404,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
@@ -460,10 +470,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/updateDefinition": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified GraphModel.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the GraphModel's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the GraphModel's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -483,7 +493,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
@@ -555,10 +565,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/jobs/RefreshGraph/instances": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}/jobs/refreshGraph/instances": {
       "post": {
         "summary": "Run on-demand RefreshGraph job model.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Required Delegated Scopes\n\nGraphModel.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Required Delegated Scopes\n\nGraphModel.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -577,7 +587,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel item ID.",
             "type": "string",
             "format": "uuid",
@@ -628,10 +638,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/executeQuery?beta=true": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}/executeQuery?beta=true": {
       "post": {
         "summary": "Executes a query on the specified graph model.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -653,7 +663,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",
@@ -711,10 +721,10 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/getQueryableGraphType?beta=true": {
+    "/workspaces/{workspaceId}/graphModels/{graphModelId}/getQueryableGraphType?beta=true": {
       "get": {
         "summary": "Get the current queryable graph type.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n The caller must have *read* permissions for the graph model. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta` (`preview` query parameter has been replaced by `beta`. For backward compatibility, `preview` is still supported and behaves the same as `beta`).**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n The caller must have *read* permissions for the graph model. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -733,7 +743,7 @@
           },
           {
             "in": "path",
-            "name": "GraphModelId",
+            "name": "graphModelId",
             "description": "The GraphModel ID.",
             "type": "string",
             "format": "uuid",

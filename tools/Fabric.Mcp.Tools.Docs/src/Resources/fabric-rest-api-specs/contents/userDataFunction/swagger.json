@@ -10,7 +10,7 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/UserDataFunctions": {
+    "/workspaces/{workspaceId}/userDataFunctions": {
       "get": {
         "summary": "Returns a list of UserDataFunctions from the specified workspace.",
         "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have a *viewer* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -53,7 +53,7 @@
             "name": "continuationToken",
             "description": "A token for retrieving the next page of results.",
             "type": "string",
-            "required": false   
+            "required": false
           }
         ],
         "responses": {
@@ -177,7 +177,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/UserDataFunctions/{UserDataFunctionId}": {
+    "/workspaces/{workspaceId}/userDataFunctions/{userDataFunctionId}": {
       "get": {
         "summary": "Returns properties of the specified UserDataFunction.",
         "description": "## Permissions\n\nThe caller must have *read* permissions for the UserDataFunction.\n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -199,18 +199,11 @@
           },
           {
             "in": "path",
-            "name": "UserDataFunctionId",
+            "name": "userDataFunctionId",
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",
             "required": true
-      
-       
-              
-                
-                                                                
-                
-              
           }
         ],
         "responses": {
@@ -270,7 +263,7 @@
           },
           {
             "in": "path",
-            "name": "UserDataFunctionId",
+            "name": "userDataFunctionId",
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",
@@ -340,11 +333,18 @@
           },
           {
             "in": "path",
-            "name": "UserDataFunctionId",
+            "name": "userDataFunctionId",
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",
-            "required": true 
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -365,7 +365,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -374,11 +374,14 @@
         "x-ms-examples": {
           "Delete a UserDataFunction example": {
             "$ref": "./examples/DeleteUserDataFunction.json"
+          },
+          "Hard delete a UserDataFunction example": {
+            "$ref": "./examples/HardDeleteUserDataFunction.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/UserDataFunctions/{UserDataFunctionId}/getDefinition": {
+    "/workspaces/{workspaceId}/userDataFunctions/{userDataFunctionId}/getDefinition": {
       "post": {
         "summary": "Returns the specified UserDataFunction public definition.",
         "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a UserDataFunction's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\nThe caller must have *read and write* permissions for the UserDataFunction.\n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -401,7 +404,7 @@
           },
           {
             "in": "path",
-            "name": "UserDataFunctionId",
+            "name": "userDataFunctionId",
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",
@@ -467,7 +470,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/UserDataFunctions/{UserDataFunctionId}/updateDefinition": {
+    "/workspaces/{workspaceId}/userDataFunctions/{userDataFunctionId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified UserDataFunction.",
         "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the UserDataFunction's definition, does not affect its sensitivity label. \n\n## Permissions\n\nThe caller must have *read and write* permissions for the UserDataFunction.\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -490,7 +493,7 @@
           },
           {
             "in": "path",
-            "name": "UserDataFunctionId",
+            "name": "userDataFunctionId",
             "description": "The UserDataFunction ID.",
             "type": "string",
             "format": "uuid",

@@ -341,6 +341,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -361,7 +368,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -370,6 +377,9 @@
         "x-ms-examples": {
           "Delete a mirroredAzureDatabricksCatalog example": {
             "$ref": "./examples/DeleteMirroredAzureDatabricksCatalog.json"
+          },
+          "Hard delete a mirroredAzureDatabricksCatalog example": {
+            "$ref": "./examples/HardDeleteMirroredAzureDatabricksCatalog.json"
           }
         }
       }
@@ -623,7 +633,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/azuredatabricks/catalogs": {
+    "/workspaces/{workspaceId}/azureDatabricks/catalogs": {
       "get": {
         "summary": "Returns a list of catalogs from Unity Catalog.",
         "description": "> [!NOTE]\n> Mirrored Azure Databricks Catalog item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -703,7 +713,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/azuredatabricks/catalogs/{catalogName}/schemas": {
+    "/workspaces/{workspaceId}/azureDatabricks/catalogs/{catalogName}/schemas": {
       "get": {
         "summary": "Returns a list of schemas in the given catalog from Unity Catalog.",
         "description": "> [!NOTE]\n> Mirrored Azure Databricks Catalog item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -790,7 +800,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/azuredatabricks/catalogs/{catalogName}/schemas/{schemaName}/tables": {
+    "/workspaces/{workspaceId}/azureDatabricks/catalogs/{catalogName}/schemas/{schemaName}/tables": {
       "get": {
         "summary": "Returns a list of tables in the given schema from Unity Catalog.",
         "description": "> [!NOTE]\n> Mirrored Azure Databricks Catalog item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",

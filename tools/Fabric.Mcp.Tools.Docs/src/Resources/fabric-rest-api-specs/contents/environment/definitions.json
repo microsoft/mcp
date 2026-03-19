@@ -343,6 +343,11 @@
                     "description": "The environment public definition.",
                     "$ref": "#/definitions/EnvironmentDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the environment.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -366,7 +371,7 @@
             }
         },
         "EnvironmentDefinition" : {
-            "description": "Environment public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/environment-definition) for more details on how to craft a environment public definition.",
+            "description": "Environment public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/environment-definition) for more details on the structure of the Environment definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

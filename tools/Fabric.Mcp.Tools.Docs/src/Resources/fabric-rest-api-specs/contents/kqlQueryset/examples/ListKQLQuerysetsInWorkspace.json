@@ -11,21 +11,30 @@
                         "displayName": "KQLQueryset_1",
                         "description": "A KQL queryset description.",
                         "type": "KQLQueryset",
-                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                        }
                     },
                     {
                         "id": "4c9adc22-ffb1-491f-baaa-9c9987745591",
                         "displayName": "KQLQueryset_2",
                         "description": "A KQL queryset description.",
                         "type": "KQLQueryset",
-                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                        }
                     },
                     {
                         "id": "8b681594-894d-4adf-8ae8-aed415dd1de6",
                         "displayName": "KQLQueryset_3",
                         "description": "A KQL queryset description.",
                         "type": "KQLQueryset",
-                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                        }
                     }
                 ]
             }

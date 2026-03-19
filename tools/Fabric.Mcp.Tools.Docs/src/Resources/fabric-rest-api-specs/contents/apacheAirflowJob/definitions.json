@@ -59,6 +59,11 @@
                     "description": "The Apache Airflow job public definition.",
                     "$ref": "#/definitions/ApacheAirflowJobDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Apache Airflow job.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -334,6 +339,293 @@
                     "type": "integer",
                     "minimum": 5
                 }
+            }
+        },
+        "AirflowEnvironmentStatusResponse": {
+            "description": "Apache Airflow environment status response.",
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "description": "The Apache Airflow environment status.",
+                    "$ref": "#/definitions/AirflowEnvironmentStatus",
+                    "readOnly": true
+                }
+            }
+        },
+        "AirflowEnvironmentStatus": {
+            "type": "string",
+            "description": "Apache Airflow environment status. Additional statuses may be added over time.",
+            "enum": [
+                "Initial",
+                "Starting",
+                "Started",
+                "Stopping",
+                "Stopped",
+                "Upgrading",
+                "Failed"
+            ],
+            "x-ms-enum": {
+                "name": "AirflowEnvironmentStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Initial",
+                        "description": "The environment for the Airflow is initializing."
+                    },
+                    {
+                        "value": "Starting",
+                        "description": "The environment for the Airflow is starting."
+                    },
+                    {
+                        "value": "Started",
+                        "description": "The environment for the Airflow is running."
+                    },
+                    {
+                        "value": "Stopping",
+                        "description": "The environment for the Airflow is stopping."
+                    },
+                    {
+                        "value": "Stopped",
+                        "description": "The environment for the Airflow is stopped."
+                    },
+                    {
+                        "value": "Upgrading",
+                        "description": "The environment for the Airflow is upgrading."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "The environment for the Airflow encountered a failure."
+                    }
+                ]
+            }
+        },
+        "AirflowLibrariesResponse": {
+            "description": "Apache Airflow libraries response.",
+            "type": "object",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "description": "A list of installed libraries.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AirflowLibrary"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "AirflowLibrary": {
+            "description": "Apache Airflow library.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The library name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "libraryType": {
+                    "description": "The library type.",
+                    "$ref": "#/definitions/LibraryType",
+                    "readOnly": true
+                },
+                "source": {
+                    "description": "The library source.",
+                    "$ref": "#/definitions/LibrarySource",
+                    "readOnly": true
+                },
+                "version": {
+                    "description": "The library version.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "LibraryType": {
+            "type": "string",
+            "description": "Library type. Additional `LibraryType` values may be added over time.",
+            "enum": ["Public", "Private"],
+            "x-ms-enum": {
+                "name": "LibraryType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Public",
+                        "description": "A public library."
+                    },
+                    {
+                        "value": "Private",
+                        "description": "A private library."
+                    }
+                ]
+            }
+        },
+        "LibrarySource": {
+            "type": "string",
+            "description": "Library source. Additional `LibrarySource` values may be added over time.",
+            "enum": ["PyPI", "Internal"],
+            "x-ms-enum": {
+                "name": "LibrarySource",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "PyPI",
+                        "description": "Library sourced from PyPI."
+                    },
+                    {
+                        "value": "Internal",
+                        "description": "Library sourced internally."
+                    }
+                ]
+            }
+        },
+        "AirflowEnvironmentSettingsResponse": {
+            "description": "Apache Airflow environment settings response.",
+            "type": "object",
+            "properties": {
+                "environmentVariables": {
+                    "description": "Environment variables configured for the Airflow environment.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NameValuePair"
+                    },
+                    "readOnly": true
+                },
+                "airflowConfigurationOverrides": {
+                    "description": "Airflow configuration overrides.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NameValuePair"
+                    },
+                    "readOnly": true
+                },
+                "triggerers": {
+                    "description": "The triggerers status.",
+                    "$ref": "#/definitions/TriggerersStatus",
+                    "readOnly": true
+                }
+            }
+        },
+        "NameValuePair": {
+            "description": "A name-value pair.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The name.",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The value.",
+                    "type": "string"
+                }
+            }
+        },
+        "TriggerersStatus": {
+            "type": "string",
+            "description": "Triggerers status. Additional `TriggerersStatus` values may be added over time.",
+            "enum": ["Enabled", "Disabled"],
+            "x-ms-enum": {
+                "name": "TriggerersStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Triggerers are enabled."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Triggerers are disabled."
+                    }
+                ]
+            }
+        },
+        "AirflowComputeResponse": {
+            "description": "Apache Airflow compute configuration response.",
+            "type": "object",
+            "properties": {
+                "poolTemplateId": {
+                    "description": "The pool template ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "poolTemplateName": {
+                    "description": "The pool template name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "nodeSize": {
+                    "description": "The node size.",
+                    "$ref": "#/definitions/NodeSize",
+                    "readOnly": true
+                },
+                "computeScalability": {
+                    "description": "Compute scalability settings.",
+                    "$ref": "#/definitions/ComputeScalability",
+                    "readOnly": true
+                },
+                "apacheAirflowJobVersion": {
+                    "description": "The Apache Airflow job version.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "apacheAirflowJobVersionDetails": {
+                    "description": "The Apache Airflow job version details.",
+                    "$ref": "#/definitions/ApacheAirflowJobVersionDetails",
+                    "readOnly": true
+                },
+                "availabilityZones": {
+                    "description": "The availability zones status.",
+                    "$ref": "#/definitions/AvailabilityZonesStatus",
+                    "readOnly": true
+                },
+                "shutdownPolicy": {
+                    "description": "The shutdown policy.",
+                    "$ref": "#/definitions/ShutdownPolicy",
+                    "readOnly": true
+                }
+            }
+        },
+        "ApacheAirflowJobVersionDetails": {
+            "description": "Apache Airflow job version details.",
+            "type": "object",
+            "properties": {
+                "apacheAirflowVersion": {
+                    "description": "The Apache Airflow version.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "pythonVersion": {
+                    "description": "The Python version.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "AvailabilityZonesStatus": {
+            "type": "string",
+            "description": "Availability zones status. Additional `AvailabilityZonesStatus` values may be added over time.",
+            "enum": ["Enabled", "Disabled"],
+            "x-ms-enum": {
+                "name": "AvailabilityZonesStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Availability zones are enabled."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Availability zones are disabled."
+                    }
+                ]
             }
         }
     }

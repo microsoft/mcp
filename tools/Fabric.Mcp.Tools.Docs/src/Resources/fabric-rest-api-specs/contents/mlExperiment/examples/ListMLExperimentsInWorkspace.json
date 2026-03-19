@@ -13,7 +13,10 @@
                         "type": "MLExperiment",
                         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
                         "properties": {
-                            "mlFlowExperimentId":"7b0f1b08-da51-4561-a0ed-c0a2833f50c0"
+                            "mlFlowExperimentId": "7b0f1b08-da51-4561-a0ed-c0a2833f50c0"
+                        },
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
                         }
                     },
                     {
@@ -23,7 +26,10 @@
                         "type": "MLExperiment",
                         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
                         "properties": {
-                            "mlFlowExperimentId":"d5d773cb-cf52-4b9b-b78b-760324ea161e"
+                            "mlFlowExperimentId": "d5d773cb-cf52-4b9b-b78b-760324ea161e"
+                        },
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
                         }
                     }
                 ]

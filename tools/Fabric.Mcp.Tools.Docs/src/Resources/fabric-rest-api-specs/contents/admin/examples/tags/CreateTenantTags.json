@@ -1,9 +1,11 @@
 {
     "parameters": {
-        "createTagsRequest": [
-            { "displayName": "Finance 2024" },
-            { "displayName": "HR 2024" }
-        ]
+        "createTagsRequest": {
+            "createTagsRequest": [
+                { "displayName": "Finance 2024" },
+                { "displayName": "HR 2024" }
+            ]
+        }
     },
     "responses": {
         "201": {

@@ -65,6 +65,11 @@
                     "description": "The GraphModel public definition.",
                     "$ref": "#/definitions/GraphModelPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the GraphModel.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -92,7 +97,7 @@
             }
         },
         "GraphModelPublicDefinition": {
-            "description": "GraphModel public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) for more details on how to craft a GraphModel public definition.",
+            "description": "GraphModel public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-model-definition) for more details on the structure of the GraphModel definition.",
             "type": "object",
             "required": [
                 "parts"

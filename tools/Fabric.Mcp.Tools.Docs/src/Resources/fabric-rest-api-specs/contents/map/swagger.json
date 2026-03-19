@@ -10,7 +10,7 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/Maps": {
+    "/workspaces/{workspaceId}/maps": {
       "get": {
         "summary": "Returns a list of Maps from the specified workspace.",
         "description": "> [!NOTE]\n> Map item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -177,7 +177,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/Maps/{MapId}": {
+    "/workspaces/{workspaceId}/maps/{mapId}": {
       "get": {
         "summary": "Returns properties of the specified Map.",
         "description": "> [!NOTE]\n> Map item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the Map. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -199,7 +199,7 @@
           },
           {
             "in": "path",
-            "name": "MapId",
+            "name": "mapId",
             "description": "The Map ID.",
             "type": "string",
             "format": "uuid",
@@ -263,7 +263,7 @@
           },
           {
             "in": "path",
-            "name": "MapId",
+            "name": "mapId",
             "description": "The Map ID.",
             "type": "string",
             "format": "uuid",
@@ -333,11 +333,18 @@
           },
           {
             "in": "path",
-            "name": "MapId",
+            "name": "mapId",
             "description": "The Map ID.",
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -358,7 +365,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -367,11 +374,14 @@
         "x-ms-examples": {
           "Delete a Map example": {
             "$ref": "./examples/DeleteMap.json"
+          },
+          "Hard delete a Map example": {
+            "$ref": "./examples/HardDeleteMap.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/Maps/{MapId}/getDefinition": {
+    "/workspaces/{workspaceId}/maps/{mapId}/getDefinition": {
       "post": {
         "summary": "Returns the specified Map public definition.",
         "description": "> [!NOTE]\n> Map item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a Map's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the Map. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -394,13 +404,13 @@
           },
           {
             "in": "path",
-            "name": "MapId",
+            "name": "mapId",
             "description": "The Map ID.",
             "type": "string",
             "format": "uuid",
             "required": true
           },
-         {
+          {
             "in": "query",
             "name": "format",
             "description": "The format of the Map public definition. Additional `format` types may be added over time.",
@@ -460,7 +470,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/Maps/{MapId}/updateDefinition": {
+    "/workspaces/{workspaceId}/maps/{mapId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified Map.",
         "description": "> [!NOTE]\n> Map item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the Map's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the Map. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -483,7 +493,7 @@
           },
           {
             "in": "path",
-            "name": "MapId",
+            "name": "mapId",
             "description": "The Map ID.",
             "type": "string",
             "format": "uuid",

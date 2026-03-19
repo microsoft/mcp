@@ -59,11 +59,16 @@
                   "description": "The KQL dashboard public definition.",
                   "$ref": "#/definitions/KQLDashboardDefinition",
                   "readOnly": false
+              },
+              "sensitivityLabelSettings": {
+                  "description": "The sensitivity label settings for the KQL dashboard.",
+                  "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                  "readOnly": false
               }
           }
       },
       "KQLDashboardDefinition" : {
-          "description": "KQL dashboard public definition object.",
+          "description": "KQL dashboard public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/kql-dashboard-definition) for more details on the structure of the KQL dashboard definition.",
           "type": "object",
           "required": ["parts"],
           "properties": {

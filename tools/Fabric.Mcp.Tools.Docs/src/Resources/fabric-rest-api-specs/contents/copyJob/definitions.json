@@ -59,6 +59,11 @@
           "description": "The CopyJob public definition.",
           "$ref": "#/definitions/CopyJobDefinition",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the CopyJob.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -82,7 +87,7 @@
       }
     },
     "CopyJobDefinition": {
-      "description": "CopyJob public definition object. Refer to [Copy job definition](/rest/api/fabric/articles/item-management/definitions/copyjob-definition) for more details on how to craft a CopyJob public definition.",
+      "description": "CopyJob public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/copyjob-definition) for more details on the structure of the CopyJob definition.",
       "type": "object",
       "required": [ "parts" ],
       "properties": {

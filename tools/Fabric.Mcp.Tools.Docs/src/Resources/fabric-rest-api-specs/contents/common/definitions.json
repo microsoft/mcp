@@ -256,7 +256,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent"],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -432,6 +432,10 @@
             {
                 "value": "EventSchemaSet",
                 "description": "An EventSchemaSet."
+            },
+            {
+                "value": "DataAgent",
+                "description": "A DataAgent."
             }
           ]
         },
@@ -592,6 +596,11 @@
                         "$ref": "#/definitions/ItemTag"
 
                     },
+                    "readOnly": true
+                },
+                "sensitivityLabel": {
+                    "description": "The item sensitivity label.",
+                    "$ref": "#/definitions/SensitivityLabel",
                     "readOnly": true
                 }
             }
@@ -1116,6 +1125,57 @@
                     {
                         "value": "Disabled",
                         "description": "Disable the SQL audit."
+                    }
+                ]
+            }
+        },
+        "SensitivityLabel": {
+            "type": "object",
+            "description": "Represents a sensitivity label applied to an item.",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The sensitivity label ID.",
+                    "format": "uuid"
+                }
+            }
+        },
+        "SensitivityLabelSettings": {
+            "description": "The sensitivity label settings.",
+            "type": "object",
+            "required": [
+                "labelId"
+            ],
+            "properties": {
+                "labelId": {
+                  "description": "The sensitivity label ID.",
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "sensitivityLabelApplyStrategy": {
+                  "description": "The strategy for applying the sensitivity label.",
+                  "$ref": "#/definitions/SensitivityLabelApplyStrategy"
+                }
+            }
+        },
+        "SensitivityLabelApplyStrategy": {
+            "description": "The strategy for applying the sensitivity label. The default value is ApplyOrFail. Additional types may be added over time.",
+            "type": "string",
+            "enum": ["ApplyOrFail", "Ignore"],
+            "x-ms-enum": {
+                "name": "SensitivityLabelApplyStrategy",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ApplyOrFail",
+                        "description": "Apply the sensitivity label or fail the operation if it cannot be applied."
+                    },
+                    {
+                        "value": "Ignore",
+                        "description": "Ignore the sensitivity label if it cannot be applied and proceed with the operation without applying the label."
                     }
                 ]
             }

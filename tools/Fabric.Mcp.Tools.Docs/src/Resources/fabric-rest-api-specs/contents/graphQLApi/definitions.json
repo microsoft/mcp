@@ -59,6 +59,11 @@
                     "description": "The API for GraphQL public definition.",
                     "$ref": "#/definitions/GraphQLApiPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the API for GraphQL.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -82,7 +87,7 @@
             }
         },
         "GraphQLApiPublicDefinition" : {
-            "description": "API for GraphQL public definition object. To create the definition, see [GraphQLApi definition](/rest/api/fabric/articles/item-management/definitions/graphql-api-definition).",
+            "description": "GraphQL API public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graphql-api-definition) for more details on the structure of the GraphQL API definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

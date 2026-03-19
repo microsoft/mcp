@@ -16,7 +16,10 @@
 					"queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
 					"ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
 					"databaseType": "ReadWrite"
-				}
+				},
+                "sensitivityLabel": {
+                    "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                }
 			}
 		}
 	}

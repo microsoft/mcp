@@ -71,6 +71,7 @@ Describes the fields for Connection Settings. Here, depending on the type, eithe
 | Name                  | Type            | Required        | Description       |
 |-----------------------|-----------------|-----------------|-------------------|
 | timeout               | String          | true            | Specifies the timeout duration. Follows the pattern: `((\\d+)\\.)?(\\d\\d):(60\|(\[0-5\]\[0-9\])):(60\|(\[0-5\]\[0-9\]))` .|
+| retry                 | Integer         | false           | Specifies the number of retries for the copy job. |
 
 ### Description for CopyJobActivity contents
 
@@ -103,6 +104,13 @@ Describes the fields used to construct the properties
 | storeSettings         | [CopyJobStoreSettings](#description-for-copyjobstoresettings-contents)| false          | Describes the store settings. |
 | formatSettings        | [CopyJobFormatSettings](#description-for-copyjobformatsettings-contents)| false         | Describes the format settings. |
 | noTruncation          | Boolean                 | false | Specifies if truncation is allowed or not. |
+| partitionSettings     | [CopyJobPartitionSettings](#description-for-copyjobpartitionsettings-contents)| false | Describes the partition settings for the source. |
+
+### Description for CopyJobPartitionSettings contents
+
+| Name                  | Type            | Required        | Description       |
+|-----------------------|-----------------|-----------------|-------------------|
+| partitionOption       | String          | false           | Specifies the partition option. |
 
 ### Description for CopyJobActivityDestination contents
 
@@ -143,6 +151,7 @@ Describes the fields used to construct the properties
 | compressionLevel| String | false | Specifies the compression level. |
 | objectApiName | String | false | Specifies the object api name. |
 | reportId | String | false | Specifies the report Id in case of Salesforce type connection. |
+| nullValue | String | false | Specifies the null value representation. |
 
 ### Description for CopyJobDatasetSettingsLocation contents
 
@@ -332,5 +341,362 @@ Describes the fields used to construct the properties
       } 
     } 
   ] 
+}
+```
+### ContentDetails Example 3
+
+```JSON
+{
+  "properties": {
+    "jobMode": "CDC",
+    "source": {
+      "type": "AzureSqlTable",
+      "connectionSettings": {
+        "type": "AzureSqlDatabase",
+        "typeProperties": {
+          "database": "sampleSqlDb"
+        },
+        "externalReferences": {
+          "connection": "00000000-0000-0000-0000-000000000000"
+        }
+      }
+    },
+    "destination": {
+      "type": "AzureSqlTable",
+      "connectionSettings": {
+        "type": "AzureSqlDatabase",
+        "typeProperties": {
+          "database": "sampleSqlDb"
+        },
+        "externalReferences": {
+          "connection": "00000000-0000-0000-0000-000000000000"
+        }
+      }
+    },
+    "policy": {
+      "timeout": "0.12:00:00",
+      "retry": 0
+    }
+  },
+  "activities": [
+    {
+      "id": "3eb6f2d2-80df-4b4e-a007-33a118afda34",
+      "properties": {
+        "source": {
+          "datasetSettings": {
+            "schema": "primary",
+            "table": "table1"
+          },
+          "changeDataSettings": {
+            "readMethod": "SnapshotPlusIncremental",
+            "columns": [
+              {
+                "name": "id",
+                "type": "Int32",
+                "physicalType": "int"
+              }
+            ]
+          },
+          "partitionSettings": {
+            "partitionOption": "None"
+          }
+        },
+        "destination": {
+          "datasetSettings": {
+            "schema": "backup",
+            "table": "table1"
+          },
+          "writeBehavior": "Upsert",
+          "upsertSettings": {
+            "useTempDB": true,
+            "keys": [
+              "id"
+            ]
+          },
+          "tableOption": "autoCreate"
+        },
+        "enableStaging": false,
+        "translator": {
+          "type": "TabularTranslator",
+          "mappings": [
+            {
+              "source": {
+                "name": "id",
+                "type": "Int32",
+                "physicalType": "int"
+              },
+              "destination": {
+                "name": "id2",
+                "physicalType": "int"
+              }
+            },
+            {
+              "source": {
+                "name": "name",
+                "type": "String",
+                "physicalType": "varchar",
+                "length": "256"
+              },
+              "destination": {
+                "name": "name2",
+                "physicalType": "varchar"
+              }
+            },
+            {
+              "source": {
+                "name": "value",
+                "type": "String",
+                "physicalType": "varchar",
+                "length": "256"
+              },
+              "destination": {
+                "name": "value2",
+                "physicalType": "varchar"
+              }
+            }
+          ]
+        },
+        "typeConversionSettings": {
+          "typeConversion": {
+            "allowDataTruncation": true,
+            "treatBooleanAsNumber": false
+          }
+        }
+      }
+    },
+    {
+      "id": "efd90069-115b-46cb-bcd7-64dcc2f5ff97",
+      "properties": {
+        "source": {
+          "datasetSettings": {
+            "schema": "primary",
+            "table": "table2"
+          },
+          "changeDataSettings": {
+            "readMethod": "SnapshotPlusIncremental",
+            "columns": [
+              {
+                "name": "id",
+                "type": "Int32",
+                "physicalType": "int"
+              }
+            ]
+          },
+          "partitionSettings": {
+            "partitionOption": "None"
+          }
+        },
+        "destination": {
+          "datasetSettings": {
+            "schema": "backup",
+            "table": "table2"
+          },
+          "writeBehavior": "Upsert",
+          "upsertSettings": {
+            "useTempDB": true,
+            "keys": [
+              "name"
+            ]
+          },
+          "tableOption": "autoCreate"
+        },
+        "enableStaging": false,
+        "translator": {
+          "type": "TabularTranslator",
+          "mappings": [
+            {
+              "source": {
+                "name": "id",
+                "type": "Int32",
+                "physicalType": "int"
+              },
+              "destination": {
+                "name": "id3",
+                "physicalType": "int"
+              }
+            },
+            {
+              "source": {
+                "name": "age",
+                "type": "String",
+                "physicalType": "nvarchar",
+                "length": "MAX"
+              },
+              "destination": {
+                "name": "age3",
+                "physicalType": "nvarchar",
+                "length": "MAX"
+              }
+            },
+            {
+              "source": {
+                "name": "name",
+                "type": "String",
+                "physicalType": "nvarchar",
+                "length": "MAX"
+              },
+              "destination": {
+                "name": "name3",
+                "physicalType": "nvarchar",
+                "length": "MAX"
+              }
+            }
+          ]
+        },
+        "typeConversionSettings": {
+          "typeConversion": {
+            "allowDataTruncation": true,
+            "treatBooleanAsNumber": false
+          }
+        }
+      }
+    }
+  ]
+}
+```
+### ContentDetails Example 4
+
+```JSON
+{
+  "properties": {
+    "jobMode": "CDC",
+    "source": {
+      "type": "AzureSqlTable",
+      "connectionSettings": {
+        "type": "AzureSqlDatabase",
+        "typeProperties": {
+          "database": "sampleSqlDb"
+        },
+        "externalReferences": {
+          "connection": "2a2c5ef3-a44d-4144-aa78-11d4ccb9f1b1"
+        }
+      }
+    },
+    "destination": {
+      "type": "DelimitedText",
+      "connectionSettings": {
+        "type": "AzureBlobStorage",
+        "externalReferences": {
+          "connection": "1f41f4d4-f5fa-4221-a21b-f36dcdfedf41"
+        }
+      }
+    },
+    "policy": {
+      "timeout": "0.12:00:00",
+      "retry": 0
+    }
+  },
+  "activities": [
+    {
+      "id": "b711b593-4332-4dcd-8e4e-840ce7645124",
+      "properties": {
+        "source": {
+          "datasetSettings": {
+            "schema": "primary",
+            "table": "tableX"
+          },
+          "changeDataSettings": {
+            "readMethod": "SnapshotPlusIncremental",
+            "columns": [
+              {
+                "name": "id",
+                "type": "Int32",
+                "physicalType": "int"
+              }
+            ]
+          },
+          "partitionSettings": {
+            "partitionOption": "None"
+          }
+        },
+        "destination": {
+          "datasetSettings": {
+            "location": {
+              "type": "AzureBlobStorageLocation",
+              "folderPath": "folder1",
+              "container": "container1"
+            },
+            "columnDelimiter": ";",
+            "rowDelimiter": "\n",
+            "compressionCodec": "gzip",
+            "compressionLevel": "Optimal",
+            "encodingName": "UTF-7",
+            "escapeChar": "/",
+            "firstRowAsHeader": true,
+            "nullValue": "-----",
+            "quoteChar": "'"
+          },
+          "formatSettings": {
+            "fileExtension": ".ssv"
+          }
+        },
+        "enableStaging": false,
+        "translator": {
+          "type": "TabularTranslator"
+        },
+        "typeConversionSettings": {
+          "typeConversion": {
+            "allowDataTruncation": true,
+            "treatBooleanAsNumber": false
+          }
+        }
+      }
+    },
+    {
+      "id": "de5b461a-efb3-4d34-a9ec-dd578502555e",
+      "properties": {
+        "source": {
+          "datasetSettings": {
+            "schema": "primary",
+            "table": "tableY"
+          },
+          "changeDataSettings": {
+            "readMethod": "SnapshotPlusIncremental",
+            "columns": [
+              {
+                "name": "age",
+                "type": "Int32",
+                "physicalType": "int"
+              }
+            ]
+          },
+          "partitionSettings": {
+            "partitionOption": "None"
+          }
+        },
+        "destination": {
+          "datasetSettings": {
+            "location": {
+              "type": "AzureBlobStorageLocation",
+              "folderPath": "folder1",
+              "container": "container1"
+            },
+            "columnDelimiter": "\t",
+            "rowDelimiter": "\n",
+            "compressionCodec": "gzip",
+            "compressionLevel": "Optimal",
+            "encodingName": "UTF-7",
+            "escapeChar": "/",
+            "firstRowAsHeader": true,
+            "nullValue": "-----",
+            "quoteChar": "'"
+          },
+          "formatSettings": {
+            "fileExtension": ".tsv"
+          }
+        },
+        "enableStaging": false,
+        "translator": {
+          "type": "TabularTranslator"
+        },
+        "typeConversionSettings": {
+          "typeConversion": {
+            "allowDataTruncation": true,
+            "treatBooleanAsNumber": false
+          }
+        }
+      }
+    }
+  ]
 }
 ```

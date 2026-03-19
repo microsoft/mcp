@@ -53,6 +53,11 @@
                     "description": "The GraphQuerySet public definition.",
                     "$ref": "#/definitions/GraphQuerySetPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the GraphQuerySet.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -76,7 +81,7 @@
             }
         },
         "GraphQuerySetPublicDefinition" : {
-            "description": "GraphQuerySet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-queryset) for more details on how to craft a GraphQuerySet public definition.",
+            "description": "GraphQuerySet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-queryset-definition) for more details on the structure of the GraphQuerySet definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

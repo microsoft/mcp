@@ -22,7 +22,10 @@
                 "description": "A mirrored database description",
                 "type": "MirroredDatabase",
                 "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
-                "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2"
+                "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2",
+                "sensitivityLabel": {
+                    "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                }
             }
         }
     }

@@ -2348,7 +2348,7 @@
     "/tags": {
       "get": {
         "summary": "Returns a list of all the tenant's tags.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "\n## Required Delegated Scopes\n\nTenant.Read.All or Tenant.ReadWrite.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -2408,7 +2408,7 @@
     "/tags/bulkCreateTags": {
       "post": {
         "summary": "Create new tags.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -2473,7 +2473,7 @@
     "/tags/{tagId}": {
       "delete": {
         "summary": "Delete the specified tag.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 10 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 10 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -2523,7 +2523,7 @@
       },
       "patch": {
         "summary": "Updates the specified tag.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "\n## Permissions\n\nThe caller must have administrator rights such as Fabric administrator.\n\n## Required Delegated Scopes\n\nTenant.ReadWrite.All.\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],

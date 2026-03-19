@@ -338,6 +338,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -367,6 +374,9 @@
         "x-ms-examples": {
           "Delete a data pipeline example": {
             "$ref": "./examples/DeleteDataPipeline.json"
+          },
+          "Hard delete a data pipeline example": {
+            "$ref": "./examples/HardDeleteDataPipeline.json"
           }
         }
       }

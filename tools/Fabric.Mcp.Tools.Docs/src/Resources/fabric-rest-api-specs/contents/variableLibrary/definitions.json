@@ -77,6 +77,11 @@
                     "description": "The VariableLibrary public definition.",
                     "$ref": "#/definitions/VariableLibraryPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the VariableLibrary.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -101,7 +106,7 @@
             }
         },
         "VariableLibraryPublicDefinition" : {
-            "description": "VariableLibrary public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/variable-library-definition) for more details on how to craft a VariableLibrary public definition.",
+            "description": "VariableLibrary public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/variable-library-definition) for more details on the structure of the VariableLibrary definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

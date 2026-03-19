@@ -32,12 +32,14 @@
                         "secretName": "some-secret"
                     }
                 }
-            }
+            },
+            "allowUsageInUserControlledCode": true
         }
     },
     "responses": {
         "201": {
             "body": {
+                "allowUsageInUserControlledCode": true,
                 "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
                 "displayName": "ContosoCloudConnection",
                 "connectivityType": "ShareableCloud",

@@ -848,6 +848,9 @@
           },
           "Create an item in folder example": {
             "$ref": "./examples/platform/CreateItemInFolder.json"
+          },
+          "Create an item with sensitivity label strategy example": {
+            "$ref": "./examples/platform/CreateItemWithSensitivityLabelStrategy.json"
           }
         }
       }
@@ -989,7 +992,7 @@
       },
       "delete": {
         "summary": "Deletes the specified item.",
-        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). \n\n## Permissions\n\n The caller must have *write* permissions for the item.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). The default behavior is to soft delete the item for supported item types.\n\n> [!NOTE]\n> The soft-deleted items will be counted toward the maximum number of items allowed in each workspace.\n\n## Permissions\n\nThe caller must have *write* permissions for the item for soft deletion.\nThe caller must have workspace *Admin* role assigned for hard/permanent deletion.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1013,6 +1016,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -1033,7 +1043,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -1042,6 +1052,9 @@
         "x-ms-examples": {
           "Delete an item example": {
             "$ref": "./examples/platform/DeleteItem.json"
+          },
+          "Hard delete an item example": {
+            "$ref": "./examples/platform/HardDeleteItem.json"
           }
         }
       }
@@ -1226,6 +1239,193 @@
         "x-ms-examples": {
           "Update an item definition example": {
             "$ref": "./examples/platform/UpdateItemDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/bulkExportDefinitions?beta=true": {
+      "post": {
+        "summary": "Bulk export item definitions from the workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nExports item definitions from multiple items in a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). You can export all supported item definitions or selectively export specific items from the specified workspace. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nWhen exporting all items in a workspace: Only the Items that the caller has both *read* and *write* permissions for are exported.\n\nWhen exporting specific items: The caller must have *read* and *write* permissions for **all** specified items.\n\n## Required Delegated Scopes\n\nItems.ReadWrite.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_Bulk_Export_Item_Definitions_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "bulkExportItemDefinitionsRequest",
+            "description": "The requested items to export their item definition.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkExportItemDefinitionsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkExportItemDefinitionsResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definitions is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemReferencedMoreThanOnce - The same item is being referenced more than once in the request.\n\n* ItemsHaveProtectedLabels - Requested items have protected labels.\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Bulk export selected item definitions example": {
+            "$ref": "./examples/platform/BulkExportItemDefinitionsSelective.json"
+          },
+          "Bulk export all supported item definitions in workspace example": {
+            "$ref": "./examples/platform/BulkExportItemDefinitionsAll.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/bulkImportDefinitions?beta=true": {
+      "post": {
+        "summary": "Bulk import item definitions into the workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nImports item definitions for multiple items into a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). Each item definition in the request will be processed, creating new items or updating existing ones as determined by the system based on whether the item already exists. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nThe caller must have *read and write* permissions for each item being updated.\n\n## Required Delegated Scopes\n\nItems.ReadWrite.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_Bulk_Import_Item_Definitions_(beta)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "beta",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "bulkImportItemDefinitionsRequest",
+            "description": "Import item definitions request payload.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkImportItemDefinitionsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkImportItemDefinitionsResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* DuplicateDisplayNameAndType - Duplicate items detected having the same display name and type.\n\n* DependenciesCouldNotBeResolved - The request contains items with dependencies that could not be resolved.\n\n* InvalidFilesPath - The request contains definition parts with invalid paths.\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Bulk import item definitions example": {
+            "$ref": "./examples/platform/BulkImportItemDefinitions.json"
           }
         }
       }
@@ -1861,6 +2061,12 @@
           },
           "Run item job instance with request body containing executionData example": {
             "$ref": "./examples/platform/RunOnDemandItemJob2.json"
+          },
+          "Run item job instance with request body containing parameters example": {
+            "$ref": "./examples/platform/RunOnDemandItemJob3.json"
+          },
+          "Run item job instance with request body containing both executionData and parameters example": {
+            "$ref": "./examples/platform/RunOnDemandItemJob4.json"
           }
         }
       }
@@ -3556,7 +3762,7 @@
     "/tags": {
       "get": {
         "summary": "Returns a list of all the tenant's tags.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\nTag.Read.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Required Delegated Scopes\n\nTag.Read.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -3613,7 +3819,7 @@
         }
       }
     },
-    "/domains":{
+    "/domains": {
       "get": {
         "summary": "Returns a list of all the tenant's domains.",
         "description": "## Required Delegated Scopes\n\nDomain.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -3825,7 +4031,7 @@
           "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref":  "./definitions/platform.json#/definitions/GetOneLakeSettingsResponse"
+              "$ref": "./definitions/platform.json#/definitions/GetOneLakeSettingsResponse"
             }
           },
           "429": {
@@ -5377,7 +5583,10 @@
             "name": "dataAccessRoleConflictPolicy",
             "description": "Determines the behavior when there are conflicting data access role assignments. Overwrite means new assignments replace existing ones. Abort means the operation fails if there are conflicts. Additional dataAccessRoleConflictPolicy types may be added over time.",
             "type": "string",
-            "enum": ["Overwrite", "Abort"],
+            "enum": [
+              "Overwrite",
+              "Abort"
+            ],
             "x-ms-enum": {
               "name": "DataAccessRoleConflictPolicy",
               "modelAsString": true,
@@ -6347,7 +6556,7 @@
     "/workspaces/{workspaceId}/items/{itemId}/applyTags": {
       "post": {
         "summary": "Apply tags on an item.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -6416,7 +6625,7 @@
     "/workspaces/{workspaceId}/items/{itemId}/unapplyTags": {
       "post": {
         "summary": "Unapply tags from an item.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per one minute per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -8845,8 +9054,8 @@
     },
     "/workspaces/{workspaceId}/networking/communicationPolicy": {
       "get": {
-        "summary": "Returns networking communication policy for the specified workspace. This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns the networking communication policy for the specified workspace.",
+        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -8903,8 +9112,8 @@
         }
       },
       "put": {
-        "summary": "Sets networking communication policy for the specified workspace. This API uses the PUT method and will overwrite all settings. Remaining policy will be set to default value if only partial policy is provided in the request body. Always run Get Network Communication Policy first and provide full policy in the request body. This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Sets the networking communication policy for the specified workspace.",
+        "description": "This API uses the PUT method and will overwrite all settings. Remaining policy will be set to default value if only partial policy is provided in the request body. Always run Get Network Communication Policy first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -8976,8 +9185,8 @@
     },
     "/workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections": {
       "get": {
-        "summary": "Returns the cloud connection rules for the workspace enabled with Outbound Access Protection (OAP). This API is designed to help workspace administrators view the effective outbound network communication policies that are enforced for cloud connections. Outbound access protection cloud connection rules are only returned and applied if the workspace’s network communication policy has `outbound.publicAccessRules.defaultAction` set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns the cloud connection rules for the workspace enabled with Outbound Access Protection (OAP).",
+        "description": "This API helps workspace administrators view the effective outbound network communication policies enforced for cloud connections. Cloud connection rules are returned and applied only if the workspace’s network communication policy has `outbound.publicAccessRules.defaultAction` set to `Deny`. If OAP is not enabled for the workspace, the API fails because outbound connections are not being restricted.\n\n> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -9034,8 +9243,8 @@
         }
       },
       "put": {
-        "summary": "Sets the outbound access protection cloud connection rules for the workspace. This API enables workspace administrators to set of outbound network communication rules that control which cloud connection types and their external endpoints/workspaces where ever applicable are to be allowed from the workspace. This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. \n\n> [!NOTE]\n> This API uses the PUT method and will overwrite all outbound access connections for the workspace. Remaining policy will be set to default value if partial policy is provided in the request body. Always run Get first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Sets the outbound access protection cloud connection rules for the workspace.",
+        "description": "This API enables workspace administrators to set a collection of outbound network communication rules that control which cloud connection types and, where applicable, their external endpoints/workspaces are allowed from the workspace.\n\n> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace's network communication policy has `outbound.publicAccessRules.defaultAction` set to Deny. If OAP is not enabled on the workspace, the API fails because outbound connections are not restricted.\n\n> [!NOTE]\n> This API uses the PUT method and will overwrite all outbound access connections for the workspace. Any omitted settings are set to their default values. Always call Get first and provide the full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -9100,8 +9309,8 @@
     },
     "/workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways": {
       "get": {
-        "summary": "Returns the gateway rules for the workspace enabled with Outbound Access Protection (OAP). This API is designed to help workspace administrators view the effective outbound network communication policies that are enforced for On-prem and Vnet Data gateways. Outbound access protection gateway rules are only returned and applied if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns the gateway rules for the workspace enabled with Outbound Access Protection (OAP).",
+        "description": "This API helps workspace administrators view the effective outbound network communication policies enforced for on-premises and VNet data gateways. Gateway rules are returned and applied only if the workspace’s network communication policy has `outbound.publicAccessRules.defaultAction` set to `Deny`. If OAP is not enabled for the workspace, the API fails because outbound connections are not being restricted.\n\n> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -9158,8 +9367,8 @@
         }
       },
       "put": {
-        "summary": "Sets the gateway rules for the workspace enabled with Outbound Access Protection (OAP). This API enables workspace administrators to define, replace, or override the set of outbound network communication policies that control which on-prem /Vnet Data Gateways are to be allowed from current workspace.  This feature is currently in preview.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. \n\n> [!NOTE]\n>This API uses the PUT method and will overwrite all outbound access gateways for the workspace. Remaining policy will be set to default value if partial policy is provided in the request body. Always run Get first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Sets the gateway rules for the workspace enabled with Outbound Access Protection (OAP).",
+        "description": "This API enables workspace administrators to define, replace, or override the set of outbound network communication policies that control which on-prem /Vnet Data Gateways are to be allowed from current workspace.\n\n> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. \n\n> [!NOTE]\n>This API uses the PUT method and will overwrite all outbound access gateways for the workspace. Remaining policy will be set to default value if partial policy is provided in the request body. Always run Get first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],

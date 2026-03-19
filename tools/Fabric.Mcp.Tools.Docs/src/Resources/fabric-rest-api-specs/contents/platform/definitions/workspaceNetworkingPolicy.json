@@ -121,13 +121,13 @@
       "type": "object",
       "description": "Represents a single endpoint-level exception rule that allows outbound communication to a specific external domain or host. This object is used within the allowedEndpoints array of a connection rule to explicitly authorize outbound access to trusted endpoints for a given connectionType. This is applicable only to connection types that support endpoint-based filtering (e.g., SQL, MySQL, Web, etc.).",
       "properties": {
-        "hostNamePattern": {
+        "hostnamePattern": {
           "type": "string",
           "description": "A wildcard-supported pattern that defines the allowed external endpoint. Examples include *.microsoft.com, api.contoso.com, or data.partner.org."
         }
       },
       "required": [
-        "hostNamePattern"
+        "hostnamePattern"
       ]
     },
     "ConnectionRuleWorkspaceMetadata": {

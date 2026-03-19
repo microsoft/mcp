@@ -84,6 +84,11 @@
                     "description": "The spark job definition public definition.",
                     "$ref": "#/definitions/SparkJobDefinitionPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the spark job definition.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -111,7 +116,7 @@
             }
         },
         "SparkJobDefinitionPublicDefinition": {
-            "description": "Spark job definition public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) for more details on how to craft a spark job definition public definition.",
+            "description": "Spark job definition public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) for more details on the structure of the Spark job definition.",
             "type": "object",
             "required": [
                 "parts"
