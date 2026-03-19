@@ -59,6 +59,11 @@
                     "description": "The Map public definition.",
                     "$ref": "#/definitions/MapPublicDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Map.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -82,7 +87,7 @@
             }
         },
         "MapPublicDefinition" : {
-            "description": "Map public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/map) for more details on how to craft a Map public definition.",
+            "description": "Map public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/map-definition) for more details on the structure of the Map definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

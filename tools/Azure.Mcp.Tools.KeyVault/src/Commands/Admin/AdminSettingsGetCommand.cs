@@ -70,8 +70,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            var result = new AdminSettingsGetCommandResult(options.VaultName!, settings);
-            context.Response.Results = ResponseResult.Create(result, KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {

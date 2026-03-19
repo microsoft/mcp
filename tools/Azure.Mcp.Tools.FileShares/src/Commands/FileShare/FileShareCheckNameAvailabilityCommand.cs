@@ -66,8 +66,9 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new FileShareCheckNameAvailabilityCommandResult(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
+                FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
 
             _logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",

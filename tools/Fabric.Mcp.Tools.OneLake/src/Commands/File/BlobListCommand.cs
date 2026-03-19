@@ -1,18 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -50,6 +47,23 @@ public sealed class BlobListCommand(
         command.Options.Add(FabricOptionDefinitions.Path);
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(OneLakeOptionDefinitions.Format);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override BlobListOptions BindOptions(ParseResult parseResult)
@@ -83,22 +97,12 @@ public sealed class BlobListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
                 var rawResponse = await _oneLakeService.ListBlobsRawAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken);
@@ -114,16 +118,16 @@ public sealed class BlobListCommand(
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 files = (await _oneLakeService.ListBlobsIntelligentAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Recursive,
                     cancellationToken)).ToList();
             }
             else
             {
                 files = (await _oneLakeService.ListBlobsAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken)).ToList();

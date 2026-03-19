@@ -678,6 +678,212 @@
         }
       ]
     },
+    "BulkExportItemDefinitionsRequest": {
+        "description": "Bulk export item definitions request payload.",
+        "type": "object",
+        "required": ["mode"],
+        "properties": {
+            "items": {
+                "type": "array",
+                "description": "A list of item identifiers to retrieve",
+                "items": {
+                    "$ref": "#/definitions/ExportItemIdentifier"
+                }
+            },
+            "mode":{
+                "description": "The mode for bulk export item definitions operation",
+                "$ref": "#/definitions/BulkExportItemDefinitionsMode"
+            }
+        }
+    },
+    "BulkExportItemDefinitionsResponse": {
+        "description": "Bulk export item definitions response by definitions' parts.",
+        "properties": {
+            "itemDefinitionsIndex": {
+                "description": "A list of item definition index entries.",
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/ItemDefinitionIndexEntry"
+                },
+                "readOnly": true
+            },
+            "definitionParts": {
+                "description": "A list of item definition parts.",
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/ItemDefinitionPart"
+                },
+                "readOnly": true
+            }
+        }
+    },
+    "BulkImportItemDefinitionsRequest": {
+        "description": "Bulk import of exported item definitions request payload.",
+        "type": "object",
+        "required": ["definitionParts"],
+        "properties": {
+            "definitionParts": {
+                "type": "array",
+                "description": "A list of items definitions parts to import",
+                "items":{
+                    "$ref": "#/definitions/ItemDefinitionPart"
+                }
+            },
+            "options": {
+                "description": "The import items request's configuration.",
+                "type": "object",
+                "properties": {
+                    "allowPairingByName": {
+                        "type": "boolean",
+                        "description": "Specifies how to handle an imported item without a Logical ID when an item with the same display name and item type already exists in the workspace.\n\nTrue – The imported item will be paired with the existing workspace item based on display name and type.\n\nFalse – Name-based pairing is disabled. If a workspace item with the same display name and type exists, the import fails due to a name duplication conflict.\n\nDefault value is false"
+                    }
+                }
+            }
+        }
+    },
+    "BulkImportItemDefinitionsResponse": {
+        "description": "Bulk import item definitions response payload.",
+        "type": "object",
+        "properties": {
+            "importItemDefinitionsDetails" :{
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/ImportItemDefinitionsDetails"
+                }
+            }
+        },
+        "readOnly": true
+    },
+    "ItemDefinitionIndexEntry" : {
+        "description": "An entry in the item definitions index.",
+        "type": "object",
+        "properties": {
+            "id": {
+                "description": "The item ID.",
+                "type": "string",
+                "readOnly": true,
+                "format": "uuid"
+            },
+            "rootPath": {
+                "description": "The item definition root path.",
+                "type": "string",
+                "readOnly": true
+            }
+        }
+    },
+    "ExportItemIdentifier": {
+        "description": "The item identifier.",
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+            "id": {
+                "description": "The item ID.",
+                "type": "string",
+                "readOnly": false,
+                "format": "uuid"
+            }
+        }
+    },
+    "BulkExportItemDefinitionsMode": {
+        "description": "Modes for the bulk export item definitions operation. Additional modes may be added over time.",
+        "type": "string",
+        "enum": [ "All", "Selective"],
+        "x-ms-enum": {
+            "name": "BulkExportItemDefinitionsMode",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "All",
+                    "description": "Export all supported items. The caller is not required to specify the list of items."
+                },
+                {
+                    "value": "Selective",
+                    "description": "Export the specified items' definitions."
+                }
+            ]
+        }
+    },
+    "ImportItemDefinitionsDetails" :{
+        "description": "The item's definition operation details",
+        "type": "object",
+        "properties": {
+            "itemId": {
+                "description": "The item object Id",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+            },
+            "itemDisplayName": {
+                "description": "The item display name. The display name must follow naming rules according to item type.",
+                "type": "string",
+                "readOnly": true
+            },
+            "itemType" :{
+                "description": "The item type.",
+                "$ref": "../../common/definitions.json#/definitions/ItemType",
+                "readOnly": true
+            },
+            "itemLogicalId": {
+                "description": "The item logical Id.",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+            },
+            "operationType": {
+                "description": "The operation type performed on the item.",
+                "$ref": "#/definitions/ItemDefinitionOperationType",
+                "readOnly": true
+            },
+            "operationStatus" :{
+                "description": "The status of the dependency resolution.",
+                "$ref": "#/definitions/ImportItemDefinitionOperationStatus",
+                "readOnly": true
+            }
+        },
+        "readOnly": true
+    },
+    "ItemDefinitionOperationType": {
+        "type": "string",
+        "description": "An item definition operation type. Additional item definition operations may be added over time.",
+        "enum": ["Create", "Update"],
+        "x-ms-enum": {
+            "name": "ItemDefinitionOperationType",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "Create",
+                    "description": "The item was created."
+                },
+                {
+                    "value": "Update",
+                    "description": "The item was updated."
+                }
+            ]
+        }
+    },
+    "ImportItemDefinitionOperationStatus": {
+        "type": "string",
+        "description": "The status of the import item definition operation. Additional import item definition statuses may be added over time.",
+        "enum": ["Succeeded", "Failed", "SucceededDespiteFailures"],
+        "x-ms-enum": {
+            "name": "ImportItemDefinitionOperationStatus",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "Succeeded",
+                    "description": "The import item definition operation completed successfully."
+                },
+                {
+                    "value": "Failed",
+                    "description": "The import item definition operation failed."
+                },
+                {
+                    "value": "SucceededDespiteFailures",
+                    "description": "The import item definition operation completed with partial success."
+                }
+            ]
+        }
+    },
     "CreateItemRequest": {
       "description": "Create item request payload.",
       "required": [ "displayName", "type" ],
@@ -711,6 +917,11 @@
         "creationPayload": {
           "description": "A set of properties used to create the item. The *Create Item* page of the relevant type indicates whether `creationPayload` is supported and lists the item's properties. Use `creationPayload` or `definition`. You can't use both at the same time.",
           "type": "object",
+          "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the item.",
+          "$ref": "../../common/definitions.json#/definitions/SensitivityLabelSettings",
           "readOnly": false
         }
       }
@@ -1260,7 +1471,7 @@
       ],
       "properties": {
         "isShortcutTransform": {
-          "description": "Determines whether this shortcut is a transform shortcut. True - A shortcut transform, False - A regular shortcut. You can get the shortcut transform properties using [Get Shortcut](rest/api/fabric/core/onelake-shortcuts/get-shortcut).",
+          "description": "Determines whether this shortcut is a transform shortcut. True - A shortcut transform, False - A regular shortcut. You can get the shortcut transform properties using [Get Shortcut](/rest/api/fabric/core/onelake-shortcuts/get-shortcut).",
           "type": "boolean"
         }
       }
@@ -1652,6 +1863,11 @@
           "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the OneDrive SharePoint data location. Open the cloud connection's settings view and copy the GUID that is the connection ID.",
           "type": "string",
           "format": "uuid"
+        },
+        "updateFabricItemSensitivity": {
+          "description": "Specifies whether the user wants the fabric item sensitivity to be consistent with site level labels for Sharepoint shortcuts. If user sets it to true, and if a sharepoint site has a more restrictive label than the Fabric item, then only the label of the fabric item will be updated to match the sharepoint site.",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1689,6 +1905,11 @@
               }
             ]
           }
+        },
+        "includeSubfolders": {
+          "type": "boolean",
+          "description": "Determines whether subfolders within the target path are included in the transform operation. True - Include subfolders, False - Do not include subfolders. Default value is False.",
+          "default": false
         }
       }
     },
@@ -1735,12 +1956,95 @@
         }
       }
     },
+    "ItemJobParameterType": {
+        "description": "A string that represents the parameter's type. Additional types may be added over time.",
+        "type": "string",
+        "enum": [
+            "VariableReference",
+            "Integer",
+            "Number",
+            "Text",
+            "Boolean",
+            "DateTime",
+            "Guid",
+            "Automatic"
+        ],
+        "x-ms-enum": {
+            "name": "ItemJobParameterType",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "VariableReference",
+                    "description": "The type of parameter is a variable reference."
+                },
+                {
+                    "value": "Integer",
+                    "description": "The type of parameter is an integer."
+                },
+                {
+                    "value": "Number",
+                    "description": "The type of parameter is a number, it accepts both integer and float values."
+                },
+                {
+                    "value": "Text",
+                    "description": "The type of parameter is a text."
+                },
+                {
+                    "value": "Boolean",
+                    "description": "The type of parameter is a boolean."
+                },
+                {
+                    "value": "DateTime",
+                    "description": "The type of parameter is a datetime in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                {
+                    "value": "Guid",
+                    "description": "The parameter type is a string representation of a GUID, using 00000000-0000-0000-0000-000000000000 format. See https://learn.microsoft.com/dotnet/api/system.guid.tostring for formatting details, and please use the default format: \"D\"."
+                },
+                {
+                    "value": "Automatic",
+                    "description": "The parameter type is automatically determined. Note: this type may not be supported for all item job types."
+                }
+            ]
+        }
+    },
+    "Parameter": {
+        "description": "An item job parameter.",
+        "type": "object",
+        "required": [
+            "name",
+            "type",
+            "value"
+        ],
+        "properties": {
+            "name": {
+                "description": "The parameter name, specified by the caller, must be unique (case-insensitive check) and no longer than 256 characters.",
+                "type": "string"
+            },
+            "type": {
+                "description": "The parameter type.",
+                "type": "string",
+                "$ref": "#/definitions/ItemJobParameterType"
+            },
+            "value": {
+                "description": "The parameter value based on the parameter type.",
+                "type": "object"
+            }
+        }
+    },
     "RunOnDemandItemJobRequest": {
       "description": "Run on demand item job instance payload",
       "properties": {
         "executionData": {
-          "description": "Payload for run on-demand job request. Needed only if the job type requires a payload.",
+          "description": "The execution data for an on-demand job. This is fixed static data defined by the specific item job type.",
           "type": "object"
+        },
+        "parameters": {
+            "description": "The parameter list for an on-demand job. These are per-run, user-defined inputs that tailor this invocation. Note: This property is not broadly supported. If the API returns an error with errorCode `FeatureNotAvailable` and errorMessage `Parameter is not allowed for this item type or this item job type`, the `parameters` property is not supported for the specified item type or item job type.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Parameter"
+            }
         }
       }
     },
@@ -2318,7 +2622,8 @@
           }
         },
         "value": {
-          "description": "The value of the parameter to override during execution."
+          "description": "The value of the parameter to override during execution.",
+          "type": "object"
         }
       }
     },

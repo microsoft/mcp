@@ -21,6 +21,7 @@
             }
         },
         "CreateTagsRequest": {
+            "type": "object",
             "required": [
                 "createTagsRequest"
             ],

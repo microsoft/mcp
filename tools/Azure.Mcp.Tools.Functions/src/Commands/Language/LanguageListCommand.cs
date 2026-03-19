@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;

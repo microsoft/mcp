@@ -59,6 +59,11 @@
                     "description": "The Reflex public definition.",
                     "$ref": "#/definitions/ReflexDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Reflex.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -82,7 +87,7 @@
             }
         },
         "ReflexDefinition" : {
-            "description": "Reflex public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/reflex-definition) for more details on how to craft a Reflex public definition.",
+            "description": "Reflex public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/reflex-definition) for more details on the structure of the Reflex definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

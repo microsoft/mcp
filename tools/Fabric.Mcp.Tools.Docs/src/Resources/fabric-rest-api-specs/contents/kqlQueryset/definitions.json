@@ -59,6 +59,11 @@
                   "description": "The KQL queryset public definition.",
                   "$ref": "#/definitions/KQLQuerysetDefinition",
                   "readOnly": false
+              },
+              "sensitivityLabelSettings": {
+                  "description": "The sensitivity label settings for the KQL queryset.",
+                  "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                  "readOnly": false
               }
           }
       },
@@ -82,7 +87,7 @@
           }
       },
       "KQLQuerysetDefinition" : {
-          "description": "KQL queryset public definition object.",
+          "description": "KQL queryset public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/kql-queryset-definition) for more details on the structure of the KQL queryset definition.",
           "type": "object",
           "required": ["parts"],
           "properties": {

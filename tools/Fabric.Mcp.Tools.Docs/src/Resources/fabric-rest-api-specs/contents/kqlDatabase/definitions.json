@@ -76,6 +76,11 @@
                     "description": "The KQL database public definition. Use `creationPayload` or `definition`. You can't use both at the same time.",
                     "$ref": "#/definitions/KQLDatabaseDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the KQL database.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -151,7 +156,7 @@
             }
         },
         "KQLDatabaseDefinition": {
-            "description": "KQL database public definition object.",
+            "description": "KQL database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/kql-database-definition) for more details on the structure of the KQL database definition.",
             "type": "object",
             "required": [
                 "parts"
@@ -261,6 +266,179 @@
                 }
             ],
             "x-ms-discriminator-value": "Shortcut"
+        },
+        "TableShortcut": {
+            "description": "Properties of a table shortcut.",
+            "type": "object",
+            "required": [ "name", "enableQueryAcceleration", "target" ],
+            "properties": {
+                "name": {
+                    "description": "The table shortcut name. The table shortcut name cannot contain the following characters: ? : / \\ \" ] [ + # %",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "enableQueryAcceleration": {
+                    "description": "A boolean flag indicating whether the shortcut has query acceleration enabled.",
+                    "type": "boolean",
+                    "readOnly": false
+                },
+                "target": {
+                    "description": "An object that contains the target datasource, and it must specify exactly one of the supported destinations: OneLake, Amazon S3, ADLS Gen2, Google Cloud Storage, S3 compatible or Azure Blob storage",
+                    "type": "object",
+                    "$ref": "#/definitions/Target"
+                }
+            }
+        },
+        "CreateTableShortcutRequest": {
+            "description": "Properties of a request to create a new table shortcut",
+            "type": "object",
+            "required": [ "name", "enableQueryAcceleration", "target" ],
+            "properties": {
+                "name": {
+                    "description": "The table shortcut name. The table shortcut name cannot contain the following characters: ? : / \\ \" ] [ + # %",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "enableQueryAcceleration": {
+                    "description": "A boolean flag indicating whether the shortcut has query acceleration enabled.",
+                    "type": "boolean",
+                    "readOnly": false
+                },
+                "target": {
+                    "description": "An object that contains the target datasource, and it must specify exactly one of the supported destinations: OneLake, Amazon S3, ADLS Gen2, Google Cloud Storage, S3 compatible or Azure Blob storage",
+                    "type": "object",
+                    "$ref": "#/definitions/CreatableShortcutTarget"
+                }
+            }
+        },
+        "CreatableShortcutTarget": {
+            "description": "An object that contains the target datasource, and must specify exactly one of the supported destinations as described in the table below.",
+            "type": "object",
+            "properties": {
+                "oneLake": {
+                    "description": "An object containing the properties of the target OneLake data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/OneLake"
+                },
+                "amazonS3": {
+                    "description": "An object containing the properties of the target Amazon S3 data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AmazonS3"
+                },
+                "adlsGen2": {
+                    "description": "An object containing the properties of the target ADLS Gen2 data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AdlsGen2"
+                },
+                "googleCloudStorage": {
+                    "description": "An object containing the properties of the target Google Cloud Storage data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/GoogleCloudStorage"
+                },
+                "s3Compatible": {
+                    "description": "An object containing the properties of the target S3 compatible data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/S3Compatible"
+                },
+                "azureBlobStorage": {
+                    "description": "An object containing the properties of the target Azure Blob Storage data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AzureBlobStorage"
+                }
+            }
+        },
+        "Target": {
+            "description": "An object that contains the target datasource, and must specify exactly one of the supported destinations as described in the table below.",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "Target type of the shortcut. String value representing one of the supported datasources.",
+                    "$ref": "#/definitions/ShortcutType"
+                },
+                "oneLake": {
+                    "description": "An object containing the properties of the target OneLake data source.",
+                    "type": "OneLake",
+                    "$ref": "../platform/definitions/platform.json#/definitions/OneLake"
+                },
+                "amazonS3": {
+                    "description": "An object containing the properties of the target Amazon S3 data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AmazonS3"
+                },
+                "adlsGen2": {
+                    "description": "An object containing the properties of the target ADLS Gen2 data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AdlsGen2"
+                },
+                "googleCloudStorage": {
+                    "description": "An object containing the properties of the target Google Cloud Storage data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/GoogleCloudStorage"
+                },
+                "s3Compatible": {
+                    "description": "An object containing the properties of the target S3 compatible data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/S3Compatible"
+                },
+                "azureBlobStorage": {
+                    "description": "An object containing the properties of the target Azure Blob Storage data source.",
+                    "type": "object",
+                    "$ref": "../platform/definitions/platform.json#/definitions/AzureBlobStorage"
+                }
+            }
+        },
+        "TableShortcuts": {
+            "required": [ "value" ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of table shortcuts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TableShortcut"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ShortcutType": {
+            "description": "Target type of the shortcut. String value representing one of the supported datasources. Additional `ShortcutType` types may be added over time.",
+            "type": "string",
+            "enum": [ "OneLake", "AmazonS3", "AdlsGen2", "GoogleCloudStorage", "S3Compatible", "AzureBlobStorage" ],
+            "x-ms-enum": {
+                "name": "ShortcutType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "OneLake",
+                        "description": "Specifies target properties for OneLake datasource."
+                    },
+                    {
+                        "value": "AmazonS3",
+                        "description": "Specifies target properties for Amazon S3 datasource."
+                    },
+                    {
+                        "value": "AdlsGen2",
+                        "description": "Specifies target properties for AdlsGen2 datasource."
+                    },
+                    {
+                        "value": "GoogleCloudStorage",
+                        "description": "Specifies target properties for GoogleCloudStorage datasource."
+                    },
+                    {
+                        "value": "S3Compatible",
+                        "description": "Specifies target properties for S3Compatible datasource."
+                    },
+                    {
+                        "value": "AzureBlobStorage",
+                        "description": "Specifies target properties for AzureBlobStorage datasource."
+                    }
+                ]
+            }
         }
     }
 }

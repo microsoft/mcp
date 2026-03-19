@@ -80,9 +80,9 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         // Map common sovereign cloud names to authority hosts and ARM environments
         return cloudValue.ToLowerInvariant() switch
         {
-            "azurecloud" or "azurepubliccloud" or "public" =>
+            "azurecloud" or "azurepubliccloud" or "public" or "azurepublic" =>
                 (new Uri("https://login.microsoftonline.com"), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
-            "azurechinacloud" or "china" =>
+            "azurechinacloud" or "china" or "azurechina" =>
                 (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
                 (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),

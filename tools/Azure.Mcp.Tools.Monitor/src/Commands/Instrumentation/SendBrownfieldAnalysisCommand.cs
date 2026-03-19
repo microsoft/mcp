@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -50,8 +49,8 @@ After this call succeeds, continue with orchestrator_next as usual.";
     {
         return new SendBrownfieldAnalysisOptions
         {
-            SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
-            FindingsJson = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.FindingsJson)
+            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
+            FindingsJson = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.FindingsJson.Name)
         };
     }
 

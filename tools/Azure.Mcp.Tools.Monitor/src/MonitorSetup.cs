@@ -89,7 +89,6 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
 
-        services.AddSingleton<ListLearningResourcesCommand>();
         services.AddSingleton<GetLearningResourceCommand>();
         services.AddSingleton<OrchestratorStartCommand>();
         services.AddSingleton<OrchestratorNextCommand>();
@@ -172,8 +171,6 @@ public class MonitorSetup : IAreaSetup
         var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
         monitor.AddSubGroup(instrumentation);
 
-        var listLearningResources = serviceProvider.GetRequiredService<ListLearningResourcesCommand>();
-        instrumentation.AddCommand(listLearningResources.Name, listLearningResources);
         var getLearningResource = serviceProvider.GetRequiredService<GetLearningResourceCommand>();
         instrumentation.AddCommand(getLearningResource.Name, getLearningResource);
         var orchestratorStart = serviceProvider.GetRequiredService<OrchestratorStartCommand>();

@@ -32,6 +32,7 @@ Describes Event metadata, used to communicate between source, Eventstream, and d
 |--|--|--|--|
 | `id` | String | true | Unique id of the eventType |
 | `description` | String | false | Description of the eventType |
+| `eventTypeCategory` | String | false | Category of the eventType. Allowed values: EventType or BusinessEventType |
 | `format` | String | true | Serialization format. |
 | `envelopeMetadata` | Dictionary<string, object> | false | Collection of messages that are stored in Catalog. |
 | `schemaUrl` | string | false | Url to the schemaGroup and Schema. SchemaUrl and Schema are mutually exclusive. If Schema is defined in EventType, then SchemaUrl cannot be included.|

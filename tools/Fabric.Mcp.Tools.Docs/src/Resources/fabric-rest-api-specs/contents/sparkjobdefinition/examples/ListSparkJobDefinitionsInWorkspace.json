@@ -14,6 +14,9 @@
                         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
                         "properties": {
                             "oneLakeRootPath": "https://onelake.dfs.fabric.microsoft.com/f089354e-8366-4e18-aea3-4cb4a3a50b48/41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+                        },
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
                         }
                     },
                     {
@@ -24,6 +27,9 @@
                         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
                         "properties": {
                             "oneLakeRootPath": "https://onelake.dfs.fabric.microsoft.com/f089354e-8366-4e18-aea3-4cb4a3a50b48/d8f6cf16-3aac-4440-9d76-a03d86b7ae3e"
+                        },
+                        "sensitivityLabel": {
+                            "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
                         }
                     }
                 ]

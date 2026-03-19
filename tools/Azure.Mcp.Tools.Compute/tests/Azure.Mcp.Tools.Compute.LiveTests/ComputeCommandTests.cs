@@ -761,7 +761,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "resource-group", Settings.ResourceGroupName },
                 { "disk-name", newDiskName },
                 { "sku", "Standard_LRS" }
-            });
+            },
+            resultProcessor: elem => elem); // Don't try to extract "results" property since we expect an error response with a different structure
 
         // Assert - should return an error response
         Assert.NotNull(result);
@@ -956,7 +957,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "disk-name", newDiskName },
                 { "upload-type", "Upload" },
                 { "sku", "Standard_LRS" }
-            });
+            },
+            resultProcessor: elem => elem); // Don't try to extract "results" property since we expect an error response with a different structure
 
         // Assert - should return an error response
         Assert.NotNull(result);
