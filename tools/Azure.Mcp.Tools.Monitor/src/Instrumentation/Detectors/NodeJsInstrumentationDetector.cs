@@ -40,7 +40,6 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
             var root = packageJson.RootElement;
 
             var dependencies = new List<string>();
-            var evidence = new List<string>();
 
             // Collect all dependencies
             if (root.TryGetProperty("dependencies", out var depsElement))
