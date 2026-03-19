@@ -4,14 +4,13 @@
 
 ### Changed
 
-- **Breaking:** Moved the following tools from `monitorinstrumentation` namespace to `monitor` namespace:
-[[#2087](https://github.com/microsoft/mcp/pull/2087)]
+- **Breaking:** Moved the following tools from `monitorinstrumentation` namespace to `monitor` namespace: [[#2087](https://github.com/microsoft/mcp/pull/2087)]
   - `list_learning_resources`
   - `get_learning_resource`
   - `orchestrator_start`
   - `orchestrator_next`
   - `send_brownfield_analysis`
-- **Breaking:** Consolidated the `list_learning_resources` tool and `get_learning_resources` into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
+- **Breaking:** Consolidated the `list_learning_resources` tool and `get_learning_resource` into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
 - Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
 - Reviewed MCP tool Command definitions and resolved validation inconsistencies, aligning implementations with tool development guidelines and improving consistency across multiple tool areas. [[#2086](https://github.com/microsoft/mcp/pull/2086)]
 
