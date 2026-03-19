@@ -1,28 +1,29 @@
 ---
-title: ASP.NET Core Setup with Application Insights
+title: Basic ASP.NET Core Setup
 category: example
 applies-to: 3.x
+source: ApplicationInsightsDemo/Program.cs
 ---
 
-# ASP.NET Core Setup with Application Insights
+# Basic ASP.NET Core Setup
 
-**Category:** Example
+**Category:** Example  
 **Applies to:** 3.x
 
 ## Overview
 
-Complete working example of adding Application Insights to a new ASP.NET Core application using `Microsoft.ApplicationInsights.AspNetCore`.
+Complete working example of adding Azure Monitor to a new ASP.NET Core application.
 
 ## Step 1: Add Package
 
 ```bash
-dotnet add package Microsoft.ApplicationInsights.AspNetCore
+dotnet add package Azure.Monitor.OpenTelemetry.AspNetCore
 ```
 
 Or in `.csproj`:
 
 ```xml
-<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.*" />
+<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.3.0" />
 ```
 
 ## Step 2: Configure in Program.cs
@@ -30,10 +31,12 @@ Or in `.csproj`:
 ### Minimal Setup
 
 ```csharp
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Application Insights - one line!
-builder.Services.AddApplicationInsightsTelemetry();
+// Add Azure Monitor - one line!
+builder.Services.AddOpenTelemetry().UseAzureMonitor();
 
 builder.Services.AddControllers();
 
@@ -46,15 +49,20 @@ app.Run();
 ### With Configuration Options
 
 ```csharp
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationInsightsTelemetry(options =>
+builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
 {
-    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-    options.EnableQuickPulseMetricStream = true;
-    options.SamplingRatio = 0.5f;   // Collect 50% of telemetry
+    // Connection string from configuration
+    options.ConnectionString = builder.Configuration["AzureMonitor:ConnectionString"];
+    
+    // Sample 50% of requests in production
+    if (!builder.Environment.IsDevelopment())
+    {
+        options.SamplingRatio = 0.5f;
+    }
 });
 
 builder.Services.AddControllers();
@@ -77,7 +85,7 @@ export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=xxx;IngestionEn
 
 ```json
 {
-  "ApplicationInsights": {
+  "AzureMonitor": {
     "ConnectionString": "InstrumentationKey=xxx;IngestionEndpoint=https://..."
   }
 }
@@ -86,12 +94,14 @@ export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=xxx;IngestionEn
 ### Option C: User Secrets (Development)
 
 ```bash
-dotnet user-secrets set "ApplicationInsights:ConnectionString" "InstrumentationKey=xxx;..."
+dotnet user-secrets set "AzureMonitor:ConnectionString" "InstrumentationKey=xxx;..."
 ```
 
 ## Complete Program.cs
 
 ```csharp
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
@@ -99,8 +109,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add Application Insights telemetry
-builder.Services.AddApplicationInsightsTelemetry();
+// Add Azure Monitor OpenTelemetry
+builder.Services.AddOpenTelemetry().UseAzureMonitor();
 
 var app = builder.Build();
 
@@ -120,7 +130,7 @@ app.Run();
 
 ## What You Get Automatically
 
-After this setup, Application Insights will collect:
+After this setup, Azure Monitor will collect:
 
 | Signal | Data |
 |--------|------|
@@ -129,19 +139,6 @@ After this setup, Application Insights will collect:
 | **Exceptions** | Unhandled exceptions with stack traces |
 | **Logs** | ILogger output (Information level and above) |
 | **Metrics** | Request rate, response time, CPU, memory |
-| **Live Metrics** | Real-time monitoring via QuickPulse |
-| **Performance Counters** | GC, thread pool, process metrics |
-
-## Extending with OpenTelemetry
-
-Application Insights 3.x is built on OpenTelemetry. You can add custom sources and meters:
-
-```csharp
-builder.Services.AddApplicationInsightsTelemetry();
-builder.Services.AddOpenTelemetry()
-    .WithTracing(t => t.AddSource("MyApp.CustomSource"))
-    .WithMetrics(m => m.AddMeter("MyApp.CustomMeter"));
-```
 
 ## Verify It Works
 
@@ -155,6 +152,5 @@ builder.Services.AddOpenTelemetry()
 
 ## See Also
 
-- Application Insights for ASP.NET Core (see in appinsights-aspnetcore.md)
-- AddApplicationInsightsTelemetry API (see in AddApplicationInsightsTelemetry.md)
-- App Insights 2.x to 3.x Migration (see in appinsights-2x-to-3x-code-migration.md)
+- Azure Monitor Distro(see in azure-monitor-distro.md)
+- UseAzureMonitor API(see in UseAzureMonitor.md)

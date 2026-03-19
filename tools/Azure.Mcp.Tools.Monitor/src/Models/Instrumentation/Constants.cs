@@ -20,6 +20,7 @@ public static class OnboardingConstants
         // .NET
         public const string ConceptsOpenTelemetryPipelineDotNet = "learn://concepts/dotnet/opentelemetry-pipeline.md";
         public const string ConceptsAzureMonitorDistro = "learn://concepts/dotnet/azure-monitor-distro.md";
+        public const string ConceptsAppInsightsAspNetCore = "learn://concepts/dotnet/appinsights-aspnetcore.md";
         public const string ApiUseAzureMonitor = "learn://api-reference/dotnet/UseAzureMonitor.md";
         public const string ApiAddOpenTelemetry = "learn://api-reference/dotnet/AddOpenTelemetry.md";
         public const string ApiOpenTelemetrySdkCreate = "learn://api-reference/dotnet/OpenTelemetrySdkCreate.md";
@@ -55,6 +56,7 @@ public static class OnboardingConstants
         public const string MigrationAadAuthentication = "learn://migration/dotnet/aad-authentication-migration.md";
         public const string MigrationILoggerMigration = "learn://migration/dotnet/ilogger-migration.md";
         public const string ExampleAspNetCoreSetup = "learn://examples/dotnet/aspnetcore-setup.md";
+        public const string ExampleAspNetCoreDistroSetup = "learn://examples/dotnet/aspnetcore-distro-setup.md";
         public const string ExampleAspNetClassicSetup = "learn://examples/dotnet/aspnet-classic-setup.md";
         public const string ExampleWorkerServiceSetup = "learn://examples/dotnet/workerservice-setup.md";
 
