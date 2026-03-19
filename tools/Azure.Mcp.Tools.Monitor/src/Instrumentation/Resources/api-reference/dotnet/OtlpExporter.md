@@ -85,4 +85,4 @@ Instead of code, configure via environment variables:
 - For local development with Aspire Dashboard, use `http://localhost:4317` with gRPC.
 - `AddOtlpExporter()` with no arguments uses environment variables or defaults.
 - Each signal (traces, metrics, logs) needs its own `AddOtlpExporter()` call.
-- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddOtlpExporter(...)))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddOtlpExporter(...)))` on `TelemetryConfiguration`. See TelemetryClient.md.

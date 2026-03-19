@@ -8,7 +8,7 @@ applies-to: 3.x
 
 The non-DI extensibility API for Application Insights 3.x. Use this when you don't have an `IServiceCollection` — classic ASP.NET (`Global.asax`), console apps, or test scenarios.
 
-For DI-based apps (ASP.NET Core, Worker Service), use [ConfigureOpenTelemetryTracerProvider](./ConfigureOpenTelemetryProvider.md) instead.
+For DI-based apps (ASP.NET Core, Worker Service), use ConfigureOpenTelemetryTracerProvider(see in ConfigureOpenTelemetryProvider.md) instead.
 
 ## API
 

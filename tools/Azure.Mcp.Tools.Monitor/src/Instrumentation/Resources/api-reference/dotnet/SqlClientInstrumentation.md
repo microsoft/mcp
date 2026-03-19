@@ -50,4 +50,4 @@ builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
 - Works with both `System.Data.SqlClient` and `Microsoft.Data.SqlClient`.
 - If using EF Core with SQL Server, you may not need this package separately — EF Core instrumentation captures the same spans. Use this when you have raw `SqlCommand` / `SqlConnection` calls alongside or instead of EF Core.
 - `SetDbStatementForText = true` captures raw SQL which may contain sensitive data. Use with caution in production.
-- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddSqlClientInstrumentation()))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddSqlClientInstrumentation()))` on `TelemetryConfiguration`. See TelemetryClient.md.

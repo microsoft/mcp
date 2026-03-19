@@ -145,7 +145,7 @@ public class MvcApplication : HttpApplication
 
 > **Important:** Create a **single static** `TelemetryClient` instance in `Application_Start`. Do not create per-request or per-controller instances — this causes memory leaks and duplicate telemetry. `TelemetryConfiguration.CreateDefault()` returns a singleton that is shared with the `ApplicationInsightsHttpModule`.
 
-See [TelemetryConfigurationBuilder.md](../api-reference/dotnet/TelemetryConfigurationBuilder.md) for full API details.
+See TelemetryConfigurationBuilder.md for full API details.
 
 ## Sampling changes
 
@@ -156,7 +156,7 @@ See [TelemetryConfigurationBuilder.md](../api-reference/dotnet/TelemetryConfigur
 
 ## TelemetryClient changes
 
-See [TelemetryClient.md](../api-reference/dotnet/TelemetryClient.md) for full breaking changes. Key items:
+See TelemetryClient.md for full breaking changes. Key items:
 - `TrackPageView` — removed entirely
 - `TrackEvent`/`TrackException`/`TrackAvailability` — metrics dict parameter removed
 - Parameterless `new TelemetryClient()` — removed, use `new TelemetryClient(TelemetryConfiguration.CreateDefault())`
@@ -185,6 +185,6 @@ See [TelemetryClient.md](../api-reference/dotnet/TelemetryClient.md) for full br
 
 ## See also
 
-- [ApplicationInsightsWeb API reference](../api-reference/dotnet/ApplicationInsightsWeb.md)
-- [ConfigureOpenTelemetryBuilder](../api-reference/dotnet/TelemetryConfigurationBuilder.md)
-- [TelemetryClient breaking changes](../api-reference/dotnet/TelemetryClient.md)
+- ApplicationInsightsWeb API reference(see in ApplicationInsightsWeb.md)
+- ConfigureOpenTelemetryBuilder(see in TelemetryConfigurationBuilder.md)
+- TelemetryClient breaking changes(see in TelemetryClient.md)

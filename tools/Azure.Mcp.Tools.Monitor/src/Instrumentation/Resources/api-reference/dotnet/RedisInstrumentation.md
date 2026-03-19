@@ -60,4 +60,4 @@ builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
 
 - The Redis instrumentation hooks into `StackExchange.Redis` profiling. It requires either DI-registered `IConnectionMultiplexer` (auto-discovered) or passing the connection explicitly.
 - When using DI registration, the instrumentation automatically discovers all `IConnectionMultiplexer` instances — no need to pass the connection manually.
-- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddRedisInstrumentation(connection)))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddRedisInstrumentation(connection)))` on `TelemetryConfiguration`. See TelemetryClient.md.

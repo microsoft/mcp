@@ -66,7 +66,7 @@ Target: .NET Framework 4.6.2+
 
 ## TelemetryClient usage
 
-`TelemetryClient` works the same as in ASP.NET Core 3.x. See [TelemetryClient.md](./TelemetryClient.md) for breaking changes.
+`TelemetryClient` works the same as in ASP.NET Core 3.x. See TelemetryClient.md for breaking changes.
 
 Key difference: in classic ASP.NET, create via `new TelemetryClient(TelemetryConfiguration.CreateDefault())` or let `ApplicationInsightsHttpModule` initialize the configuration first.
 

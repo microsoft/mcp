@@ -106,4 +106,4 @@ builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
 - Both client and server instrumentation are **already active** in AI 3.x setups. Adding the packages explicitly is only needed to access the `options` overload for enrichment/filtering.
 - Enrichment callbacks run synchronously on the hot path — keep them lightweight.
 - `Filter` on the server side is the recommended way to suppress health check / readiness probe spans (instead of a custom processor).
-- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddHttpClientInstrumentation(...)))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddHttpClientInstrumentation(...)))` on `TelemetryConfiguration`. See TelemetryClient.md.

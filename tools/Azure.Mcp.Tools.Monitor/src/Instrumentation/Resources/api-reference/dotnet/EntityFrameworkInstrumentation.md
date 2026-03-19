@@ -53,4 +53,4 @@ EF Core spans use the [OpenTelemetry Database semantic conventions](https://open
 - EF Core instrumentation relies on `DiagnosticSource` events emitted by EF Core itself — no additional packages needed for basic span collection.
 - The `OpenTelemetry.Instrumentation.EntityFrameworkCore` package is only needed to customize options (SQL text capture, enrichment, filtering).
 - Works with all EF Core providers (SQL Server, PostgreSQL, SQLite, MySQL, etc.).
-- **Non-DI usage:** If not using ASP.NET Core DI, use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddEntityFrameworkCoreInstrumentation()))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** If not using ASP.NET Core DI, use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddEntityFrameworkCoreInstrumentation()))` on `TelemetryConfiguration`. See TelemetryClient.md.

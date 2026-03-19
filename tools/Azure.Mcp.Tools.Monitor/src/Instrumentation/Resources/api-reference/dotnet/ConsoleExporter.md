@@ -44,4 +44,4 @@ builder.Services.ConfigureOpenTelemetryLoggerProvider(logging =>
 - Console exporter works alongside Azure Monitor — both receive the same telemetry.
 - Each signal needs its own `AddConsoleExporter()` call.
 - For production multi-destination export, use OTLP exporter instead.
-- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddConsoleExporter()))` on `TelemetryConfiguration`. See [TelemetryClient.md](./TelemetryClient.md).
+- **Non-DI usage:** Use `config.ConfigureOpenTelemetryBuilder(otel => otel.WithTracing(t => t.AddConsoleExporter()))` on `TelemetryConfiguration`. See TelemetryClient.md.
