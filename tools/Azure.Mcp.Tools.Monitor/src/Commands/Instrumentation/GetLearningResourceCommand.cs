@@ -63,7 +63,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 // List all learning resources
-                var resources = ListLearningResourcesTool.ListLearningResources();
+                var resources = GetLearningResourceTool.ListLearningResources();
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(

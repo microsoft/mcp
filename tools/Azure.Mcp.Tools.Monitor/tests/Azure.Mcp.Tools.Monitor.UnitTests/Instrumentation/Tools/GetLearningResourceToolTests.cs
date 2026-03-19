@@ -90,7 +90,7 @@ public sealed class GetLearningResourceToolTests
         try
         {
             // Act
-            var result = ListLearningResourcesTool.ListLearningResources();
+            var result = GetLearningResourceTool.ListLearningResources();
 
             // Assert
             Assert.Contains(firstPath, result);
