@@ -138,6 +138,14 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [microsoft/clarity-mcp-server](https://github.com/microsoft/clarity-mcp-server)
 
+### 🔷 Azure Synapse Analytics (Community)
+
+* **REPOSITORY**: [manjotsingh20/azure-synapse-mcp](https://github.com/manjotsingh20/azure-synapse-mcp)
+* **DESCRIPTION**: Community MCP server for Azure Synapse Analytics — full CRUD SQL, pipeline orchestration, Spark job submission, and notebook listing. Free and open-source, no paid drivers required. Supports Azure AD, Managed Identity, Service Principal, and SQL auth. Azure Synapse is not covered by the official Azure MCP Server.
+* **CATEGORY**: `DATA AND ANALYTICS`
+* **TYPE**: `Local`
+* **INSTALL**: `pip install azure-synapse-mcp`
+
 ### 🗃️ Microsoft Dataverse
 - **REPOSITORY**: [Microsoft Dataverse](https://go.microsoft.com/fwlink/?linkid=2320176)
 - **DESCRIPTION**: Chat over your business data using NL - Discover tables, run queries, retrieve data, insert or update records, and execute custom prompts grounded in business knowledge and context.
