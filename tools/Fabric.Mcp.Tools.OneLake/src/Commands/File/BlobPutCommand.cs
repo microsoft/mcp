@@ -3,28 +3,25 @@
 
 using System.Net;
 using System.Text;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 public sealed class BlobPutCommand(
     ILogger<BlobPutCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobPutOptions>()
+    IOneLakeService oneLakeService) : BaseItemCommand<BlobPutOptions>()
 {
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "upload_file";
+    public override string Name => "upload-file";
     public override string Title => "Upload OneLake File";
     public override string Description => "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.";
 
@@ -32,7 +29,7 @@ public sealed class BlobPutCommand(
     {
         Destructive = true,
         Idempotent = false,
-        LocalRequired = false,
+        LocalRequired = true,
         OpenWorld = false,
         ReadOnly = false,
         Secret = false
@@ -41,10 +38,6 @@ public sealed class BlobPutCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.FilePath);
         command.Options.Add(FabricOptionDefinitions.Content);
         command.Options.Add(FabricOptionDefinitions.LocalFilePath);
@@ -52,19 +45,23 @@ public sealed class BlobPutCommand(
         command.Options.Add(FabricOptionDefinitions.ContentType);
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            var localFilePath = result.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
+            var content = result.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
+            if (string.IsNullOrEmpty(localFilePath) && string.IsNullOrEmpty(content))
             {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+                result.AddError("Either --content or --local-file-path must be specified.");
+            }
+            else if (!string.IsNullOrEmpty(localFilePath) && !string.IsNullOrEmpty(content))
+            {
+                result.AddError("Only one of --content or --local-file-path can be specified, not both.");
             }
 
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            if (!string.IsNullOrEmpty(localFilePath))
             {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
+                if (!System.IO.File.Exists(localFilePath))
+                {
+                    result.AddError($"Local file not found: {localFilePath}");
+                }
             }
         });
     }
@@ -72,19 +69,6 @@ public sealed class BlobPutCommand(
     protected override BlobPutOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
         options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
         options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
         options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
@@ -107,8 +91,8 @@ public sealed class BlobPutCommand(
             using var contentStream = ResolveContentStream(options, out var contentLength);
 
             var result = await _oneLakeService.PutBlobAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                options.WorkspaceId!,
+                options.ItemId!,
                 options.FilePath,
                 contentStream,
                 contentLength,
@@ -153,11 +137,6 @@ public sealed class BlobPutCommand(
     {
         if (!string.IsNullOrEmpty(options.LocalFilePath))
         {
-            if (!System.IO.File.Exists(options.LocalFilePath))
-            {
-                throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
-            }
-
             var fileStream = System.IO.File.OpenRead(options.LocalFilePath);
             contentLength = fileStream.Length;
             return fileStream;
@@ -194,10 +173,8 @@ public sealed class BlobPutCommand(
         string Message);
 }
 
-public sealed class BlobPutOptions : GlobalOptions
+public sealed class BlobPutOptions : BaseItemOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string? Content { get; set; }
     public string? LocalFilePath { get; set; }

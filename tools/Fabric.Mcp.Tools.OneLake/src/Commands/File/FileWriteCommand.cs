@@ -1,24 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
 public sealed class FileWriteCommand(
     ILogger<FileWriteCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileWriteOptions>()
+    IOneLakeService oneLakeService) : BaseItemCommand<FileWriteOptions>()
 {
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -32,7 +29,7 @@ public sealed class FileWriteCommand(
     {
         Destructive = true,
         Idempotent = false,
-        LocalRequired = false,
+        LocalRequired = true,
         OpenWorld = false,
         ReadOnly = false,
         Secret = false
@@ -41,31 +38,12 @@ public sealed class FileWriteCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.FilePath);
         command.Options.Add(FabricOptionDefinitions.Content);
         command.Options.Add(FabricOptionDefinitions.LocalFilePath);
         command.Options.Add(FabricOptionDefinitions.Overwrite);
         command.Validators.Add(result =>
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-
             var content = result.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
             var localFilePath = result.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
             if (string.IsNullOrWhiteSpace(content) && string.IsNullOrWhiteSpace(localFilePath))
@@ -88,19 +66,6 @@ public sealed class FileWriteCommand(
     protected override FileWriteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
         options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
         options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
         options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
@@ -138,8 +103,8 @@ public sealed class FileWriteCommand(
             using (contentStream)
             {
                 await _oneLakeService.WriteFileAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.FilePath,
                     contentStream,
                     options.Overwrite,
@@ -169,10 +134,8 @@ public sealed class FileWriteCommand(
         string Message);
 }
 
-public sealed class FileWriteOptions : GlobalOptions
+public sealed class FileWriteOptions : BaseItemOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string? Content { get; set; }
     public string? LocalFilePath { get; set; }

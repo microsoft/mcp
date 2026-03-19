@@ -2,16 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
@@ -20,7 +17,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// </summary>
 public sealed class OneLakeItemListDfsCommand(
     ILogger<OneLakeItemListDfsCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions>()
+    IOneLakeService oneLakeService) : BaseWorkspaceCommand<OneLakeItemListDfsOptions>()
 {
     private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -43,30 +40,13 @@ public sealed class OneLakeItemListDfsCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
     }
 
     protected override OneLakeItemListDfsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
         options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
         return options;
@@ -83,13 +63,12 @@ public sealed class OneLakeItemListDfsCommand(
         try
         {
             var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
-                options.WorkspaceId,
+                options.WorkspaceId!,
                 recursive: options.Recursive,
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
 
-            var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(jsonResponse), OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
         }
         catch (Exception ex)
         {
@@ -118,15 +97,11 @@ public sealed class OneLakeItemListDfsCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record OneLakeItemListDfsCommandResult
-    {
-        public string? JsonResponse { get; init; }
-    }
+    public sealed record OneLakeItemListDfsCommandResult(string? JsonResponse);
 }
 
-public sealed class OneLakeItemListDfsOptions : GlobalOptions
+public sealed class OneLakeItemListDfsOptions : BaseWorkspaceOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
     public bool Recursive { get; set; }
     public string? ContinuationToken { get; set; }
 }

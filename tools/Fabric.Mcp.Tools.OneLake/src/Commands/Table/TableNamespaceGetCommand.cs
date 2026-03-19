@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -15,13 +14,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 public sealed class TableNamespaceGetCommand(
     ILogger<TableNamespaceGetCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<TableNamespaceGetOptions>()
+    IOneLakeService oneLakeService) : BaseItemCommand<TableNamespaceGetOptions>()
 {
     private readonly ILogger<TableNamespaceGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "a86298d1-7475-4ea8-8c1b-e4c54ac2b896";
-    public override string Name => "get_table_namespace";
+    public override string Name => "get-table-namespace";
     public override string Title => "Get OneLake Table Namespace";
     public override string Description => "Retrieves metadata for a specific table namespace. Use this when the user needs details about a namespace.";
 
@@ -38,38 +37,13 @@ public sealed class TableNamespaceGetCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
     }
 
     protected override TableNamespaceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Namespace.Name);
         options.Namespace ??= parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Schema.Name);
         return options;
@@ -85,15 +59,7 @@ public sealed class TableNamespaceGetCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
-
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            var namespaceResult = await _oneLakeService.GetTableNamespaceAsync(workspaceIdentifier!, itemIdentifier!, options.Namespace!, cancellationToken);
+            var namespaceResult = await _oneLakeService.GetTableNamespaceAsync(options.WorkspaceId!, options.ItemId!, options.Namespace!, cancellationToken);
             var result = new TableNamespaceGetCommandResult(namespaceResult.Workspace, namespaceResult.Item, namespaceResult.Namespace, namespaceResult.Definition, namespaceResult.RawResponse);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.TableNamespaceGetCommandResult);
         }

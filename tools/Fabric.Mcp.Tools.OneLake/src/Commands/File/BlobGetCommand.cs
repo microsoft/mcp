@@ -3,22 +3,20 @@
 
 using System.Net;
 using System.Text;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
+namespace Fabric.Mcp.Tools.OneLake.Commands.File;
+
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<BlobGetOptions>()
+    IOneLakeService oneLakeService) : BaseItemCommand<BlobGetOptions>()
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -26,7 +24,7 @@ public sealed class BlobGetCommand(
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
     public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
-    public override string Name => "download_file";
+    public override string Name => "download-file";
     public override string Title => "Download OneLake File";
     public override string Description => "Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable.";
 
@@ -34,7 +32,7 @@ public sealed class BlobGetCommand(
     {
         Destructive = false,
         Idempotent = true,
-        LocalRequired = false,
+        LocalRequired = true,
         OpenWorld = false,
         ReadOnly = true,
         Secret = false
@@ -43,47 +41,13 @@ public sealed class BlobGetCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.FilePath);
         command.Options.Add(FabricOptionDefinitions.DownloadFilePath.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
     }
 
     protected override BlobGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
         options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
         options.DownloadFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DownloadFilePath.Name);
         return options;
@@ -99,18 +63,9 @@ public sealed class BlobGetCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
-            var transport = serviceStartOptions.Value.Transport ?? "stdio";
-            var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
-
             string? downloadPath = null;
             if (!string.IsNullOrWhiteSpace(options.DownloadFilePath))
             {
-                if (!isLocalTransport)
-                {
-                    throw new ArgumentException("The --download-file-path option is only supported when the server runs with stdio transport.", nameof(options.DownloadFilePath));
-                }
-
                 var candidatePath = options.DownloadFilePath!;
                 downloadPath = Path.IsPathRooted(candidatePath)
                     ? candidatePath
@@ -136,8 +91,8 @@ public sealed class BlobGetCommand(
             };
 
             var result = await _oneLakeService.GetBlobAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                options.WorkspaceId!,
+                options.ItemId!,
                 options.FilePath,
                 downloadOptions,
                 cancellationToken);
@@ -186,10 +141,8 @@ public sealed class BlobGetCommand(
     };
 }
 
-public sealed class BlobGetOptions : GlobalOptions
+public sealed class BlobGetOptions : BaseItemOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string? DownloadFilePath { get; set; }
 }

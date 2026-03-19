@@ -21,7 +21,7 @@ public class OneLakeWorkspaceListCommandTests
         var command = new OneLakeWorkspaceListCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("list_workspaces", command.Name);
+        Assert.Equal("list-workspaces", command.Name);
         Assert.Equal("List OneLake Workspaces", command.Title);
         Assert.Contains("Lists all Fabric workspaces accessible via OneLake", command.Description);
         Assert.True(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class OneLakeWorkspaceListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_workspaces", systemCommand.Name);
+        Assert.Equal("list-workspaces", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

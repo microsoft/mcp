@@ -1,15 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using System.Xml.Linq;
 using Azure.Core;
 using Azure.Identity;
@@ -79,7 +74,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     private ConcurrentDictionary<string, string> GetWorkspaceItemCache(string workspaceId)
     {
-        return _itemIdentifierCache.GetOrAdd(workspaceId, static _ => new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+        return _itemIdentifierCache.GetOrAdd(workspaceId, static _ => new(StringComparer.OrdinalIgnoreCase));
     }
 
     private static string NormalizeWorkspaceIdentifier(string workspaceId)
@@ -139,7 +134,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
                 var propertiesElement = container.Element("Properties");
                 if (propertiesElement != null)
                 {
-                    workspace.Properties = new WorkspaceProperties();
+                    workspace.Properties = new();
                     var lastModifiedString = propertiesElement.Element("Last-Modified")?.Value;
                     if (!string.IsNullOrEmpty(lastModifiedString) && DateTime.TryParse(lastModifiedString, out var lastModified))
                     {
@@ -150,7 +145,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
                 var metadataElement = container.Element("Metadata");
                 if (metadataElement != null)
                 {
-                    workspace.Metadata = new WorkspaceMetadata
+                    workspace.Metadata = new()
                     {
                         RegionalServiceEndpoint = metadataElement.Element("RegionalServiceEndpoint")?.Value,
                         WorkspaceObjectId = metadataElement.Element("WorkspaceObjectId")?.Value,
@@ -189,7 +184,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateItemRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new();
     }
 
     // Private helper method for internal use
@@ -197,7 +192,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
+        return await JsonSerializer.DeserializeAsync(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new();
     }
 
     // Data Operations (OneLake Data Plane)
@@ -207,7 +202,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/Files/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Head, url, cancellationToken: cancellationToken);
 
-        return new OneLakeFileInfo
+        return new()
         {
             Name = Path.GetFileName(filePath),
             Path = filePath,
@@ -346,7 +341,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         using var document = JsonDocument.Parse(rawResponse);
         var configuration = document.RootElement.Clone();
 
-        return new TableConfigurationResult(normalizedWorkspaceId, normalizedItemIdentifier, configuration, rawResponse);
+        return new(normalizedWorkspaceId, normalizedItemIdentifier, configuration, rawResponse);
     }
 
     public async Task<TableNamespaceListResult> ListTableNamespacesAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default)
@@ -376,7 +371,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         using var document = JsonDocument.Parse(rawResponse);
         var namespaces = document.RootElement.Clone();
 
-        return new TableNamespaceListResult(normalizedWorkspaceId, normalizedItemIdentifier, namespaces, rawResponse);
+        return new(normalizedWorkspaceId, normalizedItemIdentifier, namespaces, rawResponse);
     }
 
     public async Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
@@ -418,7 +413,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         using var document = JsonDocument.Parse(rawResponse);
         var definition = document.RootElement.Clone();
 
-        return new TableNamespaceGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, definition, rawResponse);
+        return new(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, definition, rawResponse);
     }
 
     public async Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
@@ -460,7 +455,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         using var document = JsonDocument.Parse(rawResponse);
         var tables = document.RootElement.Clone();
 
-        return new TableListResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, tables, rawResponse);
+        return new(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, tables, rawResponse);
     }
 
     public async Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default)
@@ -515,7 +510,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         using var document = JsonDocument.Parse(rawResponse);
         var tableDefinition = document.RootElement.Clone();
 
-        return new TableGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, trimmedTableName, tableDefinition, rawResponse);
+        return new(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, trimmedTableName, tableDefinition, rawResponse);
     }
 
     private List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
@@ -547,7 +542,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
                 // Use ResourceType to determine if this is a directory
                 var isDirectory = string.Equals(resourceType, "directory", StringComparison.OrdinalIgnoreCase);
 
-                files.Add(new OneLakeFileInfo
+                files.Add(new()
                 {
                     Name = Path.GetFileName(fileName),
                     Path = fileName,
@@ -566,7 +561,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
                 if (nameElement?.Value != null)
                 {
                     var dirName = nameElement.Value.TrimEnd('/');
-                    files.Add(new OneLakeFileInfo
+                    files.Add(new()
                     {
                         Name = Path.GetFileName(dirName),
                         Path = dirName,
@@ -621,7 +616,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return allItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
-    private List<FileSystemItem> ParsePathListResponse(string jsonContent)
+    private static List<FileSystemItem> ParsePathListResponse(string jsonContent)
     {
         var fileSystemItems = new List<FileSystemItem>();
 
@@ -751,7 +746,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return fileSystemItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
-    private List<FileSystemItem> BuildHierarchicalStructure(List<FileSystemItem> flatItems, string basePath)
+    private static List<FileSystemItem> BuildHierarchicalStructure(List<FileSystemItem> flatItems, string basePath)
     {
         var root = new List<FileSystemItem>();
         var pathPrefix = basePath.TrimEnd('/') + "/";
@@ -835,7 +830,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
 
             // Option 2: Try <EnumerationResults><Blobs><Blob> (fallback for regular blobs)
-            if (!items.Any())
+            if (items.Count == 0)
             {
                 var blobs = doc.Root?.Element("Blobs")?.Elements("Blob");
                 if (blobs != null && blobs.Any())
@@ -845,7 +840,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
 
             // Option 2: Try <EnumerationResults><Containers><Container> (like workspace listing)
-            if (!items.Any())
+            if (items.Count == 0)
             {
                 var containers = doc.Root?.Element("Containers")?.Elements("Container");
                 if (containers != null && containers.Any())
@@ -855,7 +850,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
 
             // Option 3: Try direct children of root element
-            if (!items.Any())
+            if (items.Count == 0)
             {
                 var directElements = doc.Root?.Elements().Where(e => e.Name != "NextMarker" && e.Name != "MaxResults");
                 if (directElements != null && directElements.Any())
@@ -1114,7 +1109,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             var metadataElement = blobPrefix.Element("Metadata");
             if (metadataElement != null)
             {
-                item.Metadata = new OneLakeItemMetadata
+                item.Metadata = new()
                 {
                     ArtifactId = metadataElement.Element("ArtifactId")?.Value,
                     ArtifactPortalUrl = metadataElement.Element("ArtifactPortalUrl")?.Value
@@ -1129,7 +1124,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
             else if (propertiesElement != null)
             {
-                item.Metadata = new OneLakeItemMetadata
+                item.Metadata = new()
                 {
                     ResourceType = propertiesElement.Element("ResourceType")?.Value,
                     BlobType = propertiesElement.Element("BlobType")?.Value
@@ -1286,17 +1281,17 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
         // Upload content
         url += "?action=append&position=0";
-        using var uploadRequest = new HttpRequestMessage(new HttpMethod("PATCH"), url)
+        using var uploadRequest = new HttpRequestMessage(HttpMethod.Patch, url)
         {
             Content = new StreamContent(content)
         };
-        uploadRequest.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        uploadRequest.Content.Headers.ContentType = new("application/octet-stream");
 
         await SendDataPlaneRequestAsync(uploadRequest, cancellationToken: cancellationToken);
 
         // Flush/commit
         url = url.Replace("action=append&position=0", $"action=flush&position={content.Length}");
-        using var flushRequest = new HttpRequestMessage(new HttpMethod("PATCH"), url);
+        using var flushRequest = new HttpRequestMessage(HttpMethod.Patch, url);
         await SendDataPlaneRequestAsync(flushRequest, cancellationToken: cancellationToken);
     }
 
@@ -1318,7 +1313,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         };
 
         request.Headers.Add("x-ms-blob-type", "BlockBlob");
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+        request.Content.Headers.ContentType = new(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
         request.Content.Headers.ContentLength = contentLength;
 
         if (!overwrite)
@@ -1366,7 +1361,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
             }
         }
 
-        return new BlobPutResult(
+        return new(
             normalizedWorkspaceId,
             normalizedItemId,
             blobPath,
@@ -1541,7 +1536,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var clientRequestId = GetHeaderValue(response.Headers, "x-ms-client-request-id");
         var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
 
-        return new BlobGetResult(
+        return new(
             normalizedWorkspaceId,
             normalizedItemId,
             path,
@@ -1585,7 +1580,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         var clientRequestId = GetHeaderValue(response.Headers, "x-ms-client-request-id");
         var rootActivityId = GetHeaderValue(response.Headers, "x-ms-root-activity-id");
 
-        return new BlobDeleteResult(
+        return new(
             normalizedWorkspaceId,
             normalizedItemId,
             blobPath,
@@ -1637,11 +1632,11 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     // Private helper methods
     private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
+        var tokenContext = new TokenRequestContext([OneLakeEndpoints.GetFabricScope()]);
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
 
         using var request = new HttpRequestMessage(method, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Authorization = new("Bearer", token.Token);
         ApplyUserAgent(request);
 
         if (!string.IsNullOrEmpty(jsonContent))
@@ -1657,11 +1652,11 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     private async Task<Stream> SendOneLakeApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new Azure.Core.TokenRequestContext(new[] { OneLakeEndpoints.StorageScope });
+        var tokenContext = new TokenRequestContext([OneLakeEndpoints.StorageScope]);
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
 
         using var request = new HttpRequestMessage(method, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Authorization = new("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
         ApplyUserAgent(request);
 
@@ -1684,10 +1679,10 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     private async Task<HttpResponseMessage> SendDataPlaneRequestAsync(HttpRequestMessage request, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.StorageScope });
+        var tokenContext = new TokenRequestContext([OneLakeEndpoints.StorageScope]);
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Authorization = new("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
         request.Headers.Add("x-ms-date", DateTime.UtcNow.ToString("R"));
         ApplyUserAgent(request);

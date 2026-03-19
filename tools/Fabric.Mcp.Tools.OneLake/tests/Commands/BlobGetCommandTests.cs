@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -22,7 +23,7 @@ public class BlobGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
 
-        Assert.Equal("download_file", command.Name);
+        Assert.Equal("download-file", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);

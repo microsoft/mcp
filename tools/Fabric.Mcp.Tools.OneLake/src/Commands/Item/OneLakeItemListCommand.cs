@@ -2,16 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 
@@ -20,13 +17,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// </summary>
 public sealed class OneLakeItemListCommand(
     ILogger<OneLakeItemListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListOptions>()
+    IOneLakeService oneLakeService) : BaseWorkspaceCommand<OneLakeItemListOptions>()
 {
     private readonly ILogger<OneLakeItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d";
-    public override string Name => "list_items";
+    public override string Name => "list-items";
     public override string Title => "List OneLake Items";
     public override string Description => "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.";
 
@@ -43,29 +40,12 @@ public sealed class OneLakeItemListCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
     }
 
     protected override OneLakeItemListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
         return options;
     }
@@ -81,12 +61,11 @@ public sealed class OneLakeItemListCommand(
         try
         {
             var xmlResponse = await _oneLakeService.ListOneLakeItemsXmlAsync(
-                options.WorkspaceId,
+                options.WorkspaceId!,
                 continuationToken: options.ContinuationToken,
                 cancellationToken);
 
-            var result = new OneLakeItemListCommandResult { XmlResponse = xmlResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(xmlResponse), OneLakeJsonContext.Default.OneLakeItemListCommandResult);
         }
         catch (Exception ex)
         {
@@ -115,18 +94,10 @@ public sealed class OneLakeItemListCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record OneLakeItemListCommandResult
-    {
-        public List<OneLakeItem>? Items { get; init; }
-        public string? XmlResponse { get; init; }
-
-        public OneLakeItemListCommandResult() { }
-        public OneLakeItemListCommandResult(List<OneLakeItem> items) { Items = items; }
-    }
+    public sealed record OneLakeItemListCommandResult(string? XmlResponse);
 }
 
-public sealed class OneLakeItemListOptions : GlobalOptions
+public sealed class OneLakeItemListOptions : BaseWorkspaceOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
     public string? ContinuationToken { get; set; }
 }
