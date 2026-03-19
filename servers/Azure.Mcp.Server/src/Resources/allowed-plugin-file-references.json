@@ -1,5 +1,4 @@
 [
-  "appinsights-instrumentation\\LICENSE.txt",
   "appinsights-instrumentation\\examples\\appinsights.bicep",
   "appinsights-instrumentation\\references\\aspnetcore.md",
   "appinsights-instrumentation\\references\\auto.md",
