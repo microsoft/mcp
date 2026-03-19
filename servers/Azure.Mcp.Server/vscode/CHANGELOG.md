@@ -1,5 +1,12 @@
 # Release History
 
+## 1.0.4 (2026-03-18)
+
+### Fixed
+
+- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2108](https://github.com/microsoft/mcp/pull/2108)]
+- Hardened Postgres SQL query validator to block set-operation keywords (`UNION`, `INTERSECT`, `EXCEPT`), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2097](https://github.com/microsoft/mcp/pull/2097)]
+
 ## 1.0.3 (2026-03-17)
 
 ### Fixed
