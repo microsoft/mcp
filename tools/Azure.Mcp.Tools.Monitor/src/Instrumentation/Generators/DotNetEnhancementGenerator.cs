@@ -70,7 +70,8 @@ public class DotNetEnhancementGenerator : IGenerator
 
         // Match: AI SDK 3.x (IsTargetVersion) or Azure Monitor Distro
         var instr = analysis.ExistingInstrumentation;
-        if (instr == null) return false;
+        if (instr == null)
+            return false;
 
         return (instr.Type == InstrumentationType.ApplicationInsightsSdk && instr.IsTargetVersion)
             || instr.Type == InstrumentationType.AzureMonitorDistro;

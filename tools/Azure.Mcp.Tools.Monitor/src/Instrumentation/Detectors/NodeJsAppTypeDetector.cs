@@ -23,8 +23,8 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
             var root = packageJson.RootElement;
 
             // Get project name
-            var projectName = root.TryGetProperty("name", out var nameElement) 
-                ? nameElement.GetString() ?? "nodejs-app" 
+            var projectName = root.TryGetProperty("name", out var nameElement)
+                ? nameElement.GetString() ?? "nodejs-app"
                 : "nodejs-app";
 
             // Detect app type based on dependencies
@@ -149,7 +149,7 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
 
         // Common entry point files
         var commonEntryPoints = new[] { "index.js", "server.js", "app.js", "src/index.js", "src/server.js", "src/app.js" };
-        
+
         foreach (var entryPoint in commonEntryPoints)
         {
             var fullPath = Path.Combine(workspacePath, entryPoint);

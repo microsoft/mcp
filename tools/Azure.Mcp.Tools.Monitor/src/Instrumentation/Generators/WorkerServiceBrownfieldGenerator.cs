@@ -48,10 +48,14 @@ public class WorkerServiceBrownfieldGenerator : BrownfieldGeneratorBase
     protected override bool HasFrameworkSpecificCodeChanges(ServiceOptionsFindings opts)
     {
         // Worker Service-only removed properties
-        if (opts.EnableEventCounterCollectionModule != null) return true;
-        if (opts.EnableAppServicesHeartbeatTelemetryModule != null) return true;
-        if (opts.EnableAzureInstanceMetadataTelemetryModule != null) return true;
-        if (opts.EnableDiagnosticsTelemetryModule != null) return true;
+        if (opts.EnableEventCounterCollectionModule != null)
+            return true;
+        if (opts.EnableAppServicesHeartbeatTelemetryModule != null)
+            return true;
+        if (opts.EnableAzureInstanceMetadataTelemetryModule != null)
+            return true;
+        if (opts.EnableDiagnosticsTelemetryModule != null)
+            return true;
         return false;
     }
 

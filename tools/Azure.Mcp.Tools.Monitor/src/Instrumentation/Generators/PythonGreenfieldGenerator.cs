@@ -194,7 +194,7 @@ public class PythonGreenfieldGenerator : IGenerator
             var normalized = PythonInstrumentationRegistry.NormalizePackageName(dep);
             var instrumentation = genaiInstrumentations
                 .FirstOrDefault(g => PythonInstrumentationRegistry.NormalizePackageName(g.LibraryName) == normalized);
-            
+
             if (instrumentation != null && !string.IsNullOrEmpty(instrumentation.InstrumentationPackage))
             {
                 // Avoid duplicates (e.g., langchain-core and langchain-community use same instrumentation)

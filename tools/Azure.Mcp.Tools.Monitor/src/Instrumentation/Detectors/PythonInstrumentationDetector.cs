@@ -246,7 +246,7 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
         // Find the array content between [ and ]
         var startIndex = line.IndexOf('[');
         var endIndex = line.LastIndexOf(']');
-        
+
         if (startIndex < 0 || endIndex < 0 || endIndex <= startIndex)
         {
             return packages;

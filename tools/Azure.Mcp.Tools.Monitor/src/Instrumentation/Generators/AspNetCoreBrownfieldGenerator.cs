@@ -30,8 +30,10 @@ public class AspNetCoreBrownfieldGenerator : BrownfieldGeneratorBase
 
     protected override bool HasFrameworkSpecificCodeChanges(ServiceOptionsFindings opts)
     {
-        if (opts.RequestCollectionOptions != null) return true;
-        if (opts.UseApplicationInsights == true) return true;
+        if (opts.RequestCollectionOptions != null)
+            return true;
+        if (opts.UseApplicationInsights == true)
+            return true;
         return false;
     }
 

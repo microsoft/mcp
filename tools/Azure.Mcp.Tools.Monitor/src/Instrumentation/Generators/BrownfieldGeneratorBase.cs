@@ -176,35 +176,53 @@ public abstract class BrownfieldGeneratorBase : IGenerator
 
     protected bool HasCodeChanges(BrownfieldFindings? findings)
     {
-        if (findings == null) return false;
+        if (findings == null)
+            return false;
 
         var opts = findings.ServiceOptions;
         if (opts != null)
         {
             // Shared removed properties
-            if (opts.InstrumentationKey != null) return true;
-            if (opts.EnableAdaptiveSampling != null) return true;
-            if (opts.DeveloperMode != null) return true;
-            if (opts.EndpointAddress != null) return true;
-            if (opts.EnableHeartbeat != null) return true;
-            if (opts.EnableDebugLogger != null) return true;
-            if (opts.DependencyCollectionOptions != null) return true;
+            if (opts.InstrumentationKey != null)
+                return true;
+            if (opts.EnableAdaptiveSampling != null)
+                return true;
+            if (opts.DeveloperMode != null)
+                return true;
+            if (opts.EndpointAddress != null)
+                return true;
+            if (opts.EnableHeartbeat != null)
+                return true;
+            if (opts.EnableDebugLogger != null)
+                return true;
+            if (opts.DependencyCollectionOptions != null)
+                return true;
 
             // Shared removed extension methods
-            if (opts.AddTelemetryProcessor == true) return true;
-            if (opts.ConfigureTelemetryModule == true) return true;
-            if (opts.UsesInstrumentationKeyOverload == true) return true;
+            if (opts.AddTelemetryProcessor == true)
+                return true;
+            if (opts.ConfigureTelemetryModule == true)
+                return true;
+            if (opts.UsesInstrumentationKeyOverload == true)
+                return true;
 
             // Framework-specific checks
-            if (HasFrameworkSpecificCodeChanges(opts)) return true;
+            if (HasFrameworkSpecificCodeChanges(opts))
+                return true;
         }
 
-        if (findings.Initializers is { Found: true }) return true;
-        if (findings.Processors is { Found: true }) return true;
-        if (HasBreakingClientUsage(findings.ClientUsage)) return true;
-        if (findings.Sampling is { HasCustomSampling: true }) return true;
-        if (findings.TelemetryPipeline is { Found: true }) return true;
-        if (findings.Logging is { Found: true }) return true;
+        if (findings.Initializers is { Found: true })
+            return true;
+        if (findings.Processors is { Found: true })
+            return true;
+        if (HasBreakingClientUsage(findings.ClientUsage))
+            return true;
+        if (findings.Sampling is { HasCustomSampling: true })
+            return true;
+        if (findings.TelemetryPipeline is { Found: true })
+            return true;
+        if (findings.Logging is { Found: true })
+            return true;
 
         return false;
     }
