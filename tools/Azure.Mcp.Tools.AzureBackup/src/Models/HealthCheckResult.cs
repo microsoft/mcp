@@ -14,10 +14,3 @@ public sealed record HealthCheckResult(
     string? ImmutabilityState,
     string? EncryptionType,
     IReadOnlyList<HealthCheckItemDetail>? Details);
-
-public sealed record HealthCheckItemDetail(
-    string? Name,
-    string? ProtectionStatus,
-    string? HealthStatus,
-    DateTimeOffset? LastBackupTime,
-    bool RpoBreached);

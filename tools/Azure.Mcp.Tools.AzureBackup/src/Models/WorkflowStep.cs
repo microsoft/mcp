@@ -3,8 +3,7 @@
 
 namespace Azure.Mcp.Tools.AzureBackup.Models;
 
-public sealed record WorkflowResult(
+public sealed record WorkflowStep(
+    string StepName,
     string Status,
-    string WorkflowName,
-    IReadOnlyList<WorkflowStep> Steps,
-    string? Message);
+    string? Detail);
