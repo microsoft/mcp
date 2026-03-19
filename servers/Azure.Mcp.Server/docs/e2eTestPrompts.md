@@ -6,9 +6,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| advisor_recommendations_list | List all recommendations in my subscription |
-| advisor_recommendations_list | Show me Advisor recommendations in the subscription <subscription> |
-| advisor_recommendations_list | List all Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | List all recommendations in my subscription |
+| advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> |
+| advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> |
 
 ## Azure AI Search
 
@@ -105,6 +105,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> |
+| appservice_webapp_diagnostic_diagnose | Diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> |
+| appservice_webapp_diagnostic_list | List the diagnostic detectors for web app <webapp> in <resource_group> |
+| appservice_webapp_get | List the web apps in my subscription |
+| appservice_webapp_get | Show me the web apps in my <resource_group> resource group |
+| appservice_webapp_get | Get the details for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | List the deployments for web app <webapp> in <resource_group> |
+| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
+| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
 ## Azure Backup
 
@@ -200,6 +213,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
+| compute_vm_create | Create a virtual machine with Standard_DS1_v2 size in <resource-group-name> |
+| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
+| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication |
+| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> |
+| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> |
 | compute_vm_get | List all virtual machines in my subscription |
 | compute_vm_get | Show me all VMs in my subscription |
 | compute_vm_get | What virtual machines do I have? |
@@ -214,6 +233,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_get | What is the power state of virtual machine <vm-name> in resource group <resource-group-name>? |
 | compute_vm_get | Get VM <vm-name> status and provisioning state in resource group <resource-group-name> |
 | compute_vm_get | Show me the current status of VM <vm-name> |
+| compute_vm_update | Add tags to VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_update | Update virtual machine <vm-name> with environment=production tag |
+| compute_vm_update | Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name> |
+| compute_vm_update | Change the size of VM <vm-name> to Standard_D4s_v3 |
+| compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
+| compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
+| compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
+| compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> |
 | compute_vmss_get | List all virtual machine scale sets in my subscription |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> |
 | compute_vmss_get | What scale sets are in resource group <resource-group-name>? |
@@ -221,6 +248,52 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vmss_get | Show me VMSS <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_get | Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_get | What is the status of instance <instance-id> in scale set <vmss-name>? |
+| compute_vmss_update | Update the capacity of scale set <vmss-name> to 10 |
+| compute_vmss_update | Enable automatic OS upgrades on VMSS <vmss-name> |
+| compute_vmss_update | Change upgrade policy to Rolling for <vmss-name> |
+| compute_vmss_update | Add tags to scale set <vmss-name> in resource group <resource-group-name> |
+| compute_disk_get | List all managed disks in my subscription |
+| compute_disk_get | Show me all disks in resource group <resource-group> |
+| compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
+| compute_disk_get | Show me the disk sizes in resource group <resource-group> |
+| compute_disk_get | What managed disks are available? |
+| compute_disk_get | Get information about disk <disk-name> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> |
+| compute_disk_create | Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> in eastus |
+| compute_disk_create | Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> from blob <blob-uri> |
+| compute_disk_create | Create a 64 GB Standard_LRS Linux disk named <disk-name> in resource group <resource-group> in zone 1 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with tags env=prod team=infra |
+| compute_disk_create | Create a 128 GB Premium_LRS disk named <disk-name> in resource group <resource-group> with performance tier P30 |
+| compute_disk_create | Create a disk <disk-name> in resource group <resource-group> with customer-managed encryption using disk encryption set <disk-encryption-set-id> |
+| compute_disk_create | Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group> |
+| compute_disk_create | Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes |
+| compute_disk_create | Create a Trusted Launch upload disk named <disk-name> in resource group <resource-group> with UploadWithSecurityData type and security-type TrustedLaunch |
+| compute_disk_create | Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput |
+| compute_disk_create | Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3 |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id> |
+| compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled |
+| compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_create | Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB |
+| compute_disk_delete | Delete the managed disk <disk-name> in resource group <resource-group> |
+| compute_disk_delete | Remove managed disk <disk-name> from resource group <resource-group> |
+| compute_disk_delete | Delete disk <disk-name> in resource group <resource-group> in my subscription |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to 256 GB |
+| compute_disk_update | Change the SKU of disk <disk-name> to Premium_LRS |
+| compute_disk_update | Resize disk <disk-name> in resource group <resource-group> to 512 GB |
+| compute_disk_update | Update disk <disk-name> to enable bursting |
+| compute_disk_update | Set the max shares on disk <disk-name> in resource group <resource-group> to 2 |
+| compute_disk_update | Change the network access policy of disk <disk-name> to DenyAll |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> with tags env=staging |
+| compute_disk_update | Set the IOPS limit on ultra disk <disk-name> in resource group <resource-group> to 10000 |
+| compute_disk_update | Update the throughput of disk <disk-name> in resource group <resource-group> to 500 MBps |
+| compute_disk_update | Change the performance tier of disk <disk-name> in resource group <resource-group> to P40 |
+| compute_disk_update | Update disk <disk-name> in resource group <resource-group> to use disk encryption set <disk-encryption-set-id> |
+| compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys |
+| compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate |
+| compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev |
 
 ## Azure Confidential Ledger
 
@@ -234,29 +307,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
 | confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
-## Azure Compute
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| compute_disk_get | List all managed disks in my subscription |
-| compute_disk_get | Show me all disks in resource group <resource-group> |
-| compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> |
-| compute_disk_get | Show me the disk sizes in resource group <resource-group> |
-| compute_disk_get | What managed disks are available? |
-| compute_disk_get | Get information about disk <disk-name> |
-
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| cosmos_account_list | List all cosmosdb accounts in my subscription |
-| cosmos_account_list | Show me my cosmosdb accounts |
-| cosmos_account_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all cosmosdb accounts in my subscription |
+| cosmos_list | Show me my cosmosdb accounts |
+| cosmos_list | Show me the cosmosdb accounts in my subscription |
+| cosmos_list | List all the databases in the cosmosdb account <account_name> |
+| cosmos_list | Show me the databases in the cosmosdb account <account_name> |
+| cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
+| cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_container_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> |
-| cosmos_database_list | List all the databases in the cosmosdb account <account_name> |
-| cosmos_database_list | Show me the databases in the cosmosdb account <account_name> |
 
 ## Azure Data Explorer
 
@@ -312,11 +374,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| deploy_app_logs_get | Show me the log of the application deployed by azd  |
+| deploy_app_logs_get | Show me the log of the application deployed by azd |
 | deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules to generate bicep scripts  |
-| deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
-| deploy_plan_get | Create a plan to deploy this application to azure |
+| deploy_iac_rules_get | Show me the rules and best practices for writing Bicep and Terraform IaC for Azure |
+| deploy_pipeline_guidance_get | How do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure? |
+| deploy_plan_get | How do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC? |
+
+## Azure Device Registry
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| deviceregistry_namespace_list | List all Device Registry namespaces in my subscription |
+| deviceregistry_namespace_list | Show me the Device Registry namespaces in subscription <subscription> |
+| deviceregistry_namespace_list | List Device Registry namespaces in resource group <resource_group_name> |
+| deviceregistry_namespace_list | What Device Registry namespaces do I have in my Azure subscription? |
 
 ## Azure Event Grid
 
@@ -391,9 +462,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | fileshares_fileshare_snapshot_get | Get snapshot <snapshot_id> for file share <file_share_name> |
 | fileshares_fileshare_snapshot_update | Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_snapshot_update | Update metadata for snapshot <snapshot_id> of file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | Show me the private endpoint connections for file share <file_share_name> |
+| fileshares_fileshare_peconnection_get | Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_get | What private endpoint connections exist for file share <file_share_name>? |
+| fileshares_fileshare_peconnection_update | Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name> |
+| fileshares_fileshare_peconnection_update | Reject private endpoint connection <connection_name> for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Update private endpoint connection <connection_name> status to Approved for file share <file_share_name> |
+| fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB |
-| fileshares_fileshare_update | Change the media tier of file share <file_share_name> to Standard |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings |
 | fileshares_fileshare_usage_get | Get usage data for file share <file_share_name> in resource group <resource_group_name> |
 | fileshares_fileshare_usage_get | Show me the usage statistics for file share <file_share_name> |
@@ -415,6 +493,22 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_get | List all function apps in my subscription |
 | functionapp_get | Show me my Azure function apps |
 | functionapp_get | What function apps do I have? |
+
+## Azure Functions Templates
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| functions_language_list | What languages does Azure Functions support? |
+| functions_language_list | Compare all Azure Functions languages side by side |
+| functions_language_list | What runtime versions are available for Azure Functions? |
+| functions_project_get | Set up a new Azure Functions project in Python |
+| functions_project_get | Generate the project files for a TypeScript Azure Functions app |
+| functions_project_get | Create the boilerplate for a Java Azure Functions app using JDK 21 |
+| functions_template_get | What triggers and bindings are available for C# Azure Functions? |
+| functions_template_get | Show me all the Python Azure Function templates |
+| functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes |
+| functions_template_get | Show me a Cosmos DB trigger with an output binding in Java |
+| functions_template_get | I need a MCP Tool trigger in TypeScript for Node.js 22 |
 
 ## Azure Key Vault
 
@@ -588,6 +682,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> |
 | azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> |
@@ -622,6 +718,26 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
+
+## Azure Monitor Instrumentation
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| monitor_instrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get_learning_resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
+| monitor_instrumentation_list_learning_resources | List all available Azure Monitor onboarding learning resources |
+| monitor_instrumentation_list_learning_resources | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitor_instrumentation_list_learning_resources | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitor_instrumentation_orchestrator_next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
+| monitor_instrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitor_instrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
+| monitor_instrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitor_instrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitor_instrumentation_orchestrator_start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
+| monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
+| monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
+| monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
 
 ## Azure Native ISV
 
@@ -679,11 +795,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | resourcehealth_availability-status_get | Get the availability status for resource <resource_name> |
-| resourcehealth_availability-status_get | Show me the health status of the storage account <storage_account_name> |
+| resourcehealth_availability-status_get | What is the Azure Resource Health availability status of the storage account <storage_account_name>? |
 | resourcehealth_availability-status_get | What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>? |
-| resourcehealth_availability-status_list | List availability status for all resources in my subscription |
-| resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
-| resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| resourcehealth_availability-status_get | Get Azure Resource Health availability status for all resources in my subscription |
+| resourcehealth_availability-status_get | Show me the health status of all my Azure resources |
+| resourcehealth_availability-status_get | What resources in resource group <resource_group_name> have health issues? |
 | resourcehealth_health-events_list | List all service health events in my subscription |
 | resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> |
 | resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
@@ -718,6 +834,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
 
+## Azure Service Fabric
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| servicefabric_managedcluster_node_get | Get all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name> |
+| servicefabric_managedcluster_node_get | Show me the nodes and their status for Service Fabric managed cluster <cluster_name> |
+| servicefabric_managedcluster_node_get | Get node <node_name> from Service Fabric managed cluster <cluster_name> |
+| servicefabric_managedcluster_nodetype_restart | Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD |
+| servicefabric_managedcluster_nodetype_restart | Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name> |
+
 ## Azure SignalR
 
 | Tool Name | Test Prompt |
@@ -739,12 +865,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
 | sql_db_delete | Delete the database called <database_name> on server <server_name> |
-| sql_db_list | List all databases in the Azure SQL server <server_name> |
-| sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| sql_db_get | List all Azure SQL databases in server <server_name> |
+| sql_db_get | List all databases in the Azure SQL server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> |
+| sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> |
 | sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
 | sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
-| sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
-| sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
 | sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
@@ -778,11 +904,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
-| sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
-| sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
-| sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
-| sql_server_show | Get the configuration details for SQL server <server_name> |
-| sql_server_show | Display the properties of SQL server <server_name> |
+| sql_server_get | List all Azure SQL servers in resource group <resource_group_name> |
+| sql_server_get | Show me every Azure SQL server in resource group <resource_group_name> |
+| sql_server_get | Show me the Azure SQL server <server_name> details |
+| sql_server_get | Get Azure SQL server <server_name> info |
+| sql_server_get | Display the properties of Azure SQL server <server_name> |
 
 ## Azure Storage
 
@@ -861,6 +987,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
 | virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
+## Azure Well-Architected Framework
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance |
+| wellarchitectedframework_serviceguide_get | What services have architectural guidance? |
+| wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service |
+| wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? |
+| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB |
+
 ## Azure Workbooks
 
 | Tool Name | Test Prompt |
@@ -888,35 +1024,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |
 
-## Microsoft Foundry
+## Microsoft Foundry Extensions
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| foundry_agents_connect | Query an agent in my Microsoft Foundry resource |
-| foundry_agents_create | Create a new Microsoft Foundry agent using instructions in the active editor |
-| foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
-| foundry_agents_list | List all agents in my Microsoft Foundry resource |
-| foundry_agents_list | Show me the available agents in my Microsoft Foundry resource |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Microsoft Foundry resource for task_adherence |
-| foundry_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
-| foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
-| foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
-| foundry_models_deployments_list | List all Microsoft Foundry model deployments |
-| foundry_models_deployments_list | Show me all Microsoft Foundry model deployments |
-| foundry_models_list | List all Microsoft Foundry models |
-| foundry_models_list | Show me the available Microsoft Foundry models |
-| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
-| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
-| foundry_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
-| foundry_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
-| foundry_resource_get | List all Microsoft Foundry resources in my subscription |
-| foundry_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
-| foundry_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundry_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundry_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundry_threads_list | List my Microsoft Foundry threads |
+| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
+| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
+| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
+| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
+| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
+| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
+| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
+| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
+| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
+| foundryextensions_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
+| foundryextensions_resource_get | List all Microsoft Foundry resources in my subscription |
+| foundryextensions_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
+| foundryextensions_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |

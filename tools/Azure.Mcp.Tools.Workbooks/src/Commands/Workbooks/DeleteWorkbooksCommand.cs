@@ -3,11 +3,13 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
@@ -22,9 +24,12 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
     public override string Description =>
         """
-        Delete a workbook by its Azure resource ID.
-        This command soft deletes the workbook: it will be retained for 90 days.
-        If needed, you can restore it from the Recycle Bin through the Azure Portal.
+        Delete one or more workbooks by their Azure resource IDs.
+        This command soft deletes workbooks: they will be retained for 90 days.
+        If needed, you can restore them from the Recycle Bin through the Azure Portal.
+
+        BATCH: Accepts multiple --workbook-ids values. Partial failures are reported per-workbook.
+        Individual failures do not fail the entire batch operation.
 
         To learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage
         """;
@@ -44,13 +49,21 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
+        command.Options.Add(WorkbooksOptionDefinitions.WorkbookIds);
+        command.Validators.Add(result =>
+        {
+            var workbookIds = result.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
+            if (workbookIds == null || workbookIds.Length == 0)
+            {
+                result.AddError("At least one workbook ID is required");
+            }
+        });
     }
 
     protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
+        options.WorkbookIds = parseResult.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
         return options;
     }
 
@@ -66,26 +79,24 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         try
         {
             var workbooksService = context.GetService<IWorkbooksService>();
-            var deleted = await workbooksService.DeleteWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant, cancellationToken);
+            var result = await workbooksService.DeleteWorkbooksAsync(
+                options.WorkbookIds!,
+                options.RetryPolicy,
+                options.Tenant,
+                cancellationToken);
 
-            if (deleted)
-            {
-                context.Response.Results = ResponseResult.Create(new(options.WorkbookId!, "Successfully deleted"),
-                    WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Failed to delete workbook with ID '{options.WorkbookId}'");
-            }
+            context.Response.Results = ResponseResult.Create(
+                new(result.Succeeded.ToList(), result.Failed.ToList()),
+                WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting workbook with ID: {WorkbookId}", options.WorkbookId);
+            _logger.LogError(ex, "Error deleting workbooks");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed record DeleteWorkbooksCommandResult(string WorkbookId, string Message);
+    public sealed record DeleteWorkbooksCommandResult(List<string> Succeeded, List<WorkbookError> Errors);
 }

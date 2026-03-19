@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 
-namespace Azure.Mcp.Core.Areas.Server;
+namespace Microsoft.Mcp.Core.Areas.Server;
 
 /// <summary>
-/// Initializes and configures the Server area for the Azure MCP application.
+/// Initializes and configures the Server area for the MCP application.
 /// </summary>
 public sealed class ServerSetup : IAreaSetup
 {
@@ -27,6 +26,7 @@ public sealed class ServerSetup : IAreaSetup
     {
         services.AddSingleton<ServiceStartCommand>();
         services.AddSingleton<ServiceInfoCommand>();
+        services.AddSingleton<PluginTelemetryCommand>();
     }
 
     /// <summary>
@@ -45,6 +45,9 @@ public sealed class ServerSetup : IAreaSetup
 
         var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
         mcpServer.AddCommand(infoCommand.Name, infoCommand);
+
+        var pluginTelemetryCommand = serviceProvider.GetRequiredService<PluginTelemetryCommand>();
+        mcpServer.AddCommand(pluginTelemetryCommand.Name, pluginTelemetryCommand);
 
         return mcpServer;
     }

@@ -5,6 +5,18 @@
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />
     <EmbeddedResource Include="**\Resources\*.json" />
+    <EmbeddedResource Include="Instrumentation/Resources/**/*.md" />
+    <EmbeddedResource Include="Instrumentation/Resources/**/*.json" />
+    <EmbeddedResource Include="Instrumentation/Resources/**/*.js" />
+    <EmbeddedResource Include="Instrumentation/Resources/generator-configs/templates/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Instrumentation/Resources/generator-configs/templates/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Instrumentation/Resources/**/*.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />

@@ -1,20 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
+using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
-public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger)
+public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestResourceCreateOptions>
 {
     private const string _commandTitle = "Test Resource Create";
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "c39f6e9c-86a7-4cba-b267-0fa71f1ac743";
     public override string Name => "create";
     public override string Description =>
@@ -34,6 +38,13 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         Secret = false
     };
 
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -45,11 +56,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.CreateOrUpdateLoadTestingResourceAsync(
+            var results = await _loadTestingService.CreateOrUpdateLoadTestingResourceAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.TestResourceName!,

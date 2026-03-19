@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logger)
+public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger)
     : BaseManagedLustreCommand<ImportJobCreateOptions>(logger)
 {
     private const string CommandTitle = "Create Azure Managed Lustre Import Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
 
     public override string Id => "b1f3c5e7-9d2a-4b8f-6c3e-1a7b9d2f5e8c";
@@ -83,7 +83,6 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
             // Log the prefixes for debugging
             if (options.ImportPrefixes != null && options.ImportPrefixes.Length > 0)
@@ -95,7 +94,7 @@ public sealed class ImportJobCreateCommand(ILogger<ImportJobCreateCommand> logge
                 _logger.LogInformation("No import prefixes received, will import all data");
             }
 
-            var job = await svc.CreateImportJobAsync(
+            var job = await _service.CreateImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

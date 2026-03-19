@@ -1,42 +1,54 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppLens.Models;
+using Azure.ResourceManager.ResourceGraph;
+using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
 
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
+/// Uses Azure Resource Graph to discover resources by name and validates
+/// that the resource type is supported by AppLens before creating a session.
 /// </summary>
-public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAppLensService
+public class AppLensService(
+    IHttpClientFactory httpClientFactory,
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    ILogger<AppLensService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly AppLensOptions _options = new AppLensOptions();
-    private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
+    private readonly ILogger<AppLensService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly AppLensOptions _options = new();
 
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
         string resource,
-        string subscription,
+        string? subscription = null,
         string? resourceGroup = null,
         string? resourceType = null,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
-        // Step 1: Get the resource ID
-        var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType, cancellationToken);
+        // Step 1: Find the resource using ARG
+        var findResult = await FindResourceAsync(resource, subscription, resourceGroup, resourceType, tenantId, cancellationToken);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -65,66 +77,241 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
             foundResource.ResourceTypeAndKind);
     }
 
-    private Task<FindResourceIdResult> FindResourceIdAsync(
-        string resource,
+    /// <summary>
+    /// Discovers a resource using Azure Resource Graph, progressively filtering by
+    /// subscription, resource group, and resource type when provided. Only returns
+    /// resources whose type is supported by AppLens.
+    /// </summary>
+    internal async Task<FindResourceIdResult> FindResourceAsync(
+        string resourceName,
         string? subscription,
         string? resourceGroup,
         string? resourceType,
+        string? tenantId,
         CancellationToken cancellationToken)
     {
-        // Construct a resource ID from the provided information
+        // Query ARG for resources matching the name
+        var queryResults = await ExecuteArgQueryAsync(resourceName, subscription, tenantId, cancellationToken);
 
-        if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(resourceGroup))
+        if (queryResults.Length == 0)
         {
-            return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
+            return new DidNotFindResourceResult($"No resources found with name '{resourceName}'.");
         }
 
-        var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
+        var filteredResults = queryResults;
 
-        return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
+        // There is no need to filter by the given subscription (if any) because that would
+        // have been taken care of by the ARG query.
+
+        // Progressive filtering by resource group
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var rgFiltered = filteredResults
+                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase))
+                .ToImmutableArray();
+
+            if (rgFiltered.Length == 0)
+            {
+                var foundGroups = string.Join("\n", filteredResults
+                    .Select(r => r.ResourceGroup)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(rg => $"- {rg}"));
+                return new DidNotFindResourceResult(
+                    $"Found resources with name '{resourceName}' but not in resource group '{resourceGroup}'.\n" +
+                    $"Resources were found in the following resource groups:\n{foundGroups}");
+            }
+
+            filteredResults = rgFiltered;
+        }
+
+        // Progressive filtering by resource type
+        if (!string.IsNullOrEmpty(resourceType))
+        {
+            var typeFiltered = filteredResults
+                .Where(r => r.ResourceType.Equals(resourceType, StringComparison.OrdinalIgnoreCase))
+                .ToImmutableArray();
+
+            if (typeFiltered.Length == 0)
+            {
+                var foundTypes = string.Join("\n", filteredResults
+                    .Select(r => r.ResourceType)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(t => $"- {t}"));
+                return new DidNotFindResourceResult(
+                    $"Found resources with name '{resourceName}' but not of type '{resourceType}'.\n" +
+                    $"Found resources of the following types:\n{foundTypes}");
+            }
+
+            filteredResults = typeFiltered;
+        }
+
+        // Filter to supported resource types
+        var supportedResults = filteredResults
+            .Where(r => IsResourceTypeSupported(r.ResourceType, r.ResourceKind))
+            .ToImmutableArray();
+
+        if (supportedResults.Length == 0)
+        {
+            var supportedTypes = string.Join("\n", SupportedResourceTypes().Select(t => $"- {t}"));
+            return new DidNotFindResourceResult(
+                $"No supported resources found with name '{resourceName}'.\n" +
+                $"Supported resource types:\n{supportedTypes}");
+        }
+
+        // Disambiguation when multiple resources match
+        if (supportedResults.Length > 1)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Found multiple resources matching '{resourceName}':");
+
+            foreach (var result in supportedResults)
+            {
+                sb.AppendLine($"- Subscription: {result.SubscriptionId}, resource group: {result.ResourceGroup}, type: {result.ResourceType}, name: {result.ResourceName}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Which one do you want to diagnose? Please specify --subscription, --resource-group, or --resource-type to narrow down the results.");
+
+            return new DidNotFindResourceResult(sb.ToString());
+        }
+
+        // Single result found
+        var resource = supportedResults[0];
+        var resourceTypeAndKind = resource.ResourceType;
+        if (!string.IsNullOrEmpty(resource.ResourceKind))
+        {
+            resourceTypeAndKind += "/" + resource.ResourceKind;
+        }
+
+        return new FoundResourceResult(resource.Id, resourceTypeAndKind, null);
+    }
+
+    /// <summary>
+    /// Executes an Azure Resource Graph query to find resources by name.
+    /// </summary>
+    private async Task<ImmutableArray<AppLensArgQueryResult>> ExecuteArgQueryAsync(
+        string resourceName,
+        string? subscription,
+        string? tenantId,
+        CancellationToken cancellationToken)
+    {
+        var escapedName = EscapeKqlString(resourceName);
+        var kqlQuery = $"resources | where name =~ '{escapedName}' | project id, subscriptionId, resourceGroup, type, kind, name | limit 50";
+
+        var queryContent = new ResourceQueryContent(kqlQuery);
+
+        // If subscription is provided, scope to that subscription and the related tenant.
+        // Otherwise query all accessible subscriptions.
+        Guid? targetTenantId = null;
+        if (!string.IsNullOrEmpty(subscription))
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
+            queryContent.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
+            targetTenantId = subscriptionResource.Data.TenantId;
+        }
+        else if (!string.IsNullOrEmpty(tenantId))
+        {
+            targetTenantId = Guid.Parse(tenantId);
+        }
+
+        var tenants = await TenantService.GetTenants(cancellationToken);
+        var tenantResource = targetTenantId.HasValue
+            ? tenants.FirstOrDefault(t => t.Data.TenantId == targetTenantId)
+            : tenants.FirstOrDefault();
+        if (tenantResource is null)
+        {
+            throw new InvalidOperationException("No accessible tenants found.");
+        }
+
+        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        var result = response.Value;
+
+        if (result == null || result.Count == 0)
+        {
+            return [];
+        }
+
+        using var jsonDocument = JsonDocument.Parse(result.Data);
+        var dataArray = jsonDocument.RootElement;
+
+        if (dataArray.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var results = new List<AppLensArgQueryResult>();
+        foreach (var item in dataArray.EnumerateArray())
+        {
+            results.Add(new AppLensArgQueryResult(
+                Id: item.GetProperty("id").GetString() ?? string.Empty,
+                SubscriptionId: item.GetProperty("subscriptionId").GetString() ?? string.Empty,
+                ResourceGroup: item.GetProperty("resourceGroup").GetString() ?? string.Empty,
+                ResourceType: item.GetProperty("type").GetString() ?? string.Empty,
+                ResourceKind: item.TryGetProperty("kind", out var kindProp) ? kindProp.GetString() ?? string.Empty : string.Empty,
+                ResourceName: item.GetProperty("name").GetString() ?? string.Empty));
+        }
+
+        return [.. results];
+    }
+
+    /// <summary>
+    /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
+    /// </summary>
+    internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
+    {
+        if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
+        {
+            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
+                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
+                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
+            || resourceType.Equals("microsoft.apimanagement/service", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns the list of resource types supported by AppLens diagnostics.
+    /// </summary>
+    internal static IEnumerable<string> SupportedResourceTypes()
+    {
+        yield return "microsoft.web/sites";
+        yield return "microsoft.containerservice/managedclusters";
+        yield return "microsoft.apimanagement/service";
     }
 
     private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)
     {
-        try
+        // Get Azure credential using BaseAzureService
+        var credential = await GetCredential(tenantId, cancellationToken);
+
+        // Get ARM token
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext([GetManagementImpersonationEndpoint()]),
+            cancellationToken);
+
+        // Call the AppLens token endpoint
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            GetAppLensTokenEndpoint(resourceId));
+
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+
+        var client = _httpClientFactory.CreateClient();
+        using var response = await client.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
         {
-            // Get Azure credential using BaseAzureService
-            var credential = await GetCredential(tenantId, cancellationToken);
-
-            // Get ARM token
-            var token = await credential.GetTokenAsync(
-                new TokenRequestContext(["https://management.azure.com/user_impersonation"]),
-                cancellationToken);
-
-            // Call the AppLens token endpoint
-            using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01");
-
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
-
-            var client = _httpClientFactory.CreateClient();
-            using var response = await client.SendAsync(request, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
-                }
-                return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
+                return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
             }
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            AppLensSession? appLensSession;
-            appLensSession = ParseGetTokenResponse(content);
-
-            return new SuccessfulAppLensSessionResult(
-                appLensSession with { ResourceId = resourceId });
+            return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
         }
-        catch (Exception ex)
-        {
-            return new FailedAppLensSessionResult($"Failed to create AppLens session: {ex.Message}");
-        }
+
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        var appLensSession = ParseGetTokenResponse(content);
+
+        return new SuccessfulAppLensSessionResult(appLensSession with { ResourceId = resourceId });
     }
 
     /// <summary>
@@ -156,10 +343,10 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
                 // https://learn.microsoft.com/aspnet/core/signalr/configuration?view=aspnetcore-9.0&tabs=dotnet#jsonmessagepack-serialization-options
                 options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppLensJsonContext.Default);
             })
-            .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
+            .WithUrl(new Uri(GetConversationalDiagnosticsSignalREndpoint()), options =>
             {
                 options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
-                options.Headers.Add("origin", "https://appservice-diagnostics.trafficmanager.net");
+                options.Headers.Add("origin", GetDiagnosticsPortalEndpoint());
             })
             .WithAutomaticReconnect()
             .Build();
@@ -280,7 +467,7 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
             }
         }
 
-        return new DiagnosticResult(insights, solutions, session.ResourceId, "Resource");
+        return new(insights, solutions, session.ResourceId, "Resource");
     }
 
     private static AppLensSession ParseGetTokenResponse(string rawResponse)
@@ -344,5 +531,50 @@ public class AppLensService(IHttpClientFactory httpClientFactory, ISubscriptionS
         }
 
         return session;
+    }
+
+    private string GetConversationalDiagnosticsSignalREndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschat.azure.com/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschat.azure.cn/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschat.azure.us/chatHub",
+            _ => "https://diagnosticschat.azure.com/chatHub",
+        };
+    }
+
+    private string GetManagementImpersonationEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://management.azure.com/user_impersonation",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://management.chinacloudapi.cn/user_impersonation",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://management.usgovcloudapi.net/user_impersonation",
+            _ => "https://management.azure.com/user_impersonation",
+        };
+    }
+
+    private string GetAppLensTokenEndpoint(string resourceId)
+    {
+        const string detectorsTokenPath = "detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01";
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/{detectorsTokenPath}",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{resourceId}/{detectorsTokenPath}",
+            _ => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
+        };
+    }
+
+    private string GetDiagnosticsPortalEndpoint()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://appservice-diagnostics.trafficmanager.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://appservice-diagnostics.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://appservice-diagnostics.azure.us",
+            _ => "https://appservice-diagnostics.trafficmanager.net",
+        };
     }
 }

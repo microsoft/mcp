@@ -3,14 +3,16 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 /// <summary>
 /// Provides access to services.
@@ -36,19 +38,26 @@ internal class TelemetryService : ITelemetryService
     internal ActivitySource Parent { get; }
 
     public TelemetryService(IMachineInformationProvider informationProvider,
-        IOptions<AzureMcpServerConfiguration> options,
+        IOptions<McpServerConfiguration> options,
         IOptions<ServiceStartOptions> serverOptions,
-        ILogger<TelemetryService> logger)
+        ILogger<TelemetryService> logger,
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList =
         [
-            new(TagName.AzureMcpVersion, options.Value.Version),
+            new(TagName.McpServerVersion, options.Value.Version),
+            new(TagName.McpServerName, options.Value.Name),
             new(TagName.ServerMode, serverOptions.Value.Mode),
             new(TagName.Transport, serverOptions.Value.Transport),
             new(TagName.Host, RuntimeInformation.OSDescription),
             new(TagName.ProcessorArchitecture, RuntimeInformation.ProcessArchitecture.ToString())
         ];
+
+        if (cloudConfiguration != null)
+        {
+            _tagsList.Add(new(TagName.Cloud, cloudConfiguration.CloudType.ToString()));
+        }
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;

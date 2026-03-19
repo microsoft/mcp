@@ -29,11 +29,15 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </listheader>
 /// <item>
 /// <term>"dev"</term>
-/// <description>Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential</description>
+/// <description>Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential → DeviceCodeCredential (CLI mode; fallbacks suppressed in server transport mode)</description>
 /// </item>
 /// <item>
 /// <term>"prod"</term>
 /// <description>Environment → Workload Identity → Managed Identity (no interactive fallback)</description>
+/// </item>
+/// <item>
+/// <term>"DeviceCodeCredential"</term>
+/// <description>Device code flow — displays a URL and one-time code on the console; works in headless environments (Docker, WSL, SSH, CI). Not available in server transport mode (stdio/http).</description>
 /// </item>
 /// <item>
 /// <term>Specific credential name</term>
@@ -41,7 +45,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// </item>
 /// <item>
 /// <term>Not set or empty</term>
-/// <description>Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI) + InteractiveBrowserCredential fallback</description>
+/// <description>Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI) + InteractiveBrowserCredential + DeviceCodeCredential as last-resort fallbacks (CLI mode only; both suppressed in server transport mode)</description>
 /// </item>
 /// </list>
 /// <para>
@@ -52,22 +56,35 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// Visual Studio Code credential is automatically prioritized first in the chain.
 /// </para>
 /// <para>
-/// InteractiveBrowserCredential with Identity Broker is added as a final fallback only when:
+/// InteractiveBrowserCredential with Identity Broker is added as an interactive fallback only when:
 /// - AZURE_TOKEN_CREDENTIALS is not set (default behavior)
 /// - AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
 /// - AZURE_TOKEN_CREDENTIALS="InteractiveBrowserCredential" (explicitly requested)
+/// It is NOT added when AZURE_TOKEN_CREDENTIALS is "prod" or any specific credential name
+/// (user wants only that credential, no interactive popup).
 /// </para>
 /// <para>
-/// It is NOT added when:
-/// - AZURE_TOKEN_CREDENTIALS="prod" (production credentials only, fail fast if unavailable)
-/// - AZURE_TOKEN_CREDENTIALS=specific credential name (user wants only that credential, fail fast)
+/// DeviceCodeCredential is appended automatically as a last-resort fallback (after
+/// InteractiveBrowserCredential) only when ALL of the following are true:
+/// - AZURE_TOKEN_CREDENTIALS is not set or is "dev" (non-pinned mode)
+/// - AZURE_TOKEN_CREDENTIALS is not "InteractiveBrowserCredential"
+/// - ActiveTransport is empty (not running as an MCP server in stdio or http mode)
+/// It is NOT appended when a specific credential is pinned (including "prod"),
+/// when "InteractiveBrowserCredential" is explicitly requested, or when running as a server.
+/// </para>
+/// <para>
+/// The <c>forceBrowserFallback</c> constructor parameter lets callers (e.g. registry server OAuth)
+/// request interactive browser as a last resort. It overrides most pinned credential modes, but
+/// AZURE_TOKEN_CREDENTIALS="prod" is always honored and prevents the browser popup even when
+/// <c>forceBrowserFallback</c> is <c>true</c>. Prod signals a non-interactive environment
+/// (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
 /// </para>
 /// <para>
 /// For User-Assigned Managed Identity, set the AZURE_CLIENT_ID environment variable to the client ID of the managed identity.
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
-internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
+internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false) : TokenCredential
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
@@ -77,15 +94,21 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     /// </summary>
     internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
 
+    /// <summary>
+    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServiceStartCommand"/>
+    /// before the credential chain is first used. Empty when not running as a server (e.g. direct CLI invocation).
+    /// </summary>
+    internal static string ActiveTransport { get; set; } = string.Empty;
+
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
         return _credential.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
         return _credential.GetTokenAsync(requestContext, cancellationToken);
     }
 
@@ -100,7 +123,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 
-    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
+    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
     {
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
@@ -146,18 +169,52 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        // Only add InteractiveBrowserCredential as fallback when:
+        // Only add interactive fallback credentials when:
         // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
-        // 2. AZURE_TOKEN_CREDENTIALS explicitly requests it
-        // 3. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
-        // Do NOT add it for "prod" or specific credential names (user wants only those credentials)
-        bool shouldAddBrowserFallback = !hasExplicitCredentialSetting ||
-                                       (tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                                       (tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false);
+        // 2. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
+        // 3. AZURE_TOKEN_CREDENTIALS="InteractiveBrowserCredential" (explicitly requested)
+        // 4. forceBrowserFallback=true AND no specific credential is pinned
+        //    (registry server callers want interactive fallback; must still honor any explicit
+        //     AZURE_TOKEN_CREDENTIALS choice — "prod", "AzureCliCredential", etc. — which all
+        //     express "use only this credential, no interactive popup")
+        //
+        // Do NOT add it when AZURE_TOKEN_CREDENTIALS is set to "prod" or any specific
+        // credential name; those choices are always respected even when forceBrowserFallback=true.
+        bool isDevMode = tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false;
+        bool isExplicitBrowserMode = tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false;
+        // Any explicit AZURE_TOKEN_CREDENTIALS value other than "dev" or "InteractiveBrowserCredential"
+        // is treated as a pinned credential choice — interactive browser must not be injected.
+        // Pinned mode: any explicit setting other than "dev" or "InteractiveBrowserCredential" means
+        // the caller wants exactly that credential — no interactive popup, even with forceBrowserFallback.
+        bool isProd = tokenCredentials?.Equals("prod", StringComparison.OrdinalIgnoreCase) ?? false;
+        bool isPinnedCredentialMode = hasExplicitCredentialSetting && !isDevMode && !isExplicitBrowserMode;
+        // forceBrowserFallback overrides any pinned credential mode EXCEPT prod.
+        // prod always suppresses interactive fallback — it signals a non-interactive environment
+        // (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
+        // Other pinned credentials (e.g. AzureCliCredential) may still allow the browser fallback
+        // when the caller explicitly requests it via forceBrowserFallback=true.
+        bool shouldAddBrowserFallback = !isPinnedCredentialMode || (forceBrowserFallback && !isProd);
 
         if (shouldAddBrowserFallback)
         {
-            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+            // Wrap in SafeTokenCredential so that MsalCachePersistenceException
+            // (libsecret missing / no keyring daemon in Docker/headless environments)
+            // is converted to CredentialUnavailableException, allowing the chain to
+            // continue rather than propagating an unhandled exception.
+            creds.Add(new SafeTokenCredential(CreateBrowserCredential(tenantId, authRecord), "InteractiveBrowserCredential"));
+        }
+
+        // Add DeviceCodeCredential as a fallback for headless environments (Docker, WSL, SSH, CI)
+        // when the default or dev chain is active. Unlike InteractiveBrowserCredential it only needs
+        // a terminal, not a GUI browser. Only added in CLI mode (ActiveTransport empty) because in
+        // server mode stdout is the MCP protocol pipe (stdio) or there is no attached terminal (http).
+        bool shouldAddDeviceCodeFallback = !isPinnedCredentialMode &&
+                                          !isExplicitBrowserMode &&
+                                          string.IsNullOrEmpty(ActiveTransport);
+
+        if (shouldAddDeviceCodeFallback)
+        {
+            AddDeviceCodeCredential(creds, tenantId);
         }
 
         return new ChainedTokenCredential([.. creds]);
@@ -262,6 +319,10 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                     AddAzureDeveloperCliCredential(credentials, tenantId);
                     break;
 
+                case "devicecodecredential":
+                    AddDeviceCodeCredential(credentials, tenantId);
+                    break;
+
                 default:
                     // Unknown value, fall back to default chain
                     AddDefaultCredentialChain(credentials, tenantId);
@@ -290,7 +351,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static void AddEnvironmentCredential(List<TokenCredential> credentials)
     {
-        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential"));
+        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential", normalizeScopes: true));
     }
 
     private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
@@ -304,7 +365,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             workloadOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential"));
+        credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential", normalizeScopes: true));
     }
 
     private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
@@ -332,7 +393,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             managedIdentityCredential = new ManagedIdentityCredential(options);
         }
 
-        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
+        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential", normalizeScopes: true));
     }
 
     private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
@@ -346,7 +407,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             vsOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential"));
+        credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential", normalizeScopes: true));
     }
 
     private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId)
@@ -360,7 +421,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             vscodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential"));
+        credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential", normalizeScopes: true));
     }
 
     private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId)
@@ -374,7 +435,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             cliOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential"));
+        credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential", normalizeScopes: true));
     }
 
     private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId)
@@ -388,7 +449,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             psOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential"));
+        credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential", normalizeScopes: true));
     }
 
     private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId)
@@ -402,7 +463,49 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         {
             azdOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
-        credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
+        credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential", normalizeScopes: true));
+    }
+
+    private static void AddDeviceCodeCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        // DeviceCodeCredential requires an interactive terminal to display the device code prompt.
+        // In stdio mode stdout is the MCP protocol pipe — writing to it would corrupt the transport.
+        // In http mode there is no user-facing terminal attached to the server process.
+        if (!string.IsNullOrEmpty(ActiveTransport))
+        {
+            throw new CredentialUnavailableException(
+                $"DeviceCodeCredential is not available when the server is running in '{ActiveTransport}' transport mode. " +
+                "DeviceCodeCredential requires an interactive terminal to display the device code prompt.");
+        }
+
+        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+
+        var deviceCodeOptions = new DeviceCodeCredentialOptions
+        {
+            TenantId = string.IsNullOrEmpty(tenantId) ? null : tenantId,
+            TokenCachePersistenceOptions = new TokenCachePersistenceOptions { Name = TokenCacheName }
+        };
+
+        if (!string.IsNullOrEmpty(clientId))
+        {
+            deviceCodeOptions.ClientId = clientId;
+        }
+
+        if (CloudConfiguration != null)
+        {
+            deviceCodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
+
+        // Hydrate an existing AuthenticationRecord from the environment to enable silent token cache reuse
+        string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
+        if (!string.IsNullOrEmpty(authRecordJson))
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(authRecordJson);
+            using MemoryStream stream = new(bytes);
+            deviceCodeOptions.AuthenticationRecord = AuthenticationRecord.Deserialize(stream);
+        }
+
+        credentials.Add(new SafeTokenCredential(new DeviceCodeCredential(deviceCodeOptions), "DeviceCodeCredential"));
     }
 
     private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId)
@@ -427,14 +530,44 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 /// <summary>
 /// A wrapper that converts any exception from the underlying credential into a CredentialUnavailableException
 /// to ensure proper chaining behavior in ChainedTokenCredential.
+/// <para>
+/// When <paramref name="normalizeScopes"/> is <c>true</c>, any scope that is not already in
+/// <c>resource/.default</c> form (e.g. <c>https://mcp.ai.azure.com/Foundry.Mcp.Tools</c>) is
+/// normalized to <c>https://&lt;host&gt;/.default</c> before being forwarded to the inner
+/// credential. This is required for non-MSAL credentials (Azure CLI, Managed Identity, etc.)
+/// which derive the resource URL from the scope by stripping the <c>/.default</c> suffix, and
+/// do not understand arbitrary MSAL permission scopes.
+/// </para>
 /// </summary>
-internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName) : TokenCredential
+internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName, bool normalizeScopes = false) : TokenCredential
 {
     private readonly TokenCredential _innerCredential = innerCredential;
     private readonly string _credentialName = credentialName;
+    private readonly bool _normalizeScopes = normalizeScopes;
+
+    /// <summary>
+    /// Converts a permission scope to its <c>resource/.default</c> equivalent when it is not
+    /// already in that form. For example:
+    /// <list type="bullet">
+    ///   <item><c>https://mcp.ai.azure.com/Foundry.Mcp.Tools</c> → <c>https://mcp.ai.azure.com/.default</c></item>
+    ///   <item><c>https://management.azure.com/.default</c> → unchanged</item>
+    /// </list>
+    /// </summary>
+    private static string NormalizeScope(string scope) =>
+        scope.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
+            ? scope
+            : Uri.TryCreate(scope, UriKind.Absolute, out var uri)
+                ? $"{uri.GetLeftPart(UriPartial.Authority)}/.default"
+                : scope; // not a valid absolute URI — return unchanged to preserve chaining
+
+    private TokenRequestContext MaybeNormalize(TokenRequestContext ctx) =>
+        _normalizeScopes
+            ? new TokenRequestContext([.. ctx.Scopes.Select(NormalizeScope)], ctx.ParentRequestId, ctx.Claims, ctx.TenantId, ctx.IsCaeEnabled)
+            : ctx;
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
+        requestContext = MaybeNormalize(requestContext);
         try
         {
             return _innerCredential.GetToken(requestContext, cancellationToken);
@@ -451,6 +584,7 @@ internal class SafeTokenCredential(TokenCredential innerCredential, string crede
 
     public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
+        requestContext = MaybeNormalize(requestContext);
         try
         {
             return await _innerCredential.GetTokenAsync(requestContext, cancellationToken);

@@ -110,7 +110,7 @@ public abstract class GlobalCommand<
     {
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
-        RequestFailedException rfEx => rfEx.Message,
+        RequestFailedException rfEx => HandleRequestFailedException(rfEx),
         HttpRequestException httpEx =>
             $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
         _ => ex.Message  // Just return the actual exception message
@@ -124,4 +124,24 @@ public abstract class GlobalCommand<
         HttpRequestException => HttpStatusCode.ServiceUnavailable,
         _ => HttpStatusCode.InternalServerError
     };
+
+    private static string HandleRequestFailedException(RequestFailedException ex)
+    {
+        string message = ex.Message ?? string.Empty;
+
+        if (ex.Status == 401 && message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Authentication failed due to a tenant mismatch. " +
+            "Your credential is authenticated to a different Azure tenant than the one required by this subscription. " +
+            "To resolve: " +
+            "1. Authenticate to the target tenant using one of the supported credential types: " +
+            "   - Azure CLI: Run 'az login --tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureCliCredential, " +
+            "   - Azure PowerShell: Run 'Connect-AzAccount -Tenant <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzurePowerShellCredential, " +
+            "   - Azure Developer CLI: Run 'azd auth login --tenant-id <tenant_id>' and set AZURE_TOKEN_CREDENTIALS=AzureDeveloperCliCredential, " +
+            "2. Restart the Azure MCP Server. " +
+            "For the complete list of supported credentials, see: https://aka.ms/azmcp/auth";
+        }
+
+        return message;
+    }
 }

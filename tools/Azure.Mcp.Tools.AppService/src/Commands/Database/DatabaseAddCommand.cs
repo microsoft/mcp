@@ -11,10 +11,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
-public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : BaseAppServiceCommand<DatabaseAddOptions>()
+public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<DatabaseAddOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
     public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
 
@@ -29,12 +31,19 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppServiceName);
         command.Options.Add(AppServiceOptionDefinitions.DatabaseTypeOption);
         command.Options.Add(AppServiceOptionDefinitions.DatabaseServerOption);
         command.Options.Add(AppServiceOptionDefinitions.DatabaseNameOption);
@@ -44,7 +53,6 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     protected override DatabaseAddOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
         options.DatabaseType = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseTypeOption);
         options.DatabaseServer = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseServerOption);
         options.DatabaseName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseNameOption);
@@ -66,8 +74,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var connectionInfo = await appServiceService.AddDatabaseAsync(
+            var connectionInfo = await _appServiceService.AddDatabaseAsync(
                 options.AppName!,
                 options.ResourceGroup!,
                 options.DatabaseType!,
@@ -79,9 +86,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new Result(connectionInfo),
-                AppServiceJsonContext.Default.Result);
+            context.Response.Results = ResponseResult.Create(new(connectionInfo), AppServiceJsonContext.Default.DatabaseAddResult);
         }
         catch (Exception ex)
         {
@@ -92,5 +97,5 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
         return context.Response;
     }
 
-    public record Result(DatabaseConnectionInfo ConnectionInfo);
+    public record DatabaseAddResult(DatabaseConnectionInfo ConnectionInfo);
 }

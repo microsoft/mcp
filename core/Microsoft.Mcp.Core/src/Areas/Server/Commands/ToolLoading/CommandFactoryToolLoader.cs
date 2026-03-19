@@ -4,16 +4,16 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
@@ -74,8 +74,9 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var tools = visibleCommands
+            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
-            .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -238,14 +239,20 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
+        JsonObject? meta = null;
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject
-            {
-                ["SecretHint"] = metadata.Secret
-            };
+            meta ??= new();
+            meta["SecretHint"] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta ??= new();
+            meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
         var options = command.GetCommand().Options;
 

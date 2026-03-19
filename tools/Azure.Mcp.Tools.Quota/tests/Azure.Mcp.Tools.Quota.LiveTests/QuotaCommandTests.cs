@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.LiveTests;
@@ -38,7 +38,7 @@ public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture
     public async Task Should_check_azure_quota()
     {
         // act
-        var resourceTypes = "Microsoft.CognitiveServices, Microsoft.Compute, Microsoft.Storage, Microsoft.App, Microsoft.Network, Microsoft.MachineLearningServices, Microsoft.DBforPostgreSQL, Microsoft.HDInsight, Microsoft.Search, Microsoft.ContainerInstance";
+        var resourceTypes = "Microsoft.CognitiveServices, Microsoft.Compute, Microsoft.Storage, Microsoft.App, Microsoft.Network, Microsoft.MachineLearningServices, Microsoft.DBforPostgreSQL, Microsoft.HDInsight, Microsoft.Search, Microsoft.ContainerInstance, Microsoft.Sql";
         JsonElement? result = await CallToolAsync(
             "quota_usage_check",
             new() {
@@ -79,6 +79,9 @@ public sealed class QuotaCommandTests(ITestOutputHelper output, TestProxyFixture
         var containerInstanceQuotas = quotas.AssertProperty("Microsoft.ContainerInstance");
         Assert.Equal(JsonValueKind.Array, containerInstanceQuotas.ValueKind);
         Assert.NotEmpty(containerInstanceQuotas.EnumerateArray());
+        var sqlQuotas = quotas.AssertProperty("Microsoft.Sql");
+        Assert.Equal(JsonValueKind.Array, sqlQuotas.ValueKind);
+        Assert.NotEmpty(sqlQuotas.EnumerateArray());
 
     }
 

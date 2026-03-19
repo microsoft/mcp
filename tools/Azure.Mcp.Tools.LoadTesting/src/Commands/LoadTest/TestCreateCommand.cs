@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -9,14 +10,16 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
+public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestCreateOptions>
 {
     private const string _commandTitle = "Test Create";
     private readonly ILogger<TestCreateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
     public override string Id => "2153384b-02ea-47b3-a069-7f5f9a709d66";
     public override string Name => "create";
@@ -42,6 +45,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Test);
         command.Options.Add(LoadTestingOptionDefinitions.Description);
         command.Options.Add(LoadTestingOptionDefinitions.DisplayName);
@@ -75,11 +80,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // Call service operation(s)
-            var results = await service.CreateTestAsync(
+            var results = await _loadTestingService.CreateTestAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,

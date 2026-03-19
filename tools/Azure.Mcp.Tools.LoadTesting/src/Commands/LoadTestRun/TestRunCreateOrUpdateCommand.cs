@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -13,11 +14,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger)
+public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestRunCreateOrUpdateOptions>
 {
     private const string _commandTitle = "Test Run Create or Update";
     private readonly ILogger<TestRunCreateOrUpdateCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "0e3c8f2c-57ce-49c0-bff4-27c9573e7049";
     public override string Name => "createorupdate";
     public override string Description =>
@@ -43,7 +45,9 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestRun);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsRequired());
         command.Options.Add(LoadTestingOptionDefinitions.Test);
         command.Options.Add(LoadTestingOptionDefinitions.DisplayName.AsOptional());
         command.Options.Add(LoadTestingOptionDefinitions.Description.AsOptional());
@@ -72,10 +76,8 @@ public sealed class TestRunCreateOrUpdateCommand(ILogger<TestRunCreateOrUpdateCo
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)
-            var results = await service.CreateOrUpdateLoadTestRunAsync(
+            var results = await _loadTestingService.CreateOrUpdateLoadTestRunAsync(
                 options.Subscription!,
                 options.TestResourceName!,
                 options.TestId!,

@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.Areas.Server.Models;
 
 /// <summary>
 /// Contains configuration information for an MCP server defined in the registry.
@@ -74,4 +74,11 @@ public sealed class RegistryServerInfo
     /// </summary>
     [JsonPropertyName("installInstructions")]
     public string? InstallInstructions { get; init; }
+
+    /// <summary>
+    /// Gets the prefix to prepend to all tool names exposed from this server.
+    /// When set, tools from this server will be exposed with this prefix (e.g. "foundry_").
+    /// </summary>
+    [JsonPropertyName("toolPrefix")]
+    public string? ToolPrefix { get; init; }
 }

@@ -12,12 +12,19 @@ namespace Azure.Mcp.Core;
 /// </summary>
 public sealed class AccessTokenHandler : DelegatingHandler
 {
-    private readonly IAzureTokenCredentialProvider _tokenCredentialProvider;
+    private readonly IAzureTokenCredentialProvider? _tokenCredentialProvider;
+    private readonly TokenCredential? _credential;
     private readonly string[] _oauthScopes;
 
     public AccessTokenHandler(IAzureTokenCredentialProvider tokenCredentialProvider, string[] oauthScopes)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
+        _oauthScopes = oauthScopes;
+    }
+
+    public AccessTokenHandler(TokenCredential credential, string[] oauthScopes)
+    {
+        _credential = credential;
         _oauthScopes = oauthScopes;
     }
 
@@ -29,7 +36,8 @@ public sealed class AccessTokenHandler : DelegatingHandler
     /// <param name="cancellationToken"></param>
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+        TokenCredential credential = _credential
+            ?? await _tokenCredentialProvider!.GetTokenCredentialAsync(tenantId: null, cancellationToken);
         var tokenContext = new TokenRequestContext(_oauthScopes);
         var token = await credential.GetTokenAsync(tokenContext, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);

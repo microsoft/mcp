@@ -7,17 +7,17 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
-public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger) : BaseEventGridCommand<EventsPublishOptions>
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger, IEventGridService eventGridService) : BaseEventGridCommand<EventsPublishOptions>
 {
     private const string CommandTitle = "Publish Events to Event Grid Topic";
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
+    private readonly IEventGridService _eventGridService = eventGridService;
     public override string Id => "d5f216a4-c45e-4c29-a414-d3feaa5929e2";
 
     public override string Name => "publish";
@@ -85,9 +85,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
 
         try
         {
-            var eventGridService = context.GetService<IEventGridService>();
-
-            var result = await eventGridService.PublishEventAsync(
+            var result = await _eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.TopicName!,
@@ -114,11 +112,11 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Event Grid topic not found. Please verify the topic name and resource group exist.",
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Access denied to Event Grid topic. Please verify you have Event Grid Data Sender permissions.",
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             "Invalid event data or schema format. Please verify the event data is valid JSON and matches the expected schema.",
         System.Text.Json.JsonException jsonEx =>
             $"Invalid JSON format in event data: {jsonEx.Message}",

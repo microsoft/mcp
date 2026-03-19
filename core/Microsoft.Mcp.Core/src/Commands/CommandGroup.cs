@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-
 namespace Microsoft.Mcp.Core.Commands;
 
 public class CommandGroup(string name, string description, string? title = null)

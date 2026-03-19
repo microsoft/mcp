@@ -4,33 +4,37 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace Azure.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
 /// <summary>
 /// Command to start the MCP server with specified configuration options.
@@ -40,6 +44,16 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
     private const string CommandTitle = "Start MCP Server";
+    private static readonly string[] StdioHostBuilderArgs =
+    [
+        $"--contentRoot={AppContext.BaseDirectory}",
+        "--hostBuilder:reloadConfigOnChange=false"
+    ];
+
+    private static readonly WebApplicationOptions HttpWebApplicationOptions = new()
+    {
+        ContentRootPath = AppContext.BaseDirectory
+    };
 
     /// <summary>
     /// Gets the name of the command.
@@ -181,10 +195,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         var options = BindOptions(parseResult);
-
-        // Update the UserAgentPolicy for all Azure service calls to include the transport type.
-        var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
-        BaseAzureService.InitializeUserAgentPolicy(transport);
 
         try
         {
@@ -373,6 +383,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for the MCP server.</returns>
     private IHost CreateHost(ServiceStartOptions serverOptions)
     {
+        // Inform the credential chain which transport is active so that interactive credentials
+        // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
+        CustomChainedCredential.ActiveTransport = serverOptions.Transport;
+
 #if ENABLE_HTTP
         if (serverOptions.Transport == TransportTypes.Http)
         {
@@ -401,7 +415,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
+        return Host.CreateDefaultBuilder(StdioHostBuilderArgs)
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -446,7 +460,16 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
+
+        // Read once at host setup time — this env var is process-wide and effectively static,
+        // so there is no need to re-read it on every incoming request.
+        // Default to false; the env var must be present and parse to "true" to enable.
+        bool enableForwardedHeaders =
+            bool.TryParse(
+                Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"),
+                out bool parsedEnvVar)
+            && parsedEnvVar;
 
         // Configure logging
         builder.Logging.ClearProviders();
@@ -459,31 +482,47 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing and incoming authentication and authorization.
         //
         // Configure incoming authentication and authorization.
-        MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder = services
+        var azureAdSection = builder.Configuration.GetSection(Constants.AzureAd);
+        AuthenticationBuilder authBuilder = services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApi(builder.Configuration);
-
-        // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
-        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.Events = new JwtBearerEvents
-            {
-                OnChallenge = context =>
+            .AddMicrosoftIdentityWebApiAot(
+                options => azureAdSection.Bind(options),
+                JwtBearerDefaults.AuthenticationScheme,
+                jwtOptions =>
                 {
-                    // Add resource_metadata parameter to WWW-Authenticate header
-                    if (!context.Response.HasStarted)
-                    {
-                        HttpRequest request = context.Request;
-                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                    // Only disable HTTPS metadata requirement in development environments.
+                    // Production environments should enforce HTTPS for metadata endpoints.
+                    // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
+                    jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
 
-                        // Modify the WWW-Authenticate header to include resource_metadata
-                        context.Response.Headers.WWWAuthenticate =
-                            $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
-                    }
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                    // Configure JWT Bearer events for OAuth protected resource metadata
+                    jwtOptions.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = context =>
+                        {
+                            // Add resource_metadata parameter to WWW-Authenticate header
+                            if (!context.Response.HasStarted)
+                            {
+                                HttpRequest request = context.Request;
+                                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                                string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                                context.Response.StatusCode = 401;
+
+                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                                if (!string.IsNullOrEmpty(context.Error))
+                                    header += $", error=\"{context.Error}\"";
+                                if (!string.IsNullOrEmpty(context.ErrorDescription))
+                                    header += $", error_description=\"{context.ErrorDescription}\"";
+
+                                // Modify the WWW-Authenticate header to include resource_metadata
+                                context.Response.Headers.WWWAuthenticate = header;
+                            }
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
 
         // Configure authorization policy for MCP access.
         services.AddAuthorizationBuilder()
@@ -506,7 +545,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing authentication strategy
         if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
-            services.AddHttpOnBehalfOfTokenCredentialProvider(authBuilder);
+            services.AddHttpOnBehalfOfTokenCredentialProvider();
         }
         else
         {
@@ -545,12 +584,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
                 context.Request.Method == "GET")
             {
-                IOptionsMonitor<MicrosoftIdentityOptions> azureAdOptionsMonitor = context
+                IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
                     .RequestServices
-                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityOptions>>();
-                MicrosoftIdentityOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
+                MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
-                string baseUrl = $"{request.Scheme}://{request.Host}";
+                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                string baseUrl = $"{scheme}://{request.Host}";
                 string? clientId = azureAdOptions.ClientId;
                 string? tenantId = azureAdOptions.TenantId;
                 string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
@@ -613,7 +653,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateIncomingAuthDisabledHttpHost(ServiceStartOptions serverOptions)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
 
         InitializeListingUrls(builder, serverOptions);
 
@@ -654,6 +694,52 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         app.MapMcp();
 
         return app;
+    }
+
+    /// <summary>
+    /// Resolves the effective HTTP scheme for use in OAuth Protected Resource Metadata URLs,
+    /// optionally honouring the <c>X-Forwarded-Proto</c> header when the server runs behind a
+    /// reverse proxy (e.g. Azure Container Apps).
+    /// </summary>
+    /// <param name="request">The current HTTP request.</param>
+    /// <param name="enableForwardedHeaders">
+    /// When <c>true</c>, the value of the <c>X-Forwarded-Proto</c> header (if present and equal
+    /// to "http" or "https", case-insensitive) overrides the request scheme.
+    /// </param>
+    /// <returns>"https" or "http".</returns>
+    /// <remarks>
+    /// Azure Container Apps setups typically use plain HTTP between the ACA platform's reverse
+    /// proxy and the application container. The OAuth claims challenge URL must match the scheme
+    /// the client will use, so in that case we inspect <c>X-Forwarded-Proto</c>.
+    /// Only "http" and "https" values are accepted; any other value is ignored.
+    /// See also: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer
+    /// </remarks>
+    private static string GetSchemeForOAuthProtectedResourceMetadata(HttpRequest request, bool enableForwardedHeaders)
+    {
+        string scheme = request.Scheme;
+
+        if (enableForwardedHeaders
+            && request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+        {
+            if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+            {
+                // X-Forwarded-Proto can be a comma-separated list when the request passes through
+                // multiple proxies (e.g., "https, http"). The leftmost value is the scheme used
+                // by the original client, so take the first segment and trim any whitespace before
+                // comparing. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
+                string firstProto = forwardedProtoValue.Split(',')[0].Trim();
+                if (string.Equals(firstProto, "https", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "https";
+                }
+                else if (string.Equals(firstProto, "http", StringComparison.OrdinalIgnoreCase))
+                {
+                    scheme = "http";
+                }
+            }
+        }
+
+        return scheme;
     }
 
     /// <summary>

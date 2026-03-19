@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobCancelCommand(ILogger<AutoimportJobCancelCommand> logger)
+public sealed class AutoimportJobCancelCommand(IManagedLustreService service, ILogger<AutoimportJobCancelCommand> logger)
     : BaseManagedLustreCommand<AutoimportJobCancelOptions>(logger)
 {
     private const string CommandTitle = "Cancel Azure Managed Lustre Autoimport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoimportJobCancelCommand> _logger = logger;
 
     public override string Id => "9f3g1h2i-4d0b-5g8f-c3e6-8b9d4f6g7c8h";
@@ -76,8 +76,7 @@ public sealed class AutoimportJobCancelCommand(ILogger<AutoimportJobCancelComman
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            await svc.CancelAutoimportJobAsync(
+            await _service.CancelAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
@@ -86,7 +85,7 @@ public sealed class AutoimportJobCancelCommand(ILogger<AutoimportJobCancelComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new AutoimportJobCancelResult(options.JobName!, "Cancelled"), ManagedLustreJsonContext.Default.AutoimportJobCancelResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Cancelled"), ManagedLustreJsonContext.Default.AutoimportJobCancelResult);
         }
         catch (Exception ex)
         {
