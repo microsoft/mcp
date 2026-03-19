@@ -882,7 +882,7 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
-### �️ Azure Backup
+### 🛡️ Azure Backup
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
@@ -894,7 +894,7 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Check soft delete and immutability settings on my vault"
 * "Enable cross-region restore on my vault"
 
-### �🖥️ Azure CLI Generate
+### 🖥️ Azure CLI Generate
 
 * Generate Azure CLI commands based on user intent
 

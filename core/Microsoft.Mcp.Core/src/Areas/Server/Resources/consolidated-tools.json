@@ -3171,8 +3171,8 @@
       "description": "Create and update Azure Recovery Services vaults for backup and disaster recovery.",
       "toolMetadata": {
         "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "value": true,
+          "description": "This tool performs write operations by creating or updating Azure Recovery Services vault resources and can modify existing state."
         },
         "idempotent": {
           "value": true,
