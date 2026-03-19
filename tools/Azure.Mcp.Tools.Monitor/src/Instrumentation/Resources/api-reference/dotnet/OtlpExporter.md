@@ -2,11 +2,6 @@
 title: OtlpExporter
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/WithMetrics.md
-  - api-reference/WithLogging.md
-  - api-reference/ConsoleExporter.md
 ---
 
 # OTLP Exporter

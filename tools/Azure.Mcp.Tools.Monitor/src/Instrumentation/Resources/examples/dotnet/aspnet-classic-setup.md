@@ -2,10 +2,6 @@
 title: Classic ASP.NET Setup
 category: examples
 applies-to: dotnet-framework
-related:
-  - concepts/aspnet-classic-appinsights.md
-  - api-reference/ApplicationInsightsWeb.md
-  - concepts/nuget-restore.md
 ---
 
 # Classic ASP.NET — Application Insights Setup

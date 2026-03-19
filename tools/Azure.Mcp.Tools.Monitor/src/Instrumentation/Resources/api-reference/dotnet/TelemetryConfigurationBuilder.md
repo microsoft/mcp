@@ -2,12 +2,6 @@
 title: TelemetryConfigurationBuilder
 category: api-reference
 applies-to: 3.x
-related:
-  - api-reference/ConfigureOpenTelemetryProvider.md
-  - api-reference/ActivityProcessors.md
-  - api-reference/LogProcessors.md
-  - api-reference/ApplicationInsightsWeb.md
-  - api-reference/TelemetryClient.md
 ---
 
 # TelemetryConfiguration.ConfigureOpenTelemetryBuilder

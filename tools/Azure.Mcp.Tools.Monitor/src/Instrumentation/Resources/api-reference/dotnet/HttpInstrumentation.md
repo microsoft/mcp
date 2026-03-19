@@ -2,10 +2,6 @@
 title: HttpInstrumentation
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/ActivityProcessors.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
 ---
 
 # HTTP Instrumentation — Client & Server Enrichment

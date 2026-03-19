@@ -2,10 +2,6 @@
 title: ConsoleExporter
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/WithLogging.md
-  - api-reference/OtlpExporter.md
 ---
 
 # Console Exporter

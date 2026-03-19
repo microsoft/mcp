@@ -2,10 +2,6 @@
 title: SqlClientInstrumentation
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/EntityFrameworkInstrumentation.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
 ---
 
 # SQL Client Instrumentation

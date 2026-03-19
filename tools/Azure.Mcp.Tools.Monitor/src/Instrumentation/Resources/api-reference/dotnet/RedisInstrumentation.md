@@ -2,9 +2,6 @@
 title: RedisInstrumentation
 category: api-reference
 applies-to: 1.x
-related:
-  - api-reference/WithTracing.md
-  - api-reference/ConfigureOpenTelemetryProvider.md
 ---
 
 # Redis Instrumentation (StackExchange.Redis)

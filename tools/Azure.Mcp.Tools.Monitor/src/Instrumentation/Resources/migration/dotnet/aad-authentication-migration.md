@@ -2,10 +2,6 @@
 title: AAD Authentication Migration (2.x to 3.x)
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/AddApplicationInsightsTelemetry.md
-  - api-reference/UseAzureMonitor.md
-  - migration/appinsights-2x-to-3x-code-migration.md
 ---
 
 # AAD Authentication Migration (2.x → 3.x)

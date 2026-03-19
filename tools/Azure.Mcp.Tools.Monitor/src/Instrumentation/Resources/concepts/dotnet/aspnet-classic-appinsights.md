@@ -2,10 +2,6 @@
 title: Application Insights for Classic ASP.NET
 category: concepts
 applies-to: dotnet-framework
-related:
-  - api-reference/ApplicationInsightsWeb.md
-  - examples/aspnet-classic-setup.md
-  - concepts/nuget-restore.md
 ---
 
 # Application Insights for Classic ASP.NET

@@ -2,10 +2,6 @@
 title: ApplicationInsightsWeb
 category: api-reference
 applies-to: 3.x
-related:
-  - concepts/aspnet-classic-appinsights.md
-  - examples/aspnet-classic-setup.md
-  - api-reference/TelemetryClient.md
 ---
 
 # Microsoft.ApplicationInsights.Web — API Reference

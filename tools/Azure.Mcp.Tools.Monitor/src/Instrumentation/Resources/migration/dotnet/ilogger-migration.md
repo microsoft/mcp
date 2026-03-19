@@ -2,10 +2,6 @@
 title: ILogger and Log Filtering Migration (2.x to 3.x)
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/WithLogging.md
-  - api-reference/LogProcessors.md
-  - migration/appinsights-2x-to-3x-code-migration.md
 ---
 
 # ILogger and Log Filtering Migration (2.x → 3.x)

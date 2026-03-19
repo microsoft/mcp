@@ -2,12 +2,6 @@
 title: Classic ASP.NET 2.x to 3.x Migration
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/ApplicationInsightsWeb.md
-  - api-reference/TelemetryConfigurationBuilder.md
-  - api-reference/TelemetryClient.md
-  - api-reference/ActivityProcessors.md
-  - api-reference/LogProcessors.md
 ---
 
 # Classic ASP.NET 2.x → 3.x Code Migration

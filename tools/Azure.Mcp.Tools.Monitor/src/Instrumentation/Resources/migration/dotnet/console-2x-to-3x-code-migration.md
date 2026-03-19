@@ -2,10 +2,6 @@
 title: Console App Application Insights 2.x to 3.x Migration
 category: migration
 applies-to: 3.x
-related:
-  - api-reference/TelemetryClient.md
-  - api-reference/TelemetryConfigurationBuilder.md
-  - migration/aad-authentication-migration.md
 ---
 
 # Console App — AI SDK 2.x → 3.x Migration
