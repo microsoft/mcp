@@ -6,13 +6,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Moved the following tools from `monitorinstrumentation` namespace to `monitor` namespace: [[#2087](https://github.com/microsoft/mcp/pull/2087)]
+- Moved the following tools from the `monitorinstrumentation` namespace to the `monitor` namespace: [[#2087](https://github.com/microsoft/mcp/pull/2087)]
   - `list_learning_resources`
   - `get_learning_resource`
   - `orchestrator_start`
   - `orchestrator_next`
   - `send_brownfield_analysis`
-- Consolidated the `list_learning_resources` tool and `get_learning_resource` into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
+- Consolidated the `list_learning_resources` and `get_learning_resource` tools into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
 
 ### Other Changes
 - Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
