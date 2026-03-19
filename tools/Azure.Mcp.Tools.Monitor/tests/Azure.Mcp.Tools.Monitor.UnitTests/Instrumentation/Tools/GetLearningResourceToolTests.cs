@@ -17,7 +17,7 @@ public sealed class GetLearningResourceToolTests
         var result = GetLearningResourceTool.GetLearningResource(path);
 
         // Assert
-        Assert.Equal("Invalid resource path. Use list_learning_resources to see available resources.", result);
+        Assert.Equal("Invalid resource path. Call get_learning_resource without parameters to list available resources.", result);
     }
 
     [Fact]
@@ -48,6 +48,81 @@ public sealed class GetLearningResourceToolTests
 
             // Assert
             Assert.Equal("expected-content", result);
+        }
+        finally
+        {
+            TryDeleteFile(fullPath);
+        }
+    }
+
+    [Fact]
+    public void GetLearningResource_WithValidPath_ReturnsFileContent()
+    {
+        // Arrange
+        var relativePath = $"tests/valid-{Guid.NewGuid():N}.md";
+        var fullPath = CreateResourceFile(relativePath, "test-content");
+
+        try
+        {
+            // Act
+            var result = GetLearningResourceTool.GetLearningResource(relativePath);
+
+            // Assert
+            Assert.Equal("test-content", result);
+        }
+        finally
+        {
+            TryDeleteFile(fullPath);
+        }
+    }
+
+    [Fact]
+    public void ListLearningResources_WithGeneratedFiles_IncludesRelativePathsInSortedOrder()
+    {
+        // Arrange
+        var testFolder = $"tests/list-{Guid.NewGuid():N}";
+        var firstPath = $"{testFolder}/b-resource.md";
+        var secondPath = $"{testFolder}/a-resource.md";
+
+        var firstFile = CreateResourceFile(firstPath, "b-content");
+        var secondFile = CreateResourceFile(secondPath, "a-content");
+
+        try
+        {
+            // Act
+            var result = ListLearningResourcesTool.ListLearningResources();
+
+            // Assert
+            var firstLine = $"  {secondPath}";
+            var secondLine = $"  {firstPath}";
+            Assert.Contains(firstLine, result, StringComparison.Ordinal);
+            Assert.Contains(secondLine, result, StringComparison.Ordinal);
+
+            var firstIndex = result.IndexOf(firstLine, StringComparison.Ordinal);
+            var secondIndex = result.IndexOf(secondLine, StringComparison.Ordinal);
+            Assert.True(firstIndex >= 0 && secondIndex >= 0 && firstIndex < secondIndex);
+        }
+        finally
+        {
+            TryDeleteFile(firstFile);
+            TryDeleteFile(secondFile);
+        }
+    }
+
+    [Fact]
+    public void ListLearningResources_ReturnsAvailableResourcesHeader()
+    {
+        // Arrange
+        var relativePath = $"tests/header-{Guid.NewGuid():N}.md";
+        var fullPath = CreateResourceFile(relativePath, "content");
+
+        try
+        {
+            // Act
+            var result = ListLearningResourcesTool.ListLearningResources();
+
+            // Assert
+            Assert.StartsWith("Available learning resources:", result, StringComparison.Ordinal);
         }
         finally
         {

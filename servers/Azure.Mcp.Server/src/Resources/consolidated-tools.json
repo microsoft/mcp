@@ -3522,7 +3522,6 @@
         }
       },
       "mappedToolList": [
-        "monitor_instrumentation_list_learning_resources",
         "monitor_instrumentation_get_learning_resource",
         "monitor_instrumentation_orchestrator_start",
         "monitor_instrumentation_orchestrator_next",
