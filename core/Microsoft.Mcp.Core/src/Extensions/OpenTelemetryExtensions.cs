@@ -103,7 +103,7 @@ public static class OpenTelemetryExtensions
 #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
-        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
+        if (true)
         {
             otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
                 .WithMetrics(metrics => metrics.AddOtlpExporter())

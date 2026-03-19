@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Help;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -191,6 +192,7 @@ public class CommandFactory : ICommandFactory
 
             using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
             activity?.SetTag(TagName.ToolId, implementation.Id);
+            InjectToolAreaAndName(activity, parseResult);
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
             try
@@ -325,6 +327,34 @@ public class CommandFactory : ICommandFactory
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Injects tool area and name tags into the activity based on the command being executed. The full command name
+    /// is parsed to determine the tool area and name, which are then added as tags to the activity.
+    /// </summary>
+    /// <param name="activity">The activity to inject tool area and name tags into.</param>
+    /// <param name="parseResult">The parsing result for the command.</param>
+    private void InjectToolAreaAndName(Activity? activity, ParseResult parseResult)
+    {
+        if (activity == null)
+        {
+            return;
+        }
+
+        var commandResult = parseResult.CommandResult;
+        var fullCommandName = commandResult.Command.Name;
+        while (commandResult.Parent is not null
+            && commandResult?.Parent is CommandResult
+            && (commandResult.Parent as CommandResult)?.Command.Name != RootCommand.Name)
+        {
+            commandResult = (commandResult.Parent as CommandResult)!;
+            fullCommandName = commandResult.Command.Name + "_" + fullCommandName;
+        }
+
+        var index = fullCommandName.IndexOf('_');
+        activity.SetTag(TagName.ToolArea, index == -1 ? fullCommandName : fullCommandName.Substring(0, index))
+            .SetTag(TagName.ToolName, fullCommandName);
     }
 
     /// <summary>
