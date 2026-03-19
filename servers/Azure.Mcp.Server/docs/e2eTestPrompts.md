@@ -354,6 +354,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deviceregistry_namespace_list | List Device Registry namespaces in resource group <resource_group_name> |
 | deviceregistry_namespace_list | What Device Registry namespaces do I have in my Azure subscription? |
 
+## Azure DocumentDB (with MongoDB compatibility)
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| documentdb_index_list_indexes | List indexes for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_index_create_index | Add an index for collection <collection-name> in DocumentDB database <db-name> with keys <keys> and options <options> |
+| documentdb_index_drop_index | Remove the <index-name> index from DocumentDB collection <collection-name> in database <db-name> |
+| documentdb_others_current_ops | Get current DocumentDB operations filtered by <ops-filter> |
+| documentdb_others_get_stats | Get index stats for collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_others_get_stats | Show me stats for DocumentDB database <db-name> |
+| documentdb_database_drop_database | Delete the database <db-name> from DocumentDB cluster |
+| documentdb_database_list_databases | List all databases in DocumentDB |
+| documentdb_database_list_databases | Get details for database <db-name> in DocumentDB |
+| documentdb_document_find_documents | Get all the documents in collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_find_documents | Find documents from collection <collection-name> in DocumentDB database <db-name> with filter <filter> |
+| documentdb_document_count_documents | How many documents are in collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_insert_documents | Add a new document to collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_insert_documents | Bulk insert documents into collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_update_documents | Update documents where id equals <id> in collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_update_documents | Bulk update documents in collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_delete_documents | Remove document whose id equals <id> from collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_delete_documents | Remove all documents with <filter> from collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_aggregate | Run an aggregation pipeline on collection <collection-name> in database <db-name> from DocumentDB cluster |
+| documentdb_document_find_and_modify | Find and update documents with <filter> in collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Explain the find query described by <query-body> against collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Show me the execution plan for the count query described by <query-body> on collection <collection-name> in DocumentDB database <db-name> |
+| documentdb_document_explain_query | Explain the aggregation query described by <query-body> on collection <collection-name> in DocumentDB database <db-name> |
+
 ## Azure Event Grid
 
 | Tool Name | Test Prompt |

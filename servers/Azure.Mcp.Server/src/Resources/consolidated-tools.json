@@ -137,7 +137,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, Cosmos DB, and Azure DocumentDB (with MongoDB compatibility). List and query databases, retrieve server configurations and parameters, explore table schemas, inspect Azure DocumentDB documents and indexes, explain queries, review current operations and stats, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -178,7 +178,121 @@
         "sql_db_get",
         "sql_server_get",
         "cosmos_list",
-        "cosmos_database_container_item_query"
+        "cosmos_database_container_item_query",
+        "documentdb_database_list_databases",
+        "documentdb_document_count_documents",
+        "documentdb_document_explain_query",
+        "documentdb_document_find_documents",
+        "documentdb_index_list_indexes",
+        "documentdb_others_current_ops",
+        "documentdb_others_get_stats"
+      ]
+    },
+    {
+      "name": "sample_azure_documentdb_documents",
+      "description": "Sample documents from Azure DocumentDB (with MongoDB compatibility) collections to quickly inspect data shape and example records for schema exploration and query generation.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_collection_sample_documents"
+      ]
+    },
+    {
+      "name": "insert_azure_documentdb_documents",
+      "description": "Insert one or more documents into Azure DocumentDB (with MongoDB compatibility) collections.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_document_insert_documents"
+      ]
+    },
+    {
+      "name": "manage_azure_documentdb_resources",
+      "description": "Manage Azure DocumentDB (with MongoDB compatibility) databases, collections, indexes, and documents. Supports dropping and renaming collections, dropping databases, running aggregation pipelines that may write results, updating or deleting documents, atomic find-and-modify operations, and creating or dropping indexes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "documentdb_collection_drop_collection",
+        "documentdb_collection_rename_collection",
+        "documentdb_database_drop_database",
+        "documentdb_document_aggregate",
+        "documentdb_document_delete_documents",
+        "documentdb_document_find_and_modify",
+        "documentdb_document_update_documents",
+        "documentdb_index_create_index",
+        "documentdb_index_drop_index"
       ]
     },
     {

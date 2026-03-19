@@ -960,6 +960,33 @@ Example prompts that generate Azure CLI commands:
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
 
+### 🗄️ Azure DocumentDB (with MongoDB compatibility)
+
+* "List indexes for collection 'items' in Azure DocumentDB database 'test'"
+* "Create an index on field 'category' for collection 'items' in Azure DocumentDB database 'test'"
+* "Drop index 'category_1' from collection 'items' in Azure DocumentDB database 'test'"
+* "Show index statistics for collection 'items' in Azure DocumentDB database 'test'"
+* "Show current Azure DocumentDB operations"
+* "List all databases in Azure DocumentDB"
+* "Get statistics for database 'mydb'"
+* "Get details for database 'analytics'"
+* "Drop database 'testdb'"
+* "Get statistics for collection 'users'"
+* "Rename collection 'old-name' to 'new-name'"
+* "Sample documents from collection 'products'"
+* "Find documents in collection 'users' where status is active"
+* "Count documents in collection 'orders'"
+* "Insert a document into collection 'products'"
+* "Insert multiple documents into collection 'inventory'"
+* "Update multiple documents in collection 'inventory' where quantity is low"
+* "Delete multiple documents from collection 'logs' where date is old"
+* "Run an aggregation pipeline on collection 'sales'"
+* "Find and modify a document in collection 'users'"
+* "Explain a find query plan for collection 'users'"
+* "Explain a count query for collection 'orders'"
+* "Explain an aggregation pipeline for collection 'sales'"
+
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"

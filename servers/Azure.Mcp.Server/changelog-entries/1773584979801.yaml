@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added DocumentDB tools for managing Azure DocumentDB (with MongoDB compatibility) collection"

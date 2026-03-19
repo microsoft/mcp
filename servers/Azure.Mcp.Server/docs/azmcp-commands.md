@@ -1718,6 +1718,152 @@ azmcp deviceregistry namespace list --subscription <subscription> \
                                     [--resource-group <resource-group>]
 ```
 
+### Azure DocumentDB (with MongoDB compatibility) Operations
+
+```bash
+# List all indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index list indexes --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name>
+
+# Create an index on a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index create index --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name> \
+                                    --keys <json-index-keys> \
+                                    [--options <json-index-options>]
+
+# Drop an index from a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index drop index --connection-string <connection-string> \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name> \
+                                  --index-name <index-name>
+
+# List all databases or inspect a single database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database list databases --connection-string <connection-string> \
+                                         [--db-name <db-name>]
+
+# Rename a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection rename collection --connection-string <connection-string> \
+                                              --db-name <db-name> \
+                                              --collection-name <collection-name> \
+                                              --new-collection-name <new-collection-name>
+
+# Drop a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection drop collection --connection-string <connection-string> \
+                                            --db-name <db-name> \
+                                            --collection-name <collection-name>
+
+# Sample documents from a collection
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb collection sample documents --connection-string <connection-string> \
+                                             --db-name <db-name> \
+                                             --collection-name <collection-name> \
+                                             [--sample-size <sample-size>]
+
+# Get Azure DocumentDB statistics for a database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type database \
+                                  --db-name <db-name>
+
+# Get Azure DocumentDB statistics for a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type collection \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get Azure DocumentDB statistics for indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others get stats --connection-string <connection-string> \
+                                  --resource-type index \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name>
+
+# Get current Azure DocumentDB operations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb others current ops --connection-string <connection-string> \
+                                    [--ops-filter <json-filter>]
+
+# Drop a database
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb database drop database --connection-string <connection-string> \
+                                        --db-name <db-name>
+
+# Find and retrieve documents from a collection matching an optional filter, with limit, skip, sort, and projection options
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document find documents --connection-string <connection-string> \
+                                         --db-name <db-name> \
+                                         --collection-name <collection-name> \
+                                         [--filter <json-filter>] \
+                                         [--options <json-options>]
+
+# Count documents in a collection matching an optional filter
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document count documents --connection-string <connection-string> \
+                                          --db-name <db-name> \
+                                          --collection-name <collection-name> \
+                                          [--filter <json-filter>]
+
+# Insert one document or many documents into a collection. If --mode is omitted, the command auto-detects a single document versus a JSON array payload.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document insert documents --connection-string <connection-string> \
+                                           --db-name <db-name> \
+                                           --collection-name <collection-name> \
+                                           --documents <json-document-or-array> \
+                                           [--mode <single|many>]
+
+# Update one or more documents in a collection matching a required filter. If --mode is omitted, the command defaults to single.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document update documents --connection-string <connection-string> \
+                                           --db-name <db-name> \
+                                           --collection-name <collection-name> \
+                                           --filter <json-filter> \
+                                           --update <json-update> \
+                                           [--upsert] \
+                                           [--mode <single|many>]
+
+# Delete one or more documents from a collection matching a required filter. If --mode is omitted, the command defaults to single.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document delete documents --connection-string <connection-string> \
+                                           --db-name <db-name> \
+                                           --collection-name <collection-name> \
+                                           --filter <json-filter> \
+                                           [--mode <single|many>]
+
+# Run an aggregation pipeline on a collection. Pipelines that use write stages such as $out or $merge may modify data.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document aggregate --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name> \
+                                    --pipeline <json-pipeline> \
+                                    [--allow-disk-use]
+
+# Find and update a single document in a collection matching a required filter, returning the document before modification
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document find and modify --connection-string <connection-string> \
+                                          --db-name <db-name> \
+                                          --collection-name <collection-name> \
+                                          --filter <json-filter> \
+                                          --update <json-update> \
+                                          [--upsert]
+
+# Explain a find, count, or aggregate operation for a collection by passing an operation-specific JSON body with --query-body
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb document explain query --connection-string <connection-string> \
+                                        --db-name <db-name> \
+                                        --collection-name <collection-name> \
+                                        --operation <find|count|aggregate> \
+                                        [--query-body <json-body>]
+```
+
 ### Azure Event Grid Operations
 
 ```bash
