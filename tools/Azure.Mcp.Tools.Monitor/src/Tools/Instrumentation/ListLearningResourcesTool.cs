@@ -2,27 +2,21 @@ namespace Azure.Mcp.Tools.Monitor.Tools;
 
 public sealed class ListLearningResourcesTool
 {
-    public static string ListLearningResources()
+    public static List<string> ListLearningResources()
     {
         var baseDirectory = AppContext.BaseDirectory;
         var resourcesPath = Path.Combine(baseDirectory, "Instrumentation", "Resources");
 
         if (!Directory.Exists(resourcesPath))
         {
-            return "No learning resources found.";
+            return [];
         }
 
-        var resources = Directory.GetFiles(resourcesPath, "*.md", SearchOption.AllDirectories)
+        return Directory.GetFiles(resourcesPath, "*.md", SearchOption.AllDirectories)
             .Select(filePath => Path.GetRelativePath(resourcesPath, filePath).Replace("\\", "/"))
             .OrderBy(x => x)
             .ToList();
 
-        if (resources.Count == 0)
-        {
-            return "No learning resources found.";
-        }
-
-        return "Available learning resources:\n" + string.Join("\n", resources.Select(r => $"  {r}"));
     }
 
     // Embedded resources approach (commented out):

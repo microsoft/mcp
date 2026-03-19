@@ -17,7 +17,7 @@ public sealed class GetLearningResourceToolTests
         var result = GetLearningResourceTool.GetLearningResource(path);
 
         // Assert
-        Assert.Equal("Invalid resource path. Call get_learning_resource without parameters to list available resources.", result);
+        Assert.Equal("Invalid resource path. Call get_learning_resource without the path parameter to list all available resources.", result);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public sealed class GetLearningResourceToolTests
         var firstPath = $"{testFolder}/b-resource.md";
         var secondPath = $"{testFolder}/a-resource.md";
 
-        var firstFile = CreateResourceFile(firstPath, "b-content");
-        var secondFile = CreateResourceFile(secondPath, "a-content");
+        var firstFile = CreateResourceFile(firstPath, "a-content");
+        var secondFile = CreateResourceFile(secondPath, "b-content");
 
         try
         {
@@ -93,40 +93,17 @@ public sealed class GetLearningResourceToolTests
             var result = ListLearningResourcesTool.ListLearningResources();
 
             // Assert
-            var firstLine = $"  {secondPath}";
-            var secondLine = $"  {firstPath}";
-            Assert.Contains(firstLine, result, StringComparison.Ordinal);
-            Assert.Contains(secondLine, result, StringComparison.Ordinal);
+            Assert.Contains(firstPath, result);
+            Assert.Contains(secondPath, result);
 
-            var firstIndex = result.IndexOf(firstLine, StringComparison.Ordinal);
-            var secondIndex = result.IndexOf(secondLine, StringComparison.Ordinal);
-            Assert.True(firstIndex >= 0 && secondIndex >= 0 && firstIndex < secondIndex);
+            var firstIndex = result.IndexOf(firstPath);
+            var secondIndex = result.IndexOf(secondPath);
+            Assert.True(firstIndex >= 0 && secondIndex >= 0 && secondIndex < firstIndex);
         }
         finally
         {
             TryDeleteFile(firstFile);
             TryDeleteFile(secondFile);
-        }
-    }
-
-    [Fact]
-    public void ListLearningResources_ReturnsAvailableResourcesHeader()
-    {
-        // Arrange
-        var relativePath = $"tests/header-{Guid.NewGuid():N}.md";
-        var fullPath = CreateResourceFile(relativePath, "content");
-
-        try
-        {
-            // Act
-            var result = ListLearningResourcesTool.ListLearningResources();
-
-            // Assert
-            Assert.StartsWith("Available learning resources:", result, StringComparison.Ordinal);
-        }
-        finally
-        {
-            TryDeleteFile(fullPath);
         }
     }
 

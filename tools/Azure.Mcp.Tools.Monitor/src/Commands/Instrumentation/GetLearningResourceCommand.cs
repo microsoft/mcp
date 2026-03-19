@@ -28,8 +28,8 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = false,
-        OpenWorld = true,
+        Idempotent = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = true,
         Secret = false
@@ -60,14 +60,14 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
         try
         {
-            if (string.IsNullOrEmpty(options.Path))
+            if (string.IsNullOrWhiteSpace(options.Path))
             {
                 // List all learning resources
                 var resources = ListLearningResourcesTool.ListLearningResources();
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
-                    new GetLearningResourceCommandResult(Resources: resources, Content: null),
+                    new GetLearningResourceCommandResult(Resources: resources ?? [], Content: null),
                     MonitorInstrumentationJsonContext.Default.GetLearningResourceCommandResult);
             }
             else
@@ -92,6 +92,6 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
         return Task.FromResult(context.Response);
     }
 
-    internal record GetLearningResourceCommandResult(string? Resources, string? Content);
+    internal record GetLearningResourceCommandResult(List<string>? Resources, string? Content);
 
 }

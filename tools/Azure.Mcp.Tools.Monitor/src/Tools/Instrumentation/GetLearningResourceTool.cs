@@ -18,7 +18,7 @@ public sealed class GetLearningResourceTool
             path.StartsWith('/') ||
             path.StartsWith('\\'))
         {
-            return "Invalid resource path. Call get_learning_resource without the path parameter to list available resources.";
+            return "Invalid resource path. Call get_learning_resource without the path parameter to list all available resources.";
         }
 
         // File-based approach: Read from copied resources in output directory
@@ -29,25 +29,15 @@ public sealed class GetLearningResourceTool
         // Additional check: ensure resolved path is within Resources directory
         if (!resourcePath.StartsWith(resourcesRoot, StringComparison.OrdinalIgnoreCase))
         {
-            return "Invalid resource path. Call get_learning_resource without parameters to list available resources.";
+            return "Invalid resource path. Call get_learning_resource without the path parameter to list all available resources.";
         }
 
         if (!File.Exists(resourcePath))
         {
-            return $"Resource not found: {path}\n\nCall get_learning_resource without parameters to list available resources.";
+            return $"Resource not found: {path}\n\nCall get_learning_resource without the path parameter to list all available resources.";
         }
 
         return File.ReadAllText(resourcePath);
 
-        // Embedded resources approach (commented out):
-        // var assembly = Assembly.GetExecutingAssembly();
-        // var resourceName = ResourcePrefix + path.Replace("/", ".").Replace("\\", ".");
-        // using var stream = assembly.GetManifestResourceStream(resourceName);
-        // if (stream == null)
-        // {
-        //     return $"Resource not found: {path}\n\nCall get_learning_resource without parameters to list available resources.";
-        // }
-        // using var reader = new StreamReader(stream);
-        // return reader.ReadToEnd();
     }
 }
