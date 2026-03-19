@@ -35,7 +35,7 @@ public class WorkerServiceGreenfieldGenerator : IGenerator
             .WithAgentPreExecuteInstruction(AgentPreExecuteInstruction)
             .WithDecision(
                 Intents.Onboard,
-                Approaches.AzureMonitorDistro,
+                Approaches.ApplicationInsights3x,
                 "Worker Service greenfield application. AddApplicationInsightsTelemetryWorkerService() provides automatic instrumentation for dependencies, performance counters, and custom telemetry.")
             .AddReviewEducationAction(
                 "review-education",
@@ -65,7 +65,7 @@ public class WorkerServiceGreenfieldGenerator : IGenerator
                 "add-connection-string",
                 "Configure Application Insights connection string",
                 Path.Combine(projectDir, Config.AppSettingsFileName),
-                "ApplicationInsights.ConnectionString",
+                Config.AppInsightsConnectionStringPath,
                 Config.ConnectionStringPlaceholder,
                 Config.ConnectionStringEnvVar);
 

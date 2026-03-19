@@ -121,7 +121,7 @@ public static class OnboardingConstants
     // Configuration
     public static class Config
     {
-        public const string AzureMonitorConnectionStringPath = "AzureMonitor.ConnectionString";
+        public const string AzureMonitorConnectionStringPath = "AzureMonitor:ConnectionString";
         public const string AppInsightsConnectionStringPath = "ApplicationInsights:ConnectionString";
         public const string ConnectionStringEnvVar = "APPLICATIONINSIGHTS_CONNECTION_STRING";
         public const string ConnectionStringPlaceholder = "<your-connection-string>";

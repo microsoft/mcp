@@ -78,10 +78,7 @@ services.AddApplicationInsightsTelemetryWorkerService(options =>
 {
     // Explicitly set connection string
     options.ConnectionString = configuration["ApplicationInsights:ConnectionString"];
-    
-    // Enable adaptive sampling (recommended for high-volume services)
-    options.EnableAdaptiveSampling = true;
-    
+
     // Enable dependency tracking
     options.EnableDependencyTrackingTelemetryModule = true;
 });
