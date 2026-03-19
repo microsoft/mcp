@@ -45,7 +45,7 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
-    public const string PluginsExecuted = "PluginExecuted";
+    public const string PluginExecuted = "PluginExecuted";
 }
 
 public class AppInsightsInstanceType

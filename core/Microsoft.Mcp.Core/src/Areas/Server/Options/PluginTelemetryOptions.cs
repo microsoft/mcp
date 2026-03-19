@@ -42,6 +42,24 @@ public class PluginTelemetryOptions : ServiceStartOptions
     public string? PluginName { get; set; }
 
     /// <summary>
+    /// Gets or sets the version of the plugin being invoked.
+    /// </summary>
+    [JsonPropertyName("pluginVersion")]
+    public string? PluginVersion { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the skill being invoked.
+    /// </summary>
+    [JsonPropertyName("skillName")]
+    public string? SkillName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the version of the skill being invoked.
+    /// </summary>
+    [JsonPropertyName("skillVersion")]
+    public string? SkillVersion { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the tool being invoked.
     /// </summary>
     [JsonPropertyName("toolName")]
