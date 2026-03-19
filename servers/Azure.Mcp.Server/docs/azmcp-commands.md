@@ -1039,6 +1039,42 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
 | `--user-data` | No | Base64-encoded user data |
 
+```bash
+# Delete a Virtual Machine
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--force-deletion]
+
+# Examples:
+
+# Delete a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm"
+
+# Force delete a VM even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine to delete |
+| `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -1211,6 +1247,42 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
 | `--tags` | No | Tags in key=value,key2=value2 format |
+
+```bash
+# Delete a Virtual Machine Scale Set
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--force-deletion]
+
+# Examples:
+
+# Delete a VMSS
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss"
+
+# Force delete a VMSS even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VMSS and all its VM instances. This operation is irreversible.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS to delete |
+| `--force-deletion` | No | Force delete the VMSS even if running or failed (Azure API forceDeletion) |
 
 #### Disks
 
