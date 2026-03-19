@@ -1495,7 +1495,7 @@
       ]
     },
     {
-      "name": "create_azure_compute_vms",
+      "name": "create_azure_compute_vm_and_vmss",
       "description": "Create Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
       "toolMetadata": {
         "destructive": {
@@ -1562,8 +1562,8 @@
       ]
     },
     {
-      "name": "update_azure_compute_resources",
-      "description": "Update Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Modify disk size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "name": "update_azure_compute_vm_and_vmss",
+      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1591,9 +1591,41 @@
         }
       },
       "mappedToolList": [
-        "compute_disk_update",
         "compute_vm_update",
         "compute_vmss_update"
+      ]
+    },
+    {
+      "name": "update_azure_managed_disk",
+      "description": "Update Azure managed disk properties including size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_update"
       ]
     },
     {
@@ -2428,6 +2460,40 @@
         "acr_registry_repository_list",
         "aks_cluster_get",
         "aks_nodepool_get"
+      ]
+    },
+    {
+      "name": "delete_azure_compute_vm_and_vmss",
+      "description": "Delete Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Permanently remove a VM or VMSS that is no longer needed. Use --force-deletion to force delete even if the resource is in a running or failed state. This operation is irreversible. Associated resources like disks, NICs, and public IPs are NOT automatically deleted for VMs.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool permanently deletes resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool permanently deletes Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool triggers elicitation for destructive confirmation."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_delete",
+        "compute_vmss_delete"
       ]
     },
     {
