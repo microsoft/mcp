@@ -170,23 +170,23 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
     /// <param name="options">The plugin telemetry options containing event data (timestamp, event type, session ID, etc.).</param>
     internal static void LogPluginTelemetry(ITelemetryService telemetryService, PluginTelemetryOptions options)
     {
-        using var activity = telemetryService.StartActivity(ActivityName.PluginsExecuted);
+        using var activity = telemetryService.StartActivity(ActivityName.PluginExecuted);
 
         if (activity != null)
         {
             // Add all fields as tags (FileReference has already been validated in ExecuteAsync)
             var tags = new (string Key, string? Value)[]
             {
-                ("Plugins_EventType", options.EventType),
-                ("Plugins_SessionId", options.SessionId),
-                ("Plugins_ClientType", options.ClientType),
-                ("Plugins_PluginName", options.PluginName),
-                ("Plugins_PluginVersion", options.PluginVersion),
-                ("Plugins_SkillName", options.SkillName),
-                ("Plugins_SkillVersion", options.SkillVersion),
-                ("Plugins_ToolName", options.ToolName),
-                ("Plugins_Timestamp", options.Timestamp),
-                ("Plugins_FileReference", options.FileReference)
+                ("Plugin_EventType", options.EventType),
+                ("Plugin_SessionId", options.SessionId),
+                ("Plugin_ClientType", options.ClientType),
+                ("Plugin_PluginName", options.PluginName),
+                ("Plugin_PluginVersion", options.PluginVersion),
+                ("Plugin_SkillName", options.SkillName),
+                ("Plugin_SkillVersion", options.SkillVersion),
+                ("Plugin_ToolName", options.ToolName),
+                ("Plugin_Timestamp", options.Timestamp),
+                ("Plugin_FileReference", options.FileReference)
             };
 
             foreach (var (key, value) in tags)
