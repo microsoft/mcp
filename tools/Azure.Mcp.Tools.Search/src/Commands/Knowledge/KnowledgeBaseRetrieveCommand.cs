@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -67,6 +68,22 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
             {
                 commandResult.AddError("Specifying both --query and --messages is not allowed.");
             }
+
+            if (messages.Length > 0)
+            {
+                foreach ((var index, var message) in messages.Index())
+                {
+                    try
+                    {
+                        ParseMessage(message);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        commandResult.AddError($"Message {index}: {ex.Message}");
+                        continue;
+                    }
+                }
+            }
         });
     }
 
@@ -119,18 +136,18 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         return context.Response;
     }
 
-    internal (string role, string content) ParseMessage(string message)
+    internal static (string role, string content) ParseMessage(string message)
     {
         var idx = message.IndexOf(':');
         if (idx <= 0 || idx == message.Length - 1)
         {
-            throw new ArgumentException($"Invalid message format '{message}'. Expected role:content.");
+            throw new ArgumentException($"Invalid message format, expected 'role:content'.");
         }
         var role = message[..idx].Trim();
         var content = message[(idx + 1)..].Trim();
         if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
         {
-            throw new ArgumentException($"Invalid message format '{message}'. Role and content required.");
+            throw new ArgumentException($"Invalid message format, both 'role' and 'content' must have a non-empty value.");
         }
         if (role != "user" && role != "assistant")
         {

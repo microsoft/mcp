@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -52,6 +53,23 @@ public sealed class FileReadCommand(
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.FilePath);
         command.Options.Add(FabricOptionDefinitions.DownloadFilePath.AsOptional());
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override FileReadOptions BindOptions(ParseResult parseResult)
@@ -84,16 +102,6 @@ public sealed class FileReadCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
             var transport = serviceStartOptions.Value.Transport ?? "stdio";
             var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
@@ -179,7 +187,6 @@ public sealed class FileReadCommand(
                 blobResult.ContentType,
                 blobResult.Charset);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = finalMessage;
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileReadCommandResult);
         }

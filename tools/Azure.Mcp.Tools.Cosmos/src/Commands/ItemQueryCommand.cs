@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
@@ -39,6 +40,18 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     {
         base.RegisterOptions(command);
         command.Options.Add(CosmosOptionDefinitions.Query);
+        command.Validators.Add(result =>
+        {
+            var query = result.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
+            if (query != null)
+            {
+                var validationResult = CosmosQueryValidator.EnsureReadOnlySelect(query);
+                if (!string.IsNullOrEmpty(validationResult))
+                {
+                    result.AddError(validationResult);
+                }
+            }
+        });
     }
 
     protected override ItemQueryOptions BindOptions(ParseResult parseResult)
@@ -61,12 +74,6 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         {
             var cosmosService = context.GetService<ICosmosService>();
             var queryToRun = options.Query ?? DefaultQuery;
-
-            // Validate user-provided query (skip validation only if using default)
-            if (options.Query is { Length: > 0 })
-            {
-                CosmosQueryValidator.EnsureReadOnlySelect(options.Query);
-            }
 
             var items = await cosmosService.QueryItems(
                 options.Account!,

@@ -68,21 +68,20 @@ public class GroupListCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
-        var groupsArray = jsonDoc.RootElement.GetProperty("groups");
+        var resultGroups = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.Result);
+        Assert.NotNull(resultGroups);
+        Assert.Equal(2, resultGroups.Groups.Count);
 
-        Assert.Equal(2, groupsArray.GetArrayLength());
+        var first = resultGroups.Groups[0];
+        var second = resultGroups.Groups[1];
 
-        var first = groupsArray[0];
-        var second = groupsArray[1];
+        Assert.Equal("rg1", first.Name);
+        Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg1", first.Id);
+        Assert.Equal("East US", first.Location);
 
-        Assert.Equal("rg1", first.GetProperty("name").GetString());
-        Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg1", first.GetProperty("id").GetString());
-        Assert.Equal("East US", first.GetProperty("location").GetString());
-
-        Assert.Equal("rg2", second.GetProperty("name").GetString());
-        Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg2", second.GetProperty("id").GetString());
-        Assert.Equal("West US", second.GetProperty("location").GetString());
+        Assert.Equal("rg2", second.Name);
+        Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg2", second.Id);
+        Assert.Equal("West US", second.Location);
 
         await _resourceGroupService.Received(1).GetResourceGroups(
             Arg.Is<string>(x => x == subscriptionId),
@@ -126,7 +125,7 @@ public class GroupListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyResourceGroupList_ReturnsNullResults()
+    public async Task ExecuteAsync_EmptyResourceGroupList_ReturnsEmptyResults()
     {
         // Arrange
         var subscriptionId = "test-subs-id";
@@ -142,7 +141,11 @@ public class GroupListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.Null(result.Results);
+        Assert.NotNull(result.Results);
+
+        var resultGroups = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.Result);
+        Assert.NotNull(resultGroups);
+        Assert.Empty(resultGroups.Groups);
     }
 
     [Fact]

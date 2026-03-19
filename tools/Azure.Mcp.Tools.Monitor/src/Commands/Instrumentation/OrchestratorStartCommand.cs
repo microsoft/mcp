@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -45,7 +44,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     {
         return new OrchestratorStartOptions
         {
-            WorkspacePath = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.WorkspacePath)
+            WorkspacePath = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.WorkspacePath.Name)
         };
     }
 

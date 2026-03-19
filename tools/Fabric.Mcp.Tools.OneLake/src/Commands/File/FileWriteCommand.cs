@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
@@ -13,7 +10,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -52,6 +49,40 @@ public sealed class FileWriteCommand(
         command.Options.Add(FabricOptionDefinitions.Content);
         command.Options.Add(FabricOptionDefinitions.LocalFilePath);
         command.Options.Add(FabricOptionDefinitions.Overwrite);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+
+            var content = result.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
+            var localFilePath = result.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
+            if (string.IsNullOrWhiteSpace(content) && string.IsNullOrWhiteSpace(localFilePath))
+            {
+                result.AddError("Content source is required. Provide --content or --local-file-path.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(content) && !string.IsNullOrWhiteSpace(localFilePath))
+            {
+                result.AddError("Provide only one content source. Specify either --content or --local-file-path, not both.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(localFilePath) && !System.IO.File.Exists(localFilePath))
+            {
+                result.AddError($"Local file not found: {localFilePath}");
+            }
+        });
     }
 
     protected override FileWriteOptions BindOptions(ParseResult parseResult)
@@ -94,33 +125,14 @@ public sealed class FileWriteCommand(
             // Determine content source
             if (!string.IsNullOrEmpty(options.LocalFilePath))
             {
-                if (!System.IO.File.Exists(options.LocalFilePath))
-                {
-                    throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
-                }
-
                 contentStream = System.IO.File.OpenRead(options.LocalFilePath);
                 contentLength = new FileInfo(options.LocalFilePath).Length;
             }
-            else if (!string.IsNullOrEmpty(options.Content))
-            {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(options.Content);
-                contentStream = new MemoryStream(bytes);
-                contentLength = bytes.Length;
-            }
             else
             {
-                throw new ArgumentException("Either --content or --local-file-path must be specified.");
-            }
-
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
+                var bytes = System.Text.Encoding.UTF8.GetBytes(options.Content!);
+                contentStream = new MemoryStream(bytes);
+                contentLength = bytes.Length;
             }
 
             using (contentStream)

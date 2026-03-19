@@ -166,9 +166,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new NamespaceUpdateCommandResult(updatedNamespace),
+                new(updatedNamespace),
                 EventHubsJsonContext.Default.NamespaceUpdateCommandResult);
-            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

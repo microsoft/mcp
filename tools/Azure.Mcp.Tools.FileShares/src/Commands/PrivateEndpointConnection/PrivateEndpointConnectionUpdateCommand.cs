@@ -1,17 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Commands;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -85,8 +79,7 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new PrivateEndpointConnectionUpdateCommandResult(connection);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(connection), FileSharesJsonContext.Default.PrivateEndpointConnectionUpdateCommandResult);
 
             _logger.LogInformation(
                 "Successfully updated private endpoint connection. Connection: {ConnectionName}, Status: {Status}",
@@ -101,5 +94,5 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
         return context.Response;
     }
 
-    internal record PrivateEndpointConnectionUpdateCommandResult([property: JsonPropertyName("connection")] PrivateEndpointConnectionInfo Connection);
+    internal record PrivateEndpointConnectionUpdateCommandResult(PrivateEndpointConnectionInfo Connection);
 }

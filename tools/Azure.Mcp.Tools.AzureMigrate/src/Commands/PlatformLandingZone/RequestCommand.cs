@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -153,25 +152,10 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
 
         try
         {
-            if (string.IsNullOrEmpty(options.Subscription))
-            {
-                throw new ArgumentException("Subscription is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                throw new ArgumentException("Resource group is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.MigrateProjectName))
-            {
-                throw new ArgumentException("Migrate project name is required.");
-            }
-
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.MigrateProjectName);
+                options.MigrateProjectName!);
 
             var action = options.Action?.ToLowerInvariant();
 
@@ -186,9 +170,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
                 _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
-            context.Response.Results = ResponseResult.Create(
-                new RequestCommandResult(result),
-                AzureMigrateJsonContext.Default.RequestCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
         }
         catch (Exception ex)
         {
@@ -330,5 +312,5 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
     /// Result for the platform landing zone generate command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record RequestCommandResult([property: JsonPropertyName("message")] string Message);
+    internal sealed record RequestCommandResult(string Message);
 }

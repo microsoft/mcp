@@ -177,8 +177,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 
         try
         {
-            ArgumentNullException.ThrowIfNull(options.Command);
-            var command = options.Command;
+            var command = options.Command!;
 
             // Try to authenticate, but continue even if it fails
             await AuthenticateWithAzureCredentialsAsync(_processService, _logger, cancellationToken);

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
@@ -147,9 +146,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new GetGuidanceCommandResult(response.ToString()),
-                AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
+            context.Response.Results = ResponseResult.Create(new(response.ToString()), AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
         }
         catch (Exception ex)
         {
@@ -160,6 +157,5 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(
-        [property: JsonPropertyName("guidance")] string Guidance);
+    internal record GetGuidanceCommandResult(string Guidance);
 }

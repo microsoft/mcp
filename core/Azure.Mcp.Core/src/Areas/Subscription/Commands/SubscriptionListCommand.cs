@@ -48,9 +48,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             var subscriptionService = context.GetService<ISubscriptionService>();
             var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                    new SubscriptionListCommandResult(subscriptions),
-                    SubscriptionJsonContext.Default.SubscriptionListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(subscriptions), SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)
         {

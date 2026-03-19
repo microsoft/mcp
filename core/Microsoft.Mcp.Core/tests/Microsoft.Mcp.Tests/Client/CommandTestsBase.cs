@@ -134,20 +134,54 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         Client = LiveServerFixture.GetMcpClient();
     }
 
-    protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
-    {
-        return CallToolAsync(command, parameters, Client);
-    }
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
+    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+        => await CallToolAsync(command, parameters, Client);
 
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <param name="mcpClient">The MCP client to use for the call.</param>
+    /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, McpClient mcpClient)
+        => await CallToolAsync(command, parameters, mcpClient, elem => elem.TryGetProperty("results", out var property) ? property : null);
+
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and extracts the JSON property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <param name="mcpClient">The MCP client to use for the call. If null the default Client will be used.</param>
+    /// <param name="resultProcessor">A function to extract the desired result from the JSON response. If null the "results" property will be retrieved, if it exists.</param>
+    /// <returns>The extracted JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
+    protected async Task<JsonElement?> CallToolAsync(
+        string command,
+        Dictionary<string, object?> parameters,
+        McpClient? mcpClient = null,
+        Func<JsonElement, JsonElement?>? resultProcessor = null)
     {
         // Use the same debug logic as MCP server initialization
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
+        mcpClient ??= Client;
+        resultProcessor ??= (elem => elem.TryGetProperty("results", out var property) ? property : null);
 
         // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case
         Action<string> writeOutput = enableDebug
-            ? s => Output.WriteLine(s)
+            ? Output.WriteLine
             : s => FailureOutput.AppendLine(s);
 
         writeOutput($"request: {JsonSerializer.Serialize(new { command, parameters })}");
@@ -192,7 +226,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             throw new Exception("Failed to deserialize JSON response.", ex);
         }
 
-        return root.TryGetProperty("results", out var property) ? property : null;
+        return resultProcessor.Invoke(root);
     }
 
     public void Dispose()
