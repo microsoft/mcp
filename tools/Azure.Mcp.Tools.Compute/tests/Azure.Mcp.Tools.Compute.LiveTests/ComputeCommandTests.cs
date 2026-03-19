@@ -541,7 +541,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", deleteVmName }
+                { "vm-name", deleteVmName },
+                { "force-deletion", true }
             });
 
         var message = result.AssertProperty("Message");
@@ -605,7 +606,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", deleteVmssName }
+                { "vmss-name", deleteVmssName },
+                { "force-deletion", true }
             });
 
         var message = result.AssertProperty("Message");
