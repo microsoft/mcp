@@ -79,7 +79,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var deleted = await computeService.DeleteVmssAsync(
+            await computeService.DeleteVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -88,19 +88,11 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            if (deleted)
-            {
-                context.Response.Results = ResponseResult.Create(
-                    new VmssDeleteCommandResult(
-                        $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                        true),
-                    ComputeJsonContext.Default.VmssDeleteCommandResult);
-            }
-            else
-            {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = $"Virtual machine scale set '{options.VmssName}' was not found in resource group '{options.ResourceGroup}'.";
-            }
+            context.Response.Results = ResponseResult.Create(
+                new VmssDeleteCommandResult(
+                    $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                    true),
+                ComputeJsonContext.Default.VmssDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -115,8 +107,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "VMSS not found. Verify the VMSS name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Verify you have appropriate permissions to delete the VMSS. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>

@@ -170,9 +170,9 @@ public class VmssDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_VmssNotFound_ReturnsNotFound()
+    public async Task ExecuteAsync_VmssNotFound_ReturnsSuccess()
     {
-        // Arrange
+        // Arrange - service returns false (VMSS was already gone / 404), but delete is idempotent
         _computeService.DeleteVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -192,39 +192,9 @@ public class VmssDeleteCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_HandlesNotFoundError()
-    {
-        // Arrange
-        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "VMSS not found");
-
-        _computeService.DeleteVmssAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .ThrowsAsync(notFoundException);
-
-        var parseResult = _commandDefinition.Parse([
-            "--vmss-name", _knownVmssName,
-            "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
+        // Assert - idempotent: 404 treated as success
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]

@@ -80,7 +80,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var deleted = await computeService.DeleteVmAsync(
+            await computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -89,19 +89,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            if (deleted)
-            {
-                context.Response.Results = ResponseResult.Create(
-                    new VmDeleteCommandResult(
-                        $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                        true),
-                    ComputeJsonContext.Default.VmDeleteCommandResult);
-            }
-            else
-            {
-                context.Response.Status = HttpStatusCode.NotFound;
-                context.Response.Message = $"Virtual machine '{options.VmName}' was not found in resource group '{options.ResourceGroup}'.";
-            }
+            context.Response.Results = ResponseResult.Create(
+                new VmDeleteCommandResult(
+                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
+                    true),
+                ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)
         {
@@ -116,8 +108,6 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "VM not found. Verify the VM name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Verify you have appropriate permissions to delete the VM. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>

@@ -552,29 +552,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
 
-    [Fact]
-    public async Task Should_return_not_found_when_deleting_nonexistent_vm()
-    {
-        var nonExistentVmName = "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8];
-
-        var result = await Client.CallToolAsync(
-            "compute_vm_delete",
-            new Dictionary<string, object?>
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vm-name", nonExistentVmName }
-            },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        // Command sets Status = NotFound which maps to IsError = true
-        Assert.True(result.IsError, "Expected error response for non-existent VM");
-
-        var content = McpTestUtilities.GetFirstText(result.Content);
-        Assert.False(string.IsNullOrWhiteSpace(content), "Expected error message content");
-        Assert.Contains("not found", content, StringComparison.OrdinalIgnoreCase);
-    }
-
     #endregion
 
     #region VMSS Delete Tests
@@ -615,29 +592,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         var success = result.AssertProperty("Success");
         Assert.Equal(JsonValueKind.True, success.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_return_not_found_when_deleting_nonexistent_vmss()
-    {
-        var nonExistentVmssName = "nonexistent-vmss-" + Guid.NewGuid().ToString("N")[..8];
-
-        var result = await Client.CallToolAsync(
-            "compute_vmss_delete",
-            new Dictionary<string, object?>
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vmss-name", nonExistentVmssName }
-            },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        // Command sets Status = NotFound which maps to IsError = true
-        Assert.True(result.IsError, "Expected error response for non-existent VMSS");
-
-        var content = McpTestUtilities.GetFirstText(result.Content);
-        Assert.False(string.IsNullOrWhiteSpace(content), "Expected error message content");
-        Assert.Contains("not found", content, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
