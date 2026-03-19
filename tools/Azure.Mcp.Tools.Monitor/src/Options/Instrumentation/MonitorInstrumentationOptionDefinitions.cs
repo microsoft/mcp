@@ -18,7 +18,7 @@ public static class MonitorInstrumentationOptionDefinitions
     public static readonly Option<string> Path = new($"--{PathName}")
     {
         Description = "Learning resource path.",
-        Required = true
+        Required = false
     };
 
     public const string SessionIdName = "session-id";

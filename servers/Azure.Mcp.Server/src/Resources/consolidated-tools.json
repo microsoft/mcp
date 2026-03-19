@@ -3493,8 +3493,41 @@
       ]
     },
     {
+      "name": "get_azure_monitor_instrumentation_learning_resource",
+      "description": "List and read Azure Monitor instrumentation onboarding learning resources. Returns all available resource paths or retrieves the full content of a specific resource by path.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available in local server mode and cannot be used remotely."
+        }
+      },
+      "mappedToolList": [
+        "monitor_instrumentation_get_learning_resource"
+      ]
+    },
+    {
       "name": "guide_azure_monitor_instrumentation",
-      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. List and read onboarding resources, start orchestration, continue step-by-step actions, and send brownfield analysis findings.",
+      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. Start orchestration, continue step-by-step actions, and send brownfield analysis findings.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -3522,8 +3555,6 @@
         }
       },
       "mappedToolList": [
-        "monitor_instrumentation_list_learning_resources",
-        "monitor_instrumentation_get_learning_resource",
         "monitor_instrumentation_orchestrator_start",
         "monitor_instrumentation_orchestrator_next",
         "monitor_instrumentation_send_brownfield_analysis"
