@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.Cosmos.Options;
 
 public class CopyJobCreateOptions : CopyJobOptions
 {
-    [JsonPropertyName(CosmosOptionDefinitions.JobPropertiesConst)]
+    [JsonPropertyName(CosmosOptionDefinitions.JobPropertiesName)]
     public string? JobProperties { get; set; }
 
-    [JsonPropertyName(CosmosOptionDefinitions.ModeConst)]
+    [JsonPropertyName(CosmosOptionDefinitions.ModeName)]
     public string? Mode { get; set; }
 
-    [JsonPropertyName(CosmosOptionDefinitions.WorkerCountConst)]
+    [JsonPropertyName(CosmosOptionDefinitions.WorkerCountName)]
     public int? WorkerCount { get; set; }
 }

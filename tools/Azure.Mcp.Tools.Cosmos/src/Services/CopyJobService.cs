@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using Azure.Mcp.Core.Options;
@@ -50,18 +49,21 @@ public sealed class CopyJobService(
     }
 
     /// <summary>
-    /// Gets an HttpClient with ARM auth token set.
+    /// Creates an HttpRequestMessage with ARM auth headers set per-request.
     /// </summary>
-    private async Task<HttpClient> GetAuthenticatedHttpClientAsync(
+    private async Task<HttpRequestMessage> CreateAuthenticatedRequestAsync(
+        HttpMethod method,
+        string url,
         string? tenant = null,
+        HttpContent? content = null,
         CancellationToken cancellationToken = default)
     {
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        return client;
+        var request = new HttpRequestMessage(method, url) { Content = content };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        return request;
     }
 
     /// <summary>
@@ -73,7 +75,7 @@ public sealed class CopyJobService(
         var url = $"{armEndpoint}{accountResourceId}/copyJobs";
         if (!string.IsNullOrEmpty(jobName))
         {
-            url += $"/{jobName}";
+            url += $"/{Uri.EscapeDataString(jobName)}";
         }
         url += $"?api-version={ApiVersion}";
         return url;
@@ -100,7 +102,8 @@ public sealed class CopyJobService(
         JsonElement jobProps;
         try
         {
-            jobProps = JsonDocument.Parse(jobPropertiesJson).RootElement;
+            using var propsDoc = JsonDocument.Parse(jobPropertiesJson);
+            jobProps = propsDoc.RootElement.Clone();
         }
         catch (JsonException ex)
         {
@@ -125,12 +128,16 @@ public sealed class CopyJobService(
 
         var body = JsonSerializer.Serialize(new { properties });
 
-        using var client = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        var client = TenantService.GetClient();
         var url = BuildCopyJobsUrl(accountResourceId, jobName);
 
         _logger.LogInformation("Creating copy job '{JobName}' on account '{Account}'", jobName, accountName);
 
-        var response = await client.PutAsync(url, new StringContent(body, Encoding.UTF8, "application/json"), cancellationToken);
+        using var request = await CreateAuthenticatedRequestAsync(
+            HttpMethod.Put, url, tenant,
+            new StringContent(body, Encoding.UTF8, "application/json"),
+            cancellationToken);
+        var response = await client.SendAsync(request, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -138,7 +145,8 @@ public sealed class CopyJobService(
             throw new HttpRequestException($"Failed to create copy job (HTTP {(int)response.StatusCode}): {responseBody}");
         }
 
-        return JsonDocument.Parse(responseBody).RootElement;
+        using var doc = JsonDocument.Parse(responseBody);
+        return doc.RootElement.Clone();
     }
 
     public async Task<JsonElement> GetJobAsync(
@@ -156,10 +164,11 @@ public sealed class CopyJobService(
 
         var accountResourceId = await GetAccountResourceIdAsync(subscription, accountName, tenant, retryPolicy, cancellationToken);
 
-        using var client = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        var client = TenantService.GetClient();
         var url = BuildCopyJobsUrl(accountResourceId, jobName);
 
-        var response = await client.GetAsync(url, cancellationToken);
+        using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, url, tenant, cancellationToken: cancellationToken);
+        var response = await client.SendAsync(request, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -167,7 +176,8 @@ public sealed class CopyJobService(
             throw new HttpRequestException($"Failed to get copy job (HTTP {(int)response.StatusCode}): {responseBody}");
         }
 
-        return JsonDocument.Parse(responseBody).RootElement;
+        using var doc = JsonDocument.Parse(responseBody);
+        return doc.RootElement.Clone();
     }
 
     public async Task<List<JsonElement>> ListJobsAsync(
@@ -183,13 +193,14 @@ public sealed class CopyJobService(
 
         var accountResourceId = await GetAccountResourceIdAsync(subscription, accountName, tenant, retryPolicy, cancellationToken);
 
-        using var client = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        var client = TenantService.GetClient();
         var jobs = new List<JsonElement>();
         var url = BuildCopyJobsUrl(accountResourceId);
 
         while (!string.IsNullOrEmpty(url))
         {
-            var response = await client.GetAsync(url, cancellationToken);
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, url, tenant, cancellationToken: cancellationToken);
+            var response = await client.SendAsync(request, cancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -197,7 +208,7 @@ public sealed class CopyJobService(
                 throw new HttpRequestException($"Failed to list copy jobs (HTTP {(int)response.StatusCode}): {responseBody}");
             }
 
-            var doc = JsonDocument.Parse(responseBody);
+            using var doc = JsonDocument.Parse(responseBody);
             if (doc.RootElement.TryGetProperty("value", out var valueArray))
             {
                 foreach (var item in valueArray.EnumerateArray())
@@ -231,13 +242,17 @@ public sealed class CopyJobService(
 
         var accountResourceId = await GetAccountResourceIdAsync(subscription, accountName, tenant, retryPolicy, cancellationToken);
 
-        using var client = await GetAuthenticatedHttpClientAsync(tenant, cancellationToken);
+        var client = TenantService.GetClient();
         var armEndpoint = TenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-        var url = $"{armEndpoint}{accountResourceId}/copyJobs/{jobName}/{action}?api-version={ApiVersion}";
+        var url = $"{armEndpoint}{accountResourceId}/copyJobs/{Uri.EscapeDataString(jobName)}/{action}?api-version={ApiVersion}";
 
         _logger.LogInformation("{Action} copy job '{JobName}' on account '{Account}'", action, jobName, accountName);
 
-        var response = await client.PostAsync(url, new StringContent("{}", Encoding.UTF8, "application/json"), cancellationToken);
+        using var request = await CreateAuthenticatedRequestAsync(
+            HttpMethod.Post, url, tenant,
+            new StringContent("{}", Encoding.UTF8, "application/json"),
+            cancellationToken);
+        var response = await client.SendAsync(request, cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -248,10 +263,13 @@ public sealed class CopyJobService(
         // Some actions return empty body on success (e.g., 202 Accepted)
         if (string.IsNullOrWhiteSpace(responseBody))
         {
-            return JsonDocument.Parse($"{{\"status\":\"{action} accepted\",\"jobName\":\"{jobName}\"}}").RootElement;
+            var fallback = JsonSerializer.Serialize(new { status = $"{action} accepted", jobName });
+            using var fallbackDoc = JsonDocument.Parse(fallback);
+            return fallbackDoc.RootElement.Clone();
         }
 
-        return JsonDocument.Parse(responseBody).RootElement;
+        using var doc = JsonDocument.Parse(responseBody);
+        return doc.RootElement.Clone();
     }
 
     public Task<JsonElement> CancelJobAsync(string subscription, string accountName, string jobName,

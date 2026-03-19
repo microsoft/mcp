@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.Cosmos.Options;
 
 public class CopyJobOptions : BaseCosmosOptions
 {
-    [JsonPropertyName(CosmosOptionDefinitions.JobNameConst)]
+    [JsonPropertyName(CosmosOptionDefinitions.CopyJobName)]
     public string? JobName { get; set; }
 }

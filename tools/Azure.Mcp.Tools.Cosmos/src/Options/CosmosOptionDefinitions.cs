@@ -58,13 +58,13 @@ public static class CosmosOptionDefinitions
     };
 
     // Copy Job option definitions
-    public const string JobNameConst = "job-name";
-    public const string JobPropertiesConst = "job-properties";
-    public const string ModeConst = "mode";
-    public const string WorkerCountConst = "worker-count";
+    public const string CopyJobName = "job-name";
+    public const string JobPropertiesName = "job-properties";
+    public const string ModeName = "mode";
+    public const string WorkerCountName = "worker-count";
 
     public static readonly Option<string> JobName = new(
-        $"--{JobNameConst}"
+        $"--{CopyJobName}"
     )
     {
         Description = "The name of the copy job (e.g., my-copy-job-1).",
@@ -72,7 +72,7 @@ public static class CosmosOptionDefinitions
     };
 
     public static readonly Option<string> JobProperties = new(
-        $"--{JobPropertiesConst}"
+        $"--{JobPropertiesName}"
     )
     {
         Description = "JSON string describing the copy job type and tasks. Must include 'jobType' and 'tasks' array. " +
@@ -82,14 +82,14 @@ public static class CosmosOptionDefinitions
     };
 
     public static readonly Option<string?> Mode = new(
-        $"--{ModeConst}"
+        $"--{ModeName}"
     )
     {
         Description = "Copy mode: 'Offline' (one-time, default) or 'Online' (continuous sync until completed)."
     };
 
     public static readonly Option<int?> WorkerCount = new(
-        $"--{WorkerCountConst}"
+        $"--{WorkerCountName}"
     )
     {
         Description = "Number of workers for the copy job. Set to 0 for auto-scaling (default)."
