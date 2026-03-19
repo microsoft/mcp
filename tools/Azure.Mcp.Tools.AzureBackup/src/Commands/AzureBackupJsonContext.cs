@@ -16,31 +16,21 @@ using Azure.Mcp.Tools.AzureBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
-// Vault
 [JsonSerializable(typeof(VaultGetCommand.VaultGetCommandResult))]
 [JsonSerializable(typeof(VaultCreateCommand.VaultCreateCommandResult))]
 [JsonSerializable(typeof(VaultUpdateCommand.VaultUpdateCommandResult))]
-// Policy
 [JsonSerializable(typeof(PolicyGetCommand.PolicyGetCommandResult))]
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
-// Protected item
 [JsonSerializable(typeof(ProtectedItemGetCommand.ProtectedItemGetCommandResult))]
 [JsonSerializable(typeof(ProtectedItemProtectCommand.ProtectedItemProtectCommandResult))]
-// Protectable item
 [JsonSerializable(typeof(ProtectableItemListCommand.ProtectableItemListCommandResult))]
-// Backup
 [JsonSerializable(typeof(BackupStatusCommand.BackupStatusCommandResult))]
-// Job
 [JsonSerializable(typeof(JobGetCommand.JobGetCommandResult))]
-// Recovery point
 [JsonSerializable(typeof(RecoveryPointGetCommand.RecoveryPointGetCommandResult))]
-// Governance
 [JsonSerializable(typeof(GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult))]
 [JsonSerializable(typeof(GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult))]
 [JsonSerializable(typeof(GovernanceSoftDeleteCommand.GovernanceSoftDeleteCommandResult))]
-// DR
 [JsonSerializable(typeof(DrEnableCrrCommand.DrEnableCrrCommandResult))]
-// Model types
 [JsonSerializable(typeof(BackupVaultInfo))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]

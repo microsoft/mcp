@@ -8,7 +8,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 
 public interface IDppBackupOperations
 {
-    // Existing methods
     Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string location, string? sku, string? storageType, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
@@ -24,7 +23,6 @@ public interface IDppBackupOperations
     Task<RecoveryPointInfo> GetRecoveryPointAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string recoveryPointId, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
 
-    // New methods
     Task<OperationResult> UpdateVaultAsync(string vaultName, string resourceGroup, string subscription, string? redundancy, string? softDelete, string? softDeleteRetentionDays, string? immutabilityState, string? identityType, string? tags, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<OperationResult> DeleteVaultAsync(string vaultName, string resourceGroup, string subscription, bool force, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<OperationResult> CreatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string workloadType, string? scheduleFrequency, string? scheduleTime, string? dailyRetentionDays, string? weeklyRetentionWeeks, string? monthlyRetentionMonths, string? yearlyRetentionYears, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);

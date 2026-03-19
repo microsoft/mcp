@@ -67,7 +67,6 @@ public enum DppBackupParametersMode
 /// </remarks>
 public sealed record DppDatasourceProfile
 {
-    // ── Identity ──
 
     /// <summary>Friendly name used for user-facing resolution (e.g. "AzureDisk", "AKS").</summary>
     public required string FriendlyName { get; init; }
@@ -78,12 +77,10 @@ public sealed record DppDatasourceProfile
     /// <summary>Alternative user-supplied names that resolve to this profile.</summary>
     public string[] Aliases { get; init; } = [];
 
-    // ── Data Store ──
 
     /// <summary>Whether this datasource uses OperationalStore (snapshot-based) or VaultStore.</summary>
     public bool UsesOperationalStore { get; init; }
 
-    // ── Policy / Schedule ──
 
     /// <summary>True for continuous backup (Blob, ADLS) — no scheduled backup rule created.</summary>
     public bool IsContinuousBackup { get; init; }
@@ -100,7 +97,6 @@ public sealed record DppDatasourceProfile
     /// <summary>Default retention days when user doesn't specify.</summary>
     public int DefaultRetentionDays { get; init; } = 30;
 
-    // ── Protection ──
 
     /// <summary>Whether ProtectItemAsync must set the snapshot resource group parameter.</summary>
     public bool RequiresSnapshotResourceGroup { get; init; }
@@ -114,12 +110,10 @@ public sealed record DppDatasourceProfile
     /// <summary>Instance naming pattern for backup instances.</summary>
     public DppInstanceNamingMode InstanceNamingMode { get; init; } = DppInstanceNamingMode.Standard;
 
-    // ── Restore ──
 
     /// <summary>The default restore approach (RP-based, PIT, or restore-as-files).</summary>
     public DppRestoreMode DefaultRestoreMode { get; init; } = DppRestoreMode.RecoveryPoint;
 
-    // ── Auto-detection ──
 
     /// <summary>
     /// If non-null, when the user's resource ID matches this base ARM type (e.g. "Microsoft.Storage/storageAccounts"),
@@ -128,7 +122,6 @@ public sealed record DppDatasourceProfile
     /// </summary>
     public string? AutoDetectFromBaseResourceType { get; init; }
 
-    // ── Policy Update ──
 
     /// <summary>Whether the Azure API supports updating policies for this datasource type.</summary>
     public bool SupportsPolicyUpdate { get; init; }

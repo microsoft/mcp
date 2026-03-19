@@ -67,7 +67,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
 
             if (!string.IsNullOrEmpty(options.RecoveryPoint))
             {
-                // Single recovery point get
                 var rp = await service.GetRecoveryPointAsync(
                     options.Vault!,
                     options.ResourceGroup!,
@@ -86,7 +85,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
             }
             else
             {
-                // List all recovery points
                 var points = await service.ListRecoveryPointsAsync(
                     options.Vault!,
                     options.ResourceGroup!,

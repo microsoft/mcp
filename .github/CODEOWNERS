@@ -93,6 +93,12 @@
 # ServiceLabel: %tools-Authorization
 # ServiceOwners:                       @vurhanau @xiangyan99
 
+# PRLabel: %tools-AzureBackup
+/tools/Azure.Mcp.Tools.AzureBackup/        @shrja @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AzureBackup
+# ServiceOwners:                           @shrja
+
 # ServiceLabel: %tools-AzCLI
 # ServiceOwners:                       @JasonYeMSFT @microsoft/azure-mcp
 

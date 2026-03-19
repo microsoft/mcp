@@ -91,6 +91,7 @@
     <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/src/Azure.Mcp.Tools.AzureBackup.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBackup/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.LiveTests/Azure.Mcp.Tools.AzureBackup.LiveTests.csproj" />
     <Project Path="../../tools/Azure.Mcp.Tools.AzureBackup/tests/Azure.Mcp.Tools.AzureBackup.UnitTests/Azure.Mcp.Tools.AzureBackup.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureBestPractices/" />

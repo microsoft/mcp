@@ -80,7 +80,6 @@ public enum RsvRestoreContentType
 /// </remarks>
 public sealed record RsvDatasourceProfile
 {
-    // ── Identity ──
 
     /// <summary>Friendly name used for user-facing resolution (e.g. "VM", "SQL").</summary>
     public required string FriendlyName { get; init; }
@@ -88,7 +87,6 @@ public sealed record RsvDatasourceProfile
     /// <summary>Alternative user-supplied names that resolve to this profile.</summary>
     public string[] Aliases { get; init; } = [];
 
-    // ── Classification ──
 
     /// <summary>
     /// Whether this is a "workload" type (SQL, HANA, ASE) that runs inside a VM.
@@ -96,7 +94,6 @@ public sealed record RsvDatasourceProfile
     /// </summary>
     public bool IsWorkloadType { get; init; }
 
-    // ── SDK Type Mapping ──
 
     /// <summary>Which SDK ProtectedItem type to construct for protect/stop/resume/modify.</summary>
     public RsvProtectedItemType ProtectedItemType { get; init; } = RsvProtectedItemType.IaasVm;
@@ -110,7 +107,6 @@ public sealed record RsvDatasourceProfile
     /// <summary>Which SDK RestoreContent type to construct for trigger-restore.</summary>
     public RsvRestoreContentType RestoreContentType { get; init; } = RsvRestoreContentType.IaasVm;
 
-    // ── Workload Type String ──
 
     /// <summary>
     /// The Azure API workload type string (e.g. "SQLDataBase", "SAPHanaDatabase").
@@ -119,7 +115,6 @@ public sealed record RsvDatasourceProfile
     /// </summary>
     public string? ApiWorkloadType { get; init; }
 
-    // ── Container Naming ──
 
     /// <summary>
     /// Prefix for the container name derivation.
@@ -129,7 +124,6 @@ public sealed record RsvDatasourceProfile
     /// </summary>
     public required string ContainerNamePrefix { get; init; }
 
-    // ── Features ──
 
     /// <summary>Whether container registration is required before protection (workload types).</summary>
     public bool RequiresContainerRegistration { get; init; }

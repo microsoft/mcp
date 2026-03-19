@@ -71,7 +71,6 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
 
             if (!string.IsNullOrEmpty(options.ProtectedItem))
             {
-                // Single item get
                 var item = await service.GetProtectedItemAsync(
                     options.Vault!,
                     options.ResourceGroup!,
@@ -89,7 +88,6 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
             }
             else
             {
-                // List all protected items
                 var items = await service.ListProtectedItemsAsync(
                     options.Vault!,
                     options.ResourceGroup!,

@@ -8,7 +8,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 
 public interface IAzureBackupService
 {
-    // ── Existing methods (keep all of these exactly as they are) ──
     Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string vaultType, string location, string? sku = null, string? storageType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
@@ -24,76 +23,59 @@ public interface IAzureBackupService
     Task<RecoveryPointInfo> GetRecoveryPointAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string recoveryPointId, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // ── NEW methods ──
-    // Vault operations
     Task<OperationResult> UpdateVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? redundancy = null, string? softDelete = null, string? softDeleteRetentionDays = null, string? immutabilityState = null, string? identityType = null, string? tags = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> DeleteVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, bool force = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Policy operations
     Task<OperationResult> CreatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string workloadType, string? vaultType = null, string? scheduleFrequency = null, string? scheduleTime = null, string? dailyRetentionDays = null, string? weeklyRetentionWeeks = null, string? monthlyRetentionMonths = null, string? yearlyRetentionYears = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UpdatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? scheduleFrequency = null, string? dailyRetentionDays = null, string? weeklyRetentionWeeks = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> DeletePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Protection management
     Task<OperationResult> StopProtectionAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string mode, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ResumeProtectionAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? vaultType = null, string? containerName = null, string? policyName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ModifyProtectionAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? vaultType = null, string? containerName = null, string? newPolicyName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> EnableAutoProtectionAsync(string vaultName, string resourceGroup, string subscription, string vmResourceId, string instanceName, string policyName, string workloadType, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Container and workload discovery operations
     Task<List<ContainerInfo>> ListContainersAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> RegisterContainerAsync(string vaultName, string resourceGroup, string subscription, string vmResourceId, string workloadType, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> TriggerInquiryAsync(string vaultName, string resourceGroup, string subscription, string containerName, string? workloadType = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(string vaultName, string resourceGroup, string subscription, string? workloadType = null, string? containerName = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Backup operations
     Task<BackupStatusResult> GetBackupStatusAsync(string datasourceId, string subscription, string location, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Job operations
     Task<OperationResult> CancelJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Security operations
     Task<OperationResult> ConfigureRbacAsync(string principalId, string roleName, string scope, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureMuaAsync(string vaultName, string resourceGroup, string subscription, string resourceGuardId, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigurePrivateEndpointAsync(string vaultName, string resourceGroup, string subscription, string vnetId, string subnetId, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureEncryptionAsync(string vaultName, string resourceGroup, string subscription, string keyVaultUri, string keyName, string identityType, string? vaultType = null, string? keyVersion = null, string? userAssignedIdentityId = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Monitoring operations
     Task<OperationResult> ConfigureMonitoringAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? logAnalyticsWorkspaceId = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> GetBackupReportsAsync(string reportType, string logAnalyticsWorkspaceId, string? timeRangeDays = null, string? workloadFilter = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Governance operations
     Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(string subscription, string? resourceTypeFilter = null, string? resourceGroupFilter = null, string? tagFilter = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ApplyAzurePolicyAsync(string policyDefinitionId, string scope, string? policyParameters = null, bool deployRemediation = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, string immutabilityState, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, string softDeleteState, string? vaultType = null, string? softDeleteRetentionDays = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // DR operations
     Task<OperationResult> ConfigureCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<RestoreTriggerResult> TriggerCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string recoveryPointId, string restoreMode, string? targetResourceId = null, string? secondaryRegion = null, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<DrValidationResult> ValidateDrReadinessAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? resourceIds = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Cost operations
     Task<CostEstimateResult> EstimateBackupCostAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? workloadType = null, bool includeArchiveProjection = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Diagnostics operations
     Task<OperationResult> DiagnoseBackupFailureAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? jobId = null, string? datasourceId = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ValidateBackupPrerequisitesAsync(string datasourceId, string vaultName, string resourceGroup, string subscription, string workloadType, string? vaultType = null, string? policyName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<HealthCheckResult> RunBackupHealthCheckAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, int? rpoThresholdHours = null, bool includeSecurityPosture = true, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Bulk operations
     Task<OperationResult> BulkEnableBackupAsync(string vaultName, string subscription, string workloadType, string policyName, string? vaultType = null, string? resourceGroupFilter = null, string? tagFilter = null, string? resourceIds = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> BulkTriggerBackupAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? workloadType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> BulkUpdatePolicyAsync(string vaultName, string resourceGroup, string subscription, string sourcePolicyName, string targetPolicyName, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // IaC operations
     Task<OperationResult> GenerateIacFromVaultAsync(string vaultName, string resourceGroup, string subscription, string iacFormat, string? vaultType = null, bool includeProtectedItems = true, bool includeRbac = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Recovery point archive
     Task<OperationResult> MoveRecoveryPointToArchiveAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? recoveryPointId = null, string? containerName = null, bool checkEligibilityOnly = false, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
-    // Workflow operations
     Task<WorkflowResult> SetupVmBackupAsync(string resourceIds, string resourceGroup, string subscription, string location, string? vaultName = null, string? scheduleFrequency = null, string? dailyRetentionDays = null, bool triggerFirstBackup = true, string? outputIac = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<WorkflowResult> SetupSqlHanaBackupAsync(string vmResourceId, string workloadType, string resourceGroup, string subscription, string location, string? vaultName = null, bool autoProtect = true, string? outputIac = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<WorkflowResult> SetupAksBackupAsync(string clusterResourceId, string resourceGroup, string subscription, string location, string snapshotResourceGroup, string? vaultName = null, string? outputIac = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);

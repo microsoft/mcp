@@ -32,7 +32,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
                 : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         }
 
-        // Auto-detect: try RSV first, then DPP
         return await AutoDetectAndExecuteAsync(
             () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
             () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken),
@@ -53,7 +52,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             return await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
         }
 
-        // List both types and merge
         var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
         var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
 
@@ -204,7 +202,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             : await dppOps.ListRecoveryPointsAsync(vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
     }
 
-    // ── New facade methods ──
 
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -321,7 +318,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string workloadType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Auto-protection is an RSV-only feature for SQL/HANA workloads
         return rsvOps.EnableAutoProtectionAsync(vaultName, resourceGroup, subscription, vmResourceId, instanceName, policyName, workloadType, tenant, retryPolicy, cancellationToken);
     }
 
@@ -330,7 +326,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Container listing is an RSV-only feature (DPP vaults don't use the container concept)
         return rsvOps.ListContainersAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
@@ -339,7 +334,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string vmResourceId, string workloadType, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Container registration is an RSV-only feature for SQL/HANA workloads
         return rsvOps.RegisterContainerAsync(vaultName, resourceGroup, subscription, vmResourceId, workloadType, tenant, retryPolicy, cancellationToken);
     }
 
@@ -348,7 +342,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string containerName, string? workloadType, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Inquiry is an RSV-only feature for SQL/HANA workloads
         return rsvOps.TriggerInquiryAsync(vaultName, resourceGroup, subscription, containerName, workloadType, tenant, retryPolicy, cancellationToken);
     }
 
@@ -357,7 +350,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? workloadType, string? containerName, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Protectable items listing is an RSV-only feature for SQL/HANA workloads
         return rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
     }
 
@@ -589,7 +581,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         return Task.FromResult(new OperationResult("Accepted", null, $"Recovery point archive initiated for '{protectedItemName}'."));
     }
 
-    // ── Workflow methods ──
 
     public Task<WorkflowResult> SetupVmBackupAsync(
         string resourceIds, string resourceGroup, string subscription,
@@ -755,7 +746,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             return vaultType!;
         }
 
-        // Auto-detect by trying RSV first, then DPP
         try
         {
             await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
@@ -763,7 +753,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            // Not an RSV vault, try DPP
         }
 
         try
@@ -786,7 +775,6 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            // Not found in RSV, try DPP
         }
 
         try

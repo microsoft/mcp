@@ -3132,6 +3132,213 @@
       "mappedToolList": [
         "azuremigrate_platformlandingzone_getguidance"
       ]
+    },
+    {
+      "name": "get_azure_backup_vault_details",
+      "description": "Get information about Azure Recovery Services vaults including configuration, redundancy settings, and properties.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_vault_get"
+      ]
+    },
+    {
+      "name": "manage_azure_backup_vaults",
+      "description": "Create and update Azure Recovery Services vaults for backup and disaster recovery.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_vault_create",
+        "azurebackup_vault_update"
+      ]
+    },
+    {
+      "name": "manage_azure_backup_policies",
+      "description": "Create and retrieve Azure Backup policies for configuring backup schedules and retention.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_policy_create",
+        "azurebackup_policy_get"
+      ]
+    },
+    {
+      "name": "manage_azure_backup_protection",
+      "description": "Manage backup protection for Azure resources including enabling protection, checking status, listing protectable items, and monitoring protected items.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_protecteditem_get",
+        "azurebackup_protecteditem_protect",
+        "azurebackup_protectableitem_list",
+        "azurebackup_backup_status"
+      ]
+    },
+    {
+      "name": "get_azure_backup_jobs_and_recovery_points",
+      "description": "Get Azure Backup job status and recovery point details for protected items.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_job_get",
+        "azurebackup_recoverypoint_get"
+      ]
+    },
+    {
+      "name": "manage_azure_backup_governance_and_dr",
+      "description": "Manage Azure Backup governance settings including soft delete, immutability, cross-region restore, and find unprotected resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_governance_find-unprotected",
+        "azurebackup_governance_immutability",
+        "azurebackup_governance_soft-delete",
+        "azurebackup_dr_enablecrr"
+      ]
     }
   ]
 }

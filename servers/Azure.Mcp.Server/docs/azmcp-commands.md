@@ -539,6 +539,181 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
+### Azure Backup Operations
+
+#### Vault
+
+```bash
+# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault create --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --vault <vault> \
+                               --location <location> \
+                               [--vault-type <vault-type>] \
+                               [--sku <sku>] \
+                               [--storage-type <storage-type>]
+
+# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription, optionally filtered by --vault-type ('rsv' or 'dpp').
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault get --subscription <subscription> \
+                            [--resource-group <resource-group>] \
+                            [--vault <vault>] \
+                            [--vault-type <vault-type>]
+
+# Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup vault update --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --vault <vault> \
+                               [--vault-type <vault-type>] \
+                               [--redundancy <redundancy>] \
+                               [--soft-delete <soft-delete>] \
+                               [--soft-delete-retention-days <soft-delete-retention-days>] \
+                               [--immutability-state <immutability-state>] \
+                               [--identity-type <identity-type>] \
+                               [--tags <tags>]
+```
+
+#### Policy
+
+```bash
+# Creates a backup policy for a specified workload type with schedule and retention rules.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup policy create --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                --policy <policy> \
+                                [--vault-type <vault-type>] \
+                                [--workload-type <workload-type>] \
+                                [--schedule-frequency <schedule-frequency>] \
+                                [--schedule-time <schedule-time>] \
+                                [--daily-retention-days <daily-retention-days>] \
+                                [--weekly-retention-weeks <weekly-retention-weeks>] \
+                                [--monthly-retention-months <monthly-retention-months>] \
+                                [--yearly-retention-years <yearly-retention-years>]
+
+# Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup policy get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --vault <vault> \
+                             [--vault-type <vault-type>] \
+                             [--policy <policy>]
+```
+
+#### Protected Item
+
+```bash
+# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, and last backup time. When --protected-item is omitted, lists all protected items in the vault.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protecteditem get --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --vault <vault> \
+                                    [--vault-type <vault-type>] \
+                                    [--protected-item <protected-item>] \
+                                    [--container <container>]
+
+# Enables backup protection for a resource by creating a protected item or backup instance.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protecteditem protect --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --vault <vault> \
+                                        --datasource-id <datasource-id> \
+                                        --policy <policy> \
+                                        [--vault-type <vault-type>] \
+                                        [--container <container>] \
+                                        [--datasource-type <datasource-type>]
+```
+
+#### Protectable Item
+
+```bash
+# Lists protectable items (SQL databases, SAP HANA databases) discovered in the Recovery Services vault.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protectableitem list --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --vault <vault> \
+                                       [--vault-type <vault-type>] \
+                                       [--workload-type <workload-type>] \
+                                       [--container <container>]
+```
+
+#### Backup
+
+```bash
+# Checks whether a datasource is protected and returns vault and policy details.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup backup status --subscription <subscription> \
+                                --datasource-id <datasource-id> \
+                                --location <location>
+```
+
+#### Job
+
+```bash
+# Retrieves backup job information. When --job is specified, returns detailed information about a single job. When omitted, lists all backup jobs in the vault.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup job get --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vault <vault> \
+                          [--vault-type <vault-type>] \
+                          [--job <job>]
+```
+
+#### Recovery Point
+
+```bash
+# Retrieves recovery point information for a protected item. When --recovery-point is specified, returns a single recovery point. When omitted, lists all available recovery points.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup recoverypoint get --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --vault <vault> \
+                                    --protected-item <protected-item> \
+                                    [--vault-type <vault-type>] \
+                                    [--container <container>] \
+                                    [--recovery-point <recovery-point>]
+```
+
+#### Governance
+
+```bash
+# Scans the subscription to find Azure resources that are not currently protected by any backup policy.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup governance find-unprotected --subscription <subscription> \
+                                              [--resource-type-filter <resource-type-filter>] \
+                                              [--resource-group-filter <resource-group-filter>] \
+                                              [--tag-filter <tag-filter>]
+
+# Configures the immutability state for a backup vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup governance immutability --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --vault <vault> \
+                                          [--vault-type <vault-type>] \
+                                          [--immutability-state <immutability-state>]
+
+# Configures the soft delete settings for a backup vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup governance soft-delete --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --vault <vault> \
+                                         [--vault-type <vault-type>] \
+                                         [--soft-delete <soft-delete>] \
+                                         [--soft-delete-retention-days <soft-delete-retention-days>]
+```
+
+#### DR
+
+```bash
+# Enables Cross-Region Restore on a GRS-enabled vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup dr enablecrr --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --vault <vault> \
+                               [--vault-type <vault-type>]
+```
+
 ### Azure CLI Operations
 
 #### Generate

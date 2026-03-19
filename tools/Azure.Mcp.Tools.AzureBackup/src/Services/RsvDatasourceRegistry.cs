@@ -16,7 +16,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// </summary>
 public static class RsvDatasourceRegistry
 {
-    // ── Profile definitions ──
 
     public static readonly RsvDatasourceProfile IaasVm = new()
     {
@@ -94,7 +93,6 @@ public static class RsvDatasourceRegistry
         SupportsPolicyUpdate = true,
     };
 
-    // ── Registry ──
 
     /// <summary>All registered RSV datasource profiles.</summary>
     public static readonly RsvDatasourceProfile[] AllProfiles =
@@ -179,7 +177,6 @@ public static class RsvDatasourceRegistry
             return AzureFileShare;
         }
 
-        // VMAppContainer indicates a workload, default to SQL if we can't determine the exact type
         if (containerLower.StartsWith("vmappcontainer", StringComparison.OrdinalIgnoreCase))
         {
             return SqlDatabase;

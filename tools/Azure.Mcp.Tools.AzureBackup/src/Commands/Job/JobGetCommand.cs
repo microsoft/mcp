@@ -67,7 +67,6 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBack
 
             if (!string.IsNullOrEmpty(options.Job))
             {
-                // Single job get
                 var job = await service.GetJobAsync(
                     options.Vault!,
                     options.ResourceGroup!,
@@ -84,7 +83,6 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBack
             }
             else
             {
-                // List all jobs
                 var jobs = await service.ListJobsAsync(
                     options.Vault!,
                     options.ResourceGroup!,

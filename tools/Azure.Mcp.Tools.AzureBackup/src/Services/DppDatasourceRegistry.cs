@@ -17,7 +17,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// </summary>
 public static class DppDatasourceRegistry
 {
-    // ── Profile definitions ──
 
     public static readonly DppDatasourceProfile AzureDisk = new()
     {
@@ -138,7 +137,6 @@ public static class DppDatasourceRegistry
         SupportsPolicyUpdate = false,
     };
 
-    // ── Registry ──
 
     /// <summary>All registered DPP datasource profiles.</summary>
     public static readonly DppDatasourceProfile[] AllProfiles =
@@ -183,8 +181,6 @@ public static class DppDatasourceRegistry
             }
         }
 
-        // Fallback: treat unknown types as VaultStore with daily schedule.
-        // This ensures forward compatibility when new Azure datasource types are added.
         return new DppDatasourceProfile
         {
             FriendlyName = workloadTypeOrArmType,
@@ -226,8 +222,6 @@ public static class DppDatasourceRegistry
     {
         var idStr = childResourceId.ToString();
 
-        // Find the last child segment: .../parentType/parentName/childType/childName
-        // Strip /childType/childName to get the parent ID
         var lastSlash = idStr.LastIndexOf('/');
         if (lastSlash > 0)
         {

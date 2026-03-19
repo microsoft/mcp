@@ -5,7 +5,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public static class AzureBackupOptionDefinitions
 {
-    // Existing option names
     public const string VaultName = "vault";
     public const string VaultTypeName = "vault-type";
     public const string ProtectedItemName = "protected-item";
@@ -22,7 +21,6 @@ public static class AzureBackupOptionDefinitions
     public const string TargetResourceIdName = "target-resource-id";
     public const string RestoreLocationName = "restore-location";
 
-    // New option names for expanded tool set
     public const string RedundancyName = "redundancy";
     public const string EnableCrrName = "enable-crr";
     public const string EncryptionTypeName = "encryption-type";
@@ -109,7 +107,6 @@ public static class AzureBackupOptionDefinitions
     public const string StatusFilterName = "status-filter";
     public const string OperationFilterName = "operation-filter";
 
-    // Existing option objects
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
         Description = "The name of the backup vault (Recovery Services vault or Backup vault).",
@@ -200,7 +197,6 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    // New option objects for expanded tool set
     public static readonly Option<string> Redundancy = new($"--{RedundancyName}")
     {
         Description = "Storage redundancy: LRS, GRS, ZRS, or RAGRS.",

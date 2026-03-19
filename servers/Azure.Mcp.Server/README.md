@@ -882,7 +882,19 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
-### 🖥️ Azure CLI Generate
+### �️ Azure Backup
+
+* "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus"
+* "Get details of backup vault 'myvault' in resource group 'myRG'"
+* "Create a backup policy for Azure VMs in vault 'myvault'"
+* "List protectable items in my backup vault"
+* "Check backup status for my Azure resource"
+* "Get recovery points for a protected item"
+* "Find unprotected resources in my subscription"
+* "Check soft delete and immutability settings on my vault"
+* "Enable cross-region restore on my vault"
+
+### �🖥️ Azure CLI Generate
 
 * Generate Azure CLI commands based on user intent
 
@@ -1047,6 +1059,7 @@ The Azure MCP Server provides tools for interacting with **42+ Azure service are
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
+- 🛡️ **Azure Backup** - Recovery Services vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication

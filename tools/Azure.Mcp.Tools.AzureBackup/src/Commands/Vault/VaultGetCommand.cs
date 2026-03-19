@@ -74,7 +74,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
 
             if (!string.IsNullOrEmpty(options.Vault))
             {
-                // Single vault get
                 var vault = await service.GetVaultAsync(
                     options.Vault,
                     options.ResourceGroup!,
@@ -90,7 +89,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
             }
             else
             {
-                // List all vaults
                 var vaults = await service.ListVaultsAsync(
                     options.Subscription!,
                     options.VaultType,

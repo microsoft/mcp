@@ -108,7 +108,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // Get the vault to determine its location
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
@@ -117,21 +116,15 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var policyArmId = BackupProtectionPolicyResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, policyName);
 
-        // Resolve the datasource profile
         var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
 
-        // Check if this is a workload (SQL/HANA/ASE) protection request
         if (profile.IsWorkloadType)
         {
-            // For workload protection, containerName and datasourceId (protectable item name) are required
             if (string.IsNullOrEmpty(containerName))
             {
                 throw new ArgumentException($"The --container parameter is required for {profile.FriendlyName} workload protection. Use 'azurebackup protectable_item_list' to discover containers and items.");
             }
 
-            // Bug #47: Detect if user passed an ARM resource ID instead of the protectable item name.
-            // For workloads, datasource-id must be the protectable item name (e.g., 'SAPHanaDatabase;instance;db')
-            // from 'protectableitem list', NOT the VM ARM resource ID.
             if (datasourceId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException(
@@ -144,7 +137,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             var protectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
                 subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
 
-            // Construct the correct SDK protected item type based on profile
             BackupGenericProtectedItem protectedItemProperties = profile.ProtectedItemType switch
             {
                 RsvProtectedItemType.SapHanaDatabase => new VmWorkloadSapHanaDatabaseProtectedItem { PolicyId = policyArmId },
@@ -162,32 +154,26 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
                 jobId != null ? $"Workload protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Workload protection initiated.");
         }
 
-        // Azure File Share protection flow
         if (profile.ProtectedItemType == RsvProtectedItemType.AzureFileShare)
         {
             var fsContainer = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId, datasourceType);
             var fsProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId, datasourceType);
 
-            // Trigger storage account inquiry so the vault discovers file shares
             var containerId = BackupProtectionContainerResource.CreateResourceIdentifier(
                 subscription, resourceGroup, vaultName, FabricName, fsContainer);
             var containerResource = armClient.GetBackupProtectionContainerResource(containerId);
             try
             {
                 await containerResource.InquireAsync(filter: null, cancellationToken);
-                // Wait briefly for inquiry to complete
                 await Task.Delay(5000, cancellationToken);
             }
             catch (RequestFailedException)
             {
-                // Inquiry may fail if container is not yet registered; proceed anyway
             }
 
             var fsProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
                 subscription, resourceGroup, vaultName, FabricName, fsContainer, fsProtectedItemName);
 
-            // Derive the source resource ID (the storage account ARM ID)
-            // We're already in the AzureFileShare block, so always extract the storage account ID
             var parsedDatasourceId = new ResourceIdentifier(datasourceId);
             var storageAccountId = RsvNamingHelper.GetStorageAccountId(parsedDatasourceId);
 
@@ -210,16 +196,12 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
                 fsJobId != null ? $"File share protection initiated. Use 'azurebackup job get --job {fsJobId}' to monitor progress." : "File share protection initiated.");
         }
 
-        // Standard VM protection flow
-        // Trigger container discovery/refresh so the vault discovers the VM
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         await rgResource.RefreshProtectionContainerAsync(vaultName, FabricName, filter: null, cancellationToken);
 
-        // Wait for container discovery to complete (refresh is async on the server side)
         await Task.Delay(30000, cancellationToken);
 
-        // Derive container name if not provided
         var container = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId);
         var vmProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId);
 
@@ -238,8 +220,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var vmProtectedItemResource = armClient.GetBackupProtectedItemResource(vmProtectedItemId);
         var vmResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
-        // The Azure-AsyncOperation header contains an operation ID, not a job ID.
-        // We need to find the actual job by listing recent jobs.
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
         vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
 
@@ -263,7 +243,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // If container name is not provided, we need to list and find the item
         if (string.IsNullOrEmpty(containerName))
         {
             var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
@@ -335,8 +314,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var result = await itemResource.TriggerBackupAsync(backupContent, cancellationToken);
 
-        // The Azure-AsyncOperation header contains an operation ID, not a job ID.
-        // We need to find the actual backup job by listing recent jobs.
         var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "Backup", cancellationToken);
         jobId ??= ExtractOperationIdFromResponse(result); // Fallback to operation ID if job not found yet
 
@@ -348,7 +325,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
     private static BackupContent CreateBackupRequestContent(string? backupType, DateTimeOffset? expiryTime, string? protectedItemName = null, string? containerName = null)
     {
-        // If a specific backup type is provided (Full, Differential, Log), use workload backup content
         if (!string.IsNullOrEmpty(backupType) && !backupType.Equals("Default", StringComparison.OrdinalIgnoreCase))
         {
             return new WorkloadBackupContent
@@ -359,7 +335,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             };
         }
 
-        // Auto-detect workload type from item/container naming conventions using the registry
         var detectedProfile = RsvDatasourceRegistry.ResolveFromProtectedItemName(protectedItemName ?? string.Empty, containerName);
         var isWorkload = detectedProfile.IsWorkloadType;
 
@@ -373,7 +348,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             };
         }
 
-        // Default: IaasVmBackupContent for VM workloads
         return new IaasVmBackupContent
         {
             RecoveryPointExpireOn = expiryTime
@@ -402,14 +376,12 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // Get the existing protected item to determine type and extract SourceResourceId
         var piId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
         var piResource = armClient.GetBackupProtectedItemResource(piId);
         var existingItem = await piResource.GetAsync(cancellationToken: cancellationToken);
         var existingProperties = existingItem.Value.Data.Properties;
 
-        // Get vault location for restore region
         var vaultRes = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultRes);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -421,10 +393,8 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         RestoreContent restoreProperties;
 
-        // Check if this is a workload (SQL/HANA) protected item
         if (existingProperties is VmWorkloadSqlDatabaseProtectedItem)
         {
-            // For SQL ALR, extract data directory paths from recovery point extended info
             IList<SqlDataDirectoryMapping>? sqlDataDirMappings = null;
             if (!string.IsNullOrEmpty(targetDatabaseName))
             {
@@ -465,11 +435,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         else
         {
-            // Standard VM restore
             var sourceResourceId = (existingProperties as IaasComputeVmProtectedItem)?.SourceResourceId
                 ?? (existingProperties as BackupGenericProtectedItem)?.SourceResourceId;
 
-            // Determine restore mode: AlternateLocation, RestoreDisks, or OriginalLocation
             var resolvedMode = !string.IsNullOrEmpty(restoreMode)
                 ? restoreMode
                 : !string.IsNullOrEmpty(targetResourceId) ? "RestoreDisks" : "OriginalLocation";
@@ -498,7 +466,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
             if (recoveryType == FileShareRecoveryType.AlternateLocation)
             {
-                // Full ALR: create a new VM at alternate location
                 if (string.IsNullOrEmpty(targetVmName) || string.IsNullOrEmpty(targetVnetId) || string.IsNullOrEmpty(targetSubnetId))
                 {
                     throw new ArgumentException("AlternateLocation restore requires --target-vm-name, --target-vnet-id, and --target-subnet-id parameters.");
@@ -514,7 +481,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             }
             else if (recoveryType == FileShareRecoveryType.RestoreDisks && !string.IsNullOrEmpty(targetResourceId))
             {
-                // RestoreDisks: restore managed disks to target RG
                 vmRestoreContent.TargetResourceGroupId = new ResourceIdentifier(targetResourceId);
             }
 
@@ -528,7 +494,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var result = await rpResource.TriggerRestoreAsync(WaitUntil.Started, restoreContent, cancellationToken);
 
-        // The Azure-AsyncOperation header contains an operation ID, not a job ID.
         var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "Restore", cancellationToken);
         jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse()); // Fallback to operation ID
 
@@ -679,7 +644,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         return points;
     }
 
-    // ── New methods ──
 
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -743,14 +707,12 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // Fetch the existing policy — will throw RequestFailedException (404) if it doesn't exist
         var policyId = BackupProtectionPolicyResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetBackupProtectionPolicyResource(policyId);
         var existingPolicy = await policyResource.GetAsync(cancellationToken);
         var policyData = existingPolicy.Value.Data;
 
-        // Modify only the requested fields on the existing policy
         if (policyData.Properties is FileShareProtectionPolicy fsPolicy)
         {
             UpdateFileSharePolicyRetention(fsPolicy, dailyRetentionDays, weeklyRetentionWeeks);
@@ -765,13 +727,11 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             UpdateWorkloadPolicyRetention(workloadPolicy, dailyRetentionDays);
         }
 
-        // Fetch vault location for PUT — the GET response data may lack location, causing NullRef in SDK constructor
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResourceId);
         var vault = await vaultResource.GetAsync(cancellationToken);
         var vaultLocation = vault.Value.Data.Location;
 
-        // PUT the modified policy back using fresh data with vault location
         var freshPolicyData = new BackupProtectionPolicyData(vaultLocation)
         {
             Properties = policyData.Properties
@@ -786,9 +746,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         catch (NullReferenceException)
         {
-            // SDK v1.3.0 bug: BackupProtectionPolicyResource constructor throws NullRef
-            // when deserializing certain policy types (e.g. VM policies with enhanced schedules).
-            // The PUT REST call itself succeeds — verify by re-fetching the updated policy.
             var verifyPolicy = await policyResource.GetAsync(cancellationToken);
             if (verifyPolicy.Value?.Data?.Properties == null)
             {
@@ -913,19 +870,16 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
 
-        // Parse schedule time or default to 2:00 AM UTC
         var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
         var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,
             scheduleDateTime.Hour, scheduleDateTime.Minute, 0, TimeSpan.Zero);
 
         BackupGenericProtectionPolicy policyProperties;
 
-        // Resolve the profile to determine policy type
         var profile = RsvDatasourceRegistry.ResolveOrDefault(workloadType);
 
         if (profile.PolicyType == RsvPolicyType.VmWorkload)
         {
-            // SQL/HANA/ASE workload policy
             var fullSchedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
             fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
 
@@ -963,7 +917,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         else if (profile.PolicyType == RsvPolicyType.AzureFileShare)
         {
-            // Azure File Share policy
             var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
             schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
 
@@ -979,7 +932,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         else
         {
-            // Standard VM policy
             var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
             schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
 
@@ -1049,7 +1001,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             return new OperationResult("Accepted", null, "Protection stopped and data deletion initiated.");
         }
 
-        // RetainData mode - update with ProtectionState = ProtectionStopped
         var vaultRes = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultRes);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -1058,7 +1009,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
         var piResource = armClient.GetBackupProtectedItemResource(piId);
 
-        // Get existing item to determine type and construct the correct SDK type via profile matching
         var existingItem = await piResource.GetAsync(cancellationToken: cancellationToken);
         BackupGenericProtectedItem stopProps = existingItem.Value.Data.Properties switch
         {
@@ -1099,7 +1049,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
         var piResource = armClient.GetBackupProtectedItemResource(piId);
 
-        // Get existing item to determine type and construct the correct SDK type via profile matching
         var existingItem = await piResource.GetAsync(cancellationToken: cancellationToken);
         ResourceIdentifier? policyArmId = null;
         if (!string.IsNullOrEmpty(policyName))
@@ -1146,12 +1095,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
         var piResource = armClient.GetBackupProtectedItemResource(piId);
 
-        // Get existing protected item to determine type and extract SourceResourceId
         var existingItem = await piResource.GetAsync(cancellationToken: cancellationToken);
         var existingProperties = existingItem.Value.Data.Properties;
 
-        // Bug #49: Check item state before attempting modify — IRPending items cannot be modified.
-        // ProtectionState is on concrete types, not the base BackupGenericProtectedItem.
         var protectionState = GetProtectionState(existingProperties);
         if (string.Equals(protectionState, "IRPending", StringComparison.OrdinalIgnoreCase))
         {
@@ -1185,7 +1131,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             var sourceResourceId = (existingProperties as IaasComputeVmProtectedItem)?.SourceResourceId
                 ?? (existingProperties as BackupGenericProtectedItem)?.SourceResourceId;
 
-            // If SourceResourceId not available from cast, derive from container name
             if (sourceResourceId is null && !string.IsNullOrEmpty(containerName))
             {
                 var parts = containerName.Split(';');
@@ -1213,7 +1158,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         string protectedItemName, string? containerName,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // RSV undelete is handled via support request or portal; SDK doesn't expose a direct undelete for RSV
         return Task.FromResult(new OperationResult("NotSupported", null, "Undelete for RSV protected items requires Azure portal or support request. Use soft-delete recovery instead."));
     }
 
@@ -1317,14 +1261,10 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // CRR must be enabled via the BackupResourceConfig sub-resource (backupstorageconfig),
-        // NOT via the vault-level PATCH which returns CloudInternalError.
         var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
         var currentConfig = await configResource.GetAsync(cancellationToken);
 
-        // Update the data and use CreateOrUpdate via the collection
-        // (BackupResourceConfigResource.UpdateAsync has an SDK NullRef bug in its constructor)
         var data = currentConfig.Value.Data;
         data.Properties.EnableCrossRegionRestore = true;
 
@@ -1348,12 +1288,10 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // Get vault info
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        // List protected items and check health
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var rpoThreshold = rpoThresholdHours ?? 24;
         var now = DateTimeOffset.UtcNow;
@@ -1563,7 +1501,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var jobCollection = rgResource.GetBackupJobs(vaultName);
 
-        // Look for the most recent job of the given operation type started within the last minute
         await foreach (var job in jobCollection.GetAllAsync(cancellationToken: cancellationToken))
         {
             if (job.Data.Properties is BackupGenericJob genericJob)
@@ -1594,20 +1531,16 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
     {
         if (!string.IsNullOrEmpty(targetDatabaseName))
         {
-            // ALR: restore to a different database on the same or different SQL instance
             var resolvedInstanceName = targetInstanceName ?? "mssqlserver";
 
-            // Derive VM ARM ID from container name (format: VMAppContainer;Compute;{RG};{VMName})
             var containerParts = containerName.Split(';');
             var vmResourceGroup = containerParts.Length > 2 ? containerParts[2] : resourceGroup;
             var vmName = containerParts.Length > 3 ? containerParts[3] : string.Empty;
             var vmId = new ResourceIdentifier(
                 $"/subscriptions/{subscription}/resourceGroups/{vmResourceGroup}/providers/Microsoft.Compute/virtualMachines/{vmName}");
 
-            // ContainerId must be the full ARM resource ID with lowercase container name
             var fullContainerId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/backupFabrics/{FabricName}/protectionContainers/{containerName.ToLowerInvariant()}";
 
-            // DatabaseName format: {INSTANCE_UPPER}/SQLInstance;{instance_lower} (target SQL instance path)
             var databaseName = $"{resolvedInstanceName.ToUpperInvariant()}/SQLInstance;{resolvedInstanceName.ToLowerInvariant()}";
 
             var content = new WorkloadSqlRestoreContent
@@ -1625,7 +1558,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
                 }
             };
 
-            // Add alternate directory paths for SQL data/log file mapping
             if (dataDirectoryMappings != null)
             {
                 foreach (var mapping in dataDirectoryMappings)
@@ -1680,7 +1612,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
-        // The REST API requires a backupManagementType filter, so query the main types
         string[] backupManagementTypes = ["AzureWorkload", "AzureIaasVM", "AzureStorage", "MAB", "DPM"];
         var containers = new List<ContainerInfo>();
 
@@ -1696,7 +1627,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             }
             catch (Azure.RequestFailedException ex) when (ex.Status == 400)
             {
-                // Some backup management types may not be supported for all vault configurations; skip them
                 continue;
             }
         }
@@ -1726,7 +1656,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var containerResource = armClient.GetBackupProtectionContainerResource(containerId);
 
-        // Get vault location for the container data
         var vaultResId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResId);
         var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
@@ -1798,15 +1727,11 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         string filter;
         if (!string.IsNullOrEmpty(workloadType))
         {
-            // Normalize workload-type values to what the REST API filter expects (Bug #46).
-            // Users may pass common names like "SAPHana" but the API filter requires
-            // specific values like "SAPHanaDatabase" or "SAPHanaDBInstance".
             var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
             filter = $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
         }
         else
         {
-            // Azure API requires at least a backupManagementType filter (Bug #38)
             filter = "backupManagementType eq 'AzureWorkload'";
         }
 
@@ -1841,7 +1766,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var vmId = new ResourceIdentifier(vmResourceId);
 
-        // Intent name is a GUID as used by Azure Resource Manager
         var intentName = Guid.NewGuid().ToString();
 
         var intentId = BackupProtectionIntentResource.CreateResourceIdentifier(
@@ -1852,14 +1776,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResId);
         var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
 
-        // Build container and protectable item references for the intent
         var containerName = $"VMAppContainer;Compute;{vmId.ResourceGroupName};{vmId.Name}";
         var itemId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/backupFabrics/Azure/protectionContainers/{containerName}/protectableItems/{instanceName}";
 
-        // Bug #48: Use WorkloadSqlAutoProtectionIntent for all workload types (SQL and HANA).
-        // Despite the "Sql" in the name, this is the only SDK intent type that supports
-        // the WorkloadItemType property needed to distinguish SQL vs HANA auto-protection.
-        // The REST API type is AzureWorkloadSQLAutoProtectionIntent for both SQL and HANA.
         var workloadItemType = workloadType?.ToUpperInvariant() switch
         {
             "SQLDATABASE" or "SQLINSTANCE" or "SQL" => WorkloadItemType.SqlInstance,
@@ -1929,7 +1848,6 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         if (data.Properties is WorkloadProtectableItem workloadItem)
         {
-            // ProtectableItemType is internal in the SDK, use type discrimination
             protectableItemType = workloadItem switch
             {
                 VmWorkloadSqlDatabaseProtectableItem => "SQLDataBase",
@@ -1971,7 +1889,6 @@ internal static class RsvNamingHelper
 {
     public static string DeriveContainerName(string datasourceId, string? datasourceType = null)
     {
-        // Use the RSV datasource registry for workload detection
         var profile = RsvDatasourceRegistry.Resolve(datasourceType);
         if (profile?.IsWorkloadType == true)
         {
@@ -1981,14 +1898,11 @@ internal static class RsvNamingHelper
 
         var vmResourceId = new ResourceIdentifier(datasourceId);
 
-        // Use profile-based detection first (handles nested ARM IDs like file shares
-        // where ResourceType.Type returns "storageAccounts/fileServices/shares" not "shares")
         if (profile?.ProtectedItemType == RsvProtectedItemType.AzureFileShare)
         {
             return $"StorageContainer;Storage;{vmResourceId.ResourceGroupName};{ExtractStorageAccountName(vmResourceId)}";
         }
 
-        // Fallback to resource type detection for untyped calls
         var resourceType = vmResourceId.ResourceType.Type;
 
         return resourceType.ToLowerInvariant() switch
@@ -2001,7 +1915,6 @@ internal static class RsvNamingHelper
 
     public static string DeriveProtectedItemName(string datasourceId, string? datasourceType = null)
     {
-        // For workload types, the protectable item name is used directly (passed as datasourceId)
         var profile = RsvDatasourceRegistry.Resolve(datasourceType);
         if (profile?.IsWorkloadType == true)
         {
@@ -2010,14 +1923,11 @@ internal static class RsvNamingHelper
 
         var resourceId = new ResourceIdentifier(datasourceId);
 
-        // Use profile-based detection first (handles nested ARM IDs like file shares
-        // where ResourceType.Type returns "storageAccounts/fileServices/shares" not "shares")
         if (profile?.ProtectedItemType == RsvProtectedItemType.AzureFileShare)
         {
             return $"AzureFileShare;{resourceId.Name}";
         }
 
-        // Fallback to resource type detection for untyped calls
         var resourceType = resourceId.ResourceType.Type;
 
         return resourceType.ToLowerInvariant() switch
@@ -2030,8 +1940,6 @@ internal static class RsvNamingHelper
 
     private static string ExtractStorageAccountName(ResourceIdentifier resourceId)
     {
-        // For file share ARM IDs like .../storageAccounts/{sa}/fileServices/default/shares/{share}
-        // Walk up the hierarchy to find the storage account name
         ResourceIdentifier? current = resourceId;
         while (current is not null)
         {
@@ -2048,7 +1956,6 @@ internal static class RsvNamingHelper
 
     public static string GetStorageAccountId(ResourceIdentifier resourceId)
     {
-        // For file share ARM IDs, walk up to return the storage account ARM ID
         ResourceIdentifier? current = resourceId;
         while (current is not null)
         {

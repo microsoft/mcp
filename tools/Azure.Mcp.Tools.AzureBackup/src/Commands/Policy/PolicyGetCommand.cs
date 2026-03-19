@@ -67,7 +67,6 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzu
 
             if (!string.IsNullOrEmpty(options.Policy))
             {
-                // Single policy get
                 var policy = await service.GetPolicyAsync(
                     options.Vault!,
                     options.ResourceGroup!,
@@ -84,7 +83,6 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzu
             }
             else
             {
-                // List all policies
                 var policies = await service.ListPoliciesAsync(
                     options.Vault!,
                     options.ResourceGroup!,

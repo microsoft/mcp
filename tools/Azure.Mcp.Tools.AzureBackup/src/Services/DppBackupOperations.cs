@@ -24,7 +24,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
     /// </summary>
     internal static DppDatasourceProfile ResolveProfile(string datasourceTypeOrArm)
     {
-        // First try auto-detection (e.g. storage account → Blob)
         var autoDetected = DppDatasourceRegistry.TryAutoDetect(datasourceTypeOrArm);
         if (autoDetected != null)
         {
@@ -134,16 +133,13 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
         var datasourceResourceId = new ResourceIdentifier(datasourceId);
 
-        // Resolve the datasource profile from user-supplied type or auto-detect from ARM resource type
         var resolvedDatasourceType = datasourceType ?? datasourceResourceId.ResourceType.ToString();
         var profile = ResolveProfile(resolvedDatasourceType);
 
-        // Generate instance name based on profile's naming mode
         var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
 
         var policyInfo = new BackupInstancePolicyInfo(policyId);
 
-        // Set snapshot resource group for datasource types that require it (Disk, AKS, ESAN — not Blob)
         if (profile.RequiresSnapshotResourceGroup)
         {
             var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, datasourceResourceId.ResourceGroupName ?? resourceGroup);
@@ -155,7 +151,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             policyInfo.PolicyParameters.DataStoreParametersList.Add(opStoreSettings);
         }
 
-        // Add datasource-specific backup parameters (e.g. AKS K8s cluster settings)
         if (profile.BackupParametersMode == DppBackupParametersMode.KubernetesCluster)
         {
             policyInfo.PolicyParameters ??= new BackupInstancePolicySettings();
@@ -181,7 +176,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             ObjectType = "BackupInstance",
         };
 
-        // Set DataSourceSetInfo based on profile configuration
         if (profile.DataSourceSetMode != DppDataSourceSetMode.None)
         {
             var setId = profile.DataSourceSetMode == DppDataSourceSetMode.Parent
@@ -270,11 +264,9 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
         var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
 
-        // Fetch backup instance to get associated policy
         var instanceData = await instanceResource.GetAsync(cancellationToken);
         var policyId = instanceData.Value.Data.Properties.PolicyInfo.PolicyId;
 
-        // Fetch policy to find the backup rule name
         var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
         var policyData = await policyResource.GetAsync(cancellationToken);
 
@@ -316,7 +308,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
         var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
 
-        // Get the backup instance to determine datasource info
         var instance = await instanceResource.GetAsync(cancellationToken);
         var datasourceInfo = instance.Value.Data.Properties?.DataSourceInfo;
         var datasourceId = datasourceInfo?.ResourceId;
@@ -324,16 +315,12 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         RestoreTargetInfoBase restoreTarget;
 
-        // Determine if this is a restore-as-files scenario (target is a storage account)
         if (!string.IsNullOrEmpty(targetResourceId) &&
             targetResourceId.Contains("Microsoft.Storage/storageAccounts", StringComparison.OrdinalIgnoreCase))
         {
-            // Restore-as-files: target is a storage account with optional container
             var storageAccountId = targetResourceId;
             var containerName = "pgflex-restore";
 
-            // Extract container name from the target resource ID if it includes a container
-            // e.g., .../storageAccounts/name/blobServices/default/containers/containerName
             if (targetResourceId.Contains("/blobServices/", StringComparison.OrdinalIgnoreCase))
             {
                 var parts = targetResourceId.Split('/');
@@ -342,15 +329,12 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
                 storageAccountId = targetResourceId[..containerIndex];
             }
 
-            // Extract storage account name from the ARM ID
             var storageAccountArmId = new ResourceIdentifier(storageAccountId);
             var storageAccountName = storageAccountArmId.Name;
 
             var containerUri = new Uri($"https://{storageAccountName}.blob.core.windows.net/{containerName}");
             var filePrefix = $"pgflex-restore-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
 
-            // TargetResourceArmId must point to the container (not the storage account)
-            // per the REST API spec: "ARM Id pointing to container / file share"
             var containerArmId = new ResourceIdentifier(
                 $"{storageAccountId}/blobServices/default/containers/{containerName}");
 
@@ -371,7 +355,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         else
         {
-            // Restore-as-server: target is a datasource resource
             var targetId = !string.IsNullOrEmpty(targetResourceId) ? new ResourceIdentifier(targetResourceId) : datasourceId;
 
             var targetDatasource = new DataSourceInfo(targetId ?? datasourceId!)
@@ -390,7 +373,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
                 RestoreLocation = location,
             };
 
-            // Set DataSourceSetInfo for datasource types that require it (ESAN, AKS)
             var resolvedDatasourceTypeStr = datasourceInfo?.DataSourceType ?? string.Empty;
             var restoreProfile = ResolveProfile(resolvedDatasourceTypeStr);
             if (restoreProfile.DataSourceSetMode != DppDataSourceSetMode.None)
@@ -412,12 +394,10 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             restoreTarget = restoreTargetInfo;
         }
 
-        // Determine the correct source data store type from the datasource profile
         var datasourceTypeStr = datasourceInfo?.DataSourceType ?? string.Empty;
         var storeProfile = ResolveProfile(datasourceTypeStr);
         var sourceDataStoreType = storeProfile.UsesOperationalStore ? SourceDataStoreType.OperationalStore : SourceDataStoreType.VaultStore;
 
-        // Use time-based restore for blob PIT or when --point-in-time is provided
         BackupRestoreContent restoreContent;
         if (!string.IsNullOrEmpty(pointInTime))
         {
@@ -516,8 +496,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
         catch (FormatException)
         {
-            // Bug #40 workaround: SDK can't parse ISO 8601 durations like "PT3M7.0153191S"
-            // in DataProtectionBackupJobData. Fall back to listing jobs and matching by ID.
             var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return jobs.FirstOrDefault(j => j.Name == jobId)
                 ?? throw new InvalidOperationException($"Job '{jobId}' not found. The SDK cannot parse this job's duration field.");
@@ -592,7 +570,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         return points;
     }
 
-    // ── New methods ──
 
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -656,13 +633,11 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
-        // Fetch the existing policy — will throw RequestFailedException (404) if it doesn't exist
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
         var existingPolicy = await policyResource.GetAsync(cancellationToken);
         var policyData = existingPolicy.Value.Data;
 
-        // Modify only the requested retention on existing policy rules, preserving datasourceTypes and structure
         if (policyData.Properties is RuleBasedBackupPolicy ruleBasedPolicy)
         {
             foreach (var rule in ruleBasedPolicy.PolicyRules)
@@ -677,7 +652,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             }
         }
 
-        // PUT the modified policy back with original datasourceTypes preserved
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
@@ -706,7 +680,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
 
-        // Parse retention and schedule parameters
         var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 0;
         var scheduleTimeValue = scheduleTime ?? "02:00";
         var now = DateTimeOffset.UtcNow;
@@ -715,14 +688,11 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var scheduleMinute = scheduleParts.Length > 1 && int.TryParse(scheduleParts[1], out var sm) ? sm : 0;
         var scheduleStartTime = new DateTimeOffset(now.Year, now.Month, now.Day, scheduleHour, scheduleMinute, 0, TimeSpan.Zero);
 
-        // Resolve the datasource profile — drives all policy construction decisions
         var profile = DppDatasourceRegistry.Resolve(workloadType);
         var dataStoreType = profile.UsesOperationalStore ? DataStoreType.OperationalStore : DataStoreType.VaultStore;
 
-        // Use profile default retention if user didn't specify
         var defaultRetention = retentionDays > 0 ? retentionDays : profile.DefaultRetentionDays;
 
-        // Build the retention rule (Default)
         var retentionDeleteSetting = new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(defaultRetention));
         var retentionDataStore = new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase");
         var retentionLifeCycle = new SourceLifeCycle(retentionDeleteSetting, retentionDataStore);
@@ -733,8 +703,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         List<DataProtectionBasePolicyRule> rules = [retentionRule];
 
-        // Continuous backup (Blob, ADLS, CosmosDB) — no scheduled backup rule
-        // All other workloads — add a scheduled backup rule driven by profile settings
         if (!profile.IsContinuousBackup)
         {
             var repeatingInterval = $"R/{scheduleStartTime:yyyy-MM-ddTHH:mm:ss+00:00}/{profile.ScheduleInterval}";
@@ -804,7 +772,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             return new OperationResult("Accepted", null, "Protection stopped and data deletion initiated.");
         }
 
-        // DPP suspend backup
         var instId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
         var instResource = armClient.GetDataProtectionBackupInstanceResource(instId);
         await instResource.SuspendBackupsAsync(WaitUntil.Started, cancellationToken);
@@ -836,7 +803,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         string protectedItemName, string? newPolicyName,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // DPP modify requires re-creating the instance with a different policy
         return Task.FromResult(new OperationResult("NotSupported", null, "To change policy for a DPP backup instance, stop protection (RetainData) and re-protect with the new policy."));
     }
 
@@ -1010,7 +976,6 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
     {
         if (response.Headers.TryGetValue("Azure-AsyncOperation", out var asyncOpUrl) && !string.IsNullOrEmpty(asyncOpUrl))
         {
-            // Format: https://.../operationResults/{jobId}?api-version=...
             var uri = new Uri(asyncOpUrl);
             var segments = uri.AbsolutePath.Split('/');
             return segments.Length > 0 ? segments[^1] : null;
