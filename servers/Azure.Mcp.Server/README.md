@@ -933,6 +933,10 @@ Example prompts that generate Azure CLI commands:
 * "Update VM 'my-vm' tags to environment=production"
 * "Create a VMSS named 'my-vmss' with 3 instances for web workloads"
 * "Update VMSS 'my-vmss' capacity to 5 instances"
+* "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
+* "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
 ### �📦 Azure Container Apps
 
