@@ -1,4 +1,4 @@
-pr: 2087
+pr: 2087, 2115
 changes:
   - section: "Features Added"
     description: "Added new tools to Azure Monitor service area. It provides guided, deterministic onboarding for Azure Monitor (Application Insights / OpenTelemetry) instrumentation. It helps an agent or developer inspect a local workspace, choose the right instrumentation path (greenfield or brownfield), and execute migration/onboarding steps in a controlled sequence."

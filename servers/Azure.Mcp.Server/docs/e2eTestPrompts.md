@@ -703,6 +703,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
 | monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
 | monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
+| monitor_instrumentation_send_enhanced_selection | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
+| monitor_instrumentation_send_enhanced_selection | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
+| monitor_instrumentation_send_enhanced_selection | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
 
 ## Azure Native ISV
 
