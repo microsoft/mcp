@@ -161,4 +161,4 @@ Ensure `configure_azure_monitor()` is called before importing instrumented libra
 ## Links
 
 - [Azure Monitor OpenTelemetry](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable?tabs=python)
-- [Troubleshooting Guide](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-troubleshoot-python)
+- [Troubleshooting Guide](https://learn.microsoft.com/troubleshoot/azure/azure-monitor/app-insights/telemetry/opentelemetry-troubleshooting-python)
