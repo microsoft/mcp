@@ -38,6 +38,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [Working with Administrators](#working-with-administrators)
     - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
     - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
+  - [Sovereign Cloud Support](#sovereign-cloud-support)
 
 ## Common Issues
 
@@ -997,6 +998,52 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
          }
       }
    ```
+
+## Sovereign Cloud Support
+
+For configuration options, see the [Sovereign Cloud Support](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support) section in the README.
+
+### Authentication Failures
+
+Authentication against a sovereign cloud most commonly fails because the local tooling is still authenticated against the public cloud. Before starting the server, switch your tools to the target cloud:
+
+```bash
+# Azure CLI
+az cloud set --name AzureChinaCloud
+az login
+
+# Azure PowerShell
+Connect-AzAccount -Environment AzureChinaCloud
+
+# Azure Developer CLI
+azd config set cloud.name AzureChinaCloud
+azd auth login
+```
+
+If authentication still fails after switching clouds, check the following:
+
+- **Wrong tenant** — Sovereign cloud tenants are separate from the public cloud. Confirm the tenant ID belongs to your sovereign cloud subscription:
+  ```bash
+  az account show --query tenantId -o tsv
+  ```
+
+- **Wrong cloud name** — An unrecognized value falls back to the public cloud silently. Verify the value you passed to `--cloud` or `AZURE_CLOUD` matches a supported alias. See the [README](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support) for the full list.
+
+- **Network connectivity** — Sovereign clouds use different authority hosts. Confirm you can reach the correct endpoint:
+  | Cloud | Authority Host |
+  |-------|----------------|
+  | Azure China Cloud | `https://login.chinacloudapi.cn` |
+  | Azure US Government | `https://login.microsoftonline.us` |
+
+#### Sovereign cloud in Remote (using Azure Container Apps)
+
+When authenicating in remote, the following environment variables need to be set on the container:
+
+- AZURE_CLOUD
+- AzureAd__ClientCredentials__0__TokenExchangeUrl
+
+If encountering authentication issues in remote, verify these environment variables are set correctly.
+For more information, see the [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md).
 
 ## Remote MCP Server
 
