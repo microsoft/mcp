@@ -13,6 +13,9 @@
                 "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
                 "properties": {
                     "activeValueSetName": "Default value set"
+                },
+                "sensitivityLabel": {
+                    "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
                 }
             }
         }

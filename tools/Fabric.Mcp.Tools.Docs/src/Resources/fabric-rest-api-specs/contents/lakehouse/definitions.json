@@ -136,6 +136,11 @@
           "description": "The lakehouse public definition.",
           "$ref": "#/definitions/LakehouseDefinition",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the lakehouse.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -189,7 +194,7 @@
       }
     },
     "LakehouseDefinition": {
-      "description": "Lakehouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/lakehouse-definition) for more details on how to craft a lakehouse definition.",
+      "description": "Lakehouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/lakehouse-definition) for more details on the structure of the Lakehouse definition.",
       "type": "object",
       "required": ["parts"],
       "properties": {

@@ -26,12 +26,20 @@
                             }
                         ],
                         "supportedCredentialTypes": [
-                            "Basic", "OAuth2"
+                            "Basic",
+                            "OAuth2",
+                            "ServicePrincipal",
+                            "WorkspaceIdentity"
                         ],
                         "supportedConnectionEncryptionTypes": [
-                            "Encrypted", "NotEncrypted"
+                            "NotEncrypted",
+                            "Encrypted"
                         ],
-                        "supportsSkipTestConnection": true
+                        "supportsSkipTestConnection": false,
+                        "supportedCredentialTypesForUsageInUserControlledCode": [
+                            "Basic",
+                            "WorkspaceIdentity"
+                        ]
                     }
                 ],
                 "continuationToken": "LDEsMTAwMDAwLDA%3D",

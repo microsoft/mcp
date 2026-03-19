@@ -16,8 +16,7 @@
                             "namespaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourceGroupName/providers/Microsoft.EventGrid/namespaces/eventGridNamespaceName",
                             "topic": "eea0a4ba-733a-4519-a20c-3c95f3840efa"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "514d0e11-cf65-44fb-a292-fc88a2a78618",
@@ -33,8 +32,18 @@
                                 }
                             }
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
+                    },
+                    {
+                        "id": "d1c9f8a2-8f3e-4c7c-b9b9-4e1b7b3a5f3f",
+                        "name": "AzureEventHubExtendedSource",
+                        "type": "AzureEventHubExtended",
+                        "properties": {
+                            "dataConnectionId": "7b0d2f83-1b3f-4f3b-a0f9-1d6b2f7b6c21",
+                            "consumerGroupName": "$Default",
+                            "startPosition": "Earliest"
+                        },
+                        "status": "Running"
                     },
                     {
                         "id": "e2886002-d696-4c05-969c-51361365cc24",
@@ -50,8 +59,7 @@
                                 }
                             }
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "7ff51116-df2c-4e47-bf4f-1b59f5f0ed17",
@@ -62,16 +70,136 @@
                             "databaseName": "databaseName",
                             "tableNames": "tableName1,tableName2"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "0d9bf4db-bc7f-4854-8579-6fdf244ed503",
                         "name": "CustomEndpointSource",
                         "type": "CustomEndpoint",
                         "properties": {},
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
+                    },
+                    {
+                        "id": "8b6b1b8e-9b7f-4a7d-8f6b-6f2a8b7c4b15",
+                        "name": "AzureBlobStorageEventsSource",
+                        "type": "AzureBlobStorageEvents",
+                        "properties": {
+                            "azureBlobStorageEvents": [
+                                {
+                                    "id": "c1a7f10c-3b4a-4d1a-9f6f-1d2b3c4d5e6f",
+                                    "azureResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourceGroupName/providers/Microsoft.Storage/storageAccounts/storageAccountName",
+                                    "includedEventTypes": [
+                                        "Microsoft.Storage.BlobCreated",
+                                        "Microsoft.Storage.BlobDeleted"
+                                    ]
+                                }
+                            ],
+                            "streamEvents": true
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "2e7b7f0f-6f1a-4d38-8b12-67d0e2d3e0b9",
+                        "name": "FabricCapacityOverviewEventsSource",
+                        "type": "FabricCapacityOverviewEvents",
+                        "properties": {
+                            "eventScope": "Capacity",
+                            "capacityId": "0b6d8e27-0b7b-4e18-9e5b-2e6b9d9d7e3a",
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.Capacity.State",
+                                "Microsoft.Fabric.Capacity.Summary"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "NumberIn",
+                                    "key": "data.counter",
+                                    "values": [
+                                        5,
+                                        1
+                                    ]
+                                }
+                            ]
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "f9c8c1e2-1c5b-4c2a-8f3a-1a2b3c4d5e6f",
+                        "name": "FabricJobEventsSource",
+                        "type": "FabricJobEvents",
+                        "properties": {
+                            "eventScope": "Workspace",
+                            "workspaceId": "9625b495-17b3-4d6c-aeea-a81ae76ba369",
+                            "itemId": "ee579458-85ea-4652-bd77-5c7d7c298b2a",
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.Job.Started",
+                                "Microsoft.Fabric.Job.Completed"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "StringIn",
+                                    "key": "data.jobType",
+                                    "values": [
+                                        "Pipeline",
+                                        "Notebook"
+                                    ]
+                                }
+                            ]
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "b7a6f5e4-3d2c-4b1a-9f8e-7d6c5b4a3f2e",
+                        "name": "FabricOneLakeEventsSource",
+                        "type": "FabricOneLakeEvents",
+                        "properties": {
+                            "tenantId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                            "workspaceId": "9625b495-17b3-4d6c-aeea-a81ae76ba369",
+                            "itemId": "ee579458-85ea-4652-bd77-5c7d7c298b2a",
+                            "oneLakePaths": [
+                                "/Files/Events/",
+                                "/Tables/Telemetry/"
+                            ],
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.OneLake.FileCreated",
+                                "Microsoft.Fabric.OneLake.FileDeleted"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "StringEndsWith",
+                                    "key": "data.path",
+                                    "values": [
+                                        ".json",
+                                        ".csv"
+                                    ]
+                                }
+                            ]
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "e6d5c4b3-a2b1-4c5d-9e8f-7a6b5c4d3e2f",
+                        "name": "FabricWorkspaceItemEventsSource",
+                        "type": "FabricWorkspaceItemEvents",
+                        "properties": {
+                            "eventScope": "Item",
+                            "workspaceId": "9625b495-17b3-4d6c-aeea-a81ae76ba369",
+                            "itemId": "4c8c3353-9652-4567-b8f3-eb585ef01ba9",
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.Item.Created",
+                                "Microsoft.Fabric.Item.Deleted"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "StringIn",
+                                    "key": "data.itemType",
+                                    "values": [
+                                        "Lakehouse",
+                                        "Notebook"
+                                    ]
+                                }
+                            ]
+                        },
+                        "status": "Running"
                     },
                     {
                         "id": "19258e62-4de9-4c52-b45e-71502dc2ddea",
@@ -80,8 +208,7 @@
                         "properties": {
                             "type": "Bicycles"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "7afaa265-1d67-416f-8183-e6e1b1ebb4ea",
@@ -91,8 +218,7 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "region": "us-east-1"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "d020dd19-e84c-42e1-b4be-87e58145e1b5",
@@ -106,8 +232,7 @@
                             "saslMechanism": "PLAIN",
                             "securityProtocol": "SASL_PLAINTEXT"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "03a6dd4a-4627-422f-a287-2ccd7daf903d",
@@ -121,8 +246,7 @@
                             "saslMechanism": "SCRAM-SHA-512",
                             "securityProtocol": "SASL_SSL"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "6f493321-6c12-40c6-9980-c2aa38804829",
@@ -134,8 +258,7 @@
                             "consumerGroupName": "consumerGroupName",
                             "autoOffsetReset": "Earliest"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "e7f88779-0349-47e3-bead-85afc9d3c9a4",
@@ -147,8 +270,7 @@
                             "databaseName": "databaseName",
                             "offsetPolicy": "Earliest"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "da5ed80d-c672-4809-a7ac-6224aa2ab2c7",
@@ -158,8 +280,7 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "tableName": "tableName"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "745e401f-aac6-463f-b107-c336a2440abe",
@@ -169,8 +290,7 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "tableName": "tableName"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "759842ab-a968-498d-9f37-f46297da8b07",
@@ -180,8 +300,7 @@
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
                             "tableName": "tableName"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "9791cd2a-19fb-4991-b878-2b061420a460",
@@ -193,8 +312,7 @@
                             "serverId": 9,
                             "port": 3306
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "57b3394b-bcf3-479a-952b-22a815e1d684",
@@ -206,8 +324,7 @@
                             "slotName": "slotName",
                             "port": 5432
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "d5f702ca-8b2b-4ac5-88e7-50697cb1b207",
@@ -216,8 +333,34 @@
                         "properties": {
                             "dataConnectionId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
+                    },
+                    {
+                        "id": "0d61c91a-6b1d-4f4f-8e9a-1a7ef0f4d4f1",
+                        "name": "HttpSource",
+                        "type": "Http",
+                        "properties": {
+                            "dataConnectionId": "9dfcf6c1-0b38-4d53-9a2f-7b7f7d3f1a4b",
+                            "method": "GET",
+                            "requestHeaders": [
+                                {
+                                    "key": "Accept",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "requestParameters": [
+                                {
+                                    "key": "country",
+                                    "value": "US"
+                                }
+                            ],
+                            "requestBody": "{\"query\":\"sample\"}",
+                            "pollIntervalMs": 60000,
+                            "maxRetries": 3,
+                            "retryBackoffMs": 2000,
+                            "retriableHttpStatusCodes": "408,423,429"
+                        },
+                        "status": "Running"
                     },
                     {
                         "id": "77640306-3525-45cb-978c-f2ce6f1d2605",
@@ -228,8 +371,7 @@
                             "serverVersion": "V5",
                             "topic": "mqttTopicName"
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "bf273a56-dcb7-4cb1-8be4-5620f769fe1f",
@@ -239,8 +381,7 @@
                             "latitude": -22.690611,
                             "longitude": -45.7846301
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "a612baf7-4d64-4522-8850-44847c99016c",
@@ -257,8 +398,7 @@
                             "mapUserProperties": false,
                             "mapSolaceProperties": false
                         },
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     }
                 ],
                 "destinations": [
@@ -272,8 +412,7 @@
                                 "name": "DerivedStreamName"
                             }
                         ],
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "e1e2d0cc-87e5-46d9-977d-2a8eede7bef0",
@@ -298,8 +437,7 @@
                                 "name": "DerivedStreamName"
                             }
                         ],
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "49b5d6ec-f8af-4ae9-a4d6-5e94645efe1f",
@@ -323,8 +461,7 @@
                                 "name": "EventStreamName-stream"
                             }
                         ],
-                        "status": "Running",
-                        "error": null
+                        "status": "Running"
                     },
                     {
                         "id": "c0ca1c2a-b8c5-482c-98da-40088f988e9c",
@@ -342,8 +479,7 @@
                                 "name": "EventStreamName-stream"
                             }
                         ],
-                        "status": "External",
-                        "error": null
+                        "status": "External"
                     }
                 ],
                 "streams": [
