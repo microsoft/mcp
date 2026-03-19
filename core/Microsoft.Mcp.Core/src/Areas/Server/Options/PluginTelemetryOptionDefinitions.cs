@@ -25,7 +25,7 @@ public static class PluginTelemetryOptionDefinitions
         $"--{EventTypeName}"
     )
     {
-        Description = "Type of event being logged (e.g., 'plugin_invocation', 'tool_invocation', 'reference_file_read').",
+        Description = "Type of event being logged (e.g., 'skill_invocation', 'tool_invocation', 'reference_file_read').",
         Required = true
     };
 
@@ -45,11 +45,11 @@ public static class PluginTelemetryOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> PluginName = new(
-        $"--{PluginNameName}"
+    public static readonly Option<string> SkillName = new(
+        $"--{SkillName}"
     )
     {
-        Description = "Name of the plugin being invoked.",
+        Description = "Name of the skill being invoked.",
         Required = false
     };
 

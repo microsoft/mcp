@@ -80,7 +80,7 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         command.Options.Add(PluginTelemetryOptionDefinitions.EventType);
         command.Options.Add(PluginTelemetryOptionDefinitions.SessionId);
         command.Options.Add(PluginTelemetryOptionDefinitions.ClientType);
-        command.Options.Add(PluginTelemetryOptionDefinitions.PluginName);
+        command.Options.Add(PluginTelemetryOptionDefinitions.SkillName);
         command.Options.Add(PluginTelemetryOptionDefinitions.ToolName);
         command.Options.Add(PluginTelemetryOptionDefinitions.FileReference);
     }
@@ -93,7 +93,7 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
             EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
             SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
             ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
-            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
+            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
             ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
             FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
         };
