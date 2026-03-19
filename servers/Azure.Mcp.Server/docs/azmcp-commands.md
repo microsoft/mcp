@@ -1718,6 +1718,42 @@ azmcp deviceregistry namespace list --subscription <subscription> \
                                     [--resource-group <resource-group>]
 ```
 
+### Azure DocumentDB (with MongoDB compatibility) Operations
+
+```bash
+# List all indexes on a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index list indexes --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name>
+
+# Create an index on a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index create index --connection-string <connection-string> \
+                                    --db-name <db-name> \
+                                    --collection-name <collection-name> \
+                                    --keys <json-index-keys> \
+                                    [--options <json-index-options>]
+
+# Drop an index from a collection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index drop index --connection-string <connection-string> \
+                                  --db-name <db-name> \
+                                  --collection-name <collection-name> \
+                                  --index-name <index-name>
+
+# Get index statistics for a collection
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index index stats --connection-string <connection-string> \
+                                   --db-name <db-name> \
+                                   --collection-name <collection-name>
+
+# Get current DocumentDB operations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp documentdb index current ops --connection-string <connection-string> \
+                                   [--ops <json-filter>]
+```
+
 ### Azure Event Grid Operations
 
 ```bash
