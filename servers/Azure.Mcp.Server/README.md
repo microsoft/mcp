@@ -1020,7 +1020,7 @@ Example prompts that generate Azure CLI commands:
 
 * "Query my Log Analytics workspace"
 
-### 🧭 Azure Monitor Instrumentation
+### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
 * "List available Azure Monitor onboarding learning resources"
 * "Get the learning resource at 'concepts/dotnet/opentelemetry-pipeline.md'"
@@ -1104,8 +1104,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, and health monitoring
-- 🧭 **Azure Monitor Instrumentation** - Deterministic onboarding and migration workflow for instrumenting local applications
+- 📈 **Azure Monitor** - Logging, metrics, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
