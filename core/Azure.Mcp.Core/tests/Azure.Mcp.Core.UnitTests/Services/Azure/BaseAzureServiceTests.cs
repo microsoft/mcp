@@ -162,10 +162,69 @@ public class BaseAzureServiceTests
         Assert.Equal("The value cannot be an empty string or composed entirely of whitespace. (Parameter 'transportType')", exception.Message);
     }
 
+    [Fact]
+    public async Task GetArmAccessTokenAsync_UsesArmDefaultScope()
+    {
+        // Arrange
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
+        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(credential);
+
+        // Act
+        await _azureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
+
+        // Assert: ARM default scope is passed in the TokenRequestContext
+        await credential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(ctx => ctx.Scopes.Contains(ArmEnvironment.AzurePublicCloud.DefaultScope)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetArmAccessTokenAsync_ForwardsTenantIdToGetTokenCredentialAsync()
+    {
+        // Arrange
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
+        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(credential);
+
+        // Act
+        await _azureService.GetArmAccessTokenPublicAsync(TenantName, TestContext.Current.CancellationToken);
+
+        // Assert: TenantName is resolved to TenantId and forwarded to GetTokenCredentialAsync
+        await _tenantService.Received(1).GetTokenCredentialAsync(TenantId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetArmAccessTokenAsync_NullTenant_PassesNullToGetTokenCredentialAsync()
+    {
+        // Arrange
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("token", DateTimeOffset.UtcNow.AddHours(1))));
+        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(credential);
+
+        // Act
+        await _azureService.GetArmAccessTokenPublicAsync(TestContext.Current.CancellationToken);
+
+        // Assert: null tenant is passed through as null
+        await _tenantService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
+    }
+
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
             CreateArmClientAsync(tenant, retryPolicy);
+
+        public Task<AccessToken> GetArmAccessTokenPublicAsync(CancellationToken cancellationToken) =>
+            GetArmAccessTokenAsync(null, cancellationToken);
+
+        public Task<AccessToken> GetArmAccessTokenPublicAsync(string? tenant, CancellationToken cancellationToken) =>
+            GetArmAccessTokenAsync(tenant, cancellationToken);
 
         // Expose the protected ResolveTenantIdAsync method for testing
         public Task<string?> ResolveTenantId(string? tenant, CancellationToken cancellationToken) => ResolveTenantIdAsync(tenant, cancellationToken);

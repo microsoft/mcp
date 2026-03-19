@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
@@ -24,9 +21,9 @@ public sealed class TableNamespaceGetCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "a86298d1-7475-4ea8-8c1b-e4c54ac2b896";
-    public override string Name => "get";
+    public override string Name => "get_table_namespace";
     public override string Title => "Get OneLake Table Namespace";
-    public override string Description => "Retrieve detailed metadata for a specific namespace (schema) exposed by the OneLake table API. CRITICAL: When using --item with friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse' or 'ItemName.Warehouse').";
+    public override string Description => "Retrieves metadata for a specific table namespace. Use this when the user needs details about a namespace.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -45,8 +42,25 @@ public sealed class TableNamespaceGetCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Namespace.AsRequired());
         command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override TableNamespaceGetOptions BindOptions(ParseResult parseResult)
@@ -75,30 +89,9 @@ public sealed class TableNamespaceGetCommand(
                 ? options.WorkspaceId
                 : options.Workspace;
 
-            if (string.IsNullOrWhiteSpace(workspaceIdentifier))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "Workspace identifier is required. Provide --workspace or --workspace-id.";
-                return context.Response;
-            }
-
             var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
                 ? options.ItemId
                 : options.Item;
-
-            if (string.IsNullOrWhiteSpace(itemIdentifier))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "Item identifier is required. Provide --item or --item-id.";
-                return context.Response;
-            }
-
-            if (string.IsNullOrWhiteSpace(options.Namespace))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "Namespace is required. Provide --namespace.";
-                return context.Response;
-            }
 
             var namespaceResult = await _oneLakeService.GetTableNamespaceAsync(workspaceIdentifier!, itemIdentifier!, options.Namespace!, cancellationToken);
             var result = new TableNamespaceGetCommandResult(namespaceResult.Workspace, namespaceResult.Item, namespaceResult.Namespace, namespaceResult.Definition, namespaceResult.RawResponse);

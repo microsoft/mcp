@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
@@ -13,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : BaseStorageCommand<ContainerGetOptions>()
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
 {
     private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
 
@@ -63,8 +63,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
 
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containers = await storageService.GetContainerDetails(
+            var containers = await _storageService.GetContainerDetails(
                 options.Account!,
                 options.Container,
                 options.Subscription!,
@@ -91,5 +90,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
         }
     }
 
-    internal record ContainerGetCommandResult([property: JsonPropertyName("containers")] List<ContainerInfo> Containers);
+    internal record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }

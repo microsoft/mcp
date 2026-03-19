@@ -140,7 +140,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 3. **Node.js**: [Node.js 20+](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
 4. **PowerShell**: [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (required for build/test scripts)
-5. **.NET SDK**: .NET 10.0.103 (configured in `global.json`)
+5. **.NET SDK**: .NET 10.0.201 (configured in `global.json`)
 6. **Azure PowerShell**: For live tests - [Install Azure PowerShell](https://learn.microsoft.com/powershell/azure/install-azure-powershell)
 7. **Azure Bicep**: For test infrastructure - [Install Azure Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install#install-manually)
 
@@ -462,7 +462,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         // Use subscriptionResource for write operations
     }
 }
@@ -640,7 +640,7 @@ Azure MCP Server supports **stdio** (local) and **HTTP** (remote) transports wit
 **Key Patterns:**
 ```csharp
 // ✅ Correct: Authentication provider handles both modes
-var credential = await GetCredentialAsync(null, CancellationToken.None);
+var credential = await GetCredentialAsync(tenant, CancellationToken.None);
 var armClient = new ArmClient(credential);
 
 // ❌ Wrong: Don't check transport type or access HttpContext

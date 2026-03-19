@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
@@ -17,6 +16,7 @@ using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -25,11 +25,13 @@ public class MonitorService(
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientFactory httpClientFactory) : BaseAzureService(tenantService), IMonitorService
+    IHttpClientFactory httpClientFactory,
+    ILogger<MonitorService> logger) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ILogger<MonitorService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -78,7 +80,8 @@ public class MonitorService(
                 TimeoutException => "The query timed out. Try simplifying your query or reducing the time range.",
                 _ => $"Error querying resource logs: {ex.Message}"
             };
-            throw new Exception(errorMessage, ex);
+            _logger.LogError(ex, errorMessage);
+            throw;
         }
     }
 
@@ -122,43 +125,36 @@ public class MonitorService(
         options.Transport = new HttpClientTransport(_httpClientFactory.CreateClient());
         var client = new LogsQueryClient(credential, options);
 
-        try
+        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+
+        var response = await client.QueryWorkspaceAsync(
+            workspaceId,
+            query,
+            new(TimeSpan.FromDays(timeSpanDays)),
+            options: null,
+            cancellationToken
+        );
+
+        var results = new List<JsonNode>();
+        if (response.Value.Table != null)
         {
-            var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+            var rows = response.Value.Table.Rows;
+            var columns = response.Value.Table.Columns;
 
-            var response = await client.QueryWorkspaceAsync(
-                workspaceId,
-                query,
-                new LogsQueryTimeRange(TimeSpan.FromDays(timeSpanDays)),
-                options: null,
-                cancellationToken
-            );
-
-            var results = new List<JsonNode>();
-            if (response.Value.Table != null)
+            if (rows != null && columns != null && rows.Any())
             {
-                var rows = response.Value.Table.Rows;
-                var columns = response.Value.Table.Columns;
-
-                if (rows != null && columns != null && rows.Any())
+                foreach (var row in rows)
                 {
-                    foreach (var row in rows)
+                    var rowDict = new JsonObject();
+                    for (int i = 0; i < columns.Count; i++)
                     {
-                        var rowDict = new JsonObject();
-                        for (int i = 0; i < columns.Count; i++)
-                        {
-                            rowDict[columns[i].Name] = JsonValue.Create(row[i]?.ToString() ?? "null");
-                        }
-                        results.Add(rowDict);
+                        rowDict[columns[i].Name] = JsonValue.Create(row[i]?.ToString() ?? "null");
                     }
+                    results.Add(rowDict);
                 }
             }
-            return results;
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error querying workspace: {ex.Message}", ex);
-        }
+        return results;
     }
 
     public async Task<List<string>> ListTables(
@@ -172,36 +168,29 @@ public class MonitorService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
-        try
+        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+
+        var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
+            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+        var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (workspaceResponse?.Value == null)
         {
-            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
-
-            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
-                throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (workspaceResponse?.Value == null)
-            {
-                throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
-            }
-
-            var workspaceResource = workspaceResponse.Value;
-            var tableOperations = workspaceResource.GetOperationalInsightsTables();
-            var tables = await tableOperations.GetAllAsync(cancellationToken)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            return [.. tables
-                .Where(table => string.IsNullOrEmpty(tableType) || table.Data.Schema.TableType.ToString() == tableType)
-                .Select(table => table.Data.Name ?? string.Empty) // ensure non-null
-                .Where(name => !string.IsNullOrEmpty(name))
-                .OrderBy(name => name)];
+            throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing tables for workspace {workspace}: {ex.Message}", ex);
-        }
+
+        var workspaceResource = workspaceResponse.Value;
+        var tableOperations = workspaceResource.GetOperationalInsightsTables();
+        var tables = await tableOperations.GetAllAsync(cancellationToken)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return [.. tables
+            .Where(table => string.IsNullOrEmpty(tableType) || table.Data.Schema.TableType.ToString() == tableType)
+            .Select(table => table.Data.Name ?? string.Empty) // ensure non-null
+            .Where(name => !string.IsNullOrEmpty(name))
+            .OrderBy(name => name)];
     }
 
     public async Task<List<WorkspaceInfo>> ListWorkspaces(
@@ -212,26 +201,19 @@ public class MonitorService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
-        {
-            var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-            var workspaces = await subscriptionResource
-                .GetOperationalInsightsWorkspacesAsync(cancellationToken)
-                .Select(workspace => new WorkspaceInfo
-                {
-                    Name = workspace.Data.Name,
-                    CustomerId = workspace.Data.CustomerId?.ToString() ?? string.Empty,
-                })
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+        var workspaces = await subscriptionResource
+            .GetOperationalInsightsWorkspacesAsync(cancellationToken)
+            .Select(workspace => new WorkspaceInfo
+            {
+                Name = workspace.Data.Name,
+                CustomerId = workspace.Data.CustomerId?.ToString() ?? string.Empty,
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
-            return workspaces;
-        }
-        catch (Exception ex) when (ex is not ArgumentNullException)
-        {
-            throw new Exception($"Error retrieving Log Analytics workspaces: {ex.Message}", ex);
-        }
+        return workspaces;
     }
     public async Task<List<JsonNode>> QueryWorkspaceLogs(
         string subscription,
@@ -286,7 +268,8 @@ public class MonitorService(
                 _ => $"Error querying logs: {ex.Message}"
             };
 
-            throw new Exception(errorMessage, ex);
+            _logger.LogError(ex, errorMessage);
+            throw;
         }
     }
 
@@ -339,37 +322,31 @@ public class MonitorService(
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
-        try
+
+        var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
+
+        var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+        var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (workspaceResponse?.Value == null)
         {
-            var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy, cancellationToken);
-
-            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
-                ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-            var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (workspaceResponse?.Value == null)
-            {
-                throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
-            }
-
-            var workspaceResource = workspaceResponse.Value;
-            var tableOperations = workspaceResource.GetOperationalInsightsTables();
-            var tables = await tableOperations.GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
-
-            var tableTypes = tables
-                .Select(table => table.Data.Schema.TableType?.ToString() ?? string.Empty)
-                .Where(type => !string.IsNullOrEmpty(type))
-                .Distinct()
-                .OrderBy(type => type)
-                .ToList();
-
-            return tableTypes;
+            throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing table types for workspace {workspace}: {ex.Message}", ex);
-        }
+
+        var workspaceResource = workspaceResponse.Value;
+        var tableOperations = workspaceResource.GetOperationalInsightsTables();
+        var tables = await tableOperations.GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        var tableTypes = tables
+            .Select(table => table.Data.Schema.TableType?.ToString() ?? string.Empty)
+            .Where(type => !string.IsNullOrEmpty(type))
+            .Distinct()
+            .OrderBy(type => type)
+            .ToList();
+
+        return tableTypes;
     }
 
     public async Task<List<ActivityLogEventData>> ListActivityLogs(
@@ -391,26 +368,19 @@ public class MonitorService(
             top = 10;
         }
 
-        try
-        {
-            // Resolve the resource ID from the resource name
-            var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
-                subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        // Resolve the resource ID from the resource name
+        var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
+            subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
 
-            string resourceId = resourceIdentifier.ToString();
-            string subscriptionId = resourceIdentifier.SubscriptionId
-                ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
+        string resourceId = resourceIdentifier.ToString();
+        string subscriptionId = resourceIdentifier.SubscriptionId
+            ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
-            // Get the activity logs from the Azure Management API
-            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
+        // Get the activity logs from the Azure Management API
+        var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, cancellationToken);
 
-            // Take only the requested number of logs
-            return activityLogs.Take(top).ToList();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving activity logs for resource '{resourceName}': {ex.Message}", ex);
-        }
+        // Take only the requested number of logs
+        return activityLogs.Take(top).ToList();
     }
 
     private async Task<List<ActivityLogEventData>> CallActivityLogApiAsync(
@@ -447,10 +417,7 @@ public class MonitorService(
         query += $"&$filter={Uri.EscapeDataString(filter)}";
         uriBuilder.Query = query;
 
-        TokenCredential credential = await GetCredential(tenant, cancellationToken);
-        AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
         // Make paginated requests
         string? nextRequestUrl = uriBuilder.Uri.ToString();
@@ -467,7 +434,7 @@ public class MonitorService(
     private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token, CancellationToken cancellationToken)
     {
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        httpRequest.Headers.Authorization = new("Bearer", token);
 
         var client = _httpClientFactory.CreateClient();
         using HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken);
@@ -479,7 +446,7 @@ public class MonitorService(
                 responseStream,
                 MonitorJsonContext.Default.ActivityLogListResponse,
                 cancellationToken);
-            return responseObject ?? new ActivityLogListResponse();
+            return responseObject ?? new();
         }
         else
         {
@@ -501,11 +468,8 @@ public class MonitorService(
         }
     }
 
-    private static bool IsWorkspaceId(string workspace)
-    {
-        // Workspace IDs are GUIDs
-        return Guid.TryParse(workspace, out _);
-    }
+    // Workspace IDs are GUIDs
+    private static bool IsWorkspaceId(string workspace) => Guid.TryParse(workspace, out _);
 
     private async Task<(string id, string name)> GetWorkspaceInfo(
         string workspace,

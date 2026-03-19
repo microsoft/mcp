@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -19,13 +20,14 @@ public class FoundryExtensionsServiceEndpointValidationTests
     private readonly ITenantService _tenantService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly FoundryExtensionsService _service;
+    private readonly ILogger<FoundryExtensionsService> _logger = Substitute.For<ILogger<FoundryExtensionsService>>();
 
     public FoundryExtensionsServiceEndpointValidationTests()
     {
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
         _httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _service = new FoundryExtensionsService(_httpClientFactory, _subscriptionService, _tenantService);
+        _service = new FoundryExtensionsService(_httpClientFactory, _subscriptionService, _tenantService, _logger);
     }
 
     #region Test Data
@@ -43,35 +45,6 @@ public class FoundryExtensionsServiceEndpointValidationTests
     #endregion
 
     #region Project Endpoint Validation Tests
-
-    [Theory]
-    [MemberData(nameof(InvalidProjectEndpoints))]
-    public async Task ListThreads_RejectsInvalidProjectEndpoints(string invalidEndpoint)
-    {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.ListThreads(
-                invalidEndpoint,
-                null,
-                null,
-                TestContext.Current.CancellationToken));
-
-        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
-    }
-
-    [Theory]
-    [MemberData(nameof(InvalidProjectEndpoints))]
-    public async Task GetMessages_RejectsInvalidProjectEndpoints(string invalidEndpoint)
-    {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.GetMessages(
-                invalidEndpoint,
-                "thread-id",
-                null,
-                null,
-                TestContext.Current.CancellationToken));
-
-        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
-    }
 
     [Theory]
     [MemberData(nameof(InvalidProjectEndpoints))]
@@ -94,21 +67,6 @@ public class FoundryExtensionsServiceEndpointValidationTests
                 invalidEndpoint,
                 "test-index",
                 cancellationToken: TestContext.Current.CancellationToken));
-
-        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
-    }
-
-    [Theory]
-    [MemberData(nameof(InvalidProjectEndpoints))]
-    public async Task CreateThread_RejectsInvalidProjectEndpoints(string invalidEndpoint)
-    {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.CreateThread(
-                invalidEndpoint,
-                "test message",
-                null,
-                null,
-                TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid Foundry project endpoint", exception.Message);
     }

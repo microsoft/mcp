@@ -27,7 +27,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     public override string Name => "query";
 
     public override string Description =>
-        $"""
+        """
         Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
         """;
 

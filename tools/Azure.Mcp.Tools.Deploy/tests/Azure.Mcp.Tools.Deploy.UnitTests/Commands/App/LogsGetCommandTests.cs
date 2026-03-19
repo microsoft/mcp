@@ -29,12 +29,11 @@ public class LogsGetCommandTests
         _logger = Substitute.For<ILogger<LogsGetCommand>>();
         _deployService = Substitute.For<IDeployService>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_deployService);
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger);
+        _command = new(_logger, _deployService);
         _commandDefinition = _command.GetCommand();
+        _serviceProvider = new ServiceCollection()
+            .BuildServiceProvider();
+        _context = new(_serviceProvider);
     }
 
     [Fact]

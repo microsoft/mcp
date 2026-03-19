@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
@@ -15,9 +14,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
-public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
+public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
     : BaseAzureMigrateCommand<GetGuidanceOptions>()
 {
+    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
     private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
 
     /// <inheritdoc/>
@@ -109,15 +109,14 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
 
         try
         {
-            IPlatformLandingZoneGuidanceService service = context.GetService<IPlatformLandingZoneGuidanceService>();
             var response = new StringBuilder();
 
-            var guidance = await service.GetGuidanceAsync(options.Scenario!, cancellationToken);
+            var guidance = await _guidanceService.GetGuidanceAsync(options.Scenario!, cancellationToken);
             response.AppendLine(guidance);
 
             if (options.ListPolicies)
             {
-                Dictionary<string, List<string>> allPolicies = await service.GetAllPoliciesAsync(cancellationToken);
+                Dictionary<string, List<string>> allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
                 response.AppendLine("\n--- All Policies by Archetype ---");
                 foreach (var (archetype, policies) in allPolicies.OrderBy(kv => kv.Key))
                 {
@@ -130,7 +129,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
             if (!string.IsNullOrWhiteSpace(options.PolicyName) &&
                 options.Scenario is "policy-enforcement" or "policy-assignment")
             {
-                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await service.SearchPoliciesAsync(options.PolicyName, cancellationToken);
+                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
                 if (locations.Count > 0)
                 {
                     response.AppendLine("\n--- Matching Policies ---");
@@ -147,9 +146,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new GetGuidanceCommandResult(response.ToString()),
-                AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
+            context.Response.Results = ResponseResult.Create(new(response.ToString()), AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
         }
         catch (Exception ex)
         {
@@ -160,6 +157,5 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger)
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(
-        [property: JsonPropertyName("guidance")] string Guidance);
+    internal record GetGuidanceCommandResult(string Guidance);
 }

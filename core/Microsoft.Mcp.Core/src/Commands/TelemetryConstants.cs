@@ -14,6 +14,9 @@ public class TagName
     public const string ClientVersion = "ClientVersion";
     public const string DevDeviceId = "DevDeviceId";
     public const string ErrorDetails = "ErrorDetails";
+    public const string ExceptionMessage = "exception.message";
+    public const string ExceptionType = "exception.type";
+    public const string ExceptionStackTrace = "exception.stacktrace";
     public const string EventId = "EventId";
     public const string MacAddressHash = "MacAddressHash";
     public const string ToolId = "ToolId";
@@ -42,6 +45,7 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
+    public const string PluginExecuted = "PluginExecuted";
 }
 
 public class AppInsightsInstanceType

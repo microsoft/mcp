@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateCommand> logger)
+public sealed class AutoexportJobCreateCommand(IManagedLustreService service, ILogger<AutoexportJobCreateCommand> logger)
     : BaseManagedLustreCommand<AutoexportJobCreateOptions>(logger)
 {
     private const string CommandTitle = "Create Azure Managed Lustre Autoexport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoexportJobCreateCommand> _logger = logger;
 
     public override string Id => "9f3e7c2a-4b8d-4e5f-a1c6-8d9e2f3b4a5c";
@@ -79,8 +79,7 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            var job = await svc.CreateAutoexportJobAsync(
+            var job = await _service.CreateAutoexportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,

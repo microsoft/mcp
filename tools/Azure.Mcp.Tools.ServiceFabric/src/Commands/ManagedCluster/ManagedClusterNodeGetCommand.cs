@@ -81,7 +81,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new ManagedClusterNodeGetCommandResult([node]), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([node]), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
             }
             else
             {
@@ -93,7 +93,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new ManagedClusterNodeGetCommandResult(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
             }
         }
         catch (Exception ex)
