@@ -9,9 +9,9 @@ namespace Azure.Mcp.Core.Helpers
 {
     public static class CommandHelper
     {
-        // Cache the default subscription to avoid redundant file I/O.
-        // The Azure CLI profile is read at most once per process invocation.
-        private static readonly Lazy<string?> s_defaultSubscription = new(ResolveDefaultSubscription);
+        // Cache the Azure CLI profile read to avoid redundant file I/O.
+        // The profile is read at most once per process invocation.
+        private static readonly Lazy<string?> s_profileDefault = new(AzureCliProfileHelper.GetDefaultSubscriptionId);
 
         /// <summary>
         /// Checks if a subscription is available from the command option, Azure CLI profile, or AZURE_SUBSCRIPTION_ID environment variable.
@@ -47,23 +47,18 @@ namespace Azure.Mcp.Core.Helpers
         /// <summary>
         /// Gets the default subscription from the Azure CLI profile (~/.azure/azureProfile.json),
         /// falling back to the AZURE_SUBSCRIPTION_ID environment variable.
-        /// The result is cached for the lifetime of the process to avoid redundant file I/O.
+        /// The CLI profile read is cached for the lifetime of the process to avoid redundant file I/O.
         /// </summary>
         public static string? GetDefaultSubscription()
         {
-            return s_defaultSubscription.Value;
-        }
-
-        private static string? ResolveDefaultSubscription()
-        {
-            // Primary: Azure CLI profile (set via 'az account set')
-            var profileDefault = AzureCliProfileHelper.GetDefaultSubscriptionId();
+            // Primary: Azure CLI profile (set via 'az account set') - cached to avoid repeated file I/O
+            var profileDefault = s_profileDefault.Value;
             if (!string.IsNullOrEmpty(profileDefault))
             {
                 return profileDefault;
             }
 
-            // Fallback: AZURE_SUBSCRIPTION_ID environment variable
+            // Fallback: AZURE_SUBSCRIPTION_ID environment variable (cheap, not cached)
             return EnvironmentHelpers.GetAzureSubscriptionId();
         }
 
