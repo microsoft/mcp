@@ -39,7 +39,7 @@
 # ServiceLabel: %packages-IntelliJ
 # ServiceOwners:                       @srnagar @microsoft/azure-mcp
 
-# ServiceLabel: %tools-mcpb
+# ServiceLabel: %packages-mcpb
 # ServiceOwners:                       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %packages-npx
