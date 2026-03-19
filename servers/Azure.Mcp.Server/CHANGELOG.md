@@ -2,18 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 1.0.4-beta.1 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 1.0.4 (2026-03-18)
 
 ### Bugs Fixed
 
-- Hardened Postgres SQL query validator to block set-operation keywords (UNION, INTERSECT, EXCEPT), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals [[#2097](https://github.com/microsoft/mcp/pull/2097)]
-- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2083](https://github.com/microsoft/mcp/pull/2083)]
-
-### Other Changes
+- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2108](https://github.com/microsoft/mcp/pull/2108)]
+- Hardened Postgres SQL query validator to block set-operation keywords (`UNION`, `INTERSECT`, `EXCEPT`), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2097](https://github.com/microsoft/mcp/pull/2097)]
 
 ## 1.0.3 (2026-03-17)
 
