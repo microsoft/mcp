@@ -31,7 +31,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
         Destructive = false,
         Idempotent = false,
         OpenWorld = true,
-        ReadOnly = true,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };
