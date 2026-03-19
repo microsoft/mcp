@@ -143,10 +143,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
                 ?.SetTag(TagName.ExceptionMessage, string.Join("; ", result.Errors));
 
             commandResponse.Status = HttpStatusCode.BadRequest;
-            var errorMessage = string.Join('\n', result.Errors);
-            var exceptionResult = new ExceptionResult(errorMessage, null, "ValidationError");
-            commandResponse.Results = ResponseResult.Create(exceptionResult, CoreJsonContext.Default.ExceptionResult);
-            commandResponse.Message = errorMessage;
+            commandResponse.Message = string.Join('\n', result.Errors);
         }
 
         return result;
