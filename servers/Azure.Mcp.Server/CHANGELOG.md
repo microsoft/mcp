@@ -2,15 +2,22 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.30 (Unreleased)
-
-### Features Added
+## 2.0.0-beta.30 (2026-03-19)
 
 ### Breaking Changes
 
-### Bugs Fixed
+- Moved the following tools from `monitorinstrumentation` namespace to `monitor` namespace:
+[[#2087](https://github.com/microsoft/mcp/pull/2087)]
+  - `list_learning_resources`
+  - `get_learning_resource`
+  - `orchestrator_start`
+  - `orchestrator_next`
+  - `send_brownfield_analysis`
+- Consolidated the `list_learning_resources` tool and `get_learning_resources` into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
 
 ### Other Changes
+- Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
+- Reviewed MCP tool Command definitions and resolved validation inconsistencies, aligning implementations with tool development guidelines and improving consistency across multiple tool areas. [[#2086](https://github.com/microsoft/mcp/pull/2086)]
 
 ## 2.0.0-beta.29 (2026-03-18)
 
