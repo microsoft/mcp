@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -12,6 +10,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
@@ -48,6 +47,16 @@ public sealed class OneLakeItemListDfsCommand(
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+        });
     }
 
     protected override OneLakeItemListDfsOptions BindOptions(ParseResult parseResult)
@@ -73,11 +82,6 @@ public sealed class OneLakeItemListDfsCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
             var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
                 options.WorkspaceId,
                 recursive: options.Recursive,

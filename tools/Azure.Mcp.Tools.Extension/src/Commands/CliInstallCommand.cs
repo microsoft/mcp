@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
@@ -25,8 +24,8 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
 
     public override string Description =>
         """
-This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.
-""";
+        This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.
+        """;
 
     public override string Title => CommandTitle;
 
@@ -47,7 +46,7 @@ This tool can provide installation instructions for the specified CLI tool among
 
         command.Validators.Add(result =>
         {
-            var cliType = result.GetValue(ExtensionOptionDefinitions.CliInstall.CliType);
+            var cliType = result.GetValue(ExtensionOptionDefinitions.CliInstall.CliType)?.ToLowerInvariant();
             if (!_allowedCliTypeValues.Contains(cliType))
             {
                 result.AddError($"Invalid CLI type: {cliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
@@ -74,12 +73,7 @@ This tool can provide installation instructions for the specified CLI tool among
 
         try
         {
-            var cliType = options.CliType?.ToLowerInvariant();
-
-            if (cliType is null || !_allowedCliTypeValues.Contains(cliType))
-            {
-                throw new ArgumentException($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
-            }
+            var cliType = options.CliType?.ToLowerInvariant()!;
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
@@ -88,8 +82,7 @@ This tool can provide installation instructions for the specified CLI tool among
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-            CliInstallResult result = new(responseBody, cliType);
-            context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliInstallResult);
+            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliInstallResult);
 
         }
         catch (Exception ex)

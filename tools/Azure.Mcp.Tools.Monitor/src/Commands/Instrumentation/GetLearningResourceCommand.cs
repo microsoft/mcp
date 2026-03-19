@@ -44,7 +44,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
     {
         return new GetLearningResourceOptions
         {
-            Path = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.Path)
+            Path = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.Path.Name)
         };
     }
 

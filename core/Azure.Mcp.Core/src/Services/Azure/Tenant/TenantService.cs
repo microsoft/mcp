@@ -87,8 +87,7 @@ public class TenantService : BaseAzureService, ITenantService
         var tenant = tenants.FirstOrDefault(t => t.Data.DisplayName?.Equals(tenantName, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with name {tenantName}");
 
-        string? tenantId = tenant.Data.TenantId?.ToString();
-        if (tenantId == null)
+        string? tenantId = tenant.Data.TenantId?.ToString() ??
             throw new InvalidOperationException($"Tenant {tenantName} has a null TenantId");
 
         return tenantId.ToString();
@@ -101,8 +100,7 @@ public class TenantService : BaseAzureService, ITenantService
         var tenant = tenants.FirstOrDefault(t => t.Data.TenantId?.ToString().Equals(tenantId, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with ID {tenantId}");
 
-        string? tenantName = tenant.Data.DisplayName;
-        if (tenantName == null)
+        string? tenantName = tenant.Data.DisplayName ??
             throw new InvalidOperationException($"Tenant with ID {tenantId} has a null DisplayName");
 
         return tenantName;

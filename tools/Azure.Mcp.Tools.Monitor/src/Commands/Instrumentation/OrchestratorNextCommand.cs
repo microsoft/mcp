@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -54,8 +53,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     {
         return new OrchestratorNextOptions
         {
-            SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
-            CompletionNote = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.CompletionNote)
+            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
+            CompletionNote = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.CompletionNote.Name)
         };
     }
 
