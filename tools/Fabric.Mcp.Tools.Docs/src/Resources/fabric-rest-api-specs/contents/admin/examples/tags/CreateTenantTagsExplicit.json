@@ -3,10 +3,15 @@
         "scope": {
             "type": "Tenant"
         },
-        "createTagsRequest": [
-            { "displayName": "Finance 2024" },
-            { "displayName": "HR 2024" }
-        ]
+        "createTagsRequest": {
+            "scope": {
+                "type": "Tenant"
+            },
+            "createTagsRequest": [
+                { "displayName": "Finance 2024" },
+                { "displayName": "HR 2024" }
+            ]
+        }
     },
     "responses": {
         "201": {

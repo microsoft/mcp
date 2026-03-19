@@ -17,6 +17,7 @@
           },
           "transform": {
             "type": "csvToDelta",
+            "includeSubfolders": true,
             "properties": {
               "delimiter": ",",
               "skipFilesWithErrors": true,
@@ -37,6 +38,7 @@
           },
           "transform": {
             "type": "csvToDelta",
+            "includeSubfolders": false,
             "properties": {
               "delimiter": ",",
               "skipFilesWithErrors": true,
@@ -87,6 +89,7 @@
             },
             "transform": {
               "type": "csvToDelta",
+              "includeSubfolders": true,
               "properties": {
                 "delimiter": ",",
                 "skipFilesWithErrors": true,
@@ -99,7 +102,7 @@
         {
           "request": {
             "path": "Files/blafolder/folder2",
-            "name": "OneLakeShortcut3"
+            "name": "OneLakeShortcut2"
           },
           "error": {
             "errorCode": "ShorcutsOperationNotAllowed",
@@ -107,6 +110,7 @@
           },
           "transform": {
             "type": "csvToDelta",
+            "includeSubfolders": false,
             "properties": {
               "delimiter": ",",
               "skipFilesWithErrors": true,

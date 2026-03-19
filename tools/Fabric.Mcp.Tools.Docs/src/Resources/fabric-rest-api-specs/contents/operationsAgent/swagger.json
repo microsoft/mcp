@@ -10,7 +10,7 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/OperationsAgents": {
+    "/workspaces/{workspaceId}/operationsAgents": {
       "get": {
         "summary": "Returns a list of OperationsAgents from the specified workspace.",
         "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -90,8 +90,8 @@
         }
       },
       "post": {
-        "summary": "Creates a OperationsAgent in the specified workspace.",
-        "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create OperationsAgent with a definition, refer to [OperationsAgent](/rest/api/fabric/articles/item-management/definitions/operationsagent-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a OperationsAgent the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "summary": "Creates an OperationsAgent in the specified workspace.",
+        "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create an OperationsAgent with a definition, refer to [OperationsAgent](/rest/api/fabric/articles/item-management/definitions/operations-agent-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create an OperationsAgent the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -177,7 +177,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/OperationsAgents/{OperationsAgentId}": {
+    "/workspaces/{workspaceId}/operationsAgents/{operationsAgentId}": {
       "get": {
         "summary": "Returns properties of the specified OperationsAgent.",
         "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the OperationsAgent. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -199,7 +199,7 @@
           },
           {
             "in": "path",
-            "name": "OperationsAgentId",
+            "name": "operationsAgentId",
             "description": "The OperationsAgent ID.",
             "type": "string",
             "format": "uuid",
@@ -263,7 +263,7 @@
           },
           {
             "in": "path",
-            "name": "OperationsAgentId",
+            "name": "operationsAgentId",
             "description": "The OperationsAgent ID.",
             "type": "string",
             "format": "uuid",
@@ -333,11 +333,18 @@
           },
           {
             "in": "path",
-            "name": "OperationsAgentId",
+            "name": "operationsAgentId",
             "description": "The OperationsAgent ID.",
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -358,20 +365,23 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           }
         },
         "x-ms-examples": {
-          "Delete a OperationsAgent example": {
+          "Delete an OperationsAgent example": {
             "$ref": "./examples/DeleteOperationsAgent.json"
+          },
+          "Hard delete an OperationsAgent example": {
+            "$ref": "./examples/HardDeleteOperationsAgent.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/OperationsAgents/{OperationsAgentId}/getDefinition": {
+    "/workspaces/{workspaceId}/operationsAgents/{operationsAgentId}/getDefinition": {
       "post": {
         "summary": "Returns the specified OperationsAgent public definition.",
         "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a OperationsAgent's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the OperationsAgent. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -394,7 +404,7 @@
           },
           {
             "in": "path",
-            "name": "OperationsAgentId",
+            "name": "operationsAgentId",
             "description": "The OperationsAgent ID.",
             "type": "string",
             "format": "uuid",
@@ -473,7 +483,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/OperationsAgents/{OperationsAgentId}/updateDefinition": {
+    "/workspaces/{workspaceId}/operationsAgents/{operationsAgentId}/updateDefinition": {
       "post": {
         "summary": "Overrides the definition for the specified OperationsAgent.",
         "description": "> [!NOTE]\n> OperationsAgent item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the OperationsAgent's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the OperationsAgent. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -496,7 +506,7 @@
           },
           {
             "in": "path",
-            "name": "OperationsAgentId",
+            "name": "operationsAgentId",
             "description": "The OperationsAgent ID.",
             "type": "string",
             "format": "uuid",
