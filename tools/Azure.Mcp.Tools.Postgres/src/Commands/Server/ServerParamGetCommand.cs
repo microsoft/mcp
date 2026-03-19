@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
+public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
 {
+    private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Server Parameter";
 
     public override string Id => "af3a581d-ab64-4939-9765-974815d9c7be";
@@ -58,8 +59,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
 
         try
         {
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            var parameterValue = await pgService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
+            var parameterValue = await _postgresService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, cancellationToken);
             context.Response.Results = parameterValue?.Length > 0 ?
                 ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
                 null;

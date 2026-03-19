@@ -38,7 +38,7 @@ public class ServerParamSetCommandTests
         var expectedMessage = "Parameter 'param123' updated successfully to 'value123'.";
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", "value123", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "param123", "--value", "value123"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -61,7 +61,7 @@ public class ServerParamSetCommandTests
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", "value123", Arg.Any<CancellationToken>()).Returns("");
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "param123", "--value", "value123"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -81,7 +81,7 @@ public class ServerParamSetCommandTests
     [InlineData("--value")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
@@ -105,7 +105,7 @@ public class ServerParamSetCommandTests
         var expectedMessage = "Parameter updated successfully.";
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "max_connections", "--value", "200"]);
         var context = new CommandContext(_serviceProvider);
 
