@@ -216,10 +216,10 @@ public class VmCreateCommandTests
         ]);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<Microsoft.Mcp.Core.Commands.CommandValidationException>(
-            () => _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken));
-        Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Windows", ex.Message, StringComparison.OrdinalIgnoreCase);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("password", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Windows", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

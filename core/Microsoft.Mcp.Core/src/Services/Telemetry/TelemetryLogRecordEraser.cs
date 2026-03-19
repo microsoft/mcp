@@ -7,12 +7,12 @@ using OpenTelemetry.Logs;
 namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 /// <summary>
-/// Prevents emitting telemetry events by OpenTelemetryExporter.  Accomplishes this by clearing the log contents
+/// Prevents emitting telemetry events by OpenTelemetryExporter. Accomplishes this by clearing the log contents
 /// sent when calling any log methods on <see cref="Microsoft.Extensions.Logging.ILogger"/>.
 /// </summary>
 internal class TelemetryLogRecordEraser : BaseProcessor<LogRecord>
 {
-    private static readonly IReadOnlyList<KeyValuePair<string, object?>> EmptyAttributes = new List<KeyValuePair<string, object?>>().AsReadOnly();
+    private static readonly IReadOnlyList<KeyValuePair<string, object?>> EmptyAttributes = [];
 
     public override void OnEnd(LogRecord data)
     {

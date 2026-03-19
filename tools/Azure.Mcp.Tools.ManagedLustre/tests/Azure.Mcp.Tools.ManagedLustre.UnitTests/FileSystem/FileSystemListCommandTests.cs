@@ -38,7 +38,7 @@ public class FileSystemListCommandTests
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_amlfsService, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

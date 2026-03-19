@@ -13,15 +13,11 @@
     <PackageReference Include="Azure.AI.Projects" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.CognitiveServices" />
-    <PackageReference Include="Azure.AI.Agents.Persistent" />
     <PackageReference Include="Azure.AI.OpenAI" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
     <PackageReference Include="System.CommandLine" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\AgentSdkSamples\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\**\*.md" />

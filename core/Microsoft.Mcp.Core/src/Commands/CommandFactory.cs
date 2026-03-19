@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
@@ -63,10 +65,10 @@ public class CommandFactory : ICommandFactory
         _logger = logger;
         _telemetryService = telemetryService;
         _configurationOptions = configurationOptions;
-        _rootGroup = new CommandGroup(_configurationOptions.Value.RootCommandGroupName, _configurationOptions.Value.DisplayName);
+        _rootGroup = new(_configurationOptions.Value.RootCommandGroupName, _configurationOptions.Value.DisplayName);
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
-        _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
+        _srcGenWithOptions = new(new()
         {
             WriteIndented = true,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
@@ -87,7 +89,7 @@ public class CommandFactory : ICommandFactory
         {
             throw new ArgumentException("groupNames cannot be null.");
         }
-        Dictionary<string, IBaseCommand> commandsFromGroups = new();
+        Dictionary<string, IBaseCommand> commandsFromGroups = [];
         foreach (string groupName in groupNames)
         {
             foreach (CommandGroup group in _rootGroup.SubGroup)
@@ -209,7 +211,7 @@ public class CommandFactory : ICommandFactory
 
                 if (response.Status == HttpStatusCode.OK && response.Results == null)
                 {
-                    response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
+                    response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
                 var isServiceStartCommand = implementation is ServiceStartCommand;
@@ -220,7 +222,9 @@ public class CommandFactory : ICommandFactory
 
                 if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
                 {
-                    activity?.SetStatus(ActivityStatusCode.Error);
+                    activity?.SetStatus(ActivityStatusCode.Error)
+                        ?.SetTagIfNotExists(TagName.ExceptionType, "ToolCallError")
+                        ?.SetTagIfNotExists(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)response.Status)]));
                 }
 
                 return (int)response.Status;
@@ -229,7 +233,9 @@ public class CommandFactory : ICommandFactory
             {
                 _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}",
                     command.Name, ex);
-                activity?.SetStatus(ActivityStatusCode.Error);
+                activity?.SetStatus(ActivityStatusCode.Error)
+                    ?.SetTagIfNotExists(TagName.ExceptionType, ex.GetType().ToString())
+                    ?.SetTagIfNotExists(TagName.ExceptionStackTrace, ex.StackTrace);
                 return 1;
             }
             finally

@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
-public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger) : SubscriptionCommand<BaseKeyVaultOptions>
+public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions>
 {
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
     public override string Name => "get";
@@ -57,8 +58,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
 
         try
         {
-            var service = context.GetService<IKeyVaultService>();
-            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var settingsResult = await _keyVaultService.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
@@ -70,8 +70,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            var result = new AdminSettingsGetCommandResult(options.VaultName!, settings);
-            context.Response.Results = ResponseResult.Create(result, KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {

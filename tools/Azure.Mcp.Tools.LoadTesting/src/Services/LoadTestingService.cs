@@ -12,16 +12,17 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
-using Azure.ResourceManager;
 using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
 public class LoadTestingService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<LoadTestingService> logger)
     : BaseAzureService(tenantService), ILoadTestingService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
@@ -46,9 +47,9 @@ public class LoadTestingService(
             {
                 throw new Exception($"Failed to retrieve Azure Load Testing resources: {response}");
             }
-            return new List<TestResource>
-            {
-                new TestResource
+            return
+            [
+                new()
                 {
                     Id = response.Value.Data.Id!,
                     Name = response.Value.Data.Name,
@@ -56,7 +57,7 @@ public class LoadTestingService(
                     DataPlaneUri = response.Value.Data.DataPlaneUri,
                     ProvisioningState = response.Value.Data.ProvisioningState?.ToString(),
                 }
-            };
+            ];
         }
         else
         {
@@ -70,7 +71,7 @@ public class LoadTestingService(
             var loadTestResources = new List<TestResource>();
             foreach (var resource in response)
             {
-                loadTestResources.Add(new TestResource
+                loadTestResources.Add(new()
                 {
                     Id = resource.Data.Id!,
                     Name = resource.Data.Name,
@@ -104,14 +105,14 @@ public class LoadTestingService(
         var response = await rgResource.GetLoadTestingResources().CreateOrUpdateAsync(
             WaitUntil.Completed,
             testResourceName,
-            new LoadTestingResourceData(location),
+            new(location),
             cancellationToken);
         if (response == null || response.Value == null)
         {
             throw new Exception($"Failed to create or update Azure Load Testing resource: {response}");
         }
 
-        return new TestResource
+        return new()
         {
             Id = response.Value.Data.Id!,
             Name = response.Value.Data.Name,
@@ -145,16 +146,16 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
-        var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId);
+        var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
         {
             throw new Exception($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
         }
 
         var loadTestRun = loadTestRunResponse.Content;
-        return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new TestRun();
+        return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new();
     }
 
     public async Task<List<TestRun>> GetLoadTestRunsFromTestIdAsync(
@@ -180,7 +181,7 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
         var loadTestRunResponse = loadTestClient.GetTestRunsAsync(testId: testId);
         if (loadTestRunResponse == null)
@@ -234,9 +235,9 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
-        TestRunRequest requestBody = new TestRunRequest
+        TestRunRequest requestBody = new()
         {
             TestId = testId,
             DisplayName = displayName ?? $"TestRun_{DateTime.UtcNow:dd-MM-yyyy_HH:mm:ss tt}",
@@ -251,7 +252,8 @@ public class LoadTestingService(
             0,
             testRunId,
             requestContent,
-            oldTestRunId: oldTestRunId);
+            oldTestRunId: oldTestRunId,
+            context: new RequestContext { CancellationToken = cancellationToken });
 
         if (loadTestRunResponse == null)
         {
@@ -260,7 +262,7 @@ public class LoadTestingService(
 
         var loadTestRunOperation = await loadTestRunResponse.WaitForCompletionAsync(cancellationToken);
         var loadTestRun = loadTestRunOperation.Value.ToString();
-        return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new TestRun();
+        return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new();
     }
 
     public async Task<Test> GetTestAsync(
@@ -288,14 +290,14 @@ public class LoadTestingService(
         var credential = await GetCredential(tenant, cancellationToken);
         var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
 
-        var loadTestResponse = await loadTestClient.GetTestAsync(testId);
+        var loadTestResponse = await loadTestClient.GetTestAsync(testId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
             throw new Exception($"Failed to retrieve Azure Load Test: {loadTestResponse}");
         }
 
         var loadTest = loadTestResponse.Content.ToString();
-        return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new Test();
+        return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new();
     }
     public async Task<Test> CreateTestAsync(
         string subscription,
@@ -316,7 +318,7 @@ public class LoadTestingService(
 
         if (!string.IsNullOrEmpty(endpointUrl))
         {
-            EndpointValidator.ValidatePublicTargetUrl(endpointUrl);
+            EndpointValidator.ValidatePublicTargetUrl(endpointUrl, logger);
         }
 
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
@@ -333,34 +335,34 @@ public class LoadTestingService(
         }
 
         var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
-        OptionalLoadTestConfig optionalLoadTestConfig = new OptionalLoadTestConfig
+        var loadTestClient = new LoadTestAdministrationClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions(retryPolicy));
+        OptionalLoadTestConfig optionalLoadTestConfig = new()
         {
             Duration = (duration ?? 20) * 60, // Convert minutes to seconds
             EndpointUrl = endpointUrl ?? "https://example.com",
             RampUpTime = (rampUpTime ?? 1) * 60, // Convert minutes to seconds
             VirtualUsers = virtualUsers ?? 50,
         };
-        TestRequestPayload testRequestPayload = new TestRequestPayload
+        TestRequestPayload testRequestPayload = new()
         {
             TestId = testId,
             DisplayName = displayName ?? "Test_" + DateTime.UtcNow.ToString("dd/MM/yyyy") + "_" + DateTime.UtcNow.ToString("HH:mm:ss"),
             Description = description,
-            LoadTestConfiguration = new LoadTestConfiguration
+            LoadTestConfiguration = new()
             {
                 OptionalLoadTestConfig = optionalLoadTestConfig,
                 QuickStartTest = true, // Set to true for quick start tests (URL BASIC Test)
             }
         };
 
-        var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)));
+        var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)), new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
             throw new Exception($"Failed to create Azure Load Test: {loadTestResponse}");
         }
 
         var loadTest = loadTestResponse.Content.ToString();
-        return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new Test();
+        return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new();
     }
 
     private LoadTestingClientOptions CreateLoadTestingClientOptions(RetryPolicyOptions? retryPolicy)

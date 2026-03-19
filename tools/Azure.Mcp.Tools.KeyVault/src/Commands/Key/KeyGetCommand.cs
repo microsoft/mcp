@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
 
-public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionCommand<KeyGetOptions>
+public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<KeyGetOptions>
 {
     private const string CommandTitle = "Get Key Vault Key";
     private readonly ILogger<KeyGetCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "c19a45a0-b963-427d-a087-35560a7f4e5b";
 
@@ -65,12 +66,10 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
             if (string.IsNullOrEmpty(options.KeyName))
             {
                 // List all keys
-                var keys = await keyVaultService.ListKeys(
+                var keys = await _keyVaultService.ListKeys(
                     options.VaultName!,
                     options.IncludeManagedKeys,
                     options.Subscription!,
@@ -78,12 +77,12 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: keys ?? [], Key: null), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
             else
             {
                 // Get specific key
-                var key = await keyVaultService.GetKey(
+                var key = await _keyVaultService.GetKey(
                     options.VaultName!,
                     options.KeyName,
                     options.Subscription!,
@@ -100,7 +99,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                     key.Properties.CreatedOn,
                     key.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new KeyGetCommandResult(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Keys: null, Key: keyDetails), KeyVaultJsonContext.Default.KeyGetCommandResult);
             }
         }
         catch (Exception ex)

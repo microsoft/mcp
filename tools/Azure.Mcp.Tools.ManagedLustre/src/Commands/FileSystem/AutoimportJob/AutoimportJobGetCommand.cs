@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> logger)
+public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogger<AutoimportJobGetCommand> logger)
     : BaseManagedLustreCommand<AutoimportJobGetOptions>(logger)
 {
     private const string CommandTitle = "Get Azure Managed Lustre Autoimport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoimportJobGetCommand> _logger = logger;
 
     public override string Id => "b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e";
@@ -77,12 +77,11 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
-                var result = await svc.GetAutoimportJobAsync(
+                var result = await _service.GetAutoimportJobAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,
@@ -91,12 +90,12 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new AutoimportJobGetResult(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
+                context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
             }
             else
             {
                 // List all jobs
-                var results = await svc.ListAutoimportJobsAsync(
+                var results = await _service.ListAutoimportJobsAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,
@@ -104,7 +103,7 @@ public sealed class AutoimportJobGetCommand(ILogger<AutoimportJobGetCommand> log
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new AutoimportJobListResult(results ?? []), ManagedLustreJsonContext.Default.AutoimportJobListResult);
+                context.Response.Results = ResponseResult.Create(new(results ?? []), ManagedLustreJsonContext.Default.AutoimportJobListResult);
             }
         }
         catch (Exception ex)

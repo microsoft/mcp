@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> logger)
+public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogger<FileSystemUpdateCommand> logger)
     : BaseManagedLustreCommand<FileSystemUpdateOptions>(logger)
 {
     private const string CommandTitle = "Update Azure Managed Lustre FileSystem";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
 
     public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
@@ -83,8 +84,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
             }
             var options = BindOptions(parseResult);
 
-            var svc = context.GetService<IManagedLustreService>();
-            var fs = await svc.UpdateFileSystemAsync(
+            var fs = await _service.UpdateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,
@@ -98,7 +98,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemUpdateResult(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         }
         catch (Exception ex)
         {

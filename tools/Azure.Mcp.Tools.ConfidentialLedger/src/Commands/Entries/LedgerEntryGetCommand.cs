@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.CommandLine;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;

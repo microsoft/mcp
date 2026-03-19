@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "apacheAirflowJobId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "poolTemplateId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "poolTemplateName": "StarterPool",
+                "nodeSize": "Small",
+                "computeScalability": {
+                    "minNodeCount": 5,
+                    "maxNodeCount": 5
+                },
+                "apacheAirflowJobVersion": "1.0.0",
+                "apacheAirflowJobVersionDetails": {
+                    "apacheAirflowVersion": "2.10.5",
+                    "pythonVersion": "3.12"
+                },
+                "availabilityZones": "Disabled",
+                "shutdownPolicy": "OneHourInactivity"
+            }
+        }
+    }
+}

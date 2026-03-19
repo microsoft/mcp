@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -10,10 +9,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger) : BaseContainerCommand<ContainerCreateOptions>()
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService) : BaseContainerCommand<ContainerCreateOptions>()
 {
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "f5088334-e630-4df0-a5be-ac87787acad0";
 
@@ -47,8 +47,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containerInfo = await storageService.CreateContainer(
+            var containerInfo = await _storageService.CreateContainer(
                 options.Account!,
                 options.Container!,
                 options.Subscription!,
@@ -68,5 +67,5 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         return context.Response;
     }
 
-    internal record ContainerCreateCommandResult([property: JsonPropertyName("container")] ContainerInfo Container);
+    internal record ContainerCreateCommandResult(ContainerInfo Container);
 }

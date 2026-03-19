@@ -14,19 +14,11 @@ The following cloud names are recognized and automatically mapped to their respe
 
 | Cloud Name | Authority Host | Aliases |
 |------------|----------------|---------|
-| Azure Public Cloud | `https://login.microsoftonline.com` | `AzureCloud`, `AzurePublicCloud`, `public` |
-| Azure China Cloud | `https://login.chinacloudapi.cn` | `AzureChinaCloud`, `china` |
-| Azure US Government | `https://login.microsoftonline.us` | `AzureUSGovernment`, `AzureUSGovernmentCloud`, `usgov`, `usgovernment` |
+| Azure Public Cloud | `https://login.microsoftonline.com` | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` |
+| Azure China Cloud | `https://login.chinacloudapi.cn` | `AzureChinaCloud`, `China`, `AzureChina` |
+| Azure US Government | `https://login.microsoftonline.us` | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
 
-### Custom Authority Hosts
-
-For less common cloud environments, you can specify the full authority host URL directly:
-
-```bash
-azmcp server start --cloud https://login.custom-cloud.com
-```
-
-The URL must start with `https://`.
+*_The aliases are case insensitive._
 
 ## Configuration Methods
 
@@ -54,9 +46,6 @@ azmcp server start --cloud AzureChinaCloud
 
 # Azure US Government
 azmcp server start --cloud AzureUSGovernment
-
-# Custom authority host
-azmcp server start --cloud https://login.custom-cloud.com
 ```
 
 ### 2. Configuration File (appsettings.json)
@@ -121,10 +110,6 @@ az login
 # Azure US Government
 az cloud set --name AzureUSGovernment
 az login
-
-# Custom cloud (if configured)
-az cloud set --name MyCustomCloud
-az login
 ```
 
 #### Azure PowerShell
@@ -147,62 +132,6 @@ azd auth login
 # Azure US Government
 azd config set cloud.name AzureUSGovernment
 azd auth login
-```
-
-## MCP Client Configuration
-
-When using the Azure MCP Server with an MCP client (like Claude Desktop), configure the server in your client's configuration file:
-
-### Claude Desktop (stdio mode)
-
-**Windows (`%APPDATA%\Claude\claude_desktop_config.json`):**
-
-```json
-{
-  "mcpServers": {
-    "azure-china": {
-      "command": "C:\\path\\to\\azmcp.exe",
-      "args": ["server", "start", "--cloud", "AzureChinaCloud"]
-    }
-  }
-}
-```
-
-**macOS (`~/Library/Application Support/Claude/claude_desktop_config.json`):**
-
-```json
-{
-  "mcpServers": {
-    "azure-china": {
-      "command": "/path/to/azmcp",
-      "args": ["server", "start", "--cloud", "AzureChinaCloud"]
-    }
-  }
-}
-```
-
-### Remote HTTP Mode
-
-For remote HTTP deployments, configure the cloud environment using one of these methods:
-
-**Application Settings (Azure App Service):**
-
-```json
-{
-  "cloud": "AzureChinaCloud"
-}
-```
-
-**Environment Variables:**
-
-```bash
-AZURE_CLOUD=AzureChinaCloud
-```
-
-**Command Line:**
-
-```bash
-dotnet azmcp.dll server start --run-as-remote-http-service --cloud AzureChinaCloud
 ```
 
 ## Examples
@@ -229,31 +158,6 @@ Connect-AzAccount -Environment AzureUSGovernment
 
 # Start the MCP server (will use AZURE_CLOUD env var)
 azmcp server start
-```
-
-### Example 3: Custom Cloud with Configuration File
-
-Create `appsettings.json`:
-
-```json
-{
-  "cloud": "https://login.mycustomcloud.com"
-}
-```
-
-Then start the server:
-
-```bash
-azmcp server start
-```
-
-### Example 4: Docker with Sovereign Cloud
-
-```bash
-docker run -i --rm \
-  --env-file .env \
-  -e AZURE_CLOUD=AzureChinaCloud \
-  azure-sdk/azure-mcp:latest
 ```
 
 ## Troubleshooting

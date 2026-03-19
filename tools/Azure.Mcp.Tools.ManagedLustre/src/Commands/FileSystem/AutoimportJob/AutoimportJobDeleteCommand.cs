@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobDeleteCommand(ILogger<AutoimportJobDeleteCommand> logger)
+public sealed class AutoimportJobDeleteCommand(IManagedLustreService service, ILogger<AutoimportJobDeleteCommand> logger)
     : BaseManagedLustreCommand<AutoimportJobDeleteOptions>(logger)
 {
     private const string CommandTitle = "Delete Azure Managed Lustre Autoimport Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<AutoimportJobDeleteCommand> _logger = logger;
 
     public override string Id => "0h4i2j3k-5e1c-6h9g-d4f7-9c0e5g7h8d9i";
@@ -76,8 +76,7 @@ public sealed class AutoimportJobDeleteCommand(ILogger<AutoimportJobDeleteComman
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            await svc.DeleteAutoimportJobAsync(
+            await _service.DeleteAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
@@ -86,7 +85,7 @@ public sealed class AutoimportJobDeleteCommand(ILogger<AutoimportJobDeleteComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new AutoimportJobDeleteResult(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoimportJobDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(options.JobName!, "Deleted"), ManagedLustreJsonContext.Default.AutoimportJobDeleteResult);
         }
         catch (Exception ex)
         {
