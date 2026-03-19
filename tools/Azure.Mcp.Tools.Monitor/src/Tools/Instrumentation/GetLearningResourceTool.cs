@@ -18,7 +18,7 @@ public sealed class GetLearningResourceTool
             path.StartsWith('/') ||
             path.StartsWith('\\'))
         {
-            return "Invalid resource path. Call get_learning_resource without parameters to list available resources.";
+            return "Invalid resource path. Call get_learning_resource without the path parameter to list available resources.";
         }
 
         // File-based approach: Read from copied resources in output directory
