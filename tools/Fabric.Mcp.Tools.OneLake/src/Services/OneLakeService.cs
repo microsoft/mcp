@@ -203,6 +203,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     // Data Operations (OneLake Data Plane)
     public async Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/Files/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Head, url, cancellationToken: cancellationToken);
@@ -1256,6 +1257,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public Task<BlobGetResult> ReadFileAsync(string workspaceId, string itemId, string filePath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         return DownloadBlobAsync(
             OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl,
             workspaceId,
@@ -1268,6 +1270,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // Use DFS endpoint for file operations (similar to directory creation)
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
@@ -1303,6 +1306,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public async Task<BlobPutResult> PutBlobAsync(string workspaceId, string itemId, string blobPath, Stream content, long contentLength, string? contentType = null, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(content);
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
 
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
@@ -1388,6 +1392,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
         return DownloadBlobAsync(
             OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl,
             workspaceId,
@@ -1598,6 +1603,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
@@ -1605,6 +1611,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(directoryPath, nameof(directoryPath));
         // Use blob endpoint for directory deletion, similar to file deletion
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}";
@@ -1625,6 +1632,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
         // However, we can create an empty directory using a PUT request with the appropriate headers
+        ValidatePathForTraversal(directoryPath, nameof(directoryPath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}?resource=directory";
 
@@ -1635,6 +1643,14 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     }
 
     // Private helper methods
+    private static void ValidatePathForTraversal(string path, string paramName)
+    {
+        if (path.Contains(".."))
+        {
+            throw new ArgumentException("File path cannot contain directory traversal sequences.", paramName);
+        }
+    }
+
     private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
