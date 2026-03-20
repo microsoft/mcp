@@ -91,7 +91,7 @@ public class TableGetCommandTests
         service.GetTableAsync(workspace, item, namespaceName, tableName, Arg.Any<CancellationToken>())
             .Returns(new TableGetResult(workspace, item, namespaceName, tableName, sampleDocument.RootElement.Clone(), "{}"));
 
-        var parseResult = command.GetCommand().Parse($"--workspace \"{workspace}\" --item \"{item}\" --schema {namespaceName} --table {tableName}");
+        var parseResult = command.GetCommand().Parse($"--workspace \"{workspace}\" --item \"{item}\" --namespace {namespaceName} --table {tableName}");
         var context = CreateContext();
 
         _ = await command.ExecuteAsync(context, parseResult, CancellationToken.None);

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed directory traversal vulnerability in OneLake file operations. Paths containing .. sequences are now rejected before any HTTP request is made."

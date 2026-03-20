@@ -222,6 +222,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null) ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
 
         // If no path is specified, intelligently discover and search top-level folders
@@ -708,6 +709,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null) ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -875,6 +877,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null) ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -946,6 +949,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null) ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -1578,9 +1582,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
-
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
         using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
 
