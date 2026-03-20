@@ -33,8 +33,8 @@ After this call succeeds, continue with orchestrator-next as usual.";
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = true,
+        OpenWorld = false,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };
@@ -81,7 +81,8 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 findings.Processors,
                 findings.ClientUsage,
                 findings.Sampling,
-                findings.TelemetryPipeline);
+                findings.TelemetryPipeline,
+                findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);

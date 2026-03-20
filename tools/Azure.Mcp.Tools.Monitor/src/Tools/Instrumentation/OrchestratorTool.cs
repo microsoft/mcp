@@ -2,22 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using Azure.Mcp.Tools.Monitor.Generators;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Pipeline;
 using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.Monitor.Tools;
 
-/// <summary>
-/// Single entry point for Azure Monitor instrumentation.
-/// Controls the entire workflow server-side, eliminating LLM decision randomness.
-///
-/// Flow:
-/// 1. LLM calls orchestrator-start → gets first action with explicit instructions
-/// 2. LLM executes EXACTLY what's returned
-/// 3. LLM calls orchestrator-next → gets next action (or completion)
-/// 4. Repeat until complete
-/// </summary>
 public class OrchestratorTool
 {
     private readonly WorkspaceAnalyzer _analyzer;
@@ -29,10 +20,6 @@ public class OrchestratorTool
         _analyzer = analyzer;
     }
 
-    /// <summary>
-    /// Removes expired sessions to prevent unbounded memory growth.
-    /// Called opportunistically on Start and Next operations.
-    /// </summary>
     private static void CleanupExpiredSessions()
     {
         var now = DateTime.UtcNow;
@@ -49,9 +36,22 @@ public class OrchestratorTool
 
     public string Start(string workspacePath)
     {
-        var spec = _analyzer.Analyze(workspacePath);
+        OnboardingSpec spec;
+        try
+        {
+            spec = _analyzer.Analyze(workspacePath);
+        }
+        catch (Exception ex)
+        {
+            return Respond(new OrchestratorResponse
+            {
+                Status = "error",
+                Message = $"Analysis failed: {ex.GetType().Name}: {ex.Message}",
+                Instruction = "Tell the user about this error. Do not proceed.",
+                Warnings = [ex.StackTrace ?? "No stack trace available"]
+            });
+        }
 
-        // Handle error cases
         if (spec.Decision.Intent == Intents.Error)
         {
             return Respond(new OrchestratorResponse
@@ -63,15 +63,19 @@ public class OrchestratorTool
             });
         }
 
-        // Handle brownfield — intercept before unsupported fallback
+        if (spec.Decision.Intent == Intents.Enhance)
+        {
+            return HandleEnhancementOffer(workspacePath, spec);
+        }
+
         if (spec.Decision.Intent == Intents.Unsupported
             && spec.Analysis.State == InstrumentationState.Brownfield
-            && spec.Analysis.ExistingInstrumentation?.Type == InstrumentationType.ApplicationInsightsSdk)
+            && spec.Analysis.ExistingInstrumentation?.Type == InstrumentationType.ApplicationInsightsSdk
+            && spec.Analysis.ExistingInstrumentation?.IsTargetVersion != true)
         {
             return HandleBrownfieldAnalysis(workspacePath, spec.Analysis);
         }
 
-        // Handle unsupported cases
         if (spec.Decision.Intent == Intents.Unsupported)
         {
             return Respond(new OrchestratorResponse
@@ -83,7 +87,6 @@ public class OrchestratorTool
             });
         }
 
-        // Handle clarification needed
         if (spec.Decision.Intent == Intents.ClarificationNeeded)
         {
             return Respond(new OrchestratorResponse
@@ -95,7 +98,6 @@ public class OrchestratorTool
             });
         }
 
-        // No actions to execute
         if (spec.Actions.Count == 0)
         {
             return Respond(new OrchestratorResponse
@@ -106,7 +108,6 @@ public class OrchestratorTool
             });
         }
 
-        // Create session
         CleanupExpiredSessions();
         var session = new ExecutionSession
         {
@@ -117,7 +118,6 @@ public class OrchestratorTool
         };
         Sessions[workspacePath] = session;
 
-        // Return first action
         var firstAction = spec.Actions[0];
         var primaryProject = spec.Analysis.Projects.FirstOrDefault();
         var appTypeDescription = primaryProject?.AppType.ToString() ?? "unknown";
@@ -127,16 +127,9 @@ public class OrchestratorTool
             Status = "in_progress",
             SessionId = workspacePath,
             Message = $"Instrumentation started for {spec.Analysis.Language} {appTypeDescription} application.",
-
-            // Tell LLM exactly what to do
             Instruction = BuildInstruction(firstAction, spec.AgentMustExecuteFirst),
-
-            // Provide action details for execution
             CurrentAction = firstAction,
-
-            // Progress info
             Progress = $"Step 1 of {spec.Actions.Count}",
-
             Warnings = spec.Warnings
         });
     }
@@ -155,7 +148,6 @@ public class OrchestratorTool
             });
         }
 
-        // Guard: cannot call next while still awaiting brownfield analysis
         if (session.State == SessionState.AwaitingAnalysis)
         {
             return Respond(new OrchestratorResponse
@@ -167,9 +159,19 @@ public class OrchestratorTool
             });
         }
 
+        if (session.State == SessionState.AwaitingEnhancementSelection)
+        {
+            return Respond(new OrchestratorResponse
+            {
+                Status = "error",
+                SessionId = sessionId,
+                Message = "Enhancement selection is pending. Send selection first.",
+                Instruction = "Call send-enhancement-select with the chosen enhancement keys before calling orchestrator-next."
+            });
+        }
+
         var spec = session.Spec!;
 
-        // Record completion and advance atomically
         var completedIndex = session.AdvanceIndex();
         if (completedIndex >= spec.Actions.Count)
         {
@@ -189,7 +191,6 @@ public class OrchestratorTool
         session.CompletedActions.Add(completedAction.Id);
         var nextIndex = completedIndex + 1;
 
-        // Check if all done
         if (nextIndex >= spec.Actions.Count)
         {
             Sessions.TryRemove(sessionId, out _);
@@ -204,7 +205,6 @@ public class OrchestratorTool
             });
         }
 
-        // Return next action
         var nextAction = spec.Actions[nextIndex];
 
         return Respond(new OrchestratorResponse
@@ -219,10 +219,6 @@ public class OrchestratorTool
         });
     }
 
-    /// <summary>
-    /// Handle brownfield detection by creating an AwaitingAnalysis session
-    /// and returning an analysis template for the LLM to fill.
-    /// </summary>
     private string HandleBrownfieldAnalysis(string workspacePath, Analysis analysis)
     {
         CleanupExpiredSessions();
@@ -250,20 +246,70 @@ public class OrchestratorTool
         });
     }
 
+    private string HandleEnhancementOffer(string workspacePath, OnboardingSpec spec)
+    {
+        CleanupExpiredSessions();
+        var session = new ExecutionSession
+        {
+            WorkspacePath = workspacePath,
+            Analysis = spec.Analysis,
+            State = SessionState.AwaitingEnhancementSelection,
+            Spec = spec,
+            CreatedAt = DateTime.UtcNow
+        };
+        Sessions[workspacePath] = session;
+
+        var sdkLabel = spec.Analysis.ExistingInstrumentation?.Type == InstrumentationType.AzureMonitorDistro
+            ? "Azure Monitor Distro"
+            : "Application Insights 3.x";
+
+        var version = spec.Analysis.ExistingInstrumentation?.Version;
+        var versionSuffix = version != null ? $" (v{version})" : string.Empty;
+
+        var options = DotNetEnhancementGenerator.SupportedEnhancements
+            .Select(kv => new EnhancementOptionInfo { Key = kv.Key, DisplayName = kv.Value.DisplayName })
+            .ToList();
+
+        return Respond(new OrchestratorResponse
+        {
+            Status = "enhancement_available",
+            SessionId = workspacePath,
+            Message = $"Already on {sdkLabel}{versionSuffix}. No migration needed. Choose an enhancement to add:",
+            Instruction = BuildEnhancementInstruction(),
+            EnhancementOptions = options
+        });
+    }
+
+    private static string BuildEnhancementInstruction()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("ENHANCEMENT SELECTION");
+        sb.AppendLine();
+        sb.AppendLine("The application is already on the latest SDK version. No migration is needed.");
+        sb.AppendLine("Present the enhancement options to the user and ask what they'd like to add.");
+        sb.AppendLine("The user may select one or more options. They can describe what they want in natural language.");
+        sb.AppendLine();
+        sb.AppendLine("When the user has chosen, call send-enhancement-select with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
+        sb.AppendLine("If the user asks for something not in the list, inform them it is not currently supported through MCP.");
+        return sb.ToString();
+    }
+
     private static string BuildAnalysisInstruction()
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("BROWNFIELD ANALYSIS REQUIRED");
         sb.AppendLine();
         sb.AppendLine("Scan the workspace source files and fill in the analysis template provided in the 'analysisTemplate' field.");
-        sb.AppendLine("The template has 5 sections. Set any section to null if the concern does not exist in the codebase.");
+        sb.AppendLine("The template has 7 sections. For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false) rather than null.");
         sb.AppendLine();
         sb.AppendLine("Sections to analyze:");
-        sb.AppendLine("1. serviceOptions — Find the AddApplicationInsightsTelemetry() call and report which options are configured");
-        sb.AppendLine("2. initializers — Find all classes implementing ITelemetryInitializer and describe each one");
+        sb.AppendLine("1. serviceOptions — Find the AddApplicationInsightsTelemetry() or AddApplicationInsightsTelemetryWorkerService() call, or for Console apps find TelemetryConfiguration.CreateDefault() / TelemetryConfiguration.Active usage, and report which options are configured");
+        sb.AppendLine("2. initializers — Find all classes implementing ITelemetryInitializer AND any classes implementing IConfigureOptions<TelemetryConfiguration> (e.g. classes that call SetAzureTokenCredential for AAD auth). Also report any direct config.SetAzureTokenCredential() calls found in entry points (e.g. Program.cs, Global.asax.cs) as an initializer entry with purpose mentioning 'SetAzureTokenCredential for AAD auth'. Report all types here — describe each one with its purpose");
         sb.AppendLine("3. processors — Find all classes implementing ITelemetryProcessor and describe each one");
-        sb.AppendLine("4. clientUsage — Find all files that use TelemetryClient directly (injection, instantiation, or method calls)");
-        sb.AppendLine("5. sampling — Find any custom sampling configuration");
+        sb.AppendLine("4. clientUsage — Find all files that use TelemetryClient directly OR access Application Insights telemetry types (RequestTelemetry, DependencyTelemetry, TraceTelemetry, EventTelemetry, MetricTelemetry, ExceptionTelemetry, AvailabilityTelemetry) from HttpContext.Features, HttpContext.GetRequestTelemetry(), or via Microsoft.ApplicationInsights.DataContracts. For each file, list every Track*/GetMetric method name called (e.g. TrackEvent, TrackException, TrackPageView, TrackAvailability, GetMetric) — several have removed overloads in 3.x. Also note: (a) Features.Get<RequestTelemetry>() or GetRequestTelemetry() usage — in 3.x use Activity.Current with SetTag(); (b) manual construction of telemetry objects (new DependencyTelemetry(), new RequestTelemetry(), etc.) — these types still exist in 3.x but some properties changed; (c) type checks like 'telemetry is RequestTelemetry' in custom code outside initializers/processors");
+        sb.AppendLine("5. sampling — Find any custom sampling configuration (e.g. custom ISamplingProcessor, .SetSampler<T>(), or explicit TelemetryProcessorChainBuilder sampling setup). Do NOT report EnableAdaptiveSampling here — that is a service option handled in section 1");
+        sb.AppendLine("6. telemetryPipeline — Find any custom ITelemetryChannel implementations, TelemetryConfiguration.TelemetryChannel assignments, or TelemetrySinks/DefaultTelemetrySink usage — all removed in 3.x");
+        sb.AppendLine("7. logging — Find any explicit loggingBuilder.AddApplicationInsights() or services.AddLogging(b => b.AddApplicationInsights(...)) calls, and any AddFilter<ApplicationInsightsLoggerProvider>(...) log filter registrations — ApplicationInsightsLoggerProvider is removed in 3.x and logging is now automatic");
         sb.AppendLine();
         sb.AppendLine("When done, call send-brownfield-analysis with the sessionId and your filled findings JSON.");
         return sb.ToString();
@@ -274,30 +320,21 @@ public class OrchestratorTool
         return AnalysisTemplate.CreateDefault();
     }
 
-    /// <summary>
-    /// Build explicit, unambiguous instructions for the LLM.
-    /// This is the key to reducing hallucination - tell it EXACTLY what to do.
-    /// </summary>
     private string BuildInstruction(OnboardingAction action, string? preInstruction)
     {
         return BuildInstructionPublic(action, preInstruction);
     }
 
-    /// <summary>
-    /// Public accessor for BuildInstruction, used by SendBrownfieldAnalysisTool.
-    /// </summary>
     internal static string BuildInstructionPublic(OnboardingAction action, string? preInstruction)
     {
         var instruction = new System.Text.StringBuilder();
 
-        // Pre-instruction (e.g., read docs first)
         if (!string.IsNullOrEmpty(preInstruction))
         {
             instruction.AppendLine($"FIRST: {preInstruction}");
             instruction.AppendLine();
         }
 
-        // Action-specific instructions
         instruction.AppendLine($"ACTION: {action.Description}");
         instruction.AppendLine();
 
@@ -317,16 +354,16 @@ public class OrchestratorTool
                 break;
 
             case ActionType.AddPackage:
-                var pkg = action.Details.GetValueOrDefault("package", "")?.ToString();
-                var project = action.Details.GetValueOrDefault("targetProject", "")?.ToString();
-                var version = action.Details.GetValueOrDefault("version", "")?.ToString();
-                var packageManager = action.Details.GetValueOrDefault("packageManager", "")?.ToString();
+                var pkg = action.Details.GetValueOrDefault("package", string.Empty)?.ToString();
+                var project = action.Details.GetValueOrDefault("targetProject", string.Empty)?.ToString();
+                var version = action.Details.GetValueOrDefault("version", string.Empty)?.ToString();
+                var packageManager = action.Details.GetValueOrDefault("packageManager", string.Empty)?.ToString();
                 if (string.IsNullOrWhiteSpace(pkg) || string.IsNullOrWhiteSpace(project))
                 {
                     instruction.AppendLine("ERROR: Missing package or project information. Cannot proceed with this action.");
                     break;
                 }
-                instruction.AppendLine($"EXECUTE: Run this exact command:");
+                instruction.AppendLine("EXECUTE: Run this exact command:");
                 var installCommand = packageManager?.ToLowerInvariant() switch
                 {
                     "pip" => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
@@ -335,20 +372,28 @@ public class OrchestratorTool
                     "npm" => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  npm install {pkg}@{version}"
                         : $"  npm install {pkg}",
+                    "nuget-vs" => $"  Install-Package {pkg}",
                     _ => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  dotnet add \"{project}\" package {pkg} --version {version}"
                         : $"  dotnet add \"{project}\" package {pkg}"
                 };
                 instruction.AppendLine(installCommand);
+                if (packageManager?.ToLowerInvariant() == "nuget-vs")
+                {
+                    instruction.AppendLine();
+                    instruction.AppendLine("ASK THE USER to run this command in the Package Manager Console (View → Other Windows → Package Manager Console) or install via the NuGet Package Manager UI (right-click project → Manage NuGet Packages).");
+                    instruction.AppendLine("The agent cannot run this command — it requires the Package Manager Console which is separate from the developer terminal.");
+                    instruction.AppendLine("Wait for the user to confirm the package is installed, then call orchestrator-next to continue.");
+                }
                 instruction.AppendLine();
                 instruction.AppendLine("Wait for the command to complete successfully.");
                 break;
 
             case ActionType.ModifyCode:
-                var file = action.Details.GetValueOrDefault("file", "")?.ToString();
-                var snippet = action.Details.GetValueOrDefault("codeSnippet", "")?.ToString();
-                var insertAfter = action.Details.GetValueOrDefault("insertAfter", "")?.ToString();
-                var usingStmt = action.Details.GetValueOrDefault("requiredUsing", "")?.ToString();
+                var file = action.Details.GetValueOrDefault("file", string.Empty)?.ToString();
+                var snippet = action.Details.GetValueOrDefault("codeSnippet", string.Empty)?.ToString();
+                var insertAfter = action.Details.GetValueOrDefault("insertAfter", string.Empty)?.ToString();
+                var usingStmt = action.Details.GetValueOrDefault("requiredUsing", string.Empty)?.ToString();
                 if (string.IsNullOrWhiteSpace(file) || string.IsNullOrWhiteSpace(snippet))
                 {
                     instruction.AppendLine("ERROR: Missing file path or code snippet. Cannot proceed with this action.");
@@ -358,7 +403,7 @@ public class OrchestratorTool
                 instruction.AppendLine();
                 if (!string.IsNullOrWhiteSpace(usingStmt))
                 {
-                    instruction.AppendLine($"1. Add this using statement at the top:");
+                    instruction.AppendLine("1. Add this using statement at the top:");
                     instruction.AppendLine($"   using {usingStmt};");
                     instruction.AppendLine();
                     instruction.AppendLine($"2. Add this code IMMEDIATELY after the line containing '{insertAfter}':");
@@ -373,18 +418,28 @@ public class OrchestratorTool
                 break;
 
             case ActionType.AddConfig:
-                var configFile = action.Details.GetValueOrDefault("file", "")?.ToString();
-                var jsonPath = action.Details.GetValueOrDefault("jsonPath", "")?.ToString();
-                var value = action.Details.GetValueOrDefault("value", "")?.ToString();
-                var envVar = action.Details.GetValueOrDefault("envVarAlternative", "")?.ToString();
+                var configFile = action.Details.GetValueOrDefault("file", string.Empty)?.ToString();
+                var jsonPath = action.Details.GetValueOrDefault("jsonPath", string.Empty)?.ToString();
+                var value = action.Details.GetValueOrDefault("value", string.Empty)?.ToString();
+                var envVar = action.Details.GetValueOrDefault("envVarAlternative", string.Empty)?.ToString();
                 if (string.IsNullOrWhiteSpace(configFile) || string.IsNullOrWhiteSpace(jsonPath))
                 {
-                    instruction.AppendLine("ERROR: Missing configuration file or JSON path. Cannot proceed with this action.");
+                    instruction.AppendLine("ERROR: Missing configuration file or config path. Cannot proceed with this action.");
                     break;
                 }
                 instruction.AppendLine($"EXECUTE: Add configuration to {configFile}");
                 instruction.AppendLine();
-                instruction.AppendLine($"Add this JSON property: \"{jsonPath}\": \"{value}\"");
+                if (configFile.EndsWith(".config", StringComparison.OrdinalIgnoreCase))
+                {
+                    // XML config (ApplicationInsights.config, Web.config)
+                    instruction.AppendLine($"Set the <{jsonPath}> element value to \"{value}\" in the XML file.");
+                    instruction.AppendLine($"Example: <{jsonPath}>{value}</{jsonPath}>");
+                }
+                else
+                {
+                    // JSON config (appsettings.json)
+                    instruction.AppendLine($"Add this JSON property: \"{jsonPath}\": \"{value}\"");
+                }
                 if (!string.IsNullOrWhiteSpace(envVar))
                 {
                     instruction.AppendLine();
@@ -393,7 +448,7 @@ public class OrchestratorTool
                 break;
 
             case ActionType.ManualStep:
-                var manualInstructions = action.Details.GetValueOrDefault("instructions", "")?.ToString();
+                var manualInstructions = action.Details.GetValueOrDefault("instructions", string.Empty)?.ToString();
                 if (string.IsNullOrWhiteSpace(manualInstructions))
                 {
                     instruction.AppendLine("ERROR: Missing manual step instructions. Cannot proceed with this action.");
@@ -413,10 +468,6 @@ public class OrchestratorTool
         return instruction.ToString();
     }
 
-    /// <summary>
-    /// Build a dynamic completion instruction based on what was actually done,
-    /// instead of hardcoding .NET-specific text.
-    /// </summary>
     private static string BuildCompletionInstruction(OnboardingSpec spec)
     {
         var sb = new System.Text.StringBuilder();
@@ -461,9 +512,8 @@ public class OrchestratorTool
 
 internal enum SessionState
 {
-    /// <summary>Brownfield analysis template sent, waiting for LLM to submit findings</summary>
     AwaitingAnalysis,
-    /// <summary>Normal step-through of actions (greenfield or post-analysis brownfield)</summary>
+    AwaitingEnhancementSelection,
     Executing
 }
 
@@ -480,56 +530,27 @@ internal class ExecutionSession
 
     public int CurrentActionIndex => _currentActionIndex;
 
-    /// <summary>
-    /// Atomically advances the action index. Returns the previous index.
-    /// </summary>
     public int AdvanceIndex() => Interlocked.Increment(ref _currentActionIndex) - 1;
+}
+
+internal sealed record EnhancementOptionInfo
+{
+    public required string Key { get; init; }
+    public required string DisplayName { get; init; }
 }
 
 internal record OrchestratorResponse
 {
-    /// <summary>
-    /// Status: "in_progress", "complete", "error", "unsupported", "clarification_needed", "analysis_needed"
-    /// </summary>
     public required string Status { get; init; }
-
     public string? SessionId { get; init; }
-
-    /// <summary>
-    /// Human-readable message about current state
-    /// </summary>
     public required string Message { get; init; }
-
-    /// <summary>
-    /// EXPLICIT instruction for what the LLM must do next.
-    /// This is the key to reducing hallucination - tell it exactly what to do.
-    /// </summary>
     public required string Instruction { get; init; }
-
-    /// <summary>
-    /// The current action details (if in_progress)
-    /// </summary>
     public OnboardingAction? CurrentAction { get; init; }
-
-    /// <summary>
-    /// Progress indicator: "Step 2 of 4"
-    /// </summary>
     public string? Progress { get; init; }
-
-    /// <summary>
-    /// Actions already completed
-    /// </summary>
     public List<string>? CompletedActions { get; init; }
-
-    /// <summary>
-    /// Any warnings to relay to user
-    /// </summary>
     public List<string>? Warnings { get; init; }
-
-    /// <summary>
-    /// Brownfield analysis template (only present when status is "analysis_needed")
-    /// </summary>
     public AnalysisTemplate? AnalysisTemplate { get; init; }
+    public List<EnhancementOptionInfo>? EnhancementOptions { get; init; }
 }
 
 #endregion

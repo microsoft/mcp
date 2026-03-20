@@ -39,13 +39,21 @@ public static class MonitorInstrumentationOptionDefinitions
         Description = """
             JSON object with brownfield analysis findings. Required properties:
             - serviceOptions: Service options findings from analyzing AddApplicationInsightsTelemetry() call. Null if not found.
-            - initializers: Telemetry initializer findings from analyzing ITelemetryInitializer implementations. Null if none found.
+            - initializers: Telemetry initializer findings from analyzing ITelemetryInitializer or IConfigureOptions<TelemetryConfiguration> implementations. Null if none found.
             - processors: Telemetry processor findings from analyzing ITelemetryProcessor implementations. Null if none found.
             - clientUsage: TelemetryClient usage findings from analyzing direct TelemetryClient usage. Null if not found.
             - sampling: Custom sampling configuration findings. Null if no custom sampling.
             - telemetryPipeline: Custom ITelemetryChannel or TelemetrySinks usage findings. Null if not found.
+            - logging: Explicit logger provider and filter findings. Null if not found.
             For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
             """,
+        Required = true
+    };
+
+    public const string EnhancementKeysName = "enhancement-keys";
+    public static readonly Option<string> EnhancementKeys = new($"--{EnhancementKeysName}")
+    {
+        Description = "One or more enhancement keys, comma-separated (e.g. 'redis', 'redis,processors', 'entityframework,otlp').",
         Required = true
     };
 }

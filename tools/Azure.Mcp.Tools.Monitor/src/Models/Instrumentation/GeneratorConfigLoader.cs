@@ -59,6 +59,10 @@ public class ActionConfig
     // Manual Step specific
     public string? Instructions { get; set; }
     public List<string>? Links { get; set; }
+
+    // Validate Install specific
+    public List<string>? FilesToExist { get; set; }
+    public Dictionary<string, List<string>>? FileContentChecks { get; set; }
 }
 
 /// <summary>
