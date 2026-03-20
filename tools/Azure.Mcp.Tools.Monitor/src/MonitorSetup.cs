@@ -69,7 +69,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<WorkspaceAnalyzer>();
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
-        services.AddSingleton<SendEnhancedSelectionTool>();
+        services.AddSingleton<SendEnhancementSelectTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
@@ -93,7 +93,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<OrchestratorStartCommand>();
         services.AddSingleton<OrchestratorNextCommand>();
         services.AddSingleton<SendBrownfieldAnalysisCommand>();
-        services.AddSingleton<SendEnhancedSelectionCommand>();
+        services.AddSingleton<SendEnhancementSelectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -179,8 +179,8 @@ public class MonitorSetup : IAreaSetup
         instrumentation.AddCommand(orchestratorNext.Name, orchestratorNext);
         var sendBrownfieldAnalysis = serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>();
         instrumentation.AddCommand(sendBrownfieldAnalysis.Name, sendBrownfieldAnalysis);
-        var sendEnhancedSelection = serviceProvider.GetRequiredService<SendEnhancedSelectionCommand>();
-        instrumentation.AddCommand(sendEnhancedSelection.Name, sendEnhancedSelection);
+        var sendEnhancementSelect = serviceProvider.GetRequiredService<SendEnhancementSelectCommand>();
+        instrumentation.AddCommand(sendEnhancementSelect.Name, sendEnhancementSelect);
 
         return monitor;
     }

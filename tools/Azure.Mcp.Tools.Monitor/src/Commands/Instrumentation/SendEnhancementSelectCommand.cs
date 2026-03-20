@@ -12,14 +12,14 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
-public sealed class SendEnhancedSelectionCommand(ILogger<SendEnhancedSelectionCommand> logger)
-    : BaseCommand<SendEnhancedSelectionOptions>
+public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger)
+    : BaseCommand<SendEnhancementSelectOptions>
 {
-    private readonly ILogger<SendEnhancedSelectionCommand> _logger = logger;
+    private readonly ILogger<SendEnhancementSelectCommand> _logger = logger;
 
     public override string Id => "8fd4eb5f-14d1-450f-982c-82d761f0f7d6";
 
-    public override string Name => "send_enhanced_selection";
+    public override string Name => "send_enhancement_select";
 
     public override string Description => @"Submit the user's enhancement selection after orchestrator_start returned status 'enhancement_available'.
 Present the enhancement options to the user first, then call this tool with their chosen option key(s).
@@ -44,9 +44,9 @@ After this call succeeds, continue with orchestrator_next as usual.";
         command.Options.Add(MonitorInstrumentationOptionDefinitions.EnhancementKeys);
     }
 
-    protected override SendEnhancedSelectionOptions BindOptions(ParseResult parseResult)
+    protected override SendEnhancementSelectOptions BindOptions(ParseResult parseResult)
     {
-        return new SendEnhancedSelectionOptions
+        return new SendEnhancementSelectOptions
         {
             SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
             EnhancementKeys = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.EnhancementKeys)
@@ -64,7 +64,7 @@ After this call succeeds, continue with orchestrator_next as usual.";
 
         try
         {
-            var tool = context.GetService<SendEnhancedSelectionTool>();
+            var tool = context.GetService<SendEnhancementSelectTool>();
             var result = tool.Send(options.SessionId!, options.EnhancementKeys!);
 
             context.Response.Status = HttpStatusCode.OK;

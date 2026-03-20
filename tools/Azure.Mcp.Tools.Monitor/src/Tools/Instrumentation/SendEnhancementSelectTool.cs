@@ -7,7 +7,7 @@ using Azure.Mcp.Tools.Monitor.Models;
 
 namespace Azure.Mcp.Tools.Monitor.Tools;
 
-public class SendEnhancedSelectionTool
+public class SendEnhancementSelectTool
 {
     public string Send(string sessionId, string enhancementKeys)
     {

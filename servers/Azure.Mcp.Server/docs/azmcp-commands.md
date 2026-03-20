@@ -2511,14 +2511,14 @@ azmcp monitor instrumentation send_brownfield_analysis --session-id <session-id>
                                                       --findings-json <json>
 
 # Submit enhancement selection when orchestrator_start returns enhancement_available
-azmcp monitor instrumentation send_enhanced_selection --session-id <session-id> \
+azmcp monitor instrumentation send_enhancement_select --session-id <session-id> \
                                                      --enhancement-keys <comma-separated-keys>
 ```
 
 **Notes:**
 - `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
 - `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
-- `send_enhanced_selection` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator_start` when status is `enhancement_available`.
+- `send_enhancement_select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator_start` when status is `enhancement_available`.
 
 ### Azure Managed Lustre Operations
 

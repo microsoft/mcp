@@ -3558,7 +3558,7 @@
         "monitor_instrumentation_orchestrator_start",
         "monitor_instrumentation_orchestrator_next",
         "monitor_instrumentation_send_brownfield_analysis",
-        "monitor_instrumentation_send_enhanced_selection"
+        "monitor_instrumentation_send_enhancement_select"
       ]
     }
     ,

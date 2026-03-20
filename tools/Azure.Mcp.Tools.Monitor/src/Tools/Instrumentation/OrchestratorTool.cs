@@ -164,7 +164,7 @@ public class OrchestratorTool
                 Status = "error",
                 SessionId = sessionId,
                 Message = "Enhancement selection is pending. Send selection first.",
-                Instruction = "Call send_enhanced_selection with the chosen enhancement keys before calling orchestrator_next."
+                Instruction = "Call send_enhancement_select with the chosen enhancement keys before calling orchestrator_next."
             });
         }
 
@@ -287,7 +287,7 @@ public class OrchestratorTool
         sb.AppendLine("Present the enhancement options to the user and ask what they'd like to add.");
         sb.AppendLine("The user may select one or more options. They can describe what they want in natural language.");
         sb.AppendLine();
-        sb.AppendLine("When the user has chosen, call send_enhanced_selection with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
+        sb.AppendLine("When the user has chosen, call send_enhancement_select with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
         sb.AppendLine("If the user asks for something not in the list, inform them it is not currently supported through MCP.");
         return sb.ToString();
     }

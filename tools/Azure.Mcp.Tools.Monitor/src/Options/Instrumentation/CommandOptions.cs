@@ -27,7 +27,7 @@ public sealed class SendBrownfieldAnalysisOptions
     public string? FindingsJson { get; set; }
 }
 
-public sealed class SendEnhancedSelectionOptions
+public sealed class SendEnhancementSelectOptions
 {
     public string? SessionId { get; set; }
 

@@ -675,9 +675,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
 | monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
 | monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
-| monitor_instrumentation_send_enhanced_selection | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
-| monitor_instrumentation_send_enhanced_selection | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
-| monitor_instrumentation_send_enhanced_selection | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
+| monitor_instrumentation_send_enhancement_select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
+| monitor_instrumentation_send_enhancement_select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
+| monitor_instrumentation_send_enhancement_select | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |

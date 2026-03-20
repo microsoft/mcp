@@ -98,7 +98,7 @@ public class DotNetEnhancementGenerator : IGenerator
 
     /// <summary>
     /// Generate actions for one or more enhancement selections.
-    /// Called by the SendEnhancedSelectionTool after user picks.
+    /// Called by the SendEnhancementSelectTool after user picks.
     /// </summary>
     public static OnboardingSpec GenerateForSelections(
         Analysis analysis,
