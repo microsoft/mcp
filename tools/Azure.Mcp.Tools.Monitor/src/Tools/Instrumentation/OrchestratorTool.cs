@@ -285,7 +285,7 @@ public class OrchestratorTool
         sb.AppendLine();
         sb.AppendLine("The application is already on the latest SDK version. No migration is needed.");
         sb.AppendLine("Present the enhancement options to the user and ask what they'd like to add.");
-        sb.AppendLine("The user may select one or more options.");
+        sb.AppendLine("The user may select one or more options. They can describe what they want in natural language.");
         sb.AppendLine();
         sb.AppendLine("When the user has chosen, call send_enhanced_selection with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
         sb.AppendLine("If the user asks for something not in the list, inform them it is not currently supported through MCP.");
@@ -301,13 +301,13 @@ public class OrchestratorTool
         sb.AppendLine("The template has 7 sections. For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false) rather than null.");
         sb.AppendLine();
         sb.AppendLine("Sections to analyze:");
-        sb.AppendLine("1. serviceOptions - Find AddApplicationInsightsTelemetry() / AddApplicationInsightsTelemetryWorkerService(), or for Console apps find TelemetryConfiguration usage");
-        sb.AppendLine("2. initializers - Find ITelemetryInitializer and IConfigureOptions<TelemetryConfiguration> implementations");
-        sb.AppendLine("3. processors - Find ITelemetryProcessor implementations");
-        sb.AppendLine("4. clientUsage - Find TelemetryClient direct usages and Track*/GetMetric methods");
-        sb.AppendLine("5. sampling - Find custom sampling configuration");
-        sb.AppendLine("6. telemetryPipeline - Find ITelemetryChannel, TelemetryChannel assignment, TelemetrySinks usage");
-        sb.AppendLine("7. logging - Find AddApplicationInsights() logging provider and AddFilter<ApplicationInsightsLoggerProvider>()");
+        sb.AppendLine("1. serviceOptions — Find the AddApplicationInsightsTelemetry() or AddApplicationInsightsTelemetryWorkerService() call, or for Console apps find TelemetryConfiguration.CreateDefault() / TelemetryConfiguration.Active usage, and report which options are configured");
+        sb.AppendLine("2. initializers — Find all classes implementing ITelemetryInitializer AND any classes implementing IConfigureOptions<TelemetryConfiguration> (e.g. classes that call SetAzureTokenCredential for AAD auth). Also report any direct config.SetAzureTokenCredential() calls found in entry points (e.g. Program.cs, Global.asax.cs) as an initializer entry with purpose mentioning 'SetAzureTokenCredential for AAD auth'. Report all types here — describe each one with its purpose");
+        sb.AppendLine("3. processors — Find all classes implementing ITelemetryProcessor and describe each one");
+        sb.AppendLine("4. clientUsage — Find all files that use TelemetryClient directly OR access Application Insights telemetry types (RequestTelemetry, DependencyTelemetry, TraceTelemetry, EventTelemetry, MetricTelemetry, ExceptionTelemetry, AvailabilityTelemetry) from HttpContext.Features, HttpContext.GetRequestTelemetry(), or via Microsoft.ApplicationInsights.DataContracts. For each file, list every Track*/GetMetric method name called (e.g. TrackEvent, TrackException, TrackPageView, TrackAvailability, GetMetric) — several have removed overloads in 3.x. Also note: (a) Features.Get<RequestTelemetry>() or GetRequestTelemetry() usage — in 3.x use Activity.Current with SetTag(); (b) manual construction of telemetry objects (new DependencyTelemetry(), new RequestTelemetry(), etc.) — these types still exist in 3.x but some properties changed; (c) type checks like 'telemetry is RequestTelemetry' in custom code outside initializers/processors");
+        sb.AppendLine("5. sampling — Find any custom sampling configuration (e.g. custom ISamplingProcessor, .SetSampler<T>(), or explicit TelemetryProcessorChainBuilder sampling setup). Do NOT report EnableAdaptiveSampling here — that is a service option handled in section 1");
+        sb.AppendLine("6. telemetryPipeline — Find any custom ITelemetryChannel implementations, TelemetryConfiguration.TelemetryChannel assignments, or TelemetrySinks/DefaultTelemetrySink usage — all removed in 3.x");
+        sb.AppendLine("7. logging — Find any explicit loggingBuilder.AddApplicationInsights() or services.AddLogging(b => b.AddApplicationInsights(...)) calls, and any AddFilter<ApplicationInsightsLoggerProvider>(...) log filter registrations — ApplicationInsightsLoggerProvider is removed in 3.x and logging is now automatic");
         sb.AppendLine();
         sb.AppendLine("When done, call send_brownfield_analysis with the sessionId and your filled findings JSON.");
         return sb.ToString();
@@ -370,11 +370,19 @@ public class OrchestratorTool
                     "npm" => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  npm install {pkg}@{version}"
                         : $"  npm install {pkg}",
+                    "nuget-vs" => $"  Install-Package {pkg}",
                     _ => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  dotnet add \"{project}\" package {pkg} --version {version}"
                         : $"  dotnet add \"{project}\" package {pkg}"
                 };
                 instruction.AppendLine(installCommand);
+                if (packageManager?.ToLowerInvariant() == "nuget-vs")
+                {
+                    instruction.AppendLine();
+                    instruction.AppendLine("ASK THE USER to run this command in the Package Manager Console (View → Other Windows → Package Manager Console) or install via the NuGet Package Manager UI (right-click project → Manage NuGet Packages).");
+                    instruction.AppendLine("The agent cannot run this command — it requires the Package Manager Console which is separate from the developer terminal.");
+                    instruction.AppendLine("Wait for the user to confirm the package is installed, then call orchestrator_next to continue.");
+                }
                 instruction.AppendLine();
                 instruction.AppendLine("Wait for the command to complete successfully.");
                 break;
@@ -414,12 +422,22 @@ public class OrchestratorTool
                 var envVar = action.Details.GetValueOrDefault("envVarAlternative", string.Empty)?.ToString();
                 if (string.IsNullOrWhiteSpace(configFile) || string.IsNullOrWhiteSpace(jsonPath))
                 {
-                    instruction.AppendLine("ERROR: Missing configuration file or JSON path. Cannot proceed with this action.");
+                    instruction.AppendLine("ERROR: Missing configuration file or config path. Cannot proceed with this action.");
                     break;
                 }
                 instruction.AppendLine($"EXECUTE: Add configuration to {configFile}");
                 instruction.AppendLine();
-                instruction.AppendLine($"Add this JSON property: \"{jsonPath}\": \"{value}\"");
+                if (configFile.EndsWith(".config", StringComparison.OrdinalIgnoreCase))
+                {
+                    // XML config (ApplicationInsights.config, Web.config)
+                    instruction.AppendLine($"Set the <{jsonPath}> element value to \"{value}\" in the XML file.");
+                    instruction.AppendLine($"Example: <{jsonPath}>{value}</{jsonPath}>");
+                }
+                else
+                {
+                    // JSON config (appsettings.json)
+                    instruction.AppendLine($"Add this JSON property: \"{jsonPath}\": \"{value}\"");
+                }
                 if (!string.IsNullOrWhiteSpace(envVar))
                 {
                     instruction.AppendLine();

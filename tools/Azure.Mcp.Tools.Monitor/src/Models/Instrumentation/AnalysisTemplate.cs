@@ -16,8 +16,8 @@ public sealed record AnalysisTemplate
         {
             ServiceOptions = new ServiceOptionsTemplate
             {
-                EntryPointFile = "(string) File containing AddApplicationInsightsTelemetry, e.g. Program.cs",
-                SetupPattern = "(string) e.g. AddApplicationInsightsTelemetry",
+                EntryPointFile = "(string) File containing AddApplicationInsightsTelemetry or AddApplicationInsightsTelemetryWorkerService, e.g. Program.cs",
+                SetupPattern = "(string) e.g. AddApplicationInsightsTelemetry or AddApplicationInsightsTelemetryWorkerService",
                 InstrumentationKey = "(string|null) options.InstrumentationKey value - REMOVED in 3.x",
                 ConnectionString = "(string|null) options.ConnectionString value",
                 EnableAdaptiveSampling = "(bool|null) - REMOVED in 3.x",
@@ -41,17 +41,17 @@ public sealed record AnalysisTemplate
             },
             Initializers = new InitializerTemplate
             {
-                Found = "(bool) true if any ITelemetryInitializer implementations exist",
+                Found = "(bool) true if any ITelemetryInitializer or IConfigureOptions<TelemetryConfiguration> implementations exist",
                 Implementations =
                 [
                     new ImplementationTemplate
                     {
                         ClassName = "(string) class name",
                         File = "(string) file path",
-                        Purpose = "(string) what this initializer does"
+                        Purpose = "(string) what this initializer does \u2014 for IConfigureOptions<TelemetryConfiguration>, mention if it calls SetAzureTokenCredential for AAD auth"
                     }
                 ],
-                Registrations = ["(string) the DI registration line, e.g. services.AddSingleton<ITelemetryInitializer, MyInit>()"]
+                Registrations = ["(string) the DI registration line, e.g. services.AddSingleton<ITelemetryInitializer, MyInit>() or services.AddSingleton<IConfigureOptions<TelemetryConfiguration>, MyEnricher>()"]
             },
             Processors = new ProcessorTemplate
             {
@@ -76,7 +76,7 @@ public sealed record AnalysisTemplate
                     {
                         File = "(string) file path",
                         Pattern = "(string) e.g. Constructor injection of TelemetryClient",
-                        Methods = ["(string) method names called, e.g. TrackEvent, TrackException"]
+                        Methods = ["(string) every Track*/GetMetric method name called, e.g. TrackEvent, TrackException, TrackPageView, TrackAvailability, TrackTrace, TrackMetric, TrackDependency, GetMetric"]
                     }
                 ]
             },
