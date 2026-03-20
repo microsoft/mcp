@@ -1052,6 +1052,21 @@ Azure MCP Server supports being deployed as a Remote MCP Server using HTTP trans
 - [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md)
 - [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
 
+### TLS Termination and HTTPS
+
+The Azure MCP Server binds to HTTP (not HTTPS), delegating TLS termination to the platform's reverse proxy or ingress controller — the recommended pattern for production deployments on Azure.
+
+| Hosting Platform | How HTTPS Works |
+|---|---|
+| **Azure Container Apps** | The built-in ingress proxy terminates TLS and exposes an HTTPS FQDN, even for internal-only apps. Microsoft [recommends this pattern](https://learn.microsoft.com/azure/container-apps/ingress-overview) over end-to-end TLS into the container. |
+| **Azure App Service** | Provides HTTPS endpoints via `*.azurewebsites.net` automatically. Custom domains support managed certificates or bring your own certificate. |
+| **AKS** | HTTPS is configured via an ingress controller (e.g., NGINX, Application Gateway) with TLS termination at the ingress layer. |
+
+This follows the standard pattern for `ASP.NET` workloads on Azure — the application handles business logic while the platform handles transport security, certificate provisioning, and rotation.
+
+> [!NOTE]
+> If you are self-hosting outside Azure without a reverse proxy, you must either place a TLS-terminating proxy (such as NGINX, Caddy, or Envoy) in front of the server, or configure Kestrel for HTTPS directly.
+
 ### HTTPS redirection issues
 
 In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
