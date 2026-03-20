@@ -30,11 +30,8 @@ public class ConfidentialLedgerSetup : IAreaSetup
         var entries = new CommandGroup("entries", "Ledger entries operations - Commands for appending and retrieving ledger entries.");
         root.AddSubGroup(entries);
 
-        var append = serviceProvider.GetRequiredService<LedgerEntryAppendCommand>();
-        entries.AddCommand(append.Name, append);
-
-        var get = serviceProvider.GetRequiredService<LedgerEntryGetCommand>();
-        entries.AddCommand(get.Name, get);
+        entries.AddCommand(serviceProvider.GetRequiredService<LedgerEntryAppendCommand>());
+        entries.AddCommand(serviceProvider.GetRequiredService<LedgerEntryGetCommand>());
 
         return root;
     }

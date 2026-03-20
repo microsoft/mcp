@@ -43,16 +43,13 @@ public class EventGridSetup : IAreaSetup
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
-        var eventsPublish = serviceProvider.GetRequiredService<EventGridPublishCommand>();
-        events.AddCommand(eventsPublish.Name, eventsPublish);
+        events.AddCommand(serviceProvider.GetRequiredService<EventGridPublishCommand>());
 
         // Register Topic commands
-        var topicList = serviceProvider.GetRequiredService<TopicListCommand>();
-        topics.AddCommand(topicList.Name, topicList);
+        topics.AddCommand(serviceProvider.GetRequiredService<TopicListCommand>());
 
         // Register Subscription commands
-        var subscriptionList = serviceProvider.GetRequiredService<SubscriptionListCommand>();
-        subscriptions.AddCommand(subscriptionList.Name, subscriptionList);
+        subscriptions.AddCommand(serviceProvider.GetRequiredService<SubscriptionListCommand>());
 
         return eventGrid;
     }

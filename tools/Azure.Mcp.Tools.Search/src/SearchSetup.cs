@@ -43,16 +43,13 @@ public class SearchSetup : IAreaSetup
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");
         search.AddSubGroup(service);
 
-        var serviceList = serviceProvider.GetRequiredService<ServiceListCommand>();
-        service.AddCommand(serviceList.Name, serviceList);
+        service.AddCommand(serviceProvider.GetRequiredService<ServiceListCommand>());
 
         var index = new CommandGroup("index", "Azure AI Search (formerly known as \"Azure Cognitive Search\") index operations - Commands for listing, managing, and querying search indexes in a specific search service.");
         search.AddSubGroup(index);
 
-        var indexGet = serviceProvider.GetRequiredService<IndexGetCommand>();
-        index.AddCommand(indexGet.Name, indexGet);
-        var indexQuery = serviceProvider.GetRequiredService<IndexQueryCommand>();
-        index.AddCommand(indexQuery.Name, indexQuery);
+        index.AddCommand(serviceProvider.GetRequiredService<IndexGetCommand>());
+        index.AddCommand(serviceProvider.GetRequiredService<IndexQueryCommand>());
 
         var knowledge = new CommandGroup("knowledge", "Azure AI Search knowledge operations - Commands retrieving data from knowledge sources, listing knowledge sources and knowledge bases in a search service.");
         search.AddSubGroup(knowledge);
@@ -60,16 +57,13 @@ public class SearchSetup : IAreaSetup
         var knowledgeSource = new CommandGroup("source", "Knowledge source operations - get knowledge sources associated with a service.");
         knowledge.AddSubGroup(knowledgeSource);
 
-        var knowledgeSourceGet = serviceProvider.GetRequiredService<KnowledgeSourceGetCommand>();
-        knowledgeSource.AddCommand(knowledgeSourceGet.Name, knowledgeSourceGet);
+        knowledgeSource.AddCommand(serviceProvider.GetRequiredService<KnowledgeSourceGetCommand>());
 
         var knowledgeBase = new CommandGroup("base", "Knowledge base operations - get knowledge bases associated with a service.");
         knowledge.AddSubGroup(knowledgeBase);
 
-        var knowledgeBaseGet = serviceProvider.GetRequiredService<KnowledgeBaseGetCommand>();
-        knowledgeBase.AddCommand(knowledgeBaseGet.Name, knowledgeBaseGet);
-        var knowledgeBaseRetrieve = serviceProvider.GetRequiredService<KnowledgeBaseRetrieveCommand>();
-        knowledgeBase.AddCommand(knowledgeBaseRetrieve.Name, knowledgeBaseRetrieve);
+        knowledgeBase.AddCommand(serviceProvider.GetRequiredService<KnowledgeBaseGetCommand>());
+        knowledgeBase.AddCommand(serviceProvider.GetRequiredService<KnowledgeBaseRetrieveCommand>());
 
         return search;
     }

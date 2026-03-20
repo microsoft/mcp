@@ -38,38 +38,33 @@ public sealed class DeploySetup : IAreaSetup
         // This command will be deprecated when 'azd cli' supports the same functionality
         var appGroup = new CommandGroup("app", "Application-specific deployment tools");
         var logsGroup = new CommandGroup("logs", "Application logs management");
-        var logsGet = serviceProvider.GetRequiredService<LogsGetCommand>();
-        logsGroup.AddCommand(logsGet.Name, logsGet);
+        logsGroup.AddCommand(serviceProvider.GetRequiredService<LogsGetCommand>());
         appGroup.AddSubGroup(logsGroup);
         deploy.AddSubGroup(appGroup);
 
         // Infrastructure as Code commands
         var iacGroup = new CommandGroup("iac", "Infrastructure as Code operations");
         var rulesGroup = new CommandGroup("rules", "Infrastructure as Code rules and guidelines");
-        var rulesGet = serviceProvider.GetRequiredService<RulesGetCommand>();
-        rulesGroup.AddCommand(rulesGet.Name, rulesGet);
+        rulesGroup.AddCommand(serviceProvider.GetRequiredService<RulesGetCommand>());
         iacGroup.AddSubGroup(rulesGroup);
         deploy.AddSubGroup(iacGroup);
 
         // CI/CD Pipeline commands
         var pipelineGroup = new CommandGroup("pipeline", "CI/CD pipeline operations");
         var guidanceGroup = new CommandGroup("guidance", "CI/CD pipeline guidance");
-        var guidanceGet = serviceProvider.GetRequiredService<GuidanceGetCommand>();
-        guidanceGroup.AddCommand(guidanceGet.Name, guidanceGet);
+        guidanceGroup.AddCommand(serviceProvider.GetRequiredService<GuidanceGetCommand>());
         pipelineGroup.AddSubGroup(guidanceGroup);
         deploy.AddSubGroup(pipelineGroup);
 
         // Deployment planning commands
         var planGroup = new CommandGroup("plan", "Deployment planning operations");
-        var getPlan = serviceProvider.GetRequiredService<GetCommand>();
-        planGroup.AddCommand(getPlan.Name, getPlan);
+        planGroup.AddCommand(serviceProvider.GetRequiredService<GetCommand>());
         deploy.AddSubGroup(planGroup);
 
         // Architecture diagram commands
         var architectureGroup = new CommandGroup("architecture", "Architecture diagram operations");
         var diagramGroup = new CommandGroup("diagram", "Architecture diagram generation");
-        var diagramGenerate = serviceProvider.GetRequiredService<DiagramGenerateCommand>();
-        diagramGroup.AddCommand(diagramGenerate.Name, diagramGenerate);
+        diagramGroup.AddCommand(serviceProvider.GetRequiredService<DiagramGenerateCommand>());
         architectureGroup.AddSubGroup(diagramGroup);
         deploy.AddSubGroup(architectureGroup);
 

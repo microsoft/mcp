@@ -13,26 +13,7 @@ public class CommandGroup(string name, string description, string? title = null)
     public Command Command { get; } = new Command(name, description);
     public ToolMetadata? ToolMetadata { get; set; }
 
-    public void AddCommand(string path, IBaseCommand command)
-    {
-        // Split on first dot to get group and remaining path
-        var parts = path.Split(['.'], 2);
-
-        if (parts.Length == 1)
-        {
-            // This is a direct command for this group
-            Commands[path] = command;
-        }
-        else
-        {
-            // Find or create the subgroup
-            var subGroup = SubGroup.FirstOrDefault(g => g.Name == parts[0]) ??
-                throw new InvalidOperationException($"Subgroup {parts[0]} not found. Group must be registered before commands.");
-
-            // Recursively add command to subgroup
-            subGroup.AddCommand(parts[1], command);
-        }
-    }
+    public void AddCommand(IBaseCommand command) => Commands[command.Name] = command;
 
     public void AddSubGroup(CommandGroup subGroup)
     {

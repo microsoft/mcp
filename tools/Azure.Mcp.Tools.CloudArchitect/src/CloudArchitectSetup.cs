@@ -25,8 +25,7 @@ public class CloudArchitectSetup : IAreaSetup
         var cloudArchitect = new CommandGroup(Name, "Cloud Architecture operations - Commands for generating Azure architecture designs and recommendations based on requirements.", Title);
 
         // Register CloudArchitect commands
-        var design = serviceProvider.GetRequiredService<DesignCommand>();
-        cloudArchitect.AddCommand(design.Name, design);
+        cloudArchitect.AddCommand(serviceProvider.GetRequiredService<DesignCommand>());
 
         return cloudArchitect;
     }

@@ -121,19 +121,13 @@ public class MonitorSetup : IAreaSetup
         resources.AddSubGroup(resourceLogs);
 
         // Register Monitor commands
+        workspaceLogs.AddCommand(serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>());
+        workspaceLogs.AddCommand(serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>());
 
-        var workspaceLogQuery = serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>();
-        workspaceLogs.AddCommand(workspaceLogQuery.Name, workspaceLogQuery);
-        var resourceLogQuery = serviceProvider.GetRequiredService<ResourceLogQueryCommand>();
-        resourceLogs.AddCommand(resourceLogQuery.Name, resourceLogQuery);
+        workspaces.AddCommand(serviceProvider.GetRequiredService<WorkspaceListCommand>());
+        workspaces.AddCommand(serviceProvider.GetRequiredService<TableListCommand>());
 
-        var workspaceList = serviceProvider.GetRequiredService<WorkspaceListCommand>();
-        workspaces.AddCommand(workspaceList.Name, workspaceList);
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        monitorTable.AddCommand(tableList.Name, tableList);
-
-        var tableTypeList = serviceProvider.GetRequiredService<TableTypeListCommand>();
-        monitorTableType.AddCommand(tableTypeList.Name, tableTypeList);
+        monitorTableType.AddCommand(serviceProvider.GetRequiredService<TableTypeListCommand>());
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
@@ -141,46 +135,35 @@ public class MonitorSetup : IAreaSetup
         var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
         health.AddSubGroup(entity);
 
-        var entityGetHealth = serviceProvider.GetRequiredService<EntityGetHealthCommand>();
-        entity.AddCommand(entityGetHealth.Name, entityGetHealth);
+        entity.AddCommand(serviceProvider.GetRequiredService<EntityGetHealthCommand>());
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
-        var metricsQuery = serviceProvider.GetRequiredService<MetricsQueryCommand>();
-        metrics.AddCommand(metricsQuery.Name, metricsQuery);
-        var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
-        metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
+        metrics.AddCommand(serviceProvider.GetRequiredService<MetricsQueryCommand>());
+        metrics.AddCommand(serviceProvider.GetRequiredService<MetricsDefinitionsCommand>());
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
         monitor.AddSubGroup(activityLog);
 
-        var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
-        activityLog.AddCommand(activityLogList.Name, activityLogList);
+        activityLog.AddCommand(serviceProvider.GetRequiredService<ActivityLogListCommand>());
 
         // Register Monitor.WebTest sub-group commands
         var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
         monitor.AddSubGroup(webTests);
 
-        var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();
-        webTests.AddCommand(webTestGet.Name, webTestGet);
-        var webTestCreateOrUpdate = serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>();
-        webTests.AddCommand(webTestCreateOrUpdate.Name, webTestCreateOrUpdate);
+        webTests.AddCommand(serviceProvider.GetRequiredService<WebTestsGetCommand>());
+        webTests.AddCommand(serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>());
 
         var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
         monitor.AddSubGroup(instrumentation);
 
-        var getLearningResource = serviceProvider.GetRequiredService<GetLearningResourceCommand>();
-        instrumentation.AddCommand(getLearningResource.Name, getLearningResource);
-        var orchestratorStart = serviceProvider.GetRequiredService<OrchestratorStartCommand>();
-        instrumentation.AddCommand(orchestratorStart.Name, orchestratorStart);
-        var orchestratorNext = serviceProvider.GetRequiredService<OrchestratorNextCommand>();
-        instrumentation.AddCommand(orchestratorNext.Name, orchestratorNext);
-        var sendBrownfieldAnalysis = serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>();
-        instrumentation.AddCommand(sendBrownfieldAnalysis.Name, sendBrownfieldAnalysis);
-        var sendEnhancementSelect = serviceProvider.GetRequiredService<SendEnhancementSelectCommand>();
-        instrumentation.AddCommand(sendEnhancementSelect.Name, sendEnhancementSelect);
+        instrumentation.AddCommand(serviceProvider.GetRequiredService<GetLearningResourceCommand>());
+        instrumentation.AddCommand(serviceProvider.GetRequiredService<OrchestratorStartCommand>());
+        instrumentation.AddCommand(serviceProvider.GetRequiredService<OrchestratorNextCommand>());
+        instrumentation.AddCommand(serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>());
+        instrumentation.AddCommand(serviceProvider.GetRequiredService<SendEnhancementSelectCommand>());
 
         return monitor;
     }
