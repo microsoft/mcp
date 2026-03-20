@@ -897,6 +897,11 @@ See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/A
 
 1. **Ensure Claude Desktop is installed and up to date**: Download the latest version from [claude.com/download](https://claude.com/download).
 2. **Download the correct platform bundle**: Verify you downloaded the `.mcpb` file matching your operating system and architecture from the [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page.
+3. **Uninstall and reinstall the Azure MCP Server MCPB**:
+   1. In Claude Desktop, open the hamburger menu on the top left:
+   2. Go to **File** > **Settings** > **Extensions**
+   3. Click on the three dots button (`...`) on the right of the Azure MCP Server extension and select **Uninstall**.
+   4. After uninstalling, try installing the correct MCP Bundle by dragging the `.mcpb` file into the Claude Desktop window.
 
 ### Platform Package Installation Issues
 
