@@ -126,7 +126,8 @@
     "_overrideComments": {
         "serialize-javascript": "Prototype pollution in serialize-javascript < 7.0.0 (via mocha)",
         "diff": "GHSA-73rr-hh4g-fpgx: DoS in jsdiff 6.0.0-8.0.2 (via mocha)",
-        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)"
+        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)",
+        "flatted": "Prototype pollution in flatted < 3.4.2 (via eslint)"
     },
     "overrides": {
         "mocha": {
@@ -135,6 +136,7 @@
         },
         "@vscode/vsce": {
             "yauzl": "^3.2.1"
-        }
+        },
+        "flatted": "^3.4.2"
     }
 }
