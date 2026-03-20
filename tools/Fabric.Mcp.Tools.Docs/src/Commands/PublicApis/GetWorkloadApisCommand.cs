@@ -20,7 +20,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
 
     public override string Id => "97229a98-c1ae-4255-a6e2-07631c2a42c5";
 
-    public override string Name => "workload_api_spec";
+    public override string Name => "workload-api-spec";
 
     public override string Description =>
         "Retrieves the complete OpenAPI specification for a specific Fabric workload. Use this when the user needs detailed API documentation for a workload like notebooks or reports. Returns full API spec in JSON format.";

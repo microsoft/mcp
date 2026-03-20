@@ -51,10 +51,10 @@ public class FabricDocsSetupTests
 
         // Verify all 6 commands are registered with noun-based naming
         Assert.Contains("workloads", docsGroup.Commands.Keys);
-        Assert.Contains("workload_api_spec", docsGroup.Commands.Keys);
-        Assert.Contains("platform_api_spec", docsGroup.Commands.Keys);
-        Assert.Contains("item_definitions", docsGroup.Commands.Keys);
-        Assert.Contains("best_practices", docsGroup.Commands.Keys);
-        Assert.Contains("api_examples", docsGroup.Commands.Keys);
+        Assert.Contains("workload-api-spec", docsGroup.Commands.Keys);
+        Assert.Contains("platform-api-spec", docsGroup.Commands.Keys);
+        Assert.Contains("item-definitions", docsGroup.Commands.Keys);
+        Assert.Contains("best-practices", docsGroup.Commands.Keys);
+        Assert.Contains("api-examples", docsGroup.Commands.Keys);
     }
 }

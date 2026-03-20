@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -19,12 +18,12 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
 
     public override string Id => "8fd4eb5f-14d1-450f-982c-82d761f0f7d6";
 
-    public override string Name => "send_enhancement_select";
+    public override string Name => "send-enhancement-select";
 
-    public override string Description => @"Submit the user's enhancement selection after orchestrator_start returned status 'enhancement_available'.
+    public override string Description => @"Submit the user's enhancement selection after orchestrator-start returned status 'enhancement_available'.
 Present the enhancement options to the user first, then call this tool with their chosen option key(s).
 Multiple enhancements can be selected by passing a comma-separated list (e.g. 'redis,processors').
-After this call succeeds, continue with orchestrator_next as usual.";
+After this call succeeds, continue with orchestrator-next as usual.";
 
     public override string Title => "Send Enhancement Selection";
 

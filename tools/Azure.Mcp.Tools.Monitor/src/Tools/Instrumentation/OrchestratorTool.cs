@@ -1,5 +1,7 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Concurrent;
-using System.Text.Json;
 using Azure.Mcp.Tools.Monitor.Generators;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Pipeline;
@@ -91,7 +93,7 @@ public class OrchestratorTool
             {
                 Status = "clarification_needed",
                 Message = spec.Decision.Rationale,
-                Instruction = "Ask the user to clarify which project to instrument, then call orchestrator_start again.",
+                Instruction = "Ask the user to clarify which project to instrument, then call orchestrator-start again.",
                 Warnings = spec.Warnings
             });
         }
@@ -141,8 +143,8 @@ public class OrchestratorTool
             return Respond(new OrchestratorResponse
             {
                 Status = "error",
-                Message = "No active session. Call orchestrator_start first.",
-                Instruction = "Call orchestrator_start with the workspace path to begin."
+                Message = "No active session. Call orchestrator-start first.",
+                Instruction = "Call orchestrator-start with the workspace path to begin."
             });
         }
 
@@ -153,7 +155,7 @@ public class OrchestratorTool
                 Status = "error",
                 SessionId = sessionId,
                 Message = "Brownfield analysis is pending. Submit findings first.",
-                Instruction = "Call send_brownfield_analysis with the filled analysis template before calling orchestrator_next."
+                Instruction = "Call send-brownfield-analysis with the filled analysis template before calling orchestrator-next."
             });
         }
 
@@ -164,7 +166,7 @@ public class OrchestratorTool
                 Status = "error",
                 SessionId = sessionId,
                 Message = "Enhancement selection is pending. Send selection first.",
-                Instruction = "Call send_enhancement_select with the chosen enhancement keys before calling orchestrator_next."
+                Instruction = "Call send-enhancement-select with the chosen enhancement keys before calling orchestrator-next."
             });
         }
 
@@ -287,7 +289,7 @@ public class OrchestratorTool
         sb.AppendLine("Present the enhancement options to the user and ask what they'd like to add.");
         sb.AppendLine("The user may select one or more options. They can describe what they want in natural language.");
         sb.AppendLine();
-        sb.AppendLine("When the user has chosen, call send_enhancement_select with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
+        sb.AppendLine("When the user has chosen, call send-enhancement-select with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
         sb.AppendLine("If the user asks for something not in the list, inform them it is not currently supported through MCP.");
         return sb.ToString();
     }
@@ -309,7 +311,7 @@ public class OrchestratorTool
         sb.AppendLine("6. telemetryPipeline — Find any custom ITelemetryChannel implementations, TelemetryConfiguration.TelemetryChannel assignments, or TelemetrySinks/DefaultTelemetrySink usage — all removed in 3.x");
         sb.AppendLine("7. logging — Find any explicit loggingBuilder.AddApplicationInsights() or services.AddLogging(b => b.AddApplicationInsights(...)) calls, and any AddFilter<ApplicationInsightsLoggerProvider>(...) log filter registrations — ApplicationInsightsLoggerProvider is removed in 3.x and logging is now automatic");
         sb.AppendLine();
-        sb.AppendLine("When done, call send_brownfield_analysis with the sessionId and your filled findings JSON.");
+        sb.AppendLine("When done, call send-brownfield-analysis with the sessionId and your filled findings JSON.");
         return sb.ToString();
     }
 
@@ -342,7 +344,7 @@ public class OrchestratorTool
                 var resources = action.Details.TryGetValue("resources", out var res)
                     ? res as IEnumerable<object> ?? []
                     : [];
-                instruction.AppendLine("EXECUTE: Call get_learning_resource for each of these paths:");
+                instruction.AppendLine("EXECUTE: Call get-learning-resource for each of these paths:");
                 foreach (var resource in resources)
                 {
                     instruction.AppendLine($"  - {resource}");
@@ -381,7 +383,7 @@ public class OrchestratorTool
                     instruction.AppendLine();
                     instruction.AppendLine("ASK THE USER to run this command in the Package Manager Console (View → Other Windows → Package Manager Console) or install via the NuGet Package Manager UI (right-click project → Manage NuGet Packages).");
                     instruction.AppendLine("The agent cannot run this command — it requires the Package Manager Console which is separate from the developer terminal.");
-                    instruction.AppendLine("Wait for the user to confirm the package is installed, then call orchestrator_next to continue.");
+                    instruction.AppendLine("Wait for the user to confirm the package is installed, then call orchestrator-next to continue.");
                 }
                 instruction.AppendLine();
                 instruction.AppendLine("Wait for the command to complete successfully.");
@@ -461,7 +463,7 @@ public class OrchestratorTool
         }
 
         instruction.AppendLine();
-        instruction.AppendLine("When done, call orchestrator_next with the sessionId to continue.");
+        instruction.AppendLine("When done, call orchestrator-next with the sessionId to continue.");
 
         return instruction.ToString();
     }

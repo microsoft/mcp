@@ -21,7 +21,7 @@ public class ItemCreateCommandTests
         var command = new ItemCreateCommand(logger, fabricCoreService);
 
         // Assert
-        Assert.Equal("create_item", command.Name);
+        Assert.Equal("create-item", command.Name);
         Assert.Equal("Create Fabric Item", command.Title);
         Assert.Contains("Creates a new item in a Fabric workspace", command.Description);
         Assert.False(command.Metadata.ReadOnly);
@@ -42,7 +42,7 @@ public class ItemCreateCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("create_item", systemCommand.Name);
+        Assert.Equal("create-item", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 

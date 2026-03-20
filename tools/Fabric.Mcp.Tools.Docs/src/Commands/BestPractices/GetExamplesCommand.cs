@@ -20,7 +20,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
 
     public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
 
-    public override string Name => "api_examples";
+    public override string Name => "api-examples";
 
     public override string Description =>
         "Retrieves example API request and response files for a Fabric workload. Use this when the user needs sample API calls or implementation examples. Returns dictionary of example files with their contents.";

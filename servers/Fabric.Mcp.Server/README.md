@@ -229,11 +229,11 @@ The Fabric MCP Server exposes tools organized into three categories:
 | Tool Name | Description |
 |-----------|-------------|
 | `docs_workloads` | Lists Fabric workload types that have public API specifications available. |
-| `docs_workload_api_spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
-| `docs_platform_api_spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
-| `docs_item_definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
-| `docs_best_practices` | Retrieves best practice documentation and guidance for a specific topic. |
-| `docs_api_examples` | Retrieves example API request/response files for a specific workload. |
+| `docs_workload-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
+| `docs_platform-api-spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
+| `docs_item-definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
+| `docs_best-practices` | Retrieves best practice documentation and guidance for a specific topic. |
+| `docs_api-examples` | Retrieves example API request/response files for a specific workload. |
 
 ### OneLake Data Operations
 
@@ -258,7 +258,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `core_create_item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
