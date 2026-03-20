@@ -3229,8 +3229,8 @@ azmcp storage account create --subscription <subscription> \
 # Get detailed properties of Storage accounts
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \
-                              [--account <account>] \
-                              [--tenant <tenant>]
+                          [--account <account>] \
+                          [--tenant <tenant>]
 ```
 
 #### Blob Storage
@@ -3245,15 +3245,17 @@ azmcp storage blob container create --subscription <subscription> \
 # Get detailed properties of Storage containers
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --subscription <subscription> \
-                                     --account <account> \
-                                     [--container <container>]
+                                 --account <account> \
+                                 [--container <container>] \
+                                 [--prefix <prefix>]
 
 # Get detailed properties of Storage blobs
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
-                           [--blob <blob>]
+                           [--blob <blob>] \
+                           [--prefix <prefix>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -23,8 +24,16 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
     public override string Name => "get";
 
     public override string Description =>
-        $"""
-        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.
+        """
+        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
+        show details for a specific Storage container. If no container specified, shows all containers in the storage
+        account, optionally filtering on a prefix.
+        
+        Required: --account, --subscription
+        Optional: --container, --tenant, --prefix
+        
+        Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties.
+        Do not use this tool to list blobs in a container.
         """;
 
     public override string Title => CommandTitle;
@@ -43,12 +52,14 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
     {
         base.RegisterOptions(command);
         command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
+        command.Options.Add(StorageOptionDefinitions.ContainerPrefix.AsOptional());
     }
 
     protected override ContainerGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
+        options.Prefix = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.ContainerPrefix.Name);
         return options;
     }
 
@@ -67,6 +78,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 options.Account!,
                 options.Container,
                 options.Subscription!,
+                options.Prefix,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken
