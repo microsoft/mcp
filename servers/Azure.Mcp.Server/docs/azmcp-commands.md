@@ -2582,16 +2582,20 @@ azmcp monitor webtests update --subscription <subscription> \
 ```bash
 
 # Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
                                                 --completion-note <what-was-completed>
 
 # Send brownfield analysis findings JSON to continue migration flow
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
                                                        --findings-json <json>
 ```
