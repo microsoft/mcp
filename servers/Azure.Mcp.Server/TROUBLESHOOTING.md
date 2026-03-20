@@ -6,6 +6,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
 
   - [Common Issues](#common-issues)
     - [Platform Package Installation Issues](#platform-package-installation-issues)
+    - [MCPB (MCP Bundle) Installation Issues](#mcpb-mcp-bundle-installation-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
   - [Development in VS Code](#development-in-vs-code)
@@ -889,6 +890,18 @@ See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/A
 1. Choose the option that best fits your scenario
 2. Complete the authentication setup as described in the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md)
 3. Verify access by running `az account show` to confirm you're authenticated with the correct account type
+
+### MCPB (MCP Bundle) Installation Issues
+
+#### Error: Bundle fails to open in Claude Desktop
+
+1. **Ensure Claude Desktop is installed and up to date**: Download the latest version from [claude.com/download](https://claude.com/download).
+2. **Download the correct platform bundle**: Verify you downloaded the `.mcpb` file matching your operating system and architecture from the [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page.
+3. **Uninstall and reinstall the Azure MCP Server MCPB**:
+   1. In Claude Desktop, open the hamburger menu on the top left:
+   2. Go to **File** > **Settings** > **Extensions**
+   3. Click on the three dots button (`...`) on the right of the Azure MCP Server extension and select **Uninstall**.
+   4. After uninstalling, try installing the correct MCP Bundle by dragging the `.mcpb` file into the Claude Desktop window.
 
 ### Platform Package Installation Issues
 
