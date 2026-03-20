@@ -74,7 +74,7 @@ Download the `.mcpb` file for your platform/architecture from **Assets** section
 
 - **Option 1 (Recommended):** Drag the downloaded `.mcpb` file into the Claude Desktop app window to install it. **This is the easiest method ✅.**
 - **Option 2:**
-    1. Open the hamburger menu on the top left of the Claude Desktop app:
+    1. Open the hamburger menu on the top left of the Claude Desktop app.
     2. Go to **File** > **Settings** > **Extensions** > **Advanced Settings** > **Install Extension**
     3. Select the downloaded `.mcpb` file and click **Preview**.
     4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.

@@ -406,7 +406,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ### MCPB
 
-MCP Bundles (`.mcpb`) are portable versions of MCP servers that can be installed directly into clients like [Claude Desktop](https://claude.ai/download). We produce an `.mcpb` file for each supported platform (Windows, macOS, Linux) and architecture (x64, ARM64). The `.mcpb` file contains the server binary and all dependencies, so it can be installed without Node.js or .NET.
+MCP Bundles (`.mcpb`) are portable versions of MCP servers that can be installed directly into clients like [Claude Desktop](https://claude.com/download). We produce an `.mcpb` file for each supported platform (Windows, macOS, Linux) and architecture (x64, ARM64). The `.mcpb` file contains the server binary and all dependencies, so it can be installed without Node.js or .NET.
 
 <details>
 <summary>MCPB installation instructions</summary>
@@ -426,7 +426,7 @@ Download the `.mcpb` file for your platform/architecture from **Assets** section
 
 - **Option 1 (Recommended):** Drag the downloaded `.mcpb` file into the Claude Desktop app window to install it. **This is the easiest method ✅.**
 - **Option 2:**
-    1. Open the hamburger menu on the top left of the Claude Desktop app:
+    1. Open the hamburger menu on the top left of the Claude Desktop app.
     2. Go to **File** > **Settings** > **Extensions** > **Advanced Settings** > **Install Extension**
     3. Select the downloaded `.mcpb` file and click **Preview**.
     4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.
