@@ -78,7 +78,7 @@ public class TableGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AllowsSchemaAlias()
+    public async Task ExecuteAsync_AcceptsWorkspaceAndItemByName()
     {
         var service = Substitute.For<IOneLakeService>();
         var command = new TableGetCommand(NullLogger<TableGetCommand>.Instance, service);

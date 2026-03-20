@@ -120,7 +120,7 @@ public class DirectoryDeleteCommandTests
                 Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
                 Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("File path cannot contain directory traversal sequences.", "directoryPath"));
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "directoryPath"));
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var systemCommand = command.GetCommand();

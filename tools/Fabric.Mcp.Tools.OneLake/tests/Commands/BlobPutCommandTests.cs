@@ -233,7 +233,7 @@ public class BlobPutCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("File path cannot contain directory traversal sequences.", "blobPath"));
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "blobPath"));
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var parseResult = command.GetCommand().Parse($"--workspace-id workspace --item-id item --file-path {traversalPath} --content data");

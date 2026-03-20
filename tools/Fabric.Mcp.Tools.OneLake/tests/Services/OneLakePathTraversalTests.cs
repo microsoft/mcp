@@ -36,6 +36,10 @@ public class OneLakePathTraversalTests
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
     [InlineData("Files/sub/../../../escape")]
+    [InlineData("%2e%2e/secret.txt")]            // percent-encoded lowercase
+    [InlineData("%2E%2E/secret.txt")]            // percent-encoded uppercase
+    [InlineData("Files/%2e%2e/other-item/data")] // encoded in middle segment
+    [InlineData("Files/%2E%2E/%2e%2e/escape")]   // multiple encoded segments
     public async Task GetFileInfoAsync_ThrowsArgumentException_ForTraversalPath(string filePath)
     {
         var service = CreateService();
@@ -62,6 +66,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task ReadFileAsync_ThrowsArgumentException_ForTraversalPath(string filePath)
     {
         var service = CreateService();
@@ -76,6 +83,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task WriteFileAsync_ThrowsArgumentException_ForTraversalPath(string filePath)
     {
         var service = CreateService();
@@ -90,6 +100,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task PutBlobAsync_ThrowsArgumentException_ForTraversalPath(string blobPath)
     {
         var service = CreateService();
@@ -104,6 +117,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task GetBlobAsync_ThrowsArgumentException_ForTraversalPath(string blobPath)
     {
         var service = CreateService();
@@ -118,6 +134,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task DeleteFileAsync_ThrowsArgumentException_ForTraversalPath(string filePath)
     {
         var service = CreateService();
@@ -132,6 +151,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../dir")]
     [InlineData("Files/../../other-item")]
     [InlineData("../subdir")]
+    [InlineData("%2e%2e/dir")]
+    [InlineData("%2E%2E/dir")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task DeleteDirectoryAsync_ThrowsArgumentException_ForTraversalPath(string directoryPath)
     {
         var service = CreateService();
@@ -146,6 +168,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../dir")]
     [InlineData("Files/../../other-item")]
     [InlineData("../subdir")]
+    [InlineData("%2e%2e/dir")]
+    [InlineData("%2E%2E/dir")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task CreateDirectoryAsync_ThrowsArgumentException_ForTraversalPath(string directoryPath)
     {
         var service = CreateService();
@@ -160,6 +185,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret")]
     [InlineData("Files/../../other-item")]
     [InlineData("../hidden")]
+    [InlineData("%2e%2e/secret")]
+    [InlineData("%2E%2E/secret")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task ListBlobsAsync_ThrowsArgumentException_ForTraversalPath(string path)
     {
         var service = CreateService();
@@ -183,6 +211,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret")]
     [InlineData("Files/../../other-item")]
     [InlineData("../hidden")]
+    [InlineData("%2e%2e/secret")]
+    [InlineData("%2E%2E/secret")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task ListPathAsync_ThrowsArgumentException_ForTraversalPath(string path)
     {
         var service = CreateService();
@@ -197,6 +228,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret")]
     [InlineData("Files/../../other-item")]
     [InlineData("../hidden")]
+    [InlineData("%2e%2e/secret")]
+    [InlineData("%2E%2E/secret")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task ListBlobsRawAsync_ThrowsArgumentException_ForTraversalPath(string path)
     {
         var service = CreateService();
@@ -211,6 +245,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret")]
     [InlineData("Files/../../other-item")]
     [InlineData("../hidden")]
+    [InlineData("%2e%2e/secret")]
+    [InlineData("%2E%2E/secret")]
+    [InlineData("Files/%2e%2e/other-item")]
     public async Task ListPathRawAsync_ThrowsArgumentException_ForTraversalPath(string path)
     {
         var service = CreateService();
@@ -225,6 +262,9 @@ public class OneLakePathTraversalTests
     [InlineData("../../secret.txt")]
     [InlineData("Files/../../other-item/data")]
     [InlineData("../credentials.env")]
+    [InlineData("%2e%2e/secret.txt")]
+    [InlineData("%2E%2E/secret.txt")]
+    [InlineData("Files/%2e%2e/other-item/data")]
     public async Task DeleteBlobAsync_ThrowsArgumentException_ForTraversalPath(string blobPath)
     {
         var service = CreateService();

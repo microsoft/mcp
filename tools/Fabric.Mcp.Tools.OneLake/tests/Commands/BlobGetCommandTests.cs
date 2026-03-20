@@ -274,7 +274,7 @@ public class BlobGetCommandTests
                 Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
                 Arg.Any<BlobDownloadOptions>(),
                 Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("File path cannot contain directory traversal sequences.", "blobPath"));
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "blobPath"));
 
         var parseResult = command.GetCommand().Parse($"--workspace-id workspace --item-id item --file-path {traversalPath}");
         var context = CreateContext();

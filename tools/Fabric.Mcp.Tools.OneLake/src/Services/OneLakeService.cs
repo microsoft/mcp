@@ -222,7 +222,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
-        if (path is not null) ValidatePathForTraversal(path, nameof(path));
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
 
         // If no path is specified, intelligently discover and search top-level folders
@@ -709,7 +710,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
-        if (path is not null) ValidatePathForTraversal(path, nameof(path));
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -877,7 +879,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
-        if (path is not null) ValidatePathForTraversal(path, nameof(path));
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -949,7 +952,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
-        if (path is not null) ValidatePathForTraversal(path, nameof(path));
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -1649,9 +1653,29 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     // Private helper methods
     private static void ValidatePathForTraversal(string path, string paramName)
     {
-        if (path.Contains(".."))
+        // Decode percent-encoding so that %2e%2e or %2E%2E variants are caught
+        // before checking for traversal segments.
+        string decoded;
+        try
         {
-            throw new ArgumentException("File path cannot contain directory traversal sequences.", paramName);
+            decoded = Uri.UnescapeDataString(path);
+        }
+        catch (UriFormatException)
+        {
+            // Malformed percent-encoding — treat the raw string as-is.
+            decoded = path;
+        }
+
+        // Normalise both forward- and back-slash separators and reject any
+        // segment that resolves to "." or "..".
+        var segments = decoded.Split('/', '\\');
+        foreach (var segment in segments)
+        {
+            var trimmed = segment.Trim();
+            if (trimmed is "." or "..")
+            {
+                throw new ArgumentException("Path cannot contain directory traversal sequences.", paramName);
+            }
         }
     }
 
