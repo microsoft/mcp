@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_subscriptions_and_resource_groups",
-      "description": "Get information about Azure subscriptions and resource groups that the user has access to.",
+      "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -31,6 +31,7 @@
       },
       "mappedToolList": [
         "group_list",
+        "group_resource_list",
         "subscription_list"
       ]
     },

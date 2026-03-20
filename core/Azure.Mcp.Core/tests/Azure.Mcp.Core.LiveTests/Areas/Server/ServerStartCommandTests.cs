@@ -321,8 +321,8 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         // Should not include documentation tool when explicit namespaces are specified
         Assert.DoesNotContain("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
-        // Should contain exactly 4 tools: 2 specified namespaces + 2 utility tools (group_list, subscription_list)
-        Assert.Equal(4, toolNames.Count);
+        // Should contain exactly 5 tools: 2 specified namespaces + 3 utility tools (group_list, group_resource_list, subscription_list)
+        Assert.Equal(5, toolNames.Count);
 
         // Verify tools are from storage, keyvault namespaces, or utility tools
         Assert.All(toolNames, toolName =>
@@ -352,7 +352,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         var toolNames = listResult.Select(t => t.Name).ToList();
 
         // Should contain the documentation tool (displayed by its title) plus utility tools
-        Assert.Equal(3, listResult.Count());
+        Assert.Equal(4, listResult.Count());
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
         Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
@@ -415,7 +415,7 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
 
         // Assert
         Assert.NotEmpty(listResult);
-        Assert.Equal(4, listResult.Count()); // 2 specified namespaces + 2 utility tools
+        Assert.Equal(5, listResult.Count()); // 2 specified namespaces + 3 utility tools
 
         var toolNames = listResult.Select(t => t.Name).ToList();
 
@@ -538,8 +538,8 @@ public class ServerStartCommandTests(ITestOutputHelper output) : IAsyncLifetime
         // Should not crash, but may have fewer tools
         Assert.NotNull(listResult);
 
-        // Invalid namespaces should result in only utility tools (group_list, subscription_list)
-        Assert.Equal(2, listResult.Count());
+        // Invalid namespaces should result in only utility tools (group_list, group_resource_list, subscription_list)
+        Assert.Equal(3, listResult.Count());
         var toolNames = listResult.Select(t => t.Name).ToList();
         Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
