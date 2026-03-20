@@ -22,6 +22,8 @@ public record ExistingInstrumentation
 {
     public InstrumentationType Type { get; init; }
     public string? Version { get; init; }
+    /// <summary>true when the detected SDK version is already the target (3.x for App Insights, any for Distro)</summary>
+    public bool IsTargetVersion { get; init; }
     public List<Evidence> Evidence { get; init; } = [];
 }
 

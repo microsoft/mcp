@@ -5,7 +5,7 @@
   "decision": {
     "intent": "onboard",
     "solution": "applicationinsights-web",
-    "rationale": "Classic ASP.NET greenfield application (.NET Framework). Microsoft.ApplicationInsights.Web v3.x provides automatic instrumentation with zero code changes — the NuGet package auto-configures HTTP modules and telemetry pipeline."
+    "rationale": "Classic ASP.NET greenfield application (.NET Framework). Requires Visual Studio — the NuGet Package Manager Console runs Install-Package which auto-configures ApplicationInsights.config, Web.config HTTP modules, and assembly references."
   },
   "actions": [
     {
@@ -21,35 +21,27 @@
     {
       "id": "add-appinsights-package",
       "type": "add-package",
-      "title": "Add Application Insights Web SDK package",
+      "title": "Install Application Insights Web SDK via Package Manager Console",
       "dependsOn": "review-education",
-      "packageManager": "nuget-pm",
+      "packageManager": "nuget-vs",
       "packageName": "Microsoft.ApplicationInsights.Web",
       "version": "latest-stable"
     },
     {
-      "id": "validate-install",
-      "type": "validate-install",
-      "title": "Verify package auto-configured Web.config and created ApplicationInsights.config",
+      "id": "verify-install",
+      "type": "manual-step",
+      "title": "Verify ApplicationInsights.config and Web.config were configured",
       "dependsOn": "add-appinsights-package",
-      "filesToExist": [
-        "ApplicationInsights.config"
-      ],
-      "fileContentChecks": {
-        "Web.config": [
-          "ApplicationInsightsHttpModule",
-          "TelemetryHttpModule"
-        ]
-      }
+      "instructions": "After Install-Package completes, verify:\n1. ApplicationInsights.config was created in the project root\n2. Web.config contains ApplicationInsightsWebTracking and TelemetryHttpModule in <system.webServer><modules>\n3. Project references were added for Microsoft.ApplicationInsights and Microsoft.AI.Web assemblies"
     },
     {
       "id": "add-connection-string",
       "type": "add-config",
-      "title": "Configure Application Insights connection string",
-      "dependsOn": "validate-install",
+      "title": "Set Application Insights connection string",
+      "dependsOn": "verify-install",
       "targetFile": "ApplicationInsights.config",
       "configKey": "ConnectionString",
-      "configValue": "<your-connection-string>",
+      "configValue": "YOUR_CONNECTION_STRING_HERE",
       "configFormat": "xml",
       "validationKey": "APPLICATIONINSIGHTS_CONNECTION_STRING"
     }

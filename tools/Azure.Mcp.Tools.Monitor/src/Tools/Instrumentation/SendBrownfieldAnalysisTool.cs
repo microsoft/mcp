@@ -24,7 +24,8 @@ public class SendBrownfieldAnalysisTool
         ProcessorFindings? processors,
         ClientUsageFindings? clientUsage,
         SamplingFindings? sampling,
-        TelemetryPipelineFindings? telemetryPipeline)
+        TelemetryPipelineFindings? telemetryPipeline,
+        LoggingFindings? logging)
     {
         if (!OrchestratorTool.Sessions.TryGetValue(sessionId, out var session))
         {
@@ -54,7 +55,8 @@ public class SendBrownfieldAnalysisTool
             Processors = processors,
             ClientUsage = clientUsage,
             Sampling = sampling,
-            TelemetryPipeline = telemetryPipeline
+            TelemetryPipeline = telemetryPipeline,
+            Logging = logging
         };
 
         // Store findings and attach to analysis for generator

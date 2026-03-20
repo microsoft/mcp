@@ -13,10 +13,15 @@ public sealed record ServiceOptionsTemplate
     public required string EnableDebugLogger { get; init; }
     public required string RequestCollectionOptions { get; init; }
     public required string DependencyCollectionOptions { get; init; }
+    public required string EnableEventCounterCollectionModule { get; init; }
+    public required string EnableAppServicesHeartbeatTelemetryModule { get; init; }
+    public required string EnableAzureInstanceMetadataTelemetryModule { get; init; }
+    public required string EnableDiagnosticsTelemetryModule { get; init; }
     public required string SamplingRatio { get; init; }
     public required string TracesPerSecond { get; init; }
     public required string EnableQuickPulseMetricStream { get; init; }
     public required string UseApplicationInsights { get; init; }
     public required string AddTelemetryProcessor { get; init; }
     public required string ConfigureTelemetryModule { get; init; }
+    public required string UsesInstrumentationKeyOverload { get; init; }
 }

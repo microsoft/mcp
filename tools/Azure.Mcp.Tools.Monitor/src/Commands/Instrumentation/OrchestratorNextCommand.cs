@@ -37,8 +37,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = true,
+        OpenWorld = false,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };

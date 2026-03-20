@@ -53,5 +53,5 @@ See the AddOpenTelemetry API reference(see in AddOpenTelemetry.md) for full setu
 
 ## See Also
 
-- Azure Monitor Distro(see in azure-monitor-distro.md)
+- Application Insights for ASP.NET Core(see in appinsights-aspnetcore.md)
 - AddOpenTelemetry API(see in AddOpenTelemetry.md)

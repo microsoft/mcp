@@ -12,6 +12,7 @@ public record BrownfieldFindings
     public ClientUsageFindings? ClientUsage { get; init; }
     public SamplingFindings? Sampling { get; init; }
     public TelemetryPipelineFindings? TelemetryPipeline { get; init; }
+    public LoggingFindings? Logging { get; init; }
 }
 
 /// <summary>
@@ -131,4 +132,24 @@ public record TelemetryPipelineFindings
     public string? ClassName { get; init; }
     public string? File { get; init; }
     public string? Details { get; init; }
+}
+
+/// <summary>
+/// Findings from analyzing explicit Application Insights logger provider configuration.
+/// In 3.x, ILogger output is exported to Application Insights automatically - explicit
+/// AddApplicationInsights() calls and AddFilter&lt;ApplicationInsightsLoggerProvider&gt; must be removed.
+/// </summary>
+public record LoggingFindings
+{
+    /// <summary>true if any explicit Application Insights logger provider configuration exists</summary>
+    public bool Found { get; init; }
+
+    /// <summary>true if AddApplicationInsights() on ILoggingBuilder is found</summary>
+    public bool HasExplicitLoggerProvider { get; init; }
+
+    /// <summary>AddFilter&lt;ApplicationInsightsLoggerProvider&gt;(...) lines found</summary>
+    public List<string> LogFilters { get; init; } = [];
+
+    /// <summary>File containing the logging configuration</summary>
+    public string? File { get; init; }
 }

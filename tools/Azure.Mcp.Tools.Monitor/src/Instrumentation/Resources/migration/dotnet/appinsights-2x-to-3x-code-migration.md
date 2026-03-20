@@ -102,6 +102,36 @@ Or set `APPLICATIONINSIGHTS_CONNECTION_STRING` as an environment variable and ca
 | `client.InstrumentationKey` | **Removed**. Use `TelemetryConfiguration.ConnectionString`. |
 | `TrackTrace`, `TrackMetric`, `TrackRequest`, `TrackDependency` (full overload), `Flush` | **Unchanged** — no action needed. |
 
+## Middleware telemetry access
+
+In 2.x, middleware could access `RequestTelemetry` via `HttpContext.Features`:
+
+```csharp
+// 2.x
+var requestTelemetry = context.Features.Get<RequestTelemetry>();
+requestTelemetry?.Properties.Add("ResponseBody", responseBody);
+```
+
+In 3.x, `RequestTelemetry` is no longer placed in `HttpContext.Features`. Use `Activity.Current` instead:
+
+```csharp
+// 3.x
+using System.Diagnostics;
+
+var activity = Activity.Current;
+activity?.SetTag("ResponseBody", responseBody);
+```
+
+This applies to any code that accessed `RequestTelemetry` or `DependencyTelemetry` via `HttpContext.Features.Get<T>()`.
+
+## Manually constructed telemetry objects
+
+Telemetry types (`RequestTelemetry`, `DependencyTelemetry`, `TraceTelemetry`, `EventTelemetry`, `ExceptionTelemetry`, `MetricTelemetry`, `AvailabilityTelemetry`) still exist in 3.x and can be passed to `TelemetryClient.Track*(...)`. However:
+
+- `ISupportProperties` — **Removed**. Use the typed `Properties` dictionary directly on each telemetry class.
+- Type checks (`telemetry is RequestTelemetry`) in custom middleware or filters — these still compile but may not match auto-collected telemetry in contexts where the 3.x SDK uses `Activity` internally. Prefer `Activity.Current?.SetTag()` for enrichment.
+- `new DependencyTelemetry(...)` with `StartOperation<DependencyTelemetry>()` — **Still works**. The dependency is correlated automatically.
+
 ## Migration steps
 
 1. Update the package:

@@ -111,6 +111,11 @@ Register instrumentation sources early in startup, then configure exporters
 separately:
 
 ```csharp
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register sources (could be in a different file or method)
@@ -130,12 +135,30 @@ var app = builder.Build();
 app.Run();
 ```
 
+## Example - setting cloud role name via ConfigureResource
+
+A common migration pattern: replace a custom `ITelemetryInitializer` that sets
+cloud role name with `ConfigureResource` + `AddService`:
+
+```csharp
+using OpenTelemetry.Resources; // Required for ResourceBuilder.AddService
+
+// Set cloud role name (replaces ITelemetryInitializer that set Context.Cloud.RoleName)
+builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
+    tracing.ConfigureResource(r => r.AddService(
+        serviceName: "MyService",
+        serviceInstanceId: Environment.MachineName)));
+```
+
 ## Example - library author registering sources
 
 A library can register its instrumentation without depending on the app's
 startup code:
 
 ```csharp
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+
 public static class MyLibraryExtensions
 {
     public static IServiceCollection AddMyLibrary(this IServiceCollection services)
