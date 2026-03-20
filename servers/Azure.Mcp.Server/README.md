@@ -33,6 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
+        - [MCPB](#mcpb)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
@@ -402,6 +403,36 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 </details>
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+
+### MCPB
+
+MCP Bundles (`.mcpb`) are portable versions of MCP servers that can be installed directly into clients like [Claude Desktop](https://claude.ai/download). We produce an `.mcpb` file for each supported platform (Windows, macOS, Linux) and architecture (x64, ARM64). The `.mcpb` file contains the server binary and all dependencies, so it can be installed without Node.js or .NET.
+
+<details>
+<summary>MCPB installation instructions</summary>
+
+#### Download
+
+Download the `.mcpb` file for your platform/architecture from **Assets** section of the latest release in our [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page:
+
+|           | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| **x64**   | `Azure.Mcp.Server-win-x64.mcpb` | `Azure.Mcp.Server-osx-x64.mcpb` | `Azure.Mcp.Server-linux-x64.mcpb` |
+| **ARM64** | `Azure.Mcp.Server-win-arm64.mcpb` | `Azure.Mcp.Server-osx-arm64.mcpb` | `Azure.Mcp.Server-linux-arm64.mcpb` |
+
+#### Install
+
+##### Claude Desktop
+
+- **Option 1 (Recommended):** Drag the downloaded `.mcpb` file into the Claude Desktop app window to install it. **This is the easiest method ✅.**
+- **Option 2:**
+    1. Open the hamburger menu on the top left of the Claude Desktop app:
+    2. Go to **File** > **Settings** > **Extensions** > **Advanced Settings** > **Install Extension**
+    3. Select the downloaded `.mcpb` file and click **Preview**.
+    4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.
+- **Option 3:** Set Claude Desktop to be the default application for `.mcpb` files on your computer. Then, double-click on the downloaded `.mcpb` file and Claude Desktop will automatically install the bundle.
+
+</details>
 
 ### GitHub Copilot CLI Configuration
 
