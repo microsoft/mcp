@@ -215,8 +215,6 @@
         "@vscode/vsce": {
             "yauzl": "^3.2.1"
         },
-        "eslint": {
-            "flatted": "^3.4.2"
-        }
+        "flatted": "^3.4.2"
     }
 }
