@@ -32,10 +32,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
 
     public override string Description =>
         """
-        Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.
-        This tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.
-        Requires a subscription id and optionally a resource group name. Returns the generated report file's path.
-        Note that Azure Quick Review CLI (azqr) is different from Azure CLI (az).
+        Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).
         """;
 
     public override string Title => CommandTitle;
