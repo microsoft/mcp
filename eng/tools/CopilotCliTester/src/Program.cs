@@ -185,6 +185,8 @@ static class Program
     static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null)
     // static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null, string? mcpUrl = null, int batchSize = 20, McpServerManager? serverManager = null)
     {
+        CleanStaleWorkspaces();
+
         Console.WriteLine("--------------------------------------------");
         Console.WriteLine("Azure MCP E2E Test Runner (Copilot SDK)");
         Console.WriteLine("--------------------------------------------");
