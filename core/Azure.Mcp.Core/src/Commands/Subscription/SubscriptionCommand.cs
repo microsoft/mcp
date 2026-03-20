@@ -18,8 +18,8 @@ public abstract class SubscriptionCommand<
         command.Options.Add(OptionDefinitions.Common.Subscription);
         command.Validators.Add(commandResult =>
         {
-            // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
-            // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
+            // Command-level validation for presence: allow either --subscription,
+            // Azure CLI profile default, or AZURE_SUBSCRIPTION_ID env var.
             if (!CommandHelper.HasSubscriptionAvailable(commandResult))
             {
                 commandResult.AddError("Missing Required options: --subscription");
