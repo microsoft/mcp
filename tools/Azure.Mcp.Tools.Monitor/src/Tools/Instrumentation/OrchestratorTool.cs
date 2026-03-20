@@ -1,5 +1,7 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Concurrent;
-using System.Text.Json;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Pipeline;
 using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
@@ -11,9 +13,9 @@ namespace Azure.Mcp.Tools.Monitor.Tools;
 /// Controls the entire workflow server-side, eliminating LLM decision randomness.
 ///
 /// Flow:
-/// 1. LLM calls orchestrator_start → gets first action with explicit instructions
+/// 1. LLM calls orchestrator-start → gets first action with explicit instructions
 /// 2. LLM executes EXACTLY what's returned
-/// 3. LLM calls orchestrator_next → gets next action (or completion)
+/// 3. LLM calls orchestrator-next → gets next action (or completion)
 /// 4. Repeat until complete
 /// </summary>
 public class OrchestratorTool
@@ -88,7 +90,7 @@ public class OrchestratorTool
             {
                 Status = "clarification_needed",
                 Message = spec.Decision.Rationale,
-                Instruction = "Ask the user to clarify which project to instrument, then call orchestrator_start again.",
+                Instruction = "Ask the user to clarify which project to instrument, then call orchestrator-start again.",
                 Warnings = spec.Warnings
             });
         }
@@ -148,8 +150,8 @@ public class OrchestratorTool
             return Respond(new OrchestratorResponse
             {
                 Status = "error",
-                Message = "No active session. Call orchestrator_start first.",
-                Instruction = "Call orchestrator_start with the workspace path to begin."
+                Message = "No active session. Call orchestrator-start first.",
+                Instruction = "Call orchestrator-start with the workspace path to begin."
             });
         }
 
@@ -161,7 +163,7 @@ public class OrchestratorTool
                 Status = "error",
                 SessionId = sessionId,
                 Message = "Brownfield analysis is pending. Submit findings first.",
-                Instruction = "Call send_brownfield_analysis with the filled analysis template before calling orchestrator_next."
+                Instruction = "Call send-brownfield-analysis with the filled analysis template before calling orchestrator-next."
             });
         }
 
@@ -263,7 +265,7 @@ public class OrchestratorTool
         sb.AppendLine("4. clientUsage — Find all files that use TelemetryClient directly (injection, instantiation, or method calls)");
         sb.AppendLine("5. sampling — Find any custom sampling configuration");
         sb.AppendLine();
-        sb.AppendLine("When done, call send_brownfield_analysis with the sessionId and your filled findings JSON.");
+        sb.AppendLine("When done, call send-brownfield-analysis with the sessionId and your filled findings JSON.");
         return sb.ToString();
     }
 
@@ -305,7 +307,7 @@ public class OrchestratorTool
                 var resources = action.Details.TryGetValue("resources", out var res)
                     ? res as IEnumerable<object> ?? []
                     : [];
-                instruction.AppendLine("EXECUTE: Call get_learning_resource for each of these paths:");
+                instruction.AppendLine("EXECUTE: Call get-learning-resource for each of these paths:");
                 foreach (var resource in resources)
                 {
                     instruction.AppendLine($"  - {resource}");
@@ -406,7 +408,7 @@ public class OrchestratorTool
         }
 
         instruction.AppendLine();
-        instruction.AppendLine("When done, call orchestrator_next with the sessionId to continue.");
+        instruction.AppendLine("When done, call orchestrator-next with the sessionId to continue.");
 
         return instruction.ToString();
     }
