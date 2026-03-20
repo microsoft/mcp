@@ -1,0 +1,4 @@
+pr: 1981
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp containerapps list` command to list Azure Container Apps in a subscription"
