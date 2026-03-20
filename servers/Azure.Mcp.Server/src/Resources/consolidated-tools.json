@@ -3606,12 +3606,12 @@
           "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
         },
         "openWorld": {
-          "value": true,
-          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
         },
         "secret": {
           "value": false,
@@ -3625,7 +3625,8 @@
       "mappedToolList": [
         "monitor_instrumentation_orchestrator_start",
         "monitor_instrumentation_orchestrator_next",
-        "monitor_instrumentation_send_brownfield_analysis"
+        "monitor_instrumentation_send_brownfield_analysis",
+        "monitor_instrumentation_send_enhancement_select"
       ]
     }
     ,

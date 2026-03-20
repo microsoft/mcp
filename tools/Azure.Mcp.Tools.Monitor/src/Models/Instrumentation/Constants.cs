@@ -20,6 +20,7 @@ public static class OnboardingConstants
         // .NET
         public const string ConceptsOpenTelemetryPipelineDotNet = "learn://concepts/dotnet/opentelemetry-pipeline.md";
         public const string ConceptsAzureMonitorDistro = "learn://concepts/dotnet/azure-monitor-distro.md";
+        public const string ConceptsAppInsightsAspNetCore = "learn://concepts/dotnet/appinsights-aspnetcore.md";
         public const string ApiUseAzureMonitor = "learn://api-reference/dotnet/UseAzureMonitor.md";
         public const string ApiAddOpenTelemetry = "learn://api-reference/dotnet/AddOpenTelemetry.md";
         public const string ApiOpenTelemetrySdkCreate = "learn://api-reference/dotnet/OpenTelemetrySdkCreate.md";
@@ -32,9 +33,17 @@ public static class OnboardingConstants
         public const string ApiSampling = "learn://api-reference/dotnet/Sampling.md";
         public const string ApiActivityProcessors = "learn://api-reference/dotnet/ActivityProcessors.md";
         public const string ApiLogProcessors = "learn://api-reference/dotnet/LogProcessors.md";
+        public const string ApiTelemetryClient = "learn://api-reference/dotnet/TelemetryClient.md";
+        public const string ApiEntityFrameworkInstrumentation = "learn://api-reference/dotnet/EntityFrameworkInstrumentation.md";
+        public const string ApiRedisInstrumentation = "learn://api-reference/dotnet/RedisInstrumentation.md";
+        public const string ApiSqlClientInstrumentation = "learn://api-reference/dotnet/SqlClientInstrumentation.md";
+        public const string ApiHttpInstrumentation = "learn://api-reference/dotnet/HttpInstrumentation.md";
+        public const string ApiOtlpExporter = "learn://api-reference/dotnet/OtlpExporter.md";
+        public const string ApiConsoleExporter = "learn://api-reference/dotnet/ConsoleExporter.md";
         public const string ApiAzureMonitorExporter = "learn://api-reference/dotnet/AzureMonitorExporter.md";
         public const string ApiUseAzureMonitorExporter = "learn://api-reference/dotnet/UseAzureMonitorExporter.md";
         public const string ApiApplicationInsightsWeb = "learn://api-reference/dotnet/ApplicationInsightsWeb.md";
+        public const string ApiConfigureOpenTelemetryBuilder = "learn://api-reference/dotnet/TelemetryConfigurationBuilder.md";
         public const string ApiAddApplicationInsightsTelemetry = "learn://api-reference/dotnet/AddApplicationInsightsTelemetry.md";
         public const string ApiAddApplicationInsightsTelemetryWorkerService = "learn://api-reference/dotnet/AddApplicationInsightsTelemetryWorkerService.md";
         public const string ConceptsAspNetClassicAppInsights = "learn://concepts/dotnet/aspnet-classic-appinsights.md";
@@ -42,7 +51,12 @@ public static class OnboardingConstants
         public const string MigrationAppInsights2xTo3xNoCodeChange = "learn://migration/dotnet/appinsights-2x-to-3x-no-code-change.md";
         public const string MigrationWorkerService2xTo3xCode = "learn://migration/dotnet/workerservice-2x-to-3x-code-migration.md";
         public const string MigrationWorkerService2xTo3xNoCodeChange = "learn://migration/dotnet/workerservice-2x-to-3x-no-code-change.md";
+        public const string MigrationAspNetClassic2xTo3xCode = "learn://migration/dotnet/aspnet-classic-2x-to-3x-code-migration.md";
+        public const string MigrationConsole2xTo3xCode = "learn://migration/dotnet/console-2x-to-3x-code-migration.md";
+        public const string MigrationAadAuthentication = "learn://migration/dotnet/aad-authentication-migration.md";
+        public const string MigrationILoggerMigration = "learn://migration/dotnet/ilogger-migration.md";
         public const string ExampleAspNetCoreSetup = "learn://examples/dotnet/aspnetcore-setup.md";
+        public const string ExampleAspNetCoreDistroSetup = "learn://examples/dotnet/aspnetcore-distro-setup.md";
         public const string ExampleAspNetClassicSetup = "learn://examples/dotnet/aspnet-classic-setup.md";
         public const string ExampleWorkerServiceSetup = "learn://examples/dotnet/workerservice-setup.md";
 
@@ -85,14 +99,29 @@ public static class OnboardingConstants
         public const string ApplicationInsightsAspNetCore3x = "3.*";
         public const string WorkerService = "Microsoft.ApplicationInsights.WorkerService";
         public const string WorkerServiceVersion = "3.0.0-rc1";
+        public const string WorkerService3x = "3.*";
+        public const string ApplicationInsightsWeb = "Microsoft.ApplicationInsights.Web";
+        public const string ApplicationInsightsWeb3x = "3.*";
+        public const string ApplicationInsightsCore = "Microsoft.ApplicationInsights";
+        public const string ApplicationInsightsCore3x = "3.*";
         public const string PackageManagerNuGet = "nuget";
+        public const string PackageManagerNuGetVS = "nuget-vs";
         public const string LatestStableVersion = "latest-stable";
+
+        // Enhancement packages
+        public const string EntityFrameworkInstrumentation = "OpenTelemetry.Instrumentation.EntityFrameworkCore";
+        public const string RedisInstrumentation = "OpenTelemetry.Instrumentation.StackExchangeRedis";
+        public const string SqlClientInstrumentation = "OpenTelemetry.Instrumentation.SqlClient";
+        public const string HttpInstrumentation = "OpenTelemetry.Instrumentation.Http";
+        public const string AspNetCoreInstrumentation = "OpenTelemetry.Instrumentation.AspNetCore";
+        public const string OtlpExporter = "OpenTelemetry.Exporter.OpenTelemetryProtocol";
+        public const string ConsoleExporter = "OpenTelemetry.Exporter.Console";
     }
 
     // Configuration
     public static class Config
     {
-        public const string AzureMonitorConnectionStringPath = "AzureMonitor.ConnectionString";
+        public const string AzureMonitorConnectionStringPath = "AzureMonitor:ConnectionString";
         public const string AppInsightsConnectionStringPath = "ApplicationInsights:ConnectionString";
         public const string ConnectionStringEnvVar = "APPLICATIONINSIGHTS_CONNECTION_STRING";
         public const string ConnectionStringPlaceholder = "<your-connection-string>";
@@ -119,6 +148,7 @@ public static class OnboardingConstants
     {
         public const string Onboard = "onboard";
         public const string Migrate = "migrate";
+        public const string Enhance = "enhance";
         public const string Error = "error";
         public const string ClarificationNeeded = "clarification-needed";
         public const string Unsupported = "unsupported";

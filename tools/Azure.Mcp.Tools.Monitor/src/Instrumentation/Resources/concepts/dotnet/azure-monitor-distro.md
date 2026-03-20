@@ -99,4 +99,4 @@ builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
 
 - OpenTelemetry Pipeline(see in opentelemetry-pipeline.md)
 - UseAzureMonitor API(see in api-reference/dotnet/UseAzureMonitor.md)
-- Basic Setup Example(see in examples/dotnet/aspnetcore-setup.md)
+- Basic Setup Example(see in examples/dotnet/aspnetcore-distro-setup.md)
