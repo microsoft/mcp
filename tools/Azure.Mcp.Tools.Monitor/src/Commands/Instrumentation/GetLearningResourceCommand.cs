@@ -18,10 +18,10 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
 
     public override string Id => "2c9f3785-4b97-4dd6-8489-af515638f0d5";
 
-    public override string Name => "get_learning_resource";
+    public override string Name => "get-learning-resource";
 
     public override string Description =>
-        "List all available learning resources for Azure Monitor instrumentation or get the content of a specific resource by path. Returns all resource paths by default, or retrieves the full content when a path is specified. Note: For instrumenting an application, use orchestrator_start instead.";
+        "List all available learning resources for Azure Monitor instrumentation or get the content of a specific resource by path. Returns all resource paths by default, or retrieves the full content when a path is specified. Note: For instrumenting an application, use orchestrator-start instead.";
 
     public override string Title => "Get Azure Monitor Learning Resource";
 

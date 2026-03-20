@@ -677,24 +677,24 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
 | monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
-| monitor_instrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | List all available Azure Monitor onboarding learning resources |
-| monitor_instrumentation_get_learning_resource | Show me all learning resource paths for Azure Monitor instrumentation |
-| monitor_instrumentation_get_learning_resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
-| monitor_instrumentation_orchestrator_next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
-| monitor_instrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
-| monitor_instrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
-| monitor_instrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
-| monitor_instrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
-| monitor_instrumentation_orchestrator_start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
-| monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
-| monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
-| monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
-| monitor_instrumentation_send_enhancement_select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
-| monitor_instrumentation_send_enhancement_select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
-| monitor_instrumentation_send_enhancement_select | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
+| monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | List all available Azure Monitor onboarding learning resources |
+| monitor_instrumentation_get-learning-resource | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
+| monitor_instrumentation_orchestrator-next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
+| monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
+| monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
+| monitor_instrumentation_send-brownfield-analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
+| monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
+| monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
+| monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
+| monitor_instrumentation_send-enhancement-select | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |

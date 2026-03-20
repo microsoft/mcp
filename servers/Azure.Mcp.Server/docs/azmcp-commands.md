@@ -2582,28 +2582,33 @@ azmcp monitor webtests update --subscription <subscription> \
 ```bash
 
 # Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
-azmcp monitor instrumentation get_learning_resource [--path <resource-path>]
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
-azmcp monitor instrumentation orchestrator_start --workspace-path <absolute-workspace-path>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
-azmcp monitor instrumentation orchestrator_next --session-id <session-id> \
-                                               --completion-note <what-was-completed>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
+                                                --completion-note <what-was-completed>
 
 # Send brownfield analysis findings JSON to continue migration flow
-azmcp monitor instrumentation send_brownfield_analysis --session-id <session-id> \
-                                                      --findings-json <json>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
+                                                       --findings-json <json>
 
-# Submit enhancement selection when orchestrator_start returns enhancement_available
-azmcp monitor instrumentation send_enhancement_select --session-id <session-id> \
-                                                     --enhancement-keys <comma-separated-keys>
+# Submit enhancement selection when orchestrator-start returns enhancement_available
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-enhancement-select --session-id <session-id> \
+                                                      --enhancement-keys <comma-separated-keys>
 ```
 
 **Notes:**
-- `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
-- `send_enhancement_select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator_start` when status is `enhancement_available`.
+- `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
+- `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
 
 ### Azure Managed Lustre Operations
 
