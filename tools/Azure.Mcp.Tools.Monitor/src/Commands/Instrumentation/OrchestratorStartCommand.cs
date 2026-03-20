@@ -29,7 +29,7 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = true,
         Secret = false
