@@ -285,7 +285,7 @@ public class OrchestratorTool
         sb.AppendLine();
         sb.AppendLine("The application is already on the latest SDK version. No migration is needed.");
         sb.AppendLine("Present the enhancement options to the user and ask what they'd like to add.");
-        sb.AppendLine("The user may select one or more options.");
+        sb.AppendLine("The user may select one or more options. They can describe what they want in natural language.");
         sb.AppendLine();
         sb.AppendLine("When the user has chosen, call send_enhanced_selection with the sessionId and the selected option key(s) as a comma-separated string (e.g. 'redis,processors').");
         sb.AppendLine("If the user asks for something not in the list, inform them it is not currently supported through MCP.");
@@ -370,9 +370,7 @@ public class OrchestratorTool
                     "npm" => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  npm install {pkg}@{version}"
                         : $"  npm install {pkg}",
-                    "nuget-vs" => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
-                        ? $"  Install-Package {pkg} -Version {version}"
-                        : $"  Install-Package {pkg}",
+                    "nuget-vs" => $"  Install-Package {pkg}",
                     _ => !string.IsNullOrWhiteSpace(version) && version != "latest-stable"
                         ? $"  dotnet add \"{project}\" package {pkg} --version {version}"
                         : $"  dotnet add \"{project}\" package {pkg}"
