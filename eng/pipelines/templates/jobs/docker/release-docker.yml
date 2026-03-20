@@ -84,6 +84,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
             Write-Host "##vso[task.setvariable variable=Amd64RemoteImages;isOutput=true]$amd64RemoteImages"
             Write-Host "##vso[task.setvariable variable=Arm64RemoteImages;isOutput=true]$arm64RemoteImages"
+          displayName: Set release variables
           name: SetReleaseVariables
 
         - task: PowerShell@2
