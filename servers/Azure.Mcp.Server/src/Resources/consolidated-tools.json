@@ -1037,7 +1037,7 @@
       ]
     },
     {
-      "name": "get_azure_best_practices",
+      "name": "getazurebestpractices",
       "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and Well-Architected Framework guidance.",
       "toolMetadata": {
         "destructive": {
@@ -1068,8 +1068,8 @@
       "mappedToolList": [
         "azureterraformbestpractices_get",
         "bicepschema_get",
-        "get_azure_bestpractices_ai_app",
-        "get_azure_bestpractices_get",
+        "getazurebestpractices_ai-app",
+        "getazurebestpractices_get",
         "wellarchitectedframework_serviceguide_get"
       ]
     },
@@ -3590,7 +3590,7 @@
         }
       },
       "mappedToolList": [
-        "monitor_instrumentation_get_learning_resource"
+        "monitor_instrumentation_get-learning-resource"
       ]
     },
     {
@@ -3623,9 +3623,9 @@
         }
       },
       "mappedToolList": [
-        "monitor_instrumentation_orchestrator_start",
-        "monitor_instrumentation_orchestrator_next",
-        "monitor_instrumentation_send_brownfield_analysis"
+        "monitor_instrumentation_orchestrator-start",
+        "monitor_instrumentation_orchestrator-next",
+        "monitor_instrumentation_send-brownfield-analysis"
       ]
     }
     ,

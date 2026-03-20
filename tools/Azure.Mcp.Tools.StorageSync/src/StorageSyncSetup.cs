@@ -82,48 +82,79 @@ public class StorageSyncSetup : IAreaSetup
             "Storage Sync Service operations - Create, get, update, and delete Storage Sync services in your Azure subscription.");
         storageSync.AddSubGroup(storageSyncServiceGroup);
 
-        storageSyncServiceGroup.AddCommand("get", serviceProvider.GetRequiredService<StorageSyncServiceGetCommand>());
-        storageSyncServiceGroup.AddCommand("create", serviceProvider.GetRequiredService<StorageSyncServiceCreateCommand>());
-        storageSyncServiceGroup.AddCommand("update", serviceProvider.GetRequiredService<StorageSyncServiceUpdateCommand>());
-        storageSyncServiceGroup.AddCommand("delete", serviceProvider.GetRequiredService<StorageSyncServiceDeleteCommand>());
+        var serviceGet = serviceProvider.GetRequiredService<StorageSyncServiceGetCommand>();
+        storageSyncServiceGroup.AddCommand(serviceGet.Name, serviceGet);
+
+        var serviceCreate = serviceProvider.GetRequiredService<StorageSyncServiceCreateCommand>();
+        storageSyncServiceGroup.AddCommand(serviceCreate.Name, serviceCreate);
+
+        var serviceUpdate = serviceProvider.GetRequiredService<StorageSyncServiceUpdateCommand>();
+        storageSyncServiceGroup.AddCommand(serviceUpdate.Name, serviceUpdate);
+
+        var serviceDelete = serviceProvider.GetRequiredService<StorageSyncServiceDeleteCommand>();
+        storageSyncServiceGroup.AddCommand(serviceDelete.Name, serviceDelete);
 
         // RegisteredServer subgroup
         var registeredServerGroup = new CommandGroup("registeredserver",
             "Registered Server operations - Get, update, and unregister servers in your Storage Sync service.");
         storageSync.AddSubGroup(registeredServerGroup);
 
-        registeredServerGroup.AddCommand("get", serviceProvider.GetRequiredService<RegisteredServerGetCommand>());
-        registeredServerGroup.AddCommand("update", serviceProvider.GetRequiredService<RegisteredServerUpdateCommand>());
-        registeredServerGroup.AddCommand("unregister", serviceProvider.GetRequiredService<RegisteredServerUnregisterCommand>());
+        var registeredServerGet = serviceProvider.GetRequiredService<RegisteredServerGetCommand>();
+        registeredServerGroup.AddCommand(registeredServerGet.Name, registeredServerGet);
+
+        var registeredServerUpdate = serviceProvider.GetRequiredService<RegisteredServerUpdateCommand>();
+        registeredServerGroup.AddCommand(registeredServerUpdate.Name, registeredServerUpdate);
+
+        var registeredServerUnregister = serviceProvider.GetRequiredService<RegisteredServerUnregisterCommand>();
+        registeredServerGroup.AddCommand(registeredServerUnregister.Name, registeredServerUnregister);
 
         // SyncGroup subgroup
         var syncGroupGroup = new CommandGroup("syncgroup",
             "Sync Group operations - Create, get, and delete sync groups in your Storage Sync service.");
         storageSync.AddSubGroup(syncGroupGroup);
 
-        syncGroupGroup.AddCommand("get", serviceProvider.GetRequiredService<SyncGroupGetCommand>());
-        syncGroupGroup.AddCommand("create", serviceProvider.GetRequiredService<SyncGroupCreateCommand>());
-        syncGroupGroup.AddCommand("delete", serviceProvider.GetRequiredService<SyncGroupDeleteCommand>());
+        var syncGroupGet = serviceProvider.GetRequiredService<SyncGroupGetCommand>();
+        syncGroupGroup.AddCommand(syncGroupGet.Name, syncGroupGet);
+
+        var syncGroupCreate = serviceProvider.GetRequiredService<SyncGroupCreateCommand>();
+        syncGroupGroup.AddCommand(syncGroupCreate.Name, syncGroupCreate);
+
+        var syncGroupDelete = serviceProvider.GetRequiredService<SyncGroupDeleteCommand>();
+        syncGroupGroup.AddCommand(syncGroupDelete.Name, syncGroupDelete);
 
         // CloudEndpoint subgroup
         var cloudEndpointGroup = new CommandGroup("cloudendpoint",
             "Cloud Endpoint operations - Create, get, delete, and manage cloud endpoints in your sync groups.");
         storageSync.AddSubGroup(cloudEndpointGroup);
 
-        cloudEndpointGroup.AddCommand("get", serviceProvider.GetRequiredService<CloudEndpointGetCommand>());
-        cloudEndpointGroup.AddCommand("create", serviceProvider.GetRequiredService<CloudEndpointCreateCommand>());
-        cloudEndpointGroup.AddCommand("delete", serviceProvider.GetRequiredService<CloudEndpointDeleteCommand>());
-        cloudEndpointGroup.AddCommand("changedetection", serviceProvider.GetRequiredService<CloudEndpointTriggerChangeDetectionCommand>());
+        var cloudEndpointGet = serviceProvider.GetRequiredService<CloudEndpointGetCommand>();
+        cloudEndpointGroup.AddCommand(cloudEndpointGet.Name, cloudEndpointGet);
+
+        var cloudEndpointCreate = serviceProvider.GetRequiredService<CloudEndpointCreateCommand>();
+        cloudEndpointGroup.AddCommand(cloudEndpointCreate.Name, cloudEndpointCreate);
+
+        var cloudEndpointDelete = serviceProvider.GetRequiredService<CloudEndpointDeleteCommand>();
+        cloudEndpointGroup.AddCommand(cloudEndpointDelete.Name, cloudEndpointDelete);
+
+        var cloudEndpointTriggerChangeDetection = serviceProvider.GetRequiredService<CloudEndpointTriggerChangeDetectionCommand>();
+        cloudEndpointGroup.AddCommand(cloudEndpointTriggerChangeDetection.Name, cloudEndpointTriggerChangeDetection);
 
         // ServerEndpoint subgroup
         var serverEndpointGroup = new CommandGroup("serverendpoint",
             "Server Endpoint operations - Create, get, update, and delete server endpoints in your sync groups.");
         storageSync.AddSubGroup(serverEndpointGroup);
 
-        serverEndpointGroup.AddCommand("get", serviceProvider.GetRequiredService<ServerEndpointGetCommand>());
-        serverEndpointGroup.AddCommand("create", serviceProvider.GetRequiredService<ServerEndpointCreateCommand>());
-        serverEndpointGroup.AddCommand("update", serviceProvider.GetRequiredService<ServerEndpointUpdateCommand>());
-        serverEndpointGroup.AddCommand("delete", serviceProvider.GetRequiredService<ServerEndpointDeleteCommand>());
+        var serverEndpointGet = serviceProvider.GetRequiredService<ServerEndpointGetCommand>();
+        serverEndpointGroup.AddCommand(serverEndpointGet.Name, serverEndpointGet);
+
+        var serverEndpointCreate = serviceProvider.GetRequiredService<ServerEndpointCreateCommand>();
+        serverEndpointGroup.AddCommand(serverEndpointCreate.Name, serverEndpointCreate);
+
+        var serverEndpointUpdate = serviceProvider.GetRequiredService<ServerEndpointUpdateCommand>();
+        serverEndpointGroup.AddCommand(serverEndpointUpdate.Name, serverEndpointUpdate);
+
+        var serverEndpointDelete = serviceProvider.GetRequiredService<ServerEndpointDeleteCommand>();
+        serverEndpointGroup.AddCommand(serverEndpointDelete.Name, serverEndpointDelete);
 
         return storageSync;
     }

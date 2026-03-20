@@ -57,7 +57,7 @@ public class AIAppBestPracticesCommandTests
     [Fact]
     public void Command_HasCorrectProperties()
     {
-        Assert.Equal("ai_app", _command.Name);
+        Assert.Equal("ai-app", _command.Name);
         Assert.Equal("Get AI App Best Practices", _command.Title);
         Assert.Equal("6c29659e-406d-4b9b-8150-e3d4fd7ba31c", _command.Id);
         Assert.Contains("AI applications in Azure", _command.Description);

@@ -2347,10 +2347,10 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 # Get best practices for building AI applications, workflows and agents in Azure
 # Call this before generating code for any AI application, working with Microsoft Agent Framework,
 # or implementing AI solutions in Azure.
-azmcp get azure bestpractices ai_app
+azmcp get azure bestpractices ai-app
 
 # AI App Development:
-#   ai_app - Comprehensive guidance for AI applications including:
+#   ai-app - Comprehensive guidance for AI applications including:
 #     • Microsoft Agent Framework usage and patterns
 #     • Best practices for AI app/agent development in Azure
 ```
@@ -2582,23 +2582,23 @@ azmcp monitor webtests update --subscription <subscription> \
 ```bash
 
 # Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
-azmcp monitor instrumentation get_learning_resource [--path <resource-path>]
+azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
-azmcp monitor instrumentation orchestrator_start --workspace-path <absolute-workspace-path>
+azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
-azmcp monitor instrumentation orchestrator_next --session-id <session-id> \
+azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
                                                --completion-note <what-was-completed>
 
 # Send brownfield analysis findings JSON to continue migration flow
-azmcp monitor instrumentation send_brownfield_analysis --session-id <session-id> \
+azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
                                                       --findings-json <json>
 ```
 
 **Notes:**
-- `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+- `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
 
 ### Azure Managed Lustre Operations
 

@@ -74,8 +74,10 @@ public class ManagedLustreSetup : IAreaSetup
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
 
-        var autoexportJob = new CommandGroup("blob_autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
-        fileSystem.AddSubGroup(autoexportJob);
+        var blobGroup = new CommandGroup("blob", "Blob storage operations for Azure Managed Lustre - Commands managing import and exprt from blob storage accounts.");
+
+        var autoexportJob = new CommandGroup("autoexport", "Autoexport job operations for Azure Managed Lustre - Commands for creating jobs to export data from the filesystem to blob storage.");
+        blobGroup.AddSubGroup(autoexportJob);
 
         var autoexportJobCreate = serviceProvider.GetRequiredService<AutoexportJobCreateCommand>();
         autoexportJob.AddCommand(autoexportJobCreate.Name, autoexportJobCreate);
@@ -89,8 +91,8 @@ public class ManagedLustreSetup : IAreaSetup
         var autoexportJobDelete = serviceProvider.GetRequiredService<AutoexportJobDeleteCommand>();
         autoexportJob.AddCommand(autoexportJobDelete.Name, autoexportJobDelete);
 
-        var autoimportJob = new CommandGroup("blob_autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
-        fileSystem.AddSubGroup(autoimportJob);
+        var autoimportJob = new CommandGroup("autoimport", "Autoimport job operations for Azure Managed Lustre - Commands for creating jobs to import data from blob storage to the filesystem.");
+        blobGroup.AddSubGroup(autoimportJob);
 
         var autoimportJobCreate = serviceProvider.GetRequiredService<AutoimportJobCreateCommand>();
         autoimportJob.AddCommand(autoimportJobCreate.Name, autoimportJobCreate);
@@ -104,8 +106,8 @@ public class ManagedLustreSetup : IAreaSetup
         var autoimportJobDelete = serviceProvider.GetRequiredService<AutoimportJobDeleteCommand>();
         autoimportJob.AddCommand(autoimportJobDelete.Name, autoimportJobDelete);
 
-        var blobImport = new CommandGroup("blob_import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
-        fileSystem.AddSubGroup(blobImport);
+        var blobImport = new CommandGroup("import", "One-time blob import operations for Azure Managed Lustre - Commands for creating jobs to perform one-time import of data from blob storage to the filesystem.");
+        blobGroup.AddSubGroup(blobImport);
 
         var importJobCreate = serviceProvider.GetRequiredService<ImportJobCreateCommand>();
         blobImport.AddCommand(importJobCreate.Name, importJobCreate);

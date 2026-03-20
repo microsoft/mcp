@@ -49,15 +49,23 @@ public class FoundryExtensionsSetup : IAreaSetup
         var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in Microsoft Foundry.");
         foundryExtensions.AddSubGroup(openai);
 
-        openai.AddCommand("create-completion", serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>());
-        openai.AddCommand("embeddings-create", serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>());
-        openai.AddCommand("models-list", serviceProvider.GetRequiredService<OpenAiModelsListCommand>());
-        openai.AddCommand("chat-completions-create", serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>());
+        var createCompletion = serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>();
+        openai.AddCommand(createCompletion.Name, createCompletion);
+
+        var embeddingsCreate = serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>();
+        openai.AddCommand(embeddingsCreate.Name, embeddingsCreate);
+
+        var modelsList = serviceProvider.GetRequiredService<OpenAiModelsListCommand>();
+        openai.AddCommand(modelsList.Name, modelsList);
+
+        var chatCompletionsCreate = serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>();
+        openai.AddCommand(chatCompletionsCreate.Name, chatCompletionsCreate);
 
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Microsoft Foundry resources.");
         foundryExtensions.AddSubGroup(resources);
 
-        resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
+        var resourceGet = serviceProvider.GetRequiredService<ResourceGetCommand>();
+        resources.AddCommand(resourceGet.Name, resourceGet);
 
         return foundryExtensions;
     }

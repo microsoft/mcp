@@ -24,7 +24,7 @@ public static class MonitorInstrumentationOptionDefinitions
     public const string SessionIdName = "session-id";
     public static readonly Option<string> SessionId = new($"--{SessionIdName}")
     {
-        Description = "The workspace path returned as sessionId from orchestrator_start.",
+        Description = "The workspace path returned as sessionId from orchestrator-start.",
         Required = true
     };
 

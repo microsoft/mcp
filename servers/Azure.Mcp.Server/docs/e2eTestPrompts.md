@@ -629,20 +629,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| get_azure_bestpractices_get | Get the latest Azure code generation best practices |
-| get_azure_bestpractices_get | Get the latest Azure deployment best practices |
-| get_azure_bestpractices_get | Get the latest Azure best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions deployment best practices |
-| get_azure_bestpractices_get | Get the latest Azure Functions best practices |
-| get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| get_azure_bestpractices_get | What are azure function best practices? |
-| get_azure_bestpractices_get | configure azure mcp in coding agent for my repo |
-| get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure |
-| get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation |
-| get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
+| getazurebestpractices_get | Get the latest Azure code generation best practices |
+| getazurebestpractices_get | Get the latest Azure deployment best practices |
+| getazurebestpractices_get | Get the latest Azure best practices |
+| getazurebestpractices_get | Get the latest Azure Functions code generation best practices |
+| getazurebestpractices_get | Get the latest Azure Functions deployment best practices |
+| getazurebestpractices_get | Get the latest Azure Functions best practices |
+| getazurebestpractices_get | Get the latest Azure Static Web Apps best practices |
+| getazurebestpractices_get | What are azure function best practices? |
+| getazurebestpractices_get | configure azure mcp in coding agent for my repo |
+| getazurebestpractices_ai-app | Get best practices for building AI applications in Azure |
+| getazurebestpractices_ai-app | Show me the best practices for Microsoft Foundry agents code generation |
+| getazurebestpractices_ai-app | Get guidance for building agents with Microsoft Foundry |
+| getazurebestpractices_ai-app | Create an AI app that helps me to manage travel queries. |
+| getazurebestpractices_ai-app | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
 
 ## Azure Migrate
 
@@ -700,21 +700,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
-| monitor_instrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | List all available Azure Monitor onboarding learning resources |
-| monitor_instrumentation_get_learning_resource | Show me all learning resource paths for Azure Monitor instrumentation |
-| monitor_instrumentation_get_learning_resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
-| monitor_instrumentation_orchestrator_next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
-| monitor_instrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
-| monitor_instrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
-| monitor_instrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
-| monitor_instrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
-| monitor_instrumentation_orchestrator_start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
-| monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
-| monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
-| monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
+| monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | List all available Azure Monitor onboarding learning resources |
+| monitor_instrumentation_get-learning-resource | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
+| monitor_instrumentation_orchestrator-next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
+| monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
+| monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
+| monitor_instrumentation_send-brownfield-analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
+| monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
 
 ## Azure Native ISV
 

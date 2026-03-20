@@ -277,7 +277,7 @@
     "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
     "Upload certificate file <file_path> to key vault <key_vault_account_name>"
   ],
-  "get_azure_best_practices": [
+  "getazurebestpractices": [
     "configure azure mcp in coding agent for my repo",
     "Fetch the Azure Terraform best practices",
     "Get the latest Azure best practices",

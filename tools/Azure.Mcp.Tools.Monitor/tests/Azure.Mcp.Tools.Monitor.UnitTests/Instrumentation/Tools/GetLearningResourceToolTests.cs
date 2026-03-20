@@ -17,7 +17,7 @@ public sealed class GetLearningResourceToolTests
         var result = GetLearningResourceTool.GetLearningResource(path);
 
         // Assert
-        Assert.Equal("Invalid resource path. Call get_learning_resource without the path parameter to list all available resources.", result);
+        Assert.Equal("Invalid resource path. Call get-learning-resource without the path parameter to list all available resources.", result);
     }
 
     [Fact]

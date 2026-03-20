@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
@@ -25,7 +24,7 @@ namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 /// </summary>
 public sealed class VisualStudioToolNameTests
 {
-    private const string AzureBestPracticesToolName = "get_azure_bestpractices_get";
+    private const string AzureBestPracticesToolName = "getazurebestpractices_get";
     private const string ExtensionCliGenerateToolName = "extension_cli_generate";
 
     /// <summary>
