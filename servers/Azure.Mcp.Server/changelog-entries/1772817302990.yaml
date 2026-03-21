@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added compute VM delete and VMSS delete commands with --force-deletion support"
