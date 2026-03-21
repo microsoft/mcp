@@ -1,4 +1,0 @@
-pr: 2131
-changes:
-  - section: "Other Changes"
-    description: "Improved descriptions of the `extension_azqr`, `extension_cli_generate`, and `extension_cli_install` tools, as well as the base Azure rules around them fed to agents for better tool selection."

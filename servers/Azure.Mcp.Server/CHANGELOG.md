@@ -2,15 +2,33 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.31 (Unreleased)
+## 2.0.0-beta.31 (2026-03-20)
 
 ### Features Added
 
+- Added new `compute` commands for deleting VMs and VM scale sets with `--force-deletion` support: [[#2065](https://github.com/microsoft/mcp/pull/2065)]
+  - `compute_vm_delete`
+  - `compute_vmss_delete`
+- Added new `containerapps` tool for listing Azure Container Apps in a subscription: [[#1981](https://github.com/microsoft/mcp/pull/1981)]
+  - `containerapps_list`
+- Enhanced the `monitor` instrumentation tools with framework-aware guided onboarding for .NET, Node.js, and Python, including code/package recommendations, brownfield migration guidance for Application Insights SDK to 3.x, and enhancement flows for projects already on Application Insights 3.x or Azure Monitor Distro. [[#2115](https://github.com/microsoft/mcp/pull/2115)]
+- Added default subscription resolution from Azure CLI profile (`~/.azure/azureProfile.json`) for all subscription-scoped commands, falling back to `AZURE_SUBSCRIPTION_ID` environment variable. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
+- Added new command to list all resources within an Azure Resource Group, including generic and non-specialized resources: [[#1975](https://github.com/microsoft/mcp/pull/1975)]
+  - `group_resource_list`
+
 ### Breaking Changes
 
-### Bugs Fixed
+- Renamed the following `monitor` tools to use dashes instead of underscores: [[#2134](https://github.com/microsoft/mcp/pull/2134)]
+  - `get-learning-resource`
+  - `orchestrator-start`
+  - `orchestrator-next`
+  - `send-brownfield-analysis`
+- Narrowed the `subscription list` command response model to (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
 
 ### Other Changes
+
+- Improved descriptions for better LLM selection accuracy for the following: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+  - The `extension_azqr`, `extension_cli_generate`, and `extension_cli_install` tools
 
 ## 2.0.0-beta.30 (2026-03-19)
 
