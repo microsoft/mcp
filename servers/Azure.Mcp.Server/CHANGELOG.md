@@ -2,34 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.31 (2026-03-20)
+## 2.0.0-beta.31 (Unreleased)
 
 ### Features Added
 
-- Added new `compute` commands to delete VMs and VM scale sets with `--force-deletion` support: [[#2065](https://github.com/microsoft/mcp/pull/2065)]
-  - `compute_vm_delete`
-  - `compute_vmss_delete`
-- Added `containerapps_list` tool to list Azure Container Apps in a subscription. [[#1981](https://github.com/microsoft/mcp/pull/1981)]
-- Enhanced `monitor` instrumentation tools with framework-aware onboarding for .NET, Node.js, and Python, including guidance for Application Insights 3.x migration and Azure Monitor Distro adoption, and added the `send_enhancement_select` tool to submit selected enhancements to an active orchestrator session. [[#2115](https://github.com/microsoft/mcp/pull/2115)]
-- Added default subscription resolution from the Azure CLI profile (`~/.azure/azureProfile.json`) for all subscription-scoped commands, falling back to `AZURE_SUBSCRIPTION_ID` environment variable. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
-- Added `group_resource_list` tool to list all resources within an Azure Resource Group, including generic and non-specialized resources. [[#1975](https://github.com/microsoft/mcp/pull/1975)]
-
 ### Breaking Changes
 
-- Renamed the following `monitor` tools to use dash-separated names instead of underscores: [[#2134](https://github.com/microsoft/mcp/pull/2134)]
-  - `get-learning-resource`
-  - `orchestrator-start`
-  - `orchestrator-next`
-  - `send-brownfield-analysis`
-- Narrowed the `subscription list` command response model to include only (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
+### Bugs Fixed
 
 ### Other Changes
-
-- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
-  - `extension_azqr`
-  - `extension_cli_generate`
-  - `extension_cli_install`
 
 ## 2.0.0-beta.30 (2026-03-19)
 
