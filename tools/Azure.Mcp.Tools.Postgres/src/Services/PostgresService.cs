@@ -43,6 +43,13 @@ public class PostgresService(
         return accessToken.Token;
     }
 
+    private static readonly string[] AllowedPostgresSuffixes =
+    [
+        ".postgres.database.azure.com",
+        ".postgres.database.usgovcloudapi.net",
+        ".postgres.database.chinacloudapi.cn",
+    ];
+
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
@@ -59,6 +66,14 @@ public class PostgresService(
                     server + ".postgres.database.azure.com"
             };
         }
+
+        if (!Array.Exists(AllowedPostgresSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for PostgreSQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedPostgresSuffixes)}.");
+        }
+
         return server;
     }
 

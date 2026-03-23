@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed PostgreSQL and MySQL server name validation to strictly require allowed Azure domain suffixes when a fully qualified domain name is provided."
