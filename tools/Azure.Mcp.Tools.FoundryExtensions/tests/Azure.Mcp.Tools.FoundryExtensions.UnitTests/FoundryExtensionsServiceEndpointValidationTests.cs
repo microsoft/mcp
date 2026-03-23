@@ -42,6 +42,16 @@ public class FoundryExtensionsServiceEndpointValidationTests
         ["https://my-foundry.services.ai.azure.com.evil.com/api/projects/my-project"], // Domain spoofing attempt
     ];
 
+    public static IEnumerable<object[]> InvalidAzureOpenAiEndpoints =>
+    [
+        ["http://my-resource.openai.azure.com"], // HTTP instead of HTTPS
+        ["https://my-resource.wrongdomain.com"], // Wrong domain
+        ["my-resource.openai.azure.com"], // Missing protocol
+        ["https://192.168.1.1"], // Private IP
+        ["https://evil.com"], // Malicious domain
+        ["https://my-resource.openai.azure.com.evil.com"], // Domain spoofing attempt
+    ];
+
     #endregion
 
     #region Project Endpoint Validation Tests
@@ -69,6 +79,38 @@ public class FoundryExtensionsServiceEndpointValidationTests
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid Foundry project endpoint", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project")]
+    [InlineData("https://my-foundry.services.ai.azure.com")]
+    public void ValidateProjectEndpoint_AcceptsValidEndpoints(string validEndpoint)
+    {
+        var exception = Record.Exception(() => FoundryExtensionsService.ValidateProjectEndpoint(validEndpoint));
+        Assert.Null(exception);
+    }
+
+    #endregion
+
+    #region Azure OpenAI Endpoint Validation Tests
+
+    [Theory]
+    [MemberData(nameof(InvalidAzureOpenAiEndpoints))]
+    public void ValidateAzureOpenAiEndpoint_RejectsInvalidEndpoints(string invalidEndpoint)
+    {
+        var exception = Assert.Throws<ArgumentException>(
+            () => FoundryExtensionsService.ValidateAzureOpenAiEndpoint(invalidEndpoint));
+
+        Assert.Contains("Invalid Azure OpenAI endpoint", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("https://my-resource.openai.azure.com")]
+    [InlineData("https://my-resource.cognitiveservices.azure.com")]
+    public void ValidateAzureOpenAiEndpoint_AcceptsValidEndpoints(string validEndpoint)
+    {
+        var exception = Record.Exception(() => FoundryExtensionsService.ValidateAzureOpenAiEndpoint(validEndpoint));
+        Assert.Null(exception);
     }
 
     #endregion

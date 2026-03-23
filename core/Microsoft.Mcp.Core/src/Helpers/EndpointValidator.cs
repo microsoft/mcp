@@ -59,6 +59,24 @@ public static class EndpointValidator
             : isGermanyCloud ? "communication.azure.de"
             : "communication.azure.com";
 
+        var foundrySuffix = isPublicCloud ? "services.ai.azure.com"
+            : isChinaCloud ? "services.ai.azure.cn"
+            : isGovCloud ? "services.ai.azure.us"
+            : isGermanyCloud ? "services.ai.azure.de"
+            : "services.ai.azure.com";
+
+        var openaiSuffix = isPublicCloud ? "openai.azure.com"
+            : isChinaCloud ? "openai.azure.cn"
+            : isGovCloud ? "openai.azure.us"
+            : isGermanyCloud ? "openai.azure.de"
+            : "openai.azure.com";
+
+        var cognitiveServicesSuffix = isPublicCloud ? "cognitiveservices.azure.com"
+            : isChinaCloud ? "cognitiveservices.azure.cn"
+            : isGovCloud ? "cognitiveservices.azure.us"
+            : isGermanyCloud ? "cognitiveservices.azure.de"
+            : "cognitiveservices.azure.com";
+
         return new Dictionary<string, string[]>
         {
             // Azure Communication Services
@@ -69,6 +87,12 @@ public static class EndpointValidator
 
             // Azure Container Registry
             { "acr", [$".{acrSuffix}"] },
+
+            // Microsoft Foundry (AI Services project endpoints)
+            { "foundry", [$".{foundrySuffix}"] },
+
+            // Azure OpenAI
+            { "azure-openai", [$".{openaiSuffix}", $".{cognitiveServicesSuffix}"] },
         };
     }
 

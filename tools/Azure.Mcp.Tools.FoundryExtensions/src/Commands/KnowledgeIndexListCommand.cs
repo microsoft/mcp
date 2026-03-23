@@ -54,6 +54,37 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
     {
         base.RegisterOptions(command);
         command.Options.Add(FoundryExtensionsOptionDefinitions.EndpointOption);
+        command.Validators.Add(commandResult =>
+        {
+            var endpointValue = commandResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
+            if (string.IsNullOrWhiteSpace(endpointValue))
+            {
+                return;
+            }
+
+            if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var uri))
+            {
+                commandResult.AddError($"Invalid endpoint URL: {endpointValue}");
+                return;
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttps)
+            {
+                commandResult.AddError($"Endpoint must use HTTPS: {endpointValue}");
+                return;
+            }
+
+            string[] validSuffixes =
+            [
+                ".services.ai.azure.com",
+                ".services.ai.azure.cn",
+                ".services.ai.azure.us",
+            ];
+            if (!validSuffixes.Any(suffix => uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+            {
+                commandResult.AddError($"Endpoint must be a valid Foundry project endpoint. Host must end with '.services.ai.azure.com' (or sovereign cloud equivalent): {uri.Host}");
+            }
+        });
     }
 
     protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Security;
 using System.Text.Json.Nodes;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
@@ -17,6 +18,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
@@ -35,31 +37,15 @@ public class FoundryExtensionsService(
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
-    private static void ValidateProjectEndpoint(string endpoint)
+    internal static void ValidateProjectEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
-            {
-                throw new ArgumentException("Invalid Uri");
-            }
-
-            // Example: https://{foundry-resource-name}.services.ai.azure.com/api/projects/{project-name}
-            if (parsedUri.Scheme != Uri.UriSchemeHttps)
-            {
-                throw new ArgumentException("Scheme must be https");
-            }
-
-            const string knownSuffix = ".services.ai.azure.com";
-            var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Host must end with Foundry service suffix");
-            }
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry");
         }
-        catch (Exception ex)
+        catch (SecurityException ex)
         {
             throw new ArgumentException($"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
@@ -69,58 +55,15 @@ public class FoundryExtensionsService(
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
     /// </summary>
-    private static void ValidateAzureOpenAiEndpoint(string endpoint)
+    internal static void ValidateAzureOpenAiEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
-            {
-                throw new ArgumentException("Invalid Uri");
-            }
-
-            // Example: https://{Azure-OpenAI-resource-name}.openai.azure.com/
-            // Example: https://{Azure-OpenAI-resource-name}.cognitiveservices.azure.com/
-            if (parsedUri.Scheme != Uri.UriSchemeHttps)
-            {
-                throw new ArgumentException("Scheme must be https");
-            }
-
-            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com"];
-            var host = parsedUri.Host;
-            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-            if (matchedSuffix == null)
-            {
-                throw new ArgumentException("Host must end with Azure OpenAI service suffix");
-            }
-
-            var azureOpenAIResourceName = host.Substring(0, host.Length - matchedSuffix.Length);
-
-            // Validate Azure OpenAI resource name: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
-            if (azureOpenAIResourceName.Length < 2 || azureOpenAIResourceName.Length > 64)
-            {
-                throw new ArgumentException("Azure OpenAI resource name must be between 2 and 64 characters");
-            }
-
-            if (azureOpenAIResourceName.StartsWith('-') || azureOpenAIResourceName.EndsWith('-'))
-            {
-                throw new ArgumentException("Azure OpenAI resource name cannot start or end with a hyphen");
-            }
-
-            if (!azureOpenAIResourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
-            {
-                throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
-            }
-
-            // Validate path: should be empty or just "/" (root path)
-            var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (paths.Length != 0)
-            {
-                throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
-            }
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai");
         }
-        catch (Exception ex)
+        catch (SecurityException ex)
         {
             throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
