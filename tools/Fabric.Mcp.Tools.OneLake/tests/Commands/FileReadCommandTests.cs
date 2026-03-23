@@ -314,6 +314,34 @@ public class FileReadCommandTests
 
     }
 
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
+        var oneLakeService = Substitute.For<IOneLakeService>();
+        var command = new FileReadCommand(logger, oneLakeService);
+
+        oneLakeService
+            .ReadFileAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+                Arg.Any<BlobDownloadOptions?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "filePath"));
+
+        var systemCommand = command.GetCommand();
+        var parseResult = systemCommand.Parse($"--workspace-id workspace --item-id item --file-path {traversalPath}");
+        var context = CreateContext();
+
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
     private static CommandContext CreateContext(string transport = "stdio")
     {
         var serviceProvider = Substitute.For<IServiceProvider>();

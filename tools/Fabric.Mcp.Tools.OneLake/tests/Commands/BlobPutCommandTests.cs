@@ -16,6 +16,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
@@ -211,5 +212,35 @@ public class BlobPutCommandTests
         }
 
         return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        var oneLakeService = Substitute.For<IOneLakeService>();
+        var command = new BlobPutCommand(NullLogger<BlobPutCommand>.Instance, oneLakeService);
+
+        oneLakeService
+            .PutBlobAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+                Arg.Any<Stream>(),
+                Arg.Any<long>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "blobPath"));
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var parseResult = command.GetCommand().Parse($"--workspace-id workspace --item-id item --file-path {traversalPath} --content data");
+        var context = new CommandContext(serviceProvider);
+
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+
+        Assert.NotEqual(HttpStatusCode.Created, response.Status);
     }
 }
