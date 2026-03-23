@@ -29,8 +29,12 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true, Idempotent = true, OpenWorld = false,
-        ReadOnly = false, LocalRequired = false, Secret = false
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

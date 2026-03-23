@@ -30,8 +30,12 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false, Idempotent = true, OpenWorld = false,
-        ReadOnly = true, LocalRequired = false, Secret = false
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

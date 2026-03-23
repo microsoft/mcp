@@ -33,8 +33,12 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true, Idempotent = false, OpenWorld = false,
-        ReadOnly = false, LocalRequired = false, Secret = false
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

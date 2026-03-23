@@ -1302,10 +1302,14 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         foreach (var item in items)
         {
             var rpoBreached = item.LastBackupTime.HasValue && (now - item.LastBackupTime.Value).TotalHours > rpoThreshold;
-            if (rpoBreached) breachingRpo++;
+            if (rpoBreached)
+                breachingRpo++;
 
             var isHealthy = item.ProtectionStatus?.Contains("Protected", StringComparison.OrdinalIgnoreCase) == true && !rpoBreached;
-            if (isHealthy) healthy++; else unhealthy++;
+            if (isHealthy)
+                healthy++;
+            else
+                unhealthy++;
 
             details.Add(new HealthCheckItemDetail(
                 item.Name, item.ProtectionStatus, isHealthy ? "Healthy" : "Unhealthy",

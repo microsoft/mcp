@@ -594,8 +594,10 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             new("CreatePolicy", "Pending", "Will create default VM backup policy"),
             new("EnableProtection", "Pending", $"Will protect resources: {resourceIds}"),
         };
-        if (triggerFirstBackup) steps.Add(new("TriggerBackup", "Pending", "Will trigger initial backup"));
-        if (!string.IsNullOrEmpty(outputIac)) steps.Add(new("GenerateIaC", "Pending", $"Will generate {outputIac} template"));
+        if (triggerFirstBackup)
+            steps.Add(new("TriggerBackup", "Pending", "Will trigger initial backup"));
+        if (!string.IsNullOrEmpty(outputIac))
+            steps.Add(new("GenerateIaC", "Pending", $"Will generate {outputIac} template"));
 
         return Task.FromResult(new WorkflowResult("Planned", "SetupVmBackup", steps, "Workflow ready to execute. Implementation pending."));
     }
@@ -661,9 +663,12 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             new("EnableSoftDelete", "Pending", "Will enable soft delete with 14-day retention"),
             new("EnableImmutability", "Pending", "Will enable vault immutability"),
         };
-        if (!string.IsNullOrEmpty(resourceGuardId)) steps.Add(new("ConfigureMUA", "Pending", "Will configure Multi-User Authorization"));
-        if (!string.IsNullOrEmpty(keyVaultUri)) steps.Add(new("ConfigureCMK", "Pending", "Will configure customer-managed keys"));
-        if (!string.IsNullOrEmpty(logAnalyticsWorkspaceId)) steps.Add(new("ConfigureMonitoring", "Pending", "Will configure diagnostics"));
+        if (!string.IsNullOrEmpty(resourceGuardId))
+            steps.Add(new("ConfigureMUA", "Pending", "Will configure Multi-User Authorization"));
+        if (!string.IsNullOrEmpty(keyVaultUri))
+            steps.Add(new("ConfigureCMK", "Pending", "Will configure customer-managed keys"));
+        if (!string.IsNullOrEmpty(logAnalyticsWorkspaceId))
+            steps.Add(new("ConfigureMonitoring", "Pending", "Will configure diagnostics"));
 
         return Task.FromResult(new WorkflowResult("Planned", "SecureVault", steps, "Security workflow ready to execute."));
     }
@@ -696,7 +701,8 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             new("CheckPolicies", "Pending", "Will verify backup policies"),
             new("CheckSecurity", "Pending", "Will verify security posture"),
         };
-        if (autoRemediate) steps.Add(new("Remediate", "Pending", "Will auto-remediate compliance gaps"));
+        if (autoRemediate)
+            steps.Add(new("Remediate", "Pending", "Will auto-remediate compliance gaps"));
 
         return Task.FromResult(new WorkflowResult("Planned", "ComplianceRemediation", steps, "Compliance audit workflow ready to execute."));
     }
@@ -714,7 +720,8 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             new("MigratePolicies", "Pending", "Will recreate policies in target vault"),
             new("ReprotectItems", "Pending", "Will re-protect items in target vault"),
         };
-        if (decommissionSource) steps.Add(new("DecommissionSource", "Pending", "Will decommission source vault"));
+        if (decommissionSource)
+            steps.Add(new("DecommissionSource", "Pending", "Will decommission source vault"));
 
         return Task.FromResult(new WorkflowResult("Planned", "MigrateBackupConfig", steps, "Migration workflow ready to execute."));
     }
