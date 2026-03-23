@@ -445,7 +445,7 @@ public sealed class FileSharesService(
         await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
         {
             if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
-                snapshotResource.Data.Id.ToString().Contains(snapshotId, StringComparison.OrdinalIgnoreCase))
+                snapshotResource.Data.Id.ToString().Equals(snapshotId, StringComparison.OrdinalIgnoreCase))
             {
                 return FileShareSnapshotInfo.FromResource(snapshotResource);
             }
