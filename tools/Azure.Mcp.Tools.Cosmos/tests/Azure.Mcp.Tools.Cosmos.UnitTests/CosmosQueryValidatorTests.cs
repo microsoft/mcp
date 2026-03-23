@@ -99,9 +99,27 @@ public class CosmosQueryValidatorTests
     [Theory]
     [InlineData("SELECT * FROM c WHERE c.name = 'test' OR 1=1")]
     [InlineData("SELECT * FROM c WHERE c.name = 'x' OR '1'='1'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 2=2")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR a=a")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 1 = 1")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR '2'='2'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 'a'='a'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 99=99")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' or true")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR TRUE")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'x' OR 'anything'='anything'")]
     public void EnsureReadOnlySelect_SqlInjectionTautologies_ShouldThrow(string query)
     {
         Assert.Contains("tautology", CosmosQueryValidator.EnsureReadOnlySelect(query), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("SELECT * FROM c WHERE c.name = 'contains or 1=1 inside string'")]
+    [InlineData("SELECT * FROM c WHERE c.note = 'or true is fine in a string'")]
+    public void EnsureReadOnlySelect_TautologyPatternsInsideStrings_ShouldPass(string query)
+    {
+        // Tautology-like text inside string literals should not trigger false positives
+        Assert.Null(CosmosQueryValidator.EnsureReadOnlySelect(query));
     }
 
     [Theory]

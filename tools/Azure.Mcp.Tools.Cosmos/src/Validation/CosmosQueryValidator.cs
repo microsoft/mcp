@@ -11,14 +11,43 @@ namespace Azure.Mcp.Tools.Cosmos.Validation;
 /// 1. Multiple/stacked statements that could bypass security
 /// 2. Comments that could hide malicious code
 /// 3. Attempts to execute stored procedures/triggers (which CAN modify data)
-/// 4. Common SQL injection patterns
+/// 4. Common SQL injection patterns including boolean tautologies
 /// Note: Stored procedures and triggers are executed via SDK APIs, not SQL queries, so they cannot
 /// be invoked through this query interface. This is defense-in-depth validation.
+/// Prefer using parameterized queries (QueryDefinition with parameters) over string concatenation
+/// to prevent injection at the source.
 /// </summary>
 internal static class CosmosQueryValidator
 {
     private const int MaxQueryLength = 5000; // Safety cap similar to Postgres validator.
+    private const string StringLiteralPlaceholder = "'str'";
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // Prevent ReDoS attacks
+
+    // Regex to strip string literals, replacing them with a placeholder for safe token analysis.
+    private static readonly Regex StringLiteralPattern = new(
+        "'([^']|'')*'",
+        RegexOptions.Compiled,
+        RegexTimeout);
+
+    // Matches: OR <word> = <same_word> with optional whitespace around =
+    // Catches: OR 1=1, OR 2=2, OR a=a, OR 1 = 1, etc.
+    private static readonly Regex TautologyIdentifierPattern = new(
+        @"\bor\s+(\w+)\s*=\s*\1\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        RegexTimeout);
+
+    // Matches: OR 'str' = 'str' (after string literals are replaced with placeholder)
+    // Catches any OR '<literal>'='<same_or_different_literal>' injection pattern.
+    private static readonly Regex TautologyStringLiteralPattern = new(
+        @"\bor\s+'str'\s*=\s*'str'",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        RegexTimeout);
+
+    // Matches: OR true / OR TRUE (boolean tautology)
+    private static readonly Regex TautologyBooleanPattern = new(
+        @"\bor\s+true\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        RegexTimeout);
 
     // Keywords/patterns that might indicate attempts to execute stored procedures or triggers
     private static readonly HashSet<string> BlockedPatterns = new(StringComparer.OrdinalIgnoreCase)
@@ -65,17 +94,21 @@ internal static class CosmosQueryValidator
             return "Multiple or stacked SQL statements are not allowed.";
         }
 
-        var lower = core.ToLowerInvariant();
+        // Strip string literals before tautology and keyword checks to avoid false positives
+        // from values inside quoted strings and to normalize injection patterns that break out of strings.
+        var withoutStrings = StringLiteralPattern.Replace(core, StringLiteralPlaceholder);
+        var strippedLower = withoutStrings.ToLowerInvariant();
 
-        // Check for common SQL injection patterns
-        if (lower.Contains(" or 1=1") || lower.Contains("' or '1'='1"))
+        // Detect boolean tautology injection patterns (e.g., OR 1=1, OR 2=2, OR a=a, OR 'x'='x', OR true)
+        if (TautologyIdentifierPattern.IsMatch(strippedLower) ||
+            TautologyStringLiteralPattern.IsMatch(strippedLower) ||
+            TautologyBooleanPattern.IsMatch(strippedLower))
         {
             return "Suspicious boolean tautology pattern detected.";
         }
 
         // Check for attempts to execute stored procedures or triggers
         // While these cannot be executed via SQL queries, this is defense-in-depth
-        var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
         var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
 
         foreach (Match m in matches)
