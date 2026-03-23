@@ -116,6 +116,9 @@ public class CosmosQueryValidatorTests
     [Theory]
     [InlineData("SELECT * FROM c WHERE c.name = 'contains or 1=1 inside string'")]
     [InlineData("SELECT * FROM c WHERE c.note = 'or true is fine in a string'")]
+    [InlineData("SELECT * FROM c WHERE c.name = 'a' OR c.status = 'b'")] // different literals are not tautologies
+    [InlineData("SELECT * FROM c WHERE c.x = 1 OR 'a'='b'")] // non-tautology: different string constants
+    [InlineData("SELECT * FROM c WHERE c.x = 1 OR 1=2")] // non-tautology: different numeric constants
     public void EnsureReadOnlySelect_TautologyPatternsInsideStrings_ShouldPass(string query)
     {
         // Tautology-like text inside string literals should not trigger false positives

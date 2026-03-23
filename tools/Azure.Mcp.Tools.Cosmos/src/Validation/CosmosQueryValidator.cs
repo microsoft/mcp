@@ -36,10 +36,10 @@ internal static class CosmosQueryValidator
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         RegexTimeout);
 
-    // Matches: OR 'str' = 'str' (after string literals are replaced with placeholder)
-    // Catches any OR '<literal>'='<same_or_different_literal>' injection pattern.
+    // Matches: OR '<literal>' = '<same_literal>' using a backreference on the original query.
+    // Only flags when both sides are identical (e.g., OR 'x'='x'), not different values (OR 'a'='b').
     private static readonly Regex TautologyStringLiteralPattern = new(
-        @"\bor\s+'str'\s*=\s*'str'",
+        @"\bor\s+'((?:[^']|'')*)'\s*=\s*'\1'",
         RegexOptions.IgnoreCase | RegexOptions.Compiled,
         RegexTimeout);
 
@@ -97,12 +97,13 @@ internal static class CosmosQueryValidator
         // Strip string literals before tautology and keyword checks to avoid false positives
         // from values inside quoted strings and to normalize injection patterns that break out of strings.
         var withoutStrings = StringLiteralPattern.Replace(core, StringLiteralPlaceholder);
-        var strippedLower = withoutStrings.ToLowerInvariant();
 
         // Detect boolean tautology injection patterns (e.g., OR 1=1, OR 2=2, OR a=a, OR 'x'='x', OR true)
-        if (TautologyIdentifierPattern.IsMatch(strippedLower) ||
-            TautologyStringLiteralPattern.IsMatch(strippedLower) ||
-            TautologyBooleanPattern.IsMatch(strippedLower))
+        // TautologyStringLiteralPattern uses a backreference so it must run against the original query.
+        // All patterns use RegexOptions.IgnoreCase so no lowercasing is needed.
+        if (TautologyIdentifierPattern.IsMatch(withoutStrings) ||
+            TautologyStringLiteralPattern.IsMatch(core) ||
+            TautologyBooleanPattern.IsMatch(withoutStrings))
         {
             return "Suspicious boolean tautology pattern detected.";
         }
