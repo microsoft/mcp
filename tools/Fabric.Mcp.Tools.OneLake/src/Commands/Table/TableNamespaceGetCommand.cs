@@ -37,15 +37,13 @@ public sealed class TableNamespaceGetCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Namespace);
     }
 
     protected override TableNamespaceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Namespace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Namespace.Name);
-        options.Namespace ??= parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Schema.Name);
         return options;
     }
 

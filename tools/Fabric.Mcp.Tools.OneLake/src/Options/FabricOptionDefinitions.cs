@@ -8,31 +8,19 @@ public static class FabricOptionDefinitions
 
     // Workspace options
     public const string WorkspaceName = "workspace";
-    public static readonly Option<string> Workspace = new($"--{WorkspaceName}")
+    public const string WorkspaceIdName = "workspace-id";
+    public static readonly Option<string> WorkspaceId = new($"--{WorkspaceIdName}", $"--{WorkspaceName}")
     {
         Description = "The name or ID of the Microsoft Fabric workspace.",
         Required = true
     };
 
-    public const string WorkspaceIdName = "workspace-id";
-    public static readonly Option<string> WorkspaceId = new($"--{WorkspaceIdName}")
-    {
-        Description = "The ID of the Microsoft Fabric workspace.",
-        Required = true
-    };
-
     // Item options
     public const string ItemName = "item";
-    public static readonly Option<string> Item = new($"--{ItemName}")
+    public const string ItemIdName = "item-id";
+    public static readonly Option<string> ItemId = new($"--{ItemIdName}", $"--{ItemName}")
     {
         Description = "The name or ID of the Fabric item. When using friendly names, MUST include the item type suffix (e.g., 'ItemName.Lakehouse', 'ItemName.Warehouse').",
-        Required = false
-    };
-
-    public const string ItemIdName = "item-id";
-    public static readonly Option<string> ItemId = new($"--{ItemIdName}")
-    {
-        Description = "The ID of the Fabric item.",
         Required = true
     };
 
@@ -157,17 +145,11 @@ public static class FabricOptionDefinitions
 
     // Table namespace options
     public const string NamespaceName = "namespace";
-    public static readonly Option<string> Namespace = new($"--{NamespaceName}")
+    public const string SchemaName = "schema";
+    public static readonly Option<string> Namespace = new($"--{NamespaceName}", $"--{SchemaName}")
     {
         Description = "The table namespace (schema) to inspect within the OneLake table API.",
         Required = true
-    };
-
-    public const string SchemaName = "schema";
-    public static readonly Option<string> Schema = new($"--{SchemaName}")
-    {
-        Description = "Alias for --namespace when specifying table schemas in the OneLake table API.",
-        Required = false
     };
 
     public const string TableName = "table";

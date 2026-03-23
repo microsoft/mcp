@@ -37,16 +37,14 @@ public sealed class TableGetCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Table.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.Namespace);
+        command.Options.Add(FabricOptionDefinitions.Table);
     }
 
     protected override TableGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Namespace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Namespace.Name);
-        options.Namespace ??= parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Schema.Name);
         options.Table = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Table.Name);
         return options;
     }
