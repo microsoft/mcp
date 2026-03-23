@@ -260,5 +260,44 @@ public class TtsSynthesizeCommandTests
             }
         }
     }
-}
 
+    [Theory]
+    [InlineData(@"\\server\share\output.wav", "UNC")]
+    [InlineData("//server/share/output.wav", "UNC")]
+    public async Task ExecuteAsync_WithUncOutputPath_ShouldRejectPath(string outputPath, string expectedErrorFragment)
+    {
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text HelloWorld --outputAudio {outputPath}";
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains(expectedErrorFragment, response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithPathTraversal_ShouldCanonicalizeOutputPath()
+    {
+        // A traversal path should be canonicalized; the command should not blindly pass it through.
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text HelloWorld --outputAudio ../../../tmp/evil.wav";
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // The path should be canonicalized - either it succeeds after canonicalization
+        // or fails validation, but it should never pass the raw "../../../" path through.
+        // Since the file doesn't exist, the command should proceed (no overwrite check failure).
+        // The key assertion is that the service receives a canonical path.
+        if (response.Status == HttpStatusCode.OK)
+        {
+            await _speechService.Received(1).SynthesizeSpeechToFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => !p.Contains("..")),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>());
+        }
+    }
+}

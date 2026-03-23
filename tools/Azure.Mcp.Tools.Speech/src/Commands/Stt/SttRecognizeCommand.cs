@@ -60,15 +60,27 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         {
             var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
 
-            // Validate file path exists
-            if (!File.Exists(fileValue))
+            // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+            string canonicalPath;
+            try
             {
-                commandResult.AddError($"Audio file not found: {fileValue}");
+                canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
+            }
+            catch (ArgumentException ex)
+            {
+                commandResult.AddError($"Invalid audio file path: {ex.Message}");
+                return;
+            }
+
+            // Validate file path exists
+            if (!File.Exists(canonicalPath))
+            {
+                commandResult.AddError($"Audio file not found: {canonicalPath}");
             }
             else
             {
                 // Validate file extension
-                var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+                var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
                 var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
                 if (!supportedExtensions.Contains(extension))
                 {

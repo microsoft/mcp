@@ -39,6 +39,9 @@ public class FastTranscriptionRecognizer(
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
+        // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+        filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"Audio file not found: {filePath}");
