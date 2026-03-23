@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved Cosmos DB query validator to detect a broader range of boolean tautology patterns"
