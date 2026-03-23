@@ -163,7 +163,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> DatasourceType = new($"--{DatasourceTypeName}")
     {
-        Description = "The workload type hint (e.g., 'AzureVM', 'AzureDisk').",
+        Description = "The workload type hint: AzureVM, SQLDatabase, SAPHana, SAPASE, AzureFileShare, AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB.",
         Required = false
     };
 
@@ -283,7 +283,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> WorkloadType = new($"--{WorkloadTypeName}")
     {
-        Description = "Workload type: AzureVM, SQLDatabase, SAPHana, AzureFileShare, AzureDisk, AzureBlob, PostgreSQLFlexible, MySQLFlexible, AKS.",
+        Description = "Workload type: AzureVM, SQLDatabase, SAPHana, SAPASE, AzureFileShare, AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB.",
         Required = false
     };
 

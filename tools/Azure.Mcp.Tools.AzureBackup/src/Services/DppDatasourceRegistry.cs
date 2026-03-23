@@ -96,21 +96,6 @@ public static class DppDatasourceRegistry
         SupportsPolicyUpdate = false,
     };
 
-    public static readonly DppDatasourceProfile MySqlFlexible = new()
-    {
-        FriendlyName = "MySQLFlexible",
-        ArmResourceType = "Microsoft.DBforMySQL/flexibleServers",
-        Aliases = ["mysqlflexible", "mysql"],
-        UsesOperationalStore = false,
-        ScheduleInterval = "P1D",
-        BackupType = "Full",
-        BackupRuleName = "BackupDaily",
-        DefaultRetentionDays = 30,
-        RequiresSnapshotResourceGroup = false,
-        DefaultRestoreMode = DppRestoreMode.RestoreAsFiles,
-        SupportsPolicyUpdate = false,
-    };
-
     public static readonly DppDatasourceProfile AzureDataLakeStorage = new()
     {
         FriendlyName = "AzureDataLakeStorage",
@@ -146,7 +131,6 @@ public static class DppDatasourceRegistry
         Aks,
         ElasticSan,
         PostgreSqlFlexible,
-        MySqlFlexible,
         AzureDataLakeStorage,
         CosmosDb,
     ];

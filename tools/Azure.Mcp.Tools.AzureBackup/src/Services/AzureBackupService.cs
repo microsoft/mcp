@@ -14,16 +14,20 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
 {
     /// <summary>
     /// Resource types that Azure Backup can protect.
+    /// RSV: IaasVM, SQL-in-IaasVM (workload on VM), SAP HANA (workload on VM), SAP ASE (workload on VM), Azure FileShare.
+    /// DPP: Disk, Blob, AKS, ElasticSAN, ADLS, PostgreSQL Flexible, CosmosDB.
+    /// Note: SQL/SAP HANA/SAP ASE are in-guest workloads on VMs, so VMs covers them.
+    /// Blob and ADLS share the storageAccounts ARM type.
     /// </summary>
     private static readonly string[] s_protectableResourceTypes =
     [
         "Microsoft.Compute/virtualMachines",
-        "Microsoft.Sql/servers/databases",
         "Microsoft.Storage/storageAccounts",
         "Microsoft.DBforPostgreSQL/flexibleServers",
         "Microsoft.ContainerService/managedClusters",
         "Microsoft.Compute/disks",
-        "Microsoft.DBforMySQL/flexibleServers"
+        "Microsoft.ElasticSan/elasticSans",
+        "Microsoft.DocumentDB/databaseAccounts"
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
