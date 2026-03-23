@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -94,6 +95,12 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
             throw new Exception($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
+    }
+
+    /// <inheritdoc/>
+    public string? GetDefaultSubscriptionId()
+    {
+        return CommandHelper.GetDefaultSubscription();
     }
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)

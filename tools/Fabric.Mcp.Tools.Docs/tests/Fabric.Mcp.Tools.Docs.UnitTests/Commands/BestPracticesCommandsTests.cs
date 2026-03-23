@@ -27,7 +27,7 @@ public class BestPracticesCommandsTests
         var command = new GetBestPracticesCommand(logger);
 
         // Assert
-        Assert.Equal("best_practices", command.Name);
+        Assert.Equal("best-practices", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Best Practices", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -46,7 +46,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("best_practices", systemCommand.Name);
+        Assert.Equal("best-practices", systemCommand.Name);
         // Options are registered dynamically, not statically in the Options collection
     }
 
@@ -165,7 +165,7 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
 
         // Assert
-        Assert.Equal("api_examples", command.Name);
+        Assert.Equal("api-examples", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -184,7 +184,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("api_examples", systemCommand.Name);
+        Assert.Equal("api-examples", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -282,7 +282,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("item_definitions", command.Name);
+        Assert.Equal("item-definitions", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Item Definitions", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -301,7 +301,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("item_definitions", systemCommand.Name);
+        Assert.Equal("item-definitions", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

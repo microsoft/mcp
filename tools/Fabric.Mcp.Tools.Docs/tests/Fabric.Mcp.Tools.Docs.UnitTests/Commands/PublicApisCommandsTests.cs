@@ -110,7 +110,7 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("platform_api_spec", command.Name);
+        Assert.Equal("platform-api-spec", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Platform API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -129,7 +129,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("platform_api_spec", systemCommand.Name);
+        Assert.Equal("platform-api-spec", systemCommand.Name);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("workload_api_spec", command.Name);
+        Assert.Equal("workload-api-spec", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Workload API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -213,7 +213,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("workload_api_spec", systemCommand.Name);
+        Assert.Equal("workload-api-spec", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

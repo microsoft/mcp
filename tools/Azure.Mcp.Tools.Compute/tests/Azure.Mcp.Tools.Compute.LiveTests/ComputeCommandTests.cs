@@ -21,7 +21,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
-    // Enable --dangerously-disable-elicitation for commands with Secret = true (vm create)
+    // Enable --dangerously-disable-elicitation for commands with Secret = true (vm create, vm delete, vmss delete)
     public override async ValueTask InitializeAsync()
     {
         SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
@@ -508,6 +508,90 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         var upgradePolicy = vmss.GetProperty("upgradePolicy");
         Assert.Equal("Automatic", upgradePolicy.GetString());
+    }
+
+    #endregion
+
+    #region VM Delete Tests
+
+    [Fact]
+    public async Task Should_delete_vm_with_force()
+    {
+        // Create a dedicated VM to delete
+        var deleteVmName = RegisterOrRetrieveVariable("deleteVmName", $"delvm{DateTime.UtcNow:MMddHHmmss}");
+
+        await CallToolAsync(
+            "compute_vm_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", deleteVmName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "no-public-ip", true }
+            });
+
+        // Delete the VM
+        var result = await CallToolAsync(
+            "compute_vm_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", deleteVmName },
+                { "force-deletion", true }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("successfully deleted", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
+    }
+
+    #endregion
+
+    #region VMSS Delete Tests
+
+    [Fact]
+    public async Task Should_delete_vmss_with_force()
+    {
+        // Create a dedicated VMSS to delete
+        var deleteVmssName = RegisterOrRetrieveVariable("deleteVmssName", $"delvms{DateTime.UtcNow:HHmmss}");
+
+        await CallToolAsync(
+            "compute_vmss_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", deleteVmssName },
+                { "location", "eastus2" },
+                { "admin-username", "azureuser" },
+                { "admin-password", "TestP@ssw0rd123!" },
+                { "image", "Ubuntu2404" },
+                { "instance-count", 1 }
+            });
+
+        // Delete the VMSS
+        var result = await CallToolAsync(
+            "compute_vmss_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vmss-name", deleteVmssName },
+                { "force-deletion", true }
+            });
+
+        var message = result.AssertProperty("Message");
+        Assert.Contains("successfully deleted", message.GetString());
+
+        var success = result.AssertProperty("Success");
+        Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
 
     #endregion

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
 

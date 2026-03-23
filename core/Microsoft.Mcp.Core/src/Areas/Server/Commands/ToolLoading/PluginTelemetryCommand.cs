@@ -34,8 +34,8 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         """
         Publish plugin-related telemetry events from agent hooks.
         Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type',
-        '--plugin-name', '--tool-name', and '--file-reference'. Use this command from agent hooks in clients
-        like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
+        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
+        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
         """;
 
     public override string Title => CommandTitle;
@@ -74,6 +74,18 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         return allowedPaths.Contains(pluginRelativePath);
     }
 
+    /// <summary>
+    /// Checks if a skill name is allowed based on the exact skill name allowlist.
+    /// </summary>
+    /// <param name="skillName">The skill name to check.</param>
+    /// <param name="allowlistProvider">The provider that supplies the allowed skill names.</param>
+    /// <returns>True if the skill name is in the allowlist, false otherwise.</returns>
+    private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
+    {
+        var allowedSkillNames = allowlistProvider.GetAllowedSkillNames();
+        return allowedSkillNames.Contains(skillName);
+    }
+
     protected override void RegisterOptions(Command command)
     {
         command.Options.Add(PluginTelemetryOptionDefinitions.Timestamp);
@@ -81,6 +93,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         command.Options.Add(PluginTelemetryOptionDefinitions.SessionId);
         command.Options.Add(PluginTelemetryOptionDefinitions.ClientType);
         command.Options.Add(PluginTelemetryOptionDefinitions.PluginName);
+        command.Options.Add(PluginTelemetryOptionDefinitions.PluginVersion);
+        command.Options.Add(PluginTelemetryOptionDefinitions.SkillName);
+        command.Options.Add(PluginTelemetryOptionDefinitions.SkillVersion);
         command.Options.Add(PluginTelemetryOptionDefinitions.ToolName);
         command.Options.Add(PluginTelemetryOptionDefinitions.FileReference);
     }
@@ -94,6 +109,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
             SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
             ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
             PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
+            PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
+            SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
+            SkillVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillVersion.Name),
             ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
             FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
         };
@@ -136,6 +154,19 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
                 }
             }
 
+            // Validate skill name if provided
+            if (!string.IsNullOrWhiteSpace(options.SkillName))
+            {
+                // Validate against allowlist
+                var skillNameAllowlistProvider = host.Services.GetRequiredService<IPluginSkillNameAllowlistProvider>();
+                if (!IsSkillNameAllowed(options.SkillName, skillNameAllowlistProvider))
+                {
+                    context.Response.Status = HttpStatusCode.Forbidden;
+                    context.Response.Message = $"Skill name '{options.SkillName}' is not in the allowlist and will not be logged.";
+                    return context.Response;
+                }
+            }
+
             // Start host and log telemetry
             await host.StartAsync(cancellationToken);
 
@@ -164,20 +195,23 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
     /// <param name="options">The plugin telemetry options containing event data (timestamp, event type, session ID, etc.).</param>
     internal static void LogPluginTelemetry(ITelemetryService telemetryService, PluginTelemetryOptions options)
     {
-        using var activity = telemetryService.StartActivity(ActivityName.PluginsExecuted);
+        using var activity = telemetryService.StartActivity(ActivityName.PluginExecuted);
 
         if (activity != null)
         {
             // Add all fields as tags (FileReference has already been validated in ExecuteAsync)
             var tags = new (string Key, string? Value)[]
             {
-                ("Plugins_EventType", options.EventType),
-                ("Plugins_SessionId", options.SessionId),
-                ("Plugins_ClientType", options.ClientType),
-                ("Plugins_PluginName", options.PluginName),
-                ("Plugins_ToolName", options.ToolName),
-                ("Plugins_Timestamp", options.Timestamp),
-                ("Plugins_FileReference", options.FileReference)
+                ("Plugin_EventType", options.EventType),
+                ("Plugin_SessionId", options.SessionId),
+                ("Plugin_ClientType", options.ClientType),
+                ("Plugin_PluginName", options.PluginName),
+                ("Plugin_PluginVersion", options.PluginVersion),
+                ("Plugin_SkillName", options.SkillName),
+                ("Plugin_SkillVersion", options.SkillVersion),
+                ("Plugin_ToolName", options.ToolName),
+                ("Plugin_Timestamp", options.Timestamp),
+                ("Plugin_FileReference", options.FileReference)
             };
 
             foreach (var (key, value) in tags)

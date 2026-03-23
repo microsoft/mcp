@@ -34,8 +34,8 @@ public sealed class ExtensionSetup : IAreaSetup
         bool exposeExternalProcessCommands = ShouldExposeExternalProcessCommands(serviceProvider);
 
         string description = exposeExternalProcessCommands
-            ? "Extension commands for additional Azure tooling functionality. Includes running Azure Quick Review (azqr) commands directly from the MCP server to get service recommendations, generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI."
-            : "Extension commands for additional Azure tooling functionality. Includes generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.";
+            ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) for compliance reports, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
+            : "Extension commands for CLI tooling related to Azure. Includes generating Azure CLI commands from user intent and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func).";
 
         var extension = new CommandGroup(Name, description, Title);
 
@@ -45,7 +45,7 @@ public sealed class ExtensionSetup : IAreaSetup
             extension.AddCommand(azqr.Name, azqr);
         }
 
-        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.");
+        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Core Function Tools CLI (func).");
         extension.AddSubGroup(cli);
         var cliGenerateCommand = serviceProvider.GetRequiredService<CliGenerateCommand>();
         cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);

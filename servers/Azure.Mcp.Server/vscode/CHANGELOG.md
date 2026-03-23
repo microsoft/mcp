@@ -1,5 +1,19 @@
 # Release History
 
+## 2.0.0-beta.30 (2026-03-19) (pre-release)
+
+### Changed
+
+- **Breaking:** Moved the following tools from the `monitorinstrumentation` namespace to the `monitor` namespace: [[#2087](https://github.com/microsoft/mcp/pull/2087)]
+  - `list_learning_resources`
+  - `get_learning_resource`
+  - `orchestrator_start`
+  - `orchestrator_next`
+  - `send_brownfield_analysis`
+- **Breaking:** Consolidated the `list_learning_resources` and `get_learning_resource` tools into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
+- Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
+- Reviewed MCP tool Command definitions and resolved validation inconsistencies, aligning implementations with tool development guidelines and improving consistency across multiple tool areas. [[#2086](https://github.com/microsoft/mcp/pull/2086)]
+
 ## 2.0.0-beta.29 (2026-03-18) (pre-release)
 
 ### Added

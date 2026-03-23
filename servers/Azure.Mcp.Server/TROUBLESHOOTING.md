@@ -6,6 +6,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
 
   - [Common Issues](#common-issues)
     - [Platform Package Installation Issues](#platform-package-installation-issues)
+    - [MCPB (MCP Bundle) Installation Issues](#mcpb-mcp-bundle-installation-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
   - [Development in VS Code](#development-in-vs-code)
@@ -890,6 +891,18 @@ See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/A
 2. Complete the authentication setup as described in the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md)
 3. Verify access by running `az account show` to confirm you're authenticated with the correct account type
 
+### MCPB (MCP Bundle) Installation Issues
+
+#### Error: Bundle fails to open in Claude Desktop
+
+1. **Ensure Claude Desktop is installed and up to date**: Download the latest version from [claude.com/download](https://claude.com/download).
+2. **Download the correct platform bundle**: Verify you downloaded the `.mcpb` file matching your operating system and architecture from the [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page.
+3. **Uninstall and reinstall the Azure MCP Server MCPB**:
+   1. In Claude Desktop, open the hamburger menu on the top left:
+   2. Go to **File** > **Settings** > **Extensions**
+   3. Click on the three dots button (`...`) on the right of the Azure MCP Server extension and select **Uninstall**.
+   4. After uninstalling, try installing the correct MCP Bundle by dragging the `.mcpb` file into the Claude Desktop window.
+
 ### Platform Package Installation Issues
 
 The Azure MCP wrapper automatically installs the correct platform-specific package when needed. However, if you encounter persistent errors about missing platform packages (e.g., `@azure/mcp-linux-x64`, `@azure/mcp-win32-x64`, `@azure/mcp-darwin-x64`), this may indicate network connectivity issues or permission problems.
@@ -1051,6 +1064,21 @@ Azure MCP Server supports being deployed as a Remote MCP Server using HTTP trans
 
 - [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/README.md)
 - [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi/blob/main/README.md)
+
+### TLS Termination and HTTPS
+
+The Azure MCP Server binds to HTTP (not HTTPS), delegating TLS termination to the platform's reverse proxy or ingress controller — the recommended pattern for production deployments on Azure.
+
+| Hosting Platform | How HTTPS Works |
+|---|---|
+| **Azure Container Apps** | The built-in ingress proxy terminates TLS and exposes an HTTPS FQDN, even for internal-only apps. Microsoft [recommends this pattern](https://learn.microsoft.com/azure/container-apps/ingress-overview) over end-to-end TLS into the container. |
+| **Azure App Service** | Provides HTTPS endpoints via `*.azurewebsites.net` automatically. Custom domains support managed certificates or bring your own certificate. |
+| **AKS** | HTTPS is configured via an ingress controller (e.g., NGINX, Application Gateway) with TLS termination at the ingress layer. |
+
+This follows the standard pattern for `ASP.NET` workloads on Azure — the application handles business logic while the platform handles transport security, certificate provisioning, and rotation.
+
+> [!NOTE]
+> If you are self-hosting outside Azure without a reverse proxy, you must either place a TLS-terminating proxy (such as NGINX, Caddy, or Envoy) in front of the server, or configure Kestrel for HTTPS directly.
 
 ### HTTPS redirection issues
 

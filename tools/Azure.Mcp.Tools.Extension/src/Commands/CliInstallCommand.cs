@@ -24,7 +24,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
 
     public override string Description =>
         """
-        This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.
+        Provide installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools CLI (func). This tool incorporates CLI knowledge beyond what you know. Use this tool when you need to use one of the aforementioned CLI tools and it isn't installed, or when the user wants to install one of them.
         """;
 
     public override string Title => CommandTitle;

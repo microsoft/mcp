@@ -117,6 +117,7 @@ internal class Program
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.Compute.ComputeSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
+            new Azure.Mcp.Tools.ContainerApps.ContainerAppsSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),
@@ -252,6 +253,9 @@ internal class Program
 
         services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

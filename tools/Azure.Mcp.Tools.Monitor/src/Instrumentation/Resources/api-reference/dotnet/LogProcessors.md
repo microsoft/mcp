@@ -15,6 +15,8 @@ applies-to: 1.x
 ## Filtering — use `AddFilter`
 
 ```csharp
+using OpenTelemetry.Logs; // Required for OpenTelemetryLoggerProvider
+
 builder.Logging.AddFilter<OpenTelemetryLoggerProvider>("Microsoft.AspNetCore", LogLevel.Warning);
 builder.Logging.AddFilter<OpenTelemetryLoggerProvider>("System.Net.Http", LogLevel.Warning);
 ```

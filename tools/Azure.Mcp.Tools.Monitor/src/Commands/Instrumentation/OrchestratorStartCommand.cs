@@ -18,10 +18,10 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
 
     public override string Id => "35f577d9-6378-4d34-b822-111ff6e8957c";
 
-    public override string Name => "orchestrator_start";
+    public override string Name => "orchestrator-start";
 
     public override string Description =>
-        "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator_next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.";
+        "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator-next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.";
 
     public override string Title => "Start Azure Monitor Instrumentation";
 
@@ -29,8 +29,8 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = true,
+        OpenWorld = false,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };

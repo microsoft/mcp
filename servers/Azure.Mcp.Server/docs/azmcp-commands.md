@@ -1039,6 +1039,42 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
 | `--user-data` | No | Base64-encoded user data |
 
+```bash
+# Delete a Virtual Machine
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--force-deletion]
+
+# Examples:
+
+# Delete a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm"
+
+# Force delete a VM even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine to delete |
+| `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -1211,6 +1247,42 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--enable-auto-os-upgrade` | No | Enable automatic OS image upgrades |
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
 | `--tags` | No | Tags in key=value,key2=value2 format |
+
+```bash
+# Delete a Virtual Machine Scale Set
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--force-deletion]
+
+# Examples:
+
+# Delete a VMSS
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss"
+
+# Force delete a VMSS even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VMSS and all its VM instances. This operation is irreversible.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS to delete |
+| `--force-deletion` | No | Force delete the VMSS even if running or failed (Azure API forceDeletion) |
 
 #### Disks
 
@@ -1466,6 +1538,19 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 -   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
+
+### Azure Container Apps Operations
+
+```bash
+# List Azure Container Apps in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription>
+
+# List Azure Container Apps in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription> \
+                         [--resource-group <resource-group>]
+```
 
 ### Azure Container Registry (ACR) Operations
 
@@ -2495,27 +2580,35 @@ azmcp monitor webtests update --subscription <subscription> \
 ### Azure Monitor Instrumentation Operations
 
 ```bash
-# List available Azure Monitor onboarding learning resources
-azmcp monitor instrumentation list_learning_resources
 
-# Get a specific learning resource by path
-azmcp monitor instrumentation get_learning_resource --path <resource-path>
+# Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
-azmcp monitor instrumentation orchestrator_start --workspace-path <absolute-workspace-path>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
-azmcp monitor instrumentation orchestrator_next --session-id <session-id> \
-                                               --completion-note <what-was-completed>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
+                                                --completion-note <what-was-completed>
 
 # Send brownfield analysis findings JSON to continue migration flow
-azmcp monitor instrumentation send_brownfield_analysis --session-id <session-id> \
-                                                      --findings-json <json>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
+                                                       --findings-json <json>
+
+# Submit enhancement selection when orchestrator-start returns enhancement_available
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-enhancement-select --session-id <session-id> \
+                                                      --enhancement-keys <comma-separated-keys>
 ```
 
 **Notes:**
-- `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+- `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
+- `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
 
 ### Azure Managed Lustre Operations
 
@@ -2920,6 +3013,10 @@ azmcp redis list --subscription <subscription>
 # List resource groups in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp group list --subscription <subscription>
+
+# List all resources in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp group resource list --subscription <subscription> --resource-group <resource-group>
 ```
 
 ### Azure Resource Health Operations
@@ -3354,7 +3451,9 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 ### Azure Subscription Management
 
 ```bash
-# List available Azure subscriptions
+# List available Azure subscriptions with default subscription indicator
+# Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
+# The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp subscription list [--tenant-id <tenant-id>]
 ```

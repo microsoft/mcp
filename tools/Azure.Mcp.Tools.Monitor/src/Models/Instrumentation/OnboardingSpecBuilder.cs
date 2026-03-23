@@ -269,10 +269,11 @@ public class OnboardingSpecBuilder
                     break;
 
                 case "validate-install":
+                    var validateInstructions = BuildValidateInstallInstructions(action, projectDir);
                     AddManualStepAction(
                         action.Id,
                         action.Title,
-                        action.Instructions ?? $"Verify that the installation step is complete: {action.Title}",
+                        validateInstructions,
                         action.Links);
                     break;
 
@@ -281,5 +282,37 @@ public class OnboardingSpecBuilder
             }
         }
         return this;
+    }
+
+    private static string BuildValidateInstallInstructions(ActionConfig action, string projectDir)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine(action.Instructions ?? $"Verify that the installation step is complete: {action.Title}");
+
+        if (action.FilesToExist is { Count: > 0 })
+        {
+            sb.AppendLine();
+            sb.AppendLine("Check that these files were created:");
+            foreach (var file in action.FilesToExist)
+            {
+                sb.AppendLine($"  - {Path.Combine(projectDir, file)}");
+            }
+        }
+
+        if (action.FileContentChecks is { Count: > 0 })
+        {
+            sb.AppendLine();
+            sb.AppendLine("Check that these files contain the expected content:");
+            foreach (var (file, expectedStrings) in action.FileContentChecks)
+            {
+                sb.AppendLine($"  {file} must contain:");
+                foreach (var s in expectedStrings)
+                {
+                    sb.AppendLine($"    - \"{s}\"");
+                }
+            }
+        }
+
+        return sb.ToString();
     }
 }
