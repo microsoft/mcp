@@ -43,7 +43,7 @@ public class KnowledgeIndexListCommandTests
     }
 
     [Theory]
-    [InlineData("--endpoint https://example.com", true)]
+    [InlineData("--endpoint https://my-foundry.services.ai.azure.com/api/projects/my-project", true)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {

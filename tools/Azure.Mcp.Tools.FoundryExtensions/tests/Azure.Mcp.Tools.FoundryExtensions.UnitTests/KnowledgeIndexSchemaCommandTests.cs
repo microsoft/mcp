@@ -42,8 +42,8 @@ public class KnowledgeIndexSchemaCommandTests
     }
 
     [Theory]
-    [InlineData("--endpoint https://example.com --index test-index", true)]
-    [InlineData("--endpoint https://example.com", false)] // Missing index name
+    [InlineData("--endpoint https://my-foundry.services.ai.azure.com/api/projects/my-project --index test-index", true)]
+    [InlineData("--endpoint https://my-foundry.services.ai.azure.com/api/projects/my-project", false)] // Missing index name
     [InlineData("--index test-index", false)] // Missing endpoint
     [InlineData("", false)] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)

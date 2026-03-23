@@ -34,16 +34,19 @@ public class FoundryExtensionsService(
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<FoundryExtensionsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    private ArmEnvironment GetArmEnvironment() =>
+        TenantService.CloudConfiguration.ArmEnvironment;
+
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
-    internal static void ValidateProjectEndpoint(string endpoint)
+    internal void ValidateProjectEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry");
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", GetArmEnvironment());
         }
         catch (SecurityException ex)
         {
@@ -55,15 +58,56 @@ public class FoundryExtensionsService(
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
     /// </summary>
-    internal static void ValidateAzureOpenAiEndpoint(string endpoint)
+    internal void ValidateAzureOpenAiEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai");
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai", GetArmEnvironment());
+
+            // Azure OpenAI-specific structural checks beyond domain validation
+            var parsedUri = new Uri(endpoint);
+
+            // Azure OpenAI endpoints should not contain path segments
+            var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (paths.Length != 0)
+            {
+                throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
+            }
+
+            // Validate the resource name portion of the host
+            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com",
+                ".openai.azure.cn", ".cognitiveservices.azure.cn",
+                ".openai.azure.us", ".cognitiveservices.azure.us",
+                ".openai.azure.de", ".cognitiveservices.azure.de"];
+            var host = parsedUri.Host;
+            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (matchedSuffix != null)
+            {
+                var resourceName = host[..^matchedSuffix.Length];
+                if (resourceName.Length < 2 || resourceName.Length > 64)
+                {
+                    throw new ArgumentException("Azure OpenAI resource name must be between 2 and 64 characters");
+                }
+
+                if (resourceName.StartsWith('-') || resourceName.EndsWith('-'))
+                {
+                    throw new ArgumentException("Azure OpenAI resource name cannot start or end with a hyphen");
+                }
+
+                if (!resourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
+                {
+                    throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
+                }
+            }
         }
         catch (SecurityException ex)
+        {
+            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
+        }
+        catch (ArgumentException ex) when (!ex.Message.StartsWith("Invalid Azure OpenAI endpoint", StringComparison.Ordinal))
         {
             throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
