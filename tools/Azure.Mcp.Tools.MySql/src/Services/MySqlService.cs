@@ -103,6 +103,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         };
     }
 
+    private static readonly string[] AllowedMySqlSuffixes =
+    [
+        ".mysql.database.azure.com",
+        ".mysql.database.usgovcloudapi.net",
+        ".mysql.database.chinacloudapi.cn",
+    ];
+
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
@@ -119,13 +126,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
                     server + ".mysql.database.azure.com"
             };
         }
+
+        if (!Array.Exists(AllowedMySqlSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for MySQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedMySqlSuffixes)}.");
+        }
+
         return server;
     }
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         var host = NormalizeServerName(server);
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }
 
