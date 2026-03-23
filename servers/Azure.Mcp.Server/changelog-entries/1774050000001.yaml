@@ -1,6 +1,0 @@
-pr: 1974
-changes:
-  - section: "Features Added"
-    description: "Subscription: Read default subscription from Azure CLI profile (~/.azure/azureProfile.json) for all subscription-scoped commands, falling back to AZURE_SUBSCRIPTION_ID environment variable"
-  - section: "Breaking Changes"
-    description: "Subscription: The `subscription list` command now returns a narrower model (subscriptionId, displayName, state, tenantId, isDefault) instead of the full Azure SDK SubscriptionData type"
