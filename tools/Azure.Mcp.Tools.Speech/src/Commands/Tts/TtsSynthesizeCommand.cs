@@ -77,14 +77,26 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             }
             else
             {
-                // Check if file already exists (don't allow overwriting)
-                if (File.Exists(fileValue))
+                // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+                string canonicalPath;
+                try
                 {
-                    commandResult.AddError($"Output file already exists: {fileValue}. Please specify a different file path or delete the existing file.");
+                    canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
+                }
+                catch (ArgumentException ex)
+                {
+                    commandResult.AddError($"Invalid output file path: {ex.Message}");
+                    return;
+                }
+
+                // Check if file already exists (don't allow overwriting)
+                if (File.Exists(canonicalPath))
+                {
+                    commandResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
                 }
 
                 // Validate file extension
-                var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+                var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
 
                 if (!SupportedExtensions.Contains(extension))
                 {
