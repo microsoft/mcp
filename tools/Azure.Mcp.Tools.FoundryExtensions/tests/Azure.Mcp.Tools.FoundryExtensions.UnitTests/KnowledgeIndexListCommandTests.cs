@@ -43,7 +43,7 @@ public class KnowledgeIndexListCommandTests
     }
 
     [Theory]
-    [InlineData("--endpoint https://example.com", true)]
+    [InlineData("--endpoint https://my-foundry.services.ai.azure.com/api/projects/my-project", true)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -82,7 +82,7 @@ public class KnowledgeIndexListCommandTests
         _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<KnowledgeIndexInformation>>(new Exception("Test error")));
 
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -106,7 +106,7 @@ public class KnowledgeIndexListCommandTests
         _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);

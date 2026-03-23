@@ -6,7 +6,9 @@ using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
@@ -54,6 +56,16 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
     {
         base.RegisterOptions(command);
         command.Options.Add(FoundryExtensionsOptionDefinitions.EndpointOption);
+        command.Validators.Add(commandResult =>
+        {
+            var endpointValue = commandResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
+            if (string.IsNullOrWhiteSpace(endpointValue))
+            {
+                return;
+            }
+
+            ValidateFoundryEndpoint(endpointValue, commandResult);
+        });
     }
 
     protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)
@@ -88,6 +100,27 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
         }
 
         return context.Response;
+    }
+
+    private static void ValidateFoundryEndpoint(string endpoint, System.CommandLine.Parsing.CommandResult commandResult)
+    {
+        ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
+        string? lastError = null;
+
+        foreach (var cloud in clouds)
+        {
+            try
+            {
+                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+            }
+        }
+
+        commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
     internal record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);
