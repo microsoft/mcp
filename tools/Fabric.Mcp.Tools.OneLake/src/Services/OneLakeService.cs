@@ -1667,12 +1667,12 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         // Normalise both forward- and back-slash separators and reject any
-        // segment that resolves to "." or "..".
+        // segment that resolves to ".", "..", or "~" (home-directory shorthand).
         var segments = decoded.Split('/', '\\');
         foreach (var segment in segments)
         {
             var trimmed = segment.Trim();
-            if (trimmed is "." or "..")
+            if (trimmed is "." or ".." or "~")
             {
                 throw new ArgumentException("Path cannot contain directory traversal sequences.", paramName);
             }
