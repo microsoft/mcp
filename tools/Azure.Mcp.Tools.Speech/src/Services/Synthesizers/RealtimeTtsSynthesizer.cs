@@ -36,10 +36,16 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
 
+        // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+        outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);
+
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be empty or whitespace.", nameof(text));
         }
+
+        // Record whether the file already exists so we only clean up files we created
+        bool existedBefore = File.Exists(outputFilePath);
 
         try
         {
@@ -68,8 +74,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             _logger.LogError(ex, "Error during speech synthesis.");
 
-            // Clean up partial file on error
-            if (File.Exists(outputFilePath))
+            // Clean up only if the file didn't exist before and now does (partial write)
+            if (!existedBefore && File.Exists(outputFilePath))
             {
                 try
                 {

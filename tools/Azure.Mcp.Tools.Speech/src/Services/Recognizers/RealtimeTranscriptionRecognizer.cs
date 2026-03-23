@@ -42,6 +42,9 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             _logger.LogWarning("Language not specified or unsupported for Realtime Transcription. Defaulting to 'en-US'.");
         }
 
+        // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+        filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"Audio file not found: {filePath}");
