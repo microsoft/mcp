@@ -44,7 +44,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`
