@@ -2,12 +2,29 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps) : IAzureBackupService
+public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService)
+    : BaseAzureService(tenantService), IAzureBackupService
 {
+    /// <summary>
+    /// Resource types that Azure Backup can protect.
+    /// </summary>
+    private static readonly string[] s_protectableResourceTypes =
+    [
+        "Microsoft.Compute/virtualMachines",
+        "Microsoft.Sql/servers/databases",
+        "Microsoft.Storage/storageAccounts",
+        "Microsoft.DBforPostgreSQL/flexibleServers",
+        "Microsoft.ContainerService/managedClusters",
+        "Microsoft.Compute/disks",
+        "Microsoft.DBforMySQL/flexibleServers"
+    ];
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
         string location, string? sku, string? storageType, string? tenant,
@@ -421,12 +438,118 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         return Task.FromResult(new OperationResult("Succeeded", null, $"Generated '{reportType}' report from Log Analytics workspace."));
     }
 
-    public Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
+    public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroupFilter,
         string? tagFilter, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new List<UnprotectedResourceInfo>());
+        // Step 1: List all vaults (RSV + DPP) in the subscription
+        var rsvVaults = await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var dppVaults = await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+
+        // Step 2: Collect all protected datasource ARM IDs from every vault
+        var protectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var vault in rsvVaults)
+        {
+            if (vault.Name is null || vault.ResourceGroup is null)
+            {
+                continue;
+            }
+
+            var items = await rsvOps.ListProtectedItemsAsync(
+                vault.Name, vault.ResourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+
+            foreach (var item in items)
+            {
+                if (!string.IsNullOrEmpty(item.DatasourceId))
+                {
+                    protectedIds.Add(item.DatasourceId);
+                }
+            }
+        }
+
+        foreach (var vault in dppVaults)
+        {
+            if (vault.Name is null || vault.ResourceGroup is null)
+            {
+                continue;
+            }
+
+            var items = await dppOps.ListProtectedItemsAsync(
+                vault.Name, vault.ResourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+
+            foreach (var item in items)
+            {
+                if (!string.IsNullOrEmpty(item.DatasourceId))
+                {
+                    protectedIds.Add(item.DatasourceId);
+                }
+            }
+        }
+
+        // Step 3: List all resources of protectable types in the subscription
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+        var subResource = armClient.GetSubscriptionResource(subId);
+
+        var targetTypes = !string.IsNullOrEmpty(resourceTypeFilter)
+            ? [resourceTypeFilter]
+            : s_protectableResourceTypes;
+
+        var unprotected = new List<UnprotectedResourceInfo>();
+
+        foreach (var resourceType in targetTypes)
+        {
+            var filter = $"resourceType eq '{resourceType}'";
+
+            await foreach (var resource in subResource.GetGenericResourcesAsync(filter: filter, cancellationToken: cancellationToken))
+            {
+                var resourceId = resource.Id?.ToString();
+                if (string.IsNullOrEmpty(resourceId))
+                {
+                    continue;
+                }
+
+                // Apply optional resource group filter
+                if (!string.IsNullOrEmpty(resourceGroupFilter) &&
+                    !string.Equals(resource.Id?.ResourceGroupName, resourceGroupFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Apply optional tag filter (format: "key=value")
+                if (!string.IsNullOrEmpty(tagFilter) && tagFilter.Contains('=', StringComparison.Ordinal))
+                {
+                    var parts = tagFilter.Split('=', 2);
+                    var tagKey = parts[0];
+                    var tagValue = parts.Length > 1 ? parts[1] : string.Empty;
+
+                    if (resource.Data.Tags is null ||
+                        !resource.Data.Tags.TryGetValue(tagKey, out var actualValue) ||
+                        !string.Equals(actualValue, tagValue, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
+                // Skip if already protected
+                if (protectedIds.Contains(resourceId))
+                {
+                    continue;
+                }
+
+                unprotected.Add(new UnprotectedResourceInfo(
+                    resourceId,
+                    resource.Data.Name,
+                    resource.Data.ResourceType.ToString(),
+                    resource.Id?.ResourceGroupName,
+                    resource.Data.Location.ToString(),
+                    resource.Data.Tags?.ToDictionary(t => t.Key, t => t.Value)));
+            }
+        }
+
+        return unprotected;
     }
 
     public Task<OperationResult> ApplyAzurePolicyAsync(
