@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed snapshot lookup in FileShares to use exact match on resource ID instead of substring match"
