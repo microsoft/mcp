@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Centralized Foundry and Azure OpenAI endpoint validation using the shared EndpointValidator with sovereign cloud support"
