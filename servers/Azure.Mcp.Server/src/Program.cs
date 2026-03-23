@@ -253,6 +253,9 @@ internal class Program
 
         services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

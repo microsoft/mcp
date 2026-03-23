@@ -74,6 +74,18 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
         return allowedPaths.Contains(pluginRelativePath);
     }
 
+    /// <summary>
+    /// Checks if a skill name is allowed based on the exact skill name allowlist.
+    /// </summary>
+    /// <param name="skillName">The skill name to check.</param>
+    /// <param name="allowlistProvider">The provider that supplies the allowed skill names.</param>
+    /// <returns>True if the skill name is in the allowlist, false otherwise.</returns>
+    private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
+    {
+        var allowedSkillNames = allowlistProvider.GetAllowedSkillNames();
+        return allowedSkillNames.Contains(skillName);
+    }
+
     protected override void RegisterOptions(Command command)
     {
         command.Options.Add(PluginTelemetryOptionDefinitions.Timestamp);
@@ -138,6 +150,19 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Plugin file reference '{options.FileReference}' is not in the allowlist and will not be logged.";
+                    return context.Response;
+                }
+            }
+
+            // Validate skill name if provided
+            if (!string.IsNullOrWhiteSpace(options.SkillName))
+            {
+                // Validate against allowlist
+                var skillNameAllowlistProvider = host.Services.GetRequiredService<IPluginSkillNameAllowlistProvider>();
+                if (!IsSkillNameAllowed(options.SkillName, skillNameAllowlistProvider))
+                {
+                    context.Response.Status = HttpStatusCode.Forbidden;
+                    context.Response.Message = $"Skill name '{options.SkillName}' is not in the allowlist and will not be logged.";
                     return context.Response;
                 }
             }
