@@ -6,7 +6,9 @@ using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
@@ -59,16 +61,7 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
                 return;
             }
 
-            if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var uri))
-            {
-                commandResult.AddError($"Invalid endpoint URL: {endpointValue}");
-                return;
-            }
-
-            if (uri.Scheme != Uri.UriSchemeHttps)
-            {
-                commandResult.AddError($"Endpoint must use HTTPS: {endpointValue}");
-            }
+            ValidateFoundryEndpoint(endpointValue, commandResult);
         });
     }
 
@@ -111,6 +104,27 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
         }
 
         return context.Response;
+    }
+
+    private static void ValidateFoundryEndpoint(string endpoint, System.CommandLine.Parsing.CommandResult commandResult)
+    {
+        ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
+        string? lastError = null;
+
+        foreach (var cloud in clouds)
+        {
+            try
+            {
+                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+            }
+        }
+
+        commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
     internal record KnowledgeIndexSchemaCommandResult(KnowledgeIndexSchema Schema);

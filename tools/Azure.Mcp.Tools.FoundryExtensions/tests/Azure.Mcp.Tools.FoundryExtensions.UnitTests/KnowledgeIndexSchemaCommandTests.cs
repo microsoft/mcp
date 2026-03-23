@@ -88,7 +88,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -113,7 +113,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSchema);
 
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
