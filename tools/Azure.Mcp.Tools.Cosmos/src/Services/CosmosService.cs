@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
@@ -126,38 +125,16 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
         if (cosmosClient != null)
             return cosmosClient;
 
-        try
-        {
-            // First attempt with requested auth method
-            cosmosClient = await CreateCosmosClientWithAuth(
-                accountName,
-                subscription,
-                authMethod,
-                tenant,
-                retryPolicy,
-                cancellationToken);
+        cosmosClient = await CreateCosmosClientWithAuth(
+            accountName,
+            subscription,
+            authMethod,
+            tenant,
+            retryPolicy,
+            cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
-            return cosmosClient;
-        }
-        catch (Exception ex) when (
-            authMethod == AuthMethod.Credential &&
-            (ex.Message.Contains(((int)HttpStatusCode.Unauthorized).ToString()) || ex.Message.Contains(((int)HttpStatusCode.Forbidden).ToString())))
-        {
-            // If credential auth fails with 401/403, try key auth
-            cosmosClient = await CreateCosmosClientWithAuth(
-                accountName,
-                subscription,
-                AuthMethod.Key,
-                tenant,
-                retryPolicy,
-                cancellationToken);
-
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
-            return cosmosClient;
-        }
-
-        throw new Exception($"Failed to create Cosmos client for account '{accountName}' with any authentication method");
+        await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationClients, cancellationToken);
+        return cosmosClient;
     }
 
     public async Task<List<string>> GetCosmosAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
