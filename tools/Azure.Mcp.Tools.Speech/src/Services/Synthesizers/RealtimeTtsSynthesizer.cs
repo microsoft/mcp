@@ -44,8 +44,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
             throw new ArgumentException("Text cannot be empty or whitespace.", nameof(text));
         }
 
-        // Track whether we created the file so cleanup only deletes our own file
-        bool fileCreatedByUs = false;
+        // Record whether the file already exists so we only clean up files we created
+        bool existedBefore = File.Exists(outputFilePath);
 
         try
         {
@@ -55,7 +55,6 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
             // Write the complete audio data to file
             await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
-            fileCreatedByUs = true;
 
             _logger.LogInformation(
                 "Speech synthesized and saved to file: {OutputFile}, Audio size: {AudioSize} bytes",
@@ -75,8 +74,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             _logger.LogError(ex, "Error during speech synthesis.");
 
-            // Only delete the file if we created it during this operation
-            if (fileCreatedByUs && File.Exists(outputFilePath))
+            // Clean up only if the file didn't exist before and now does (partial write)
+            if (!existedBefore && File.Exists(outputFilePath))
             {
                 try
                 {

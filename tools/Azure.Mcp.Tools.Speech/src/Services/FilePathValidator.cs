@@ -36,6 +36,16 @@ internal static class FilePathValidator
             throw new ArgumentException("File path contains invalid characters.", nameof(path));
         }
 
+        // Reject Windows device paths (\\?\, \\.\) — check before generic UNC
+        // since device paths also start with "\\" and would match the UNC check.
+        if (
+            path.StartsWith(@"\\?\", StringComparison.Ordinal)
+            || path.StartsWith(@"\\.\", StringComparison.Ordinal)
+        )
+        {
+            throw new ArgumentException("Device paths are not allowed.", nameof(path));
+        }
+
         // Reject UNC paths (\\server\share or //server/share)
         if (
             path.StartsWith(@"\\", StringComparison.Ordinal)
@@ -45,19 +55,21 @@ internal static class FilePathValidator
             throw new ArgumentException("UNC paths are not allowed.", nameof(path));
         }
 
-        // Reject Windows device paths (\\?\, \\.\)
-        if (
-            path.StartsWith(@"\\?\", StringComparison.Ordinal)
-            || path.StartsWith(@"\\.\", StringComparison.Ordinal)
-        )
+        // Canonicalize: resolve . and .. segments and normalize path separators.
+        // Note: Path.GetFullPath does not resolve symlinks; it only normalizes the string.
+        // Directory traversal via ".." is not rejected outright — use the allowedDirectories
+        // parameter to enforce confinement when needed.
+        string canonicalPath;
+        try
         {
-            throw new ArgumentException("Device paths are not allowed.", nameof(path));
+            canonicalPath = Path.GetFullPath(path);
+        }
+        catch (Exception ex) when (ex is NotSupportedException or PathTooLongException)
+        {
+            throw new ArgumentException($"Invalid file path: {ex.Message}", nameof(path), ex);
         }
 
-        // Canonicalize: resolve ., .., symlinks, and normalize separators
-        string canonicalPath = Path.GetFullPath(path);
-
-        // Re-check the canonical path for UNC (symlink could resolve to UNC)
+        // Re-check the canonical path for UNC (a relative path could resolve to a UNC mount)
         if (
             canonicalPath.StartsWith(@"\\", StringComparison.Ordinal)
             || canonicalPath.StartsWith("//", StringComparison.Ordinal)
@@ -72,6 +84,11 @@ internal static class FilePathValidator
         // Directory confinement check
         if (allowedDirectories is { Count: > 0 })
         {
+            // Use case-insensitive comparison on Windows, case-sensitive on Linux/macOS
+            var pathComparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
             bool confined = false;
             foreach (var dir in allowedDirectories)
             {
@@ -80,7 +97,7 @@ internal static class FilePathValidator
                         .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                     + Path.DirectorySeparatorChar;
 
-                if (canonicalPath.StartsWith(canonicalDir, StringComparison.OrdinalIgnoreCase))
+                if (canonicalPath.StartsWith(canonicalDir, pathComparison))
                 {
                     confined = true;
                     break;
