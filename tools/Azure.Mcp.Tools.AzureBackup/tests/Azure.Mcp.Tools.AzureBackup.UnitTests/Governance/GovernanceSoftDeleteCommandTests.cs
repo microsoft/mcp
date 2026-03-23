@@ -98,7 +98,7 @@ public class GovernanceSoftDeleteCommandTests
 
     [Theory]
     [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On", true)]
-    [InlineData("--subscription sub --vault v --resource-group rg", true)] // soft-delete is optional
+    [InlineData("--subscription sub --vault v --resource-group rg", false)] // soft-delete is required
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {

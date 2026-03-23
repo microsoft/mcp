@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
@@ -40,7 +41,7 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.SoftDelete);
+        command.Options.Add(AzureBackupOptionDefinitions.SoftDelete.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
     }
 
@@ -69,8 +70,8 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.SoftDeleteState!,
-                options.SoftDeleteRetentionDays,
                 options.VaultType,
+                options.SoftDeleteRetentionDays,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

@@ -98,7 +98,7 @@ public class GovernanceImmutabilityCommandTests
 
     [Theory]
     [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Enabled", true)]
-    [InlineData("--subscription sub --vault v --resource-group rg", true)] // immutability-state is optional
+    [InlineData("--subscription sub --vault v --resource-group rg", false)] // immutability-state is required
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {

@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
@@ -40,7 +41,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState);
+        command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState.AsRequired());
     }
 
     protected override GovernanceImmutabilityOptions BindOptions(ParseResult parseResult)

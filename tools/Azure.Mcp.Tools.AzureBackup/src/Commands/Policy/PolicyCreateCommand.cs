@@ -29,7 +29,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger) : B
     {
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.Policy);
-        command.Options.Add(AzureBackupOptionDefinitions.WorkloadType);
+        command.Options.Add(AzureBackupOptionDefinitions.WorkloadType.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.ScheduleFrequency);
         command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
         command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
