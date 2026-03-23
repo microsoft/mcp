@@ -83,17 +83,31 @@ $versionedTag = "${BaseRepo}:${Version}"
 # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0
 $minorVersionedTag = "${BaseRepo}:${minorVersion}"
 
+# Determine if the provided version is a stable SemVer (no prerelease or build metadata)
+# Stable format: MAJOR.MINOR.PATCH (e.g., 2.0.0)
+$isStableSemVer = $Version -match '^[0-9]+\.[0-9]+\.[0-9]+$'
+
 # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:latest
 $latestTag = "${BaseRepo}:latest"
 
 # Create and push multi-arch manifests
 New-MultiArchManifest -ManifestTag $versionedTag -ArchTags $archTags
-New-MultiArchManifest -ManifestTag $minorVersionedTag -ArchTags $archTags
+
+if ($isStableSemVer) {
+    New-MultiArchManifest -ManifestTag $minorVersionedTag -ArchTags $archTags
+} else {
+    Write-Host "Skipping minor-version manifest for prerelease or non-stable version '$Version'." -ForegroundColor Yellow
+}
+
 New-MultiArchManifest -ManifestTag $latestTag -ArchTags $archTags
 
 Write-Host ""
 Write-Host "Manifest publish complete" -ForegroundColor Green
 Write-Host "Published manifests:"
 Write-Host "  - $versionedTag"
-Write-Host "  - $minorVersionedTag"
+if ($isStableSemVer) {
+    Write-Host "  - $minorVersionedTag"
+} else {
+    Write-Host "  - (minor-version tag skipped for '$Version')"
+}
 Write-Host "  - $latestTag"
