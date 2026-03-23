@@ -36,10 +36,16 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
 
+        // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+        outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);
+
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be empty or whitespace.", nameof(text));
         }
+
+        // Track whether we created the file so cleanup only deletes our own file
+        bool fileCreatedByUs = false;
 
         try
         {
@@ -49,6 +55,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
             // Write the complete audio data to file
             await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
+            fileCreatedByUs = true;
 
             _logger.LogInformation(
                 "Speech synthesized and saved to file: {OutputFile}, Audio size: {AudioSize} bytes",
@@ -68,8 +75,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             _logger.LogError(ex, "Error during speech synthesis.");
 
-            // Clean up partial file on error
-            if (File.Exists(outputFilePath))
+            // Only delete the file if we created it during this operation
+            if (fileCreatedByUs && File.Exists(outputFilePath))
             {
                 try
                 {
