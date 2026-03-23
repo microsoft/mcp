@@ -78,9 +78,16 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
 
             if (!string.IsNullOrEmpty(options.Vault))
             {
+                if (string.IsNullOrEmpty(options.ResourceGroup))
+                {
+                    context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+                    context.Response.Message = "--resource-group is required when --vault is specified.";
+                    return context.Response;
+                }
+
                 var vault = await service.GetVaultAsync(
                     options.Vault,
-                    options.ResourceGroup!,
+                    options.ResourceGroup,
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,

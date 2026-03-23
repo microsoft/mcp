@@ -65,6 +65,13 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger) : Bas
 
         var options = BindOptions(parseResult);
 
+        if (string.IsNullOrEmpty(options.VaultType))
+        {
+            context.Response.Status = System.Net.HttpStatusCode.BadRequest;
+            context.Response.Message = "--vault-type is required for vault creation. Specify 'rsv' or 'dpp'.";
+            return context.Response;
+        }
+
         try
         {
             var service = context.GetService<IAzureBackupService>();
@@ -72,7 +79,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger) : Bas
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.VaultType!,
+                options.VaultType,
                 options.Location!,
                 options.Sku,
                 options.StorageType,

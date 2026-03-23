@@ -199,7 +199,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> Redundancy = new($"--{RedundancyName}")
     {
-        Description = "Storage redundancy: LRS, GRS, ZRS, or RAGRS.",
+        Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', 'ZoneRedundant', or 'ReadAccessGeoZoneRedundant'.",
         Required = false
     };
 

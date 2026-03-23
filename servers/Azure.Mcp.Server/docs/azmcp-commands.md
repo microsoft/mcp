@@ -626,7 +626,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 --vault <vault> \
                                 --policy <policy> \
                                 [--vault-type <vault-type>] \
-                                [--workload-type <workload-type>] \
+                                --workload-type <workload-type> \
                                 [--schedule-frequency <schedule-frequency>] \
                                 [--schedule-time <schedule-time>] \
                                 [--daily-retention-days <daily-retention-days>] \

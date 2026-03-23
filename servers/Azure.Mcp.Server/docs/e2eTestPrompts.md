@@ -130,7 +130,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_vault_update | Update vault <vault_name> in resource group <resource_group> to use GeoRedundant storage |
 | azurebackup_vault_update | Change the redundancy of vault <vault_name> in resource group <resource_group> to LocallyRedundant |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> |
-| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureStorage workload in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> |
