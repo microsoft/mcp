@@ -69,15 +69,20 @@ jobs:
 
             $baseRepo = '${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/' + $dockerImageName
 
-            $amd64RemoteImages = @(
-              "${baseRepo}:${version}-amd64",
-              "${baseRepo}:${minorVersion}-amd64"
-            ) -join ','
+            # Always tag by full version; only tag by minor version for stable versions
+            $amd64Tags = @()
+            $amd64Tags += "${baseRepo}:${version}-amd64"
+            if ($version -notmatch '[-+]') {
+              $amd64Tags += "${baseRepo}:${minorVersion}-amd64"
+            }
+            $amd64RemoteImages = $amd64Tags -join ','
 
-            $arm64RemoteImages = @(
-              "${baseRepo}:${version}-arm64",
-              "${baseRepo}:${minorVersion}-arm64"
-            ) -join ','
+            $arm64Tags = @()
+            $arm64Tags += "${baseRepo}:${version}-arm64"
+            if ($version -notmatch '[-+]') {
+              $arm64Tags += "${baseRepo}:${minorVersion}-arm64"
+            }
+            $arm64RemoteImages = $arm64Tags -join ','
 
             Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
             Write-Host "##vso[task.setvariable variable=CliName;isOutput=true]$cliName"
