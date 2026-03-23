@@ -139,34 +139,13 @@ public class ServerParamSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenUnknownParameterIsUsed()
+    public async Task ExecuteAsync_AllowsNonBlockedParameters()
     {
-        var command = new ServerParamSetCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "unknown_param_xyz", "--value", "some_value"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
-        Assert.Contains("not in the allowlist", response.Message);
-        await _postgresService.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", "", TestContext.Current.CancellationToken);
-    }
-
-    [Theory]
-    [InlineData("max_connections")]
-    [InlineData("work_mem")]
-    [InlineData("shared_buffers")]
-    [InlineData("effective_cache_size")]
-    [InlineData("autovacuum")]
-    [InlineData("timezone")]
-    [InlineData("statement_timeout")]
-    public async Task ExecuteAsync_AllowsAllowlistedParameters(string allowedParam)
-    {
-        var expectedMessage = $"Parameter '{allowedParam}' updated successfully.";
-        _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", allowedParam, "100", Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        var expectedMessage = "Parameter 'custom_setting' updated successfully.";
+        _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         var command = new ServerParamSetCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", allowedParam, "--value", "100"]);
+        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "custom_setting", "--value", "42"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -183,10 +162,10 @@ public class ServerParamSetCommandTests
     }
 
     [Fact]
-    public void EnsureParameterAllowed_IsCaseInsensitive()
+    public void EnsureParameterAllowed_BlocklistIsCaseInsensitive()
     {
-        ServerParameterValidator.EnsureParameterAllowed("MAX_CONNECTIONS");
-        ServerParameterValidator.EnsureParameterAllowed("Max_Connections");
-        ServerParameterValidator.EnsureParameterAllowed("max_connections");
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("LOG_CONNECTIONS"));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("Log_Connections"));
+        Assert.Throws<CommandValidationException>(() => ServerParameterValidator.EnsureParameterAllowed("log_connections"));
     }
 }
