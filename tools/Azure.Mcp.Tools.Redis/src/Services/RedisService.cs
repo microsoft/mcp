@@ -65,6 +65,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         string location,
         string? sku,
         bool? accessKeyAuthenticationEnabled = false,
+        bool? publicNetworkAccessEnabled = false,
         string[]? modules = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
@@ -98,6 +99,10 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             ? "Enabled"
             : "Disabled";
 
+        var publicNetworkAccessString = publicNetworkAccessEnabled == true
+            ? "Enabled"
+            : "Disabled";
+
         var bicepTemplate = GetCreateResourceBicepTemplate();
 
         var requestedModules = new ModuleList()
@@ -111,6 +116,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
             Location = new() { Value = location },
             SkuName = new() { Value = sku },
             AccessKeyAuthenticationEnabled = new() { Value = accessKeyAuthenticationString },
+            PublicNetworkAccess = new() { Value = publicNetworkAccessString },
             Modules = requestedModules
         };
 
@@ -360,6 +366,10 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 "modules": {
                   "type": "array",
                   "defaultValue": []
+                },
+                "publicNetworkAccess": {
+                  "type": "string",
+                  "defaultValue": "Disabled"
                 }
               },
               "resources": [
@@ -374,7 +384,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                   "properties": {
                     "highAvailability": "Enabled",
                     "minimumTlsVersion": "1.2",
-                    "publicNetworkAccess": "Enabled"
+                    "publicNetworkAccess": "[parameters('publicNetworkAccess')]"
                   }
                 },
                 {
