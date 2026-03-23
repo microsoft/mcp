@@ -55,8 +55,8 @@ public class ResourceCreateCommandTests
             "test-redis",
             "eastus",
             "Balanced_B0",
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
+            false,
+            false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -87,6 +87,19 @@ public class ResourceCreateCommandTests
         Assert.Equal("eastus", result.Resource.Location);
         Assert.Equal("Balanced_B0", result.Resource.Sku);
         Assert.Equal("Creating", result.Resource.Status);
+
+        await _redisService.Received(1).CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis",
+            "eastus",
+            "Balanced_B0",
+            false,
+            false,
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]

@@ -47,7 +47,7 @@ public interface IRedisService
         string location,
         string? sku,
         bool? accessKeyAuthenticationEnabled,
-        bool? publicNetworkAccessEnabled,
+        bool? publicNetworkAccessEnabled = false,
         string[]? modules = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
