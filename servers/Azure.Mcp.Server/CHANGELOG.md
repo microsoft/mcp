@@ -25,6 +25,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
 - Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
