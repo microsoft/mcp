@@ -4,8 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
@@ -16,9 +14,7 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
@@ -102,24 +98,24 @@ public class RequestCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(parameters));
+                .Returns(parameters);
 
             _platformLandingZoneService.DownloadAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult("/path/to/downloaded/file.zip"));
+                .Returns("/path/to/downloaded/file.zip");
 
             _platformLandingZoneService.GenerateAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<string?>("https://download.url/file.zip"));
+                .Returns("https://download.url/file.zip");
 
             _platformLandingZoneService.GetParameterStatus(Arg.Any<PlatformLandingZoneContext>())
                 .Returns("Status message");
 
             _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -181,10 +177,10 @@ public class RequestCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(updatedParameters));
+            .Returns(updatedParameters);
 
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--action", "update",
@@ -227,7 +223,7 @@ public class RequestCommandTests
                 ctx.MigrateProjectName == projectName),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(downloadedPath));
+            .Returns(downloadedPath);
 
         var args = _commandDefinition.Parse([
             "--action", "download",
@@ -262,7 +258,7 @@ public class RequestCommandTests
 
         // Mock that all parameters are provided
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         _platformLandingZoneService.GenerateAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
@@ -270,7 +266,7 @@ public class RequestCommandTests
                 ctx.ResourceGroupName == resourceGroup &&
                 ctx.MigrateProjectName == projectName),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>(downloadUrl));
+            .Returns(downloadUrl);
 
         var args = _commandDefinition.Parse([
             "--action", "generate",
@@ -305,12 +301,12 @@ public class RequestCommandTests
 
         // Mock that defaults are applied (no missing parameters)
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>("https://download.url/landingzone.zip"));
+            .Returns("https://download.url/landingzone.zip");
 
         var args = _commandDefinition.Parse([
             "--action", "generate",
@@ -349,12 +345,12 @@ public class RequestCommandTests
 
         // Mock that all parameters are provided
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>(null));
+            .Returns((string?)null);
 
         var args = _commandDefinition.Parse([
             "--action", "generate",
@@ -476,7 +472,7 @@ public class RequestCommandTests
         var projectName = "project1";
 
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
@@ -507,7 +503,7 @@ public class RequestCommandTests
         var projectName = "project1";
 
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         _platformLandingZoneService.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
@@ -525,7 +521,7 @@ public class RequestCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Missing required parameters", response.Message);
     }
 
@@ -564,7 +560,7 @@ public class RequestCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("regionType must be 'single' or 'multi'", response.Message);
     }
 
@@ -604,10 +600,10 @@ public class RequestCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(completeParameters));
+            .Returns(completeParameters);
 
         _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--action", "update",

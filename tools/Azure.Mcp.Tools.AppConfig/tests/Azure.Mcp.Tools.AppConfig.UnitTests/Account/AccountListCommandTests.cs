@@ -134,11 +134,11 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
+    public async Task ExecuteAsync_ReturnsHttpResponseExceptionStatusCode_WhenServiceIsUnavailable()
     {
         // Arrange
         _appConfigService.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 

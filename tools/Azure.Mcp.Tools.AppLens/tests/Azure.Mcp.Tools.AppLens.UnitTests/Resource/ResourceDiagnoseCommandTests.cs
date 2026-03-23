@@ -319,9 +319,10 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
+    public async Task ExecuteAsync_ReturnsSpecificStatusCode_WhenHttpRequestException()
     {
         // Arrange
+        var expectedStatusCode = HttpStatusCode.ServiceUnavailable;
         _appLensService.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -330,7 +331,7 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, expectedStatusCode));
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
@@ -344,7 +345,7 @@ public class ResourceDiagnoseCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
+        Assert.Equal(expectedStatusCode, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
     }
 

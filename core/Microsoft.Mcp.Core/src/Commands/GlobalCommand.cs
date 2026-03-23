@@ -111,9 +111,7 @@ public abstract class GlobalCommand<
         AuthenticationFailedException authEx =>
             $"Authentication failed. Please run 'az login' to sign in to Azure. Details: {authEx.Message}",
         RequestFailedException rfEx => HandleRequestFailedException(rfEx),
-        HttpRequestException httpEx =>
-            $"Service unavailable or network connectivity issues. Details: {httpEx.Message}",
-        _ => ex.Message  // Just return the actual exception message
+        _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
@@ -121,7 +119,7 @@ public abstract class GlobalCommand<
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
-        _ => HttpStatusCode.InternalServerError
+        _ => base.GetStatusCode(ex)
     };
 
     private static string HandleRequestFailedException(RequestFailedException ex)
