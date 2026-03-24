@@ -420,7 +420,7 @@ public class BaseToolLoaderTests
     }
 
     [Fact]
-    public async Task HandleSecretElicitation_UsesEmptySchemaWithNoProperties()
+    public async Task HandleSecretElicitation_UsesConfirmSchemaProperty()
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
@@ -452,16 +452,18 @@ public class BaseToolLoaderTests
         await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
             request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
-        // Assert - verify the schema has no properties (empty dictionary)
+        // Assert - verify the schema has a confirm boolean property
         Assert.NotNull(capturedRequest);
         Assert.NotNull(capturedRequest.Params);
         var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params.ToJsonString());
         Assert.NotNull(elicitParams);
         Assert.NotNull(elicitParams.RequestedSchema);
         Assert.NotNull(elicitParams.RequestedSchema.Properties);
-        Assert.Empty(elicitParams.RequestedSchema.Properties); // Key assertion: no form fields
+        Assert.Single(elicitParams.RequestedSchema.Properties);
+        Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("confirm"));
         Assert.NotNull(elicitParams.RequestedSchema.Required);
-        Assert.Empty(elicitParams.RequestedSchema.Required);
+        Assert.Single(elicitParams.RequestedSchema.Required);
+        Assert.Contains("confirm", elicitParams.RequestedSchema.Required);
     }
 
     [Fact]
