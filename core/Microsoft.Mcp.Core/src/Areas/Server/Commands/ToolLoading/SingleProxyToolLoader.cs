@@ -20,7 +20,6 @@ public sealed class SingleProxyToolLoader(
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
     private string? _cachedRootToolsJson;
     private readonly Dictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, IList<McpClientTool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
@@ -237,19 +236,11 @@ public sealed class SingleProxyToolLoader(
 
     internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
-        {
-            return cachedList;
-        }
-
         var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
-        var filtered = allTools
+        return allTools
             .Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
             .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.ProtocolTool))
             .ToArray();
-
-        _cachedToolLists[tool] = filtered;
-        return filtered;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)
@@ -579,7 +570,6 @@ public sealed class SingleProxyToolLoader(
     {
         // Clear caching collections
         _cachedAllToolLists.Clear();
-        _cachedToolLists.Clear();
         _cachedToolListsJson.Clear();
         _cachedRootToolsJson = null;
 

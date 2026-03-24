@@ -15,7 +15,6 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
@@ -447,20 +446,11 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
-        {
-            return cachedList;
-        }
-
         var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
-
-        var list = allTools
+        return allTools
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
             .Where(t => !(options?.Value?.IsHttpMode ?? false) || !HasLocalRequiredHint(t))
             .ToList();
-
-        _cachedToolLists[tool] = list;
-        return list;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)
@@ -597,7 +587,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// </summary>
     protected override async ValueTask DisposeAsyncCore()
     {
-        _cachedToolLists.Clear();
         _cachedAllToolLists.Clear();
         await ValueTask.CompletedTask;
     }
