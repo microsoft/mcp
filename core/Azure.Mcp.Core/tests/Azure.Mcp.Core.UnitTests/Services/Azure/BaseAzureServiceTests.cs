@@ -215,18 +215,22 @@ public class BaseAzureServiceTests
         await _tenantService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public void ConfigureRetryPolicy_CapsMaxRetriesAt10()
+    [Theory]
+    [InlineData(5, true, 5)]   // below cap, should remain unchanged
+    [InlineData(10, true, 10)] // at cap, should remain unchanged
+    [InlineData(20, true, 10)] // above cap, should be capped
+    [InlineData(20, false, null)] // HasMaxRetries = false, should not override default
+    public void ConfigureRetryPolicy_RespectsAndCapsMaxRetries(int maxRetries, bool hasMaxRetries, int? expectedMaxRetries)
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { MaxRetries = 20, HasMaxRetries = true };
+        var retryPolicy = new RetryPolicyOptions { MaxRetries = maxRetries, HasMaxRetries = hasMaxRetries };
         var clientOptions = new ArmClientOptions();
-
+        var defaultClientOptions = new ArmClientOptions();
         // Act
         _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
-
         // Assert
-        Assert.Equal(10, clientOptions.Retry.MaxRetries);
+        var expected = expectedMaxRetries ?? defaultClientOptions.Retry.MaxRetries;
+        Assert.Equal(expected, clientOptions.Retry.MaxRetries);
     }
 
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
