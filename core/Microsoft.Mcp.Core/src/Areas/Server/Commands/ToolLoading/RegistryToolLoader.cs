@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -23,7 +24,7 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client)> _toolClientMap = [];
+    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, ToolAnnotations? Annotations, JsonObject? Meta)> _toolClientMap = [];
     private List<McpClient> _discoveredClients = [];
     private Dictionary<McpClient, string?> _clientPrefixMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
@@ -56,7 +57,7 @@ public sealed class RegistryToolLoader(
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
                 .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t));
+                .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.Meta));
 
             // Filter by specific tools if provided
             if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
@@ -130,6 +131,40 @@ public sealed class RegistryToolLoader(
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found in the tool registry.",
+            };
+
+            _logger.LogWarning(content.Text);
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
+        // Enforce read-only mode at execution time
+        if (_options.Value.ReadOnly && kvp.Annotations?.ReadOnlyHint != true)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{request.Params.Name}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+            };
+
+            _logger.LogWarning(content.Text);
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
+        // Enforce HTTP mode restrictions at execution time
+        if (_options.Value.IsHttpMode && HasLocalRequiredHint(kvp.Meta))
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{request.Params.Name}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
 
             _logger.LogWarning(content.Text);
@@ -243,13 +278,11 @@ public sealed class RegistryToolLoader(
                     try
                     {
                         var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-                        var filteredTools = toolsResponse
+                        var allTools = toolsResponse
                             .Select(t => t.ProtocolTool)
-                            .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                            .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t))
                             .ToArray();
 
-                        return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)filteredTools);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)allTools);
                     }
                     catch (OperationCanceledException)
                     {
@@ -285,7 +318,7 @@ public sealed class RegistryToolLoader(
                     foreach (var tool in tools)
                     {
                         var exposedName = string.IsNullOrEmpty(toolPrefix) ? tool.Name : toolPrefix + tool.Name;
-                        _toolClientMap[exposedName] = (serverName, tool.Name, mcpClient);
+                        _toolClientMap[exposedName] = (serverName, tool.Name, mcpClient, tool.Annotations, tool.Meta);
                         toolCount++;
                     }
                     successCount++;
@@ -305,9 +338,9 @@ public sealed class RegistryToolLoader(
         }
     }
 
-    private static bool HasLocalRequiredHint(Tool tool)
+    private static bool HasLocalRequiredHint(JsonObject? meta)
     {
-        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
+        if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
         {
             return localRequired?.GetValueKind() == JsonValueKind.True;
         }

@@ -146,6 +146,37 @@ public sealed class CommandFactoryToolLoader(
             };
         }
         activity?.SetTag(TagName.ToolId, command.Id);
+
+        // Enforce read-only mode at execution time
+        if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+            };
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
+        // Enforce HTTP mode restrictions at execution time
+        if (_options.Value.IsHttpMode && command.Metadata.LocalRequired)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+            };
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
         var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive data

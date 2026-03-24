@@ -332,6 +332,29 @@ public sealed class SingleProxyToolLoader(
             .SetTag(TagName.ToolArea, tool)
             .SetTag(TagName.ToolName, command);
 
+        // Enforce mode restrictions at execution time: verify the command is in the filtered tool list.
+        if (_options.Value.ReadOnly || _options.Value.IsHttpMode)
+        {
+            var availableTools = await GetToolListAsync(request, tool, cancellationToken);
+            if (!availableTools.Any(t => string.Equals(t.ProtocolTool.Name, command, StringComparison.OrdinalIgnoreCase)))
+            {
+                var modeMessage = _options.Value.ReadOnly
+                    ? "This server is configured in read-only mode and this tool is not a read-only tool."
+                    : "This server is running in HTTP mode and this tool requires local execution.";
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. {modeMessage}",
+                        }
+                    ],
+                    IsError = true,
+                };
+            }
+        }
+
         try
         {
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);

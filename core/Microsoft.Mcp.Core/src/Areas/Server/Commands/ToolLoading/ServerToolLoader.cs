@@ -253,6 +253,26 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 parameters = samplingResult.parameters;
             }
 
+            // Enforce mode restrictions at execution time: verify the resolved command
+            // (which may have been updated by sampling) is in the filtered available tools list.
+            if (!availableTools.Any(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase)))
+            {
+                var modeMessage = (options?.Value?.ReadOnly ?? false)
+                    ? "This server is configured in read-only mode and this tool is not a read-only tool."
+                    : "This server is running in HTTP mode and this tool requires local execution.";
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. {modeMessage}",
+                        }
+                    ],
+                    IsError = true,
+                };
+            }
+
             // At this point we should always have a valid command (child tool) call to invoke.
             Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
                 .SetTag(TagName.ToolName, command);
