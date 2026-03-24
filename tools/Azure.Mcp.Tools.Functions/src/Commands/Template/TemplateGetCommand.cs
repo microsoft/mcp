@@ -28,7 +28,8 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         "Generate Azure Functions code from templates including triggers, bindings, AI agents, Durable Functions, and MCP servers or list available templates. " +
         "Use for code generation for serverless functions with triggers and bindings. " +
         "Without --template, lists available templates. " +
-        "With --template, generates function code with the specified trigger and optional input/output bindings. " +
+        "With --template, returns all template files in a single 'files' list ready for creating complete projects. " +
+        "Use --mode Add when adding to an existing project to get separated 'functionFiles' and 'projectFiles' with merge instructions. " +
         "Select one trigger (required) and zero or more bindings. " +
         "Use after functions language list and functions project get.";
 
@@ -50,6 +51,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         command.Options.Add(FunctionsOptionDefinitions.Language);
         command.Options.Add(FunctionsOptionDefinitions.Template.AsOptional());
         command.Options.Add(FunctionsOptionDefinitions.RuntimeVersion);
+        command.Options.Add(FunctionsOptionDefinitions.Mode);
 
         command.Validators.Add(commandResult =>
         {
@@ -71,7 +73,8 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         {
             Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name),
             Template = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Template.Name),
-            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name)
+            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name),
+            Mode = parseResult.GetValueOrDefault<TemplateMode>(FunctionsOptionDefinitions.Mode.Name)
         };
     }
 
@@ -106,7 +109,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
             {
                 // Get mode: fetch specific template files
                 var functionTemplate = await service.GetFunctionTemplateAsync(
-                    options.Language!, options.Template, options.RuntimeVersion, cancellationToken);
+                    options.Language!, options.Template, options.RuntimeVersion, options.Mode, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(

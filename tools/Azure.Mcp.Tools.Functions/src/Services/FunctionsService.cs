@@ -164,6 +164,7 @@ public sealed class FunctionsService(
         string language,
         string template,
         string? runtimeVersion,
+        TemplateMode mode = TemplateMode.New,
         CancellationToken cancellationToken = default)
     {
         var normalizedLanguage = language.ToLowerInvariant();
@@ -213,9 +214,27 @@ public sealed class FunctionsService(
 
         var allFiles = await FetchTemplateFilesAsync(entry, normalizedLanguage, runtimeVersion, cancellationToken);
 
-        var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
-        var projectFiles = allFiles.Where(f => _languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
+        if (mode == TemplateMode.Add)
+        {
+            // Separate files for merge scenario
+            var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
+            var projectFiles = allFiles.Where(f => _languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
 
+            return new FunctionTemplateResult
+            {
+                Language = normalizedLanguage,
+                TemplateName = ExtractTemplateName(entry),
+                DisplayName = entry.DisplayName,
+                Description = entry.LongDescription ?? entry.ShortDescription,
+                BindingType = entry.BindingType,
+                Resource = entry.Resource,
+                FunctionFiles = functionFiles,
+                ProjectFiles = projectFiles,
+                MergeInstructions = FunctionTemplateMergeInstructions
+            };
+        }
+
+        // Default: NewProject mode - return all files together
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,
@@ -224,9 +243,7 @@ public sealed class FunctionsService(
             Description = entry.LongDescription ?? entry.ShortDescription,
             BindingType = entry.BindingType,
             Resource = entry.Resource,
-            FunctionFiles = functionFiles,
-            ProjectFiles = projectFiles,
-            MergeInstructions = FunctionTemplateMergeInstructions
+            Files = allFiles.ToList()
         };
     }
 
