@@ -253,6 +253,8 @@ public class ServerCreateCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+        Assert.NotNull(response.Results);
 
         await _service.Received(1).CreateServerAsync(
             "testserver",
@@ -265,6 +267,34 @@ public class ServerCreateCommandTests
             Arg.Is<string?>(p => p == null), // publicNetworkAccess not specified; service defaults to Disabled
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidPublicNetworkAccess_ReturnsBadRequest()
+    {
+        // Arrange
+        _service.CreateServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid value 'Enabeld' for public-network-access. Allowed values are 'Enabled' or 'Disabled'.", "publicNetworkAccess")));
+
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --public-network-access Enabeld");
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid parameter", response.Message);
     }
 
     [Fact]
