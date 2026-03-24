@@ -80,8 +80,8 @@ public static class McpServerElicitationExtensions
 
         if (toolMetadata is JsonObject jsonMetadata)
         {
-            // Check if the metadata indicates this is a secret/sensitive tool
-            if (jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
+            // tool.Meta uses "SecretHint" (set in CommandFactoryToolLoader/NamespaceToolLoader)
+            if (jsonMetadata.TryGetPropertyValue("SecretHint", out var secretValue) &&
                 secretValue is JsonValue secretJsonValue &&
                 secretJsonValue.TryGetValue(out bool isSecret) &&
                 isSecret)
@@ -89,8 +89,8 @@ public static class McpServerElicitationExtensions
                 return true;
             }
 
-            // Check if the metadata indicates this is a destructive tool
-            if (jsonMetadata.TryGetPropertyValue("Destructive", out var destructiveValue) &&
+            // tool.Meta uses "DestructiveHint" when present; also check ToolAnnotations-style keys
+            if (jsonMetadata.TryGetPropertyValue("DestructiveHint", out var destructiveValue) &&
                 destructiveValue is JsonValue destructiveJsonValue &&
                 destructiveJsonValue.TryGetValue(out bool isDestructive) &&
                 isDestructive)
