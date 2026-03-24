@@ -192,15 +192,21 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         {
             logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
 
-            // Create the elicitation request with empty schema (required by MCP SDK 0.8.0-preview.1+)
-            // No form fields - pure accept/decline prompt
+            // Create the elicitation request with a confirmation checkbox
             var protocolRequest = new ElicitRequestParams
             {
                 Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
                 RequestedSchema = new()
                 {
-                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>(),
-                    Required = []
+                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
+                    {
+                        ["confirm"] = new ElicitRequestParams.BooleanSchema
+                        {
+                            Title = "Confirm",
+                            Description = "I confirm that I want to proceed with this sensitive operation."
+                        }
+                    },
+                    Required = ["confirm"]
                 }
             };
 
