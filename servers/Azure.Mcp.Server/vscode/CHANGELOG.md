@@ -1,6 +1,6 @@
 # Release History
 
-## 2.0.32 (2026-03-23) (pre-release)
+## 2.0.32 (2026-03-24) (pre-release)
 
 ### Added
 
