@@ -122,7 +122,7 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         {
             if (string.IsNullOrEmpty(containerName))
             {
-                throw new ArgumentException($"The --container parameter is required for {profile.FriendlyName} workload protection. Use 'azurebackup protectable_item_list' to discover containers and items.");
+                throw new ArgumentException($"The --container parameter is required for {profile.FriendlyName} workload protection. Use 'azurebackup protectableitem list' to discover containers and items.");
             }
 
             if (datasourceId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
@@ -200,9 +200,33 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var rgResource = armClient.GetResourceGroupResource(rgId);
         await rgResource.RefreshProtectionContainerAsync(vaultName, FabricName, filter: null, cancellationToken);
 
-        await Task.Delay(30000, cancellationToken);
-
         var container = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId);
+
+        // Poll for container visibility after refresh (up to 60s with 5s intervals)
+        const int maxRetries = 12;
+        const int delayMs = 5000;
+        for (int i = 0; i < maxRetries; i++)
+        {
+            await Task.Delay(delayMs, cancellationToken);
+            try
+            {
+                var checkContainerId = BackupProtectionContainerResource.CreateResourceIdentifier(
+                    subscription, resourceGroup, vaultName, FabricName, container);
+                var checkContainer = armClient.GetBackupProtectionContainerResource(checkContainerId);
+                await checkContainer.GetAsync(cancellationToken: cancellationToken);
+                break; // Container is visible
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                if (i == maxRetries - 1)
+                {
+                    throw new InvalidOperationException(
+                        $"Container '{container}' was not discovered after {maxRetries * delayMs / 1000}s. " +
+                        "Retry later or verify the VM resource ID is correct.", ex);
+                }
+            }
+        }
+
         var vmProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId);
 
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(

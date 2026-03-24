@@ -18,7 +18,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
     private const string CommandTitle = "List Protectable Items";
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
 
-    public override string Id => "c1a2b3c4-d5e6-7890-abcd-protectable001";
+    public override string Id => "9f6b0a1e-1c2d-4e5f-8a9b-7c6d5e4f3a21";
     public override string Name => "list";
     public override string Description =>
         """
