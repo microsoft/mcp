@@ -3175,10 +3175,10 @@ azmcp sql server create --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name> \
                         --location <location> \
-                        --admin-user <admin-username> \
-                        --admin-password <admin-password> \
+                        --administrator-login <admin-username> \
+                        --administrator-password <admin-password> \
                         [--version <server-version>] \
-                        [--public-network-access <enabled|disabled>]
+                        [--public-network-access <Enabled|Disabled>]  # Defaults to 'Disabled'
 
 # List Microsoft Entra ID administrators for a SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
