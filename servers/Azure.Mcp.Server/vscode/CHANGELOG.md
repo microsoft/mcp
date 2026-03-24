@@ -1,10 +1,11 @@
 # Release History
 
-## 2.0.32 (2026-03-23) (pre-release)
+## 2.0.32 (2026-03-24) (pre-release)
 
 ### Added
 
 - Added blocklist validation for security-sensitive PostgreSQL server parameters (audit logging, TLS/SSL, authentication, shared libraries, row-level security) in the `server param set` command to prevent accidental weakening of server security. [[#2164](https://github.com/microsoft/mcp/pull/2164)]
+- Added `--public-network-access` option to the `redis_create` command to control public network access for Azure Managed Redis resources (defaults to disabled). [[#2179](https://github.com/microsoft/mcp/pull/2179)]
 
 ### Changed
 
@@ -12,12 +13,15 @@
 - Added file path validation and canonicalization for the `speech_stt_recognize` and `speech_tts_synthesize` commands. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
 - Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
 - Removed structured logging of the full options payload from the `sql_server_create` command to prevent accidental exposure of sensitive values. [[#2158](https://github.com/microsoft/mcp/pull/2158)]
+- Updated Docker release pipeline to publish additional minor version tags (e.g., `2.0`, `2.0-amd64`, `2.0-arm64`) allowing consumers to pin to a minor release stream. [[#2144](https://github.com/microsoft/mcp/pull/2144)]
 
 ### Fixed
 
 - Fixed PostgreSQL and MySQL server name validation to require allowed Azure domain suffixes when a fully qualified domain name is provided. [[#2159](https://github.com/microsoft/mcp/pull/2159)]
 - Fixed Cosmos DB credential authentication to strictly honor the requested authentication method instead of falling back to account-key authentication. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
 - Fixed snapshot lookup in the `FileShares` namespace to use exact resource ID matching instead of substring matching. [[#2168](https://github.com/microsoft/mcp/pull/2168)]
+- Improved Cosmos DB query validator to detect a broader range of boolean tautology patterns. [[#2171](https://github.com/microsoft/mcp/pull/2171)]
+- Fixed the `sql_server_create` command to default `--public-network-access` to `Disabled` for secure-by-default server creation. [[#2181](https://github.com/microsoft/mcp/pull/2181)]
 
 ## 2.0.31 (2026-03-20) (pre-release)
 
