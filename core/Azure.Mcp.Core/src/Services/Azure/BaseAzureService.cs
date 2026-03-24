@@ -200,8 +200,7 @@ public abstract class BaseAzureService
             if (retryPolicy.HasMaxRetries)
             {
                 // To prevent excessive retries, we enforce a maximum number of retries regardless of what the caller specifies.
-                // This is to protect against misconfiguration that could lead to very long retry loops, especially in cases 
-                // where the caller might set a high number of retries without realizing the implications.
+                // This is to protect against misconfiguration that could lead to very long retry loops.
                 clientOptions.Retry.MaxRetries = Math.Min(MaxAllowedRetries, retryPolicy.MaxRetries);
             }
             if (retryPolicy.HasMode)
