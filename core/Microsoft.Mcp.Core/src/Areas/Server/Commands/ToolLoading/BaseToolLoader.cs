@@ -227,13 +227,22 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                     "Do you want to continue with this potentially destructive operation?"
             };
 
+            // Create the elicitation request with a single-select enum for approve/reject
             var protocolRequest = new ElicitRequestParams
             {
                 Message = message,
                 RequestedSchema = new()
                 {
-                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>(),
-                    Required = []
+                    Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
+                    {
+                        ["decision"] = new ElicitRequestParams.UntitledSingleSelectEnumSchema
+                        {
+                            Title = "Decision",
+                            Description = "Approve or reject this sensitive operation.",
+                            Enum = ["Approve", "Reject"]
+                        }
+                    },
+                    Required = ["decision"]
                 }
             };
 
