@@ -145,8 +145,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
-| azurebackup_governance_find-unprotected | Find unprotected resources of type <datasource_type> in my subscription |
-| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for datasource type <datasource_type> |
+| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
+| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
 | azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |

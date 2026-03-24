@@ -753,6 +753,7 @@ azmcp azurebackup dr enablecrr --subscription <subscription> \
                                --resource-group <resource-group> \
                                --vault <vault> \
                                [--vault-type <vault-type>]
+```
 
 #### Web Apps
 
