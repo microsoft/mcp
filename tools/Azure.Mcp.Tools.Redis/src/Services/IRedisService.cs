@@ -33,6 +33,7 @@ public interface IRedisService
     /// <param name="location">The location/region for the Redis resource</param>
     /// <param name="sku">The requested SKU to create (default "Balanced_B0")</param>
     /// <param name="accessKeyAuthenticationEnabled">Whether to use access keys for authentication (default false)</param>
+    /// <param name="publicNetworkAccessEnabled">Whether to enable public network access (default false)</param>
     /// <param name="modules">The modules to enable (e.g. "RedisJSON", "RedisBloom")</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
@@ -46,6 +47,7 @@ public interface IRedisService
         string location,
         string? sku,
         bool? accessKeyAuthenticationEnabled,
+        bool? publicNetworkAccessEnabled = false,
         string[]? modules = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
