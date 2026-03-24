@@ -24,7 +24,7 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, ToolAnnotations? Annotations, JsonObject? Meta)> _toolClientMap = [];
+    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
     private List<McpClient> _discoveredClients = [];
     private Dictionary<McpClient, string?> _clientPrefixMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
@@ -143,7 +143,7 @@ public sealed class RegistryToolLoader(
         }
 
         // Enforce read-only mode at execution time
-        if (_options.Value.ReadOnly && kvp.Annotations?.ReadOnlyHint != true)
+        if (_options.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
         {
             var content = new TextContentBlock
             {
@@ -160,7 +160,7 @@ public sealed class RegistryToolLoader(
         }
 
         // Enforce HTTP mode restrictions at execution time
-        if (_options.Value.IsHttpMode && HasLocalRequiredHint(kvp.Meta))
+        if (_options.Value.IsHttpMode && HasLocalRequiredHint(kvp.Tool.Meta))
         {
             var content = new TextContentBlock
             {
@@ -318,7 +318,7 @@ public sealed class RegistryToolLoader(
                     foreach (var tool in tools)
                     {
                         var exposedName = string.IsNullOrEmpty(toolPrefix) ? tool.Name : toolPrefix + tool.Name;
-                        _toolClientMap[exposedName] = (serverName, tool.Name, mcpClient, tool.Annotations, tool.Meta);
+                        _toolClientMap[exposedName] = (serverName, tool.Name, mcpClient, tool);
                         toolCount++;
                     }
                     successCount++;

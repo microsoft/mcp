@@ -16,6 +16,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
     private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -253,44 +254,45 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 parameters = samplingResult.parameters;
             }
 
-            // Enforce mode restrictions at execution time: verify the resolved command
-            // (which may have been updated by sampling) is in the filtered available tools list.
-            if (!availableTools.Any(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase)))
+            // Verify the resolved command (which may have been updated by sampling)
+            // exists and is permitted under current mode restrictions.
+            var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+
+            if (resolvedTool == null)
             {
-                if (options?.Value?.ReadOnly ?? false)
-                {
-                    return new CallToolResult
-                    {
-                        Content =
-                        [
-                            new TextContentBlock
-                            {
-                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
-                            }
-                        ],
-                        IsError = true,
-                    };
-                }
-
-                if (options?.Value?.IsHttpMode ?? false)
-                {
-                    return new CallToolResult
-                    {
-                        Content =
-                        [
-                            new TextContentBlock
-                            {
-                                Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
-                            }
-                        ],
-                        IsError = true,
-                    };
-                }
-
-                // Neither read-only nor HTTP mode is active; the resolved command is simply
-                // not recognised. Fall back to learn mode so the caller gets useful guidance
-                // instead of a misleading mode-restriction message.
+                // Sampling resolved to a command that doesn't exist at all.
                 return await InvokeToolLearn(request, intent, tool, cancellationToken);
+            }
+
+            if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                        }
+                    ],
+                    IsError = true,
+                };
+            }
+
+            if ((options?.Value?.IsHttpMode ?? false) && HasLocalRequiredHint(resolvedTool))
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                        }
+                    ],
+                    IsError = true,
+                };
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
@@ -409,9 +411,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
         {
             return cachedList;
         }
@@ -437,6 +439,22 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         var list = listTools
             .Select(t => t.ProtocolTool)
+            .ToList();
+
+        _cachedAllToolLists[tool] = list;
+        return list;
+    }
+
+    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        {
+            return cachedList;
+        }
+
+        var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+
+        var list = allTools
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
             .Where(t => !(options?.Value?.IsHttpMode ?? false) || !HasLocalRequiredHint(t))
             .ToList();
@@ -580,6 +598,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     protected override async ValueTask DisposeAsyncCore()
     {
         _cachedToolLists.Clear();
+        _cachedAllToolLists.Clear();
         await ValueTask.CompletedTask;
     }
 }
