@@ -2,15 +2,24 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.32 (Unreleased)
+## 2.0.0-beta.32 (2026-03-23)
 
 ### Features Added
 
-### Breaking Changes
+- Added blocklist validation for security-sensitive PostgreSQL server parameters (audit logging, TLS/SSL, authentication, shared libraries, row-level security) in the `server param set` command to prevent accidental weakening of server security. [[#2164](https://github.com/microsoft/mcp/pull/2164)]
 
 ### Bugs Fixed
 
+- Fixed PostgreSQL and MySQL server name validation to require allowed Azure domain suffixes when a fully qualified domain name is provided. [[#2159](https://github.com/microsoft/mcp/pull/2159)]
+- Fixed Cosmos DB credential authentication to strictly honor the requested authentication method instead of falling back to account-key authentication. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Fixed snapshot lookup in the `FileShares` namespace to use exact resource ID matching instead of substring matching. [[#2168](https://github.com/microsoft/mcp/pull/2168)]
+
 ### Other Changes
+
+- Centralized Foundry and Azure OpenAI endpoint validation using the shared `EndpointValidator` with sovereign cloud support. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added file path validation and canonicalization for the `speech_stt_recognize` and `speech_tts_synthesize` commands. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
+- Removed structured logging of the full options payload from the `sql_server_create` command to prevent accidental exposure of sensitive values. [[#2158](https://github.com/microsoft/mcp/pull/2158)]
 
 ## 2.0.0-beta.31 (2026-03-20)
 
@@ -35,8 +44,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
-- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+- Improved tool descriptions to enhance LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
   - `extension_cli_install`
