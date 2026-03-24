@@ -13,6 +13,24 @@ namespace Azure.Mcp.Tools.AzureBackup.LiveTests;
 public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Relax matching: ignore Authorization headers and don't compare request bodies
+    // (ARM requests include timestamps, correlation IDs, etc. that vary between runs)
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        ExcludedHeaders = "Authorization,Content-Type,x-ms-client-request-id",
+        CompareBodies = false
+    };
+
+    // Sanitize hostnames in response body URLs to remove actual resource names
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody()
+        {
+            Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
+            GroupForReplace = "host",
+        })
+    ];
+
     #region Vault Tests
 
     [Fact]
@@ -81,7 +99,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName }
+                { "vault", vaultName },
+                { "soft-delete", "On" }
             });
 
         Assert.NotNull(result);
@@ -98,7 +117,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName }
+                { "vault", vaultName },
+                { "immutability-state", "Disabled" }
             });
 
         Assert.NotNull(result);
