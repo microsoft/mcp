@@ -580,6 +580,159 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
+#### Web Apps
+
+```bash
+# Get App Service Web App details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp get --subscription <subscription> \
+                            [--resource-group <resource-group>] \
+                            [--app <app>]
+
+# Examples:
+# List the App Service Web Apps details in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp get --subscription "my-subscription"
+
+# List the App Service Web Apps details in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group"
+
+# Get the details for a specific App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp get --subscription "my-subscription" \
+                            --resource-group "my-resource-group" \
+                            --app "my-app"
+```
+
+#### Web App Application Settings
+
+```bash
+# Get application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription <subscription> \
+                                                 --resource-group <resource-group> \
+                                                 --app <app>
+
+# Examples:
+# Get the application settings for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp appservice webapp settings get-appsettings --subscription "my-subscription" \
+                                                 --resource-group "my-resource-group" \
+                                                 --app "my-app"
+```
+
+```bash
+# Update application settings for an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription <subscription> \
+                                                    --resource-group <resource-group> \
+                                                    --app <app> \
+                                                    --setting-name <setting-name> \
+                                                    --setting-update-type <add/set/delete> \
+                                                    [--setting-value <setting-value>]
+
+# Examples:
+# Add the application setting 'foo' with value 'bar' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "foo" \
+                                                    --setting-update-type "add" \
+                                                    --setting-value "bar"
+
+# Set the application setting 'fizz' with value 'buzz' to an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "fizz" \
+                                                    --setting-update-type "set" \
+                                                    --setting-value "buzz"
+
+# Delete the application setting 'baz' from an App Service Web App
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
+                                                    --resource-group "my-resource-group" \
+                                                    --app "my-app" \
+                                                    --setting-name "baz" \
+                                                    --setting-update-type "delete"
+```
+
+#### Web App Deployments
+
+```bash
+# Get the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --app <app> \
+                                       [--deployment-id <deployment-id>]
+
+# Examples:
+# List the deployments for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app"
+
+# Get the deployment for an App Service web app
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp deployment get --subscription "my-subscription" \
+                                       --resource-group "my-resource-group" \
+                                       --app "my-app" \
+                                       --deployment-id "deployment-id"
+```
+
+#### Web App Diagnostics
+
+```bash
+# List detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --app <app>
+
+# Examples:
+# List diagnostic detectors for an App Service Web App
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic list --subscription "my-subscription" \
+                                        --resource-group "my-resource-group" \
+                                        --app "my-web-app"
+```
+
+```bash
+# Diagnose an App Service Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --app <app> \
+                                            --detector-name <detector-name> \
+                                            [--start-time <start-time>] \
+                                            [--end-time <end-time>] \
+                                            [--interval <interval>]
+
+# Examples:
+# Diagnose the Web App with detector
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+
+# Diagnose the Web App with detector between start and end time with interval
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
+                                            --resource-group "my-resource-group" \
+                                            --app "my-web-app" \
+                                            --detector-name "detector"
+                                            --start-time "2026-01-01T00:00:00Z" \
+                                            --end-time "2026-01-01T23:59:59Z" \
+                                            --interval "PT1H"
+```
+
 ### Azure Backup Operations
 
 #### Vault
@@ -753,159 +906,6 @@ azmcp azurebackup dr enablecrr --subscription <subscription> \
                                --resource-group <resource-group> \
                                --vault <vault> \
                                [--vault-type <vault-type>]
-```
-
-#### Web Apps
-
-```bash
-# Get App Service Web App details
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp get --subscription <subscription> \
-                            [--resource-group <resource-group>] \
-                            [--app <app>]
-
-# Examples:
-# List the App Service Web Apps details in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp get --subscription "my-subscription"
-
-# List the App Service Web Apps details in a resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp get --subscription "my-subscription" \
-                            --resource-group "my-resource-group"
-
-# Get the details for a specific App Service Web App
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp get --subscription "my-subscription" \
-                            --resource-group "my-resource-group" \
-                            --app "my-app"
-```
-
-#### Web App Application Settings
-
-```bash
-# Get application settings for an App Service Web App
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp appservice webapp settings get-appsettings --subscription <subscription> \
-                                                 --resource-group <resource-group> \
-                                                 --app <app>
-
-# Examples:
-# Get the application settings for an App Service Web App
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp appservice webapp settings get-appsettings --subscription "my-subscription" \
-                                                 --resource-group "my-resource-group" \
-                                                 --app "my-app"
-```
-
-```bash
-# Update application settings for an App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp settings update-appsettings --subscription <subscription> \
-                                                    --resource-group <resource-group> \
-                                                    --app <app> \
-                                                    --setting-name <setting-name> \
-                                                    --setting-update-type <add/set/delete> \
-                                                    [--setting-value <setting-value>]
-
-# Examples:
-# Add the application setting 'foo' with value 'bar' to an App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
-                                                    --resource-group "my-resource-group" \
-                                                    --app "my-app" \
-                                                    --setting-name "foo" \
-                                                    --setting-update-type "add" \
-                                                    --setting-value "bar"
-
-# Set the application setting 'fizz' with value 'buzz' to an App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
-                                                    --resource-group "my-resource-group" \
-                                                    --app "my-app" \
-                                                    --setting-name "fizz" \
-                                                    --setting-update-type "set" \
-                                                    --setting-value "buzz"
-
-# Delete the application setting 'baz' from an App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp settings update-appsettings --subscription "my-subscription" \
-                                                    --resource-group "my-resource-group" \
-                                                    --app "my-app" \
-                                                    --setting-name "baz" \
-                                                    --setting-update-type "delete"
-```
-
-#### Web App Deployments
-
-```bash
-# Get the deployments for an App Service web app
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp deployment get --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --app <app> \
-                                       [--deployment-id <deployment-id>]
-
-# Examples:
-# List the deployments for an App Service web app
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp deployment get --subscription "my-subscription" \
-                                       --resource-group "my-resource-group" \
-                                       --app "my-app"
-
-# Get the deployment for an App Service web app
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp deployment get --subscription "my-subscription" \
-                                       --resource-group "my-resource-group" \
-                                       --app "my-app" \
-                                       --deployment-id "deployment-id"
-```
-
-#### Web App Diagnostics
-
-```bash
-# List detectors for an App Service Web App
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic list --subscription <subscription> \
-                                        --resource-group <resource-group> \
-                                        --app <app>
-
-# Examples:
-# List diagnostic detectors for an App Service Web App
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic list --subscription "my-subscription" \
-                                        --resource-group "my-resource-group" \
-                                        --app "my-web-app"
-```
-
-```bash
-# Diagnose an App Service Web App with detector
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
-                                            --resource-group <resource-group> \
-                                            --app <app> \
-                                            --detector-name <detector-name> \
-                                            [--start-time <start-time>] \
-                                            [--end-time <end-time>] \
-                                            [--interval <interval>]
-
-# Examples:
-# Diagnose the Web App with detector
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
-                                            --resource-group "my-resource-group" \
-                                            --app "my-web-app" \
-                                            --detector-name "detector"
-
-# Diagnose the Web App with detector between start and end time with interval
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
-                                            --resource-group "my-resource-group" \
-                                            --app "my-web-app" \
-                                            --detector-name "detector"
-                                            --start-time "2026-01-01T00:00:00Z" \
-                                            --end-time "2026-01-01T23:59:59Z" \
-                                            --interval "PT1H"
 ```
 
 ### Azure CLI Operations

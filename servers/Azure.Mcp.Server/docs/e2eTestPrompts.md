@@ -123,8 +123,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> |
-| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> |
+| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
+| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_get | Show me information about vault <vault_name> in resource group <resource_group> |
 | azurebackup_vault_update | Update vault <vault_name> in resource group <resource_group> to use GeoRedundant storage |
