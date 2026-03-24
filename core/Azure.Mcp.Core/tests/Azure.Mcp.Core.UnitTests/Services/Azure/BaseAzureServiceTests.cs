@@ -219,7 +219,7 @@ public class BaseAzureServiceTests
     public void ConfigureRetryPolicy_CapsMaxRetriesAt10()
     {
         // Arrange
-        var retryPolicy = new RetryPolicyOptions { MaxRetries = 20 };
+        var retryPolicy = new RetryPolicyOptions { MaxRetries = 20, HasMaxRetries = true };
         var clientOptions = new ArmClientOptions();
 
         // Act
