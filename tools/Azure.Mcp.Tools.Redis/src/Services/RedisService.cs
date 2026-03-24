@@ -315,7 +315,7 @@ public class RedisService(
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Database listing may fail for some enterprise clusters; continue with partial data.
-                logger.LogWarning(ex, "Failed to retrieve databases for {ResouceName}.", resource.Name);
+                logger.LogWarning(ex, "Failed to retrieve databases for {ResourceName}.", resource.Name);
             }
 
             resources.Add(new()

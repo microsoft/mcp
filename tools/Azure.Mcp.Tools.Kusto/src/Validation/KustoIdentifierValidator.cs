@@ -26,10 +26,6 @@ internal static class KustoIdentifierValidator
         @"^[A-Za-z_][A-Za-z0-9_ .\-]*$",
         RegexOptions.Compiled);
 
-    private static readonly Regex InvalidCharactersPattern = RegexHelper.CreateRegex(
-        @"[|;(){}\[\]<>'\""`/\\\n\r]",
-        RegexOptions.Compiled);
-
     /// <summary>
     /// Validates that the given identifier is a safe Kusto table/database name.
     /// Throws <see cref="CommandValidationException"/> for invalid input.
@@ -48,7 +44,7 @@ internal static class KustoIdentifierValidator
         }
 
         // Reject any KQL operators or injection characters
-        if (!InvalidCharactersPattern.IsMatch(identifier))
+        if (identifier.IndexOfAny(['|', ';', '(', ')', '{', '}', '[', ']', '<', '>', '\'', '"', '`', '/', '\\', '\n', '\r']) != -1)
         {
             throw new CommandValidationException(
                 $"{parameterName} contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed.");
