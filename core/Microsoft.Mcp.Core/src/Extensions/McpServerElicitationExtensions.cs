@@ -78,13 +78,25 @@ public static class McpServerElicitationExtensions
             return false;
         }
 
-        // Check if the metadata indicates this is a secret/sensitive tool
         if (toolMetadata is JsonObject jsonMetadata)
         {
-            return jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
-                   secretValue is JsonValue jsonValue &&
-                   jsonValue.TryGetValue(out bool isSecret) &&
-                   isSecret;
+            // Check if the metadata indicates this is a secret/sensitive tool
+            if (jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
+                secretValue is JsonValue secretJsonValue &&
+                secretJsonValue.TryGetValue(out bool isSecret) &&
+                isSecret)
+            {
+                return true;
+            }
+
+            // Check if the metadata indicates this is a destructive tool
+            if (jsonMetadata.TryGetPropertyValue("Destructive", out var destructiveValue) &&
+                destructiveValue is JsonValue destructiveJsonValue &&
+                destructiveJsonValue.TryGetValue(out bool isDestructive) &&
+                isDestructive)
+            {
+                return true;
+            }
         }
 
         return false;
