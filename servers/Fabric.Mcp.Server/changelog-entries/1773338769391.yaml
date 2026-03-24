@@ -1,4 +1,0 @@
-pr: 2017
-changes:
-  - section: "Bugs Fixed"
-    description: "Added filtering on LocalRequired when running in remote mode"

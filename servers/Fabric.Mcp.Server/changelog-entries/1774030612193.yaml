@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Changed Fabric tool names to use dash instead of underscore. create-item, api-examples, best-practices, item-definitions, platform-api-spec, and workload-api-spec have dashes now."
