@@ -125,6 +125,7 @@ const serverPath = path.join(context.extensionPath, 'server', binary);
 - As an optimization, the extension could download the latest platform-specific server binary from a public URL at runtime.
 - This reduces VSIX size but requires HTTP(S) download logic.
 - Not currently implemented in the default design for maximum compatibility and offline support.
+- Note: Platform specific .zip files are hosted on GitHub in each release.
 
 ---
 
