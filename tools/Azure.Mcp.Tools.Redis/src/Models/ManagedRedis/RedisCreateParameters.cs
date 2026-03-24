@@ -29,6 +29,11 @@ public class RedisCreateParameters
     public required BicepParameter AccessKeyAuthenticationEnabled { get; init; }
 
     /// <summary>
+    /// Public network access setting (Enabled or Disabled).
+    /// </summary>
+    public required BicepParameter PublicNetworkAccess { get; init; }
+
+    /// <summary>
     /// List of Redis modules to enable.
     /// </summary>
     public required ModuleList Modules { get; init; }
