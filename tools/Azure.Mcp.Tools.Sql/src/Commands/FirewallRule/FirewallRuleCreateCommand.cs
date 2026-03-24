@@ -55,19 +55,20 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
             var startIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.StartIpAddressOption);
             var endIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.EndIpAddressOption);
 
-            if (!string.IsNullOrEmpty(startIp) && !IsValidIpAddress(startIp))
+            var startIpIsValid = !string.IsNullOrEmpty(startIp) && IsValidIpAddress(startIp);
+            var endIpIsValid = !string.IsNullOrEmpty(endIp) && IsValidIpAddress(endIp);
+
+            if (!startIpIsValid)
             {
                 commandResult.AddError($"Invalid start IP address format: '{startIp}'. Must be a valid IPv4 address.");
             }
 
-            if (!string.IsNullOrEmpty(endIp) && !IsValidIpAddress(endIp))
+            if (!endIpIsValid)
             {
                 commandResult.AddError($"Invalid end IP address format: '{endIp}'. Must be a valid IPv4 address.");
             }
 
-            if (!string.IsNullOrEmpty(startIp) && !string.IsNullOrEmpty(endIp) &&
-                IsValidIpAddress(startIp) && IsValidIpAddress(endIp) &&
-                IsDangerousRange(startIp, endIp))
+            if (startIpIsValid && endIpIsValid && IsDangerousRange(startIp!, endIp!))
             {
                 commandResult.AddError(
                     "The specified IP range is not allowed. A range of 0.0.0.0 to 0.0.0.0 enables access from all Azure services, and a range of 0.0.0.0 to 255.255.255.255 opens access to the entire internet. " +
