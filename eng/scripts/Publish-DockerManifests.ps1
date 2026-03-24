@@ -66,7 +66,7 @@ Write-Host ""
 
 # Build arch-specific tag list from architectures
 # E.g., azuresdkimages.azurecr.io/public/azure-sdk/azure-mcp:2.0.0-amd64
-$archTags  = $Architectures | ForEach-Object { "${BaseRepo}:${Version}-${_}" }
+$archTags = $Architectures | ForEach-Object { "${BaseRepo}:${Version}-${_}" }
 
 Write-Host "Architecture-specific tags:"
 foreach ($tag in $archTags) {
