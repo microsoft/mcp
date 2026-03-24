@@ -924,14 +924,14 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
-* "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus"
+* "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
 * "List protectable items in my backup vault"
-* "Check backup status for my Azure resource"
+* "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"
 * "Find unprotected resources in my subscription"
-* "Check soft delete and immutability settings on my vault"
+* "Configure soft delete to 'AlwaysOn' and immutability to 'Locked' on my vault"
 * "Enable cross-region restore on my vault"
 
 ### 🖥️ Azure CLI Generate

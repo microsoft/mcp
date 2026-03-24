@@ -591,7 +591,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
                                --vault <vault> \
                                --location <location> \
-                               [--vault-type <vault-type>] \
+                               --vault-type <vault-type> \
                                [--sku <sku>] \
                                [--storage-type <storage-type>]
 
@@ -732,7 +732,7 @@ azmcp azurebackup governance immutability --subscription <subscription> \
                                           --resource-group <resource-group> \
                                           --vault <vault> \
                                           [--vault-type <vault-type>] \
-                                          [--immutability-state <immutability-state>]
+                                          --immutability-state <immutability-state>
 
 # Configures the soft delete settings for a backup vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -740,7 +740,7 @@ azmcp azurebackup governance soft-delete --subscription <subscription> \
                                          --resource-group <resource-group> \
                                          --vault <vault> \
                                          [--vault-type <vault-type>] \
-                                         [--soft-delete <soft-delete>] \
+                                         --soft-delete <soft-delete> \
                                          [--soft-delete-retention-days <soft-delete-retention-days>]
 ```
 

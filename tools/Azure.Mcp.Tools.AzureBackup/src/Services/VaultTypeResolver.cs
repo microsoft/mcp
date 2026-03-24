@@ -27,6 +27,18 @@ public static class VaultTypeResolver
         }
     }
 
-    public static bool IsVaultTypeSpecified(string? vaultType) =>
-        !string.IsNullOrEmpty(vaultType) && (IsRsv(vaultType) || IsDpp(vaultType));
+    public static bool IsVaultTypeSpecified(string? vaultType)
+    {
+        if (string.IsNullOrEmpty(vaultType))
+        {
+            return false;
+        }
+
+        if (!IsRsv(vaultType) && !IsDpp(vaultType))
+        {
+            throw new ArgumentException($"Invalid vault type '{vaultType}'. Must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+        }
+
+        return true;
+    }
 }
