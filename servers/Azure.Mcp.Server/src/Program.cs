@@ -134,6 +134,7 @@ internal class Program
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
+            new Azure.Mcp.Tools.NetAppFiles.NetAppFilesSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Pricing.PricingSetup(),

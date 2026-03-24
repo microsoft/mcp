@@ -617,6 +617,23 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp-netappfiles-account-get | List all NetApp Files accounts in my subscription <subscription_name> |
+| azmcp-netappfiles-account-get | Get details of NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-backuppolicy-get | List all NetApp Files backup policies in my subscription <subscription_name> |
+| azmcp-netappfiles-backuppolicy-get | Get the backup policy <policy_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-backupvault-get | List all NetApp Files backup vaults in my subscription <subscription_name> |
+| azmcp-netappfiles-backupvault-get | Get details of backup vault <vault_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-pool-get | List all NetApp Files capacity pools in my subscription <subscription_name> |
+| azmcp-netappfiles-pool-get | Get details of capacity pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-volume-get | List all NetApp Files volumes in my subscription <subscription_name> |
+| azmcp-netappfiles-volume-get | Get details of volume <volume_name> in pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-volumegroup-get | List all NetApp Files volume groups in my subscription <subscription_name> |
+| azmcp-netappfiles-volumegroup-get | Get details of volume group <volume_group_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+
 ## Azure Marketplace
 
 | Tool Name | Test Prompt |
