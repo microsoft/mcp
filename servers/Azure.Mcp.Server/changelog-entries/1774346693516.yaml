@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added --mode option to functions template get command with New (default) and Add modes for controlling template file output"
