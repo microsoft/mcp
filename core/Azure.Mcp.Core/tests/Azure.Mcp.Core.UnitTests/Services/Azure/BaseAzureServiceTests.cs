@@ -215,6 +215,20 @@ public class BaseAzureServiceTests
         await _tenantService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public void ConfigureRetryPolicy_CapsMaxRetriesAt10()
+    {
+        // Arrange
+        var retryPolicy = new RetryPolicyOptions { MaxRetries = 20 };
+        var clientOptions = new ArmClientOptions();
+
+        // Act
+        _azureService.ConfigureRetryPolicyPublic(clientOptions, retryPolicy);
+
+        // Assert
+        Assert.Equal(10, clientOptions.Retry.MaxRetries);
+    }
+
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
@@ -232,5 +246,8 @@ public class BaseAzureServiceTests
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
 
         public string GetUserAgent() => UserAgent;
+
+        public T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
+            ConfigureRetryPolicy(clientOptions, retryPolicy);
     }
 }

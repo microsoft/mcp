@@ -198,7 +198,9 @@ public abstract class BaseAzureService
             }
             if (retryPolicy.HasMaxRetries)
             {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
+                // To prevent excessive retries, we enforce a maximum of 10 retries
+                // even if the caller specifies a higher number.
+                clientOptions.Retry.MaxRetries = Math.Min(10, retryPolicy.MaxRetries);
             }
             if (retryPolicy.HasMode)
             {
