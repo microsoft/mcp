@@ -20,6 +20,7 @@ public sealed class SingleProxyToolLoader(
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
     private string? _cachedRootToolsJson;
     private readonly Dictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IList<McpClientTool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const string ToolCallProxySchema = """
@@ -219,14 +220,20 @@ public sealed class SingleProxyToolLoader(
 
     internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
+        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        {
+            return cachedList;
+        }
+
         var clientOptions = CreateClientOptions(request.Server);
         var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-        listTools = listTools.Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
+        var filtered = listTools.Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
             .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.ProtocolTool))
             .ToArray();
 
-        return listTools;
+        _cachedToolLists[tool] = filtered;
+        return filtered;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)
@@ -338,16 +345,28 @@ public sealed class SingleProxyToolLoader(
             var availableTools = await GetToolListAsync(request, tool, cancellationToken);
             if (!availableTools.Any(t => string.Equals(t.ProtocolTool.Name, command, StringComparison.OrdinalIgnoreCase)))
             {
-                var modeMessage = _options.Value.ReadOnly
-                    ? "This server is configured in read-only mode and this tool is not a read-only tool."
-                    : "This server is running in HTTP mode and this tool requires local execution.";
+                if (_options.Value.ReadOnly)
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                            }
+                        ],
+                        IsError = true,
+                    };
+                }
+
                 return new CallToolResult
                 {
                     Content =
                     [
                         new TextContentBlock
                         {
-                            Text = $"Tool '{tool} {command}' is not available. {modeMessage}",
+                            Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
                         }
                     ],
                     IsError = true,
@@ -538,6 +557,7 @@ public sealed class SingleProxyToolLoader(
     protected override async ValueTask DisposeAsyncCore()
     {
         // Clear caching collections
+        _cachedToolLists.Clear();
         _cachedToolListsJson.Clear();
         _cachedRootToolsJson = null;
 

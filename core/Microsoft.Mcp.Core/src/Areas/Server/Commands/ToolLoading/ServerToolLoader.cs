@@ -257,20 +257,40 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             // (which may have been updated by sampling) is in the filtered available tools list.
             if (!availableTools.Any(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase)))
             {
-                var modeMessage = (options?.Value?.ReadOnly ?? false)
-                    ? "This server is configured in read-only mode and this tool is not a read-only tool."
-                    : "This server is running in HTTP mode and this tool requires local execution.";
-                return new CallToolResult
+                if (options?.Value?.ReadOnly ?? false)
                 {
-                    Content =
-                    [
-                        new TextContentBlock
-                        {
-                            Text = $"Tool '{tool} {command}' is not available. {modeMessage}",
-                        }
-                    ],
-                    IsError = true,
-                };
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                            }
+                        ],
+                        IsError = true,
+                    };
+                }
+
+                if (options?.Value?.IsHttpMode ?? false)
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                            }
+                        ],
+                        IsError = true,
+                    };
+                }
+
+                // Neither read-only nor HTTP mode is active; the resolved command is simply
+                // not recognised. Fall back to learn mode so the caller gets useful guidance
+                // instead of a misleading mode-restriction message.
+                return await InvokeToolLearn(request, intent, tool, cancellationToken);
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
