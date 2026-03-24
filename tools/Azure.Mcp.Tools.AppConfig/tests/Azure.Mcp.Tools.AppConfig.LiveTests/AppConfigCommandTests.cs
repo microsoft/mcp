@@ -40,7 +40,8 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
+        var loggingFactory = new LoggingTokenCredentialFactory(NullLogger<LoggingTokenCredential>.Instance);
+        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance, loggingFactory);
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());

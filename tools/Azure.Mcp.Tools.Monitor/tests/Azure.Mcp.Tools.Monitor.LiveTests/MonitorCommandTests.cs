@@ -43,7 +43,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var cacheService = new SingleUserCliCacheService(_memoryCache);
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
+        var loggingFactory = new LoggingTokenCredentialFactory(NullLogger<LoggingTokenCredential>.Instance);
+        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance, loggingFactory);
         var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
         _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration);
         var subscriptionService = new SubscriptionService(cacheService, _tenantService);

@@ -37,12 +37,17 @@ public static class AuthenticationServiceCollectionExtensions
         // Register cloud configuration
         services.TryAddSingleton<IAzureCloudConfiguration, AzureCloudConfiguration>();
 
+        // Register the logging token credential factory
+        services.TryAddSingleton<ILoggingTokenCredentialFactory, LoggingTokenCredentialFactory>();
+
         // Set the static cloud configuration on CustomChainedCredential
         services.TryAddSingleton<IAzureTokenCredentialProvider>(sp =>
         {
             var cloudConfig = sp.GetRequiredService<IAzureCloudConfiguration>();
             CustomChainedCredential.CloudConfiguration = cloudConfig;
-            return new SingleIdentityTokenCredentialProvider(sp.GetRequiredService<ILoggerFactory>());
+            return new SingleIdentityTokenCredentialProvider(
+                sp.GetRequiredService<ILoggerFactory>(),
+                sp.GetRequiredService<ILoggingTokenCredentialFactory>());
         });
 
         return services;
@@ -63,6 +68,9 @@ public static class AuthenticationServiceCollectionExtensions
     {
         // Dependencies - directly in constructor.
         services.AddHttpContextAccessor();
+
+        // Register the logging token credential factory
+        services.TryAddSingleton<ILoggingTokenCredentialFactory, LoggingTokenCredentialFactory>();
 
         // With AddMicrosoftIdentityWebApiAot, OBO works automatically via AddTokenAcquisition
         // (no EnableTokenAcquisitionToCallDownstreamApi needed).

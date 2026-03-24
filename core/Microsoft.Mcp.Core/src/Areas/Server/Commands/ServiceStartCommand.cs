@@ -437,6 +437,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                         simple.TimestampFormat = "[HH:mm:ss] ";
                     });
                     logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+                    logging.AddFilter("Azure.Mcp.Core.Services.Azure.Authentication.LoggingTokenCredential", LogLevel.Debug);
                     logging.SetMinimumLevel(LogLevel.Debug);
                 }
 
@@ -945,8 +946,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// to avoid duplicate spans and telemetry loops.
     /// This telemetry configuration is intended for self-hosted scenarios where
     /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
-    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
-    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors
+    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is
     /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
     /// </remarks>
     private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)

@@ -12,13 +12,16 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILoggingTokenCredentialFactory _credentialFactory;
     private readonly ILogger<HttpOnBehalfOfTokenCredentialProvider> _logger;
 
     public HttpOnBehalfOfTokenCredentialProvider(
         IHttpContextAccessor httpContextAccessor,
+        ILoggingTokenCredentialFactory credentialFactory,
         ILogger<HttpOnBehalfOfTokenCredentialProvider> logger)
     {
         _httpContextAccessor = httpContextAccessor;
+        _credentialFactory = credentialFactory;
         _logger = logger;
     }
 
@@ -53,9 +56,11 @@ public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvid
 
         // MicrosoftIdentityTokenCredential is registered as scoped, so we
         // can get it from the request services to ensure we get the right instance.
-        MicrosoftIdentityTokenCredential tokenCredential = httpContext
+        MicrosoftIdentityTokenCredential innerCredential = httpContext
             .RequestServices
             .GetRequiredService<MicrosoftIdentityTokenCredential>();
-        return Task.FromResult<TokenCredential>(tokenCredential);
+
+        TokenCredential credential = _credentialFactory.WrapIfEnabled(innerCredential, tenantId);
+        return Task.FromResult(credential);
     }
 }

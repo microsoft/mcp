@@ -13,17 +13,20 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvider
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ILoggingTokenCredentialFactory _credentialFactory;
     private readonly TokenCredential _credential;
     private readonly Dictionary<string, TokenCredential> _tenantSpecificCredentials
         = new(StringComparer.OrdinalIgnoreCase);
 
-    public SingleIdentityTokenCredentialProvider(ILoggerFactory loggerFactory)
+    public SingleIdentityTokenCredentialProvider(
+        ILoggerFactory loggerFactory,
+        ILoggingTokenCredentialFactory credentialFactory)
     {
         _loggerFactory = loggerFactory;
-        _credential = new CustomChainedCredential(
-            null,
-            _loggerFactory.CreateLogger<CustomChainedCredential>()
-        );
+        _credentialFactory = credentialFactory;
+        _credential = credentialFactory.WrapIfEnabled(
+            new CustomChainedCredential(null, loggerFactory.CreateLogger<CustomChainedCredential>()),
+            null);
     }
 
     /// <inheritdoc/>
@@ -42,10 +45,11 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
             {
                 if (!_tenantSpecificCredentials.TryGetValue(tenantId, out tenantCredential))
                 {
-                    tenantCredential = new CustomChainedCredential(
+                    var innerCredential = new CustomChainedCredential(
                         tenantId,
                         _loggerFactory.CreateLogger<CustomChainedCredential>()
                     );
+                    tenantCredential = _credentialFactory.WrapIfEnabled(innerCredential, tenantId);
                     _tenantSpecificCredentials[tenantId] = tenantCredential;
                 }
             }

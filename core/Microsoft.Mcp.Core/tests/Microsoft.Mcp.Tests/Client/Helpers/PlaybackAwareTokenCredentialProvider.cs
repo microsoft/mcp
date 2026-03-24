@@ -15,15 +15,20 @@ public sealed class PlaybackAwareTokenCredentialProvider : IAzureTokenCredential
 {
     private readonly Func<TestMode> _testModeAccessor;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly ILoggingTokenCredentialFactory _credentialFactory;
     private readonly TokenCredential _playbackCredential = new PlaybackTokenCredential();
     private readonly Lazy<IAzureTokenCredentialProvider> _liveProvider;
 
-    public PlaybackAwareTokenCredentialProvider(Func<TestMode> testModeAccessor, ILoggerFactory loggerFactory)
+    public PlaybackAwareTokenCredentialProvider(
+        Func<TestMode> testModeAccessor,
+        ILoggerFactory loggerFactory,
+        ILoggingTokenCredentialFactory credentialFactory)
     {
         ArgumentNullException.ThrowIfNull(testModeAccessor);
         _testModeAccessor = testModeAccessor;
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-        _liveProvider = new Lazy<IAzureTokenCredentialProvider>(() => new SingleIdentityTokenCredentialProvider(_loggerFactory));
+        _credentialFactory = credentialFactory ?? throw new ArgumentNullException(nameof(credentialFactory));
+        _liveProvider = new Lazy<IAzureTokenCredentialProvider>(() => new SingleIdentityTokenCredentialProvider(_loggerFactory, _credentialFactory));
     }
 
     public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellation)

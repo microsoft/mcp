@@ -118,7 +118,8 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 
         private async Task SendTestMessages(string queueOrTopicName, int numberOfMessages)
         {
-            var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+            var loggingFactory = new LoggingTokenCredentialFactory(NullLogger<LoggingTokenCredential>.Instance);
+            var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance, loggingFactory);
             TokenCredential credentials = await tokenProvider.GetTokenCredentialAsync(Settings.TenantId, default);
             await using (var client = new ServiceBusClient($"{Settings.ResourceBaseName}.servicebus.windows.net", credentials))
             await using (var sender = client.CreateSender(queueOrTopicName))

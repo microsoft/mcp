@@ -162,12 +162,25 @@ public static class McpTestUtilities
         string? testPackage = null,
         string? settingsDirectory = null)
     {
+        void WriteStdError(string line)
+        {
+            try
+            {
+                output?.WriteLine($"[MCP Server] {line}");
+            }
+            catch (Exception)
+            {
+                // Test has completed; ignore output
+                Console.WriteLine($"[MCP Server - dropped] {line}");
+            }
+        }
+
         StdioClientTransportOptions transportOptions = new()
         {
             Name = "Test Server",
             Command = executablePath,
             Arguments = arguments.ToArray(),
-            StandardErrorLines = line => output?.WriteLine($"[MCP Server] {line}"),
+            StandardErrorLines = WriteStdError,
             EnvironmentVariables = environmentVariables
         };
 
