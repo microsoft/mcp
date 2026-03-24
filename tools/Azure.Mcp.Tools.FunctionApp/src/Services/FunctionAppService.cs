@@ -39,8 +39,13 @@ public sealed class FunctionAppService(
         var functionApps = new List<FunctionAppInfo>();
         if (string.IsNullOrEmpty(functionAppName))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cacheKey = (string.IsNullOrEmpty(tenant), string.IsNullOrEmpty(resourceGroup)) switch
+            {
+                (true, true) => subscription,
+                (false, true) => CacheKeyBuilder.Build(subscription, tenant),
+                (true, false) => CacheKeyBuilder.Build(subscription, resourceGroup),
+                (false, false) => CacheKeyBuilder.Build(subscription, tenant, resourceGroup)
+            };
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
@@ -72,8 +77,8 @@ public sealed class FunctionAppService(
                 (nameof(resourceGroup), resourceGroup));
 
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{functionAppName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{functionAppName}";
+                ? CacheKeyBuilder.Build(subscription, resourceGroup!, functionAppName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, functionAppName);
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
