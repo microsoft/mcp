@@ -60,7 +60,10 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         try
         {
             List<JsonElement> results;
-            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {options.Limit}";
+            // Validate limit is within safe bounds to prevent resource abuse
+            var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
+
+            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {safeLimit}";
 
             if (UseClusterUri(options))
             {

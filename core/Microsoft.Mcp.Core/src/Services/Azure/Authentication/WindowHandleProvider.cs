@@ -31,11 +31,10 @@ public static partial class WindowHandleProvider
                     : "X display is available.");
                 return display;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.ToString());
-                Console.ResetColor();
+                // X11 display detection failed; running in headless mode.
+                // Avoid logging exception details to console to prevent information disclosure.
             }
         }
 

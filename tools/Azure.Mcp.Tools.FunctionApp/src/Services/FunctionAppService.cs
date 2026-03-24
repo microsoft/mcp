@@ -17,6 +17,7 @@ public sealed class FunctionAppService(
     ICacheService cacheService,
     ILogger<FunctionAppService> logger) : BaseAzureService(tenantService), IFunctionAppService
 {
+    private const int MaxFunctionApps = 10_000;
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -99,6 +100,12 @@ public sealed class FunctionAppService(
         await foreach (var site in sites.WithCancellation(cancellationToken))
         {
             TryAddFunctionApp(site, functionApps);
+            if (functionApps.Count >= MaxFunctionApps)
+            {
+                // Log a warning and break to avoid potential memory issues
+                Console.WriteLine($"Warning: Reached maximum function app limit of {MaxFunctionApps}. Some function apps may not be included in the results.");
+                break;
+            }
         }
     }
 

@@ -130,7 +130,7 @@ public sealed class McpRuntime : IMcpRuntime
             {
                 Content = [new TextContentBlock
                 {
-                    Text = ex.Message,
+                    Text = !string.IsNullOrWhiteSpace(ex.Message) ? ex.Message : "An unknown error occurred while trying to call the tool.",
                 }],
                 IsError = true,
             };
