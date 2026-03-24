@@ -192,7 +192,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         {
             logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
 
-            // Create the elicitation request with a confirmation checkbox
+            // Create the elicitation request with a single-select enum for approve/reject
             var protocolRequest = new ElicitRequestParams
             {
                 Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
@@ -200,13 +200,14 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 {
                     Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
                     {
-                        ["confirm"] = new ElicitRequestParams.BooleanSchema
+                        ["decision"] = new ElicitRequestParams.UntitledSingleSelectEnumSchema
                         {
-                            Title = "Confirm",
-                            Description = "I confirm that I want to proceed with this sensitive operation."
+                            Title = "Decision",
+                            Description = "Approve or reject this sensitive operation.",
+                            Enum = ["Approve", "Reject"]
                         }
                     },
-                    Required = ["confirm"]
+                    Required = ["decision"]
                 }
             };
 

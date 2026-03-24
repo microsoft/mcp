@@ -420,7 +420,7 @@ public class BaseToolLoaderTests
     }
 
     [Fact]
-    public async Task HandleSecretElicitation_UsesConfirmSchemaProperty()
+    public async Task HandleSecretElicitation_UsesDecisionEnumSchema()
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
@@ -452,7 +452,7 @@ public class BaseToolLoaderTests
         await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
             request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
-        // Assert - verify the schema has a confirm boolean property
+        // Assert - verify the schema has a decision single-select enum property with approve/reject
         Assert.NotNull(capturedRequest);
         Assert.NotNull(capturedRequest.Params);
         var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params.ToJsonString());
@@ -460,10 +460,12 @@ public class BaseToolLoaderTests
         Assert.NotNull(elicitParams.RequestedSchema);
         Assert.NotNull(elicitParams.RequestedSchema.Properties);
         Assert.Single(elicitParams.RequestedSchema.Properties);
-        Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("confirm"));
+        Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("decision"));
+        var decisionSchema = Assert.IsType<ElicitRequestParams.UntitledSingleSelectEnumSchema>(elicitParams.RequestedSchema.Properties["decision"]);
+        Assert.Equal(["Approve", "Reject"], decisionSchema.Enum);
         Assert.NotNull(elicitParams.RequestedSchema.Required);
         Assert.Single(elicitParams.RequestedSchema.Required);
-        Assert.Contains("confirm", elicitParams.RequestedSchema.Required);
+        Assert.Contains("decision", elicitParams.RequestedSchema.Required);
     }
 
     [Fact]
