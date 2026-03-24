@@ -644,14 +644,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
         };
 
-        // Set PublicNetworkAccess if specified
-        if (!string.IsNullOrEmpty(publicNetworkAccess))
-        {
-            // Set the public network access value - defaults to "Enabled" if not "Disabled"
-            serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+        // Default to Disabled for secure-by-default behavior
+        serverData.PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
+            publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
                 ? ServerNetworkAccessFlag.Enabled
                 : ServerNetworkAccessFlag.Disabled;
-        }
 
         var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
             WaitUntil.Completed,
