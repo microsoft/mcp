@@ -2461,6 +2461,8 @@ Azure MCP Server supports two outgoing authentication strategies when running in
 
 **Use when:** Per-user authorization required, multi-tenant scenarios, audit trail with individual user identities
 
+> **Note:** OBO requires callers to authenticate with a delegated (user) token. Service principals, managed identities, and other app-only callers cannot use this strategy — see [#2192](https://github.com/microsoft/mcp/issues/2192).
+
 **How it works:**
 - Client authenticates user with Entra ID and sends bearer token
 - MCP server validates incoming token

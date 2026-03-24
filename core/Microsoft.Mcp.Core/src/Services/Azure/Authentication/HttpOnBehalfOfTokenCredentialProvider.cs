@@ -9,6 +9,20 @@ using Microsoft.Identity.Web;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
+/// <summary>
+/// Implementation of <see cref="IAzureTokenCredentialProvider"/> that performs
+/// On-Behalf-Of (OBO) token exchange using the incoming HTTP request's bearer token.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The OBO flow requires a <b>delegated</b> (user) token as the incoming assertion.
+/// Callers that authenticate with app-only tokens — service principals, managed
+/// identities, or any client using the client credentials flow — will fail with
+/// Entra ID error <c>AADSTS7000114</c> because service-principal-to-service-principal
+/// OBO is not supported by Entra ID.
+/// See <see href="https://github.com/microsoft/mcp/issues/2192"/> for details.
+/// </para>
+/// </remarks>
 public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;

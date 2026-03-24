@@ -1130,6 +1130,16 @@ export AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS=true
 2. Verify user assignment in Azure Portal:
    - Entra ID → Enterprise Applications → [Your App] → Users and groups
 
+#### AADSTS7000114: Application-Only Callers Cannot Use OBO
+
+If the caller is a **service principal, managed identity, or daemon** using the client credentials flow, OBO will not work. Entra ID rejects app-only tokens as OBO assertions:
+
+```
+AADSTS7000114: Application '<app-id>' is not allowed to make application on-behalf-of calls.
+```
+
+This is a Microsoft Entra ID platform limitation — the OBO flow requires a delegated (user) token. See [#2192](https://github.com/microsoft/mcp/issues/2192) for details and workarounds.
+
 #### OBO Token Exchange Failures
 
 **Causes:** Server app missing API permissions or client token lacks scopes.
