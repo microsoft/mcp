@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added input validation for ledger names in ConfidentialLedgerService to ensure only valid characters are accepted"
