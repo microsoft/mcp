@@ -131,7 +131,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var commandFactory = Substitute.For<ICommandFactory>();
         commandFactory.GetServiceArea(Arg.Is(toolName)).Returns(toolArea);
         var toolCommand = Substitute.For<IBaseCommand>();
-        toolCommand.Metadata.Returns(new ToolMetadata());
+        toolCommand.Metadata.Returns(new ToolMetadata { Destructive = false });
         toolCommand.Id.Returns(toolId);
         toolCommand.GetCommand().Returns(new Command("tool-command"));
         toolCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
@@ -170,7 +170,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         toolCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new CommandResponse()));
         toolCommand.Id.Returns(toolId);
-        toolCommand.Metadata.Returns(new ToolMetadata());
+        toolCommand.Metadata.Returns(new ToolMetadata { Destructive = false });
         toolCommand.GetCommand().Returns(new Command("tool-command"));
         commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>
         {

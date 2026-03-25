@@ -121,8 +121,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug"]
-            : ["server", "start", "--mode", "all"];
+            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation"]
+            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
