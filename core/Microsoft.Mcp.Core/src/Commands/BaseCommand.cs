@@ -110,6 +110,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     {
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
+        HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
         _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 
