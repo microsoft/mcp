@@ -47,15 +47,15 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         s_groupKeys.AddOrUpdate(
             group,
-            key =>
+            _ =>
             {
                 var keys = new ConcurrentDictionary<string, object>();
-                keys.TryAdd(key, s_sentinal);
+                keys[key] = s_sentinal;
                 return keys;
             },
             (_, keys) =>
             {
-                keys.TryAdd(key, s_sentinal);
+                keys[key] = s_sentinal;
                 return keys;
             });
 
