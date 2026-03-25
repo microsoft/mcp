@@ -106,8 +106,7 @@ public sealed class FunctionAppService(
             TryAddFunctionApp(site, functionApps);
             if (functionApps.Count >= MaxFunctionApps)
             {
-                // Log a warning and break to avoid potential memory issues
-                logger.LogInformation("Warning: Reached maximum function app limit of {MaxFunctionApps}. Some function apps may not be included in the results.", MaxFunctionApps);
+                logger.LogWarning("Warning: Reached maximum function app limit of {MaxFunctionApps}. Some function apps may not be included in the results.", MaxFunctionApps);
                 break;
             }
         }

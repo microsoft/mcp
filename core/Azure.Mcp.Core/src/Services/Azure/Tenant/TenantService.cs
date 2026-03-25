@@ -63,7 +63,7 @@ public class TenantService : BaseAzureService, ITenantService
             results.Add(tenant);
             if (results.Count >= MaxTenants)
             {
-                _logger.LogInformation("Reached maximum tenant limit of {MaxTenants}. Some tenants may not be included in the results.", MaxTenants);
+                _logger.LogWarning("Reached maximum tenant limit of {MaxTenants}. Some tenants may not be included in the results.", MaxTenants);
                 break;
             }
         }

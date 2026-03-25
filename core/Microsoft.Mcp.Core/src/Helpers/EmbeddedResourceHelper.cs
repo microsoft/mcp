@@ -37,7 +37,7 @@ namespace Azure.Mcp.Core.Helpers
             Regex regex;
             try
             {
-                regex = RegexHelper.CreateRegex(resourcePattern);
+                regex = RegexHelper.CreateRegex(resourcePattern, RegexOptions.None);
             }
             catch (ArgumentException ex)
             {

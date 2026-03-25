@@ -16,7 +16,7 @@ public static class RegexHelper
     /// <param name="options">Regex options.</param>
     /// <returns>The regex.</returns>
     /// <exception cref="ArgumentException">If the regex pattern is invalid.</exception>
-    public static Regex CreateRegex(string pattern, RegexOptions options = RegexOptions.None)
+    public static Regex CreateRegex(string pattern, RegexOptions options)
     {
         try
         {

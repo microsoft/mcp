@@ -44,7 +44,7 @@ public class SubscriptionService(
             results.Add(subscription.Data);
             if (results.Count >= MaxSubscriptions)
             {
-                _logger.LogInformation("Reached maximum subscription limit of {MaxSubscriptions}. Some subscriptions may not be included in the results.", MaxSubscriptions);
+                _logger.LogWarning("Reached maximum subscription limit of {MaxSubscriptions}. Some subscriptions may not be included in the results.", MaxSubscriptions);
                 break;
             }
         }
