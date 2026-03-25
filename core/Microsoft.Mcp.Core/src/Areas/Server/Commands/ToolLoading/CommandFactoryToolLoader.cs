@@ -148,21 +148,19 @@ public sealed class CommandFactoryToolLoader(
         activity?.SetTag(TagName.ToolId, command.Id);
         var commandContext = new CommandContext(_serviceProvider, activity);
 
-        // Check if this tool requires elicitation for sensitive data
+        // Check if this tool requires elicitation for sensitive or destructive operations
         var metadata = command.Metadata;
-        if (metadata.Secret)
-        {
-            var elicitationResult = await HandleSecretElicitationAsync(
-                request,
-                toolName,
-                _options.Value.DangerouslyDisableElicitation,
-                _logger,
-                cancellationToken);
+        var elicitationResult = await HandleElicitationAsync(
+            request,
+            toolName,
+            metadata,
+            _options.Value.DangerouslyDisableElicitation,
+            _logger,
+            cancellationToken);
 
-            if (elicitationResult != null)
-            {
-                return elicitationResult;
-            }
+        if (elicitationResult != null)
+        {
+            return elicitationResult;
         }
 
         var realCommand = command.GetCommand();

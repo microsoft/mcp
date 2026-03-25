@@ -21,13 +21,6 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
-    // Enable --dangerously-disable-elicitation for commands with Secret = true (vm create, vm delete, vmss delete)
-    public override async ValueTask InitializeAsync()
-    {
-        SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation");
-        await base.InitializeAsync();
-    }
-
     // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [

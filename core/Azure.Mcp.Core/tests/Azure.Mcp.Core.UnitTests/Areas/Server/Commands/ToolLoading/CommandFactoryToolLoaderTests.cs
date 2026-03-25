@@ -643,7 +643,7 @@ public class CommandFactoryToolLoaderTests
         var fakeSystemCommand = new Command("fake-non-secret-get", "A fake non-secret command for testing");
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Non-Secret Get");
-        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false }); // Not secret
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false, Destructive = false }); // Not secret or destructive
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Test response" });
 
