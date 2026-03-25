@@ -164,7 +164,7 @@ public sealed class FunctionsService(
         string language,
         string template,
         string? runtimeVersion,
-        TemplateMode mode = TemplateMode.New,
+        TemplateOutput output = TemplateOutput.New,
         CancellationToken cancellationToken = default)
     {
         var normalizedLanguage = language.ToLowerInvariant();
@@ -209,12 +209,12 @@ public sealed class FunctionsService(
         if (!GitHubUrlValidator.IsValidRepositoryUrl(entry.RepositoryUrl))
         {
             throw new InvalidOperationException(
-                $"Invalid repository URL in manifest. Only Azure and Azure-Samples organizations are allowed.");
+                $"Invalid repository URL in manifest. Only Azure, Azure-Samples, and Microsoft organizations are allowed.");
         }
 
         var allFiles = await FetchTemplateFilesAsync(entry, normalizedLanguage, runtimeVersion, cancellationToken);
 
-        if (mode == TemplateMode.Add)
+        if (output == TemplateOutput.Add)
         {
             // Separate files for merge scenario
             var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();

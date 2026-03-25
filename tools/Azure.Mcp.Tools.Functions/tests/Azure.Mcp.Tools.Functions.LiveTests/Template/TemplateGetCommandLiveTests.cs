@@ -209,21 +209,21 @@ public class TemplateGetCommandLiveTests(
 
     [Fact]
     [LiveTestOnly]
-    public async Task ExecuteAsync_HttpTrigger_AddMode_ReturnsSeparatedFiles()
+    public async Task ExecuteAsync_HttpTrigger_AddOutput_ReturnsSeparatedFiles()
     {
         // Arrange
         var templateList = await GetTemplateListAsync("python");
         var httpTemplate = FindTemplateByPattern(templateList, "http-trigger-python");
         Assert.NotNull(httpTemplate);
 
-        // Act - Use Add mode to get separated files with merge instructions
+        // Act - Use Add output to get separated files with merge instructions
         var result = await CallToolAsync(
             "functions_template_get",
             new()
             {
                 { "language", "python" },
                 { "template", httpTemplate },
-                { "mode", "Add" }
+                { "output", "Add" }
             });
 
         // Assert
@@ -232,7 +232,7 @@ public class TemplateGetCommandLiveTests(
         Assert.NotNull(templateResult?.FunctionTemplate);
         Assert.Equal("python", templateResult.FunctionTemplate.Language);
 
-        // Add mode should return separated files, not combined
+        // Add output should return separated files, not combined
         Assert.Null(templateResult.FunctionTemplate.Files);
         Assert.NotNull(templateResult.FunctionTemplate.FunctionFiles);
         Assert.NotEmpty(templateResult.FunctionTemplate.FunctionFiles);

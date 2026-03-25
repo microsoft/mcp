@@ -66,7 +66,7 @@ public sealed class TemplateGetCommandTests
         var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
         var templateOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.TemplateName}");
         var runtimeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.RuntimeVersionName}");
-        var modeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.ModeName}");
+        var outputOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.OutputName}");
 
         Assert.NotNull(languageOption);
         Assert.True(languageOption.Required);
@@ -74,8 +74,8 @@ public sealed class TemplateGetCommandTests
         Assert.False(templateOption.Required); // registered with AsOptional
         Assert.NotNull(runtimeOption);
         Assert.False(runtimeOption.Required);
-        Assert.NotNull(modeOption);
-        Assert.False(modeOption.Required);
+        Assert.NotNull(outputOption);
+        Assert.False(outputOption.Required);
     }
 
     [Fact]
@@ -162,7 +162,7 @@ public sealed class TemplateGetCommandTests
             ]
         };
 
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateMode.New, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         // Act - with --template means get mode, default mode is New
@@ -192,9 +192,9 @@ public sealed class TemplateGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GetMode_AddMode_ReturnsSeparatedFiles()
+    public async Task ExecuteAsync_GetOutput_AddOutput_ReturnsSeparatedFiles()
     {
-        // Arrange - Add mode returns separated FunctionFiles and ProjectFiles
+        // Arrange - Add output returns separated FunctionFiles and ProjectFiles
         var expectedResult = new FunctionTemplateResult
         {
             Language = "python",
@@ -217,11 +217,11 @@ public sealed class TemplateGetCommandTests
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateMode.Add, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
-        // Act - with --mode add-function
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger", "--mode", "Add"]);
+        // Act - with --output Add
+        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger", "--output", "Add"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
@@ -263,7 +263,7 @@ public sealed class TemplateGetCommandTests
             ]
         };
 
-        _service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateMode.New, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         // Act
@@ -302,7 +302,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidTemplate()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateMode.New, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new ArgumentException(
                 "Template \"NonExistent\" not found for language \"python\"."));
 
@@ -319,7 +319,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidRuntimeVersion()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateMode.New, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new ArgumentException("Invalid runtime version \"99\" for java."));
 
         // Act
@@ -351,7 +351,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateMode.New, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new InvalidOperationException("Could not fetch template"));
 
         // Act
@@ -467,11 +467,11 @@ public sealed class TemplateGetCommandTests
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateMode.Add, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--mode", "Add"]);
+        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--output", "Add"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
@@ -543,7 +543,7 @@ public sealed class TemplateGetCommandTests
     public void BindOptions_BindsAllOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--mode", "Add"]);
+        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--output", "Add"]);
 
         var method = typeof(TemplateGetCommand).GetMethod(
             "BindOptions",
@@ -555,7 +555,7 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("java", options.Language);
         Assert.Equal("HttpTrigger", options.Template);
         Assert.Equal("21", options.RuntimeVersion);
-        Assert.Equal(TemplateMode.Add, options.Mode);
+        Assert.Equal(TemplateOutput.Add, options.Output);
     }
 
     [Fact]
@@ -574,6 +574,6 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("python", options.Language);
         Assert.Null(options.Template);
         Assert.Null(options.RuntimeVersion);
-        Assert.Equal(TemplateMode.New, options.Mode); // default mode
+        Assert.Equal(TemplateOutput.New, options.Output); // default output
     }
 }

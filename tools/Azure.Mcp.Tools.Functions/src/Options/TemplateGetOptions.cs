@@ -10,5 +10,5 @@ public sealed class TemplateGetOptions
     public string? Language { get; set; }
     public string? Template { get; set; }
     public string? RuntimeVersion { get; set; }
-    public TemplateMode Mode { get; set; } = TemplateMode.New;
+    public TemplateOutput Output { get; set; } = TemplateOutput.New;
 }

@@ -8,8 +8,8 @@ namespace Azure.Mcp.Tools.Functions.Models;
 /// <summary>
 /// Specifies how template files should be returned.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter<TemplateMode>))]
-public enum TemplateMode
+[JsonConverter(typeof(JsonStringEnumConverter<TemplateOutput>))]
+public enum TemplateOutput
 {
     /// <summary>
     /// Returns all files in a single 'files' list for creating complete new projects.

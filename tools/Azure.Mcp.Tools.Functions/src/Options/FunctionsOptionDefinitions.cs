@@ -10,7 +10,7 @@ public static class FunctionsOptionDefinitions
     public const string LanguageName = "language";
     public const string RuntimeVersionName = "runtime-version";
     public const string TemplateName = "template";
-    public const string ModeName = "mode";
+    public const string OutputName = "output";
 
     /// <summary>
     /// Supported languages for validation (must match LanguageMetadataProvider keys).
@@ -42,11 +42,11 @@ public static class FunctionsOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<TemplateMode> Mode = new($"--{ModeName}")
+    public static readonly Option<TemplateOutput> Output = new($"--{OutputName}")
     {
-        Description = "Template mode. 'New' (default) returns all files in a single 'files' list for creating complete projects. " +
+        Description = "Output format. 'New' (default) returns all files in a single 'files' list for creating complete projects. " +
             "'Add' separates files into 'functionFiles' and 'projectFiles' with merge instructions for adding to existing projects.",
         Required = false,
-        DefaultValueFactory = _ => TemplateMode.New
+        DefaultValueFactory = _ => TemplateOutput.New
     };
 }
