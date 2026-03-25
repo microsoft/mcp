@@ -132,7 +132,7 @@ public class CosmosServiceTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task GetCosmosClientAsync_KeyAuthRequest_QueriesCacheWithKeyKey()
+    public async Task GetCosmosClientAsync_KeyAuthRequest_QueriesCacheWithKeyAuthKey()
     {
         // Arrange: _subscriptionService returns null/throws by default, causing key-based creation to fail
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
