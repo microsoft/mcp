@@ -41,10 +41,11 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
@@ -74,8 +75,9 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         bool loaded = false;
         string? contents = null;
