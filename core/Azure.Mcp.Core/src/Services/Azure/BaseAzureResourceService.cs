@@ -74,7 +74,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
@@ -93,6 +93,13 @@ public abstract class BaseAzureResourceService(
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
+
+        if (!string.IsNullOrEmpty(additionalFilter) && additionalFilter.Contains('|'))
+        {
+            throw new ArgumentException(
+                "additionalFilter must not contain the pipe operator '|' to prevent KQL injection.",
+                nameof(additionalFilter));
+        }
 
         var results = new List<T>();
 
@@ -145,7 +152,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
