@@ -146,7 +146,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Ledger name cannot be null or empty.", nameof(ledgerName));
         }
 
-        if (!IsAsciiLetter(ledgerName[0]))
+        if (!char.IsAsciiLetter(ledgerName[0]))
         {
             throw new ArgumentException(
                 $"Ledger name must start with an ASCII letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
@@ -154,17 +154,11 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
         foreach (var c in ledgerName)
         {
-            if (!IsAsciiLetterOrDigit(c) && c != '-')
+            if (!char.IsAsciiLetterOrDigit(c) && c != '-')
             {
                 throw new ArgumentException(
                     $"Ledger name contains invalid character '{c}'. Only ASCII alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
             }
         }
     }
-
-    private static bool IsAsciiLetter(char c) =>
-        (uint)((c | 0x20) - 'a') <= 'z' - 'a';
-
-    private static bool IsAsciiLetterOrDigit(char c) =>
-        IsAsciiLetter(c) || (uint)(c - '0') <= '9' - '0';
 }
