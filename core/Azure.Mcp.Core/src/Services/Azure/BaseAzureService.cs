@@ -13,6 +13,7 @@ namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
+    private const int MaxAllowedRetries = 10;
     private static UserAgentPolicy s_sharedUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
@@ -198,7 +199,9 @@ public abstract class BaseAzureService
             }
             if (retryPolicy.HasMaxRetries)
             {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
+                // To prevent excessive retries, we enforce a maximum number of retries regardless of what the caller specifies.
+                // This is to protect against misconfiguration that could lead to very long retry loops.
+                clientOptions.Retry.MaxRetries = Math.Min(MaxAllowedRetries, retryPolicy.MaxRetries);
             }
             if (retryPolicy.HasMode)
             {
