@@ -235,11 +235,11 @@ public class BaseAzureServiceTests
 
     [Theory]
     [InlineData(0.5, true, 0.5)]    // within bounds, should remain unchanged
-    [InlineData(60, true, 60)]       // at upper cap, should remain unchanged
+    [InlineData(60.0, true, 60.0)]       // at upper cap, should remain unchanged
     [InlineData(0.1, true, 0.1)]    // at lower cap, should remain unchanged
-    [InlineData(120, true, 60)]      // above upper cap, should be capped to 60
+    [InlineData(120.0, true, 60.0)]      // above upper cap, should be capped to 60
     [InlineData(0.01, true, 0.1)]   // below lower cap, should be raised to 0.1
-    [InlineData(120, false, null)]   // HasDelaySeconds = false, should not override default
+    [InlineData(120.0, false, null)]   // HasDelaySeconds = false, should not override default
     public void ConfigureRetryPolicy_RespectsAndClampsDelay(double delaySeconds, bool hasDelay, double? expectedDelay)
     {
         // Arrange
@@ -254,12 +254,12 @@ public class BaseAzureServiceTests
     }
 
     [Theory]
-    [InlineData(5, true, 5)]        // within bounds, should remain unchanged
-    [InlineData(60, true, 60)]       // at upper cap, should remain unchanged
+    [InlineData(5.0, true, 5.0)]        // within bounds, should remain unchanged
+    [InlineData(60.0, true, 60.0)]       // at upper cap, should remain unchanged
     [InlineData(0.1, true, 0.1)]    // at lower cap, should remain unchanged
-    [InlineData(120, true, 60)]      // above upper cap, should be capped to 60
+    [InlineData(120.0, true, 60.0)]      // above upper cap, should be capped to 60
     [InlineData(0.01, true, 0.1)]   // below lower cap, should be raised to 0.1
-    [InlineData(120, false, null)]   // HasMaxDelaySeconds = false, should not override default
+    [InlineData(120.0, false, null)]   // HasMaxDelaySeconds = false, should not override default
     public void ConfigureRetryPolicy_RespectsAndClampsMaxDelay(double maxDelaySeconds, bool hasMaxDelay, double? expectedMaxDelay)
     {
         // Arrange
@@ -274,10 +274,10 @@ public class BaseAzureServiceTests
     }
 
     [Theory]
-    [InlineData(30, true, 30)]       // within bounds, should remain unchanged
-    [InlineData(300, true, 300)]     // at cap, should remain unchanged
-    [InlineData(600, true, 300)]     // above cap, should be capped to 300
-    [InlineData(600, false, null)]   // HasNetworkTimeoutSeconds = false, should not override default
+    [InlineData(30.0, true, 30.0)]       // within bounds, should remain unchanged
+    [InlineData(300.0, true, 300.0)]     // at cap, should remain unchanged
+    [InlineData(600.0, true, 300.0)]     // above cap, should be capped to 300
+    [InlineData(600.0, false, null)]   // HasNetworkTimeoutSeconds = false, should not override default
     public void ConfigureRetryPolicy_RespectsAndCapsNetworkTimeout(double networkTimeoutSeconds, bool hasNetworkTimeout, double? expectedTimeout)
     {
         // Arrange
