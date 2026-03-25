@@ -710,7 +710,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         var executed = false;
         var readCmd = Substitute.For<IBaseCommand>();
-        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true });
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
         readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
         readCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
         {
@@ -794,7 +794,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         var executed = false;
         var remoteCmd = Substitute.For<IBaseCommand>();
-        remoteCmd.Metadata.Returns(new ToolMetadata { LocalRequired = false });
+        remoteCmd.Metadata.Returns(new ToolMetadata { LocalRequired = false, Destructive = false });
         remoteCmd.GetCommand().Returns(new System.CommandLine.Command("remote-cmd", "A remote command"));
         remoteCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
         {
