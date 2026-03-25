@@ -26,10 +26,10 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
 
     public override string Description =>
         $"""
-        List all available Azure OpenAI models and deployments in a Microsoft Foundry resource. This tool retrieves information
-        about Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities,
-        and deployment status. Use this when you need to see what OpenAI models are available, check model deployments,
-        or list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.
+        List Azure OpenAI model deployments in a Microsoft Foundry resource, including deployment names, model names,
+        versions, capabilities, and deployment status. Use this to show model deployments, check which OpenAI models
+        are deployed, or see available models in a specific Foundry resource. Requires resource-name and resource-group.
+        For Foundry resource-level details like endpoint URL, location, or SKU, use the resource get command instead.
         """;
 
     public override string Title => CommandTitle;

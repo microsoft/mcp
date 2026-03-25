@@ -31,6 +31,10 @@ Use these values unless the prompt explicitly specifies otherwise. Do NOT spend 
 - **Tenant:** 70a036f6-8e4d-4615-bad6-149c02e7720d
 - **Resource Group:** SSS3PT_Copilot_Cli_Test
 - **Location:** eastus2
+- **Postgres Server Name:** copilot-cli-test-server
+- **MySQL Server Name:** copilot-cli-test-server-mysql
+- **Log Analytics Workspace:** mcp-server-test-workspace
+- **Application Insight Resource:** mcp-server-test-appinsight
 
 **Placeholder Substitution:**
 For any placeholder values in angle brackets (e.g., `<storage_account_name>`), use a reasonable test value:
@@ -49,6 +53,33 @@ For any placeholder values in angle brackets (e.g., `<storage_account_name>`), u
 - Index names: `mcp-test-index`
 - Key/secret names: `mcp-test-key`
 - File paths: `./test-file.txt`
+- Bicep Template: 
+  ```bicep
+  param location string = 'eastus2'
+  resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
+    name: 'myVM'
+    location: location
+    properties: {
+      hardwareProfile: { vmSize: 'Standard_D4s_v5' }
+      storageProfile: {
+        osDisk: { createOption: 'FromImage', managedDisk: { storageAccountType: 'Premium_LRS' } }
+      }
+      osProfile: { computerName: 'myVM', adminUsername: 'azureuser', adminPassword: 'P@ssw0rd1234!' }
+      networkProfile: { networkInterfaces: [{ id: nic.id }] }
+    }
+  }
+  resource nic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
+    name: 'myNIC'
+    location: location
+    properties: { ipConfigurations: [{ name: 'ipconfig1', properties: { subnet: { id: '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/default' } } }] }
+  }
+  resource sa 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+    name: 'mcpteststorage01'
+    location: location
+    sku: { name: 'Standard_LRS' }
+    kind: 'StorageV2'
+  }
+  ```
 
 For ANY other placeholder in angle brackets, invent a plausible value. **Never** ask the user for clarification — always substitute and proceed with the tool call.
 

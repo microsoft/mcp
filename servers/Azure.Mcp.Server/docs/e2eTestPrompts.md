@@ -601,13 +601,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_blob_autoexport_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
-| managedlustre_fs_blob_autoexport_list | List all autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoexport_get | List all autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoexport_delete | Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_cancel | Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
-| managedlustre_fs_blob_autoimport_list | List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_blob_autoimport_get | List all autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_create | Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_get | Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_blob_import_get | List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
