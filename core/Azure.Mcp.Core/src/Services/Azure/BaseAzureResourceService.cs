@@ -86,13 +86,20 @@ public abstract class BaseAzureResourceService(
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
-        KqlFilter? additionalFilter = null,
+        string? additionalFilter = null,
         int limit = 50,
         CancellationToken cancellationToken = default,
         string? tenant = null)
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
+
+        if (!string.IsNullOrEmpty(additionalFilter) && additionalFilter.Contains('|'))
+        {
+            throw new ArgumentException(
+                "additionalFilter must not contain the pipe operator '|' to prevent KQL injection.",
+                nameof(additionalFilter));
+        }
 
         var results = new List<T>();
 
@@ -108,9 +115,9 @@ public abstract class BaseAzureResourceService(
             }
             queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
-        if (additionalFilter != null)
+        if (!string.IsNullOrEmpty(additionalFilter))
         {
-            queryFilter += $" and {EscapeKqlIdentifier(additionalFilter.Field)} {ValidateKqlOperator(additionalFilter.Operator)} '{EscapeKqlString(additionalFilter.Value)}'";
+            queryFilter += $" and {additionalFilter}";
         }
         queryFilter += $" | limit {limit}";
 
@@ -155,7 +162,7 @@ public abstract class BaseAzureResourceService(
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
-        KqlFilter? additionalFilter = null,
+        string? additionalFilter = null,
         string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {

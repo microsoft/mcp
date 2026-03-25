@@ -55,7 +55,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
             subscription: subscription,
             retryPolicy: retryPolicy,
             converter: ConvertToAcrRegistryInfoModel,
-            additionalFilter: new KqlFilter("name", "=~", registry),
+            additionalFilter: $"name =~ '{EscapeKqlString(registry)}'",
             tenant: tenant,
             cancellationToken: cancellationToken);
 

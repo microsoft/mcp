@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
-public sealed class EscapeKustoIdentifierTests
+public sealed class EscapeKqlIdentifierTests
 {
     [Theory]
     [InlineData("table1", "['table1']")]
@@ -18,9 +18,9 @@ public sealed class EscapeKustoIdentifierTests
     [InlineData("table\ninjection", "['table\ninjection']")]
     [InlineData("table\rinjection", "['table\rinjection']")]
     [InlineData("table\0injection", "['table\0injection']")]
-    public static void EscapeKustoIdentifier_EscapesCorrectly(string input, string expected)
+    public static void EscapeKqlIdentifier_EscapesCorrectly(string input, string expected)
     {
-        var result = KustoService.EscapeKustoIdentifier(input);
+        var result = KustoService.EscapeKqlIdentifier(input);
         Assert.Equal(expected, result);
     }
 
@@ -28,49 +28,49 @@ public sealed class EscapeKustoIdentifierTests
     [InlineData("['MyTable']", "['MyTable']")]
     [InlineData("[\"MyTable\"]", "['MyTable']")]
     [InlineData("['table''name']", "['table''''name']")]
-    public static void EscapeKustoIdentifier_UnescapesAndReescapes(string input, string expected)
+    public static void EscapeKqlIdentifier_UnescapesAndReescapes(string input, string expected)
     {
-        var result = KustoService.EscapeKustoIdentifier(input);
+        var result = KustoService.EscapeKqlIdentifier(input);
         Assert.Equal(expected, result);
     }
 
     [Theory]
     [InlineData("['']")]
     [InlineData("[\"\"]")]
-    public static void EscapeKustoIdentifier_RejectsEmptyAfterUnescape(string input)
+    public static void EscapeKqlIdentifier_RejectsEmptyAfterUnescape(string input)
     {
-        Assert.Throws<ArgumentException>(() => KustoService.EscapeKustoIdentifier(input));
+        Assert.Throws<ArgumentException>(() => KustoService.EscapeKqlIdentifier(input));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public static void EscapeKustoIdentifier_RejectsEmptyOrWhitespace(string input)
+    public static void EscapeKqlIdentifier_RejectsEmptyOrWhitespace(string input)
     {
-        Assert.Throws<ArgumentException>(() => KustoService.EscapeKustoIdentifier(input));
+        Assert.Throws<ArgumentException>(() => KustoService.EscapeKqlIdentifier(input));
     }
 
     [Fact]
-    public static void EscapeKustoIdentifier_RejectsNull()
+    public static void EscapeKqlIdentifier_RejectsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => KustoService.EscapeKustoIdentifier(null!));
+        Assert.Throws<ArgumentNullException>(() => KustoService.EscapeKqlIdentifier(null!));
     }
 
     [Fact]
-    public static void EscapeKustoIdentifier_PreventsKqlInjection()
+    public static void EscapeKqlIdentifier_PreventsKqlInjection()
     {
         // Simulates the attack from the vulnerability report - newlines are safely wrapped in brackets
         var malicious = "TestTable cslschema\n| take 0\n.show databases";
-        var result = KustoService.EscapeKustoIdentifier(malicious);
+        var result = KustoService.EscapeKqlIdentifier(malicious);
         Assert.Equal("['TestTable cslschema\n| take 0\n.show databases']", result);
     }
 
     [Fact]
-    public static void EscapeKustoIdentifier_PreventsQueryInjection()
+    public static void EscapeKqlIdentifier_PreventsQueryInjection()
     {
         // Simulates the sample command injection attack - semicolons are safely wrapped in brackets
         var malicious = "TestTable | take 0; .show database YourDB schema";
-        var result = KustoService.EscapeKustoIdentifier(malicious);
+        var result = KustoService.EscapeKqlIdentifier(malicious);
         Assert.Equal("['TestTable | take 0; .show database YourDB schema']", result);
     }
 }

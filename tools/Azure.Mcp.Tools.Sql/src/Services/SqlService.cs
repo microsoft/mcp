@@ -69,7 +69,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             subscription: subscription,
             retryPolicy: retryPolicy,
             converter: ConvertToSqlDatabaseModel,
-            additionalFilter: new KqlFilter("name", "=~", databaseName),
+            additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
             cancellationToken: cancellationToken);
 
         if (result == null)

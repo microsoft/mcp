@@ -202,7 +202,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             subscription: subscription,
             retryPolicy: retryPolicy,
             converter: ConvertToAppConfigurationAccountModel,
-            additionalFilter: new KqlFilter("name", "=~", accountName),
+            additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             cancellationToken: cancellationToken);
 
         if (account == null)
