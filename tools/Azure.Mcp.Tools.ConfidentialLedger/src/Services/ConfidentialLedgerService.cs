@@ -134,8 +134,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
     }
 
     /// <summary>
-    /// Validates that a ledger name contains only characters valid for an Azure Confidential Ledger name
-    /// (alphanumeric and hyphens, starting with a letter) to prevent SSRF via host injection.
+    /// Validates that a ledger name contains only ASCII characters valid for an Azure Confidential Ledger name
+    /// (a-z, A-Z, 0-9, and hyphens, starting with an ASCII letter).
     /// </summary>
     private static void ValidateLedgerName(string ledgerName)
     {
@@ -144,19 +144,25 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Ledger name cannot be null or empty.", nameof(ledgerName));
         }
 
-        if (!char.IsLetter(ledgerName[0]))
+        if (!IsAsciiLetter(ledgerName[0]))
         {
             throw new ArgumentException(
-                $"Ledger name must start with a letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
+                $"Ledger name must start with an ASCII letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
         }
 
         foreach (var c in ledgerName)
         {
-            if (!char.IsLetterOrDigit(c) && c != '-')
+            if (!IsAsciiLetterOrDigit(c) && c != '-')
             {
                 throw new ArgumentException(
-                    $"Ledger name contains invalid character '{c}'. Only alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
+                    $"Ledger name contains invalid character '{c}'. Only ASCII alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
             }
         }
     }
+
+    private static bool IsAsciiLetter(char c) =>
+        (uint)((c | 0x20) - 'a') <= 'z' - 'a';
+
+    private static bool IsAsciiLetterOrDigit(char c) =>
+        IsAsciiLetter(c) || (uint)(c - '0') <= '9' - '0';
 }
