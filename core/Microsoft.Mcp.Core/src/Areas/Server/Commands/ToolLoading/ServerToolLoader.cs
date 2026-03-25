@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,7 +16,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
-    private readonly Dictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -417,13 +418,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             return cachedList;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Params?.Name))
-        {
-            throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
-        }
-
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(request.Params.Name, clientOptions, cancellationToken);
+        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         if (client == null)
         {
             return [];

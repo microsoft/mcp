@@ -94,8 +94,6 @@ public sealed class RegistryToolLoader(
                 Text = "Cannot call tools with null parameters.",
             };
 
-            _logger.LogWarning(content.Text);
-
             return new CallToolResult
             {
                 Content = [content],
@@ -116,8 +114,6 @@ public sealed class RegistryToolLoader(
                     Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
                 };
 
-                _logger.LogWarning(content.Text);
-
                 return new CallToolResult
                 {
                     Content = [content],
@@ -132,8 +128,6 @@ public sealed class RegistryToolLoader(
             {
                 Text = $"The tool {request.Params.Name} was not found in the tool registry.",
             };
-
-            _logger.LogWarning(content.Text);
 
             return new CallToolResult
             {
@@ -150,8 +144,6 @@ public sealed class RegistryToolLoader(
                 Text = $"Tool '{request.Params.Name}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
             };
 
-            _logger.LogWarning(content.Text);
-
             return new CallToolResult
             {
                 Content = [content],
@@ -166,8 +158,6 @@ public sealed class RegistryToolLoader(
             {
                 Text = $"Tool '{request.Params.Name}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
-
-            _logger.LogWarning(content.Text);
 
             return new CallToolResult
             {
