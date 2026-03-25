@@ -17,7 +17,7 @@ public abstract class BaseAzureService
     private const double MaxAllowedNetworkTimeoutSeconds = 300;
     private const double MaxAllowedDelaySeconds = 60;
     private const double MinAllowedDelaySeconds = 0.1;
-    private static bool s_retryLimitsDisabled = false;
+    private static volatile bool s_retryLimitsDisabled = false;
     private static UserAgentPolicy s_sharedUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
@@ -52,23 +52,6 @@ public abstract class BaseAzureService
     /// <remarks>
     /// The user agent string will be formatted as: azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})
     /// </remarks>
-    /// <summary>
-    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
-    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
-    /// </summary>
-    public static void DisableRetryLimits()
-    {
-        s_retryLimitsDisabled = true;
-    }
-
-    /// <summary>
-    /// Resets the retry limits flag. For testing only.
-    /// </summary>
-    internal static void ResetRetryLimits()
-    {
-        s_retryLimitsDisabled = false;
-    }
-
     public static void InitializeUserAgentPolicy(string transportType)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(transportType, nameof(transportType));
@@ -87,6 +70,25 @@ public abstract class BaseAzureService
             s_initialized = true;
         }
     }
+
+    /// <summary>
+    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
+    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
+    /// </summary>
+    public static void DisableRetryLimits()
+    {
+        s_retryLimitsDisabled = true;
+    }
+
+    /// <summary>
+    /// Resets the retry limits flag. For testing only.
+    /// </summary>
+    internal static void ResetRetryLimits()
+    {
+        s_retryLimitsDisabled = false;
+    }
+
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
