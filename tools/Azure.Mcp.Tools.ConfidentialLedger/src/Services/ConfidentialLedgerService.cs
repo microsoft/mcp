@@ -41,10 +41,11 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
@@ -74,8 +75,9 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
+        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(new Uri(GetLedgerUri(ledgerName)), credential);
+        ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         bool loaded = false;
         string? contents = null;
@@ -118,6 +120,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
     private string GetLedgerUri(string ledgerName)
     {
+        ValidateLedgerName(ledgerName);
+
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
@@ -129,5 +133,32 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             _ =>
                 $"https://{ledgerName}.confidential-ledger.azure.com"
         };
+    }
+
+    /// <summary>
+    /// Validates that a ledger name contains only ASCII characters valid for an Azure Confidential Ledger name
+    /// (a-z, A-Z, 0-9, and hyphens, starting with an ASCII letter).
+    /// </summary>
+    private static void ValidateLedgerName(string ledgerName)
+    {
+        if (string.IsNullOrWhiteSpace(ledgerName))
+        {
+            throw new ArgumentException("Ledger name cannot be null or empty.", nameof(ledgerName));
+        }
+
+        if (!char.IsAsciiLetter(ledgerName[0]))
+        {
+            throw new ArgumentException(
+                $"Ledger name must start with an ASCII letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
+        }
+
+        foreach (var c in ledgerName)
+        {
+            if (!char.IsAsciiLetterOrDigit(c) && c != '-')
+            {
+                throw new ArgumentException(
+                    $"Ledger name contains invalid character '{c}'. Only ASCII alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
+            }
+        }
     }
 }
