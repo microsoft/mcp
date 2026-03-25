@@ -120,7 +120,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var key = CosmosClientsCacheKeyPrefix + accountName;
+        var key = CosmosClientsCacheKeyPrefix + accountName + "_" + authMethod;
         var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
