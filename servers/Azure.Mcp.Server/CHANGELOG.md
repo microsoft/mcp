@@ -2,15 +2,20 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.33 (Unreleased)
+## 2.0.0-beta.33 (2026-03-25)
 
 ### Features Added
 
-### Breaking Changes
+- Updated secret elicitation to require explicit user confirmation before proceeding with sensitive operations. [[#2197](https://github.com/microsoft/mcp/pull/2197)]
 
 ### Bugs Fixed
 
+- Added IPv4 format validation and blocked dangerous IP ranges in the `sql_server_firewall-rule_create` command to prevent overly permissive firewall rules. [[#2206](https://github.com/microsoft/mcp/pull/2206)]
+- Improved `HttpRequestException` handling to return the actual HTTP status code when available instead of defaulting to `503 Service Unavailable`. [[#2200](https://github.com/microsoft/mcp/pull/2200)]
+
 ### Other Changes
+
+- - Extended elicitations/user consent prompts to cover destructive operations (delete, modify, create) in addition to secret operations, and consolidated both into a single prompt to avoid duplicate confirmation. [[#2208](https://github.com/microsoft/mcp/pull/2208)]
 
 ## 2.0.0-beta.32 (2026-03-24)
 

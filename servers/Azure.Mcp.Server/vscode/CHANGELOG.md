@@ -1,5 +1,20 @@
 # Release History
 
+## 2.0.33 (2026-03-25)(pre-release)
+
+### Added
+
+- Updated secret elicitation to require explicit user confirmation before proceeding with sensitive operations. [[#2197](https://github.com/microsoft/mcp/pull/2197)]
+
+### Changed
+
+- Extended elicitations/user consent prompts to cover destructive operations (delete, modify, create) in addition to secret operations, and consolidated both into a single prompt to avoid duplicate confirmation. [[#2208](https://github.com/microsoft/mcp/pull/2208)]
+
+### Fixed
+
+- Added IPv4 format validation and blocked dangerous IP ranges in the `sql_server_firewall-rule_create` command to prevent overly permissive firewall rules. [[#2206](https://github.com/microsoft/mcp/pull/2206)]
+- Improved `HttpRequestException` handling to return the actual HTTP status code when available instead of defaulting to `503 Service Unavailable`. [[#2200](https://github.com/microsoft/mcp/pull/2200)]
+
 ## 2.0.32 (2026-03-24) (pre-release)
 
 ### Added
