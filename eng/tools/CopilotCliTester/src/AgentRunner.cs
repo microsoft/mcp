@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Data;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using CopilotCliTester.Models;
@@ -90,17 +91,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 Model = config.Model ?? "claude-sonnet-4.5",
                 Streaming = true,
                 OnPermissionRequest = PermissionHandler.ApproveAll,
-                McpServers = new Dictionary<string, object>
-                {
-                    ["azure"] = new McpLocalServerConfig
-                    {
-                        Type = "stdio",
-                        Command = @"C:\Users\anannyapatra\mcp-main-noChange\mcp\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe",
-                        Args = ["server", "start", "--mode", "all"],
-                        Tools = ["*"]
-                    },
-                },
-                // McpServers = BuildMcpServersConfig(config.McpServerUrl),
+                McpServers = BuildMcpServersConfig(),
                 SystemMessage = systemMessage
             }, cancellationToken);
 
@@ -359,45 +350,132 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     /// <summary>
-    /// Builds the MCP servers configuration based on whether an HTTP URL is provided.
-    /// If a URL is provided, uses HTTP transport to connect to a shared server.
-    /// Otherwise, spawns a new stdio process per session.
+    /// Builds the MCP servers configuration for stdio transport.
+    /// Discovers or builds the local azmcp executable from the repo.
     /// </summary>
-    // private static Dictionary<string, object> BuildMcpServersConfig(string? httpServerUrl)
-    // {
-    //     if (!string.IsNullOrEmpty(httpServerUrl))
-    //     {
-    //         // The MCP server exposes SSE at /sse endpoint
-    //         // Ensure URL ends with /sse for SSE transport
-    //         var sseUrl = httpServerUrl.TrimEnd('/');
-    //         if (!sseUrl.EndsWith("/sse", StringComparison.OrdinalIgnoreCase))
-    //         {
-    //             sseUrl += "/sse";
-    //         }
-            
-    //         return new Dictionary<string, object>
-    //         {
-    //             ["azure"] = new Dictionary<string, object>
-    //             {
-    //                 ["type"] = "sse",
-    //                 ["url"] = sseUrl,
-    //                 ["tools"] = new List<string> { "*" }
-    //             }
-    //         };
-    //     }
+    private static Dictionary<string, object> BuildMcpServersConfig()
+    {
+        var serverPath = ResolveServerExecutable();
 
-    //     // stdio mode unchanged
-    //     return new Dictionary<string, object>
-    //     {
-    //         ["azure"] = new McpLocalServerConfig
-    //         {
-    //             Type = "stdio",
-    //             Command = "npx",
-    //             Args = ["-y", "@azure/mcp", "server", "start"],
-    //             Tools = ["*"]
-    //         }
-    //     };
-    // }
+        return new Dictionary<string, object>
+        {
+            ["azure"] = new McpLocalServerConfig
+            {
+                Type = "stdio",
+                Command = serverPath,
+                Args = ["server", "start", "--mode", "namespace", "--dangerously-disable-elicitation"],
+                Env = new Dictionary<string, string>
+                {
+                    ["AZURE_TOKEN_CREDENTIALS"] = "AzureCliCredential"
+                },
+                Tools = ["*"]
+            }
+        };
+    }
+
+    private static readonly string ServerProjectRelativePath =
+        Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
+
+    /// <summary>
+    /// Resolves the azmcp server executable. Walks up from the current assembly location
+    /// to find the repo root (containing Microsoft.Mcp.slnx), then checks for an existing
+    /// build artifact. If none is found, builds the server project.
+    /// </summary>
+    private static string ResolveServerExecutable()
+    {
+        var repoRoot = FindRepoRoot();
+        var serverProject = Path.Combine(repoRoot, ServerProjectRelativePath);
+
+        if (!File.Exists(serverProject))
+        {
+            throw new InvalidOperationException(
+                $"Azure MCP Server project not found at '{serverProject}'. " +
+                "Make sure you're running from within the repo.");
+        }
+
+        // Check Debug then Release for an existing build output
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+        // string[] configurations = ["Debug", "Release"];
+
+        var file = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+
+        if (File.Exists(file))
+        {
+            Console.WriteLine($"Using existing server build: {file}");
+            return file;
+        }
+        
+        // foreach (var config in configurations)
+        // {
+        //     var candidate = Path.Combine(
+        //         repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", config, "net10.0", exeName);
+
+        //     if (File.Exists(candidate))
+        //     {
+        //         Console.WriteLine($"Using existing server build: {candidate}");
+        //         return candidate;
+        //     }
+        // }
+
+        // No pre-built artifact found — build the server project
+        Console.WriteLine("No pre-built azmcp found. Building Azure.Mcp.Server...");
+        var psi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            ArgumentList = { "build", serverProject },
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+
+        using var process = Process.Start(psi)
+            ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
+
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            var stderr = process.StandardError.ReadToEnd();
+            throw new InvalidOperationException(
+                $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
+        }
+
+        // After build, the Debug output should exist
+        var builtPath = Path.Combine(
+            repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+
+        if (!File.Exists(builtPath))
+        {
+            throw new InvalidOperationException(
+                $"Build succeeded but server executable not found at '{builtPath}'.");
+        }
+
+        Console.WriteLine($"Build complete: {builtPath}");
+        return builtPath;
+    }
+
+    /// <summary>
+    /// Walks up from the executing assembly's directory to find the repo root
+    /// (the directory containing Microsoft.Mcp.slnx).
+    /// </summary>
+    private static string FindRepoRoot()
+    {
+        var dir = AppContext.BaseDirectory;
+
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir, "Microsoft.Mcp.slnx")))
+            {
+                return dir;
+            }
+
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        throw new InvalidOperationException(
+            "Could not find repo root (directory containing Microsoft.Mcp.slnx). " +
+            "Make sure you're running from within the repo.");
+    }
 
     private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)
     {

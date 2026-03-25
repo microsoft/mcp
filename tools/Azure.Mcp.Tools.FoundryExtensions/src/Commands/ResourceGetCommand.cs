@@ -27,10 +27,11 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
     public override string Description =>
         """
         Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL,
-        location, SKU, and all deployed models with their configuration. If a specific resource name is provided,
-        returns details for that resource only. If no resource name is provided, lists all Microsoft Foundry resources
-        in the subscription or resource group. Use this tool when users need endpoint information, want to discover
-        available AI resources, or need to see all models deployed on AI resources.
+        location, SKU, and provisioning state. If a specific resource name is provided, returns details for that
+        resource only. If no resource name is provided, lists all Microsoft Foundry resources in the subscription
+        or resource group. Use this tool when users need endpoint information, want to discover available AI
+        resources, or need to check the configuration of a Foundry account. To list OpenAI model deployments
+        within a resource, use the openai models-list command instead.
         """;
 
     public override string Title => CommandTitle;

@@ -46,7 +46,7 @@ static class Program
               --retries <n>       Maximum retry attempts per prompt (default: 3)
               --one-per-tool      Test only one prompt per tool
               --output <dir>      Output directory for reports
-              --model <name>      Model to use (default: claude-sonnet-4.5)
+              --model <name>      Model to use (default: claude-opus-4.6)
               --parallel <n>      Number of prompts to test concurrently (default: 4)
               --prompts-file <path>  Custom prompts file (markdown format)
             """);
@@ -55,7 +55,7 @@ static class Program
 
     static async Task<int> RunE2ETestsFromArgs(string[] args)
     {
-        string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-sonnet-4.5", promptsFile = null;
+        string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-opus-4.6", promptsFile = null;
         int max = 0, retries = 3, parallel = 4;
         bool onePerTool = false;
 
