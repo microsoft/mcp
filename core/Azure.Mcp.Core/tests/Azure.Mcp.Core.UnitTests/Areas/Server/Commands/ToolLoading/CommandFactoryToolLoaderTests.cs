@@ -1018,7 +1018,7 @@ public class CommandFactoryToolLoaderTests
         var fakeSystemCommand = new Command("fake-readonly-tool", "A fake read-only tool for testing");
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake ReadOnly Tool");
-        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = true });
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Read-only test response" });
 
@@ -1095,7 +1095,7 @@ public class CommandFactoryToolLoaderTests
         var fakeSystemCommand = new Command("fake-write-tool-2", "A fake write tool for testing");
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Write Tool 2");
-        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = false });
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = false, Destructive = false });
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Write test response" });
 
