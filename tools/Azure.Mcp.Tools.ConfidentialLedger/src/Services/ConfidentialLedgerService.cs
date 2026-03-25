@@ -118,6 +118,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
     private string GetLedgerUri(string ledgerName)
     {
+        ValidateLedgerName(ledgerName);
+
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
@@ -129,5 +131,32 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             _ =>
                 $"https://{ledgerName}.confidential-ledger.azure.com"
         };
+    }
+
+    /// <summary>
+    /// Validates that a ledger name contains only characters valid for an Azure Confidential Ledger name
+    /// (alphanumeric and hyphens, starting with a letter) to prevent SSRF via host injection.
+    /// </summary>
+    private static void ValidateLedgerName(string ledgerName)
+    {
+        if (string.IsNullOrWhiteSpace(ledgerName))
+        {
+            throw new ArgumentException("Ledger name cannot be null or empty.", nameof(ledgerName));
+        }
+
+        if (!char.IsLetter(ledgerName[0]))
+        {
+            throw new ArgumentException(
+                $"Ledger name must start with a letter. Got: '{ledgerName[0]}'.", nameof(ledgerName));
+        }
+
+        foreach (var c in ledgerName)
+        {
+            if (!char.IsLetterOrDigit(c) && c != '-')
+            {
+                throw new ArgumentException(
+                    $"Ledger name contains invalid character '{c}'. Only alphanumeric characters and hyphens are allowed.", nameof(ledgerName));
+            }
+        }
     }
 }
