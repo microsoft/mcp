@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Xunit;
 
@@ -28,6 +29,7 @@ public class AppConfigServiceTests
         var parameters = executeMethod!.GetParameters();
         Assert.True(parameters.Length >= 7, "ExecuteSingleResourceQueryAsync should expose the additionalFilter parameter");
         Assert.Equal("additionalFilter", parameters[6].Name);
+        Assert.Equal(typeof(KqlFilter), Nullable.GetUnderlyingType(parameters[6].ParameterType) ?? parameters[6].ParameterType);
 
         var methodSource = ReadFindAppConfigStoreSource();
         Assert.Contains("ExecuteSingleResourceQueryAsync(", methodSource);

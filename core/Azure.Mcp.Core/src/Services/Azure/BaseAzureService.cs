@@ -130,6 +130,47 @@ public abstract class BaseAzureService
         return value.Replace("\\", "\\\\").Replace("'", "''");
     }
 
+    /// <summary>
+    /// Escapes an identifier (column/field name) for safe use in KQL queries by wrapping it
+    /// in backticks and escaping any embedded backticks.
+    /// </summary>
+    /// <param name="identifier">The identifier to escape.</param>
+    /// <returns>The escaped identifier wrapped in backticks.</returns>
+    protected static string EscapeKqlIdentifier(string identifier)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            throw new ArgumentException("KQL identifier cannot be null or empty.", nameof(identifier));
+        }
+
+        return "`" + identifier.Replace("`", "``") + "`";
+    }
+
+    private static readonly HashSet<string> s_allowedKqlOperators =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "==", "!=", "=~", "!~", "contains", "!contains",
+            "startswith", "!startswith", "endswith", "!endswith",
+            "contains_cs", "startswith_cs", "endswith_cs"
+        };
+
+    /// <summary>
+    /// Validates that the operator is an allowlisted KQL comparison operator.
+    /// </summary>
+    /// <param name="op">The operator string to validate.</param>
+    /// <returns>The operator string if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown when the operator is not allowlisted.</exception>
+    protected static string ValidateKqlOperator(string op)
+    {
+        if (!s_allowedKqlOperators.Contains(op))
+        {
+            throw new ArgumentException(
+                $"KQL operator '{op}' is not allowed. Permitted operators: {string.Join(", ", s_allowedKqlOperators)}",
+                nameof(op));
+        }
+        return op;
+    }
+
     protected async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         if (tenant == null)

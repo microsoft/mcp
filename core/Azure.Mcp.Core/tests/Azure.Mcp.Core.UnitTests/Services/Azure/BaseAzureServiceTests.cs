@@ -139,6 +139,52 @@ public class BaseAzureServiceTests
     }
 
     [Fact]
+    public void EscapeKqlIdentifier_WrapsInBackticks()
+    {
+        Assert.Equal("`name`", _azureService.EscapeKqlIdentifierTest("name"));
+        Assert.Equal("`id`", _azureService.EscapeKqlIdentifierTest("id"));
+    }
+
+    [Fact]
+    public void EscapeKqlIdentifier_DoublesEmbeddedBackticks()
+    {
+        Assert.Equal("`col``name`", _azureService.EscapeKqlIdentifierTest("col`name"));
+    }
+
+    [Fact]
+    public void EscapeKqlIdentifier_ThrowsOnNullOrEmpty()
+    {
+        Assert.Throws<ArgumentException>(() => _azureService.EscapeKqlIdentifierTest(string.Empty));
+        Assert.Throws<ArgumentException>(() => _azureService.EscapeKqlIdentifierTest(null!));
+    }
+
+    [Theory]
+    [InlineData("=~")]
+    [InlineData("contains")]
+    [InlineData("==")]
+    [InlineData("!=")]
+    [InlineData("!~")]
+    [InlineData("startswith")]
+    [InlineData("endswith")]
+    [InlineData("!contains")]
+    [InlineData("contains_cs")]
+    public void ValidateKqlOperator_AcceptsAllowlistedOperators(string op)
+    {
+        Assert.Equal(op, _azureService.ValidateKqlOperatorTest(op));
+    }
+
+    [Theory]
+    [InlineData("|")]
+    [InlineData("union")]
+    [InlineData("project")]
+    [InlineData("limit")]
+    [InlineData("; drop table")]
+    public void ValidateKqlOperator_RejectsDisallowedOperators(string op)
+    {
+        Assert.Throws<ArgumentException>(() => _azureService.ValidateKqlOperatorTest(op));
+    }
+
+    [Fact]
     public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
     {
         // Initialize the user agent policy before creating test service
@@ -230,6 +276,10 @@ public class BaseAzureServiceTests
         public Task<string?> ResolveTenantId(string? tenant, CancellationToken cancellationToken) => ResolveTenantIdAsync(tenant, cancellationToken);
 
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
+
+        public string EscapeKqlIdentifierTest(string identifier) => EscapeKqlIdentifier(identifier);
+
+        public string ValidateKqlOperatorTest(string op) => ValidateKqlOperator(op);
 
         public string GetUserAgent() => UserAgent;
     }

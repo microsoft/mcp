@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Updated BaseAzureResourceService where the additionalFilter parameter was concatenated into Resource Graph queries without validation. Pipe operators are now rejected."

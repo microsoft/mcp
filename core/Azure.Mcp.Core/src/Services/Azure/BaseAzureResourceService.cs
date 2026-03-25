@@ -74,7 +74,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
@@ -86,7 +86,7 @@ public abstract class BaseAzureResourceService(
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
-        string? additionalFilter = null,
+        KqlFilter? additionalFilter = null,
         int limit = 50,
         CancellationToken cancellationToken = default,
         string? tenant = null)
@@ -108,9 +108,9 @@ public abstract class BaseAzureResourceService(
             }
             queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
-        if (!string.IsNullOrEmpty(additionalFilter))
+        if (additionalFilter != null)
         {
-            queryFilter += $" and {additionalFilter}";
+            queryFilter += $" and {EscapeKqlIdentifier(additionalFilter.Field)} {ValidateKqlOperator(additionalFilter.Operator)} '{EscapeKqlString(additionalFilter.Value)}'";
         }
         queryFilter += $" | limit {limit}";
 
@@ -145,7 +145,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
@@ -155,7 +155,7 @@ public abstract class BaseAzureResourceService(
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
-        string? additionalFilter = null,
+        KqlFilter? additionalFilter = null,
         string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {

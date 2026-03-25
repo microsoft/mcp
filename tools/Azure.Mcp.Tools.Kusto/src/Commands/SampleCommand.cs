@@ -60,7 +60,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         try
         {
             List<JsonElement> results;
-            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {options.Limit}";
+            var query = $"{KustoService.EscapeKustoIdentifier(options.Table!)} | sample {options.Limit}";
 
             if (UseClusterUri(options))
             {

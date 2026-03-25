@@ -35,7 +35,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             retryPolicy,
             ConvertToRoleAssignmentModel,
             "authorizationresources",
-            additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+            additionalFilter: new KqlFilter("id", "contains", scope),
             tenant: tenantId,
             cancellationToken: cancellationToken);
     }

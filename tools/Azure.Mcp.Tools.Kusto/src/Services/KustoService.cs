@@ -32,7 +32,7 @@ public sealed class KustoService(
     /// <summary>
     /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
     /// </summary>
-    internal static string EscapeKqlIdentifier(string identifier)
+    internal static string EscapeKustoIdentifier(string identifier)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
 
@@ -94,7 +94,7 @@ public sealed class KustoService(
             subscription: subscriptionId,
             retryPolicy: retryPolicy,
             converter: ConvertToClusterModel,
-            additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
+            additionalFilter: new KqlFilter("name", "=~", clusterName),
             tenant: tenant,
             cancellationToken: cancellationToken);
 
@@ -206,7 +206,7 @@ public sealed class KustoService(
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant, cancellationToken);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(
             databaseName,
-            $".show table {EscapeKqlIdentifier(tableName)} cslschema", cancellationToken);
+            $".show table {EscapeKustoIdentifier(tableName)} cslschema", cancellationToken);
         var result = KustoResultToStringList(kustoResult);
         if (result.Count > 0)
         {

@@ -60,7 +60,7 @@ public class StorageService(
                 subscription: subscription,
                 retryPolicy: retryPolicy,
                 converter: ConvertToAccountInfoModel,
-                additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
+                additionalFilter: new KqlFilter("name", "=~", account),
                 tenant: tenant,
                 cancellationToken: cancellationToken);
 
