@@ -20,11 +20,10 @@ namespace Azure.Mcp.Core.Services.Caching;
 /// </remarks>
 public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 {
+    private static readonly object s_sentinal = new();
     private readonly IMemoryCache _memoryCache = memoryCache;
 
-    // Use ConcurrentDictionary with lock object per group to ensure thread-safe HashSet access.
-    private static readonly ConcurrentDictionary<string, HashSet<string>> s_groupKeys = new();
-    private static readonly ConcurrentDictionary<string, object> s_groupLocks = new();
+    private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> s_groupKeys = new();
 
     public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
@@ -46,13 +45,19 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         _memoryCache.Set(cacheKey, data, options);
 
-        // Track the key in the group with thread-safe access to the HashSet.
-        var groupLock = s_groupLocks.GetOrAdd(group, static _ => new object());
-        lock (groupLock)
-        {
-            var keys = s_groupKeys.GetOrAdd(group, static _ => new HashSet<string>());
-            keys.Add(key);
-        }
+        s_groupKeys.AddOrUpdate(
+            group,
+            key =>
+            {
+                var keys = new ConcurrentDictionary<string, object>();
+                keys.TryAdd(key, s_sentinal);
+                return keys;
+            },
+            (_, keys) =>
+            {
+                keys.TryAdd(key, s_sentinal);
+                return keys;
+            });
 
         return default;
     }
@@ -62,16 +67,10 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         string cacheKey = GetGroupKey(group, key);
         _memoryCache.Remove(cacheKey);
 
-        // Remove from group tracking with thread-safe access.
-        if (s_groupLocks.TryGetValue(group, out var groupLock))
+        // Remove from group tracking
+        if (s_groupKeys.TryGetValue(group, out var keys))
         {
-            lock (groupLock)
-            {
-                if (s_groupKeys.TryGetValue(group, out var keys))
-                {
-                    keys.Remove(key);
-                }
-            }
+            keys.Remove(key, out _);
         }
 
         return default;
@@ -82,11 +81,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         if (s_groupKeys.TryGetValue(group, out var keys))
         {
             // Return a snapshot to avoid concurrent modification during enumeration.
-            var groupLock = s_groupLocks.GetOrAdd(group, static _ => new object());
-            lock (groupLock)
-            {
-                return new ValueTask<IEnumerable<string>>(keys.ToArray().AsEnumerable());
-            }
+            return new ValueTask<IEnumerable<string>>([.. keys.Keys]);
         }
 
         return new ValueTask<IEnumerable<string>>([]);
@@ -102,7 +97,6 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         // Clear all group tracking
         s_groupKeys.Clear();
-        s_groupLocks.Clear();
 
         return default;
     }
@@ -115,22 +109,10 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
             return default;
         }
 
-        // Snapshot the keys under lock, then remove from cache outside the lock.
-        string[] keysSnapshot;
-        if (s_groupLocks.TryGetValue(group, out var groupLock))
-        {
-            lock (groupLock)
-            {
-                keysSnapshot = [.. keys];
-            }
-        }
-        else
-        {
-            keysSnapshot = [.. keys];
-        }
+        string[] keysSnapshot = [.. keys.Keys];
 
         // Remove each key in the group from the cache
-        foreach (var key in keys)
+        foreach (var key in keysSnapshot)
         {
             string cacheKey = GetGroupKey(group, key);
             _memoryCache.Remove(cacheKey);
@@ -138,7 +120,6 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         // Remove the group from tracking
         s_groupKeys.TryRemove(group, out _);
-        s_groupLocks.TryRemove(group, out _);
 
         return default;
     }
