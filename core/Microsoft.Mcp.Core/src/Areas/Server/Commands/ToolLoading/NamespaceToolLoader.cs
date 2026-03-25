@@ -398,21 +398,19 @@ public sealed class NamespaceToolLoader(
                 };
             }
 
-            // Check if this tool requires elicitation for sensitive data
+            // Check if this tool requires elicitation for sensitive or destructive operations
             var metadata = cmd.Metadata;
-            if (metadata.Secret)
-            {
-                var elicitationResult = await HandleSecretElicitationAsync(
-                    request,
-                    $"{namespaceName} {command}",
-                    _options.Value.DangerouslyDisableElicitation,
-                    _logger,
-                    cancellationToken);
+            var elicitationResult = await HandleElicitationAsync(
+                request,
+                $"{namespaceName} {command}",
+                metadata,
+                _options.Value.DangerouslyDisableElicitation,
+                _logger,
+                cancellationToken);
 
-                if (elicitationResult != null)
-                {
-                    return elicitationResult;
-                }
+            if (elicitationResult != null)
+            {
+                return elicitationResult;
             }
 
             var currentActivity = Activity.Current;

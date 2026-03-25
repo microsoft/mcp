@@ -121,7 +121,7 @@ public abstract class GlobalCommand<
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
-        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
         _ => HttpStatusCode.InternalServerError
     };
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.Sockets;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
@@ -9,6 +10,7 @@ using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
@@ -48,6 +50,32 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         command.Options.Add(SqlOptionDefinitions.FirewallRuleNameOption);
         command.Options.Add(SqlOptionDefinitions.StartIpAddressOption);
         command.Options.Add(SqlOptionDefinitions.EndIpAddressOption);
+        command.Validators.Add(commandResult =>
+        {
+            var startIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.StartIpAddressOption);
+            var endIp = commandResult.GetValueOrDefault(SqlOptionDefinitions.EndIpAddressOption);
+
+            var startIpIsValid = !string.IsNullOrEmpty(startIp) && IsValidIpAddress(startIp);
+            var endIpIsValid = !string.IsNullOrEmpty(endIp) && IsValidIpAddress(endIp);
+
+            if (!startIpIsValid)
+            {
+                commandResult.AddError($"Invalid start IP address format: '{startIp}'. Must be a valid IPv4 address.");
+            }
+
+            if (!endIpIsValid)
+            {
+                commandResult.AddError($"Invalid end IP address format: '{endIp}'. Must be a valid IPv4 address.");
+            }
+
+            if (startIpIsValid && endIpIsValid && IsDangerousRange(startIp!, endIp!))
+            {
+                commandResult.AddError(
+                    "The specified IP range is not allowed. A range of 0.0.0.0 to 0.0.0.0 enables access from all Azure services, and a range of 0.0.0.0 to 255.255.255.255 opens access to the entire internet. " +
+                    "These overly permissive rules are blocked for security. Specify a narrower IP range instead."
+                );
+            }
+        });
     }
 
     protected override FirewallRuleCreateOptions BindOptions(ParseResult parseResult)
@@ -57,6 +85,28 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         options.StartIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.StartIpAddressOption.Name);
         options.EndIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.EndIpAddressOption.Name);
         return options;
+    }
+
+    // IP address must be a dotted-quad IPv4 format (e.g. 10.0.0.1).
+    // The .ToString() check rejects non-canonical forms (e.g. 0, 4294967295) that would bypass the dangerous-range string checks via alternate representations.
+    internal static bool IsValidIpAddress(string ipAddress) =>
+        IPAddress.TryParse(ipAddress, out var parsed) && parsed.AddressFamily == AddressFamily.InterNetwork && parsed.ToString() == ipAddress;
+
+    internal static bool IsDangerousRange(string startIp, string endIp)
+    {
+        // Block 0.0.0.0 - 0.0.0.0 (opens server to all Azure-internal traffic)
+        if (startIp == "0.0.0.0" && endIp == "0.0.0.0")
+        {
+            return true;
+        }
+
+        // Block 0.0.0.0 - 255.255.255.255 (opens server to entire internet)
+        if (startIp == "0.0.0.0" && endIp == "255.255.255.255")
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
