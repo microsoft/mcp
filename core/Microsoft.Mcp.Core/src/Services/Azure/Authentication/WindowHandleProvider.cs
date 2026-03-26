@@ -35,6 +35,9 @@ public static partial class WindowHandleProvider
             {
                 // X11 display detection failed; running in headless mode.
                 // Avoid logging exception details to console to prevent information disclosure.
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {typeof(Exception).FullName}");
+                Console.ResetColor();
             }
         }
 
