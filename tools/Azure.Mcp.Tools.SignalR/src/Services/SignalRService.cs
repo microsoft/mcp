@@ -76,9 +76,9 @@ public sealed class SignalRService(
                 {
                     runtimes.Add(ConvertToRuntimeModel(runtime));
                 }
-
-                await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
             }
+
+            await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
         }
         else
         {
