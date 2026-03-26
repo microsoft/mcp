@@ -15,6 +15,10 @@ public static class AzureTerraformOptionDefinitions
     public const string AzApiResourceTypeName = "resource-type";
     public const string ApiVersionName = "api-version";
 
+    // AVM option names
+    public const string AvmModuleNameOption = "module-name";
+    public const string AvmModuleVersionOption = "module-version";
+
     public static readonly Option<string> ResourceType = new(
         $"--{ResourceTypeName}"
     )
@@ -61,5 +65,21 @@ public static class AzureTerraformOptionDefinitions
     {
         Description = "The API version to use for the resource schema. If omitted, the latest stable version is used.",
         Required = false
+    };
+
+    public static readonly Option<string> AvmModuleName = new(
+        $"--{AvmModuleNameOption}"
+    )
+    {
+        Description = "The name of the Azure Verified Module (e.g., avm-res-storage-storageaccount).",
+        Required = true
+    };
+
+    public static readonly Option<string> AvmModuleVersion = new(
+        $"--{AvmModuleVersionOption}"
+    )
+    {
+        Description = "The version of the Azure Verified Module (e.g., 0.4.0).",
+        Required = true
     };
 }

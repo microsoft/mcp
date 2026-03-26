@@ -23,15 +23,19 @@ public class AzureTerraformSetup : IAreaSetup
         services.AddSingleton<IAzureRMDocsService, AzureRMDocsService>();
         services.AddSingleton<IAzApiDocsService, AzApiDocsService>();
         services.AddSingleton<IAzApiExamplesService, AzApiExamplesService>();
+        services.AddSingleton<IAvmDocsService, AvmDocsService>();
         services.AddSingleton<AzureRMDocsGetCommand>();
         services.AddSingleton<AzApiDocsGetCommand>();
+        services.AddSingleton<AvmModuleListCommand>();
+        services.AddSingleton<AvmVersionListCommand>();
+        services.AddSingleton<AvmDocumentationGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var group = new CommandGroup(
             Name,
-            "Azure Terraform tools - Retrieves AzureRM and AzAPI Terraform provider documentation including resource schemas, arguments, attributes, and usage examples.",
+            "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, and usage examples.",
             Title
         );
 
@@ -56,6 +60,23 @@ public class AzureTerraformSetup : IAreaSetup
         azapiGroup.AddCommand(azapiDocsCommand.Name, azapiDocsCommand);
 
         group.AddSubGroup(azapiGroup);
+
+        var avmGroup = new CommandGroup(
+            "avm",
+            "Azure Verified Modules (AVM) documentation tools - Lists modules, versions, and retrieves module documentation",
+            "AVM"
+        );
+
+        var avmListCommand = serviceProvider.GetRequiredService<AvmModuleListCommand>();
+        avmGroup.AddCommand(avmListCommand.Name, avmListCommand);
+
+        var avmVersionsCommand = serviceProvider.GetRequiredService<AvmVersionListCommand>();
+        avmGroup.AddCommand(avmVersionsCommand.Name, avmVersionsCommand);
+
+        var avmDocsCommand = serviceProvider.GetRequiredService<AvmDocumentationGetCommand>();
+        avmGroup.AddCommand(avmDocsCommand.Name, avmDocsCommand);
+
+        group.AddSubGroup(avmGroup);
 
         return group;
     }
