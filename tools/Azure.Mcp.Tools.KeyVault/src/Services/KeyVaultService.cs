@@ -239,6 +239,8 @@ public sealed class KeyVaultService(
 
     private string BuildVaultUri(string vaultName)
     {
+        ValidateVaultName(vaultName);
+
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
@@ -255,6 +257,8 @@ public sealed class KeyVaultService(
 
     private string GetHsmUri(string vaultName)
     {
+        ValidateVaultName(vaultName);
+
         switch (_tenantService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
@@ -265,6 +269,33 @@ public sealed class KeyVaultService(
                 return $"https://{vaultName}.managedhsm.usgovcloudapi.net";
             default:
                 return $"https://{vaultName}.managedhsm.azure.net";
+        }
+    }
+
+    /// <summary>
+    /// Validates that a vault name contains only characters valid for an Azure Key Vault name
+    /// (a-z, A-Z, 0-9, and hyphens, starting with an ASCII letter).
+    /// </summary>
+    internal static void ValidateVaultName(string vaultName)
+    {
+        if (string.IsNullOrWhiteSpace(vaultName))
+        {
+            throw new ArgumentException("Vault name cannot be null or empty.", nameof(vaultName));
+        }
+
+        if (!char.IsAsciiLetter(vaultName[0]))
+        {
+            throw new ArgumentException(
+                $"Vault name must start with an ASCII letter. Got: '{vaultName[0]}'.", nameof(vaultName));
+        }
+
+        foreach (var c in vaultName)
+        {
+            if (!char.IsAsciiLetterOrDigit(c) && c != '-')
+            {
+                throw new ArgumentException(
+                    $"Vault name contains invalid character '{c}'. Only ASCII alphanumeric characters and hyphens are allowed.", nameof(vaultName));
+            }
         }
     }
 
