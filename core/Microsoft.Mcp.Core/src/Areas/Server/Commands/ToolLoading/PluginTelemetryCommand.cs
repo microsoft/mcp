@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Net;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +23,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
-public sealed class PluginTelemetryCommand(IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider, IPluginSkillNameAllowlistProvider skillNameAllowlistProvider) : BaseCommand<PluginTelemetryOptions>
+public sealed class PluginTelemetryCommand(
+    IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
+    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
+    ICommandFactory commandFactory) : BaseCommand<PluginTelemetryOptions>
 {
     private const string CommandTitle = "Plugin Telemetry";
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
+    private readonly ICommandFactory _commandFactory = commandFactory;
 
     public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
 
@@ -122,7 +127,8 @@ public sealed class PluginTelemetryCommand(IPluginFileReferenceAllowlistProvider
     /// <summary>
     /// Executes the plugin telemetry command by validating and logging telemetry.
     /// This method validates required options, checks paths and skill names against allowlists,
-    /// creates a host with telemetry services, and logs the telemetry event.
+    /// validates tool names against registered commands, creates a host with telemetry services,
+    /// and logs the telemetry event.
     /// </summary>
     /// <param name="context">The command execution context containing the response object.</param>
     /// <param name="parseResult">The parsed command-line arguments containing telemetry event data.</param>
@@ -163,6 +169,18 @@ public sealed class PluginTelemetryCommand(IPluginFileReferenceAllowlistProvider
                 }
             }
 
+            // Validate tool name if provided
+            if (!string.IsNullOrWhiteSpace(options.ToolName))
+            {
+                // Validate that the tool name corresponds to a valid command
+                if (_commandFactory.FindCommandByName(options.ToolName) == null)
+                {
+                    context.Response.Status = HttpStatusCode.Forbidden;
+                    context.Response.Message = $"Tool name '{options.ToolName}' is not a valid command and will not be logged.";
+                    return context.Response;
+                }
+            }
+
             // Create host and log telemetry
             using var host = CreateStdioHost(options);
             await InitializeServicesAsync(host.Services);
@@ -186,8 +204,9 @@ public sealed class PluginTelemetryCommand(IPluginFileReferenceAllowlistProvider
 
     /// <summary>
     /// Logs plugin telemetry by creating an activity and adding relevant tags.
-    /// Only non-empty fields are added as tags. File references should be validated
-    /// against the allowlist before calling this method.
+    /// Only non-empty fields are added as tags. File references and skill names
+    /// should be validated against their respective allowlists, and tool names
+    /// should be validated as registered commands, before calling this method.
     /// </summary>
     /// <param name="telemetryService">The telemetry service used to create and track activities.</param>
     /// <param name="options">The plugin telemetry options containing event data (timestamp, event type, session ID, etc.).</param>

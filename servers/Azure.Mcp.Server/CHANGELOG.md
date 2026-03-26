@@ -25,6 +25,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added skill name and tool name validation to the plugin-telemetry tool. Skill names are validated against an allowlist to prevent logging of customer-defined custom skill names. Tool names are validated against registered commands using CommandFactory. Expanded the plugin file-reference allowlist with additional azure-enterprise-infra-planner reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
+- Refactored PluginTelemetryCommand to use constructor injection for allowlist providers and CommandFactory instead of service resolution, improving testability and performance.
 - Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
   - `extension_azqr`
   - `extension_cli_generate`
