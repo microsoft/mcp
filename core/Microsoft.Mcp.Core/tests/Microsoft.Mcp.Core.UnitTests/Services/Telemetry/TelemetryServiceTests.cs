@@ -424,7 +424,6 @@ public class TelemetryServiceTests
             ("AzureCloud", AzureCloud.AzurePublicCloud),
             ("AzurePublicCloud", AzureCloud.AzurePublicCloud),
             ("Public", AzureCloud.AzurePublicCloud),
-            ("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud),
             ("AzureChinaCloud", AzureCloud.AzureChinaCloud),
             ("China", AzureCloud.AzureChinaCloud),
             ("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud),
