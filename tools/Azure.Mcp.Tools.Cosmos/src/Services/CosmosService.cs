@@ -22,9 +22,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "cosmos";
-    private const string CosmosClientsCacheKeyPrefix = "clients_";
-    private const string CosmosDatabasesCacheKeyPrefix = "databases_";
-    private const string CosmosContainersCacheKeyPrefix = "containers_";
+    private const string CosmosClientsCacheKeyPrefix = "clients";
+    private const string CosmosDatabasesCacheKeyPrefix = "databases";
+    private const string CosmosContainersCacheKeyPrefix = "containers";
     private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
     private static readonly TimeSpan s_cacheDurationResources = CacheDurations.ServiceData;
     private bool _disposed;
