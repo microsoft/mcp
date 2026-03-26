@@ -119,14 +119,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the credential-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            "clients_|9:myaccount|10:Credential",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the key-auth cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            "clients_|9:myaccount|3:Key",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -147,14 +147,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the key-auth-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            "clients_|9:myaccount|3:Key",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the credential cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            "clients_|9:myaccount|10:Credential",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -184,13 +184,13 @@ public class CosmosServiceTests : IAsyncDisposable
         // This proves a Key-cached client can never be served to a Credential request and vice versa.
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            "clients_|9:myaccount|3:Key",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            "clients_|9:myaccount|10:Credential",
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
