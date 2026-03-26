@@ -234,7 +234,7 @@ public sealed class FunctionsService(
             };
         }
 
-        // Default: NewProject mode - return all files together
+        // Default: TemplateOutput.New (--output New) - return all files together
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,

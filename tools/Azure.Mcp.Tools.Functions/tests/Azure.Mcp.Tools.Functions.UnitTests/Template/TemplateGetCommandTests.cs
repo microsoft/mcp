@@ -442,7 +442,7 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation_GetMode()
     {
-        // Arrange - using AddFunction mode to test separated files
+        // Arrange - using Add output mode to test separated files
         var expectedResult = new FunctionTemplateResult
         {
             Language = "java",
