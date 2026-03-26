@@ -7,8 +7,23 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Helpers;
 
-public class CommandHelperTests
+public class CommandHelperTests : IDisposable
 {
+    private readonly string? _originalSubscriptionId;
+
+    public CommandHelperTests()
+    {
+        _originalSubscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        CommandHelper.ResetProfileCacheForTesting();
+    }
+
+    public void Dispose()
+    {
+        EnvironmentHelpers.SetAzureSubscriptionId(_originalSubscriptionId);
+        CommandHelper.ResetProfileCacheForTesting();
+    }
+
     [Fact]
     public void GetSubscription_EmptySubscriptionParameter_ReturnsEnvironmentValue()
     {
@@ -83,6 +98,8 @@ public class CommandHelperTests
     public void GetSubscription_NoEnvironmentVariableParameterValueContainingDefault_ReturnsParameterValue()
     {
         // Arrange
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        CommandHelper.ResetProfileCacheForTesting(() => null);
         var parseResult = GetParseResult(["--subscription", "Some default name"]);
 
         // Act
@@ -96,6 +113,8 @@ public class CommandHelperTests
     public void GetSubscription_NoEnvironmentVariableParameterValueContainingSubscription_ReturnsParameterValue()
     {
         // Arrange
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        CommandHelper.ResetProfileCacheForTesting(() => null);
         var parseResult = GetParseResult(["--subscription", "Azure subscription 1"]);
 
         // Act
