@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Enforce read-only and HTTP mode restrictions at tool execution time, not just at list time"

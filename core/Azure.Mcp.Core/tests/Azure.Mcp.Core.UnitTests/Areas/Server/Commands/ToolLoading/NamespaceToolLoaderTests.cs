@@ -659,6 +659,174 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_RejectsNonReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var writeCmd = Substitute.For<IBaseCommand>();
+        writeCmd.Metadata.Returns(new ToolMetadata { ReadOnly = false });
+        writeCmd.GetCommand().Returns(new System.CommandLine.Command("write-cmd", "A write command"));
+        writeCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("write-cmd", writeCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "write-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-read-only command should not have been executed
+        Assert.False(executed, "Non-read-only command should not be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_AllowsReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        readCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - read-only command should have been executed
+        Assert.True(executed, "Read-only command should be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_RejectsLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var localCmd = Substitute.For<IBaseCommand>();
+        localCmd.Metadata.Returns(new ToolMetadata { LocalRequired = true });
+        localCmd.GetCommand().Returns(new System.CommandLine.Command("local-cmd", "A local command"));
+        localCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("local-cmd", localCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "local-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - local-required command should not have been executed in HTTP mode
+        Assert.False(executed, "Local-required command should not be executed in HTTP mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_AllowsNonLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var remoteCmd = Substitute.For<IBaseCommand>();
+        remoteCmd.Metadata.Returns(new ToolMetadata { LocalRequired = false, Destructive = false });
+        remoteCmd.GetCommand().Returns(new System.CommandLine.Command("remote-cmd", "A remote command"));
+        remoteCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("remote-cmd", remoteCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "remote-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-local-required command should have been executed in HTTP mode
+        Assert.True(executed, "Non-local-required command should be executed in HTTP mode");
+    }
+
+    [Fact]
     public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
     {
         // Arrange

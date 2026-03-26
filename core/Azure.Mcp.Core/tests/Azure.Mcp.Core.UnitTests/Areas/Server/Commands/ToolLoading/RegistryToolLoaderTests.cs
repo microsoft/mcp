@@ -861,4 +861,189 @@ public class RegistryToolLoaderTests
         Assert.Single(result.Tools);
         Assert.Equal("search_docs", result.Tools[0].Name);
     }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+
+        // Act - Try to call the non-read-only tool directly
+        var request = CreateCallToolRequest("write-tool");
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to read-only mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("read-only mode", errorText.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_AllowsReadOnlyTool()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+
+        // Act - Call the read-only tool
+        var request = CreateCallToolRequest("readonly-tool");
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution of read-only tool
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.Equal("Read-only result", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithHttpMode_RejectsLocalRequiredTool()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "local-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+        };
+
+        var remoteTool = new Tool
+        {
+            Name = "remote-tool",
+            Description = "Remote tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local result" }], IsError = false })
+            .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var httpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(httpOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+
+        // Act - Try to call the local-required tool in HTTP mode
+        var request = CreateCallToolRequest("local-tool");
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to HTTP mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("HTTP mode", errorText.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyToolWithNullAnnotations_RejectsInReadOnlyMode()
+    {
+        // Arrange - tool with null annotations should be rejected in read-only mode
+        var toolWithoutAnnotations = new Tool
+        {
+            Name = "no-annotations-tool",
+            Description = "Tool without annotations",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = null
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(toolWithoutAnnotations, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+
+        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+
+        // Act - Try to call a tool with null annotations in read-only mode
+        var request = CreateCallToolRequest("no-annotations-tool");
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject since null annotations means ReadOnlyHint is not true
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("read-only mode", errorText.Text);
+    }
 }

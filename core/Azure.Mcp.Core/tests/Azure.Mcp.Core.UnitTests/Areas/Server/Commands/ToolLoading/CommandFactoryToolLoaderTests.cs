@@ -964,4 +964,162 @@ public class CommandFactoryToolLoaderTests
     }
 
     #endregion
+
+    #region Execution-Time Mode Enforcement Tests
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    {
+        // Arrange - create a tool loader with read-only mode enabled
+        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var (toolLoader, commandFactory) = CreateToolLoader(readOnlyOptions);
+
+        // Add a fake non-read-only command
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-write-tool", "A fake write tool for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Write Tool");
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = false });
+
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-write-tool"] = fakeCommand;
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-write-tool",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to read-only mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("read-only mode", errorText);
+        Assert.Contains("fake-write-tool", errorText);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_AllowsReadOnlyTool()
+    {
+        // Arrange - create a tool loader with read-only mode enabled
+        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var (toolLoader, commandFactory) = CreateToolLoader(readOnlyOptions);
+
+        // Add a fake read-only command
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-readonly-tool", "A fake read-only tool for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake ReadOnly Tool");
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Read-only test response" });
+
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-readonly-tool"] = fakeCommand;
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-readonly-tool",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution of read-only tool
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithHttpMode_RejectsLocalRequiredTool()
+    {
+        // Arrange - create a tool loader with HTTP mode enabled
+        var httpOptions = new ToolLoaderOptions(IsHttpMode: true);
+        var (toolLoader, commandFactory) = CreateToolLoader(httpOptions);
+
+        // Add a fake local-required command
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-local-tool", "A fake local tool for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Local Tool");
+        fakeCommand.Metadata.Returns(new ToolMetadata { LocalRequired = true });
+
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-local-tool"] = fakeCommand;
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-local-tool",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to HTTP mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("HTTP mode", errorText);
+        Assert.Contains("fake-local-tool", errorText);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithoutReadOnlyMode_AllowsNonReadOnlyTool()
+    {
+        // Arrange - create a tool loader WITHOUT read-only mode
+        var defaultOptions = new ToolLoaderOptions(ReadOnly: false);
+        var (toolLoader, commandFactory) = CreateToolLoader(defaultOptions);
+
+        // Add a fake non-read-only command
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-write-tool-2", "A fake write tool for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Write Tool 2");
+        fakeCommand.Metadata.Returns(new ToolMetadata { ReadOnly = false, Destructive = false });
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Write test response" });
+
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-write-tool-2"] = fakeCommand;
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-write-tool-2",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution when read-only mode is not enabled
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+    }
+
+    #endregion
 }

@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -399,4 +400,253 @@ public class SingleProxyToolLoaderTests
         Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, null!, toolLoaderOptions));
         Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(discoveryStrategy, logger, null!));
     }
+
+    #region Execution-Time Mode Enforcement Tests
+
+    private static SingleProxyToolLoader CreateToolLoaderWithMockClient(
+        ToolLoaderOptions toolLoaderOptions, MockMcpClientBuilder clientBuilder, string serverName = "storage")
+    {
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
+            .Build();
+
+        var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
+        var options = Microsoft.Extensions.Options.Options.Create(toolLoaderOptions);
+
+        return new SingleProxyToolLoader(discoveryStrategy, logger, options);
+    }
+
+    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(
+        string tool, string command)
+    {
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["intent"] = JsonDocument.Parse($"\"Execute {command}\"").RootElement,
+            ["tool"] = JsonDocument.Parse($"\"{tool}\"").RootElement,
+            ["command"] = JsonDocument.Parse($"\"{command}\"").RootElement,
+        };
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "azure",
+                Arguments = arguments
+            }
+        };
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "account_list",
+            Description = "List storage accounts",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "account_create",
+            Description = "Create storage account",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var writeToolExecuted = false;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] })
+            .AddTool(writeTool, _ =>
+            {
+                writeToolExecuted = true;
+                return new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }] };
+            });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_create");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(writeToolExecuted, "Non-read-only tool should not be executed in read-only mode");
+        Assert.True(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Contains("read-only mode", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_AllowsReadOnlyCommand()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "account_list",
+            Description = "List storage accounts",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsError ?? false);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Equal("Listed accounts", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithHttpMode_RejectsLocalRequiredCommand()
+    {
+        // Arrange
+        var localTool = new Tool
+        {
+            Name = "local_command",
+            Description = "Local-only command",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations(),
+            Meta = new JsonObject { ["LocalRequiredHint"] = true }
+        };
+
+        var remoteTool = new Tool
+        {
+            Name = "remote_command",
+            Description = "Remote-safe command",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations()
+        };
+
+        var localToolExecuted = false;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localTool, _ =>
+            {
+                localToolExecuted = true;
+                return new CallToolResult { Content = [new TextContentBlock { Text = "Local result" }] };
+            })
+            .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }] });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(IsHttpMode: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "local_command");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(localToolExecuted, "Local-required tool should not be executed in HTTP mode");
+        Assert.True(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Contains("HTTP mode", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithHttpMode_AllowsNonLocalRequiredCommand()
+    {
+        // Arrange
+        var remoteTool = new Tool
+        {
+            Name = "remote_command",
+            Description = "Remote-safe command",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations()
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }] });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(IsHttpMode: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "remote_command");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.IsError ?? false);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Equal("Remote result", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsCommandWithNullAnnotations()
+    {
+        // Arrange — tool without annotations should be rejected in read-only mode
+        var toolWithoutAnnotations = new Tool
+        {
+            Name = "unknown_command",
+            Description = "Tool without annotations",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = null
+        };
+
+        var toolExecuted = false;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(toolWithoutAnnotations, _ =>
+            {
+                toolExecuted = true;
+                return new CallToolResult { Content = [new TextContentBlock { Text = "Result" }] };
+            });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(ReadOnly: true), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "unknown_command");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(toolExecuted, "Tool without ReadOnlyHint should not be executed in read-only mode");
+        Assert.True(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Contains("read-only mode", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithoutModeRestrictions_AllowsNonReadOnlyCommand()
+    {
+        // Arrange
+        var writeTool = new Tool
+        {
+            Name = "account_create",
+            Description = "Create storage account",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }] });
+
+        var toolLoader = CreateToolLoaderWithMockClient(
+            new ToolLoaderOptions(), clientBuilder);
+
+        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_create");
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert — should execute without restrictions
+        Assert.False(result.IsError ?? false);
+        var textContent = result.Content.OfType<TextContentBlock>().First();
+        Assert.Equal("Created account", textContent.Text);
+    }
+
+    #endregion
 }
