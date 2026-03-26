@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Core.Services.Caching;
 
@@ -23,7 +24,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
     private static readonly object s_sentinal = new();
     private readonly IMemoryCache _memoryCache = memoryCache;
 
-    private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> s_groupKeys = new();
+    private static readonly ConcurrentDictionary<string, ConcurrentHashSet<string>> s_groupKeys = new();
 
     public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
@@ -47,15 +48,10 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         s_groupKeys.AddOrUpdate(
             group,
-            _ =>
-            {
-                var keys = new ConcurrentDictionary<string, object>();
-                keys[key] = s_sentinal;
-                return keys;
-            },
+            [key],
             (_, keys) =>
             {
-                keys[key] = s_sentinal;
+                keys.Add(key);
                 return keys;
             });
 
@@ -70,7 +66,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         // Remove from group tracking
         if (s_groupKeys.TryGetValue(group, out var keys))
         {
-            keys.Remove(key, out _);
+            keys.Remove(key);
         }
 
         return default;
@@ -81,7 +77,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         if (s_groupKeys.TryGetValue(group, out var keys))
         {
             // Return a snapshot to avoid concurrent modification during enumeration.
-            return new ValueTask<IEnumerable<string>>([.. keys.Keys]);
+            return new ValueTask<IEnumerable<string>>([.. keys]);
         }
 
         return new ValueTask<IEnumerable<string>>([]);
@@ -109,7 +105,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
             return default;
         }
 
-        string[] keysSnapshot = [.. keys.Keys];
+        string[] keysSnapshot = [.. keys];
 
         // Remove each key in the group from the cache
         foreach (var key in keysSnapshot)
