@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 
-public class SubscriptionCommandTests
+public class SubscriptionCommandTests : IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IStorageService _storageService;
@@ -24,9 +24,14 @@ public class SubscriptionCommandTests
     private readonly AccountGetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
+    private readonly string? _originalSubscriptionId;
 
     public SubscriptionCommandTests()
     {
+        _originalSubscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        CommandHelper.ResetProfileCacheForTesting();
+
         _storageService = Substitute.For<IStorageService>();
         _logger = Substitute.For<ILogger<AccountGetCommand>>();
 
@@ -36,6 +41,12 @@ public class SubscriptionCommandTests
         _command = new(_logger, _storageService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
+    }
+
+    public void Dispose()
+    {
+        EnvironmentHelpers.SetAzureSubscriptionId(_originalSubscriptionId);
+        CommandHelper.ResetProfileCacheForTesting();
     }
 
     [Fact]
