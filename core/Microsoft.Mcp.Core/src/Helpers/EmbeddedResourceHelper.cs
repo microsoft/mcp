@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Helpers
 {
@@ -36,7 +37,7 @@ namespace Azure.Mcp.Core.Helpers
             Regex regex;
             try
             {
-                regex = new Regex(resourcePattern);
+                regex = RegexHelper.CreateRegex(resourcePattern, RegexOptions.None);
             }
             catch (ArgumentException ex)
             {

@@ -17,6 +17,7 @@ public sealed class FunctionAppService(
     ICacheService cacheService,
     ILogger<FunctionAppService> logger) : BaseAzureService(tenantService), IFunctionAppService
 {
+    private const int MaxFunctionApps = 10_000;
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -49,7 +50,7 @@ public sealed class FunctionAppService(
 
             if (string.IsNullOrEmpty(resourceGroup))
             {
-                await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps, cancellationToken);
+                await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps, _logger, cancellationToken);
             }
             else
             {
@@ -59,7 +60,7 @@ public sealed class FunctionAppService(
                     throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                 }
 
-                await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps, cancellationToken);
+                await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps, _logger, cancellationToken);
             }
 
             await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
@@ -94,11 +95,20 @@ public sealed class FunctionAppService(
         return functionApps;
     }
 
-    private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps, CancellationToken cancellationToken)
+    private static async Task RetrieveAndAddFunctionApp(
+        AsyncPageable<WebSiteResource> sites,
+        List<FunctionAppInfo> functionApps,
+        ILogger<FunctionAppService> logger,
+        CancellationToken cancellationToken)
     {
         await foreach (var site in sites.WithCancellation(cancellationToken))
         {
             TryAddFunctionApp(site, functionApps);
+            if (functionApps.Count >= MaxFunctionApps)
+            {
+                logger.LogWarning("Warning: Reached maximum function app limit of {MaxFunctionApps}. Some function apps may not be included in the results.", MaxFunctionApps);
+                break;
+            }
         }
     }
 

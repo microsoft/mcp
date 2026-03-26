@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Cosmos.Validation;
 
@@ -21,33 +22,28 @@ internal static class CosmosQueryValidator
 {
     private const int MaxQueryLength = 5000; // Safety cap similar to Postgres validator.
     private const string StringLiteralPlaceholder = "'str'";
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // Prevent ReDoS attacks
 
     // Regex to strip string literals, replacing them with a placeholder for safe token analysis.
-    private static readonly Regex StringLiteralPattern = new(
+    private static readonly Regex StringLiteralPattern = RegexHelper.CreateRegex(
         "'([^']|'')*'",
-        RegexOptions.Compiled,
-        RegexTimeout);
+        RegexOptions.Compiled);
 
     // Matches: OR <word> = <same_word> with optional whitespace around =
     // Catches: OR 1=1, OR 2=2, OR a=a, OR 1 = 1, etc.
-    private static readonly Regex TautologyIdentifierPattern = new(
+    private static readonly Regex TautologyIdentifierPattern = RegexHelper.CreateRegex(
         @"\bor\s+(\w+)\s*=\s*\1\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        RegexTimeout);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Matches: OR '<literal>' = '<same_literal>' using a backreference on the original query.
     // Only flags when both sides are identical (e.g., OR 'x'='x'), not different values (OR 'a'='b').
-    private static readonly Regex TautologyStringLiteralPattern = new(
+    private static readonly Regex TautologyStringLiteralPattern = RegexHelper.CreateRegex(
         @"\bor\s+'((?:[^']|'')*)'\s*=\s*'\1'",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        RegexTimeout);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Matches: OR true / OR TRUE (boolean tautology)
-    private static readonly Regex TautologyBooleanPattern = new(
+    private static readonly Regex TautologyBooleanPattern = RegexHelper.CreateRegex(
         @"\bor\s+true\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        RegexTimeout);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Keywords/patterns that might indicate attempts to execute stored procedures or triggers
     private static readonly HashSet<string> BlockedPatterns = new(StringComparer.OrdinalIgnoreCase)
@@ -110,7 +106,7 @@ internal static class CosmosQueryValidator
 
         // Check for attempts to execute stored procedures or triggers
         // While these cannot be executed via SQL queries, this is defense-in-depth
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
 
         foreach (Match m in matches)
         {

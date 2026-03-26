@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Core.Services.Caching;
 
@@ -20,8 +21,10 @@ namespace Azure.Mcp.Core.Services.Caching;
 /// </remarks>
 public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 {
+    private static readonly object s_sentinal = new();
     private readonly IMemoryCache _memoryCache = memoryCache;
-    private static readonly ConcurrentDictionary<string, HashSet<string>> s_groupKeys = new();
+
+    private static readonly ConcurrentDictionary<string, ConcurrentHashSet<string>> s_groupKeys = new();
 
     public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
@@ -43,10 +46,9 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         _memoryCache.Set(cacheKey, data, options);
 
-        // Track the key in the group
         s_groupKeys.AddOrUpdate(
             group,
-            new HashSet<string> { key },
+            [key],
             (_, keys) =>
             {
                 keys.Add(key);
@@ -74,7 +76,8 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
     {
         if (s_groupKeys.TryGetValue(group, out var keys))
         {
-            return new ValueTask<IEnumerable<string>>(keys.AsEnumerable());
+            // Return a snapshot to avoid concurrent modification during enumeration.
+            return new ValueTask<IEnumerable<string>>([.. keys]);
         }
 
         return new ValueTask<IEnumerable<string>>([]);
@@ -102,8 +105,10 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
             return default;
         }
 
+        string[] keysSnapshot = [.. keys];
+
         // Remove each key in the group from the cache
-        foreach (var key in keys)
+        foreach (var key in keysSnapshot)
         {
             string cacheKey = GetGroupKey(group, key);
             _memoryCache.Remove(cacheKey);

@@ -6,13 +6,19 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
-public class SubscriptionService(ICacheService cacheService, ITenantService tenantService)
+public class SubscriptionService(
+    ICacheService cacheService,
+    ITenantService tenantService,
+    ILogger<SubscriptionService> logger)
     : BaseAzureService(tenantService), ISubscriptionService
 {
+    private const int MaxSubscriptions = 10_000;
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<SubscriptionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "subscription";
     private const string CacheKey = "subscriptions";
     private const string SubscriptionCacheKey = "subscription";
@@ -36,6 +42,11 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         await foreach (var subscription in subscriptions.WithCancellation(cancellationToken))
         {
             results.Add(subscription.Data);
+            if (results.Count >= MaxSubscriptions)
+            {
+                _logger.LogWarning("Reached maximum subscription limit of {MaxSubscriptions}. Some subscriptions may not be included in the results.", MaxSubscriptions);
+                break;
+            }
         }
 
         // Cache the results
@@ -74,6 +85,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         return response.Value;
     }
 
+    // TODO (alzimmer): Why does this method take tenant?
     public bool IsSubscriptionId(string subscription, string? tenant = null)
     {
         return Guid.TryParse(subscription, out _);
