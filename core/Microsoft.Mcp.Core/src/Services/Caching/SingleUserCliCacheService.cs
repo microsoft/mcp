@@ -21,7 +21,6 @@ namespace Azure.Mcp.Core.Services.Caching;
 /// </remarks>
 public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 {
-    private static readonly object s_sentinal = new();
     private readonly IMemoryCache _memoryCache = memoryCache;
 
     private static readonly ConcurrentDictionary<string, ConcurrentHashSet<string>> s_groupKeys = new();
