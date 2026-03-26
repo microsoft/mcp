@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Kusto.Models;
+using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
@@ -202,6 +203,10 @@ public sealed class KustoService(
             (nameof(clusterUri), clusterUri),
             (nameof(databaseName), databaseName),
             (nameof(tableName), tableName));
+
+        // Validate table name to prevent KQL injection — while the query endpoint is read-only
+        // (no data modification), injection could still enable information disclosure or resource abuse
+        KustoIdentifierValidator.ValidateIdentifier(tableName, nameof(tableName));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant, cancellationToken);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(

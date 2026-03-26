@@ -51,7 +51,7 @@ public sealed class AzureMigrateProjectHelper(
                 retryPolicy,
                 cancellationToken);
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, cancellationToken: cancellationToken);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant: tenant, cancellationToken: cancellationToken);
             ResourceIdentifier projectId = new ResourceIdentifier(
                 $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/{MigrateProjectResourceType}/{projectName}");
 
