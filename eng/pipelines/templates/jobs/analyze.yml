@@ -20,6 +20,14 @@ jobs:
       packageType: sdk
       version: 9.0.x
 
+  - template: /eng/common/pipelines/templates/steps/verify-links.yml
+    parameters:
+      Condition: succeededOrFailed()
+      Directory: ""
+      CheckLinkGuidance: $true
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
+
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
@@ -33,14 +41,6 @@ jobs:
       sourceDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/pipelines/templates/steps/check-spelling.yml
-
-  - template: /eng/common/pipelines/templates/steps/verify-links.yml
-    parameters:
-      Condition: succeededOrFailed()
-      Directory: ""
-      CheckLinkGuidance: $true
-      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-        Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
 
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations
