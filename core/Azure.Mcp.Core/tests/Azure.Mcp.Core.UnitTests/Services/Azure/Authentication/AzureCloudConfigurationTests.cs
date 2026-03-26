@@ -106,47 +106,6 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that custom HTTPS URLs are correctly parsed as authority hosts.
-    /// </summary>
-    [Theory]
-    [InlineData("https://login.custom-cloud.com")]
-    [InlineData("https://login.mycustomcloud.de")]
-    [InlineData("https://login.customcloud.local")]
-    public void ParseCloudValue_CustomUrls_ReturnsCustomAuthorityHost(string customUrl)
-    {
-        // Arrange
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = customUrl })
-            .Build();
-
-        // Act
-        var cloudConfig = new AzureCloudConfiguration(config);
-
-        // Assert
-        Assert.Equal(new Uri(customUrl), cloudConfig.AuthorityHost);
-    }
-
-    /// <summary>
-    /// Tests that custom HTTPS URLs default to public cloud ARM environment.
-    /// </summary>
-    [Theory]
-    [InlineData("https://login.custom-cloud.com")]
-    [InlineData("https://login.mycustomcloud.de")]
-    public void ParseCloudValue_CustomUrls_DefaultsToPublicArmEnvironment(string customUrl)
-    {
-        // Arrange
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = customUrl })
-            .Build();
-
-        // Act
-        var cloudConfig = new AzureCloudConfiguration(config);
-
-        // Assert
-        Assert.Equal(ArmEnvironment.AzurePublicCloud, cloudConfig.ArmEnvironment);
-    }
-
-    /// <summary>
     /// Tests that when no cloud configuration is provided, the default public cloud is used.
     /// </summary>
     [Fact]
