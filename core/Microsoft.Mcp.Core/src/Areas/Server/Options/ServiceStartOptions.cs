@@ -83,6 +83,13 @@ public class ServiceStartOptions
     public string? SupportLoggingFolder { get; set; } = null;
 
     /// <summary>
+    /// Gets or sets whether retry policy bounds checking is disabled.
+    /// When true, no upper bounds are enforced on retry delays, max delays, network timeouts, or max retries.
+    /// </summary>
+    [JsonPropertyName("dangerouslyDisableRetryLimits")]
+    public bool DangerouslyDisableRetryLimits { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets the Azure cloud environment for authentication.
     /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment)
     /// or custom authority host URLs starting with https://.

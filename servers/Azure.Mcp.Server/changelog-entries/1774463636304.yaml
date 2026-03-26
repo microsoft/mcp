@@ -1,0 +1,4 @@
+pr: 2205
+changes:
+  - section: "Features Added"
+    description: "Added --dangerously-disable-retry-limits server start option to bypass retry policy bounds enforcement when explicitly needed."

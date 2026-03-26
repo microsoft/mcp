@@ -98,6 +98,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
         command.Validators.Add(commandResult =>
         {
@@ -176,6 +177,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
             SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
+            DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableRetryLimits.Name),
             Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
         };
         return options;
