@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -497,5 +497,5 @@ public class MonitorWebTestService(
         return hiddenLinkMatch?.Groups[1].Value;
     }
 
-    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = new("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = RegexHelper.CreateRegex("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Postgres.Validation;
 
@@ -18,7 +19,6 @@ namespace Azure.Mcp.Tools.Postgres.Validation;
 internal static class SqlQueryValidator
 {
     private const int MaxQueryLength = 5000; // Arbitrary safety cap to avoid extremely large inputs.
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // 3 second timeout for regex operations
 
     /// <summary>
     /// SQL set-operation keywords that must be blocked to prevent data-exfiltration attacks
@@ -142,7 +142,7 @@ internal static class SqlQueryValidator
         // E-prefixed strings (E'...') additionally support backslash escapes (e.g., \').
         // The E-string pattern must appear first so the alternation matches it before
         // the standard pattern consumes the opening quote.
-        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
+        var withoutStrings = Regex.Replace(core, "[eE]'([^'\\\\]|\\\\.|'')*'|'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
 
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
@@ -165,7 +165,7 @@ internal static class SqlQueryValidator
         }
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
         if (matches.Count == 0)
         {
             throw new CommandValidationException("Query must contain a SELECT statement.", HttpStatusCode.BadRequest);

@@ -99,7 +99,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             if (crossSubscriptionSearch)
             {
                 // Iterate all subscriptions and aggregate
-                var allSubs = await _subscriptionService.GetSubscriptions(null, options.RetryPolicy, cancellationToken);
+                var allSubs = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {

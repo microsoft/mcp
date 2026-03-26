@@ -44,8 +44,8 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory, cloudConfiguration);
-        var subscriptionService = new SubscriptionService(cacheService, tenantService);
+        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
+        var subscriptionService = new SubscriptionService(cacheService, tenantService, NullLogger<SubscriptionService>.Instance);
         _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientFactory);
     }
 
