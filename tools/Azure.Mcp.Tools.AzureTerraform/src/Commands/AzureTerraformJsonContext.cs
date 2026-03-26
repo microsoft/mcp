@@ -20,5 +20,9 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 [JsonSerializable(typeof(AvmDocumentationResult))]
 [JsonSerializable(typeof(List<AvmModule>))]
 [JsonSerializable(typeof(List<AvmVersion>))]
+[JsonSerializable(typeof(AztfexportCommandResult))]
+[JsonSerializable(typeof(InstallationHelp))]
+[JsonSerializable(typeof(InstallationMethod))]
+[JsonSerializable(typeof(List<InstallationMethod>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class AzureTerraformJsonContext : JsonSerializerContext;

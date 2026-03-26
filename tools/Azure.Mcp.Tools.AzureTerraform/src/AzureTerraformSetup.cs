@@ -24,18 +24,22 @@ public class AzureTerraformSetup : IAreaSetup
         services.AddSingleton<IAzApiDocsService, AzApiDocsService>();
         services.AddSingleton<IAzApiExamplesService, AzApiExamplesService>();
         services.AddSingleton<IAvmDocsService, AvmDocsService>();
+        services.AddSingleton<IAztfexportService, AztfexportService>();
         services.AddSingleton<AzureRMDocsGetCommand>();
         services.AddSingleton<AzApiDocsGetCommand>();
         services.AddSingleton<AvmModuleListCommand>();
         services.AddSingleton<AvmVersionListCommand>();
         services.AddSingleton<AvmDocumentationGetCommand>();
+        services.AddSingleton<AztfexportResourceCommand>();
+        services.AddSingleton<AztfexportResourceGroupCommand>();
+        services.AddSingleton<AztfexportQueryCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var group = new CommandGroup(
             Name,
-            "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, and usage examples.",
+            "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, usage examples, and aztfexport command generation.",
             Title
         );
 
@@ -77,6 +81,23 @@ public class AzureTerraformSetup : IAreaSetup
         avmGroup.AddCommand(avmDocsCommand.Name, avmDocsCommand);
 
         group.AddSubGroup(avmGroup);
+
+        var aztfexportGroup = new CommandGroup(
+            "aztfexport",
+            "Azure Export for Terraform (aztfexport) tools - Generates aztfexport commands to export Azure resources, resource groups, or query-matched resources to Terraform configuration",
+            "aztfexport"
+        );
+
+        var aztfexportResourceCommand = serviceProvider.GetRequiredService<AztfexportResourceCommand>();
+        aztfexportGroup.AddCommand(aztfexportResourceCommand.Name, aztfexportResourceCommand);
+
+        var aztfexportResourceGroupCommand = serviceProvider.GetRequiredService<AztfexportResourceGroupCommand>();
+        aztfexportGroup.AddCommand(aztfexportResourceGroupCommand.Name, aztfexportResourceGroupCommand);
+
+        var aztfexportQueryCommand = serviceProvider.GetRequiredService<AztfexportQueryCommand>();
+        aztfexportGroup.AddCommand(aztfexportQueryCommand.Name, aztfexportQueryCommand);
+
+        group.AddSubGroup(aztfexportGroup);
 
         return group;
     }
