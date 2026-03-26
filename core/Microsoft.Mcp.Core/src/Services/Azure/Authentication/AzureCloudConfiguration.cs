@@ -77,7 +77,9 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
                 (AzureAuthorityHosts.AzureChina, ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
                 (AzureAuthorityHosts.AzureGovernment, ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
-            _ => (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud) // Default to public cloud if unknown
+            _ => throw new ArgumentException(
+                $"Unrecognized cloud value '{cloudValue}'. Supported values are: AzureCloud, AzurePublicCloud, Public, AzurePublic, AzureChinaCloud, China, AzureChina, AzureUSGovernment, AzureUSGovernmentCloud, USGov, USGovernment.",
+                nameof(cloudValue))
         };
     }
 }

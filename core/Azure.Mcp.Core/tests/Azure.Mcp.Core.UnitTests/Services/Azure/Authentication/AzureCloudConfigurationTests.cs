@@ -207,24 +207,22 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that unknown cloud names default to Azure Public Cloud.
+    /// Tests that unknown cloud names throw an ArgumentException.
     /// </summary>
     [Theory]
     [InlineData("UnknownCloud")]
     [InlineData("InvalidCloudName")]
-    [InlineData("")]
-    public void ParseCloudValue_UnknownCloudNames_DefaultsToPublicCloud(string cloudName)
+    [InlineData("https://custom.authority.host")]
+    [InlineData("http://custom.authority.host")]
+    public void ParseCloudValue_UnknownCloudNames_ThrowsArgumentException(string cloudName)
     {
         // Arrange
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = cloudName })
             .Build();
 
-        // Act
-        var cloudConfig = new AzureCloudConfiguration(config);
-
-        // Assert
-        Assert.Equal(new Uri("https://login.microsoftonline.com"), cloudConfig.AuthorityHost);
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new AzureCloudConfiguration(config));
     }
 
     /// <summary>

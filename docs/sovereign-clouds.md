@@ -4,7 +4,7 @@ The Azure MCP Server supports connecting to Azure sovereign clouds (national clo
 
 ## Overview
 
-By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables.
+By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables. Only the well-known cloud names listed below are supported; URL-like values or custom authority hosts are not accepted.
 
 ## Supported Cloud Environments
 
