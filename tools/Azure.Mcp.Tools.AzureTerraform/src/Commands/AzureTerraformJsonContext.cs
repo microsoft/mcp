@@ -1,0 +1,17 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.AzureTerraform.Models;
+
+namespace Azure.Mcp.Tools.AzureTerraform.Commands;
+
+[JsonSerializable(typeof(AzureRMDocsResult))]
+[JsonSerializable(typeof(AzApiDocsResult))]
+[JsonSerializable(typeof(AzApiExample))]
+[JsonSerializable(typeof(List<AzApiExample>))]
+[JsonSerializable(typeof(List<ArgumentDetail>))]
+[JsonSerializable(typeof(List<AttributeDetail>))]
+[JsonSerializable(typeof(List<string>))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+internal partial class AzureTerraformJsonContext : JsonSerializerContext;
