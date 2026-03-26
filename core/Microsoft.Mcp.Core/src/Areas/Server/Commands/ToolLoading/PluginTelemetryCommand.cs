@@ -22,9 +22,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
-public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
+public sealed class PluginTelemetryCommand(IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider, IPluginSkillNameAllowlistProvider skillNameAllowlistProvider) : BaseCommand<PluginTelemetryOptions>
 {
     private const string CommandTitle = "Plugin Telemetry";
+    private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
+    private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
 
     public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
 
@@ -119,7 +121,7 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
 
     /// <summary>
     /// Executes the plugin telemetry command by validating and logging telemetry.
-    /// This method validates required options, checks paths against the allowlist,
+    /// This method validates required options, checks paths and skill names against allowlists,
     /// creates a host with telemetry services, and logs the telemetry event.
     /// </summary>
     /// <param name="context">The command execution context containing the response object.</param>
@@ -137,16 +139,11 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
 
         try
         {
-            // Create host early so we can access services for validation
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
-
             // Validate file reference if provided
             if (!string.IsNullOrWhiteSpace(options.FileReference))
             {
                 // Validate against allowlist
-                var allowlistProvider = host.Services.GetRequiredService<IPluginFileReferenceAllowlistProvider>();
-                if (!IsPathAllowed(options.FileReference, allowlistProvider))
+                if (!IsPathAllowed(options.FileReference, _fileReferenceAllowlistProvider))
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Plugin file reference '{options.FileReference}' is not in the allowlist and will not be logged.";
@@ -158,8 +155,7 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
             if (!string.IsNullOrWhiteSpace(options.SkillName))
             {
                 // Validate against allowlist
-                var skillNameAllowlistProvider = host.Services.GetRequiredService<IPluginSkillNameAllowlistProvider>();
-                if (!IsSkillNameAllowed(options.SkillName, skillNameAllowlistProvider))
+                if (!IsSkillNameAllowed(options.SkillName, _skillNameAllowlistProvider))
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Skill name '{options.SkillName}' is not in the allowlist and will not be logged.";
@@ -167,7 +163,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
                 }
             }
 
-            // Start host and log telemetry
+            // Create host and log telemetry
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
             await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
