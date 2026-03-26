@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed default subscription resolution to prioritize AZURE_SUBSCRIPTION_ID environment variable over Azure CLI profile, matching standard Azure SDK conventions"
