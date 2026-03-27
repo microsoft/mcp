@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Add Azure Backup toolset with 15 commands for vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery"

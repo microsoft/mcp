@@ -119,6 +119,41 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
 | appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
+## Azure Backup
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
+| azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' |
+| azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> |
+| azurebackup_vault_get | Show me information about vault <vault_name> in resource group <resource_group> |
+| azurebackup_vault_update | Update vault <vault_name> in resource group <resource_group> to use GeoRedundant storage |
+| azurebackup_vault_update | Change the redundancy of vault <vault_name> in resource group <resource_group> to LocallyRedundant |
+| azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> |
+| azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> |
+| azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> |
+| azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_protect | Protect item <item_name> with backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> |
+| azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> |
+| azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> |
+| azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? |
+| azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> |
+| azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
+| azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
+| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_soft-delete | Configure soft delete on vault <vault_name> in resource group <resource_group> |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> |
+| azurebackup_dr_enablecrr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> |
+| azurebackup_dr_enablecrr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
+
 ## Azure Application Insights
 
 | Tool Name | Test Prompt |
