@@ -31,7 +31,7 @@ public class ResourceGroupService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
-        var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
+        var cacheKey = CacheKeyBuilder.Build(CacheKey, subscriptionId, tenant ?? "default");
         var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
@@ -61,7 +61,7 @@ public class ResourceGroupService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
-        var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
+        var cacheKey = CacheKeyBuilder.Build(CacheKey, subscriptionId, tenant ?? "default");
         var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
