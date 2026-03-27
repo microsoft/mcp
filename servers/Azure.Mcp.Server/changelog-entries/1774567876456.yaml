@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed elicitation for GitHub Copilot CLI by updating from `UntitledSingleSelectEnumSchema` to `TitledSingleSelectEnumSchema`"
