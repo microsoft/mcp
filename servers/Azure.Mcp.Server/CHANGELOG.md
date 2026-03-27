@@ -2,11 +2,26 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.34 (2026-03-26)
+## 2.0.0-beta.34 (2026-03-27)
 
 ### Features Added
 
 - Added `--dangerously-disable-retry-limits` server start option to bypass retry policy bounds enforcement when explicitly required. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+
+### Breaking Changes
+
+- Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: [[#2257](https://github.com/microsoft/mcp/pull/2257)]
+  - `AzureCloud` 
+  - `AzurePublicCloud`
+  - `Public`
+  - `AzurePublic`
+  - `AzureChinaCloud`
+  - `China`
+  - `AzureChina`
+  - `AzureUSGovernment`
+  - `AzureUSGovernmentCloud`
+  - `USGov`
+  - `USGovernment`
 
 ### Bugs Fixed
 
@@ -15,10 +30,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed Cosmos DB cache key generation to include the authentication method, preventing incorrect client reuse across authentication types. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
 - Fixed validation gap in `BaseAzureResourceService` where the `additionalFilter` parameter could be concatenated into Resource Graph queries without validation. Pipe operators are now rejected. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
 - Added input validation for ledger names in `ConfidentialLedgerService` to ensure only valid characters are accepted. [[#2211](https://github.com/microsoft/mcp/pull/2211)]
+- Fixed elicitation for GitHub Copilot CLI by updating from `UntitledSingleSelectEnumSchema` to `TitledSingleSelectEnumSchema`. [[#2253](https://github.com/microsoft/mcp/pull/2253)]
+- Fixed incorrect SignalR caching where runtime results were not stored in the cache, causing every request to re-fetch instead of returning cached data. [[#2254](https://github.com/microsoft/mcp/pull/2254)]
+- Added `CacheKeyBuilder` to construct cache keys using characters disallowed in Azure resource and subscription names, preventing cache collisions in multi-client remote scenarios. [[#2259](https://github.com/microsoft/mcp/pull/2259)]
+- Added vault name validation in `KeyVaultService` to prevent unsafe input from being interpolated into Key Vault and Managed HSM URIs. [[#2238](https://github.com/microsoft/mcp/pull/2238)]
 
 ### Other Changes
 
 - Enforced upper bounds on retry policy values to prevent excessively large retry configurations. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+- Bumped `@azure/msal-browser` to 5.2.0+ to comply with Component Governance requirements. [[#2260](https://github.com/microsoft/mcp/pull/2260)]
 
 ## 2.0.0-beta.33 (2026-03-25)
 
