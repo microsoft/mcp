@@ -1,5 +1,6 @@
 # AGENTS.md
 
+
 ## Do
 - Use primary constructors for all C# classes
 - Use `System.Text.Json`
