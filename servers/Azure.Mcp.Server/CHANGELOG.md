@@ -10,7 +10,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic`,`AzureChinaCloud`, `China`, `AzureChina`,`AzureUSGovernment`, `AzureUSGovernmentCloud`, `USGov`, `USGovernment`. [[#2257](https://github.com/microsoft/mcp/pull/2257)]
+- Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: [[#2257](https://github.com/microsoft/mcp/pull/2257)]
+  - `AzureCloud` 
+  - `AzurePublicCloud`
+  - `Public`
+  - `AzurePublic`
+  - `AzureChinaCloud`
+  - `China`
+  - `AzureChina`
+  - `AzureUSGovernment`
+  - `AzureUSGovernmentCloud`
+  - `USGov`
+  - `USGovernment`
 
 ### Bugs Fixed
 
