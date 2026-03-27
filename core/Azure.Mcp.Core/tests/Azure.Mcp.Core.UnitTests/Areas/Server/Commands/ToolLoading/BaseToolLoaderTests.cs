@@ -462,8 +462,15 @@ public class BaseToolLoaderTests
         Assert.NotNull(elicitParams.RequestedSchema.Properties);
         Assert.Single(elicitParams.RequestedSchema.Properties);
         Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("decision"));
-        var decisionSchema = Assert.IsType<ElicitRequestParams.UntitledSingleSelectEnumSchema>(elicitParams.RequestedSchema.Properties["decision"]);
-        Assert.Equal(["Approve", "Reject"], decisionSchema.Enum);
+        var decisionSchema = Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(elicitParams.RequestedSchema.Properties["decision"]);
+        Assert.Equal("Decision", decisionSchema.Title);
+        Assert.Equal("Approve or reject this sensitive operation.", decisionSchema.Description);
+        Assert.NotNull(decisionSchema.OneOf);
+        Assert.Equal(2, decisionSchema.OneOf.Count);
+        Assert.Equal("Approve", decisionSchema.OneOf[0].Title);
+        Assert.Equal("accept", decisionSchema.OneOf[0].Const);
+        Assert.Equal("Reject", decisionSchema.OneOf[1].Title);
+        Assert.Equal("reject", decisionSchema.OneOf[1].Const);
         Assert.NotNull(elicitParams.RequestedSchema.Required);
         Assert.Single(elicitParams.RequestedSchema.Required);
         Assert.Contains("decision", elicitParams.RequestedSchema.Required);
