@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.CommandLine.Parsing;
 
 namespace Microsoft.Mcp.Core.Extensions;
@@ -38,7 +37,7 @@ public static class CommandResultExtensions
     }
 
     public static bool HasOptionResult<T>(this CommandResult commandResult, Option<T> option)
-        => HasOptionResult(commandResult, (Option)option);
+        => HasOptionResult(commandResult, option.Name);
 
     /// <summary>
     /// Checks if an option with the specified name has a result in the command result.
@@ -108,6 +107,21 @@ public static class CommandResultExtensions
     }
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
+        => GetValueOrDefault<T>(commandResult, option.Name);
+
+    public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
+    {
+        // Find the option by name in the command
+        var option = FindOptionTByName<T>(commandResult, optionName);
+        if (option is null)
+        {
+            return default;
+        }
+
+        return GetValueOrDefaultImpl(commandResult, option);
+    }
+
+    private static T? GetValueOrDefaultImpl<T>(this CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);
         ArgumentNullException.ThrowIfNull(option);
@@ -141,20 +155,22 @@ public static class CommandResultExtensions
         return optionResult.GetValueOrDefault<T>();
     }
 
-    public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
+    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, Option<T> option)
+        => GetValueWithoutDefault<T>(commandResult, option.Name);
+
+    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, string optionName)
     {
         // Find the option by name in the command
         var option = FindOptionTByName<T>(commandResult, optionName);
-
         if (option is null)
         {
             return default;
         }
 
-        return GetValueOrDefault(commandResult, option);
+        return GetValueWithoutDefaultImpl(commandResult, option);
     }
 
-    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, Option<T> option)
+    private static T? GetValueWithoutDefaultImpl<T>(this CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);
         ArgumentNullException.ThrowIfNull(option);
@@ -172,19 +188,6 @@ public static class CommandResultExtensions
         // At this point it was explicitly supplied by the user; get its value.
         // Using the System.CommandLine API directly to avoid accidental recursion.
         return optionResult.GetValueOrDefault<T>();
-    }
-
-    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, string optionName)
-    {
-        // Find the option by name in the command
-        var option = FindOptionTByName<T>(commandResult, optionName);
-
-        if (option is null)
-        {
-            return default;
-        }
-
-        return GetValueWithoutDefault(commandResult, option);
     }
 
     private static Option<T>? FindOptionTByName<T>(CommandResult commandResult, string optionName)

@@ -52,8 +52,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
         command.Validators.Add(commandResult =>
         {
-            var webTestName = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
-            var resourceGroup = commandResult.GetValueWithoutDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var webTestName = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName);
+            var resourceGroup = commandResult.GetValueWithoutDefault(OptionDefinitions.Common.ResourceGroup);
 
             if (!string.IsNullOrEmpty(webTestName) && string.IsNullOrEmpty(resourceGroup))
             {
