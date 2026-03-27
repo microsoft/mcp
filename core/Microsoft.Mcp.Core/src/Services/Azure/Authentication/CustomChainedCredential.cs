@@ -5,7 +5,7 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
@@ -95,6 +95,20 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
 
     /// <summary>
+    /// Configuration for reading settings. Set by DI container during service registration.
+    /// When set, configuration-based retrieval is preferred over direct environment variable access,
+    /// allowing values to come from non-environment sources (e.g. appsettings.json) in addition to environment variables.
+    /// </summary>
+    internal static IConfiguration? Configuration { get; set; }
+
+    /// <summary>
+    /// Reads a configuration value, preferring <see cref="Configuration"/> when available
+    /// and falling back to <see cref="Environment.GetEnvironmentVariable"/> otherwise.
+    /// </summary>
+    private static string? GetConfigValue(string key) =>
+        Configuration?[key] ?? Environment.GetEnvironmentVariable(key);
+
+    /// <summary>
     /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServiceStartCommand"/>
     /// before the credential chain is first used. Empty when not running as a server (e.g. direct CLI invocation).
     /// </summary>
@@ -120,13 +134,14 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static bool ShouldUseOnlyBrokerCredential()
     {
-        return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
+        string? value = GetConfigValue(OnlyUseBrokerCredentialEnvVarName);
+        return value is "true" or "True" or "T" or "1";
     }
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
     {
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
-        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
+        string? tokenCredentials = GetConfigValue(TokenCredentialsEnvVarName);
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
 
 #if DEBUG
@@ -139,7 +154,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         }
 #endif
 
-        string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
+        string? authRecordJson = GetConfigValue(AuthenticationRecordEnvVarName);
         AuthenticationRecord? authRecord = null;
         if (!string.IsNullOrEmpty(authRecordJson))
         {
@@ -156,7 +171,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         var creds = new List<TokenCredential>();
 
         // Check if we are running in a VS Code context. VSCODE_PID is set by VS Code when launching processes, and is a reliable indicator for VS Code-hosted processes.
-        bool isVsCodeContext = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID"));
+        bool isVsCodeContext = !string.IsNullOrEmpty(GetConfigValue("VSCODE_PID"));
 
         if (isVsCodeContext && !hasExplicitCredentialSetting)
         {
@@ -224,7 +239,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord)
     {
-        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+        string? clientId = GetConfigValue(ClientIdEnvVarName);
 
         IntPtr handle = WindowHandleProvider.GetWindowHandle();
 
@@ -251,8 +266,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
         var browserCredential = new InteractiveBrowserCredential(brokerOptions);
 
-        // Check for timeout value in the environment variable
-        string? timeoutValue = Environment.GetEnvironmentVariable(BrowserAuthenticationTimeoutEnvVarName);
+        // Check for timeout value in the configuration
+        string? timeoutValue = GetConfigValue(BrowserAuthenticationTimeoutEnvVarName);
         int timeoutSeconds = 300; // Default to 300 seconds (5 minutes)
         if (!string.IsNullOrEmpty(timeoutValue) && int.TryParse(timeoutValue, out int parsedTimeout) && parsedTimeout > 0)
         {
@@ -263,7 +278,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
     {
-        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
+        string? tokenCredentials = GetConfigValue(TokenCredentialsEnvVarName);
         var credentials = new List<TokenCredential>();
 
         // Handle specific credential targeting
@@ -371,7 +386,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
     {
         // Check if AZURE_CLIENT_ID is set for User-Assigned Managed Identity
-        string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+        string? clientId = GetConfigValue("AZURE_CLIENT_ID");
 
         ManagedIdentityCredential managedIdentityCredential;
         if (!string.IsNullOrEmpty(clientId))
@@ -478,7 +493,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
                 "DeviceCodeCredential requires an interactive terminal to display the device code prompt.");
         }
 
-        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+        string? clientId = GetConfigValue(ClientIdEnvVarName);
 
         var deviceCodeOptions = new DeviceCodeCredentialOptions
         {
@@ -496,8 +511,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             deviceCodeOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
         }
 
-        // Hydrate an existing AuthenticationRecord from the environment to enable silent token cache reuse
-        string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
+        // Hydrate an existing AuthenticationRecord from the configuration to enable silent token cache reuse
+        string? authRecordJson = GetConfigValue(AuthenticationRecordEnvVarName);
         if (!string.IsNullOrEmpty(authRecordJson))
         {
             byte[] bytes = Encoding.UTF8.GetBytes(authRecordJson);

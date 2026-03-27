@@ -200,7 +200,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         try
         {
-            using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
+            // Build configuration using the same sources the host will use so AddIncomingAndOutgoingHttpSpans
+            // has access to IConfiguration before the host DI container is constructed.
+            // This mirrors Host.CreateDefaultBuilder / WebApplication.CreateBuilder source order:
+            // appsettings.json → appsettings.{env}.json → environment variables.
+            string hostEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+                ?? "Production";
+            IConfiguration preHostConfiguration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile($"appsettings.{hostEnvironment}.json", optional: true, reloadOnChange: false)
+                .AddEnvironmentVariables()
+                .Build();
+
+            using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options, preHostConfiguration);
 
             using var host = CreateHost(options);
 
@@ -464,14 +478,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(HttpWebApplicationOptions);
 
-        // Read once at host setup time — this env var is process-wide and effectively static,
+        // Read once at host setup time — this value is process-wide and effectively static,
         // so there is no need to re-read it on every incoming request.
-        // Default to false; the env var must be present and parse to "true" to enable.
-        bool enableForwardedHeaders =
-            bool.TryParse(
-                Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"),
-                out bool parsedEnvVar)
-            && parsedEnvVar;
+        // Default to false; the configuration value must parse to "true" to enable.
+        string? forwardedHeadersSetting = builder.Configuration["AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS"];
+        bool enableForwardedHeaders = bool.TryParse(forwardedHeadersSetting, out bool parsedForwardedHeaders) && parsedForwardedHeaders;
 
         // Configure logging
         builder.Logging.ClearProviders();
@@ -556,7 +567,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
         services.AddHttpServiceCacheService();
-
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -822,7 +832,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             return;
         }
 
-        string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:5001";
+        string url = builder.Configuration["ASPNETCORE_URLS"] ?? "http://127.0.0.1:5001";
 
         if (url.Contains(';'))
         {
@@ -851,7 +861,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             throw new InvalidOperationException($"Explicit external binding is not supported for '{url}'.");
         }
 
-        if (isWildcard && !EnvironmentHelpers.GetEnvironmentVariableAsBool("ALLOW_INSECURE_EXTERNAL_BINDING"))
+        var allowInsecureExternalBindingRaw = builder.Configuration["ALLOW_INSECURE_EXTERNAL_BINDING"];
+        bool allowInsecureExternalBinding = false;
+        if (!string.IsNullOrWhiteSpace(allowInsecureExternalBindingRaw))
+        {
+            _ = bool.TryParse(allowInsecureExternalBindingRaw, out allowInsecureExternalBinding);
+        }
+        if (isWildcard && !allowInsecureExternalBinding)
         {
             throw new InvalidOperationException(
                 $"External binding blocked for '{url}'. " +
@@ -919,8 +935,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // - The application or server's HTTP stack is not listening for non-HTTPS requests.
         //
         // Safe default to enable HTTPS redirection unless explicitly opted-out.
-        string? httpsRedirectionOptOut = Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION");
-        if (!bool.TryParse(httpsRedirectionOptOut, out bool isOptedOut) || !isOptedOut)
+        var disableHttpsRedirectionSetting = app.Configuration["AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION"];
+        var httpsRedirectionDisabled = bool.TryParse(disableHttpsRedirectionSetting, out var parsedValue) && parsedValue;
+        if (!httpsRedirectionDisabled)
         {
             app.UseHttpsRedirection();
         }
@@ -932,6 +949,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Configures incoming and outgoing HTTP spans for self-hosted HTTP mode with Azure Monitor exporter.
     /// </summary>
     /// <param name="options">The server configuration options.</param>
+    /// <param name="configuration">The configuration used to read telemetry settings.</param>
     /// <returns>
     /// A <see cref="TracerProvider"/> instance if telemetry is enabled and properly configured for HTTP transport;
     /// otherwise, <c>null</c>.
@@ -941,17 +959,17 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <list type="bullet">
     /// <item><description>The transport is HTTP (not STDIO)</description></item>
     /// <item><description>AZURE_MCP_COLLECT_TELEMETRY is not explicitly set to false</description></item>
-    /// <item><description>APPLICATIONINSIGHTS_CONNECTION_STRING environment variable is set</description></item>
+    /// <item><description>APPLICATIONINSIGHTS_CONNECTION_STRING is set</description></item>
     /// </list>
     /// The tracer provider includes ASP.NET Core and HttpClient instrumentation with filtering
     /// to avoid duplicate spans and telemetry loops.
     /// This telemetry configuration is intended for self-hosted scenarios where
     /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
-    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
-    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// traces to user-configured Application Insights instance only when the necessary configuration values are set. This also honors 
+    /// the AZURE_MCP_COLLECT_TELEMETRY setting to allow users to disable telemetry collection if desired. Note that this is 
     /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
     /// </remarks>
-    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
+    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options, IConfiguration configuration)
     {
         if (options.Transport != TransportTypes.Http)
         {
@@ -966,11 +984,20 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             return null;
         }
 
-        string? collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
-        bool isTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) ||
-            (bool.TryParse(collectTelemetry, out bool shouldCollectTelemetry) && shouldCollectTelemetry);
+        string? telemetrySetting = configuration["AZURE_MCP_COLLECT_TELEMETRY"];
+        bool isTelemetryEnabled;
+        if (string.IsNullOrWhiteSpace(telemetrySetting))
+        {
+            // Preserve default behavior when the setting is not provided.
+            isTelemetryEnabled = true;
+        }
+        else if (!bool.TryParse(telemetrySetting, out isTelemetryEnabled))
+        {
+            // Treat invalid/unknown values as telemetry disabled to avoid startup failures.
+            isTelemetryEnabled = false;
+        }
 
-        string? connectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        string? connectionString = configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
         if (!isTelemetryEnabled || string.IsNullOrWhiteSpace(connectionString))
         {
             return null;
