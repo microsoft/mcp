@@ -24,9 +24,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<CosmosService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "cosmos";
-    private const string CosmosClientsCacheKeyPrefix = "clients_";
-    private const string CosmosDatabasesCacheKeyPrefix = "databases_";
-    private const string CosmosContainersCacheKeyPrefix = "containers_";
+    private const string CosmosClientsCacheKeyPrefix = "clients";
+    private const string CosmosDatabasesCacheKeyPrefix = "databases";
+    private const string CosmosContainersCacheKeyPrefix = "containers";
     private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
     private static readonly TimeSpan s_cacheDurationResources = CacheDurations.ServiceData;
     private bool _disposed;
@@ -122,7 +122,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var key = CosmosClientsCacheKeyPrefix + accountName + "_" + authMethod;
+        var key = CacheKeyBuilder.Build(CosmosClientsCacheKeyPrefix, accountName, authMethod.ToString());
         var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
@@ -166,7 +166,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var cacheKey = CosmosDatabasesCacheKeyPrefix + accountName;
+        var cacheKey = CacheKeyBuilder.Build(CosmosDatabasesCacheKeyPrefix, accountName);
 
         var cachedDatabases = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedDatabases != null)
@@ -214,7 +214,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(subscription), subscription));
 
-        var cacheKey = CosmosContainersCacheKeyPrefix + accountName + "_" + databaseName;
+        var cacheKey = CacheKeyBuilder.Build(CosmosContainersCacheKeyPrefix, accountName, databaseName);
 
         var cachedContainers = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedContainers != null)

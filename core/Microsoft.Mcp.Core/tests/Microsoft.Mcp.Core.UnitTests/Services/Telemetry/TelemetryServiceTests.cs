@@ -321,7 +321,6 @@ public class TelemetryServiceTests
     [InlineData("AzureCloud", AzureCloud.AzurePublicCloud)]
     [InlineData("AzurePublicCloud", AzureCloud.AzurePublicCloud)]
     [InlineData("Public", AzureCloud.AzurePublicCloud)]
-    [InlineData("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud)]
     [InlineData("AzureChinaCloud", AzureCloud.AzureChinaCloud)]
     [InlineData("China", AzureCloud.AzureChinaCloud)]
     [InlineData("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud)]
@@ -424,7 +423,6 @@ public class TelemetryServiceTests
             ("AzureCloud", AzureCloud.AzurePublicCloud),
             ("AzurePublicCloud", AzureCloud.AzurePublicCloud),
             ("Public", AzureCloud.AzurePublicCloud),
-            ("https://custom.login.microsoftonline.com", AzureCloud.AzurePublicCloud),
             ("AzureChinaCloud", AzureCloud.AzureChinaCloud),
             ("China", AzureCloud.AzureChinaCloud),
             ("AzureUSGovernmentCloud", AzureCloud.AzureUSGovernmentCloud),

@@ -48,8 +48,13 @@ public sealed class SignalRService(
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch
+            {
+                (true, true) => subscription,
+                (false, true) => CacheKeyBuilder.Build(subscription, resourceGroup),
+                (true, false) => CacheKeyBuilder.Build(subscription, tenant),
+                (false, false) => CacheKeyBuilder.Build(subscription, tenant, resourceGroup)
+            };
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
             {
@@ -85,8 +90,8 @@ public sealed class SignalRService(
         {
             ValidateRequiredParameters((nameof(signalRName), signalRName), (nameof(resourceGroup), resourceGroup));
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{signalRName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";
+                ? CacheKeyBuilder.Build(subscription, resourceGroup!, signalRName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, signalRName);
 
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
