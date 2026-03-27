@@ -23,7 +23,7 @@ public class TableConfigGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new TableConfigGetCommand(NullLogger<TableConfigGetCommand>.Instance, service);
 
-        Assert.Equal("get_table_config", command.Name);
+        Assert.Equal("get-table-config", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -38,7 +38,7 @@ public class TableConfigGetCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_table_config", systemCommand.Name);
+        Assert.Equal("get-table-config", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 

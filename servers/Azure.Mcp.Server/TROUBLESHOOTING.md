@@ -377,12 +377,12 @@ This error indicates that the access token doesn't have sufficient permissions t
 
 ### Service Principal Returns 403 for OneLake Operations in VS Code
 
-When using Azure MCP Server inside VS Code with a Service Principal authenticated via Azure CLI (`az login --service-principal`), OneLake DFS operations (such as `directory_create`, `upload_file`) may return `403 Forbidden`, even though the Service Principal has the correct permissions (e.g., Workspace Admin in Microsoft Fabric).
+When using Azure MCP Server inside VS Code with a Service Principal authenticated via Azure CLI (`az login --service-principal`), OneLake DFS operations (such as `directory_create`, `upload-file`) may return `403 Forbidden`, even though the Service Principal has the correct permissions (e.g., Workspace Admin in Microsoft Fabric).
 
 #### Symptoms
 
 - OneLake **blob** operations (e.g., `file_list` without a path) may succeed with `200 OK`
-- OneLake **DFS** operations (e.g., `directory_create`, `upload_file`) fail with `403 Forbidden`
+- OneLake **DFS** operations (e.g., `directory_create`, `upload-file`) fail with `403 Forbidden`
 - The same Service Principal works correctly when used from Python scripts or other tools outside VS Code
 - Fabric REST API operations (e.g., `item_create`) may also fail with `401 Unauthorized`
 

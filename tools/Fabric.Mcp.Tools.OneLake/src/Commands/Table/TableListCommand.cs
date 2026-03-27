@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
@@ -15,13 +14,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 public sealed class TableListCommand(
     ILogger<TableListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<TableListOptions>()
+    IOneLakeService oneLakeService) : BaseItemCommand<TableListOptions>()
 {
     private readonly ILogger<TableListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "7b1688e5-2a16-475d-8fd1-9bf3b0acf4f7";
-    public override string Name => "list_tables";
+    public override string Name => "list-tables";
     public override string Title => "List OneLake Tables";
     public override string Description => "Lists tables in OneLake. Use this when the user needs to see available tables.";
 
@@ -38,40 +37,13 @@ public sealed class TableListCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Namespace.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.Schema.AsOptional());
-        command.Validators.Add(result =>
-        {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
+        command.Options.Add(FabricOptionDefinitions.Namespace);
     }
 
     protected override TableListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Namespace.Name);
-        options.Namespace ??= parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Schema.Name);
         return options;
     }
 
@@ -85,15 +57,7 @@ public sealed class TableListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
-
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            var tablesResult = await _oneLakeService.ListTablesAsync(workspaceIdentifier!, itemIdentifier!, options.Namespace!, cancellationToken);
+            var tablesResult = await _oneLakeService.ListTablesAsync(options.WorkspaceId!, options.ItemId!, options.Namespace!, cancellationToken);
             var result = new TableListCommandResult(tablesResult.Workspace, tablesResult.Item, tablesResult.Namespace, tablesResult.Tables, tablesResult.RawResponse);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.TableListCommandResult);
         }
