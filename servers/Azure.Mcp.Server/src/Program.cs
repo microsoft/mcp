@@ -267,6 +267,11 @@ internal class Program
             // Update the UserAgentPolicy for all Azure service calls to include the transport type.
             var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
             BaseAzureService.InitializeUserAgentPolicy(transport);
+
+            if (options.DangerouslyDisableRetryLimits)
+            {
+                BaseAzureService.DisableRetryLimits();
+            }
         }
 
         // Perform any initialization before starting the service.
