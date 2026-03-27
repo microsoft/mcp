@@ -42,7 +42,7 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
             {
                 if (!_tenantSpecificCredentials.TryGetValue(tenantId, out tenantCredential))
                 {
-                    tenantCredential = new CustomChainedCredential(
+                    tenantCredential = new TenantAwareCredential(
                         tenantId,
                         _loggerFactory.CreateLogger<CustomChainedCredential>()
                     );

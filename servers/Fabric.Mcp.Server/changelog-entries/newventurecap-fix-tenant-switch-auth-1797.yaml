@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved cross-tenant Fabric authentication by isolating explicit tenant-switch flows into a dedicated tenant-aware credential path while preserving default authentication behavior."
