@@ -2,26 +2,27 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// Provides access to the allowlist of plugin file references permitted for telemetry.
+/// Provides validation for plugin file references permitted for telemetry.
 /// </summary>
 public interface IPluginFileReferenceAllowlistProvider
 {
     /// <summary>
-    /// Gets the set of allowed plugin-relative file references.
-    /// Only telemetry events with file paths in this set will be logged (with PII stripped).
+    /// Checks if a plugin-relative file reference is allowed for telemetry logging.
     /// </summary>
-    /// <returns>A HashSet of allowed plugin-relative file references (case-insensitive).</returns>
-    HashSet<string> GetAllowedPaths();
+    /// <param name="pluginRelativePath">The plugin-relative file path to validate.</param>
+    /// <returns>True if the file reference is allowed, false otherwise.</returns>
+    bool IsPathAllowed(string pluginRelativePath);
 }
 
 /// <summary>
-/// Provides plugin file reference allowlist loaded from an embedded JSON resource.
+/// Provides file reference validation using an embedded JSON resource allowlist.
 /// The resource should contain a JSON array of plugin-relative file references.
 /// </summary>
 public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileReferenceAllowlistProvider
@@ -49,7 +50,15 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
     }
 
     /// <inheritdoc/>
-    public HashSet<string> GetAllowedPaths() => _allowedPaths.Value;
+    public bool IsPathAllowed(string pluginRelativePath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginRelativePath))
+        {
+            return false;
+        }
+
+        return _allowedPaths.Value.Contains(pluginRelativePath);
+    }
 
     private HashSet<string> LoadAllowedPaths()
     {
@@ -82,5 +91,3 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
         }
     }
 }
-
-

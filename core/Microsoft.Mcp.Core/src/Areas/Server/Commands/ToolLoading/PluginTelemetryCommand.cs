@@ -73,24 +73,22 @@ public sealed class PluginTelemetryCommand(
     /// Checks if a plugin-relative path is allowed based on the exact path allowlist.
     /// </summary>
     /// <param name="pluginRelativePath">The plugin-relative path to check.</param>
-    /// <param name="allowlistProvider">The provider that supplies the allowed file references.</param>
+    /// <param name="allowlistProvider">The provider that validates allowed file references.</param>
     /// <returns>True if the path is in the allowlist, false otherwise.</returns>
     private static bool IsPathAllowed(string pluginRelativePath, IPluginFileReferenceAllowlistProvider allowlistProvider)
     {
-        var allowedPaths = allowlistProvider.GetAllowedPaths();
-        return allowedPaths.Contains(pluginRelativePath);
+        return allowlistProvider.IsPathAllowed(pluginRelativePath);
     }
 
     /// <summary>
     /// Checks if a skill name is allowed based on the exact skill name allowlist.
     /// </summary>
     /// <param name="skillName">The skill name to check.</param>
-    /// <param name="allowlistProvider">The provider that supplies the allowed skill names.</param>
+    /// <param name="allowlistProvider">The provider that validates allowed skill names.</param>
     /// <returns>True if the skill name is in the allowlist, false otherwise.</returns>
     private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
     {
-        var allowedSkillNames = allowlistProvider.GetAllowedSkillNames();
-        return allowedSkillNames.Contains(skillName);
+        return allowlistProvider.IsSkillNameAllowed(skillName);
     }
 
     protected override void RegisterOptions(Command command)
