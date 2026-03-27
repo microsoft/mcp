@@ -236,11 +236,15 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 {
                     Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
                     {
-                        ["decision"] = new ElicitRequestParams.UntitledSingleSelectEnumSchema
+                        ["decision"] = new ElicitRequestParams.TitledSingleSelectEnumSchema
                         {
                             Title = "Decision",
                             Description = "Approve or reject this sensitive operation.",
-                            Enum = ["Approve", "Reject"]
+                            OneOf = new List<ElicitRequestParams.EnumSchemaOption>
+                            {
+                                new() { Title = "Approve", Const = "accept" },
+                                new() { Title = "Reject", Const = "reject" }
+                            }
                         }
                     },
                     Required = ["decision"]
