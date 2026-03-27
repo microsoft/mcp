@@ -3,7 +3,7 @@
 
 using Azure.Core;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Token credential used during test playback to avoid any interactive or real authentication.

@@ -4,7 +4,7 @@
 using System.CommandLine.Parsing;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Options;
+namespace Microsoft.Mcp.Core.Options;
 
 public static class ParseResultExtensions
 {

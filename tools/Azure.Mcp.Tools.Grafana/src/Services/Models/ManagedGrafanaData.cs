@@ -3,8 +3,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Grafana.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Grafana.Services.Models;
 
@@ -38,6 +38,6 @@ internal sealed class ManagedGrafanaData
     // Read the JSON response content and create a model instance from it.
     public static ManagedGrafanaData? FromJson(JsonElement source)
     {
-        return JsonSerializer.Deserialize<ManagedGrafanaData>(source, GrafanaJsonContext.Default.ManagedGrafanaData);
+        return JsonSerializer.Deserialize(source, GrafanaJsonContext.Default.ManagedGrafanaData);
     }
 }

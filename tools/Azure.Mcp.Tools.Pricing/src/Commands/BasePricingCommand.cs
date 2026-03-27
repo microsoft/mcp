@@ -3,8 +3,8 @@
 
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Pricing.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Pricing.Commands;
 

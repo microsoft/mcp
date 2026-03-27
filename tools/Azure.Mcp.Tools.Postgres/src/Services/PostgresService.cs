@@ -6,7 +6,6 @@ using System.Data.Common;
 using System.Net;
 using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -16,6 +15,7 @@ using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
 

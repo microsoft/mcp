@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
-using static Azure.Mcp.Core.Services.Azure.Authentication.AzureCloudConfiguration;
+using static Microsoft.Mcp.Core.Services.Azure.Authentication.AzureCloudConfiguration;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Telemetry;
 
@@ -391,7 +391,7 @@ public class TelemetryServiceTests
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
-        var mockOptions = Options.Create(configuration);
+        var mockOptions = Microsoft.Extensions.Options.Options.Create(configuration);
 
         var mockConfiguration = Substitute.For<IConfiguration>();
         mockConfiguration[configName].Returns(cloud);

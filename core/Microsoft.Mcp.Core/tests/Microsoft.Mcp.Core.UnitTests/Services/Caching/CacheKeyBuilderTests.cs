@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Caching;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Caching;

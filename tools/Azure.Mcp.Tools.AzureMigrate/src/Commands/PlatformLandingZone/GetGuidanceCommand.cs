@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
@@ -90,9 +90,9 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
     protected override GetGuidanceOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Scenario = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Scenario);
-        options.PolicyName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.PolicyName);
-        options.ListPolicies = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.ListPolicies);
+        options.Scenario = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Scenario.Name);
+        options.PolicyName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.PolicyName.Name);
+        options.ListPolicies = parseResult.GetValueOrDefault<bool>(PlatformLandingZoneOptionDefinitions.ListPolicies.Name);
         return options;
     }
 

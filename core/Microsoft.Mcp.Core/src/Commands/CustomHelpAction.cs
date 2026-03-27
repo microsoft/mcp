@@ -12,19 +12,13 @@ namespace Microsoft.Mcp.Core.Commands;
 /// <summary>
 /// Custom help action that displays version information before the standard help output.
 /// </summary>
-internal class CustomHelpAction : SynchronousCommandLineAction
+internal class CustomHelpAction(IOptions<McpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null)
+    : SynchronousCommandLineAction
 {
-    private readonly IOptions<McpServerConfiguration> _options;
-    private readonly HelpAction _defaultHelp;
+    private readonly IOptions<McpServerConfiguration> _options = options;
+    private readonly HelpAction _defaultHelp = action;
 
-    private readonly IAreaSetup[]? _serviceAreas;
-
-    public CustomHelpAction(IOptions<McpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null)
-    {
-        _options = options;
-        _defaultHelp = action;
-        _serviceAreas = serviceAreas;
-    }
+    private readonly IAreaSetup[]? _serviceAreas = serviceAreas;
 
     private static string GetCategoryName(CommandCategory category) => category switch
     {
