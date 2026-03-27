@@ -8,11 +8,13 @@ using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -24,6 +26,7 @@ public class CommandFactory : ICommandFactory
 {
     internal const char Separator = '_';
     private readonly IAreaSetup[] _serviceAreas;
+    private readonly AreaRegistrationInfo[] _areaRegistrations;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly RootCommand _rootCommand;
@@ -35,6 +38,7 @@ public class CommandFactory : ICommandFactory
     /// </summary>
     private readonly Dictionary<string, IBaseCommand> _commandMap;
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _commandNamesToAreaName = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
     private readonly IOptions<McpServerConfiguration> _configurationOptions;
 
@@ -53,14 +57,31 @@ public class CommandFactory : ICommandFactory
         }
     }
 
-
+    /// <summary>
+    /// Creates a CommandFactory from legacy <see cref="IAreaSetup"/> instances.
+    /// </summary>
     public CommandFactory(IServiceProvider serviceProvider,
         IEnumerable<IAreaSetup> serviceAreas,
         ITelemetryService telemetryService,
         IOptions<McpServerConfiguration> configurationOptions,
         ILogger<CommandFactory> logger)
+        : this(serviceProvider, serviceAreas, [], telemetryService, configurationOptions, logger)
     {
-        _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
+    }
+
+    /// <summary>
+    /// Creates a CommandFactory supporting both legacy <see cref="IAreaSetup"/> and
+    /// new <see cref="AreaRegistrationInfo"/> descriptor-based areas.
+    /// </summary>
+    public CommandFactory(IServiceProvider serviceProvider,
+        IEnumerable<IAreaSetup> serviceAreas,
+        IEnumerable<AreaRegistrationInfo> areaRegistrations,
+        ITelemetryService telemetryService,
+        IOptions<McpServerConfiguration> configurationOptions,
+        ILogger<CommandFactory> logger)
+    {
+        _serviceAreas = serviceAreas?.ToArray() ?? [];
+        _areaRegistrations = areaRegistrations?.ToArray() ?? [];
         _serviceProvider = serviceProvider;
         _logger = logger;
         _telemetryService = telemetryService;
@@ -111,56 +132,100 @@ public class CommandFactory : ICommandFactory
 
     private void RegisterCommandGroup()
     {
-        // Register area command groups
         var existingAreaNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // Register legacy IAreaSetup areas
         foreach (var area in _serviceAreas)
         {
-            if (string.IsNullOrEmpty(area.Name))
-            {
-                var error = new ArgumentException("IAreaSetup cannot have an empty or null name. Type "
-                    + area.GetType());
-                _logger.LogError(error, "Invalid IAreaSetup encountered. Type: {Type}", area.GetType());
+            RegisterLegacyArea(area, existingAreaNames);
+        }
 
-                throw error;
-            }
+        // Register descriptor-based IAreaRegistration areas
+        foreach (var areaInfo in _areaRegistrations)
+        {
+            RegisterDescriptorArea(areaInfo, existingAreaNames);
+        }
+    }
 
-            if (!existingAreaNames.Add(area.Name))
-            {
-                var matchingAreaTypes = _serviceAreas
-                    .Where(x => string.Equals(x.Name, area.Name, StringComparison.OrdinalIgnoreCase))
-                    .Select(a => a.GetType().FullName);
+    private void RegisterLegacyArea(IAreaSetup area, HashSet<string> existingAreaNames)
+    {
+        if (string.IsNullOrEmpty(area.Name))
+        {
+            var error = new ArgumentException("IAreaSetup cannot have an empty or null name. Type "
+                + area.GetType());
+            _logger.LogError(error, "Invalid IAreaSetup encountered. Type: {Type}", area.GetType());
+            throw error;
+        }
 
-                var error = new ArgumentException("Cannot have multiple IAreaSetup with the same Name.");
-                _logger.LogError(error,
-                    "Duplicate {AreaName}. Areas with same name: {AllAreaTypes}",
-                    area.Name,
-                    string.Join(", ", matchingAreaTypes));
+        if (!existingAreaNames.Add(area.Name))
+        {
+            var matchingAreaTypes = _serviceAreas
+                .Where(x => string.Equals(x.Name, area.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(a => a.GetType().FullName);
 
-                throw error;
-            }
+            var error = new ArgumentException("Cannot have multiple IAreaSetup with the same Name.");
+            _logger.LogError(error,
+                "Duplicate {AreaName}. Areas with same name: {AllAreaTypes}",
+                area.Name,
+                string.Join(", ", matchingAreaTypes));
+            throw error;
+        }
 
-            // Get the commands for the IAreaSetup and register it to the root node.
-            var commandTree = area.RegisterCommands(_serviceProvider);
-            _rootGroup.AddSubGroup(commandTree);
+        var commandTree = area.RegisterCommands(_serviceProvider);
+        _rootGroup.AddSubGroup(commandTree);
 
-            // Create a temporary root node to register all the area's subgroups and commands to.
-            // Use this to create the mapping of all commands to that area.
-            var tempRoot = new CommandGroup(_rootGroup.Name, string.Empty);
-            tempRoot.AddSubGroup(commandTree);
+        var tempRoot = new CommandGroup(_rootGroup.Name, string.Empty);
+        tempRoot.AddSubGroup(commandTree);
+        var commandDictionary = CreateCommandDictionary(tempRoot);
 
-            var commandDictionary = CreateCommandDictionary(tempRoot);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Registered commands for area '{AreaName}' are: {AllCommands}.",
+                area.Name, string.Join(", ", commandDictionary.Keys));
+        }
 
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug("Registered commands for area '{AreaName}' are: {AllCommands}.",
-                    area.Name, string.Join(", ", commandDictionary.Keys));
-            }
+        foreach (var item in commandDictionary)
+        {
+            _commandNamesToArea.Add(item.Key, area);
+            _commandNamesToAreaName[item.Key] = area.Name;
+        }
+    }
 
-            foreach (var item in commandDictionary)
-            {
-                _commandNamesToArea.Add(item.Key, area);
-            }
+    private void RegisterDescriptorArea(AreaRegistrationInfo areaInfo, HashSet<string> existingAreaNames)
+    {
+        if (string.IsNullOrEmpty(areaInfo.AreaName))
+        {
+            var error = new ArgumentException("AreaRegistrationInfo cannot have an empty or null AreaName.");
+            _logger.LogError(error, "Invalid AreaRegistrationInfo encountered.");
+            throw error;
+        }
+
+        if (!existingAreaNames.Add(areaInfo.AreaName))
+        {
+            var error = new ArgumentException($"Cannot have multiple areas with the same name: '{areaInfo.AreaName}'.");
+            _logger.LogError(error, "Duplicate area name: {AreaName}", areaInfo.AreaName);
+            throw error;
+        }
+
+        var descriptor = areaInfo.GetCommandDescriptors();
+        var commandTree = DescriptorCommandBuilder.Build(descriptor, handlerTypeName =>
+            areaInfo.ResolveHandler(handlerTypeName, _serviceProvider));
+
+        _rootGroup.AddSubGroup(commandTree);
+
+        var tempRoot = new CommandGroup(_rootGroup.Name, string.Empty);
+        tempRoot.AddSubGroup(commandTree);
+        var commandDictionary = CreateCommandDictionary(tempRoot);
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Registered descriptor-based commands for area '{AreaName}' are: {AllCommands}.",
+                areaInfo.AreaName, string.Join(", ", commandDictionary.Keys));
+        }
+
+        foreach (var item in commandDictionary)
+        {
+            _commandNamesToAreaName[item.Key] = areaInfo.AreaName;
         }
     }
 
@@ -274,7 +339,7 @@ public class CommandFactory : ICommandFactory
         {
             if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
             {
-                helpOption.Action = new CustomHelpAction(_configurationOptions, helpAction, _serviceAreas);
+                helpOption.Action = new CustomHelpAction(_configurationOptions, helpAction, _serviceAreas, _areaRegistrations);
                 break;
             }
         }
@@ -317,14 +382,19 @@ public class CommandFactory : ICommandFactory
             return null;
         }
 
+        // Check descriptor-based area names first (covers both old and new)
+        if (_commandNamesToAreaName.TryGetValue(fullCommandName, out var areaName))
+        {
+            return areaName;
+        }
+
+        // Fall back to legacy area lookup
         if (_commandNamesToArea.TryGetValue(fullCommandName, out var area))
         {
             return area.Name;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>
