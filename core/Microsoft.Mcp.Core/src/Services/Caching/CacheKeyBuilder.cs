@@ -3,7 +3,7 @@
 
 using System.Text;
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// Utility class for building cache keys with consistent formatting.

@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Services;
+
 public interface IVirtualDesktopService
 {
     Task<IReadOnlyList<HostPool>> ListHostpoolsAsync(
