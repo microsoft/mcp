@@ -18,12 +18,14 @@ internal class CustomHelpAction : SynchronousCommandLineAction
     private readonly HelpAction _defaultHelp;
 
     private readonly IAreaSetup[]? _serviceAreas;
+    private readonly AreaRegistrationInfo[]? _areaRegistrations;
 
-    public CustomHelpAction(IOptions<McpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null)
+    public CustomHelpAction(IOptions<McpServerConfiguration> options, HelpAction action, IAreaSetup[]? serviceAreas = null, AreaRegistrationInfo[]? areaRegistrations = null)
     {
         _options = options;
         _defaultHelp = action;
         _serviceAreas = serviceAreas;
+        _areaRegistrations = areaRegistrations;
     }
 
     private static string GetCategoryName(CommandCategory category) => category switch
@@ -40,7 +42,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
     {
         Console.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
 
-        if (_serviceAreas != null && parseResult.CommandResult.Command is RootCommand rootCommand)
+        if ((_serviceAreas != null || _areaRegistrations != null) && parseResult.CommandResult.Command is RootCommand rootCommand)
         {
             RenderGroupAreasHelp(rootCommand);
             return 0;
@@ -53,7 +55,18 @@ internal class CustomHelpAction : SynchronousCommandLineAction
     {
         const int descriptionColumnWidth = 72;
 
-        var commandColumnWidth = _serviceAreas!
+        // Combine both legacy and descriptor-based areas into a unified list
+        var allAreas = new List<(string Name, CommandCategory Category)>();
+        if (_serviceAreas != null)
+        {
+            allAreas.AddRange(_serviceAreas.Select(a => (a.Name, a.Category)));
+        }
+        if (_areaRegistrations != null)
+        {
+            allAreas.AddRange(_areaRegistrations.Select(a => (a.AreaName, a.Category)));
+        }
+
+        var commandColumnWidth = allAreas
             .Select(a => a.Name.Length).DefaultIfEmpty(20).Max() + 2;
 
         var indent = new string(' ', commandColumnWidth + 4);
@@ -68,7 +81,7 @@ internal class CustomHelpAction : SynchronousCommandLineAction
         Console.WriteLine($"  {_options.Value.RootCommandGroupName} storage account get --subscription \"my-sub\"");
         Console.WriteLine($"  {_options.Value.RootCommandGroupName} server start");
 
-        var groupedAreas = _serviceAreas!.GroupBy(area => area.Category).OrderBy(g => (int)g.Key);
+        var groupedAreas = allAreas.GroupBy(area => area.Category).OrderBy(g => (int)g.Key);
         foreach (var group in groupedAreas)
         {
             Console.WriteLine($"\n{GetCategoryName(group.Key)}:");

@@ -23,6 +23,7 @@ using Microsoft.Mcp.Core.Services.Telemetry;
 internal class Program
 {
     private static IAreaSetup[] Areas = RegisterAreas();
+    private static AreaRegistrationInfo[] DescriptorAreas = RegisterDescriptorAreas();
 
     private static async Task<int> Main(string[] args)
     {
@@ -69,10 +70,14 @@ internal class Program
 
     private static IAreaSetup[] RegisterAreas()
     {
+        return [];
+    }
+
+    private static AreaRegistrationInfo[] RegisterDescriptorAreas()
+    {
         return [
-            // Register core areas
-            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup()
+            AreaRegistrationInfo.Create<Microsoft.Mcp.Core.Areas.Server.ServerRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Core.Areas.Tools.ToolsRegistration>(),
             // Register template areas
         ];
     }
@@ -153,6 +158,13 @@ internal class Program
         {
             services.AddSingleton(area);
             area.ConfigureServices(services);
+        }
+
+        // Register descriptor-based areas
+        foreach (var areaInfo in DescriptorAreas)
+        {
+            services.AddSingleton(areaInfo);
+            areaInfo.RegisterServices(services);
         }
 
         // Until there are external servers to register, just use an empty registry

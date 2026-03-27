@@ -14,7 +14,6 @@ using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Models;
@@ -24,7 +23,7 @@ using Microsoft.Mcp.Core.Services.Telemetry;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static AreaRegistrationInfo[] DescriptorAreas = RegisterDescriptorAreas();
 
     private static async Task<int> Main(string[] args)
     {
@@ -68,17 +67,18 @@ internal class Program
             return 1;
         }
     }
-    private static IAreaSetup[] RegisterAreas()
-    {
 
+    private static AreaRegistrationInfo[] RegisterDescriptorAreas()
+    {
         return [
             // Register core areas
-            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            AreaRegistrationInfo.Create<Microsoft.Mcp.Core.Areas.Server.ServerRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Core.Areas.Tools.ToolsRegistration>(),
+
             // Register Fabric areas
-            new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
-            new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
-            new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
+            AreaRegistrationInfo.Create<Fabric.Mcp.Tools.Docs.FabricDocsRegistration>(),
+            AreaRegistrationInfo.Create<Fabric.Mcp.Tools.OneLake.FabricOneLakeRegistration>(),
+            AreaRegistrationInfo.Create<Fabric.Mcp.Tools.Core.FabricCoreRegistration>(),
         ];
     }
 
@@ -155,10 +155,11 @@ internal class Program
         services.AddHttpClientServices();
         services.AddSingleUserCliCacheService();
 
-        foreach (var area in Areas)
+        // Register descriptor-based areas
+        foreach (var areaInfo in DescriptorAreas)
         {
-            services.AddSingleton(area);
-            area.ConfigureServices(services);
+            services.AddSingleton(areaInfo);
+            areaInfo.RegisterServices(services);
         }
 
         // There's no need to use assembly resource based registration if we know we have an empty registry.

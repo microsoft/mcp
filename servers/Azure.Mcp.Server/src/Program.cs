@@ -29,6 +29,7 @@ namespace Azure.Mcp.Server;
 internal class Program
 {
     private static IAreaSetup[] Areas = RegisterAreas();
+    private static AreaRegistrationInfo[] DescriptorAreas = RegisterDescriptorAreas();
 
     private static async Task<int> Main(string[] args)
     {
@@ -87,75 +88,72 @@ internal class Program
 
     private static IAreaSetup[] RegisterAreas()
     {
+        return [];
+    }
 
+    private static AreaRegistrationInfo[] RegisterDescriptorAreas()
+    {
         return [
-            // Register core areas
-            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
-            new Azure.Mcp.Tools.Extension.ExtensionSetup(),
-            new Azure.Mcp.Core.Areas.Group.GroupSetup(),
-            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
-            // Register Azure service areas
-            new Azure.Mcp.Tools.Aks.AksSetup(),
-            new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
-            new Azure.Mcp.Tools.AppLens.AppLensSetup(),
-            new Azure.Mcp.Tools.AppService.AppServiceSetup(),
-            new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
-            new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
-            new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
-            new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
-            new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
-            new Azure.Mcp.Tools.Deploy.DeploySetup(),
-            new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
-            new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
-            new Azure.Mcp.Tools.Acr.AcrSetup(),
-            new Azure.Mcp.Tools.Advisor.AdvisorSetup(),
-            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
-            new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
-            new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
-            new Azure.Mcp.Tools.Communication.CommunicationSetup(),
-            new Azure.Mcp.Tools.Compute.ComputeSetup(),
-            new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
-            new Azure.Mcp.Tools.ContainerApps.ContainerAppsSetup(),
-            new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
-            new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
-            new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),
-            new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
-            new Azure.Mcp.Tools.Functions.FunctionsSetup(),
-            new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
-            new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
-            new Azure.Mcp.Tools.Kusto.KustoSetup(),
-            new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),
-            new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
-            new Azure.Mcp.Tools.Quota.QuotaSetup(),
-            new Azure.Mcp.Tools.Monitor.MonitorSetup(),
-            new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
-            new Azure.Mcp.Tools.MySql.MySqlSetup(),
-            new Azure.Mcp.Tools.Policy.PolicySetup(),
-            new Azure.Mcp.Tools.Postgres.PostgresSetup(),
-            new Azure.Mcp.Tools.Pricing.PricingSetup(),
-            new Azure.Mcp.Tools.Redis.RedisSetup(),
-            new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
-            new Azure.Mcp.Tools.Search.SearchSetup(),
-            new Azure.Mcp.Tools.Speech.SpeechSetup(),
-            new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
-            new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
-            new Azure.Mcp.Tools.SignalR.SignalRSetup(),
-            new Azure.Mcp.Tools.Sql.SqlSetup(),
-            new Azure.Mcp.Tools.Storage.StorageSetup(),
-            new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
-            new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
-            new Azure.Mcp.Tools.WellArchitectedFramework.WellArchitectedFrameworkSetup(),
-            new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
-#if !BUILD_NATIVE
-            // IMPORTANT: DO NOT MODIFY OR ADD EXCLUSIONS IN THIS SECTION
-            // This block must remain as-is.
-            // If the "(Native AOT) Build module" stage fails in CI,
-            // follow the AOT compatibility guide instead of changing this list:
-            // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-
-#endif
+            // Core areas
+            AreaRegistrationInfo.Create<Microsoft.Mcp.Core.Areas.Server.ServerRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Core.Areas.Tools.ToolsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Core.Areas.Group.GroupRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Core.Areas.Subscription.SubscriptionRegistration>(),
+            // Recommended tools
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Extension.ExtensionRegistration>(),
+            // Azure service areas
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Acr.AcrRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Advisor.AdvisorRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Aks.AksRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AppConfig.AppConfigRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AppLens.AppLensRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AppService.AppServiceRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Authorization.AuthorizationRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AzureIsv.AzureIsvRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AzureMigrate.AzureMigrateRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.BicepSchema.BicepSchemaRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.CloudArchitect.CloudArchitectRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Communication.CommunicationRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Compute.ComputeRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ContainerApps.ContainerAppsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Cosmos.CosmosRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Deploy.DeployRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.DeviceRegistry.DeviceRegistryRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.EventGrid.EventGridRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.EventHubs.EventHubsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.FileShares.FileSharesRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.FunctionApp.FunctionAppRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Functions.FunctionsRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Grafana.GrafanaRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.KeyVault.KeyVaultRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Kusto.KustoRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.LoadTesting.LoadTestingRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ManagedLustre.ManagedLustreRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Marketplace.MarketplaceRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Monitor.MonitorRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.MySql.MySqlRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Policy.PolicyRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Postgres.PostgresRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Pricing.PricingRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Quota.QuotaRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Redis.RedisRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ResourceHealth.ResourceHealthRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Search.SearchRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ServiceBus.ServiceBusRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.ServiceFabric.ServiceFabricRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.SignalR.SignalRRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Speech.SpeechRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Sql.SqlRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Storage.StorageRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.StorageSync.StorageSyncRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.WellArchitectedFramework.WellArchitectedFrameworkRegistration>(),
+            AreaRegistrationInfo.Create<Azure.Mcp.Tools.Workbooks.WorkbooksRegistration>(),
         ];
     }
 
@@ -241,6 +239,13 @@ internal class Program
         {
             services.AddSingleton(area);
             area.ConfigureServices(services);
+        }
+
+        // Register descriptor-based areas
+        foreach (var areaInfo in DescriptorAreas)
+        {
+            services.AddSingleton(areaInfo);
+            areaInfo.RegisterServices(services);
         }
 
         services.AddRegistryRoot(thisAssembly, $"registry.json");
