@@ -47,8 +47,8 @@ public sealed class SearchService(
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var cacheKey = string.IsNullOrEmpty(tenantId)
-            ? $"{SearchServicesCacheKey}_{subscription}"
-            : $"{SearchServicesCacheKey}_{subscription}_{tenantId}";
+            ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription)
+            : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, tenantId);
 
         var cachedServices = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationServices, cancellationToken);
         if (cachedServices != null)
@@ -316,7 +316,7 @@ public sealed class SearchService(
 
     private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
-        var key = $"{SearchServicesCacheKey}_{serviceName}";
+        var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName);
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
         {

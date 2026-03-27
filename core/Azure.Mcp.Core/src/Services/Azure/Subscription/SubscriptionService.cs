@@ -27,7 +27,7 @@ public class SubscriptionService(
     public async Task<List<SubscriptionData>> GetSubscriptions(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         // Try to get from cache first
-        var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : $"{CacheKey}_{tenant}";
+        var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : CacheKeyBuilder.Build(CacheKey, tenant);
         var cachedResults = await _cacheService.GetAsync<List<SubscriptionData>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
@@ -64,8 +64,8 @@ public class SubscriptionService(
 
         // Use subscription ID for cache key
         var cacheKey = string.IsNullOrEmpty(tenant)
-            ? $"{SubscriptionCacheKey}_{subscriptionId}"
-            : $"{SubscriptionCacheKey}_{subscriptionId}_{tenant}";
+            ? CacheKeyBuilder.Build(SubscriptionCacheKey, subscriptionId)
+            : CacheKeyBuilder.Build(SubscriptionCacheKey, subscriptionId, tenant);
         var cachedSubscription = await _cacheService.GetAsync<SubscriptionResource>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedSubscription != null)
         {

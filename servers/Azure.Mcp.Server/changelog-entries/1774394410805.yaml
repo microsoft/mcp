@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Adds CacheKeyBuilder which creates cache keys using characters disallowed for azure resource / subscription names | and : to avoid possibility of cache collisions in multi-client remote scenario."

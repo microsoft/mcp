@@ -250,7 +250,7 @@ public sealed class FunctionsService(
     {
         var normalizedPath = template.FolderPath.Trim().TrimStart('/');
         var isRootOrLarge = string.IsNullOrEmpty(normalizedPath) || normalizedPath == "." || normalizedPath == "..";
-        var cacheKey = $"{template.RepositoryUrl}:{normalizedPath}";
+        var cacheKey = CacheKeyBuilder.Build(template.RepositoryUrl, normalizedPath);
 
         var cachedFiles = await _cacheService.GetAsync<List<ProjectTemplateFile>>(CacheGroup, cacheKey, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
         IReadOnlyList<ProjectTemplateFile> files;
@@ -305,7 +305,7 @@ public sealed class FunctionsService(
         var normalizedFolder = GitHubUrlValidator.NormalizeFolderPath(folderPath)
             ?? throw new ArgumentException("Folder path must specify a valid subdirectory.", nameof(folderPath));
 
-        var treeCacheKey = $"tree:{repoPath}:{DefaultBranch}";
+        var treeCacheKey = CacheKeyBuilder.Build("tree", repoPath, DefaultBranch);
         var cachedTree = await _cacheService.GetAsync<GitHubTreeResponse>(CacheGroup, treeCacheKey, FunctionsCacheDurations.TemplateCacheDuration, cancellationToken);
 
         GitHubTreeResponse treeResponse;
