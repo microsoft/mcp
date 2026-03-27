@@ -118,7 +118,10 @@ Use the following to verify your chosen inbound and outbound combination is supp
 | Delegated | On-Behalf-Of | ✅ |
 | Delegated | Hosting Environment Identity | ✅ |
 | Application | Hosting Environment Identity | ✅ |
-| Application | On-Behalf-Of | ❌ Application bearer token carries no user identity, so there is nothing to exchange in an On-Behalf-Of flow |
+| Application | On-Behalf-Of | ❌ Not supported — see below |
+
+> [!WARNING]
+> **Application-only callers cannot use `UseOnBehalfOf`.** The Entra ID [OBO flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow) requires a delegated token with user context. App-only tokens from service principals, managed identities, or any client using the [client credentials flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-client-creds-grant-flow) are rejected by Entra ID with error `AADSTS7000114`. This is a platform limitation, not an Azure MCP Server bug. See [#2192](https://github.com/microsoft/mcp/issues/2192) for details and workarounds.
 
 ### Choosing an Outbound Authentication Strategy
 
@@ -128,7 +131,7 @@ The right strategy depends on your security, auditing, and deployment requiremen
 |---|---|---|
 | **Per-user RBAC** | Yes | No — shared identity |
 | **Audit trail** | Per-user | Server identity only |
-| **Inbound auth type** | Delegated only | Delegated or Application |
+| **Inbound auth type** | Delegated only (see [#2192](https://github.com/microsoft/mcp/issues/2192)) | Delegated or Application |
 | **Setup complexity** | Higher | Lower |
 | **Best for** | Multi-tenant / enterprise / compliance-sensitive scenarios | Single-team or single-client-application scenarios |
 

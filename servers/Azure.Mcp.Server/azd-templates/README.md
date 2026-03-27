@@ -18,4 +18,6 @@ This template also gives instructions on how to connect to this server from a Co
 
 This template deploys an Azure Container App to run Azure MCP as a remote MCP server that performs On-Behalf-Of flow. The MCP server will have permissions to call downstream APIs granted to the user principal accessing the MCP server. This hosting option is a good fit if you plan to grant users with different levels of permissions access to the MCP server and limit what they can do by their permissions.
 
+> **Note:** The OBO flow requires callers to authenticate with a **delegated (user) token**. Callers using service principals, managed identities, or client credentials flow cannot use OBO — see [#2192](https://github.com/microsoft/mcp/issues/2192) for details.
+
 This template also gives instructions on how to connect from a C# console app, instructions on how to connect from a Foundry Agent, and instructions on how to connect from a Copilot Studio Agent. Follow the instructions in https://github.com/Azure-Samples/azmcp-obo-template to deploy such a remotely self-hosted Azure MCP Server.
