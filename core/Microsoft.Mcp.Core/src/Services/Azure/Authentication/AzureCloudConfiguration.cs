@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -21,8 +22,6 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         AzureChinaCloud,
         AzureUSGovernmentCloud,
     }
-
-    private const string DefaultAuthorityHost = "https://login.microsoftonline.com";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
@@ -66,27 +65,21 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     {
         if (string.IsNullOrWhiteSpace(cloudValue))
         {
-            return (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
-        }
-
-        // Check if it's already a URL - in this case we only have authority host
-        // and must default to public cloud for ARM (custom cloud scenario requires
-        // additional configuration not currently supported)
-        if (cloudValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return (new Uri(cloudValue), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
+            return (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
         }
 
         // Map common sovereign cloud names to authority hosts and ARM environments
         return cloudValue.ToLowerInvariant() switch
         {
             "azurecloud" or "azurepubliccloud" or "public" or "azurepublic" =>
-                (new Uri("https://login.microsoftonline.com"), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
+                (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
             "azurechinacloud" or "china" or "azurechina" =>
-                (new Uri("https://login.chinacloudapi.cn"), ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
+                (AzureAuthorityHosts.AzureChina, ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
-                (new Uri("https://login.microsoftonline.us"), ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
-            _ => (new Uri(DefaultAuthorityHost), ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud) // Default to public cloud if unknown
+                (AzureAuthorityHosts.AzureGovernment, ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
+            _ => throw new ArgumentException(
+                $"Unrecognized cloud value '{cloudValue}'. Supported values are: AzureCloud, AzurePublicCloud, Public, AzurePublic, AzureChinaCloud, China, AzureChina, AzureUSGovernment, AzureUSGovernmentCloud, USGov, USGovernment.",
+                nameof(cloudValue))
         };
     }
 }
