@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Kusto.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services.Models;
 
@@ -38,6 +38,6 @@ internal sealed class KustoClusterData
     // Read the JSON response content and create a model instance from it.
     public static KustoClusterData? FromJson(JsonElement source)
     {
-        return JsonSerializer.Deserialize<KustoClusterData>(source, KustoJsonContext.Default.KustoClusterData);
+        return JsonSerializer.Deserialize(source, KustoJsonContext.Default.KustoClusterData);
     }
 }

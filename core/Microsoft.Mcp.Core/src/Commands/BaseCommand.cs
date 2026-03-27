@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure;
-using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -166,7 +165,4 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     }
 }
 
-public record ExceptionResult(
-    string Message,
-    string? StackTrace,
-    string Type);
+public record ExceptionResult(string Message, string? StackTrace, string Type);

@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvider
 {

@@ -3,8 +3,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Authorization.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Authorization.Services.Models;
 
@@ -32,6 +32,6 @@ internal sealed class RoleAssignmentData
     // Read the JSON response content and create a model instance from it.
     public static RoleAssignmentData? FromJson(JsonElement source)
     {
-        return JsonSerializer.Deserialize<RoleAssignmentData>(source, AuthorizationJsonContext.Default.RoleAssignmentData);
+        return JsonSerializer.Deserialize(source, AuthorizationJsonContext.Default.RoleAssignmentData);
     }
 }

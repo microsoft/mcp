@@ -2,7 +2,4 @@
 // Licensed under the MIT License.
 
 global using System.CommandLine;
-global using System.CommandLine.Parsing;
-global using Azure;
-global using Azure.Mcp.Core.Models.Option;
 global using Microsoft.Extensions.Logging;

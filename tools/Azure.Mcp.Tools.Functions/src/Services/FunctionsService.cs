@@ -4,11 +4,11 @@
 using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Functions.Services;
 

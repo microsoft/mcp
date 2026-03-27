@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Models.Identity;
+namespace Microsoft.Mcp.Core.Models.Identity;
 
 public class SystemAssignedIdentityInfo
 {

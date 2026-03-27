@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Azure.Mcp.Tools.ContainerApps.Options.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Services;
 using Microsoft.Extensions.Logging;

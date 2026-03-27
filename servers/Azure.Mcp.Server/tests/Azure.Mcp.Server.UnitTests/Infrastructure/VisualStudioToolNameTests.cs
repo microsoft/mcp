@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -36,15 +35,15 @@ public sealed class VisualStudioToolNameTests
     private static Task<List<string>> GetAllModeToolNamesAsync()
     {
         IAreaSetup[] areaSetups = [
-            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
-            new Azure.Mcp.Tools.Extension.ExtensionSetup(),
+            new Tools.AzureBestPractices.AzureBestPracticesSetup(),
+            new Tools.Extension.ExtensionSetup(),
         ];
 
         var serviceCollection = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ITelemetryService, NoOpTelemetryService>()
-            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>())
-            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>())
+            .AddSingleton(Substitute.For<Core.Services.Azure.Subscription.ISubscriptionService>())
+            .AddSingleton(Substitute.For<Core.Services.Azure.Tenant.ITenantService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
             .AddSingleton(Substitute.For<IDateTimeProvider>())
             .AddSingleton(Substitute.For<IExternalProcessService>())

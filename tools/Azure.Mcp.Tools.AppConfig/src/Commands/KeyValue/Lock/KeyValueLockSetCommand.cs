@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
@@ -52,7 +52,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
     protected override KeyValueLockSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Lock = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Lock);
+        options.Lock = parseResult.GetValueOrDefault<bool>(AppConfigOptionDefinitions.Lock.Name);
         return options;
     }
 

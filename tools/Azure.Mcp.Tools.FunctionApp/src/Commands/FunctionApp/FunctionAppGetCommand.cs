@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;

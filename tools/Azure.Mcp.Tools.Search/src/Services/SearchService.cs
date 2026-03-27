@@ -3,12 +3,9 @@
 
 using System.Text;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
@@ -19,6 +16,9 @@ using Azure.Search.Documents.KnowledgeBases;
 using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Search.Services;
 

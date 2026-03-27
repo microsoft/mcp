@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Tools.Options;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Areas.Tools.Commands;
+namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
 public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>

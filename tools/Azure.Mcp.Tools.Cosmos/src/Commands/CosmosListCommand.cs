@@ -3,13 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;

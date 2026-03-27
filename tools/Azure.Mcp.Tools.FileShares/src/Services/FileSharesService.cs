@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 

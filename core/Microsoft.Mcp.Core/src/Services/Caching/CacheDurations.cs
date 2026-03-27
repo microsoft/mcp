@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// Provides standardized cache duration constants for consistent caching behavior across all services.

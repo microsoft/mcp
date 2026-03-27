@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,6 +11,7 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;

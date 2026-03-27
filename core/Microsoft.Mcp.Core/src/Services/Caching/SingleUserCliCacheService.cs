@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Mcp.Core.Models;
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// An implementation of <see cref="ICacheService"/> for single-user CLI scenarios using in-memory caching.

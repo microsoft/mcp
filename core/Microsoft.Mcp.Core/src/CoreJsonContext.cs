@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Metadata;
 
-namespace Azure.Mcp.Core.Areas.Server;
+namespace Microsoft.Mcp.Core;
 
 [JsonSerializable(typeof(ExceptionResult))]
 [JsonSerializable(typeof(ToolMetadata))]
