@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
-public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger)
+public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService)
     : SubscriptionCommand<ActivityLogListOptions>
 {
     private const string CommandTitle = "List Activity Logs";
@@ -79,11 +79,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
 
         try
         {
-            // Get the Monitor service from DI
-            var service = context.GetService<IMonitorService>();
-
             // Call service operation with required parameters
-            var results = await service.ListActivityLogs(
+            var results = await monitorService.ListActivityLogs(
                 options.Subscription!,
                 options.ResourceName!,
                 options.ResourceGroup,

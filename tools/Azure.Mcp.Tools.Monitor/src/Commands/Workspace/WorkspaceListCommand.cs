@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
 
-public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
+public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, IMonitorService monitorService) : SubscriptionCommand<WorkspaceListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
@@ -50,7 +50,6 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
 
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
             var workspaces = await monitorService.ListWorkspaces(
                 options.Subscription!,
                 options.Tenant,

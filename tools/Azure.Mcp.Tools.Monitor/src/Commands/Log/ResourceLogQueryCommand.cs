@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger) : SubscriptionCommand<ResourceLogQueryOptions>()
+public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService) : SubscriptionCommand<ResourceLogQueryOptions>()
 {
     private const string CommandTitle = "Query Logs for Azure Resource";
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
@@ -76,7 +76,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
             var results = await monitorService.QueryResourceLogs(
                 options.Subscription!,
                 options.ResourceId!,

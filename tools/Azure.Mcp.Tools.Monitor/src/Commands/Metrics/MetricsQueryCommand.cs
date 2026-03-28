@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for querying Azure Monitor metrics
 /// </summary>
-public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
+public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMonitorMetricsService metricsService)
     : BaseMetricsCommand<MetricsQueryOptions>
 {
     private const string CommandTitle = "Query Azure Monitor Metrics";
@@ -101,10 +101,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
 
             // Get the metrics service from DI
-            var service = context.GetService<IMonitorMetricsService>();
-
             // Call the metrics service method directly
-            var results = await service.QueryMetricsAsync(
+            var results = await metricsService.QueryMetricsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
