@@ -584,7 +584,7 @@ public sealed class NamespaceToolLoader(
     private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
         var listTools = GetChildToolList(request, namespaceName);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
+        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
     }
 
     private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
@@ -724,7 +724,7 @@ public sealed class NamespaceToolLoader(
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.ListTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
 
         var samplingRequest = new CreateMessageRequestParams
         {
