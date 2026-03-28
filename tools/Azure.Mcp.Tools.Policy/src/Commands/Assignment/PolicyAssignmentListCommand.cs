@@ -14,11 +14,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
-public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger)
+public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService)
     : SubscriptionCommand<PolicyAssignmentListOptions>
 {
     private const string CommandTitle = "List Policy Assignments";
     private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
+    private readonly IPolicyService _policyService = policyService;
 
     public override string Id => "b7c4d3e2-0f1a-4b8c-9d6e-5a7b8c9d0e1f";
 
@@ -69,8 +70,7 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
 
         try
         {
-            var policyService = context.GetService<IPolicyService>();
-            var assignments = await policyService.ListPolicyAssignmentsAsync(
+            var assignments = await _policyService.ListPolicyAssignmentsAsync(
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
