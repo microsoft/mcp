@@ -26,12 +26,12 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 public sealed class PluginTelemetryCommand(
     IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
     IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
-    ICommandFactory commandFactory) : BaseCommand<PluginTelemetryOptions>
+    IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
 {
     private const string CommandTitle = "Plugin Telemetry";
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
-    private readonly ICommandFactory _commandFactory = commandFactory;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
 
@@ -89,6 +89,91 @@ public sealed class PluginTelemetryCommand(
     private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
     {
         return allowlistProvider.IsSkillNameAllowed(skillName);
+    }
+
+    /// <summary>
+    /// Known client-specific prefixes for tool names, ordered most specific first.
+    /// Each client wraps the azmcp command name with a different prefix:
+    /// - Claude Code: mcp__plugin_azure_azure__
+    /// - VS Code: mcp_azure_mcp_
+    /// - Copilot CLI: azure-
+    /// </summary>
+    private static readonly string[] KnownToolNamePrefixes =
+    [
+        "mcp__plugin_azure_azure__",
+        "mcp_azure_mcp_",
+        "azure-"
+    ];
+
+    /// <summary>
+    /// Strips known client-specific prefixes from a tool name to extract the azmcp command name.
+    /// For example, "mcp__plugin_azure_azure__pricing" becomes "pricing".
+    /// Returns the original name if no known prefix is found.
+    /// </summary>
+    internal static string StripClientPrefix(string toolName)
+    {
+        foreach (var prefix in KnownToolNamePrefixes)
+        {
+            if (toolName.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return toolName[prefix.Length..];
+            }
+        }
+
+        return toolName;
+    }
+
+    /// <summary>
+    /// Azure extension tool names that are not azmcp commands but should still be tracked.
+    /// These are tools from the @azure VS Code extension (e.g., auth, resource graph, templates).
+    /// </summary>
+    private static readonly HashSet<string> AllowlistedExtensionTools = new(StringComparer.Ordinal)
+    {
+        "azure_auth-set_auth_context",
+        "azure_get_auth_context",
+        "azure_get_dotnet_template_tags",
+        "azure_get_dotnet_templates_for_tag",
+        "azure_query_azure_resource_graph",
+        "azure_recommend_custom_modes"
+    };
+
+    /// <summary>
+    /// Validates a tool name against registered commands by stripping client prefixes
+    /// and checking if the result is a known command name or area name.
+    /// Also allows explicitly allowlisted Azure extension tools to pass through as-is.
+    /// Returns the normalized azmcp tool name if valid, or null if not recognized.
+    /// </summary>
+    internal static string? ValidateAndNormalizeToolName(string toolName, ICommandFactory commandFactory)
+    {
+        // Check allowlisted Azure extension tools first (pass through without normalization)
+        if (AllowlistedExtensionTools.Contains(toolName))
+        {
+            return toolName;
+        }
+
+        var normalizedName = StripClientPrefix(toolName);
+
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return null;
+        }
+
+        // Check for exact command match (e.g., "group_resource_list", "subscription_list")
+        if (commandFactory.FindCommandByName(normalizedName) != null)
+        {
+            return normalizedName;
+        }
+
+        // Check for area-level match (e.g., "pricing" matches area with commands like "pricing_get")
+        foreach (var subGroup in commandFactory.RootGroup.SubGroup)
+        {
+            if (string.Equals(subGroup.Name, normalizedName, StringComparison.OrdinalIgnoreCase))
+            {
+                return normalizedName;
+            }
+        }
+
+        return null;
     }
 
     protected override void RegisterOptions(Command command)
@@ -167,16 +252,22 @@ public sealed class PluginTelemetryCommand(
                 }
             }
 
-            // Validate tool name if provided
+            // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
             if (!string.IsNullOrWhiteSpace(options.ToolName))
             {
-                // Validate that the tool name corresponds to a valid command
-                if (_commandFactory.FindCommandByName(options.ToolName) == null)
+                // Resolve ICommandFactory lazily to avoid circular dependency during construction
+                var commandFactory = _serviceProvider.GetRequiredService<ICommandFactory>();
+
+                var normalizedToolName = ValidateAndNormalizeToolName(options.ToolName, commandFactory);
+                if (normalizedToolName == null)
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
-                    context.Response.Message = $"Tool name '{options.ToolName}' is not a valid command and will not be logged.";
+                    context.Response.Message = $"Tool name '{options.ToolName}' is not a recognized azmcp command and will not be logged.";
                     return context.Response;
                 }
+
+                // Replace with normalized name for clean telemetry data
+                options.ToolName = normalizedToolName;
             }
 
             // Create host and log telemetry

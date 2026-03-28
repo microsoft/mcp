@@ -78,7 +78,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
             }
 
             _logger.LogInformation("Loaded {Count} allowed skill names from {ResourceName}", skillNames.Count, resourceName);
-            return new HashSet<string>(skillNames, StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(skillNames, StringComparer.Ordinal);
         }
         catch (Exception ex)
         {
@@ -87,7 +87,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
             // no telemetry will be logged rather than allowing all skill names
             var errorMessage = "Failed to load allowed skill names from JSON resource. Returning empty allowlist for security.";
             _logger.LogError(ex, errorMessage);
-            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(StringComparer.Ordinal);
         }
     }
 }

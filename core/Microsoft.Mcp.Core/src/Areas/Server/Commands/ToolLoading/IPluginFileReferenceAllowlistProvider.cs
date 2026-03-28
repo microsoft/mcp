@@ -78,7 +78,7 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
             }
 
             _logger.LogInformation("Loaded {Count} allowed plugin file references from {ResourceName}", paths.Count, resourceName);
-            return new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(paths, StringComparer.Ordinal);
         }
         catch (Exception ex)
         {
@@ -87,7 +87,7 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
             // no telemetry will be logged rather than allowing all paths
             var errorMessage = "Failed to load allowed plugin file references from JSON resource. Returning empty allowlist for security.";
             _logger.LogError(ex, errorMessage);
-            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(StringComparer.Ordinal);
         }
     }
 }
