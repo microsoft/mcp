@@ -461,7 +461,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         var listTools = await GetChildToolListAsync(request, tool, cancellationToken);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
+        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
     }
 
     private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
@@ -507,7 +507,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.ListTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
 
         var samplingRequest = new CreateMessageRequestParams
         {
