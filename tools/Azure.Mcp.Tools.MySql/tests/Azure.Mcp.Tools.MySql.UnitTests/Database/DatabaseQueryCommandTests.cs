@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Database;
 
 public class DatabaseQueryCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
+    
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<DatabaseQueryCommand> _logger;
 
@@ -25,11 +25,7 @@ public class DatabaseQueryCommandTests
     {
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<DatabaseQueryCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
-
-        _serviceProvider = collection.BuildServiceProvider();
+        
     }
 
     [Fact]
@@ -38,7 +34,7 @@ public class DatabaseQueryCommandTests
         var expectedResults = new List<string> { "id, name", "1, John", "2, Jane" };
         _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users", Arg.Any<CancellationToken>()).Returns(expectedResults);
 
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -47,7 +43,7 @@ public class DatabaseQueryCommandTests
             "--database", "db1",
             "--query", "SELECT * FROM users"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -66,7 +62,7 @@ public class DatabaseQueryCommandTests
     {
         _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL", Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Syntax error"));
 
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -75,7 +71,7 @@ public class DatabaseQueryCommandTests
             "--database", "db1",
             "--query", "INVALID SQL"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -87,7 +83,7 @@ public class DatabaseQueryCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_logger, _mysqlService);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);

@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Table;
 
 public class TableSchemaGetCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
+    
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<TableSchemaGetCommand> _logger;
 
@@ -26,10 +26,8 @@ public class TableSchemaGetCommandTests
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<TableSchemaGetCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
 
-        _serviceProvider = collection.BuildServiceProvider();
+        
     }
 
     [Fact]
@@ -38,7 +36,7 @@ public class TableSchemaGetCommandTests
         var expectedSchema = new List<string> { "id INT PRIMARY KEY", "name VARCHAR(100) NOT NULL", "email VARCHAR(255)" };
         _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -47,7 +45,7 @@ public class TableSchemaGetCommandTests
             "--database", "db1",
             "--table", "users"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -66,7 +64,7 @@ public class TableSchemaGetCommandTests
     {
         _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
 
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -75,7 +73,7 @@ public class TableSchemaGetCommandTests
             "--database", "db1",
             "--table", "nonexistent"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -87,7 +85,7 @@ public class TableSchemaGetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_logger, _mysqlService);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
