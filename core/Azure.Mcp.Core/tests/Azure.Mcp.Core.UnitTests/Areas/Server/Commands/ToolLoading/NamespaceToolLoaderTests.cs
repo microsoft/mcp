@@ -147,11 +147,11 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var storageGroup = new CommandGroup("storage", "Storage commands");
         var storageCommand = Substitute.For<IBaseCommand>();
         storageCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = true });
-        storageGroup.AddCommand("readonly", storageCommand);
+        storageGroup.Commands["readonly"] = storageCommand;
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
-        keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
+        keyvaultGroup.Commands["notreadonly"] = keyvaultCommand;
         rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 
@@ -182,11 +182,11 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var stroageGroup = new CommandGroup("storage", "Storage commands");
         var storageCommand = Substitute.For<IBaseCommand>();
         storageCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = true });
-        stroageGroup.AddCommand("localrequired", storageCommand);
+        stroageGroup.Commands["localrequired"] = storageCommand;
         var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
         var keyvaultCommand = Substitute.For<IBaseCommand>();
         keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
-        keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
+        keyvaultGroup.Commands["notlocalrequired"] = keyvaultCommand;
         rootGroup.SubGroup.AddRange([stroageGroup, keyvaultGroup]);
         commandFactory.RootGroup.Returns(rootGroup);
 

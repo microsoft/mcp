@@ -1383,20 +1383,20 @@ Guidelines:
 ### 9. Command Registration
 
 ```csharp
-private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
 {
     var service = new CommandGroup(
         "{Toolset}",
-        "{Toolset} operations");
-    rootGroup.AddSubGroup(service);
+        "{Toolset} operations description");
 
     var resource = new CommandGroup(
         "{resource}",
-        "{Resource} operations");
+        "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand("{operation}", new {Resource}{Operation}Command(
-        loggerFactory.CreateLogger<{Resource}{Operation}Command>()));
+    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+
+    return service;
 }
 ```
 

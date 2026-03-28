@@ -47,18 +47,13 @@ public class AppConfigSetup : IAreaSetup
         keyValue.AddSubGroup(lockGroup);
 
         // Register AppConfig commands
-        var accountList = serviceProvider.GetRequiredService<AccountListCommand>();
-        accounts.AddCommand(accountList.Name, accountList);
+        accounts.AddCommand(serviceProvider.GetRequiredService<AccountListCommand>());
 
-        var keyValueDelete = serviceProvider.GetRequiredService<KeyValueDeleteCommand>();
-        keyValue.AddCommand(keyValueDelete.Name, keyValueDelete);
-        var keyValueGet = serviceProvider.GetRequiredService<KeyValueGetCommand>();
-        keyValue.AddCommand(keyValueGet.Name, keyValueGet);
-        var keyValueSet = serviceProvider.GetRequiredService<KeyValueSetCommand>();
-        keyValue.AddCommand(keyValueSet.Name, keyValueSet);
+        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueDeleteCommand>());
+        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueGetCommand>());
+        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueSetCommand>());
 
-        var keyValueLockSet = serviceProvider.GetRequiredService<KeyValueLockSetCommand>();
-        lockGroup.AddCommand(keyValueLockSet.Name, keyValueLockSet);
+        lockGroup.AddCommand(serviceProvider.GetRequiredService<KeyValueLockSetCommand>());
 
         return appConfig;
     }

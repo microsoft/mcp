@@ -48,54 +48,30 @@ public class FileSharesSetup : IAreaSetup
         var fileShare = new CommandGroup("fileshare", "File share operations - Commands for managing file shares.");
         fileShares.AddSubGroup(fileShare);
 
-        var fileShareGet = serviceProvider.GetRequiredService<FileShareGetCommand>();
-        fileShare.AddCommand(fileShareGet.Name, fileShareGet);
-
-        var fileShareCreate = serviceProvider.GetRequiredService<FileShareCreateCommand>();
-        fileShare.AddCommand(fileShareCreate.Name, fileShareCreate);
-
-        var fileShareUpdate = serviceProvider.GetRequiredService<FileShareUpdateCommand>();
-        fileShare.AddCommand(fileShareUpdate.Name, fileShareUpdate);
-
-        var fileShareDelete = serviceProvider.GetRequiredService<FileShareDeleteCommand>();
-        fileShare.AddCommand(fileShareDelete.Name, fileShareDelete);
-
-        var checkName = serviceProvider.GetRequiredService<FileShareCheckNameAvailabilityCommand>();
-        fileShare.AddCommand(checkName.Name, checkName);
+        fileShare.AddCommand(serviceProvider.GetRequiredService<FileShareGetCommand>());
+        fileShare.AddCommand(serviceProvider.GetRequiredService<FileShareCreateCommand>());
+        fileShare.AddCommand(serviceProvider.GetRequiredService<FileShareUpdateCommand>());
+        fileShare.AddCommand(serviceProvider.GetRequiredService<FileShareDeleteCommand>());
+        fileShare.AddCommand(serviceProvider.GetRequiredService<FileShareCheckNameAvailabilityCommand>());
 
         var snapshot = new CommandGroup("snapshot", "File share snapshot operations - Commands for managing file share snapshots.");
         fileShare.AddSubGroup(snapshot);
 
-        var snapshotGet = serviceProvider.GetRequiredService<SnapshotGetCommand>();
-        snapshot.AddCommand(snapshotGet.Name, snapshotGet);
-
-        var snapshotCreate = serviceProvider.GetRequiredService<SnapshotCreateCommand>();
-        snapshot.AddCommand(snapshotCreate.Name, snapshotCreate);
-
-        var snapshotUpdate = serviceProvider.GetRequiredService<SnapshotUpdateCommand>();
-        snapshot.AddCommand(snapshotUpdate.Name, snapshotUpdate);
-
-        var snapshotDelete = serviceProvider.GetRequiredService<SnapshotDeleteCommand>();
-        snapshot.AddCommand(snapshotDelete.Name, snapshotDelete);
+        snapshot.AddCommand(serviceProvider.GetRequiredService<SnapshotGetCommand>());
+        snapshot.AddCommand(serviceProvider.GetRequiredService<SnapshotCreateCommand>());
+        snapshot.AddCommand(serviceProvider.GetRequiredService<SnapshotUpdateCommand>());
+        snapshot.AddCommand(serviceProvider.GetRequiredService<SnapshotDeleteCommand>());
 
         var privateEndpoint = new CommandGroup("peconnection", "Private endpoint connection operations - Commands for managing private endpoint connections.");
         fileShare.AddSubGroup(privateEndpoint);
 
-        var privateEndpointGet = serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>();
-        privateEndpoint.AddCommand(privateEndpointGet.Name, privateEndpointGet);
-
-        var privateEndpointUpdate = serviceProvider.GetRequiredService<PrivateEndpointConnectionUpdateCommand>();
-        privateEndpoint.AddCommand(privateEndpointUpdate.Name, privateEndpointUpdate);
+        privateEndpoint.AddCommand(serviceProvider.GetRequiredService<PrivateEndpointConnectionGetCommand>());
+        privateEndpoint.AddCommand(serviceProvider.GetRequiredService<PrivateEndpointConnectionUpdateCommand>());
 
         // Register informational commands directly under fileshares
-        var limits = serviceProvider.GetRequiredService<FileShareGetLimitsCommand>();
-        fileShares.AddCommand(limits.Name, limits);
-
-        var recommendation = serviceProvider.GetRequiredService<FileShareGetProvisioningRecommendationCommand>();
-        fileShares.AddCommand(recommendation.Name, recommendation);
-
-        var usage = serviceProvider.GetRequiredService<FileShareGetUsageDataCommand>();
-        fileShares.AddCommand(usage.Name, usage);
+        fileShares.AddCommand(serviceProvider.GetRequiredService<FileShareGetLimitsCommand>());
+        fileShares.AddCommand(serviceProvider.GetRequiredService<FileShareGetProvisioningRecommendationCommand>());
+        fileShares.AddCommand(serviceProvider.GetRequiredService<FileShareGetUsageDataCommand>());
 
         return fileShares;
     }

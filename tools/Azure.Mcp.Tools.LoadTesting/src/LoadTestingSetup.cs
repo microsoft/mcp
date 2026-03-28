@@ -57,23 +57,16 @@ public class LoadTestingSetup : IAreaSetup
         service.AddSubGroup(testRun);
 
         // Register commands for Load Test Resource
-
-        var testResourceList = serviceProvider.GetRequiredService<TestResourceListCommand>();
-        testResource.AddCommand(testResourceList.Name, testResourceList);
-        var testResourceCreate = serviceProvider.GetRequiredService<TestResourceCreateCommand>();
-        testResource.AddCommand(testResourceCreate.Name, testResourceCreate);
+        testResource.AddCommand(serviceProvider.GetRequiredService<TestResourceListCommand>());
+        testResource.AddCommand(serviceProvider.GetRequiredService<TestResourceCreateCommand>());
 
         // Register commands for Load Test
-        var testGet = serviceProvider.GetRequiredService<TestGetCommand>();
-        test.AddCommand(testGet.Name, testGet);
-        var testCreate = serviceProvider.GetRequiredService<TestCreateCommand>();
-        test.AddCommand(testCreate.Name, testCreate);
+        test.AddCommand(serviceProvider.GetRequiredService<TestGetCommand>());
+        test.AddCommand(serviceProvider.GetRequiredService<TestCreateCommand>());
 
         // Register commands for Load Test Run
-        var testRunGet = serviceProvider.GetRequiredService<TestRunGetCommand>();
-        testRun.AddCommand(testRunGet.Name, testRunGet);
-        var testRunUpdate = serviceProvider.GetRequiredService<TestRunCreateOrUpdateCommand>();
-        testRun.AddCommand(testRunUpdate.Name, testRunUpdate);
+        testRun.AddCommand(serviceProvider.GetRequiredService<TestRunGetCommand>());
+        testRun.AddCommand(serviceProvider.GetRequiredService<TestRunCreateOrUpdateCommand>());
 
         return service;
     }

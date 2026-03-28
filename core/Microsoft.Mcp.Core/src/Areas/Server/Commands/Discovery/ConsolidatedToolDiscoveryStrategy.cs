@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -253,7 +252,7 @@ internal sealed class SingleConsolidatedToolAreaSetup(
         // Add all matching commands to this group
         foreach (var cmd in _matchingCommands)
         {
-            commandGroup.AddCommand(cmd.Key, cmd.Value);
+            commandGroup.AddCommand(cmd.Value);
         }
 
         // Set tool metadata from the consolidated tool definition

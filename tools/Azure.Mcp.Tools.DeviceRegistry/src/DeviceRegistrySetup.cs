@@ -35,8 +35,7 @@ public class DeviceRegistrySetup : IAreaSetup
             "Device Registry namespace operations - Commands for listing and managing Device Registry namespaces.");
         deviceRegistry.AddSubGroup(namespaceGroup);
 
-        var namespaceList = serviceProvider.GetRequiredService<NamespaceListCommand>();
-        namespaceGroup.AddCommand(namespaceList.Name, namespaceList);
+        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceListCommand>());
 
         return deviceRegistry;
     }

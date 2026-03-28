@@ -49,47 +49,34 @@ public class SqlSetup : IAreaSetup
         var database = new CommandGroup("db", "SQL database operations");
         sql.AddSubGroup(database);
 
-        var databaseGet = serviceProvider.GetRequiredService<DatabaseGetCommand>();
-        database.AddCommand(databaseGet.Name, databaseGet);
-        var databaseCreate = serviceProvider.GetRequiredService<DatabaseCreateCommand>();
-        database.AddCommand(databaseCreate.Name, databaseCreate);
-        var databaseRename = serviceProvider.GetRequiredService<DatabaseRenameCommand>();
-        database.AddCommand(databaseRename.Name, databaseRename);
-        var databaseUpdate = serviceProvider.GetRequiredService<DatabaseUpdateCommand>();
-        database.AddCommand(databaseUpdate.Name, databaseUpdate);
-        var databaseDelete = serviceProvider.GetRequiredService<DatabaseDeleteCommand>();
-        database.AddCommand(databaseDelete.Name, databaseDelete);
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseGetCommand>());
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseCreateCommand>());
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseRenameCommand>());
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseUpdateCommand>());
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseDeleteCommand>());
 
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);
 
-        var serverGet = serviceProvider.GetRequiredService<ServerGetCommand>();
-        server.AddCommand(serverGet.Name, serverGet);
-        var serverCreate = serviceProvider.GetRequiredService<ServerCreateCommand>();
-        server.AddCommand(serverCreate.Name, serverCreate);
-        var serverDelete = serviceProvider.GetRequiredService<ServerDeleteCommand>();
-        server.AddCommand(serverDelete.Name, serverDelete);
+        server.AddCommand(serviceProvider.GetRequiredService<ServerGetCommand>());
+        server.AddCommand(serviceProvider.GetRequiredService<ServerCreateCommand>());
+        server.AddCommand(serviceProvider.GetRequiredService<ServerDeleteCommand>());
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");
         sql.AddSubGroup(elasticPool);
-        var elasticPoolList = serviceProvider.GetRequiredService<ElasticPoolListCommand>();
-        elasticPool.AddCommand(elasticPoolList.Name, elasticPoolList);
+        elasticPool.AddCommand(serviceProvider.GetRequiredService<ElasticPoolListCommand>());
 
         var entraAdmin = new CommandGroup("entra-admin", "SQL server Microsoft Entra ID administrator operations");
         server.AddSubGroup(entraAdmin);
 
-        var entraAdminList = serviceProvider.GetRequiredService<EntraAdminListCommand>();
-        entraAdmin.AddCommand(entraAdminList.Name, entraAdminList);
+        entraAdmin.AddCommand(serviceProvider.GetRequiredService<EntraAdminListCommand>());
 
         var firewallRule = new CommandGroup("firewall-rule", "SQL server firewall rule operations");
         server.AddSubGroup(firewallRule);
 
-        var firewallRuleList = serviceProvider.GetRequiredService<FirewallRuleListCommand>();
-        firewallRule.AddCommand(firewallRuleList.Name, firewallRuleList);
-        var firewallRuleCreate = serviceProvider.GetRequiredService<FirewallRuleCreateCommand>();
-        firewallRule.AddCommand(firewallRuleCreate.Name, firewallRuleCreate);
-        var firewallRuleDelete = serviceProvider.GetRequiredService<FirewallRuleDeleteCommand>();
-        firewallRule.AddCommand(firewallRuleDelete.Name, firewallRuleDelete);
+        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleListCommand>());
+        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleCreateCommand>());
+        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleDeleteCommand>());
 
         return sql;
     }

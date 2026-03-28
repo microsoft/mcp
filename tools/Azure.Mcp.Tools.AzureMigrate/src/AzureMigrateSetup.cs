@@ -55,11 +55,8 @@ public class AzureMigrateSetup : IAreaSetup
         azureMigrate.AddSubGroup(platformLandingZone);
 
         // Register platform landing zone commands
-        var platformLandingZoneGetGuidance = serviceProvider.GetRequiredService<GetGuidanceCommand>();
-        platformLandingZone.AddCommand(platformLandingZoneGetGuidance.Name, platformLandingZoneGetGuidance);
-
-        var platformLandingZoneRequest = serviceProvider.GetRequiredService<RequestCommand>();
-        platformLandingZone.AddCommand(platformLandingZoneRequest.Name, platformLandingZoneRequest);
+        platformLandingZone.AddCommand(serviceProvider.GetRequiredService<GetGuidanceCommand>());
+        platformLandingZone.AddCommand(serviceProvider.GetRequiredService<RequestCommand>());
 
         return azureMigrate;
     }

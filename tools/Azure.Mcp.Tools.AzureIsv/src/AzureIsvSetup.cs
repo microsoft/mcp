@@ -30,8 +30,7 @@ public class AzureIsvSetup : IAreaSetup
         var monitoredResources = new CommandGroup("monitoredresources", "Datadog monitored resources operations - Commands for listing monitored resources in a specific Datadog monitor.");
         datadog.AddSubGroup(monitoredResources);
 
-        var monitoredResourcesList = serviceProvider.GetRequiredService<MonitoredResourcesListCommand>();
-        monitoredResources.AddCommand(monitoredResourcesList.Name, monitoredResourcesList);
+        monitoredResources.AddCommand(serviceProvider.GetRequiredService<MonitoredResourcesListCommand>());
 
         return datadog;
     }

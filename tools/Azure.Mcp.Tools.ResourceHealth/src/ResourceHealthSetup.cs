@@ -28,7 +28,7 @@ public class ResourceHealthSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resourceHealth = new CommandGroup(Name,
-            "Resource Health operations – Commands to monitor and diagnose Azure resource health, including availability status and service health events for troubleshooting and monitoring purposes.", Title);
+            "Resource Health operations - Commands to monitor and diagnose Azure resource health, including availability status and service health events for troubleshooting and monitoring purposes.", Title);
 
         // Create availability-status subgroup
         var availabilityStatus = new CommandGroup("availability-status",
@@ -41,11 +41,8 @@ public class ResourceHealthSetup : IAreaSetup
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
         // Register commands
-        var availabilityStatusCmd = serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>();
-        availabilityStatus.AddCommand(availabilityStatusCmd.Name, availabilityStatusCmd);
-
-        var serviceHealthEventsList = serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>();
-        serviceHealthEvents.AddCommand(serviceHealthEventsList.Name, serviceHealthEventsList);
+        availabilityStatus.AddCommand(serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>());
+        serviceHealthEvents.AddCommand(serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>());
 
         return resourceHealth;
     }
