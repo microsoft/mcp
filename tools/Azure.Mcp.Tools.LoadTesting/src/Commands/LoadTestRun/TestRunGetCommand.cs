@@ -51,8 +51,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
 
         command.Validators.Add(commandResult =>
         {
-            var testRunId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-            var testId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+            var testRunId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.TestRun);
+            var testId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.Test);
 
             if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
             {

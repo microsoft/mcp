@@ -8,7 +8,7 @@ namespace Azure.Mcp.Core.Extensions;
 public static class ParseResultExtensions
 {
     public static bool TryGetValue<T>(this ParseResult parseResult, Option<T> option, out T? value)
-        => parseResult.CommandResult.TryGetValue(option, out value);
+        => TryGetValue(parseResult, option.Name, out value);
 
     public static bool TryGetValue<T>(this ParseResult parseResult, string optionName, out T? value)
     {
@@ -27,7 +27,7 @@ public static class ParseResultExtensions
     }
 
     public static T? GetValueOrDefault<T>(this ParseResult parseResult, Option<T> option)
-        => parseResult.CommandResult.GetValueOrDefault(option);
+        => GetValueOrDefault<T>(parseResult, option.Name);
 
     /// <summary>
     /// Gets the value of an option by name, returning default if not found or not set
