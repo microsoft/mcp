@@ -1,0 +1,39 @@
+# Azure Load Testing configuration for MCP Server load tests.
+# Test type: Locust-based load testing
+# Target tool: azmcp_storage_account_get (list storage accounts)
+#
+# The pipeline deploys a standalone MCP Server Container App with auth disabled
+# (--dangerously-disable-http-incoming-auth) for each test run, so no OAuth
+# token is needed.
+#
+# Reference: https://learn.microsoft.com/azure/load-testing/how-to-create-manage-test#locust
+
+version: v0.1
+testId: mcp-server-storage-account-load-test
+displayName: MCP Server - Storage Account Get Load Test
+description: >
+  Locust-based load test that exercises the azmcp_storage_account_get tool
+  via the MCP Streamable HTTP protocol on an ephemeral Azure MCP Server
+  deployed as an Azure Container App (auth disabled).
+
+testType: Locust
+testPlan: locustfile.py
+
+engineInstances: 1
+
+failureCriteria:
+  - avg(response_time_ms) > 5000
+  - percentage(error) > 10
+
+env:
+  - name: MCP_SERVER_URL
+    value: ${MCP_SERVER_ENDPOINT}
+  - name: MCP_SUBSCRIPTION
+    value: ${MCP_SUBSCRIPTION}
+
+locustConfig:
+  users: 10
+  spawnRate: 2
+  runTime: 120s
+  host: ${MCP_SERVER_ENDPOINT}
+  locustfile: locustfile.py
