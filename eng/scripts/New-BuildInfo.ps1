@@ -20,8 +20,10 @@ $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
 $govTest = $env:GOVTEST -eq 'true'
+$runAllLiveTests = $env:RUNALLLIVETESTS -eq 'true'
 
 Write-Host "GovTest: $govTest" -ForegroundColor Cyan
+Write-Host "RunAllLiveTests: $runAllLiveTests" -ForegroundColor Cyan
 
 $architectures = @('x64', 'arm64')
 
@@ -187,20 +189,6 @@ $macVmImage = CheckVariable 'MACVMIMAGE'
 function Get-PathsToTest {
     Write-Host "Getting paths to test"
 
-    if($govTest) {
-        Write-Host "GovTest environment detected. Limiting paths to test to Azure.Mcp.Server."
-        return @(
-            @{
-                path= "servers/Azure.Mcp.Server"
-                testResourcesPath= "servers/Azure.Mcp.Server/tests"
-                hasUnitTests= $true
-                hasTestResources= $true
-                hasRecordedTests= $false
-                hasLiveTests= $true
-            }
-        )
-    }
-
     # When "core" is modified, include storage and keyVault as the canary service tools.
     # TODO: These should be sourced from csproj files
     $canaryPaths = @{
@@ -250,7 +238,7 @@ function Get-PathsToTest {
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
 
-    if($isPullRequestBuild) {
+    if($isPullRequestBuild -and -not $runAllLiveTests) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
             'CHANGELOG.md',
