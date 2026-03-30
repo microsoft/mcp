@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed issue where dates returned by the service without timezone info would result in a deserialization error for `resourcehealth` tools"
