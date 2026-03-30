@@ -216,6 +216,7 @@ public sealed class SearchService(
 
         var clientOptions = AddDefaultPolicies(new SearchClientOptions());
         clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+        clientOptions.Audience = GetSearchAudience();
         ConfigureRetryPolicy(clientOptions, retryPolicy);
 
         var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
@@ -324,6 +325,7 @@ public sealed class SearchService(
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+            clientOptions.Audience = GetSearchAudience();
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var endpoint = new Uri(GetSearchEndpoint(serviceName));
@@ -387,6 +389,17 @@ public sealed class SearchService(
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
             _ => $"https://{serviceName}.search.windows.net"
+        };
+    }
+
+    private SearchAudience GetSearchAudience()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => SearchAudience.AzureGovernment,
+            _ => SearchAudience.AzurePublicCloud
         };
     }
 }
