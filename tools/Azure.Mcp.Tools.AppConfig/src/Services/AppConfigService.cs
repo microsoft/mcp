@@ -180,7 +180,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();
-        options.Audience = GetAppConfigutationAudience();
+        options.Audience = GetAppConfigurationAudience();
         AddDefaultPolicies(options);
 
         var endpointUri = new Uri(endpoint);
@@ -266,7 +266,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         };
     }
 
-    private AppConfigurationAudience GetAppConfigutationAudience()
+    private AppConfigurationAudience GetAppConfigurationAudience()
     {
         return TenantService.CloudConfiguration.CloudType switch
         {
