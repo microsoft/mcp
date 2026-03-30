@@ -165,9 +165,10 @@ public sealed class PluginTelemetryCommand(
         }
 
         // Check for area-level match (e.g., "pricing" matches area with commands like "pricing_get")
+        // Case-sensitive: area names must be lowercase as registered
         foreach (var subGroup in commandFactory.RootGroup.SubGroup)
         {
-            if (string.Equals(subGroup.Name, normalizedName, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(subGroup.Name, normalizedName, StringComparison.Ordinal))
             {
                 return normalizedName;
             }

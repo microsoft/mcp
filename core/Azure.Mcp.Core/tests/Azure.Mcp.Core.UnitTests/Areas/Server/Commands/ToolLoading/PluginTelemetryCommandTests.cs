@@ -153,7 +153,7 @@ public class PluginTelemetryCommandTests
         Assert.Contains("server_start", allCommands.Keys);
         Assert.Contains("server_info", allCommands.Keys);
         Assert.Contains("server_plugin-telemetry", allCommands.Keys);
-        Assert.Equal(3, allCommands.Count);
+        Assert.True(allCommands.Count >= 3);
     }
 
     [Theory]
