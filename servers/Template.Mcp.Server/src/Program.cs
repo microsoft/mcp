@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -163,6 +164,10 @@ internal class Program
 
         // Until there is a consolidated tool list, just use an empty provider
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
+
+        // Plugin telemetry is not supported in Template - register no-op providers
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(new NullPluginFileReferenceAllowlistProvider());
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(new NullPluginSkillNameAllowlistProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
