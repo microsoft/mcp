@@ -213,7 +213,7 @@ public sealed class SingleProxyToolLoader(
         }
 
         var listTools = await GetToolListAsync(request, tool, cancellationToken);
-        var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
+        var toolsJson = JsonSerializer.Serialize(listTools.Select(t => t.ProtocolTool), ServerJsonContext.Default.IEnumerableTool);
         _cachedToolListsJson[tool] = toolsJson;
 
         return toolsJson;
