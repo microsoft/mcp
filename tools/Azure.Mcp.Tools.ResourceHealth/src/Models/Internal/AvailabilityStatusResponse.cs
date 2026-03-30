@@ -41,9 +41,11 @@ internal class AvailabilityStatusProperties
     public string? ReasonType { get; set; }
 
     [JsonPropertyName("occuredTime")]
+    [JsonConverter(typeof(LenientNullableDateTimeOffsetConverter))]
     public DateTimeOffset? OccurredTime { get; set; }
 
     [JsonPropertyName("reportedTime")]
+    [JsonConverter(typeof(LenientNullableDateTimeOffsetConverter))]
     public DateTimeOffset? ReportedTime { get; set; }
 
     [JsonPropertyName("reasonChronicity")]
