@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-
 namespace Fabric.Mcp.Tools.OneLake.Options;
 
 public static class OneLakeOptionDefinitions

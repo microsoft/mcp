@@ -3,7 +3,7 @@
 
 namespace Fabric.Mcp.Tools.OneLake.Options;
 
-public sealed class TableNamespaceGetOptions : BaseItemOptions
+public class BaseItemOptions : BaseWorkspaceOptions
 {
-    public string? Namespace { get; set; }
+    public string? ItemId { get; set; }
 }

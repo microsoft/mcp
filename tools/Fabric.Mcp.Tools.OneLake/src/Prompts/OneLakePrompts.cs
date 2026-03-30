@@ -20,7 +20,7 @@ public sealed class OneLakePrompts
     {
         var header =
 $@"You will list items in OneLake:
-- ALWAYS call tool 'onelake_list_items' with: workspace, lakehouse, path.
+- ALWAYS call tool 'onelake_list-items' with: workspace, lakehouse, path.
 - Use paging: set maxResults (<=100) and iterate cursors if provided.
 - Do NOT assume paths exist; handle 404s gracefully.";
 

@@ -239,20 +239,20 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `onelake_list_workspaces` | Lists available Microsoft Fabric workspaces. |
-| `onelake_list_items` | Lists workspace items with high-level metadata. |
-| `onelake_list_items_dfs` | Lists Fabric items via the DFS endpoint. |
-| `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
-| `onelake_download_file` | Downloads a OneLake file. |
-| `onelake_upload_file` | Uploads a file to OneLake storage. |
-| `onelake_delete_file` | Deletes a file from OneLake storage. |
-| `onelake_create_directory` | Creates a directory via the DFS endpoint. |
-| `onelake_delete_directory` | Deletes a directory (optionally recursive). |
-| `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
-| `onelake_list_table_namespaces` | Lists table namespaces (schemas) exposed through the table API. |
-| `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
-| `onelake_list_tables` | Lists tables published within a namespace. |
-| `onelake_get_table` | Retrieves the definition for a specific table. |
+| `onelake_list-workspaces` | Lists available Microsoft Fabric workspaces. |
+| `onelake_list-items` | Lists workspace items with high-level metadata. |
+| `onelake_list-items-dfs` | Lists Fabric items via the DFS endpoint. |
+| `onelake_list-files` | Lists files using the hierarchical file-list endpoint. |
+| `onelake_download-file` | Downloads a OneLake file. |
+| `onelake_upload-file` | Uploads a file to OneLake storage. |
+| `onelake_delete-file` | Deletes a file from OneLake storage. |
+| `onelake_create-directory` | Creates a directory via the DFS endpoint. |
+| `onelake_delete-directory` | Deletes a directory (optionally recursive). |
+| `onelake_get-table-config` | Retrieves table API configuration for a workspace item. |
+| `onelake_list-table-namespaces` | Lists table namespaces (schemas) exposed through the table API. |
+| `onelake_get-table-namespace` | Retrieves metadata for a specific namespace. |
+| `onelake_list-tables` | Lists tables published within a namespace. |
+| `onelake_get-table` | Retrieves the definition for a specific table. |
 
 ### Core Fabric Operations
 
