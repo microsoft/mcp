@@ -9,7 +9,6 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
@@ -167,6 +166,7 @@ public class PluginTelemetryCommandTests
     // Copilot CLI prefix
     [InlineData("azure-documentation", "documentation")]
     [InlineData("azure-group_resource_list", "group_resource_list")]
+    [InlineData("azure-monitor_workspace_list", "monitor_workspace_list")]
     // No prefix - returned as-is
     [InlineData("pricing", "pricing")]
     [InlineData("server_start", "server_start")]
@@ -187,6 +187,10 @@ public class PluginTelemetryCommandTests
     // Exact command matches
     [InlineData("server_start", "server_start")]
     [InlineData("mcp__plugin_azure_azure__server_info", "server_info")]
+    // Full command path with prefix — proves exact match after stripping (same path monitor_workspace_list takes)
+    [InlineData("azure-server_start", "server_start")]
+    [InlineData("mcp_azure_mcp_server_start", "server_start")]
+    [InlineData("mcp__plugin_azure_azure__server_plugin-telemetry", "server_plugin-telemetry")]
     // Allowlisted Azure extension tools (pass through as-is)
     [InlineData("azure_auth-set_auth_context", "azure_auth-set_auth_context")]
     [InlineData("azure_get_auth_context", "azure_get_auth_context")]
