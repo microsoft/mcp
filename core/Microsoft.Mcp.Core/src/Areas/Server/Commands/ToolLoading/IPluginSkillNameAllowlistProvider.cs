@@ -2,26 +2,36 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// Provides access to the allowlist of skill names permitted for telemetry.
+/// Provides validation for skill names permitted for telemetry.
 /// </summary>
 public interface IPluginSkillNameAllowlistProvider
 {
     /// <summary>
-    /// Gets the set of allowed skill names.
-    /// Only telemetry events with skill names in this set will be logged.
+    /// Checks if a skill name is allowed for telemetry logging.
     /// </summary>
-    /// <returns>A HashSet of allowed skill names (case-insensitive).</returns>
-    HashSet<string> GetAllowedSkillNames();
+    /// <param name="skillName">The skill name to validate.</param>
+    /// <returns>True if the skill name is allowed, false otherwise.</returns>
+    bool IsSkillNameAllowed(string skillName);
 }
 
 /// <summary>
-/// Provides skill name allowlist loaded from an embedded JSON resource.
+/// No-op implementation that rejects all skill names.
+/// Used by servers that don't support plugin telemetry (e.g., Fabric).
+/// </summary>
+public class NullPluginSkillNameAllowlistProvider : IPluginSkillNameAllowlistProvider
+{
+    public bool IsSkillNameAllowed(string skillName) => false;
+}
+
+/// <summary>
+/// Provides skill name validation using an embedded JSON resource allowlist.
 /// The resource should contain a JSON array of skill names.
 /// </summary>
 public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameAllowlistProvider
@@ -49,7 +59,15 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
     }
 
     /// <inheritdoc/>
-    public HashSet<string> GetAllowedSkillNames() => _allowedSkillNames.Value;
+    public bool IsSkillNameAllowed(string skillName)
+    {
+        if (string.IsNullOrWhiteSpace(skillName))
+        {
+            return false;
+        }
+
+        return _allowedSkillNames.Value.Contains(skillName);
+    }
 
     private HashSet<string> LoadAllowedSkillNames()
     {
@@ -69,7 +87,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
             }
 
             _logger.LogInformation("Loaded {Count} allowed skill names from {ResourceName}", skillNames.Count, resourceName);
-            return new HashSet<string>(skillNames, StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(skillNames, StringComparer.Ordinal);
         }
         catch (Exception ex)
         {
@@ -78,7 +96,7 @@ public sealed class ResourcePluginSkillNameAllowlistProvider : IPluginSkillNameA
             // no telemetry will be logged rather than allowing all skill names
             var errorMessage = "Failed to load allowed skill names from JSON resource. Returning empty allowlist for security.";
             _logger.LogError(ex, errorMessage);
-            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(StringComparer.Ordinal);
         }
     }
 }

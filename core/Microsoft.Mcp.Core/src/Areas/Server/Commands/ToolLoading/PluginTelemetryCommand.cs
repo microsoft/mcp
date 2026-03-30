@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Net;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +23,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
-public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
+public sealed class PluginTelemetryCommand(
+    IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
+    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
+    IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
 {
     private const string CommandTitle = "Plugin Telemetry";
+    private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
+    private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
 
@@ -66,24 +73,108 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
     /// Checks if a plugin-relative path is allowed based on the exact path allowlist.
     /// </summary>
     /// <param name="pluginRelativePath">The plugin-relative path to check.</param>
-    /// <param name="allowlistProvider">The provider that supplies the allowed file references.</param>
+    /// <param name="allowlistProvider">The provider that validates allowed file references.</param>
     /// <returns>True if the path is in the allowlist, false otherwise.</returns>
     private static bool IsPathAllowed(string pluginRelativePath, IPluginFileReferenceAllowlistProvider allowlistProvider)
     {
-        var allowedPaths = allowlistProvider.GetAllowedPaths();
-        return allowedPaths.Contains(pluginRelativePath);
+        return allowlistProvider.IsPathAllowed(pluginRelativePath);
     }
 
     /// <summary>
     /// Checks if a skill name is allowed based on the exact skill name allowlist.
     /// </summary>
     /// <param name="skillName">The skill name to check.</param>
-    /// <param name="allowlistProvider">The provider that supplies the allowed skill names.</param>
+    /// <param name="allowlistProvider">The provider that validates allowed skill names.</param>
     /// <returns>True if the skill name is in the allowlist, false otherwise.</returns>
     private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
     {
-        var allowedSkillNames = allowlistProvider.GetAllowedSkillNames();
-        return allowedSkillNames.Contains(skillName);
+        return allowlistProvider.IsSkillNameAllowed(skillName);
+    }
+
+    /// <summary>
+    /// Known client-specific prefixes for tool names, ordered most specific first.
+    /// Each client wraps the azmcp command name with a different prefix:
+    /// - Claude Code: mcp__plugin_azure_azure__
+    /// - VS Code: mcp_azure_mcp_
+    /// - Copilot CLI: azure-
+    /// </summary>
+    private static readonly string[] KnownToolNamePrefixes =
+    [
+        "mcp__plugin_azure_azure__",
+        "mcp_azure_mcp_",
+        "azure-"
+    ];
+
+    /// <summary>
+    /// Strips known client-specific prefixes from a tool name to extract the azmcp command name.
+    /// For example, "mcp__plugin_azure_azure__pricing" becomes "pricing".
+    /// Returns the original name if no known prefix is found.
+    /// </summary>
+    internal static string StripClientPrefix(string toolName)
+    {
+        foreach (var prefix in KnownToolNamePrefixes)
+        {
+            if (toolName.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return toolName[prefix.Length..];
+            }
+        }
+
+        return toolName;
+    }
+
+    /// <summary>
+    /// Azure extension tool names that are not azmcp commands but should still be tracked.
+    /// These are tools from the @azure VS Code extension (e.g., auth, resource graph, templates).
+    /// </summary>
+    private static readonly HashSet<string> AllowlistedExtensionTools = new(StringComparer.Ordinal)
+    {
+        "azure_auth-set_auth_context",
+        "azure_get_auth_context",
+        "azure_get_dotnet_template_tags",
+        "azure_get_dotnet_templates_for_tag",
+        "azure_query_azure_resource_graph",
+        "azure_recommend_custom_modes"
+    };
+
+    /// <summary>
+    /// Validates a tool name against registered commands by stripping client prefixes
+    /// and checking if the result is a known command name or area name.
+    /// Also allows explicitly allowlisted Azure extension tools to pass through as-is.
+    /// Returns the normalized azmcp tool name if valid, or null if not recognized.
+    /// </summary>
+    internal static string? ValidateAndNormalizeToolName(string toolName, ICommandFactory commandFactory)
+    {
+        // Check allowlisted Azure extension tools first (pass through without normalization)
+        if (AllowlistedExtensionTools.Contains(toolName))
+        {
+            return toolName;
+        }
+
+        var normalizedName = StripClientPrefix(toolName);
+
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return null;
+        }
+
+        // Check for exact command match (e.g., "group_resource_list", "subscription_list")
+        if (commandFactory.FindCommandByName(normalizedName) != null)
+        {
+            return normalizedName;
+        }
+
+        // Check for area-level match (e.g., "pricing" matches area with commands like "pricing_get")
+        // Case-sensitive: area names must be lowercase as registered
+        foreach (var subGroup in commandFactory.RootGroup.SubGroup)
+        {
+            if (string.Equals(subGroup.Name, normalizedName, StringComparison.Ordinal))
+            {
+                return normalizedName;
+            }
+        }
+
+        return null;
     }
 
     protected override void RegisterOptions(Command command)
@@ -119,8 +210,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
 
     /// <summary>
     /// Executes the plugin telemetry command by validating and logging telemetry.
-    /// This method validates required options, checks paths against the allowlist,
-    /// creates a host with telemetry services, and logs the telemetry event.
+    /// This method validates required options, checks paths and skill names against allowlists,
+    /// validates tool names against registered commands, creates a host with telemetry services,
+    /// and logs the telemetry event.
     /// </summary>
     /// <param name="context">The command execution context containing the response object.</param>
     /// <param name="parseResult">The parsed command-line arguments containing telemetry event data.</param>
@@ -137,16 +229,11 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
 
         try
         {
-            // Create host early so we can access services for validation
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
-
             // Validate file reference if provided
             if (!string.IsNullOrWhiteSpace(options.FileReference))
             {
                 // Validate against allowlist
-                var allowlistProvider = host.Services.GetRequiredService<IPluginFileReferenceAllowlistProvider>();
-                if (!IsPathAllowed(options.FileReference, allowlistProvider))
+                if (!IsPathAllowed(options.FileReference, _fileReferenceAllowlistProvider))
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Plugin file reference '{options.FileReference}' is not in the allowlist and will not be logged.";
@@ -158,8 +245,7 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
             if (!string.IsNullOrWhiteSpace(options.SkillName))
             {
                 // Validate against allowlist
-                var skillNameAllowlistProvider = host.Services.GetRequiredService<IPluginSkillNameAllowlistProvider>();
-                if (!IsSkillNameAllowed(options.SkillName, skillNameAllowlistProvider))
+                if (!IsSkillNameAllowed(options.SkillName, _skillNameAllowlistProvider))
                 {
                     context.Response.Status = HttpStatusCode.Forbidden;
                     context.Response.Message = $"Skill name '{options.SkillName}' is not in the allowlist and will not be logged.";
@@ -167,7 +253,27 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
                 }
             }
 
-            // Start host and log telemetry
+            // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
+            if (!string.IsNullOrWhiteSpace(options.ToolName))
+            {
+                // Resolve ICommandFactory lazily to avoid circular dependency during construction
+                var commandFactory = _serviceProvider.GetRequiredService<ICommandFactory>();
+
+                var normalizedToolName = ValidateAndNormalizeToolName(options.ToolName, commandFactory);
+                if (normalizedToolName == null)
+                {
+                    context.Response.Status = HttpStatusCode.Forbidden;
+                    context.Response.Message = $"Tool name '{options.ToolName}' is not a recognized azmcp command and will not be logged.";
+                    return context.Response;
+                }
+
+                // Replace with normalized name for clean telemetry data
+                options.ToolName = normalizedToolName;
+            }
+
+            // Create host and log telemetry
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
             await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
@@ -188,8 +294,9 @@ public sealed class PluginTelemetryCommand : BaseCommand<PluginTelemetryOptions>
 
     /// <summary>
     /// Logs plugin telemetry by creating an activity and adding relevant tags.
-    /// Only non-empty fields are added as tags. File references should be validated
-    /// against the allowlist before calling this method.
+    /// Only non-empty fields are added as tags. File references and skill names
+    /// should be validated against their respective allowlists, and tool names
+    /// should be validated as registered commands, before calling this method.
     /// </summary>
     /// <param name="telemetryService">The telemetry service used to create and track activities.</param>
     /// <param name="options">The plugin telemetry options containing event data (timestamp, event type, session ID, etc.).</param>
