@@ -37,10 +37,10 @@ public class AvailabilityStatusDeserializationTests
         // Assert
         Assert.NotNull(result?.Value);
         Assert.Single(result.Value);
-        var status = result.Value[0];
-        Assert.Equal("Available", status.Properties?.AvailabilityState);
-        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), status.Properties?.OccurredTime);
-        Assert.Equal(new DateTimeOffset(2025, 3, 15, 12, 0, 0, TimeSpan.Zero), status.Properties?.ReportedTime);
+        var status = result.Value[0].ToAvailabilityStatus();
+        Assert.Equal("Available", status.AvailabilityState);
+        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), status.OccurredTime);
+        Assert.Equal(new DateTimeOffset(2025, 3, 15, 12, 0, 0, TimeSpan.Zero), status.ReportedTime);
     }
 
     [Fact]
@@ -71,10 +71,10 @@ public class AvailabilityStatusDeserializationTests
         // Assert
         Assert.NotNull(result?.Value);
         Assert.Single(result.Value);
-        var status = result.Value[0];
-        Assert.Equal("Unavailable", status.Properties?.AvailabilityState);
-        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), status.Properties?.OccurredTime);
-        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), status.Properties?.ReportedTime);
+        var status = result.Value[0].ToAvailabilityStatus();
+        Assert.Equal("Unavailable", status.AvailabilityState);
+        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), status.OccurredTime);
+        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), status.ReportedTime);
     }
 
     [Fact]
@@ -104,9 +104,10 @@ public class AvailabilityStatusDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var status = result.Value[0];
-        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), status.Properties?.OccurredTime);
-        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 5, 0, TimeSpan.Zero), status.Properties?.ReportedTime);
+        Assert.Single(result.Value);
+        var status = result.Value[0].ToAvailabilityStatus();
+        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), status.OccurredTime);
+        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 5, 0, TimeSpan.Zero), status.ReportedTime);
     }
 
     [Fact]
@@ -134,9 +135,10 @@ public class AvailabilityStatusDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var status = result.Value[0];
-        Assert.Null(status.Properties?.OccurredTime);
-        Assert.Null(status.Properties?.ReportedTime);
+        Assert.Single(result.Value);
+        var status = result.Value[0].ToAvailabilityStatus();
+        Assert.Null(status.OccurredTime);
+        Assert.Null(status.ReportedTime);
     }
 
     [Fact]
@@ -166,9 +168,10 @@ public class AvailabilityStatusDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var status = result.Value[0];
-        Assert.Equal(TimeSpan.Zero, status.Properties?.OccurredTime?.Offset);
-        Assert.Equal(TimeSpan.Zero, status.Properties?.ReportedTime?.Offset);
+        Assert.Single(result.Value);
+        var status = result.Value[0].ToAvailabilityStatus();
+        Assert.Equal(TimeSpan.Zero, status.OccurredTime?.Offset);
+        Assert.Equal(TimeSpan.Zero, status.ReportedTime?.Offset);
     }
 
     [Fact]
@@ -194,8 +197,9 @@ public class AvailabilityStatusDeserializationTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Unavailable", result.Properties?.AvailabilityState);
-        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), result.Properties?.OccurredTime);
-        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), result.Properties?.ReportedTime);
+        var status = result.ToAvailabilityStatus();
+        Assert.Equal("Unavailable", status.AvailabilityState);
+        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), status.OccurredTime);
+        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), status.ReportedTime);
     }
 }
