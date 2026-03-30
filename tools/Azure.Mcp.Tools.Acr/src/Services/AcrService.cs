@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
@@ -78,6 +79,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         var credential = await GetCredential(tenant, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Audience = GetAcrAudience();
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
@@ -144,5 +146,16 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
             containerRegistryData.Properties?.LoginServer,
             containerRegistryData.Sku?.Name,
             containerRegistryData.Sku?.Tier);
+    }
+
+    private ContainerRegistryAudience GetAcrAudience()
+    {
+        return TenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => ContainerRegistryAudience.AzureResourceManagerPublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => ContainerRegistryAudience.AzureResourceManagerChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => ContainerRegistryAudience.AzureResourceManagerGovernment,
+            _ => ContainerRegistryAudience.AzureResourceManagerPublicCloud
+        };
     }
 }
