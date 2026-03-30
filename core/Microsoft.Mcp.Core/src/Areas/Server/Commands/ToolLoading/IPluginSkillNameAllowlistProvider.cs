@@ -22,6 +22,15 @@ public interface IPluginSkillNameAllowlistProvider
 }
 
 /// <summary>
+/// No-op implementation that rejects all skill names.
+/// Used by servers that don't support plugin telemetry (e.g., Fabric).
+/// </summary>
+public class NullPluginSkillNameAllowlistProvider : IPluginSkillNameAllowlistProvider
+{
+    public bool IsSkillNameAllowed(string skillName) => false;
+}
+
+/// <summary>
 /// Provides skill name validation using an embedded JSON resource allowlist.
 /// The resource should contain a JSON array of skill names.
 /// </summary>

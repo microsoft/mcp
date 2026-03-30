@@ -22,6 +22,15 @@ public interface IPluginFileReferenceAllowlistProvider
 }
 
 /// <summary>
+/// No-op implementation that rejects all file references.
+/// Used by servers that don't support plugin telemetry (e.g., Fabric).
+/// </summary>
+public class NullPluginFileReferenceAllowlistProvider : IPluginFileReferenceAllowlistProvider
+{
+    public bool IsPathAllowed(string pluginRelativePath) => false;
+}
+
+/// <summary>
 /// Provides file reference validation using an embedded JSON resource allowlist.
 /// The resource should contain a JSON array of plugin-relative file references.
 /// </summary>
