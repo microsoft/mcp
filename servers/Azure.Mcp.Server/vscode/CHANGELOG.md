@@ -1,5 +1,79 @@
 # Release History
 
+## 2.0.34 (2026-03-27) (pre-release)
+
+### Added
+
+- Added `--dangerously-disable-retry-limits` server start option to bypass retry policy bounds enforcement when explicitly required. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+
+### Changed
+
+- **Breaking:** Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: [[#2257](https://github.com/microsoft/mcp/pull/2257)]
+  - `AzureCloud`
+  - `AzurePublicCloud`
+  - `Public`
+  - `AzurePublic`
+  - `AzureChinaCloud`
+  - `China`
+  - `AzureChina`
+  - `AzureUSGovernment`
+  - `AzureUSGovernmentCloud`
+  - `USGov`
+  - `USGovernment`
+- Enforced upper bounds on retry policy values to prevent excessively large retry configurations. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+- Bumped `@azure/msal-browser` to 5.2.0+ to comply with Component Governance requirements. [[#2260](https://github.com/microsoft/mcp/pull/2260)]
+- Removed references to the non-existent `--public-access-level` parameter from the `storage_blob_container_create` tool description and associated e2e test prompts. [[#2264](https://github.com/microsoft/mcp/pull/2264)]
+
+### Fixed
+
+- Enforced read-only and HTTP mode restrictions at tool execution time, not just during tool listing. [[#2226](https://github.com/microsoft/mcp/pull/2226)]
+- Improved reliability by adding regex timeouts to prevent hangs, limiting large resource listings, and allowing cancellation to propagate correctly through exception handling. [[#2223](https://github.com/microsoft/mcp/pull/2223)]
+- Fixed Cosmos DB cache key generation to include the authentication method, preventing incorrect client reuse across authentication types. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
+- Fixed validation gap in `BaseAzureResourceService` where the `additionalFilter` parameter could be concatenated into Resource Graph queries without validation. Pipe operators are now rejected. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
+- Added input validation for ledger names in `ConfidentialLedgerService` to ensure only valid characters are accepted. [[#2211](https://github.com/microsoft/mcp/pull/2211)]
+- Fixed elicitation for GitHub Copilot CLI by updating from `UntitledSingleSelectEnumSchema` to `TitledSingleSelectEnumSchema`. [[#2253](https://github.com/microsoft/mcp/pull/2253)]
+- Fixed incorrect SignalR caching where runtime results were not stored in the cache, causing every request to re-fetch instead of returning cached data. [[#2254](https://github.com/microsoft/mcp/pull/2254)]
+- Added `CacheKeyBuilder` to construct cache keys using characters disallowed in Azure resource and subscription names, preventing cache collisions in multi-client remote scenarios. [[#2259](https://github.com/microsoft/mcp/pull/2259)]
+- Added vault name validation in `KeyVaultService` to prevent unsafe input from being interpolated into Key Vault and Managed HSM URIs. [[#2238](https://github.com/microsoft/mcp/pull/2238)]
+
+## 2.0.33 (2026-03-25) (pre-release)
+
+### Added
+
+- Updated secret elicitation to require explicit user confirmation before proceeding with sensitive operations. [[#2197](https://github.com/microsoft/mcp/pull/2197)]
+
+### Changed
+
+- Extended elicitations/user consent prompts to cover destructive operations (delete, modify, create) in addition to secret operations, and consolidated both into a single prompt to avoid duplicate confirmation. [[#2208](https://github.com/microsoft/mcp/pull/2208)]
+
+### Fixed
+
+- Added IPv4 format validation and blocked dangerous IP ranges in the `sql_server_firewall-rule_create` command to prevent overly permissive firewall rules. [[#2206](https://github.com/microsoft/mcp/pull/2206)]
+- Improved `HttpRequestException` handling to return the actual HTTP status code when available instead of defaulting to `503 Service Unavailable`. [[#2200](https://github.com/microsoft/mcp/pull/2200)]
+
+## 2.0.32 (2026-03-24) (pre-release)
+
+### Added
+
+- Added blocklist validation for security-sensitive PostgreSQL server parameters (audit logging, TLS/SSL, authentication, shared libraries, row-level security) in the `server param set` command to prevent accidental weakening of server security. [[#2164](https://github.com/microsoft/mcp/pull/2164)]
+- Added `--public-network-access` option to the `redis_create` command to control public network access for Azure Managed Redis resources (defaults to disabled). [[#2179](https://github.com/microsoft/mcp/pull/2179)]
+
+### Changed
+
+- Centralized Foundry and Azure OpenAI endpoint validation using the shared `EndpointValidator` with sovereign cloud support. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added file path validation and canonicalization for the `speech_stt_recognize` and `speech_tts_synthesize` commands. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
+- Removed structured logging of the full options payload from the `sql_server_create` command to prevent accidental exposure of sensitive values. [[#2158](https://github.com/microsoft/mcp/pull/2158)]
+- Updated Docker release pipeline to publish additional minor version tags (e.g., `2.0`, `2.0-amd64`, `2.0-arm64`) allowing consumers to pin to a minor release stream. [[#2144](https://github.com/microsoft/mcp/pull/2144)]
+
+### Fixed
+
+- Fixed PostgreSQL and MySQL server name validation to require allowed Azure domain suffixes when a fully qualified domain name is provided. [[#2159](https://github.com/microsoft/mcp/pull/2159)]
+- Fixed Cosmos DB credential authentication to strictly honor the requested authentication method instead of falling back to account-key authentication. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Fixed snapshot lookup in the `FileShares` namespace to use exact resource ID matching instead of substring matching. [[#2168](https://github.com/microsoft/mcp/pull/2168)]
+- Improved Cosmos DB query validator to detect a broader range of boolean tautology patterns. [[#2171](https://github.com/microsoft/mcp/pull/2171)]
+- Fixed the `sql_server_create` command to default `--public-network-access` to `Disabled` for secure-by-default server creation. [[#2181](https://github.com/microsoft/mcp/pull/2181)]
+
 ## 2.0.0-beta.31 (2026-03-20) (pre-release)
 
 ### Added
