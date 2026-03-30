@@ -58,6 +58,8 @@ function New-TestSettings {
             # Live test resources are deployed using Azure PowerShell, so we know it's already in the correct tenant
             # Force CustomChainedCredential to use AzurePowerShellCredential to avoid cross-tenant auth issues
             "AZURE_TOKEN_CREDENTIALS" = "AzurePowerShellCredential"
+            # Propagate cloud environment so MCP server targets the correct ARM endpoint (e.g., sovereign clouds)
+            "AZURE_CLOUD" = $context.Environment.Name
         }
         TestMode = "Live"
     }

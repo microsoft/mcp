@@ -5,6 +5,8 @@ param(
     [string]$ResourceGroupName,
     [string]$BaseName,
     [string]$Location,
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'Dogfood')]
+    [string]$Environment = 'AzureCloud',
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel,
@@ -71,6 +73,7 @@ function Deploy-TestResources
         [string]$ResourceGroupName,
         [string]$BaseName,
         [string]$Location,
+        [string]$Environment,
         [int]$DeleteAfterHours,
         [string]$TestResourcesDirectory,
         [switch]$AsJob
@@ -84,31 +87,34 @@ Deploying$($AsJob ? ' in background job' : ''):
     ResourceGroupName: '$ResourceGroupName'
     BaseName: '$BaseName'
     Location: '$Location'
+    Environment: $Environment
     DeleteAfterHours: $DeleteAfterHours
     TestResourcesDirectory: '$TestResourcesDirectory'`n
 "@ -ForegroundColor Yellow
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
                 -ResourceGroupName $ResourceGroupName `
                 -BaseName $BaseName `
                 -Location $Location `
+                -Environment $Environment `
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
                 -UseHttpTransport:$UseHttpTransport `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
             -ResourceGroupName $ResourceGroupName `
             -BaseName $BaseName `
             -Location $Location `
+            -Environment $Environment `
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
             -UseHttpTransport:$UseHttpTransport `
@@ -135,6 +141,7 @@ $jobInputs = $testablePaths | ForEach-Object {
         ResourceGroupName = $ResourceGroupName ? $ResourceGroupName : "$accountName-mcp$($suffix)"
         BaseName = $BaseName ? $BaseName : "mcp$($suffix)"
         Location = $Location
+        Environment = $Environment
         DeleteAfterHours = $DeleteAfterHours
         TestResourcesDirectory = Resolve-Path -Path "$RepoRoot/$_/tests"
     }
