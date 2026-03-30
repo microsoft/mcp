@@ -9,7 +9,7 @@
 ### Changed
 
 - **Breaking:** Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: [[#2257](https://github.com/microsoft/mcp/pull/2257)]
-  - `AzureCloud` 
+  - `AzureCloud`
   - `AzurePublicCloud`
   - `Public`
   - `AzurePublic`
@@ -22,6 +22,7 @@
   - `USGovernment`
 - Enforced upper bounds on retry policy values to prevent excessively large retry configurations. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
 - Bumped `@azure/msal-browser` to 5.2.0+ to comply with Component Governance requirements. [[#2260](https://github.com/microsoft/mcp/pull/2260)]
+- Removed references to the non-existent `--public-access-level` parameter from the `storage_blob_container_create` tool description and associated e2e test prompts. [[#2264](https://github.com/microsoft/mcp/pull/2264)]
 
 ### Fixed
 
