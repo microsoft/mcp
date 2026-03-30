@@ -7,6 +7,7 @@ using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
@@ -168,7 +169,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var configStore = await FindAppConfigStore(subscription, accountName, subscription, retryPolicy, cancellationToken);
+        var configStore = await FindAppConfigStore(subscription, tenant, accountName, subscription, retryPolicy, cancellationToken);
         var endpoint = configStore.Endpoint;
         if (string.IsNullOrEmpty(endpoint))
         {
@@ -177,8 +178,9 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig");
 
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();
+        options.Audience = GetAppConfigurationAudience();
         AddDefaultPolicies(options);
 
         var endpointUri = new Uri(endpoint);
@@ -191,25 +193,22 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     private async Task<AppConfigurationAccount> FindAppConfigStore(
         string subscription,
+        string? tenant,
         string accountName,
         string subscriptionIdentifier,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var account = await ExecuteSingleResourceQueryAsync(
+        return await ExecuteSingleResourceQueryAsync(
             "Microsoft.AppConfiguration/configurationStores",
             resourceGroup: null, // all resource groups
             subscription: subscription,
             retryPolicy: retryPolicy,
             converter: ConvertToAppConfigurationAccountModel,
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
-            cancellationToken: cancellationToken);
-
-        if (account == null)
-        {
-            throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
-        }
-        return account;
+            tenant: tenant,
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"App Configuration store '{accountName}' not found for subscription '{subscriptionIdentifier}'.");
     }
 
     /// <summary>
@@ -264,6 +263,17 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                 KeyIdentifier = appConfigAccount.Properties?.Encryption?.KeyVaultProperties?.KeyIdentifier,
                 IdentityClientId = appConfigAccount.Properties?.Encryption?.KeyVaultProperties?.IdentityClientId,
             }
+        };
+    }
+
+    private AppConfigurationAudience GetAppConfigurationAudience()
+    {
+        return TenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => AppConfigurationAudience.AzurePublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => AppConfigurationAudience.AzureChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => AppConfigurationAudience.AzureGovernment,
+            _ => AppConfigurationAudience.AzurePublicCloud
         };
     }
 }
