@@ -178,7 +178,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig");
 
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();
         options.Audience = GetAppConfigutationAudience();
         AddDefaultPolicies(options);
