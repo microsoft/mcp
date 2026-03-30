@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Configure SearchAudience when creating Search SDK clients"
