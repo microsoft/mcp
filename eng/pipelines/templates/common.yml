@@ -34,6 +34,10 @@ parameters:
   displayName: Run Gov Test
   type: boolean
   default: false
+- name: RunAllLiveTests
+  displayName: Run All Live Tests
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -63,6 +67,9 @@ extends:
       - template: /eng/pipelines/templates/variables/globals.yml
       - ${{ if parameters.GovTest }}:
         - name: GovTest
+          value: 'true'
+      - ${{ if parameters.RunAllLiveTests }}:
+        - name: RunAllLiveTests
           value: 'true'
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml

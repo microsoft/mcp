@@ -16,6 +16,10 @@ parameters:
   displayName: Run Gov Test
   type: boolean
   default: false
+- name: RunAllLiveTests
+  displayName: Run All Live Tests
+  type: boolean
+  default: false
 
 trigger: none
 pr: none
@@ -34,3 +38,4 @@ extends:
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     GovTest: ${{ parameters.GovTest }}
+    RunAllLiveTests: ${{ parameters.RunAllLiveTests }}
