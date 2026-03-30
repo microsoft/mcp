@@ -62,6 +62,10 @@ function New-TestSettings {
         TestMode = "Live"
     }
 
+    if (-not [string]::IsNullOrEmpty($Environment)) {
+        $testSettings.EnvironmentVariables["AZURE_CLOUD"] = $Environment
+    }
+
     if ($AdditionalParameters -and $AdditionalParameters.ContainsKey("UseHttpTransport") -and $AdditionalParameters["UseHttpTransport"]) {
         $testSettings.EnvironmentVariables["MCP_TEST_TRANSPORT"] = "http"
     }
