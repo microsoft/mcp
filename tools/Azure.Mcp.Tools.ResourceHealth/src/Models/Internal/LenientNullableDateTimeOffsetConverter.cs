@@ -22,35 +22,39 @@ internal sealed class LenientNullableDateTimeOffsetConverter : JsonConverter<Dat
             return null;
         }
 
-        if (reader.TokenType == JsonTokenType.String)
+        if (reader.TokenType != JsonTokenType.String)
         {
-            var stringValue = reader.GetString();
-
-            if (string.IsNullOrWhiteSpace(stringValue))
-            {
-                return null;
-            }
-
-            // Check if the string contains timezone information (Z, +HH:MM, -HH:MM after the date/time portion)
-            if (HasTimezoneInfo(stringValue))
-            {
-                if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dto))
-                {
-                    return dto;
-                }
-            }
-
-            // Parse without timezone info, assuming UTC. In practice, the Azure Resource Health API
-            // only omits the timezone designator for sentinel values like "0001-01-01T00:00:00"
-            // (DateTime.MinValue) representing unset fields (e.g., impactMitigationTime for
-            // active/unmitigated events). Real timestamps always include the "Z" suffix.
-            if (DateTime.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
-            {
-                return new DateTimeOffset(dt, TimeSpan.Zero);
-            }
+            throw new JsonException($"Unexpected token parsing {nameof(DateTimeOffset)}?. Expected String or Null, got {reader.TokenType}.");
         }
 
-        return null;
+        var stringValue = reader.GetString();
+
+        if (string.IsNullOrWhiteSpace(stringValue))
+        {
+            return null;
+        }
+
+        // Check if the string contains timezone information (Z, +HH:MM, -HH:MM after the date/time portion)
+        if (HasTimezoneInfo(stringValue))
+        {
+            if (DateTimeOffset.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dto))
+            {
+                return dto;
+            }
+
+            throw new JsonException($"Invalid {nameof(DateTimeOffset)} value: '{stringValue}'.");
+        }
+
+        // Parse without timezone info, assuming UTC. In practice, the Azure Resource Health API
+        // only omits the timezone designator for sentinel values like "0001-01-01T00:00:00"
+        // (DateTime.MinValue) representing unset fields (e.g., impactMitigationTime for
+        // active/unmitigated events). Real timestamps always include the "Z" suffix.
+        if (DateTime.TryParse(stringValue, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
+        {
+            return new DateTimeOffset(dt, TimeSpan.Zero);
+        }
+
+        throw new JsonException($"Invalid DateTime value: '{stringValue}'.");
     }
 
     private static bool HasTimezoneInfo(string value)
