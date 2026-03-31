@@ -12,7 +12,7 @@
 - Configured the right audience based on Cloud configuration when creating SDK clients for tools in:
   - AppConfiguration [[#2287](https://github.com/microsoft/mcp/pull/2287)]
   - Container Registry [[#2286](https://github.com/microsoft/mcp/pull/2286)]
-  - Monitor Query [[#2285](https://github.com/microsoft/mcp/pull/2283)]
+  - Monitor Query [[#2285](https://github.com/microsoft/mcp/pull/2285)]
   - Search [[#2283](https://github.com/microsoft/mcp/pull/2283)]
 - Fixed JSON deserialization issues for `resourcehealth` events with timezone-less datetime values. [[#2293](https://github.com/microsoft/mcp/pull/2293)]
 
