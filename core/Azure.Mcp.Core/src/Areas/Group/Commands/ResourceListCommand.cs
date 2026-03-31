@@ -3,12 +3,12 @@
 
 using Azure.Mcp.Core.Areas.Group.Options;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Models.Resource;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 

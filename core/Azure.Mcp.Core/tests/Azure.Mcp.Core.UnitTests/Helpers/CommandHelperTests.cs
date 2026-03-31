@@ -1,7 +1,7 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas.Group.Commands;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using NSubstitute;
 using Xunit;
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;

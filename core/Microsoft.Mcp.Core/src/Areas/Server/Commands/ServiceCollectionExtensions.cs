@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +13,8 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
