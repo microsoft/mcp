@@ -93,4 +93,124 @@ public interface INetAppFilesService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<NetAppVolumeCreateResult> CreateVolume(
+        string account,
+        string pool,
+        string volume,
+        string resourceGroup,
+        string location,
+        string creationToken,
+        long usageThreshold,
+        string subnetId,
+        string subscription,
+        string? serviceLevel = null,
+        List<string>? protocolTypes = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<NetAppAccountCreateResult> CreateAccount(
+        string account,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<BackupPolicyCreateResult> CreateBackupPolicy(
+        string account,
+        string backupPolicy,
+        string resourceGroup,
+        string location,
+        string subscription,
+        int? dailyBackupsToKeep = null,
+        int? weeklyBackupsToKeep = null,
+        int? monthlyBackupsToKeep = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<BackupCreateResult> CreateBackup(
+        string account,
+        string backupVault,
+        string backup,
+        string resourceGroup,
+        string location,
+        string volumeResourceId,
+        string subscription,
+        string? label = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<BackupVaultCreateResult> CreateBackupVault(
+        string account,
+        string backupVault,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<CapacityPoolCreateResult> CreatePool(
+        string account,
+        string pool,
+        string resourceGroup,
+        string location,
+        long size,
+        string subscription,
+        string? serviceLevel = null,
+        string? qosType = null,
+        bool? coolAccess = null,
+        string? encryptionType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<SnapshotCreateResult> CreateSnapshot(
+        string account,
+        string pool,
+        string volume,
+        string snapshot,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<SnapshotPolicyCreateResult> CreateSnapshotPolicy(
+        string account,
+        string snapshotPolicy,
+        string resourceGroup,
+        string location,
+        string subscription,
+        int? hourlyScheduleMinute = null,
+        int? hourlyScheduleSnapshotsToKeep = null,
+        int? dailyScheduleHour = null,
+        int? dailyScheduleMinute = null,
+        int? dailyScheduleSnapshotsToKeep = null,
+        string? weeklyScheduleDay = null,
+        int? weeklyScheduleSnapshotsToKeep = null,
+        string? monthlyScheduleDaysOfMonth = null,
+        int? monthlyScheduleSnapshotsToKeep = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<VolumeGroupCreateResult> CreateVolumeGroup(
+        string account,
+        string volumeGroup,
+        string resourceGroup,
+        string location,
+        string applicationType,
+        string applicationIdentifier,
+        string subscription,
+        string? groupDescription = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
