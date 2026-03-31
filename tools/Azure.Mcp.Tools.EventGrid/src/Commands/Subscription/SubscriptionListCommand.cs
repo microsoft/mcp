@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
