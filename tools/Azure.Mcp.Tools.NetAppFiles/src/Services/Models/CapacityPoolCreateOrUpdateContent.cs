@@ -13,6 +13,10 @@ internal sealed class CapacityPoolCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public CapacityPoolCreateProperties? Properties { get; set; }
 }

@@ -754,6 +754,94 @@ public class NetAppFilesService(
         }
     }
 
+    public async Task<NetAppVolumeCreateResult> UpdateVolume(
+        string account,
+        string pool,
+        string volume,
+        string resourceGroup,
+        string location,
+        string subscription,
+        long? usageThreshold = null,
+        string? serviceLevel = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(pool), pool),
+            (nameof(volume), volume),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}");
+
+            var updateContent = new NetAppVolumeCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new NetAppVolumeCreateProperties
+                {
+                    UsageThreshold = usageThreshold,
+                    ServiceLevel = serviceLevel
+                },
+                Tags = tags
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.NetAppVolumeCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new NetAppVolumeCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    ServiceLevel: null,
+                    UsageThreshold: null,
+                    CreationToken: null,
+                    SubnetId: null,
+                    ProtocolTypes: null);
+            }
+
+            return new NetAppVolumeCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                ServiceLevel: GetPropertyString(result.Data.Properties, "serviceLevel"),
+                UsageThreshold: GetPropertyLong(result.Data.Properties, "usageThreshold"),
+                CreationToken: GetPropertyString(result.Data.Properties, "creationToken"),
+                SubnetId: GetPropertyString(result.Data.Properties, "subnetId"),
+                ProtocolTypes: GetPropertyStringList(result.Data.Properties, "protocolTypes"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files volume '{volume}': {ex.Message}", ex);
+        }
+    }
+
     public async Task<NetAppAccountCreateResult> CreateAccount(
         string account,
         string resourceGroup,
@@ -817,6 +905,74 @@ public class NetAppFilesService(
         catch (Exception ex)
         {
             throw new Exception($"Error creating NetApp Files account '{account}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<NetAppAccountCreateResult> UpdateAccount(
+        string account,
+        string resourceGroup,
+        string location,
+        string subscription,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}");
+
+            var updateContent = new NetAppAccountCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new NetAppAccountCreateProperties(),
+                Tags = tags
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.NetAppAccountCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new NetAppAccountCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null);
+            }
+
+            return new NetAppAccountCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files account '{account}': {ex.Message}", ex);
         }
     }
 
@@ -901,6 +1057,90 @@ public class NetAppFilesService(
         catch (Exception ex)
         {
             throw new Exception($"Error creating NetApp Files backup policy '{backupPolicy}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<BackupPolicyCreateResult> UpdateBackupPolicy(
+        string account,
+        string backupPolicy,
+        string resourceGroup,
+        string location,
+        string subscription,
+        int? dailyBackupsToKeep = null,
+        int? weeklyBackupsToKeep = null,
+        int? monthlyBackupsToKeep = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(backupPolicy), backupPolicy),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/backupPolicies",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/backupPolicies/{backupPolicy}");
+
+            var updateContent = new BackupPolicyCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new BackupPolicyCreateProperties
+                {
+                    DailyBackupsToKeep = dailyBackupsToKeep,
+                    WeeklyBackupsToKeep = weeklyBackupsToKeep,
+                    MonthlyBackupsToKeep = monthlyBackupsToKeep
+                }
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.BackupPolicyCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new BackupPolicyCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    DailyBackupsToKeep: null,
+                    WeeklyBackupsToKeep: null,
+                    MonthlyBackupsToKeep: null,
+                    Enabled: null);
+            }
+
+            return new BackupPolicyCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                DailyBackupsToKeep: GetPropertyInt(result.Data.Properties, "dailyBackupsToKeep"),
+                WeeklyBackupsToKeep: GetPropertyInt(result.Data.Properties, "weeklyBackupsToKeep"),
+                MonthlyBackupsToKeep: GetPropertyInt(result.Data.Properties, "monthlyBackupsToKeep"),
+                Enabled: GetPropertyBool(result.Data.Properties, "enabled"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files backup policy '{backupPolicy}': {ex.Message}", ex);
         }
     }
 
@@ -989,6 +1229,88 @@ public class NetAppFilesService(
         }
     }
 
+    public async Task<BackupCreateResult> UpdateBackup(
+        string account,
+        string backupVault,
+        string backup,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? label = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(backupVault), backupVault),
+            (nameof(backup), backup),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/backupVaults/backups",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/backupVaults/{backupVault}/backups/{backup}");
+
+            var updateContent = new BackupCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new BackupCreateProperties
+                {
+                    Label = label
+                }
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.BackupCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new BackupCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    VolumeResourceId: null,
+                    Label: null,
+                    BackupType: null,
+                    Size: null);
+            }
+
+            return new BackupCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                VolumeResourceId: GetPropertyString(result.Data.Properties, "volumeResourceId"),
+                Label: GetPropertyString(result.Data.Properties, "label"),
+                BackupType: GetPropertyString(result.Data.Properties, "backupType"),
+                Size: GetPropertyLong(result.Data.Properties, "size"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files backup '{backup}': {ex.Message}", ex);
+        }
+    }
+
     public async Task<BackupVaultCreateResult> CreateBackupVault(
         string account,
         string backupVault,
@@ -1054,6 +1376,76 @@ public class NetAppFilesService(
         catch (Exception ex)
         {
             throw new Exception($"Error creating NetApp Files backup vault '{backupVault}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<BackupVaultCreateResult> UpdateBackupVault(
+        string account,
+        string backupVault,
+        string resourceGroup,
+        string location,
+        string subscription,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(backupVault), backupVault),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/backupVaults",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/backupVaults/{backupVault}");
+
+            var updateContent = new BackupVaultCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new BackupVaultCreateProperties(),
+                Tags = tags
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.BackupVaultCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new BackupVaultCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null);
+            }
+
+            return new BackupVaultCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files backup vault '{backupVault}': {ex.Message}", ex);
         }
     }
 
@@ -1147,6 +1539,94 @@ public class NetAppFilesService(
         }
     }
 
+    public async Task<CapacityPoolCreateResult> UpdatePool(
+        string account,
+        string pool,
+        string resourceGroup,
+        string location,
+        string subscription,
+        long? size = null,
+        string? qosType = null,
+        bool? coolAccess = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(pool), pool),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/capacityPools",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}");
+
+            var updateContent = new CapacityPoolCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new CapacityPoolCreateProperties
+                {
+                    Size = size,
+                    QosType = qosType,
+                    CoolAccess = coolAccess
+                },
+                Tags = tags
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.CapacityPoolCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new CapacityPoolCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    ServiceLevel: null,
+                    Size: null,
+                    QosType: null,
+                    CoolAccess: null,
+                    EncryptionType: null);
+            }
+
+            return new CapacityPoolCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                ServiceLevel: GetPropertyString(result.Data.Properties, "serviceLevel"),
+                Size: GetPropertyLong(result.Data.Properties, "size"),
+                QosType: GetPropertyString(result.Data.Properties, "qosType"),
+                CoolAccess: GetPropertyBool(result.Data.Properties, "coolAccess"),
+                EncryptionType: GetPropertyString(result.Data.Properties, "encryptionType"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files capacity pool '{pool}': {ex.Message}", ex);
+        }
+    }
+
     public async Task<SnapshotCreateResult> CreateSnapshot(
         string account,
         string pool,
@@ -1218,6 +1698,80 @@ public class NetAppFilesService(
         catch (Exception ex)
         {
             throw new Exception($"Error creating NetApp Files snapshot '{snapshot}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<SnapshotCreateResult> UpdateSnapshot(
+        string account,
+        string pool,
+        string volume,
+        string snapshot,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(pool), pool),
+            (nameof(volume), volume),
+            (nameof(snapshot), snapshot),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}/snapshots/{snapshot}");
+
+            var updateContent = new SnapshotCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = new SnapshotCreateProperties()
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.SnapshotCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new SnapshotCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    Created: null);
+            }
+
+            return new SnapshotCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                Created: GetPropertyString(result.Data.Properties, "created"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files snapshot '{snapshot}': {ex.Message}", ex);
         }
     }
 
@@ -1360,6 +1914,145 @@ public class NetAppFilesService(
         }
     }
 
+    public async Task<SnapshotPolicyCreateResult> UpdateSnapshotPolicy(
+        string account,
+        string snapshotPolicy,
+        string resourceGroup,
+        string location,
+        string subscription,
+        int? hourlyScheduleMinute = null,
+        int? hourlyScheduleSnapshotsToKeep = null,
+        int? dailyScheduleHour = null,
+        int? dailyScheduleMinute = null,
+        int? dailyScheduleSnapshotsToKeep = null,
+        string? weeklyScheduleDay = null,
+        int? weeklyScheduleSnapshotsToKeep = null,
+        string? monthlyScheduleDaysOfMonth = null,
+        int? monthlyScheduleSnapshotsToKeep = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(snapshotPolicy), snapshotPolicy),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/snapshotPolicies/{snapshotPolicy}");
+
+            var properties = new SnapshotPolicyCreateProperties
+            {
+                Enabled = true
+            };
+
+            if (hourlyScheduleMinute.HasValue || hourlyScheduleSnapshotsToKeep.HasValue)
+            {
+                properties.HourlySchedule = new HourlyScheduleCreate
+                {
+                    Minute = hourlyScheduleMinute,
+                    SnapshotsToKeep = hourlyScheduleSnapshotsToKeep
+                };
+            }
+
+            if (dailyScheduleHour.HasValue || dailyScheduleMinute.HasValue || dailyScheduleSnapshotsToKeep.HasValue)
+            {
+                properties.DailySchedule = new DailyScheduleCreate
+                {
+                    Hour = dailyScheduleHour,
+                    Minute = dailyScheduleMinute,
+                    SnapshotsToKeep = dailyScheduleSnapshotsToKeep
+                };
+            }
+
+            if (weeklyScheduleDay != null || weeklyScheduleSnapshotsToKeep.HasValue)
+            {
+                properties.WeeklySchedule = new WeeklyScheduleCreate
+                {
+                    Day = weeklyScheduleDay,
+                    SnapshotsToKeep = weeklyScheduleSnapshotsToKeep
+                };
+            }
+
+            if (monthlyScheduleDaysOfMonth != null || monthlyScheduleSnapshotsToKeep.HasValue)
+            {
+                properties.MonthlySchedule = new MonthlyScheduleCreate
+                {
+                    DaysOfMonth = monthlyScheduleDaysOfMonth,
+                    SnapshotsToKeep = monthlyScheduleSnapshotsToKeep
+                };
+            }
+
+            var updateContent = new SnapshotPolicyCreateOrUpdateContent
+            {
+                Location = location,
+                Properties = properties
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.SnapshotPolicyCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new SnapshotPolicyCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    Enabled: null,
+                    HourlyScheduleMinute: null,
+                    HourlyScheduleSnapshotsToKeep: null,
+                    DailyScheduleHour: null,
+                    DailyScheduleMinute: null,
+                    DailyScheduleSnapshotsToKeep: null,
+                    WeeklyScheduleDay: null,
+                    WeeklyScheduleSnapshotsToKeep: null,
+                    MonthlyScheduleDaysOfMonth: null,
+                    MonthlyScheduleSnapshotsToKeep: null);
+            }
+
+            return new SnapshotPolicyCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                Enabled: GetPropertyBool(result.Data.Properties, "enabled"),
+                HourlyScheduleMinute: GetNestedPropertyInt(result.Data.Properties, "hourlySchedule", "minute"),
+                HourlyScheduleSnapshotsToKeep: GetNestedPropertyInt(result.Data.Properties, "hourlySchedule", "snapshotsToKeep"),
+                DailyScheduleHour: GetNestedPropertyInt(result.Data.Properties, "dailySchedule", "hour"),
+                DailyScheduleMinute: GetNestedPropertyInt(result.Data.Properties, "dailySchedule", "minute"),
+                DailyScheduleSnapshotsToKeep: GetNestedPropertyInt(result.Data.Properties, "dailySchedule", "snapshotsToKeep"),
+                WeeklyScheduleDay: GetNestedPropertyString(result.Data.Properties, "weeklySchedule", "day"),
+                WeeklyScheduleSnapshotsToKeep: GetNestedPropertyInt(result.Data.Properties, "weeklySchedule", "snapshotsToKeep"),
+                MonthlyScheduleDaysOfMonth: GetNestedPropertyString(result.Data.Properties, "monthlySchedule", "daysOfMonth"),
+                MonthlyScheduleSnapshotsToKeep: GetNestedPropertyInt(result.Data.Properties, "monthlySchedule", "snapshotsToKeep"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files snapshot policy '{snapshotPolicy}': {ex.Message}", ex);
+        }
+    }
+
     public async Task<VolumeGroupCreateResult> CreateVolumeGroup(
         string account,
         string volumeGroup,
@@ -1444,6 +2137,89 @@ public class NetAppFilesService(
         catch (Exception ex)
         {
             throw new Exception($"Error creating NetApp Files volume group '{volumeGroup}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<VolumeGroupCreateResult> UpdateVolumeGroup(
+        string account,
+        string volumeGroup,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? groupDescription = null,
+        Dictionary<string, string>? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(volumeGroup), volumeGroup),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+                "Microsoft.NetApp/netAppAccounts/volumeGroups",
+                "2024-03-01",
+                tenant,
+                retryPolicy,
+                cancellationToken);
+
+            var resourceId = new ResourceIdentifier(
+                $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/volumeGroups/{volumeGroup}");
+
+            var updateContent = new VolumeGroupCreateOrUpdateContent
+            {
+                Location = location,
+                Tags = tags,
+                Properties = new VolumeGroupCreateProperties
+                {
+                    GroupMetaData = new VolumeGroupCreateMetaData
+                    {
+                        GroupDescription = groupDescription
+                    }
+                }
+            };
+
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                resourceId,
+                location,
+                updateContent,
+                NetAppFilesJsonContext.Default.VolumeGroupCreateOrUpdateContent,
+                cancellationToken);
+
+            if (!result.HasData)
+            {
+                return new VolumeGroupCreateResult(
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    ResourceGroup: null,
+                    ProvisioningState: null,
+                    GroupMetaDataApplicationType: null,
+                    GroupMetaDataApplicationIdentifier: null,
+                    GroupMetaDataDescription: null);
+            }
+
+            return new VolumeGroupCreateResult(
+                Id: result.Data.Id.ToString(),
+                Name: result.Data.Name,
+                Type: result.Data.ResourceType.ToString(),
+                Location: result.Data.Location,
+                ResourceGroup: resourceGroup,
+                ProvisioningState: GetPropertyString(result.Data.Properties, "provisioningState"),
+                GroupMetaDataApplicationType: GetNestedPropertyString(result.Data.Properties, "groupMetaData", "applicationType"),
+                GroupMetaDataApplicationIdentifier: GetNestedPropertyString(result.Data.Properties, "groupMetaData", "applicationIdentifier"),
+                GroupMetaDataDescription: GetNestedPropertyString(result.Data.Properties, "groupMetaData", "groupDescription"));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error updating NetApp Files volume group '{volumeGroup}': {ex.Message}", ex);
         }
     }
 

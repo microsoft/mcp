@@ -13,6 +13,10 @@ internal sealed class BackupVaultCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public BackupVaultCreateProperties? Properties { get; set; }
 }

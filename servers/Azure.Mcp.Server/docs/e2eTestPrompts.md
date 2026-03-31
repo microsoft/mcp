@@ -625,22 +625,41 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp-netappfiles-account-get | Get details of NetApp Files account <account_name> in subscription <subscription_name> |
 | azmcp-netappfiles-account-create | Create a new NetApp Files account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
 | azmcp-netappfiles-account-create | Create a NetApp Files account named <account_name> in <resource_group> in westus2 for subscription <subscription_name> |
+| azmcp-netappfiles-account-update | Update the NetApp Files account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-account-update | Update the NetApp Files account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus and tags {"env":"prod","team":"storage"} |
 | azmcp-netappfiles-backup-create | Create a NetApp Files backup <backup_name> in backup vault <vault_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus and volume resource ID <volume_resource_id> |
 | azmcp-netappfiles-backup-create | Create a backup named <backup_name> in vault <vault_name> for NetApp Files account <account_name> in <resource_group> in westus2 with volume <volume_resource_id> and label daily-backup |
+| azmcp-netappfiles-backup-update | Update the NetApp Files backup <backup_name> in backup vault <vault_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-backup-update | Update the backup named <backup_name> in vault <vault_name> for NetApp Files account <account_name> in <resource_group> in westus2 with label updated-label |
 | azmcp-netappfiles-backuppolicy-create | Create a NetApp Files backup policy <policy_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
 | azmcp-netappfiles-backuppolicy-create | Create a backup policy named <policy_name> for NetApp Files account <account_name> in <resource_group> in westus2 with 5 daily, 2 weekly, and 1 monthly backups to keep |
 | azmcp-netappfiles-backuppolicy-get | List all NetApp Files backup policies in my subscription <subscription_name> |
 | azmcp-netappfiles-backuppolicy-get | Get the backup policy <policy_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-backuppolicy-update | Update the NetApp Files backup policy <policy_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-backuppolicy-update | Update the backup policy named <policy_name> for NetApp Files account <account_name> in <resource_group> in westus2 with 5 daily, 2 weekly, and 1 monthly backups to keep |
 | azmcp-netappfiles-backupvault-get | List all NetApp Files backup vaults in my subscription <subscription_name> |
 | azmcp-netappfiles-backupvault-get | Get details of backup vault <vault_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-backupvault-create | Create a NetApp Files backup vault <vault_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-backupvault-update | Update the NetApp Files backup vault <vault_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-backupvault-update | Update the backup vault named <vault_name> for NetApp Files account <account_name> in <resource_group> in westus2 with tags {"env":"prod","team":"storage"} |
 | azmcp-netappfiles-pool-get | List all NetApp Files capacity pools in my subscription <subscription_name> |
 | azmcp-netappfiles-pool-get | Get details of capacity pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
 | azmcp-netappfiles-pool-create | Create a NetApp Files capacity pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus and size 4398046511104 bytes |
 | azmcp-netappfiles-pool-create | Create a Premium tier capacity pool named <pool_name> for NetApp Files account <account_name> in resource group <resource_group> in subscription <subscription_name> with location westus2, size 4398046511104, and QoS type Auto |
+| azmcp-netappfiles-pool-update | Update the NetApp Files capacity pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-pool-update | Update the capacity pool named <pool_name> for NetApp Files account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus, size 8796093022208, and tags {"env":"prod","team":"storage"} |
 | azmcp-netappfiles-snapshot-get | List all NetApp Files snapshots in my subscription <subscription_name> |
 | azmcp-netappfiles-snapshot-get | Get details of snapshot <snapshot_name> for volume <volume_name> in pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
 | azmcp-netappfiles-snapshot-create | Create a NetApp Files snapshot <snapshot_name> for volume <volume_name> in pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
 | azmcp-netappfiles-snapshot-create | Create a snapshot named <snapshot_name> for NetApp Files volume <volume_name> in pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location westus2 |
+| azmcp-netappfiles-snapshot-update | Update the NetApp Files snapshot <snapshot_name> for volume <volume_name> in pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-snapshot-update | Update the snapshot named <snapshot_name> for NetApp Files volume <volume_name> in pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location westus2 |
+| azmcp-netappfiles-snapshotpolicy-create | Create a NetApp Files snapshot policy <policy_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-snapshotpolicy-create | Create a snapshot policy named <policy_name> for NetApp Files account <account_name> in <resource_group> in westus2 with hourly snapshots every 30 minutes keeping 5, daily at hour 12 minute 0 keeping 7, weekly on Monday keeping 4, and monthly on days 1,15 keeping 2 |
+| azmcp-netappfiles-snapshotpolicy-get | List all NetApp Files snapshot policies in my subscription <subscription_name> |
+| azmcp-netappfiles-snapshotpolicy-get | Get the snapshot policy <policy_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-snapshotpolicy-update | Update the NetApp Files snapshot policy <policy_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
+| azmcp-netappfiles-snapshotpolicy-update | Update the snapshot policy named <policy_name> for NetApp Files account <account_name> in <resource_group> in westus2 with hourly snapshots every 15 minutes keeping 3, daily at hour 8 minute 0 keeping 5, weekly on Friday keeping 2, and monthly on day 1 keeping 1 |
 | azmcp-netappfiles-volume-get | List all NetApp Files volumes in my subscription <subscription_name> |
 | azmcp-netappfiles-volume-get | Get details of volume <volume_name> in pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
 | azmcp-netappfiles-volume-create | Create a new NetApp Files volume <volume_name> in pool <pool_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus, creation token <volume_name>, usage threshold 107374182400 bytes, and subnet <subnet_id> |
@@ -649,6 +668,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp-netappfiles-volume-get | Get details of volume <volume_name> in pool <pool_name> for NetApp Files account <account_name> in subscription <subscription_name> |
 | azmcp-netappfiles-volumegroup-get | List all NetApp Files volume groups in my subscription <subscription_name> |
 | azmcp-netappfiles-volumegroup-get | Get details of volume group <volume_group_name> for NetApp Files account <account_name> in subscription <subscription_name> |
+| azmcp-netappfiles-volumegroup-create | Create a new NetApp Files volume group <volume_group_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus, application type SAP-HANA, and application identifier SH1 |
+| azmcp-netappfiles-volumegroup-update | Update NetApp Files volume group <volume_group_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus and group description "Updated description" |
+| azmcp-netappfiles-volumegroup-update | Update tags on NetApp Files volume group <volume_group_name> for account <account_name> in resource group <resource_group> in subscription <subscription_name> with location eastus |
 
 ## Azure Marketplace
 

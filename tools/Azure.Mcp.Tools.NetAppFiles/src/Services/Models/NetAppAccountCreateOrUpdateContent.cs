@@ -13,6 +13,10 @@ internal sealed class NetAppAccountCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public NetAppAccountCreateProperties? Properties { get; set; }
 }

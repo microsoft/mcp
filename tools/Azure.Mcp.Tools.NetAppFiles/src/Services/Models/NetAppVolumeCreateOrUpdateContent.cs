@@ -15,6 +15,9 @@ internal sealed class NetAppVolumeCreateOrUpdateContent
 
     [JsonPropertyName("properties")]
     public NetAppVolumeCreateProperties? Properties { get; set; }
+
+    [JsonPropertyName("tags")]
+    public Dictionary<string, string>? Tags { get; set; }
 }
 
 internal sealed class NetAppVolumeCreateProperties

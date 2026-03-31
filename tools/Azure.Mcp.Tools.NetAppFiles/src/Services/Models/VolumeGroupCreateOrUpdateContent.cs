@@ -13,6 +13,9 @@ internal sealed class VolumeGroupCreateOrUpdateContent
     [JsonPropertyName("location")]
     public string? Location { get; set; }
 
+    [JsonPropertyName("tags")]
+    public Dictionary<string, string>? Tags { get; set; }
+
     [JsonPropertyName("properties")]
     public VolumeGroupCreateProperties? Properties { get; set; }
 }

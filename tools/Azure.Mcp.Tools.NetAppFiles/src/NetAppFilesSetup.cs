@@ -30,23 +30,32 @@ public class NetAppFilesSetup : IAreaSetup
 
         services.AddSingleton<AccountCreateCommand>();
         services.AddSingleton<AccountGetCommand>();
+        services.AddSingleton<AccountUpdateCommand>();
         services.AddSingleton<BackupCreateCommand>();
+        services.AddSingleton<BackupUpdateCommand>();
         services.AddSingleton<BackupPolicyCreateCommand>();
         services.AddSingleton<BackupGetCommand>();
         services.AddSingleton<BackupPolicyGetCommand>();
+        services.AddSingleton<BackupPolicyUpdateCommand>();
         services.AddSingleton<BackupVaultGetCommand>();
         services.AddSingleton<BackupVaultCreateCommand>();
+        services.AddSingleton<BackupVaultUpdateCommand>();
         services.AddSingleton<PoolCreateCommand>();
         services.AddSingleton<PoolGetCommand>();
+        services.AddSingleton<PoolUpdateCommand>();
         services.AddSingleton<ReplicationStatusGetCommand>();
         services.AddSingleton<SnapshotCreateCommand>();
         services.AddSingleton<SnapshotGetCommand>();
+        services.AddSingleton<SnapshotUpdateCommand>();
         services.AddSingleton<SnapshotPolicyCreateCommand>();
         services.AddSingleton<SnapshotPolicyGetCommand>();
+        services.AddSingleton<SnapshotPolicyUpdateCommand>();
         services.AddSingleton<VolumeGetCommand>();
         services.AddSingleton<VolumeCreateCommand>();
+        services.AddSingleton<VolumeUpdateCommand>();
         services.AddSingleton<VolumeGroupCreateCommand>();
         services.AddSingleton<VolumeGroupGetCommand>();
+        services.AddSingleton<VolumeGroupUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -72,7 +81,11 @@ public class NetAppFilesSetup : IAreaSetup
         var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
         account.AddCommand(accountGet.Name, accountGet);
 
-        var backup = new CommandGroup("backup", "NetApp Files backup operations - Commands for listing and getting NetApp Files backups in your Azure subscription.");
+        var accountUpdate = serviceProvider.GetRequiredService<AccountUpdateCommand>();
+        account.AddCommand(accountUpdate.Name, accountUpdate);
+
+        var backup = new CommandGroup("backup", "NetApp Files backup operations - Commands for creating and managing NetApp Files backups in your Azure subscription.");
+
         netAppFiles.AddSubGroup(backup);
 
         var backupGet = serviceProvider.GetRequiredService<BackupGetCommand>();
@@ -80,6 +93,9 @@ public class NetAppFilesSetup : IAreaSetup
 
         var backupCreate = serviceProvider.GetRequiredService<BackupCreateCommand>();
         backup.AddCommand(backupCreate.Name, backupCreate);
+
+        var backupUpdate = serviceProvider.GetRequiredService<BackupUpdateCommand>();
+        backup.AddCommand(backupUpdate.Name, backupUpdate);
 
         var backupPolicy = new CommandGroup("backuppolicy", "NetApp Files backup policy operations - Commands for listing and managing NetApp Files backup policies in your Azure subscription.");
         netAppFiles.AddSubGroup(backupPolicy);
@@ -90,6 +106,9 @@ public class NetAppFilesSetup : IAreaSetup
         var backupPolicyGet = serviceProvider.GetRequiredService<BackupPolicyGetCommand>();
         backupPolicy.AddCommand(backupPolicyGet.Name, backupPolicyGet);
 
+        var backupPolicyUpdate = serviceProvider.GetRequiredService<BackupPolicyUpdateCommand>();
+        backupPolicy.AddCommand(backupPolicyUpdate.Name, backupPolicyUpdate);
+
         var backupVault = new CommandGroup("backupvault", "NetApp Files backup vault operations - Commands for listing and managing NetApp Files backup vaults in your Azure subscription.");
         netAppFiles.AddSubGroup(backupVault);
 
@@ -99,6 +118,9 @@ public class NetAppFilesSetup : IAreaSetup
         var backupVaultCreate = serviceProvider.GetRequiredService<BackupVaultCreateCommand>();
         backupVault.AddCommand(backupVaultCreate.Name, backupVaultCreate);
 
+        var backupVaultUpdate = serviceProvider.GetRequiredService<BackupVaultUpdateCommand>();
+        backupVault.AddCommand(backupVaultUpdate.Name, backupVaultUpdate);
+
         var pool = new CommandGroup("pool", "NetApp Files capacity pool operations - Commands for listing and managing NetApp Files capacity pools in your Azure subscription.");
         netAppFiles.AddSubGroup(pool);
 
@@ -107,6 +129,9 @@ public class NetAppFilesSetup : IAreaSetup
 
         var poolGet = serviceProvider.GetRequiredService<PoolGetCommand>();
         pool.AddCommand(poolGet.Name, poolGet);
+
+        var poolUpdate = serviceProvider.GetRequiredService<PoolUpdateCommand>();
+        pool.AddCommand(poolUpdate.Name, poolUpdate);
 
         var replicationStatus = new CommandGroup("replicationstatus", "NetApp Files replication status operations - Commands for listing and getting replication status of NetApp Files volumes in your Azure subscription.");
         netAppFiles.AddSubGroup(replicationStatus);
@@ -123,6 +148,9 @@ public class NetAppFilesSetup : IAreaSetup
         var snapshotGet = serviceProvider.GetRequiredService<SnapshotGetCommand>();
         snapshot.AddCommand(snapshotGet.Name, snapshotGet);
 
+        var snapshotUpdate = serviceProvider.GetRequiredService<SnapshotUpdateCommand>();
+        snapshot.AddCommand(snapshotUpdate.Name, snapshotUpdate);
+
         var snapshotPolicy = new CommandGroup("snapshotpolicy", "NetApp Files snapshot policy operations - Commands for listing and managing NetApp Files snapshot policies in your Azure subscription.");
         netAppFiles.AddSubGroup(snapshotPolicy);
 
@@ -131,6 +159,9 @@ public class NetAppFilesSetup : IAreaSetup
 
         var snapshotPolicyGet = serviceProvider.GetRequiredService<SnapshotPolicyGetCommand>();
         snapshotPolicy.AddCommand(snapshotPolicyGet.Name, snapshotPolicyGet);
+
+        var snapshotPolicyUpdate = serviceProvider.GetRequiredService<SnapshotPolicyUpdateCommand>();
+        snapshotPolicy.AddCommand(snapshotPolicyUpdate.Name, snapshotPolicyUpdate);
 
         var volume = new CommandGroup("volume", "NetApp Files volume operations - Commands for listing and managing NetApp Files volumes in your Azure subscription.");
         netAppFiles.AddSubGroup(volume);
@@ -141,6 +172,9 @@ public class NetAppFilesSetup : IAreaSetup
         var volumeCreate = serviceProvider.GetRequiredService<VolumeCreateCommand>();
         volume.AddCommand(volumeCreate.Name, volumeCreate);
 
+        var volumeUpdate = serviceProvider.GetRequiredService<VolumeUpdateCommand>();
+        volume.AddCommand(volumeUpdate.Name, volumeUpdate);
+
         var volumeGroup = new CommandGroup("volumegroup", "NetApp Files volume group operations - Commands for listing and managing NetApp Files volume groups in your Azure subscription.");
         netAppFiles.AddSubGroup(volumeGroup);
 
@@ -149,6 +183,9 @@ public class NetAppFilesSetup : IAreaSetup
 
         var volumeGroupGet = serviceProvider.GetRequiredService<VolumeGroupGetCommand>();
         volumeGroup.AddCommand(volumeGroupGet.Name, volumeGroupGet);
+
+        var volumeGroupUpdate = serviceProvider.GetRequiredService<VolumeGroupUpdateCommand>();
+        volumeGroup.AddCommand(volumeGroupUpdate.Name, volumeGroupUpdate);
 
         return netAppFiles;
     }

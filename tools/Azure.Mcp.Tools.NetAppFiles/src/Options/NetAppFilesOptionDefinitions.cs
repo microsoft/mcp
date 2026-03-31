@@ -41,6 +41,7 @@ public static class NetAppFilesOptionDefinitions
     public const string ApplicationTypeName = "applicationType";
     public const string ApplicationIdentifierName = "applicationIdentifier";
     public const string GroupDescriptionName = "groupDescription";
+    public const string TagsName = "tags";
 
     public static readonly Option<string> Account = new($"--{AccountName}")
     {
@@ -255,6 +256,12 @@ public static class NetAppFilesOptionDefinitions
     public static readonly Option<string> GroupDescription = new($"--{GroupDescriptionName}")
     {
         Description = "A description for the volume group (e.g., 'Volume group for SAP HANA').",
+        Required = false
+    };
+
+    public static readonly Option<string> Tags = new($"--{TagsName}")
+    {
+        Description = "Tags for the account in JSON format (e.g., '{\"key1\":\"value1\",\"key2\":\"value2\"}').",
         Required = false
     };
 }
