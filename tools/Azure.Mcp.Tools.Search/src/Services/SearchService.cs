@@ -317,6 +317,7 @@ public sealed class SearchService(
 
     private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
+        ValidateServiceName(serviceName);
         var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, _tenantService.CloudConfiguration.CloudType.ToString());
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
@@ -380,6 +381,53 @@ public sealed class SearchService(
     private static FieldInfo MapToFieldInfo(SearchField field)
         => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
             field.IsFacetable, field.IsHidden != true);
+
+    internal static void ValidateServiceName(string serviceName)
+    {
+        if (string.IsNullOrWhiteSpace(serviceName))
+        {
+            throw new ArgumentException("Service name cannot be null or empty.", nameof(serviceName));
+        }
+
+        if (serviceName.Length < 2 || serviceName.Length > 60)
+        {
+            throw new ArgumentException(
+                $"Service name must be between 2 and 60 characters in length. Got length: {serviceName.Length}.", nameof(serviceName));
+        }
+
+        foreach (var c in serviceName)
+        {
+            if (!char.IsAsciiLetterOrDigit(c) && c != '-')
+            {
+                throw new ArgumentException(
+                    $"Service name contains invalid character '{c}'. Only lowercase letters, digits, and hyphens are allowed.", nameof(serviceName));
+            }
+
+            if (char.IsAsciiLetter(c) && !char.IsAsciiLetterLower(c))
+            {
+                throw new ArgumentException(
+                    $"Service name contains uppercase character '{c}'. Only lowercase letters, digits, and hyphens are allowed.", nameof(serviceName));
+            }
+        }
+
+        if (serviceName[0] == '-' || serviceName[1] == '-')
+        {
+            throw new ArgumentException(
+                "Service name cannot use a dash as the first or second character.", nameof(serviceName));
+        }
+
+        if (serviceName[^1] == '-')
+        {
+            throw new ArgumentException(
+                "Service name cannot end with a dash.", nameof(serviceName));
+        }
+
+        if (serviceName.Contains("--", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "Service name cannot contain consecutive dashes.", nameof(serviceName));
+        }
+    }
 
     private string GetSearchEndpoint(string serviceName)
     {
