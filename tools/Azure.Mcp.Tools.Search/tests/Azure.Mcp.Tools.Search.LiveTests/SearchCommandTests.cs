@@ -6,6 +6,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.LiveTests;
@@ -13,7 +14,19 @@ namespace Azure.Mcp.Tools.Search.LiveTests;
 public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string IndexName = "products";
-    private const string SanitizedValue = "Sanitized";
+    private const string SanitizedValue = "sanitized";
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+
+    public override bool EnableDefaultSanitizerAdditions => false;
+
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+        if (Settings.TestMode == TestMode.Playback)
+        {
+            Settings.ResourceBaseName = SanitizedValue;
+        }
+    }
 
     /// <summary>
     /// AZSDK3493 = $..name
@@ -22,6 +35,20 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     [
         ..base.DisabledDefaultSanitizers,
         "AZSDK3493"
+    ];
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+    [
+        new(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = SanitizedValue,
+        }),
+        new(new GeneralRegexSanitizerBody()
+        {
+            Regex = Settings.SubscriptionId,
+            Value = EmptyGuid,
+        }),
     ];
 
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
