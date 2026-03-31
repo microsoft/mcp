@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.Mcp.Core.Areas.Server.Commands;
+namespace Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 
 // This is intentionally placed after the namespace declaration to avoid
 // conflicts with Microsoft.Mcp.Core.Areas.Server.Options
