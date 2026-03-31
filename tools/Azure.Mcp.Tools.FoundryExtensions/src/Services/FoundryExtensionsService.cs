@@ -8,7 +8,6 @@ using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -19,6 +18,7 @@ using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
