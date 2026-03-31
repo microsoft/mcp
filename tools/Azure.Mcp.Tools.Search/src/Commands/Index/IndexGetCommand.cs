@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;

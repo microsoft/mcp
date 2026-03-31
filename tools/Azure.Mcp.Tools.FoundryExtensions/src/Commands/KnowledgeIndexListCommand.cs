@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;

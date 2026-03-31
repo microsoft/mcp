@@ -3,10 +3,10 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;

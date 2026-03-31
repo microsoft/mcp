@@ -3,14 +3,14 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand<TOptions>

@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas.Subscription.Models;
 using Azure.Mcp.Core.Areas.Subscription.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
