@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.Search.LiveTests;
 public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string IndexName = "products";
-    private const string SanitizedValue = "Sanitized";
+    private const string SanitizedValue = "sanitized";
 
     /// <summary>
     /// AZSDK3493 = $..name
