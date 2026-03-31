@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Mcp.Core.Commands;
 
-namespace Azure.Mcp.Core.Areas.Tools;
+namespace Microsoft.Mcp.Core.Areas.Tools;
 
 public sealed class ToolsSetup : IAreaSetup
 {
