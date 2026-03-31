@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;

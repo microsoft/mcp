@@ -6,7 +6,7 @@ using System.Text;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Extensions for parsing command options from dictionary arguments

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Commands;

@@ -3,7 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Commands.Extensions;
