@@ -95,7 +95,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),

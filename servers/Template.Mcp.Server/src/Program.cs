@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -73,7 +72,7 @@ internal class Program
         return [
             // Register core areas
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup()
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup()
             // Register template areas
         ];
     }
