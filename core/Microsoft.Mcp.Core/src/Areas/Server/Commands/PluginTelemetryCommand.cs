@@ -183,6 +183,7 @@ public sealed class PluginTelemetryCommand(
         command.Options.Add(PluginTelemetryOptionDefinitions.EventType);
         command.Options.Add(PluginTelemetryOptionDefinitions.SessionId);
         command.Options.Add(PluginTelemetryOptionDefinitions.ClientType);
+        command.Options.Add(PluginTelemetryOptionDefinitions.ClientName);
         command.Options.Add(PluginTelemetryOptionDefinitions.PluginName);
         command.Options.Add(PluginTelemetryOptionDefinitions.PluginVersion);
         command.Options.Add(PluginTelemetryOptionDefinitions.SkillName);
@@ -199,6 +200,7 @@ public sealed class PluginTelemetryCommand(
             EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
             SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
             ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
+            ClientName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientName.Name),
             PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
             PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
             SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
@@ -312,6 +314,7 @@ public sealed class PluginTelemetryCommand(
                 ("Plugin_EventType", options.EventType),
                 ("Plugin_SessionId", options.SessionId),
                 ("Plugin_ClientType", options.ClientType),
+                ("Plugin_ClientName", options.ClientName),
                 ("Plugin_PluginName", options.PluginName),
                 ("Plugin_PluginVersion", options.PluginVersion),
                 ("Plugin_SkillName", options.SkillName),
