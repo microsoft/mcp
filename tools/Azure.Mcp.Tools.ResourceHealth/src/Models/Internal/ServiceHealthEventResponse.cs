@@ -47,16 +47,13 @@ internal class ServiceHealthEventProperties
     public string? TrackingId { get; set; }
 
     [JsonPropertyName("impactStartTime")]
-    [JsonConverter(typeof(LenientNullableDateTimeOffsetConverter))]
-    public DateTimeOffset? ImpactStartTime { get; set; }
+    public string? ImpactStartTime { get; set; }
 
     [JsonPropertyName("impactMitigationTime")]
-    [JsonConverter(typeof(LenientNullableDateTimeOffsetConverter))]
-    public DateTimeOffset? ImpactMitigationTime { get; set; }
+    public string? ImpactMitigationTime { get; set; }
 
     [JsonPropertyName("lastUpdateTime")]
-    [JsonConverter(typeof(LenientNullableDateTimeOffsetConverter))]
-    public DateTimeOffset? LastUpdateTime { get; set; }
+    public string? LastUpdateTime { get; set; }
 
     [JsonPropertyName("communicationId")]
     public string? CommunicationId { get; set; }

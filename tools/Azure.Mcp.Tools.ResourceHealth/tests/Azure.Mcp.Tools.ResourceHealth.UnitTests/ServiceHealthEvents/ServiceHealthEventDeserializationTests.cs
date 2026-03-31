@@ -40,11 +40,11 @@ public class ServiceHealthEventDeserializationTests
         // Assert
         Assert.NotNull(result?.Value);
         Assert.Single(result.Value);
-        var evt = result.Value[0];
-        Assert.Equal("Active issue", evt.Properties?.Title);
-        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), evt.Properties?.ImpactStartTime);
-        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), evt.Properties?.ImpactMitigationTime);
-        Assert.Equal(new DateTimeOffset(2025, 3, 15, 12, 0, 0, TimeSpan.Zero), evt.Properties?.LastUpdateTime);
+        var evt = result.Value[0].ToServiceHealthEvent("sub1");
+        Assert.Equal("Active issue", evt.Title);
+        Assert.Equal(new DateTimeOffset(2025, 3, 1, 10, 0, 0, TimeSpan.Zero), evt.StartTime);
+        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), evt.EndTime);
+        Assert.Equal(new DateTimeOffset(2025, 3, 15, 12, 0, 0, TimeSpan.Zero), evt.LastModified);
     }
 
     [Fact]
@@ -76,8 +76,9 @@ public class ServiceHealthEventDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var evt = result.Value[0];
-        Assert.Equal(new DateTimeOffset(2025, 3, 2, 15, 30, 0, TimeSpan.Zero), evt.Properties?.ImpactMitigationTime);
+        Assert.Single(result.Value);
+        var evt = result.Value[0].ToServiceHealthEvent();
+        Assert.Equal(new DateTimeOffset(2025, 3, 2, 15, 30, 0, TimeSpan.Zero), evt.EndTime);
     }
 
     [Fact]
@@ -106,10 +107,11 @@ public class ServiceHealthEventDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var evt = result.Value[0];
-        Assert.Null(evt.Properties?.ImpactStartTime);
-        Assert.Null(evt.Properties?.ImpactMitigationTime);
-        Assert.Null(evt.Properties?.LastUpdateTime);
+        Assert.Single(result.Value);
+        var evt = result.Value[0].ToServiceHealthEvent();
+        Assert.Null(evt.StartTime);
+        Assert.Null(evt.EndTime);
+        Assert.Null(evt.LastModified);
     }
 
     [Fact]
@@ -141,10 +143,11 @@ public class ServiceHealthEventDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
-        var evt = result.Value[0];
-        Assert.Equal(TimeSpan.Zero, evt.Properties?.ImpactStartTime?.Offset);
-        Assert.Equal(TimeSpan.Zero, evt.Properties?.ImpactMitigationTime?.Offset);
-        Assert.Equal(TimeSpan.Zero, evt.Properties?.LastUpdateTime?.Offset);
+        Assert.Single(result.Value);
+        var evt = result.Value[0].ToServiceHealthEvent();
+        Assert.Equal(TimeSpan.Zero, evt.StartTime?.Offset);
+        Assert.Equal(TimeSpan.Zero, evt.EndTime?.Offset);
+        Assert.Equal(TimeSpan.Zero, evt.LastModified?.Offset);
     }
 
     [Fact]
@@ -189,8 +192,10 @@ public class ServiceHealthEventDeserializationTests
 
         // Assert
         Assert.NotNull(result?.Value);
+        var resolved = result.Value[0].ToServiceHealthEvent();
+        var active = result.Value[1].ToServiceHealthEvent();
         Assert.Equal(2, result.Value.Count);
-        Assert.Equal(new DateTimeOffset(2025, 2, 1, 12, 0, 0, TimeSpan.Zero), result.Value[0].Properties?.ImpactMitigationTime);
-        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), result.Value[1].Properties?.ImpactMitigationTime);
+        Assert.Equal(new DateTimeOffset(2025, 2, 1, 12, 0, 0, TimeSpan.Zero), resolved.EndTime);
+        Assert.Equal(new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero), active.EndTime);
     }
 }
