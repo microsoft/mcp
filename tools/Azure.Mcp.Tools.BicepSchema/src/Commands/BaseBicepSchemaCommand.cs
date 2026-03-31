@@ -3,8 +3,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.BicepSchema.Options;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands;
 

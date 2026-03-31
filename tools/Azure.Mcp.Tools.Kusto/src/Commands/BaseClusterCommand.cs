@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Kusto.Options;

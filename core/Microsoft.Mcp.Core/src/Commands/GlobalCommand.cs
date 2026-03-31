@@ -76,7 +76,7 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();

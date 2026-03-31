@@ -4,10 +4,10 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 

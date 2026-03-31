@@ -4,8 +4,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Storage.Commands;
 

@@ -3,9 +3,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 

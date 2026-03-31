@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Elicitation;
+using Microsoft.Mcp.Core.Extensions;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
