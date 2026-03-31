@@ -3,5 +3,4 @@
 
 global using System.CommandLine;
 global using System.Text.Json;
-global using Azure.Mcp.Core.Extensions;
 global using Microsoft.Mcp.Core.Extensions;
