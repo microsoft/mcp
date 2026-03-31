@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using System.Text.RegularExpressions;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -22,7 +23,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
-public sealed class SearchService(
+public sealed partial class SearchService(
     ISubscriptionService subscriptionService,
     ICacheService cacheService,
     ITenantService tenantService,
@@ -317,6 +318,7 @@ public sealed class SearchService(
 
     private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
+        ValidateServiceName(serviceName);
         var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, _tenantService.CloudConfiguration.CloudType.ToString());
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
@@ -380,6 +382,37 @@ public sealed class SearchService(
     private static FieldInfo MapToFieldInfo(SearchField field)
         => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
             field.IsFacetable, field.IsHidden != true);
+
+    // Service name pattern: lowercase letters, digits, hyphens; 2-60 chars; must start and end with alphanumeric.
+    // Consecutive dashes must be checked separately as the regex pattern does not prevent them.
+    [GeneratedRegex(@"^[a-z0-9][a-z0-9\-]{0,58}[a-z0-9]$")]
+    private static partial Regex ServiceNamePattern();
+
+    internal static void ValidateServiceName(string serviceName)
+    {
+        if (string.IsNullOrWhiteSpace(serviceName))
+        {
+            throw new ArgumentException("Service name cannot be null or empty.", nameof(serviceName));
+        }
+
+        if (!ServiceNamePattern().IsMatch(serviceName))
+        {
+            throw new ArgumentException(
+                "Service name must only contain lowercase letters, digits, or dashes, cannot start or end with dashes, and must be between 2 and 60 characters in length.", nameof(serviceName));
+        }
+
+        if (serviceName.Contains("--", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "Service name cannot contain consecutive dashes.", nameof(serviceName));
+        }
+
+        if (string.Equals(serviceName, "ext", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "Service name 'ext' is reserved and cannot be used.", nameof(serviceName));
+        }
+    }
 
     private string GetSearchEndpoint(string serviceName)
     {
