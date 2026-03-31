@@ -8,6 +8,7 @@ using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Core.Commands;
 

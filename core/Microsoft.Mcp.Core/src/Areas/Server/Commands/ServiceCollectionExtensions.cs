@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Extensions;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AppLens.Options.Resource;
 using Azure.Mcp.Tools.AppLens.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
