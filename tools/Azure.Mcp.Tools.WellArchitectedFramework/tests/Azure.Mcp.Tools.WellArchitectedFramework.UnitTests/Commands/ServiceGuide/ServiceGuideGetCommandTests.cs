@@ -105,10 +105,10 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize<List<string>>(json);
-        
+
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains("Azure Well-Architected Framework service guides are available for the following services:", result[0]);
@@ -134,12 +134,12 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize<List<string>>(json);
 
         var serviceGuideUrlPrefix = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides";
-        
+
         Assert.NotNull(result);
         Assert.Single(result);
         // Check for the key parts of the multi-line response
@@ -162,10 +162,10 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize<List<string>>(json);
-        
+
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result[0]);
@@ -206,13 +206,13 @@ public class ServiceGuideGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize<List<string>>(json);
-        
+
         Assert.NotNull(result);
         Assert.Single(result);
-        
+
         // Should return guidance URL (not the "not available" message)
         Assert.Contains("For detailed Azure Well-Architected Framework guidance on", result[0]);
         Assert.Contains("please refer to the markdown file at this URL:", result[0]);
@@ -246,13 +246,13 @@ public class ServiceGuideGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        
+
         if (shouldSucceed)
         {
             // Verify the command executes successfully
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
-            
+
             // Verify the service name was parsed correctly by checking the bound options
             var options = typeof(ServiceGuideGetCommand)
                 .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)

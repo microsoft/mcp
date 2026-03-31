@@ -21,12 +21,12 @@
     <Project Path="./tests/Fabric.Mcp.Server.UnitTests/Fabric.Mcp.Server.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/" />
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/src/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.Core/src/Fabric.Mcp.Tools.Core.csproj" />
   </Folder>
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/src/">
@@ -35,11 +35,11 @@
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/tests/">
     <Project Path="../../tools/Fabric.Mcp.Tools.Docs/tests/Fabric.Mcp.Tools.Docs.UnitTests/Fabric.Mcp.Tools.Docs.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/tools/Fabric.Mcp.Tools.Core/" />
-  <Folder Name="/tools/Fabric.Mcp.Tools.Core/src/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.Core/src/Fabric.Mcp.Tools.Core.csproj" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
   </Folder>
-  <Folder Name="/tools/Fabric.Mcp.Tools.Core/tests/">
-    <Project Path="../../tools/Fabric.Mcp.Tools.Core/tests/Fabric.Mcp.Tools.Core.UnitTests/Fabric.Mcp.Tools.Core.UnitTests.csproj" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
+    <Project Path="../../tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
   </Folder>
 </Solution>
