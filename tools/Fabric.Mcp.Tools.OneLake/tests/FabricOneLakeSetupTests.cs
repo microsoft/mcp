@@ -1,67 +1,59 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Linq;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests;
 
-public class FabricOneLakeSetupTests
+public sealed class FabricOneLakeRegistrationTests
 {
+    private readonly FabricOneLakeSetup _setup = new();
     [Fact]
     public void ConfigureServices_RegistersAllServices()
     {
         // Arrange
         var services = new ServiceCollection();
-        var setup = new FabricOneLakeSetup();
 
         // Act
-        setup.ConfigureServices(services);
+        _setup.ConfigureServices(services);
 
         // Assert
         Assert.Contains(services, s => s.ServiceType == typeof(IOneLakeService));
     }
 
     [Fact]
-    public void Name_ReturnsCorrectValue()
+    public void AreaName_ReturnsCorrectValue()
     {
-        // Arrange
-        var setup = new FabricOneLakeSetup();
-
         // Act & Assert
-        Assert.Equal("onelake", setup.Name);
+        Assert.Equal("onelake", _setup.CommandDescriptors.Name);
     }
 
     [Fact]
-    public void RegisterCommands_RegistersAllOneLakeCommands()
+    public void GetCommandDescriptors_RegistersAllOneLakeCommands()
     {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricOneLakeSetup();
-        setup.ConfigureServices(services);
-        using var provider = services.BuildServiceProvider();
-
         // Act
-        var rootGroup = setup.RegisterCommands(provider);
+        var descriptor = _setup.CommandDescriptors;
 
         // Assert - flat structure with verb_object naming
-        Assert.True(rootGroup.Commands.ContainsKey("list_workspaces"), "Should have list_workspaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_items"), "Should have list_items command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_items_dfs"), "Should have list_items_dfs command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_files"), "Should have list_files command");
-        Assert.True(rootGroup.Commands.ContainsKey("download_file"), "Should have download_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("upload_file"), "Should have upload_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete_file"), "Should have delete_file command");
-        Assert.True(rootGroup.Commands.ContainsKey("create_directory"), "Should have create_directory command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete_directory"), "Should have delete_directory command");
+        Assert.NotNull(descriptor);
+        Assert.Equal("onelake", descriptor.Name);
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_workspaces");
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_items");
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_items_dfs");
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_files");
+        Assert.Contains(descriptor.Commands, c => c.Name == "download_file");
+        Assert.Contains(descriptor.Commands, c => c.Name == "upload_file");
+        Assert.Contains(descriptor.Commands, c => c.Name == "delete_file");
+        Assert.Contains(descriptor.Commands, c => c.Name == "create_directory");
+        Assert.Contains(descriptor.Commands, c => c.Name == "delete_directory");
 
         // Table commands
-        Assert.True(rootGroup.Commands.ContainsKey("get_table_config"), "Should have get_table_config command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_tables"), "Should have list_tables command");
-        Assert.True(rootGroup.Commands.ContainsKey("get_table"), "Should have get_table command");
-        Assert.True(rootGroup.Commands.ContainsKey("list_table_namespaces"), "Should have list_table_namespaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("get_table_namespace"), "Should have get_table_namespace command");
+        Assert.Contains(descriptor.Commands, c => c.Name == "get_table_config");
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_tables");
+        Assert.Contains(descriptor.Commands, c => c.Name == "get_table");
+        Assert.Contains(descriptor.Commands, c => c.Name == "list_table_namespaces");
+        Assert.Contains(descriptor.Commands, c => c.Name == "get_table_namespace");
     }
 }

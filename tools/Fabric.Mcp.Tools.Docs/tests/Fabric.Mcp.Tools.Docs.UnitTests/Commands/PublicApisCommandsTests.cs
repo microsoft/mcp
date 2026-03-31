@@ -26,11 +26,6 @@ public class PublicApisCommandsTests
         var command = new ListWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("workloads", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("Available Fabric Workloads", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -45,7 +40,6 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("workloads", systemCommand.Name);
     }
 
     [Fact]
@@ -110,11 +104,6 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("platform-api-spec", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("Platform API Specification", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -129,7 +118,6 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("platform-api-spec", systemCommand.Name);
     }
 
     [Fact]
@@ -194,11 +182,6 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("workload-api-spec", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("Workload API Specification", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -213,7 +196,6 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("workload-api-spec", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

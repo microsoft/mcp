@@ -18,23 +18,6 @@ public class BestPracticesCommandsTests
     #region GetBestPracticesCommand Tests
 
     [Fact]
-    public void GetBestPracticesCommand_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetBestPracticesCommand>();
-
-        // Act
-        var command = new GetBestPracticesCommand(logger);
-
-        // Assert
-        Assert.Equal("best-practices", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("Best Practices", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-    }
-
-    [Fact]
     public void GetBestPracticesCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
@@ -46,8 +29,6 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("best-practices", systemCommand.Name);
-        // Options are registered dynamically, not statically in the Options collection
     }
 
     [Fact]
@@ -156,23 +137,6 @@ public class BestPracticesCommandsTests
     #region GetExamplesCommand Tests
 
     [Fact]
-    public void GetExamplesCommand_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetExamplesCommand>();
-
-        // Act
-        var command = new GetExamplesCommand(logger);
-
-        // Assert
-        Assert.Equal("api-examples", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("API Examples", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-    }
-
-    [Fact]
     public void GetExamplesCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
@@ -184,8 +148,6 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("api-examples", systemCommand.Name);
-        // Options are registered dynamically during command parsing
     }
 
     [Fact]
@@ -273,23 +235,6 @@ public class BestPracticesCommandsTests
     #region GetWorkloadDefinitionCommand Tests
 
     [Fact]
-    public void GetItemDefinitionCommand_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
-
-        // Act
-        var command = new GetWorkloadDefinitionCommand(logger);
-
-        // Assert
-        Assert.Equal("item-definitions", command.Name);
-        Assert.NotEmpty(command.Description);
-        Assert.Equal("Item Definitions", command.Title);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-    }
-
-    [Fact]
     public void GetItemDefinitionCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
@@ -301,8 +246,6 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("item-definitions", systemCommand.Name);
-        // Options are registered dynamically during command parsing
     }
 
     [Fact]

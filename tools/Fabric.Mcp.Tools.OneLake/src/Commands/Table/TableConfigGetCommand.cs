@@ -6,8 +6,8 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
@@ -17,21 +17,6 @@ public sealed class TableConfigGetCommand(
 {
     private readonly ILogger<TableConfigGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "bc15c475-0329-4cc3-aaa8-0e9f3fbde6f8";
-    public override string Name => "get_table_config";
-    public override string Title => "Get OneLake Table Configuration";
-    public override string Description => "Retrieves table API configuration for OneLake. Use this when the user needs to understand table access settings.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

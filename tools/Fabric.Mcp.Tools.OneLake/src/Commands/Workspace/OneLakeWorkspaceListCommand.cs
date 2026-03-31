@@ -18,21 +18,6 @@ public sealed class OneLakeWorkspaceListCommand(
     private readonly ILogger<OneLakeWorkspaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Id => "5f005a27-9838-4c09-9785-55ce49963c97";
-    public override string Name => "list_workspaces";
-    public override string Title => "List OneLake Workspaces";
-    public override string Description => "Lists all Fabric workspaces accessible via OneLake data plane API. Use this when the user needs to view available workspaces or select a workspace for data operations. Returns workspace names and IDs.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);

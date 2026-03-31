@@ -192,7 +192,7 @@ public sealed class NamespaceToolLoader(
         string? command = null;
         bool learn = false;
 
-        // In namespace mode, the name of the tool is also its IAreaSetup name.
+        // In namespace mode, the name of the tool is also its area registration name.
         Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         if (args != null)

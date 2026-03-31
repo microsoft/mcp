@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -20,21 +21,6 @@ public sealed class ItemCreateCommand(
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
-
-    public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
-    public override string Name => "create-item";
-    public override string Title => "Create Fabric Item";
-    public override string Description => "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

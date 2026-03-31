@@ -27,8 +27,6 @@ public class FileDeleteCommandTests
         var command = new FileDeleteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -93,26 +91,6 @@ public class FileDeleteCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new FileDeleteCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileDeleteCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.True(metadata.Destructive);
-        Assert.True(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 
     [Fact]

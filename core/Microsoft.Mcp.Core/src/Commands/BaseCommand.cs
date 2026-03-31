@@ -7,6 +7,7 @@ using System.Net;
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -18,20 +19,30 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
-    private readonly Command _command;
+    private Command? _command;
 
-    protected BaseCommand()
+    /// <summary>
+    /// Returns the command descriptor. Subclasses must provide a static
+    /// <c>GetDescriptor()</c> method and override this to delegate to it.
+    /// </summary>
+    public virtual CommandDescriptor GetDescriptor() =>
+        throw new NotImplementedException($"{GetType().Name} must override GetDescriptor().");
+
+    public virtual string Id => string.Empty;
+    public virtual string Name => GetType().Name;
+    public virtual string Description => string.Empty;
+    public virtual string Title => string.Empty;
+    public virtual ToolMetadata Metadata => new();
+
+    public Command GetCommand()
     {
-        _command = new Command(Name, Description);
-        RegisterOptions(_command);
+        if (_command is null)
+        {
+            _command = new Command(Name, Description);
+            RegisterOptions(_command);
+        }
+        return _command;
     }
-
-    public Command GetCommand() => _command;
-    public abstract string Id { get; }
-    public abstract string Name { get; }
-    public abstract string Description { get; }
-    public abstract string Title { get; }
-    public abstract ToolMetadata Metadata { get; }
 
     protected virtual void RegisterOptions(Command command)
     {

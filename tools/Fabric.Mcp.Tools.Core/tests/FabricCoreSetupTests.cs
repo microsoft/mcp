@@ -3,59 +3,50 @@
 
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 
 namespace Fabric.Mcp.Tools.Core.Tests;
 
-public class FabricCoreSetupTests
+public sealed class FabricCoreSetupTests
 {
+    private readonly FabricCoreSetup _setup = new();
     [Fact]
     public void ConfigureServices_RegistersAllServices()
     {
         // Arrange
         var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
 
         // Act
-        setup.ConfigureServices(services);
+        _setup.ConfigureServices(services);
 
         // Assert
         Assert.Contains(services, s => s.ServiceType == typeof(IFabricCoreService));
     }
 
     [Fact]
-    public void Name_ReturnsCorrectValue()
+    public void AreaName_ReturnsCorrectValue()
     {
-        // Arrange
-        var setup = new FabricCoreSetup();
-
         // Act & Assert
-        Assert.Equal("core", setup.Name);
+        Assert.Equal("core", _setup.CommandDescriptors.Name);
     }
 
     [Fact]
-    public void RegisterCommands_RegistersCoreCommands()
+    public void GetCommandDescriptors_RegistersCoreCommands()
     {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-        setup.ConfigureServices(services);
-        using var provider = services.BuildServiceProvider();
-
         // Act
-        var rootGroup = setup.RegisterCommands(provider);
+        var descriptor = _setup.CommandDescriptors;
 
         // Assert
-        Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
-        Assert.Single(rootGroup.Commands);
+        Assert.NotNull(descriptor);
+        Assert.Equal("core", descriptor.Name);
+        Assert.Single(descriptor.Commands);
+        Assert.Contains(descriptor.Commands, c => c.Name == "create-item");
     }
 
     [Fact]
-    public void Title_ReturnsCorrectValue()
+    public void AreaTitle_ReturnsCorrectValue()
     {
-        // Arrange
-        var setup = new FabricCoreSetup();
-
         // Act & Assert
-        Assert.Equal("Microsoft Fabric Core", setup.Title);
+        Assert.Equal("Microsoft Fabric Core", _setup.CommandDescriptors.Title);
     }
 }

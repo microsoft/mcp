@@ -23,12 +23,6 @@ public class DirectoryDeleteCommandTests
         var command = new DirectoryDeleteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("delete_directory", command.Name);
-        Assert.Equal("Delete OneLake Directory", command.Title);
-        Assert.Contains("Deletes a directory from OneLake storage", command.Description);
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -44,8 +38,6 @@ public class DirectoryDeleteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("delete_directory", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -81,26 +73,6 @@ public class DirectoryDeleteCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new DirectoryDeleteCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DirectoryDeleteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new DirectoryDeleteCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.True(metadata.Destructive);
-        Assert.True(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 
     [Theory]

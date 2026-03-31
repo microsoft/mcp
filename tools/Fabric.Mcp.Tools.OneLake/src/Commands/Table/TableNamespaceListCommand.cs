@@ -6,8 +6,8 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
@@ -17,21 +17,6 @@ public sealed class TableNamespaceListCommand(
 {
     private readonly ILogger<TableNamespaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "173cfc00-7c12-486d-a0e7-c0d4c1de23fd";
-    public override string Name => "list_table_namespaces";
-    public override string Title => "List OneLake Table Namespaces";
-    public override string Description => "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

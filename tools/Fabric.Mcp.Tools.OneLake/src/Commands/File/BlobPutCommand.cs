@@ -8,9 +8,9 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -20,21 +20,6 @@ public sealed class BlobPutCommand(
 {
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "upload_file";
-    public override string Title => "Upload OneLake File";
-    public override string Description => "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

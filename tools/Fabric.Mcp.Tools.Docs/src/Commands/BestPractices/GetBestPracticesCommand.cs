@@ -14,28 +14,8 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 
 public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
 {
-    private const string CommandTitle = "Best Practices";
 
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
-
-    public override string Name => "best-practices";
-
-    public override string Description =>
-        "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

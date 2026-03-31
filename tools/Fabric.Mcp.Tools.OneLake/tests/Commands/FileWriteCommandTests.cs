@@ -27,9 +27,6 @@ public class FileWriteCommandTests
         var command = new FileWriteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Contains("Write content to a file in OneLake storage", command.Description);
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Destructive);
     }
 
     [Fact]
@@ -45,8 +42,6 @@ public class FileWriteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("write", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -82,26 +77,6 @@ public class FileWriteCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.True(metadata.Destructive);
-        Assert.False(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 
     [Theory]

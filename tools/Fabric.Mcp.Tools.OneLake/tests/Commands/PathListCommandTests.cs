@@ -18,12 +18,6 @@ public class PathListCommandTests
         var command = new PathListCommand(logger);
 
         // Assert
-        Assert.Equal("list_files", command.Name);
-        Assert.Equal("List OneLake Path Structure", command.Title);
-        Assert.Contains("List files and directories", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -38,8 +32,6 @@ public class PathListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_files", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]

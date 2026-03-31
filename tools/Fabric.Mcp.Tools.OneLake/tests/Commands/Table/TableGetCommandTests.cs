@@ -22,11 +22,6 @@ public class TableGetCommandTests
     {
         var service = Substitute.For<IOneLakeService>();
         var command = new TableGetCommand(NullLogger<TableGetCommand>.Instance, service);
-
-        Assert.Equal("get_table", command.Name);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.Destructive);
     }
 
     [Fact]
@@ -38,7 +33,6 @@ public class TableGetCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("get_table", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 

@@ -10,6 +10,8 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -20,21 +22,6 @@ public sealed class FileWriteCommand(
 {
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "ca454f68-3c44-47e3-bd88-6596a1d2c368";
-    public override string Name => "write";
-    public override string Title => "Write OneLake File";
-    public override string Description => "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

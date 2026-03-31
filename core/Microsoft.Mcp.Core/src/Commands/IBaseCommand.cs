@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -14,8 +15,13 @@ namespace Microsoft.Mcp.Core.Commands;
 public interface IBaseCommand
 {
     /// <summary>
-    /// A unique identifier for the command. Identifier must be a constant value representing a GUID.
-    /// See <see cref="Guid.NewGuid()"/> to generate a random GUID.
+    /// Gets the command descriptor containing all metadata (id, name, description,
+    /// title, options, tool annotations).
+    /// </summary>
+    CommandDescriptor GetDescriptor();
+
+    /// <summary>
+    /// A unique identifier for the command.
     /// </summary>
     string Id { get; }
 
@@ -36,7 +42,6 @@ public interface IBaseCommand
 
     /// <summary>
     /// Gets metadata about an MCP tool describing its behavioral characteristics.
-    /// This metadata helps MCP clients understand how the tool operates and its potential effects.
     /// </summary>
     ToolMetadata Metadata { get; }
 

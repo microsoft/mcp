@@ -14,6 +14,8 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -26,21 +28,6 @@ public sealed class FileReadCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
-
-    public override string Id => "b70e5f70-d616-4a54-9879-6aa0a80345d9";
-    public override string Name => "read";
-    public override string Title => "Read OneLake File";
-    public override string Description => "Read the contents of a file from OneLake storage.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

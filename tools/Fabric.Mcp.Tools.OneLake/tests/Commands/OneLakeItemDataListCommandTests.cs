@@ -21,12 +21,6 @@ public class OneLakeItemDataListCommandTests
         var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("list_items_dfs", command.Name);
-        Assert.Equal("List OneLake Items (Data API)", command.Title);
-        Assert.Contains("OneLake DFS", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -42,8 +36,6 @@ public class OneLakeItemDataListCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_items_dfs", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -81,23 +73,4 @@ public class OneLakeItemDataListCommandTests
         Assert.Throws<ArgumentNullException>(() => new OneLakeItemDataListCommand(logger, null!));
     }
 
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemDataListCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.False(metadata.Destructive);
-        Assert.True(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.True(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
-    }
 }

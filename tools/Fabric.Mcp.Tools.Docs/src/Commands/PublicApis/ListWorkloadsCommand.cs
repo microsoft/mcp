@@ -11,28 +11,8 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
 
 public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
 {
-    private const string CommandTitle = "Available Fabric Workloads";
 
     private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "b1f80251-df7b-4054-953b-5f452c42dd09";
-
-    public override string Name => "workloads";
-
-    public override string Description =>
-        "Lists Fabric workload types that have public API specifications available. Use this when the user needs to discover what APIs exist for Fabric workloads. Returns workload names like notebook, report, or platform.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

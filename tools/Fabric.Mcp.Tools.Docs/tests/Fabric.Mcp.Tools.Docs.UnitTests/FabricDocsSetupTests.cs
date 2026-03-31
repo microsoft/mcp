@@ -3,23 +3,22 @@
 
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 
 namespace Fabric.Mcp.Tools.Docs.Tests;
 
-public class FabricDocsSetupTests
+public sealed class FabricDocsSetupTests
 {
+    private readonly FabricDocsSetup _setup = new();
     [Fact]
     public void ConfigureServices_RegistersExpectedServices()
     {
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        var setup = new FabricDocsSetup();
 
         // Act
-        setup.ConfigureServices(services);
+        _setup.ConfigureServices(services);
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
@@ -30,31 +29,35 @@ public class FabricDocsSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_CreatesExpectedCommandStructure()
+    public void GetCommandDescriptors_CreatesExpectedCommandStructure()
     {
-        // Arrange
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var setup = new FabricDocsSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var services = new ServiceCollection();
-        services.AddLogging();
-        setup.ConfigureServices(services);
-        var serviceProvider = services.BuildServiceProvider();
-
         // Act
-        var commands = setup.RegisterCommands(serviceProvider);
-        rootGroup.AddSubGroup(commands);
+        var descriptor = _setup.CommandDescriptors;
 
         // Assert - flat structure under docs
-        var docsGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "docs");
-        Assert.NotNull(docsGroup);
+        Assert.NotNull(descriptor);
+        Assert.Equal("docs", descriptor.Name);
 
         // Verify all 6 commands are registered with noun-based naming
-        Assert.Contains("workloads", docsGroup.Commands.Keys);
-        Assert.Contains("workload-api-spec", docsGroup.Commands.Keys);
-        Assert.Contains("platform-api-spec", docsGroup.Commands.Keys);
-        Assert.Contains("item-definitions", docsGroup.Commands.Keys);
-        Assert.Contains("best-practices", docsGroup.Commands.Keys);
-        Assert.Contains("api-examples", docsGroup.Commands.Keys);
+        Assert.Contains(descriptor.Commands, c => c.Name == "workloads");
+        Assert.Contains(descriptor.Commands, c => c.Name == "workload-api-spec");
+        Assert.Contains(descriptor.Commands, c => c.Name == "platform-api-spec");
+        Assert.Contains(descriptor.Commands, c => c.Name == "item-definitions");
+        Assert.Contains(descriptor.Commands, c => c.Name == "best-practices");
+        Assert.Contains(descriptor.Commands, c => c.Name == "api-examples");
+    }
+
+    [Fact]
+    public void AreaName_ReturnsCorrectValue()
+    {
+        // Act & Assert
+        Assert.Equal("docs", _setup.CommandDescriptors.Name);
+    }
+
+    [Fact]
+    public void AreaTitle_ReturnsCorrectValue()
+    {
+        // Act & Assert
+        Assert.Equal("Microsoft Fabric Documentation", _setup.CommandDescriptors.Title);
     }
 }

@@ -23,12 +23,6 @@ public class DirectoryCreateCommandTests
         var command = new DirectoryCreateCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("create_directory", command.Name);
-        Assert.Equal("Create OneLake Directory", command.Title);
-        Assert.Contains("Creates a directory in OneLake storage", command.Description);
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -44,8 +38,6 @@ public class DirectoryCreateCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("create_directory", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -81,26 +73,6 @@ public class DirectoryCreateCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new DirectoryCreateCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DirectoryCreateCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new DirectoryCreateCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.False(metadata.Destructive);
-        Assert.True(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 
     [Theory]

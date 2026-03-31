@@ -22,7 +22,7 @@ using Microsoft.Mcp.Core.Services.Time;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static AreaRegistrationInfo[] DescriptorAreas = RegisterDescriptorAreas();
 
     private static async Task<int> Main(string[] args)
     {
@@ -66,9 +66,9 @@ internal class Program
             return 1;
         }
     }
-    private static IAreaSetup[] RegisterAreas()
-    {
 
+    private static AreaRegistrationInfo[] RegisterDescriptorAreas()
+    {
         return [
             // Register core areas
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
@@ -153,10 +153,11 @@ internal class Program
         services.AddHttpClientServices();
         services.AddSingleUserCliCacheService(disabled: true);
 
-        foreach (var area in Areas)
+        // Register descriptor-based areas
+        foreach (var areaInfo in DescriptorAreas)
         {
-            services.AddSingleton(area);
-            area.ConfigureServices(services);
+            services.AddSingleton(areaInfo);
+            areaInfo.ConfigureServices(services);
         }
 
         // There's no need to use assembly resource based registration if we know we have an empty registry.

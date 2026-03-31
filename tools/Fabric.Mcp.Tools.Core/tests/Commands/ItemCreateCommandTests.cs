@@ -11,25 +11,6 @@ namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 public class ItemCreateCommandTests
 {
     [Fact]
-    public void Constructor_InitializesCommandCorrectly()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ItemCreateCommand>();
-        var fabricCoreService = Substitute.For<IFabricCoreService>();
-
-        // Act
-        var command = new ItemCreateCommand(logger, fabricCoreService);
-
-        // Assert
-        Assert.Equal("create-item", command.Name);
-        Assert.Equal("Create Fabric Item", command.Title);
-        Assert.Contains("Creates a new item in a Fabric workspace", command.Description);
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.False(command.Metadata.Idempotent);
-    }
-
-    [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
         // Arrange
@@ -42,8 +23,7 @@ public class ItemCreateCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("create-item", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
+        Assert.NotEmpty(systemCommand.Options);
     }
 
     [Fact]
@@ -79,25 +59,5 @@ public class ItemCreateCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ItemCreateCommand>();
-        var fabricCoreService = Substitute.For<IFabricCoreService>();
-        var command = new ItemCreateCommand(logger, fabricCoreService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.False(metadata.Destructive);
-        Assert.False(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.False(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 }

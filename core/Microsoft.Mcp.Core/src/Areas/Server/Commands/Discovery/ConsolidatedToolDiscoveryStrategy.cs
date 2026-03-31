@@ -4,9 +4,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands.Descriptors;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
@@ -62,9 +64,9 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
         var allCommands = _commandFactory.AllCommands;
         var filteredCommands = FilterCommands(allCommands);
 
-        // Create individual area setups for each consolidated tool
+        // Create individual area registrations for each consolidated tool
         // This way, each consolidated tool becomes a top-level namespace
-        var consolidatedAreas = new List<IAreaSetup>();
+        var consolidatedAreas = new List<AreaRegistrationInfo>();
 
         var unmatchedCommands = new HashSet<string>(filteredCommands.Keys, StringComparer.OrdinalIgnoreCase);
 
@@ -126,11 +128,8 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 unmatchedCommands.Remove(commandName);
             }
 
-            // Create an area setup for this consolidated tool
-            var area = new SingleConsolidatedToolAreaSetup(
-                consolidatedTool,
-                matchingCommands
-            );
+            // Create an area registration for this consolidated tool
+            var area = CreateConsolidatedAreaRegistration(consolidatedTool, matchingCommands);
 
             consolidatedAreas.Add(area);
         }
@@ -165,6 +164,49 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
         );
 
         return _consolidatedCommandFactory;
+    }
+
+    private static AreaRegistrationInfo CreateConsolidatedAreaRegistration(
+        ConsolidatedToolDefinition consolidatedTool,
+        Dictionary<string, IBaseCommand> matchingCommands)
+    {
+        var name = consolidatedTool.Name ?? string.Empty;
+
+        return new ConsolidatedArea(new CommandGroupDescriptor
+        {
+            Name = name,
+            Description = name,
+            Title = name,
+            Category = "Azure Services",
+            Commands = []
+        })
+        {
+            CommandGroupOverride = BuildConsolidatedCommandGroup(name, consolidatedTool, matchingCommands)
+        };
+    }
+
+    /// <summary>
+    /// Lightweight area registration for consolidated tools where commands are already resolved.
+    /// </summary>
+    private sealed class ConsolidatedArea(CommandGroupDescriptor descriptors) : AreaRegistrationInfo
+    {
+        public override CommandGroupDescriptor CommandDescriptors => descriptors;
+    }
+
+    private static CommandGroup BuildConsolidatedCommandGroup(
+        string name,
+        ConsolidatedToolDefinition consolidatedTool,
+        Dictionary<string, IBaseCommand> matchingCommands)
+    {
+        var commandGroup = new CommandGroup(name, name);
+
+        foreach (var cmd in matchingCommands)
+        {
+            commandGroup.AddCommand(cmd.Key, cmd.Value);
+        }
+
+        commandGroup.ToolMetadata = consolidatedTool.ToolMetadata;
+        return commandGroup;
     }
 
     private Dictionary<string, IBaseCommand> FilterCommands(IReadOnlyDictionary<string, IBaseCommand> allCommands)
@@ -220,43 +262,5 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                metadata1.ReadOnly == metadata2.ReadOnly &&
                metadata1.Secret == metadata2.Secret &&
                metadata1.LocalRequired == metadata2.LocalRequired;
-    }
-}
-
-/// <summary>
-/// Represents a single consolidated tool as an IAreaSetup.
-/// Each instance creates a top-level namespace for one consolidated tool in the CommandFactory.
-/// This allows NamespaceToolLoader to see each consolidated tool as a separate top-level namespace.
-/// </summary>
-internal sealed class SingleConsolidatedToolAreaSetup(
-    ConsolidatedToolDefinition consolidatedTool,
-    Dictionary<string, IBaseCommand> matchingCommands) : IAreaSetup
-{
-    private readonly ConsolidatedToolDefinition _consolidatedTool = consolidatedTool;
-    private readonly Dictionary<string, IBaseCommand> _matchingCommands = matchingCommands;
-
-    public string Name => _consolidatedTool.Name ?? string.Empty;
-    public string Title => Name;
-
-    public void ConfigureServices(IServiceCollection services)
-    {
-        // No additional services needed
-    }
-
-    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
-    {
-        // Create command group for this consolidated tool
-        var commandGroup = new CommandGroup(Name, Title);
-
-        // Add all matching commands to this group
-        foreach (var cmd in _matchingCommands)
-        {
-            commandGroup.AddCommand(cmd.Key, cmd.Value);
-        }
-
-        // Set tool metadata from the consolidated tool definition
-        commandGroup.ToolMetadata = _consolidatedTool.ToolMetadata;
-
-        return commandGroup;
     }
 }

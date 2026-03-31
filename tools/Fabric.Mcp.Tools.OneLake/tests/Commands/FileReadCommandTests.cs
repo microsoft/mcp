@@ -27,12 +27,6 @@ public class FileReadCommandTests
         var command = new FileReadCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("read", command.Name);
-        Assert.Equal("Read OneLake File", command.Title);
-        Assert.Contains("Read the contents of a file from OneLake storage", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -48,8 +42,6 @@ public class FileReadCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("read", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -85,26 +77,6 @@ public class FileReadCommandTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new FileReadCommand(logger, null!));
-    }
-
-    [Fact]
-    public void Metadata_HasCorrectProperties()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
-        Assert.False(metadata.Destructive);
-        Assert.True(metadata.Idempotent);
-        Assert.False(metadata.LocalRequired);
-        Assert.False(metadata.OpenWorld);
-        Assert.True(metadata.ReadOnly);
-        Assert.False(metadata.Secret);
     }
 
     [Theory]

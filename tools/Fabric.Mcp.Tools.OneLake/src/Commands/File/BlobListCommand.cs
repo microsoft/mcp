@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -19,21 +20,6 @@ public sealed class BlobListCommand(
 {
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a";
-    public override string Name => "list";
-    public override string Title => "List OneLake Blobs";
-    public override string Description => "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

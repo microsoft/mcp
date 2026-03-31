@@ -170,7 +170,7 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
+    /// Gets all of the <see cref="AreaRegistrationInfo"/>'s available in the server.
     /// </summary>
     /// <returns>A JSON serialized string with each area's name and a description of operations available in
     /// that namespace.</returns>
@@ -200,10 +200,10 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="AreaRegistrationInfo">.
     /// </summary>
     /// <param name="request">Calling request</param>
-    /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
+    /// <param name="tool">Name of the <see cref="AreaRegistrationInfo"/> to get commands for.</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {

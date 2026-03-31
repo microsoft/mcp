@@ -11,6 +11,8 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -21,21 +23,6 @@ public sealed class BlobDeleteCommand(
 {
     private readonly ILogger<BlobDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "48561b8d-6f19-45ae-86fa-9feeb8f75e8e";
-    public override string Name => "delete";
-    public override string Title => "Delete OneLake Blob";
-    public override string Description => "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -22,11 +22,6 @@ public class TableNamespaceListCommandTests
     {
         var service = Substitute.For<IOneLakeService>();
         var command = new TableNamespaceListCommand(NullLogger<TableNamespaceListCommand>.Instance, service);
-
-        Assert.Equal("list_table_namespaces", command.Name);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.Destructive);
     }
 
     [Fact]
@@ -38,7 +33,6 @@ public class TableNamespaceListCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("list_table_namespaces", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 
