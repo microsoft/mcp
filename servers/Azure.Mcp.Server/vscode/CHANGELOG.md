@@ -1,5 +1,5 @@
 # Release History
-`
+
 ## 2.0.35 (2026-03-30) (pre-release)
 
 ### Changed
