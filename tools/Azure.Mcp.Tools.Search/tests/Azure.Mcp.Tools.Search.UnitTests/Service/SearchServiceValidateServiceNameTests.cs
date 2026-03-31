@@ -53,6 +53,15 @@ public class SearchServiceValidateServiceNameTests
     }
 
     [Theory]
+    [InlineData("a-service")]
+    [InlineData("s-earch")]
+    public static void ValidateServiceName_RejectsDashAsSecondCharacter(string serviceName)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SearchService.ValidateServiceName(serviceName));
+        Assert.Contains("must not have a dash as its second character", ex.Message);
+    }
+
+    [Theory]
     [InlineData("a")]
     [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")] // 61 chars
     public static void ValidateServiceName_RejectsInvalidLength(string serviceName)
