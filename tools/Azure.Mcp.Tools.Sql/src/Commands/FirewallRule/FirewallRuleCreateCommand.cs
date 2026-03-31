@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;

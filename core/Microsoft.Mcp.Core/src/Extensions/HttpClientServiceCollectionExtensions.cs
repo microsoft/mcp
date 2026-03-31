@@ -4,7 +4,7 @@
 using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Azure.Mcp.Core.Extensions;
+namespace Microsoft.Mcp.Core.Extensions;
 
 /// <summary>
 /// Extension methods for registering HTTP client services.

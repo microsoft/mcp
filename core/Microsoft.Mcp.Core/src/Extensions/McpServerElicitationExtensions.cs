@@ -4,7 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
 
-namespace Azure.Mcp.Core.Extensions;
+namespace Microsoft.Mcp.Core.Extensions;
 
 /// <summary>
 /// Extension methods for MCP server to support elicitation functionality.

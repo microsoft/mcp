@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -76,7 +77,7 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();
