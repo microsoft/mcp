@@ -401,6 +401,12 @@ public sealed partial class SearchService(
                 "Service name must only contain lowercase letters, digits, or dashes, cannot start or end with dashes, and must be between 2 and 60 characters in length.", nameof(serviceName));
         }
 
+        if (serviceName[1] == '-')
+        {
+            throw new ArgumentException(
+                "Service name must not have a dash as its second character.", nameof(serviceName));
+        }
+
         if (serviceName.Contains("--", StringComparison.Ordinal))
         {
             throw new ArgumentException(

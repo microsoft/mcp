@@ -4,7 +4,6 @@
 using System.Net;
 using System.Reflection;
 using System.Text;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;

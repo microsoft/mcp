@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;

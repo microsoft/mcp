@@ -3,11 +3,11 @@
 
 using System.Net;
 using System.Reflection;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 

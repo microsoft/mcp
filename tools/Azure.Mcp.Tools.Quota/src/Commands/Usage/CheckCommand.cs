@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
@@ -10,6 +9,7 @@ using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
