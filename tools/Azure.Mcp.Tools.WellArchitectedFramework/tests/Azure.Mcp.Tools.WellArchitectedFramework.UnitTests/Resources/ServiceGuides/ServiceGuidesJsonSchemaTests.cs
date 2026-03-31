@@ -3,7 +3,7 @@
 
 using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests;

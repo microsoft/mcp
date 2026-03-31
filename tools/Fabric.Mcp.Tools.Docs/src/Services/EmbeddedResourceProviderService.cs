@@ -1,5 +1,8 @@
-using Azure.Mcp.Core.Helpers;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Fabric.Mcp.Tools.Docs.Services
 {
