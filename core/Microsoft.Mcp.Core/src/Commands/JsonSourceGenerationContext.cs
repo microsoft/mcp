@@ -3,9 +3,8 @@
 
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Commands;
 
-namespace Azure.Mcp;
+namespace Microsoft.Mcp.Core.Commands;
 
 [JsonSerializable(typeof(ExceptionResult))]
 [JsonSerializable(typeof(JsonElement))]

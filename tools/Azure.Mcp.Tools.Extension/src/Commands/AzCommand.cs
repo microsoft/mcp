@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.ProcessExecution;

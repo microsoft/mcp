@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Services.Caching;
@@ -14,7 +11,6 @@ using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
