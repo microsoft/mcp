@@ -3,7 +3,6 @@
 
 using System.Buffers;
 using System.Text;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Commands;
