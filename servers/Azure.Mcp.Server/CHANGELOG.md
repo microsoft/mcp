@@ -4,23 +4,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 3.0.0-beta.1 (2026-04-01)
 
-### Bugs Fixed
-
-- Fixed endpoint validation to always pass `ArmEnvironment` from `TenantService.CloudConfiguration`, ensuring correct domain validation on sovereign cloud environments (China, Government, etc.). [#2320](https://github.com/microsoft/mcp/pull/2320)
-- Added `ClientName` option to the `plugin-telemetry` tool as a replacement for ClientType, which will be deprecated once usage decreases, and added `ToolArea` model property and corresponding unit tests. [#2314](https://github.com/microsoft/mcp/pull/2314)
-
 ### Breaking Changes
 
 - Updated internal namespaces to align with the `Microsoft.Mcp.Core` convention:
-  - `Azure.Mcp.TestUtilities` -> `Microsoft.Mcp.Core.TestUtilities` [#2300](https://github.com/microsoft/mcp/pull/2300)
-  - `Microsoft.Mcp.Core.Areas.Server.Commands` -> `Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions` [#2301](https://github.com/microsoft/mcp/pull/2301)
+  - `Azure.Mcp.TestUtilities` → `Microsoft.Mcp.Core.TestUtilities` [#2300](https://github.com/microsoft/mcp/pull/2300)
+  - `Microsoft.Mcp.Core.Areas.Server.Commands` → `Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions` [#2301](https://github.com/microsoft/mcp/pull/2301)
   - Fixed `Microsoft.Mcp.Core.Areas.Tools` namespaces [#2303](https://github.com/microsoft/mcp/pull/2303)
-  - `Azure.Mcp.Core.Commands` -> `Microsoft.Mcp.Core.Commands` [#2304](https://github.com/microsoft/mcp/pull/2304)
-  - `Azure.Mcp.Core.Extensions` -> `Microsoft.Mcp.Core.Extensions` [#2306](https://github.com/microsoft/mcp/pull/2306)
-  - `Azure.Mcp.Core.Helpers` -> `Microsoft.Mcp.Core.Helpers` [#2310](https://github.com/microsoft/mcp/pull/2310)
-  - `Azure.Mcp.Core.Logging` -> `Microsoft.Mcp.Core.Logging` [#2312](https://github.com/microsoft/mcp/pull/2312)
-  - `Azure.Mcp.Core.Commands` -> `Microsoft.Mcp.Core.Commands` [#2319](https://github.com/microsoft/mcp/pull/2319)
-  - `Azure.Mcp.Core.Services` -> `Microsoft.Mcp.Core.Services` [#2321](https://github.com/microsoft/mcp/pull/2321)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2304](https://github.com/microsoft/mcp/pull/2304)
+  - `Azure.Mcp.Core.Extensions` → `Microsoft.Mcp.Core.Extensions` [#2306](https://github.com/microsoft/mcp/pull/2306)
+  - `Azure.Mcp.Core.Helpers` → `Microsoft.Mcp.Core.Helpers` [#2310](https://github.com/microsoft/mcp/pull/2310)
+  - `Azure.Mcp.Core.Logging` → `Microsoft.Mcp.Core.Logging` [#2312](https://github.com/microsoft/mcp/pull/2312)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2319](https://github.com/microsoft/mcp/pull/2319)
+  - `Azure.Mcp.Core.Services` → `Microsoft.Mcp.Core.Services` [#2321](https://github.com/microsoft/mcp/pull/2321)
 
 #### Dependency Updates
 
