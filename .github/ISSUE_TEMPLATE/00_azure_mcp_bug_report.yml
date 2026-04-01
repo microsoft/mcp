@@ -27,7 +27,7 @@ body:
     attributes:
       label: Actual behavior
       description: |
-        Provide a description of the actual behavior observed.  Include tool names, prompts used, and error messages (if applicable).
+        Provide a description of the actual behavior observed. Include tool names, prompts used, and error messages (if applicable).
       placeholder: Actual behavior
     validations:
       required: true
