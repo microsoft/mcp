@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Options;
+namespace Microsoft.Mcp.Core.Options;
 
 public class GlobalOptions
 {

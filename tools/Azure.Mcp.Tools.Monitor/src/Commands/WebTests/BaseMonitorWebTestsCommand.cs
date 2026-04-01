@@ -3,8 +3,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 

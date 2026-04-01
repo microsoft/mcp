@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.FunctionApp.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
