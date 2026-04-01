@@ -27,7 +27,7 @@ body:
     attributes:
       label: Actual behavior
       description: |
-        Provide a description of the actual behavior observed. If applicable please include any error messages, exception stacktraces or memory dumps.
+        Provide a description of the actual behavior observed.  Include tool names, prompts used, and error messages (if applicable).
       placeholder: Actual behavior
     validations:
       required: true
@@ -36,7 +36,7 @@ body:
     attributes:
       label: Reproduction Steps
       description: |
-        Please include minimal steps to reproduce the problem if possible. E.g.: the smallest possible code snippet; or a small project, with steps to run it. If possible include text as text rather than screenshots (so it shows up in searches).
+        Please include minimal steps to reproduce the problem if possible. E.g.: the smallest possible prompt snippet; or a small project, with steps to run it. If possible include text as text rather than screenshots (so it shows up in searches).
       placeholder: Minimal Reproduction
     validations:
       required: true
