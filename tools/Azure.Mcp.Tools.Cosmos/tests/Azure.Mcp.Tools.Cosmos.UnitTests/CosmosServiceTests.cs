@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Core;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;

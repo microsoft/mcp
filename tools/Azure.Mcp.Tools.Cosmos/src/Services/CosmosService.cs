@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Services.Azure;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;

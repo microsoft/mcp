@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;

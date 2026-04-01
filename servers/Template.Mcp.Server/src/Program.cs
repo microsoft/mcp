@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
@@ -14,6 +13,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.ProcessExecution;

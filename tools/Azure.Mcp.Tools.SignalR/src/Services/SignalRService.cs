@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -11,6 +10,8 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Identity;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.SignalR.Services;

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Resource;
-using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Models.Resource;
+using Microsoft.Mcp.Core.Models.ResourceGroup;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;

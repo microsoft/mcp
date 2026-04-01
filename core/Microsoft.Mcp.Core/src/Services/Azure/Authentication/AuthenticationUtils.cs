@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 
 namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Options.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Services;

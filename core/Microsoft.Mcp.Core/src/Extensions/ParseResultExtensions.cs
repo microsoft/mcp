@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Microsoft.Mcp.Core.Extensions;
 

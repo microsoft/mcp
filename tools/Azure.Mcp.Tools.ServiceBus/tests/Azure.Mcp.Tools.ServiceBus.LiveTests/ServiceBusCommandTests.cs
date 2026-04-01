@@ -3,10 +3,10 @@
 
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
