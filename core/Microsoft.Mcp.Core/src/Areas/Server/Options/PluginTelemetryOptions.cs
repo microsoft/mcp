@@ -30,7 +30,7 @@ public class PluginTelemetryOptions : ServiceStartOptions
     public string? SessionId { get; set; }
 
     /// <summary>
-    /// Gets or sets the type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code'). This will be deprecated in favor of clientName when we see low usage in telemetry. Avoid using this .
+    /// Gets or sets the type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code'). This field is legacy and will be deprecated in favor of clientName when usage in telemetry is sufficiently low. New integrations should prefer clientName but continue to populate clientType while it remains required by the CLI.
     /// </summary>
     [JsonPropertyName("clientType")]
     public string? ClientType { get; set; }
