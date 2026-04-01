@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Models;
+using Microsoft.Mcp.Core.Services.Azure.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services.Models;
 
