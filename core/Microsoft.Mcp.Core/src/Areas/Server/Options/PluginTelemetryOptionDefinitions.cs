@@ -54,7 +54,7 @@ public static class PluginTelemetryOptionDefinitions
     )
     {
         Description = "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code').",
-        Required = true
+        Required = false
     };
 
     public static readonly Option<string> PluginName = new(
