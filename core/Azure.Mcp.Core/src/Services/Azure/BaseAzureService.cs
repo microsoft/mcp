@@ -8,6 +8,7 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Core.Services.Azure;
 

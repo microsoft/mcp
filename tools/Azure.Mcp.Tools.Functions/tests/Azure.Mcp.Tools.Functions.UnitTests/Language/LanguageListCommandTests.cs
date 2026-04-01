@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Language;
 using Azure.Mcp.Tools.Functions.Models;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
 using Xunit;
 

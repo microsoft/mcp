@@ -1,5 +1,5 @@
 ﻿using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Postgres.Auth
 {

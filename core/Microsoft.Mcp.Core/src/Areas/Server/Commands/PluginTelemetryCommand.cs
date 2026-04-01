@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -15,6 +14,7 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Logging;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
