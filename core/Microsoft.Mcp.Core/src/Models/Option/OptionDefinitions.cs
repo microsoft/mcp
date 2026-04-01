@@ -89,4 +89,13 @@ public static partial class OptionDefinitions
             Required = true,
         };
     }
+
+    public static class Pagination
+    {
+        public const string CursorName = "cursor";
+
+        public static readonly OptionDefinition<string> Cursor = new(
+            CursorName,
+            "Opaque continuation cursor from a previous response. Omit on the first request.");
+    }
 }

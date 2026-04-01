@@ -20,6 +20,10 @@ public class CommandResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ResponseResult? Results { get; set; }
 
+    [JsonPropertyName("nextCursor")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? NextCursor { get; set; }
+
     [JsonPropertyName("duration")]
     public long Duration { get; set; }
 }
