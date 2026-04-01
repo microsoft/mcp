@@ -20,7 +20,7 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
     private const string CommandTitle = "Configure Soft Delete";
     private readonly ILogger<GovernanceSoftDeleteCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678cb";
+    public override string Id => "b3f1ea2d-5535-4155-849c-61f2fc49f1d9";
     public override string Name => "soft-delete";
     public override string Description =>
         """

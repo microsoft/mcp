@@ -19,7 +19,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger) : B
     private const string CommandTitle = "Create Backup Policy";
     private readonly ILogger<PolicyCreateCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678a2";
+    public override string Id => "bc5e600b-c414-4bce-8b7d-a6021cfd3d23";
     public override string Name => "create";
     public override string Description => "Creates a backup policy for a specified workload type with schedule and retention rules.";
     public override string Title => CommandTitle;

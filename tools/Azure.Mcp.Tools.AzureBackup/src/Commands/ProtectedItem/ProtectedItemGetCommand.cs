@@ -24,7 +24,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
     private const string CommandTitle = "Get Protected Item";
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef123456789a";
+    public override string Id => "bc985e4f-8945-447a-9aba-ef13df309001";
     public override string Name => "get";
     public override string Description =>
         """

@@ -24,7 +24,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBack
     private const string CommandTitle = "Get Backup Job";
     private readonly ILogger<JobGetCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef1234567896";
+    public override string Id => "f1291650-8ff2-413c-8001-e4b33f157a3b";
     public override string Name => "get";
     public override string Description =>
         """

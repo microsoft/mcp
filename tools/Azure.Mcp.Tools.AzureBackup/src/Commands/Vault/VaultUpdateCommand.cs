@@ -19,7 +19,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger) : Bas
     private const string CommandTitle = "Update Backup Vault";
     private readonly ILogger<VaultUpdateCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678a0";
+    public override string Id => "da7f163e-471c-4d7d-ae00-d41f5f4b939e";
     public override string Name => "update";
     public override string Description => "Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.";
     public override string Title => CommandTitle;

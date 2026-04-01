@@ -19,7 +19,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     private const string CommandTitle = "Protect Resource";
     private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef123456789b";
+    public override string Id => "7a6fc193-ca3c-4309-97c5-ee1e7fe90e69";
     public override string Name => "protect";
     public override string Description =>
         """

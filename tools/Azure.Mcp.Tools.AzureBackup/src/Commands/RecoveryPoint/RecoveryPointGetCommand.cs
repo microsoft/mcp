@@ -24,7 +24,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
     private const string CommandTitle = "Get Recovery Point";
     private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef1234567898";
+    public override string Id => "e930bbb6-b495-454b-bae4-46b9da14eb1c";
     public override string Name => "get";
     public override string Description =>
         """

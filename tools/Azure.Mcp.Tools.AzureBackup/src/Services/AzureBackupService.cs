@@ -454,16 +454,14 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         // Step 2: Collect all protected datasource ARM IDs from every vault
         var protectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var vault in rsvVaults)
+        var rsvTasks = rsvVaults
+            .Where(v => v.Name is not null && v.ResourceGroup is not null)
+            .Select(v => rsvOps.ListProtectedItemsAsync(
+                v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+
+        var rsvResults = await Task.WhenAll(rsvTasks);
+        foreach (var items in rsvResults)
         {
-            if (vault.Name is null || vault.ResourceGroup is null)
-            {
-                continue;
-            }
-
-            var items = await rsvOps.ListProtectedItemsAsync(
-                vault.Name, vault.ResourceGroup, subscription, tenant, retryPolicy, cancellationToken);
-
             foreach (var item in items)
             {
                 if (!string.IsNullOrEmpty(item.DatasourceId))
@@ -473,16 +471,14 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             }
         }
 
-        foreach (var vault in dppVaults)
+        var dppTasks = dppVaults
+            .Where(v => v.Name is not null && v.ResourceGroup is not null)
+            .Select(v => dppOps.ListProtectedItemsAsync(
+                v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+
+        var dppResults = await Task.WhenAll(dppTasks);
+        foreach (var items in dppResults)
         {
-            if (vault.Name is null || vault.ResourceGroup is null)
-            {
-                continue;
-            }
-
-            var items = await dppOps.ListProtectedItemsAsync(
-                vault.Name, vault.ResourceGroup, subscription, tenant, retryPolicy, cancellationToken);
-
             foreach (var item in items)
             {
                 if (!string.IsNullOrEmpty(item.DatasourceId))

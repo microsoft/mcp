@@ -26,7 +26,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
     private const string CommandTitle = "Get Backup Vault";
     private readonly ILogger<VaultGetCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef1234567891";
+    public override string Id => "4a1084d5-50d9-489f-9e4c-acc594441b1f";
     public override string Name => "get";
     public override string Description =>
         """

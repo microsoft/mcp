@@ -22,7 +22,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger) : Bas
     private const string CommandTitle = "Create Backup Vault";
     private readonly ILogger<VaultCreateCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef1234567892";
+    public override string Id => "1dccdb24-d81c-4bde-9437-577a7bd0cf09";
     public override string Name => "create";
     public override string Description =>
         """

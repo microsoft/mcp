@@ -20,7 +20,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     private const string CommandTitle = "Find Unprotected Resources";
     private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678c8";
+    public override string Id => "73b050ca-2e20-448c-a76c-08e8cd5bbe25";
     public override string Name => "find-unprotected";
     public override string Description =>
         """

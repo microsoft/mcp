@@ -18,7 +18,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger) : Bas
     private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DrEnableCrrCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678d4";
+    public override string Id => "917b66e5-483f-43ac-9620-9403e1689dbe";
     public override string Name => "enablecrr";
     public override string Description => "Enables Cross-Region Restore on a GRS-enabled vault.";
     public override string Title => CommandTitle;

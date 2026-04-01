@@ -24,7 +24,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzu
     private const string CommandTitle = "Get Backup Policy";
     private readonly ILogger<PolicyGetCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef1234567894";
+    public override string Id => "5f7ef3ae-72f3-4fe8-bd1e-ea56e4db86df";
     public override string Name => "get";
     public override string Description =>
         """

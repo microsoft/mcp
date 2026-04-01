@@ -20,7 +20,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     private const string CommandTitle = "Configure Vault Immutability";
     private readonly ILogger<GovernanceImmutabilityCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678ca";
+    public override string Id => "a0ac7596-9a80-4b53-b459-06f27598a2e2";
     public override string Name => "immutability";
     public override string Description =>
         """

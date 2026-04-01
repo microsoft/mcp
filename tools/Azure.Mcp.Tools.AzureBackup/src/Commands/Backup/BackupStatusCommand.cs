@@ -21,7 +21,7 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger) : S
     private const string CommandTitle = "Check Backup Status";
     private readonly ILogger<BackupStatusCommand> _logger = logger;
 
-    public override string Id => "b1a2c3d4-e5f6-7890-abcd-ef12345678b5";
+    public override string Id => "f5612c55-054d-4fd8-964c-952e8e6b87f8";
     public override string Name => "status";
     public override string Description => "Checks whether a datasource is protected and returns vault and policy details.";
     public override string Title => CommandTitle;
