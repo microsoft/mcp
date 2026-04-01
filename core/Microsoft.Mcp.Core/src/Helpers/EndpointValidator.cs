@@ -97,17 +97,6 @@ public static class EndpointValidator
     }
 
     /// <summary>
-    /// Validates that an endpoint belongs to an allowed Azure service domain.
-    /// Uses Azure Public Cloud domains by default.
-    /// </summary>
-    /// <param name="endpoint">The endpoint URL to validate.</param>
-    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
-    public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType)
-    {
-        ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud);
-    }
-
-    /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
     /// </summary>
     /// <param name="endpoint">The endpoint URL to validate.</param>
