@@ -3,13 +3,13 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
-using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Backup;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 

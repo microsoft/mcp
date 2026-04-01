@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
