@@ -391,7 +391,7 @@ public class TelemetryServiceTests
             RootCommandGroupName = "azmcp"
         };
         var operationName = "an-activity-id";
-        var mockOptions = Options.Create(configuration);
+        var mockOptions = Microsoft.Extensions.Options.Options.Create(configuration);
 
         var mockConfiguration = Substitute.For<IConfiguration>();
         mockConfiguration[configName].Returns(cloud);

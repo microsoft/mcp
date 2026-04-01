@@ -3,13 +3,12 @@
 
 using System.Globalization;
 using System.Xml;
-using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
+using Microsoft.Mcp.Core.Options;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
