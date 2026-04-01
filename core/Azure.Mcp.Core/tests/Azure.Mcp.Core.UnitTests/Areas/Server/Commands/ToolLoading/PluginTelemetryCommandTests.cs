@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,6 +9,8 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
@@ -208,5 +210,51 @@ public class PluginTelemetryCommandTests
     {
         var result = PluginTelemetryCommand.ValidateAndNormalizeToolName(rawToolName, _commandFactory);
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void LogPluginTelemetry_LogsAllProvidedFields()
+    {
+        var telemetryService = Substitute.For<ITelemetryService>();
+        using var activitySource = new ActivitySource("test");
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "test",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+        };
+        ActivitySource.AddActivityListener(listener);
+        var activity = activitySource.StartActivity("test-activity");
+        telemetryService.StartActivity(Arg.Any<string>()).Returns(activity);
+
+        var options = new PluginTelemetryOptions
+        {
+            Timestamp = "2026-03-31T00:00:00Z",
+            EventType = "skill_invocation",
+            SessionId = "session-2",
+            ClientType = "claude-code",
+            ClientName = "Claude Code",
+            PluginName = "azure",
+            PluginVersion = "1.0.0",
+            SkillName = "azure-storage",
+            SkillVersion = "2.0.0",
+            ToolName = "storage",
+            FileReference = "azure-ai\\references\\auth-best-practices.md"
+        };
+
+        PluginTelemetryCommand.LogPluginTelemetry(telemetryService, options);
+
+        Assert.NotNull(activity);
+        Assert.Equal("skill_invocation", activity!.GetTagItem("Plugin_EventType"));
+        Assert.Equal("session-2", activity.GetTagItem("Plugin_SessionId"));
+        Assert.Equal("claude-code", activity.GetTagItem("Plugin_ClientType"));
+        Assert.Equal("Claude Code", activity.GetTagItem("Plugin_ClientName"));
+        Assert.Equal("azure", activity.GetTagItem("Plugin_PluginName"));
+        Assert.Equal("1.0.0", activity.GetTagItem("Plugin_PluginVersion"));
+        Assert.Equal("azure-storage", activity.GetTagItem("Plugin_SkillName"));
+        Assert.Equal("2.0.0", activity.GetTagItem("Plugin_SkillVersion"));
+        Assert.Equal("storage", activity.GetTagItem("Plugin_ToolName"));
+        Assert.Equal("2026-03-31T00:00:00Z", activity.GetTagItem("Plugin_Timestamp"));
+        Assert.Equal("azure-ai\\references\\auth-best-practices.md", activity.GetTagItem("Plugin_FileReference"));
+        Assert.Equal(ActivityStatusCode.Ok, activity.Status);
     }
 }

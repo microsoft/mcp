@@ -12,6 +12,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. Added unit tests for the new fields.
+
 ## 2.0.0-beta.36 (2026-03-31)
 
 ### Bugs Fixed
