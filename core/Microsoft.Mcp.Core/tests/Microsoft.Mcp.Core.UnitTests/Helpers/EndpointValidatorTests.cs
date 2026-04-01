@@ -25,7 +25,7 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception =  Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
 
@@ -111,7 +111,7 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception =  Record.Exception(() =>
+        var exception = Record.Exception(() =>
             EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
         Assert.Null(exception);
     }
@@ -127,7 +127,7 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception =  Record.Exception(() =>
+        var exception = Record.Exception(() =>
             EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
         Assert.Null(exception);
     }
@@ -182,7 +182,7 @@ public class EndpointValidatorTests
     public void ValidateExternalUrl_AllowedHost_DoesNotThrow(string url, string[] allowedHosts)
     {
         // Act & Assert
-        var exception =  Record.Exception(() => EndpointValidator.ValidateExternalUrl(url, allowedHosts));
+        var exception = Record.Exception(() => EndpointValidator.ValidateExternalUrl(url, allowedHosts));
         Assert.Null(exception);
     }
 
@@ -229,7 +229,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_PublicEndpoints_DoesNotThrow(string url)
     {
         // Act & Assert
-        var exception =  Record.Exception(() => EndpointValidator.ValidatePublicTargetUrl(url));
+        var exception = Record.Exception(() => EndpointValidator.ValidatePublicTargetUrl(url));
         Assert.Null(exception);
     }
 
@@ -401,7 +401,7 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_EdgeCases_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception =  Record.Exception(
+        var exception = Record.Exception(
             () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
@@ -427,7 +427,7 @@ public class EndpointValidatorTests
         var allowedHosts = new[] { "github.com" };
 
         // Act & Assert
-        var exception =  Record.Exception(() => EndpointValidator.ValidateExternalUrl(url, allowedHosts));
+        var exception = Record.Exception(() => EndpointValidator.ValidateExternalUrl(url, allowedHosts));
         Assert.Null(exception);
     }
 
