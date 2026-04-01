@@ -219,7 +219,7 @@ public class PluginTelemetryCommandTests
         using var activitySource = new ActivitySource("test");
         using var listener = new ActivityListener
         {
-            ShouldListenTo = _ => true,
+            ShouldListenTo = source => source.Name == "test",
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
         };
         ActivitySource.AddActivityListener(listener);
