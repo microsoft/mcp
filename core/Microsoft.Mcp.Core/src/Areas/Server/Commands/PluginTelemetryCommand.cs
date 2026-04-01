@@ -40,7 +40,7 @@ public sealed class PluginTelemetryCommand(
     public override string Description =>
         """
         Publish plugin-related telemetry events from agent hooks.
-        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type',
+        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
         '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
         Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
         """;

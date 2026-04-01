@@ -15,7 +15,6 @@ public static class PluginTelemetryOptionDefinitions
     public const string SkillNameName = "skill-name";
     public const string SkillVersionName = "skill-version";
     public const string ToolNameName = "tool-name";
-    public const string ToolAreaName = "tool-area";
     public const string FileReferenceName = "file-reference";
 
     public static readonly Option<string> Timestamp = new(
@@ -94,14 +93,6 @@ public static class PluginTelemetryOptionDefinitions
     )
     {
         Description = "Name of the tool being invoked.",
-        Required = false
-    };
-
-    public static readonly Option<string> ToolArea = new(
-        $"--{ToolAreaName}"
-    )
-    {
-        Description = "Area of the tool being invoked (e.g., 'monitor_workspace_list').",
         Required = false
     };
 
