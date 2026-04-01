@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Core;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Options;
+namespace Microsoft.Mcp.Core.Options;
 
 /// <summary>
 /// Represents retry policy configuration for Azure SDK clients

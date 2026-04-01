@@ -5,7 +5,6 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Data.Tables;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -17,6 +16,7 @@ using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 

@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 

@@ -3,12 +3,12 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
 

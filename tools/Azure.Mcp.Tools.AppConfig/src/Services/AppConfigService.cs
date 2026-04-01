@@ -4,7 +4,6 @@
 using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -13,6 +12,7 @@ using Azure.Mcp.Tools.AppConfig.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 

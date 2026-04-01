@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 

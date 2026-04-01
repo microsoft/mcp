@@ -4,7 +4,6 @@
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -17,6 +16,7 @@ using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
