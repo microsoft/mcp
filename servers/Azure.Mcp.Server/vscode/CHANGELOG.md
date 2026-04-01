@@ -1,5 +1,11 @@
 # Release History
 
+## 2.0.36 (2026-03-31) (pre-release)
+
+### Fixed
+
+- Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
+
 ## 2.0.35 (2026-03-30) (pre-release)
 
 ### Changed

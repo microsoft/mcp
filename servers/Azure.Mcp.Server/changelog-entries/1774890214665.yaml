@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Configure ContainerRegistryAudience when creating Container Registry SDK clients"

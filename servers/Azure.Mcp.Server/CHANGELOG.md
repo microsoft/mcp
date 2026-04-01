@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.36 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.0-beta.36 (2026-03-31)
 
 ### Bugs Fixed
 
-### Other Changes
+- Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
 
 ## 2.0.0-beta.35 (2026-03-30)
 
