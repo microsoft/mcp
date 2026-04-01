@@ -106,7 +106,7 @@ public class MonitorSetup : IAreaSetup
             workflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace
             and resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity
             logs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor
-            observability workflows. Set learn=true to discover sub-commands
+            observability workflows. Set learn=true to discover sub-commands.
             """,
             Title);
 
