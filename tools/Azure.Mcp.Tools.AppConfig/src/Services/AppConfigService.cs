@@ -176,7 +176,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             throw new InvalidOperationException($"The App Configuration store '{accountName}' does not have a valid endpoint.");
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();

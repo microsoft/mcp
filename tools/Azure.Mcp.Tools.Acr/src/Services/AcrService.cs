@@ -72,7 +72,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         if (!string.IsNullOrEmpty(reg.LoginServer))
         {
             var acrEndpointString = $"https://{reg.LoginServer}";
-            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr");
+            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", TenantService.CloudConfiguration.ArmEnvironment);
         }
 
         // Build data-plane client for this login server

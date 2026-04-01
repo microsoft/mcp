@@ -35,7 +35,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(from), from),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -116,7 +116,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(subject), subject),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
