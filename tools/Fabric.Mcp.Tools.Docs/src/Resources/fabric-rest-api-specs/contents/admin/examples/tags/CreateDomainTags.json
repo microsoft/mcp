@@ -4,10 +4,16 @@
             "type": "Domain",
             "domainId": "e408a2ca-0e43-49d6-86d3-f2558508d32a"
         },
-        "createTagsRequest": [
-            { "displayName": "Finance 2024" },
-            { "displayName": "HR 2024" }
-        ]
+        "createTagsRequest": {
+            "scope": {
+                "type": "Domain",
+                "domainId": "e408a2ca-0e43-49d6-86d3-f2558508d32a"
+            },
+            "createTagsRequest": [
+                { "displayName": "Finance 2024" },
+                { "displayName": "HR 2024" }
+            ]
+        }
     },
     "responses": {
         "201": {

@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
@@ -93,8 +93,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.Location, options);
+                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+                options.Server, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 

@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -24,7 +22,7 @@ public sealed class ItemCreateCommand(
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
 
     public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
-    public override string Name => "create_item";
+    public override string Name => "create-item";
     public override string Title => "Create Fabric Item";
     public override string Description => "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.";
 
@@ -46,6 +44,16 @@ public sealed class ItemCreateCommand(
         command.Options.Add(CoreOptionDefinitions.DisplayName.AsRequired());
         command.Options.Add(CoreOptionDefinitions.ItemType.AsRequired());
         command.Options.Add(CoreOptionDefinitions.Description.AsOptional());
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+        });
     }
 
     protected override ItemCreateOptions BindOptions(ParseResult parseResult)
@@ -72,11 +80,6 @@ public sealed class ItemCreateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
             var request = new CreateItemRequest
             {
                 DisplayName = options.ItemName,

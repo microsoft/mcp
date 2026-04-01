@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Monitor.Options.Metrics;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -26,9 +27,9 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     public override string Name => "definitions";
 
     public override string Description =>
-            $"""
-                List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
-            """;
+        """
+        List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
+        """;
 
     public override string Title => CommandTitle;
 

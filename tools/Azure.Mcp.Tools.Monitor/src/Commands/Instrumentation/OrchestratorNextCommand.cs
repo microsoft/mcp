@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -19,14 +18,14 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
 
     public override string Id => "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5";
 
-    public override string Name => "orchestrator_next";
+    public override string Name => "orchestrator-next";
 
     public override string Description => @"Get the next instrumentation action after completing the current one.
 Call this ONLY after you have executed the EXACT instruction from the previous response.
 DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
 
 Expected workflow:
-1. You received an action from orchestrator_start or orchestrator_next
+1. You received an action from orchestrator-start or orchestrator-next
 2. You executed EXACTLY what the 'instruction' field told you to do
 3. Now call this tool to get the next action
 
@@ -38,8 +37,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = true,
+        OpenWorld = false,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };
@@ -54,8 +53,8 @@ Returns: The next action to execute, or 'complete' status when all steps are don
     {
         return new OrchestratorNextOptions
         {
-            SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
-            CompletionNote = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.CompletionNote)
+            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
+            CompletionNote = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.CompletionNote.Name)
         };
     }
 

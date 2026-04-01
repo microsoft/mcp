@@ -55,7 +55,8 @@ public class ResourceCreateCommandTests
             "test-redis",
             "eastus",
             "Balanced_B0",
-            Arg.Any<bool?>(),
+            false,
+            false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -86,6 +87,19 @@ public class ResourceCreateCommandTests
         Assert.Equal("eastus", result.Resource.Location);
         Assert.Equal("Balanced_B0", result.Resource.Sku);
         Assert.Equal("Creating", result.Resource.Status);
+
+        await _redisService.Received(1).CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis",
+            "eastus",
+            "Balanced_B0",
+            false,
+            false,
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -143,6 +157,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -172,6 +187,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -199,6 +215,7 @@ public class ResourceCreateCommandTests
             "test-redis-with-modules",
             "eastus",
             "Balanced_B0",
+            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
             modules != null &&
@@ -238,6 +255,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
                 modules.Length == 2 &&
@@ -270,6 +288,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -304,6 +323,71 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreatesResource_WithPublicNetworkAccessEnabled()
+    {
+        // Arrange
+        var expectedResource = new Resource
+        {
+            Name = "test-redis-public",
+            Type = "AzureManagedRedis",
+            ResourceGroupName = "test-rg",
+            SubscriptionId = "sub123",
+            Location = "eastus",
+            Sku = "Balanced_B0",
+            Status = "Creating"
+        };
+
+        _redisService.CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis-public",
+            "eastus",
+            "Balanced_B0",
+            Arg.Any<bool?>(),
+            true,
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+        .Returns(expectedResource);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub123",
+            "--resource-group", "test-rg",
+            "--resource", "test-redis-public",
+            "--location", "eastus",
+            "--sku", "Balanced_B0",
+            "--public-network-access", "true"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        AssertSuccessResponse(response);
+
+        var result = DeserializeResult(response.Results!);
+
+        Assert.NotNull(result);
+        Assert.Equal("test-redis-public", result.Resource.Name);
+        Assert.Equal("Creating", result.Resource.Status);
+
+        await _redisService.Received(1).CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis-public",
+            "eastus",
+            "Balanced_B0",
+            Arg.Any<bool?>(),
+            true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -332,6 +416,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
                 modules.Length == 1 &&
@@ -370,6 +455,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
                 modules.Length == 1 &&

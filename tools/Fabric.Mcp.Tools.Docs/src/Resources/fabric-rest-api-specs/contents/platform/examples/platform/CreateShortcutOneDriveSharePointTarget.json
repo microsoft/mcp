@@ -9,7 +9,8 @@
                 "oneDriveSharePoint": {
                     "location": "https://microsoft.sharepoint.com", 
                     "subpath": "/Shared Documents/Test Folder",  
-                    "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335"
+                    "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335",
+                    "updateFabricItemSensitivity": false
                 }               
             }
         }
@@ -27,7 +28,8 @@
                     "oneDriveSharePoint": {
                         "location": "https://microsoft.sharepoint.com",
                         "subpath": "/Shared Documents/Test Folder",
-                        "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335"
+                        "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335",
+                        "updateFabricItemSensitivity": false
                     }
                 }
             }        

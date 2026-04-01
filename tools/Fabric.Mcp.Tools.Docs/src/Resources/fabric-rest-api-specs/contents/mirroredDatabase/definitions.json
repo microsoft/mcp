@@ -90,6 +90,11 @@
                     "description": "The mirrored database public definition.",
                     "$ref": "#/definitions/MirroredDatabaseDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the mirrored database.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -117,7 +122,7 @@
             }
         },
         "MirroredDatabaseDefinition": {
-            "description": "Mirrored database public definition object.",
+            "description": "Mirrored database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mirrored-database-definition) for more details on the structure of the Mirrored database definition.",
             "type": "object",
             "required": [
                 "parts"

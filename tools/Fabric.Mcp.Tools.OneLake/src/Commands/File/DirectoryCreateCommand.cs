@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -50,6 +46,23 @@ public sealed class DirectoryCreateCommand(
         command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.DirectoryPath);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
@@ -82,16 +95,6 @@ public sealed class DirectoryCreateCommand(
 
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             await _oneLakeService.CreateDirectoryAsync(
                 options.WorkspaceId,
                 options.ItemId,

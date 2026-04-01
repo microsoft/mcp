@@ -13,6 +13,11 @@ namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
+    private const int MaxAllowedRetries = 10;
+    private const double MaxAllowedNetworkTimeoutSeconds = 300;
+    private const double MaxAllowedDelaySeconds = 60;
+    private const double MinAllowedDelaySeconds = 0.1;
+    private static volatile bool s_retryLimitsDisabled = false;
     private static UserAgentPolicy s_sharedUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
@@ -65,6 +70,25 @@ public abstract class BaseAzureService
             s_initialized = true;
         }
     }
+
+    /// <summary>
+    /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
+    /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
+    /// </summary>
+    public static void DisableRetryLimits()
+    {
+        s_retryLimitsDisabled = true;
+    }
+
+    /// <summary>
+    /// Resets the retry limits flag. For testing only.
+    /// </summary>
+    internal static void ResetRetryLimits()
+    {
+        s_retryLimitsDisabled = false;
+    }
+
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
@@ -190,15 +214,21 @@ public abstract class BaseAzureService
         {
             if (retryPolicy.HasDelaySeconds)
             {
-                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
+                clientOptions.Retry.Delay = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(retryPolicy.DelaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(retryPolicy.DelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
             if (retryPolicy.HasMaxDelaySeconds)
             {
-                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+                clientOptions.Retry.MaxDelay = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds)
+                    : TimeSpan.FromSeconds(Math.Clamp(retryPolicy.MaxDelaySeconds, MinAllowedDelaySeconds, MaxAllowedDelaySeconds));
             }
             if (retryPolicy.HasMaxRetries)
             {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
+                clientOptions.Retry.MaxRetries = s_retryLimitsDisabled
+                    ? retryPolicy.MaxRetries
+                    : Math.Min(MaxAllowedRetries, retryPolicy.MaxRetries);
             }
             if (retryPolicy.HasMode)
             {
@@ -206,7 +236,9 @@ public abstract class BaseAzureService
             }
             if (retryPolicy.HasNetworkTimeoutSeconds)
             {
-                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
+                clientOptions.Retry.NetworkTimeout = s_retryLimitsDisabled
+                    ? TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds)
+                    : TimeSpan.FromSeconds(Math.Min(MaxAllowedNetworkTimeoutSeconds, retryPolicy.NetworkTimeoutSeconds));
             }
         }
 

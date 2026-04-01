@@ -13,7 +13,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
-using Azure.ResourceManager;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
@@ -43,6 +42,13 @@ public class PostgresService(
         return accessToken.Token;
     }
 
+    private static readonly string[] AllowedPostgresSuffixes =
+    [
+        ".postgres.database.azure.com",
+        ".postgres.database.usgovcloudapi.net",
+        ".postgres.database.chinacloudapi.cn",
+    ];
+
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
@@ -59,6 +65,14 @@ public class PostgresService(
                     server + ".postgres.database.azure.com"
             };
         }
+
+        if (!Array.Exists(AllowedPostgresSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for PostgreSQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedPostgresSuffixes)}.");
+        }
+
         return server;
     }
 

@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Options.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -79,7 +79,7 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new NamespaceListCommandResult(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false),
+                new(namespaces?.Results ?? [], namespaces?.AreResultsTruncated ?? false),
                 DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
         }
         catch (Exception ex)
@@ -98,17 +98,17 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the subscription and resource group exist and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
@@ -166,9 +164,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new NamespaceUpdateCommandResult(updatedNamespace),
+                new(updatedNamespace),
                 EventHubsJsonContext.Default.NamespaceUpdateCommandResult);
-            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

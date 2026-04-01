@@ -59,6 +59,11 @@
                   "description": "The report public definition.",
                   "$ref": "#/definitions/ReportDefinition",
                   "readOnly": false
+              },
+              "sensitivityLabelSettings": {
+                  "description": "The sensitivity label settings for the report.",
+                  "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                  "readOnly": false
               }
           }
       },
@@ -97,7 +102,7 @@
           }
       },
       "ReportDefinition" : {
-          "description": "Report public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/report-definition) for more details on how to craft a report public definition.",
+          "description": "Report public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/report-definition) for more details on the structure of the Report definition.",
           "type": "object",
           "required": ["parts"],
           "properties": {

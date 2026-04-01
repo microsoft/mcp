@@ -3,13 +3,12 @@
 
 using System.Net;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
@@ -177,8 +176,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 
         try
         {
-            ArgumentNullException.ThrowIfNull(options.Command);
-            var command = options.Command;
+            var command = options.Command!;
 
             // Try to authenticate, but continue even if it fails
             await AuthenticateWithAzureCredentialsAsync(_processService, _logger, cancellationToken);

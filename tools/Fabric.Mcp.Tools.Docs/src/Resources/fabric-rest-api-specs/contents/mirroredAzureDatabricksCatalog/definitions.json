@@ -211,6 +211,11 @@
           "description": "The MirroredAzureDatabricksCatalog public definition. Use `definition` or `creationPayload`. You can't use both at the same time.",
           "$ref": "#/definitions/MirroredAzureDatabricksCatalogPublicDefinition",
           "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the MirroredAzureDatabricksCatalog.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
         }
       }
     },
@@ -295,7 +300,7 @@
       }
     },
     "MirroredAzureDatabricksCatalogPublicDefinition": {
-      "description": "MirroredAzureDatabricksCatalog public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mirroredazuredatabrickscatalog-definition) for more details on how to craft a MirroredAzureDatabricksCatalog definition public definition.",
+      "description": "MirroredAzureDatabricksCatalog public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mirrored-azuredatabricks-unitycatalog-definition) for more details on the structure of the MirroredAzureDatabricksCatalog definition.",
       "type": "object",
       "required": [
         "parts"

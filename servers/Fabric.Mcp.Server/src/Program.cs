@@ -2,11 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
@@ -14,11 +10,13 @@ using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
@@ -74,7 +72,7 @@ internal class Program
         return [
             // Register core areas
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
@@ -169,6 +167,10 @@ internal class Program
 
         // Until there is a consolidated tool list, just use an empty provider
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
+
+        // Plugin telemetry is not supported in Fabric - register no-op providers
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(new NullPluginFileReferenceAllowlistProvider());
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(new NullPluginSkillNameAllowlistProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

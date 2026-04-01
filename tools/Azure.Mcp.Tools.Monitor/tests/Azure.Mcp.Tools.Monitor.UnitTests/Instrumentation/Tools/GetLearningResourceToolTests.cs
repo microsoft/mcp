@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Tools.Monitor.Tools;
 using Xunit;
 
@@ -17,7 +20,7 @@ public sealed class GetLearningResourceToolTests
         var result = GetLearningResourceTool.GetLearningResource(path);
 
         // Assert
-        Assert.Equal("Invalid resource path. Use list_learning_resources to see available resources.", result);
+        Assert.Equal("Invalid resource path. Call get-learning-resource without the path parameter to list all available resources.", result);
     }
 
     [Fact]
@@ -52,6 +55,58 @@ public sealed class GetLearningResourceToolTests
         finally
         {
             TryDeleteFile(fullPath);
+        }
+    }
+
+    [Fact]
+    public void GetLearningResource_WithValidPath_ReturnsFileContent()
+    {
+        // Arrange
+        var relativePath = $"tests/valid-{Guid.NewGuid():N}.md";
+        var fullPath = CreateResourceFile(relativePath, "test-content");
+
+        try
+        {
+            // Act
+            var result = GetLearningResourceTool.GetLearningResource(relativePath);
+
+            // Assert
+            Assert.Equal("test-content", result);
+        }
+        finally
+        {
+            TryDeleteFile(fullPath);
+        }
+    }
+
+    [Fact]
+    public void ListLearningResources_WithGeneratedFiles_IncludesRelativePathsInSortedOrder()
+    {
+        // Arrange
+        var testFolder = $"tests/list-{Guid.NewGuid():N}";
+        var firstPath = $"{testFolder}/b-resource.md";
+        var secondPath = $"{testFolder}/a-resource.md";
+
+        var firstFile = CreateResourceFile(firstPath, "a-content");
+        var secondFile = CreateResourceFile(secondPath, "b-content");
+
+        try
+        {
+            // Act
+            var result = GetLearningResourceTool.ListLearningResources();
+
+            // Assert
+            Assert.Contains(firstPath, result);
+            Assert.Contains(secondPath, result);
+
+            var firstIndex = result.IndexOf(firstPath);
+            var secondIndex = result.IndexOf(secondPath);
+            Assert.True(firstIndex >= 0 && secondIndex >= 0 && secondIndex < firstIndex);
+        }
+        finally
+        {
+            TryDeleteFile(firstFile);
+            TryDeleteFile(secondFile);
         }
     }
 

@@ -12,7 +12,7 @@
             "defaultAction": "Deny",
             "allowedEndpoints": [
               {
-                "hostNamePattern": "*.microsoft.com"
+                "hostnamePattern": "*.microsoft.com"
               }
             ]
           },

@@ -891,6 +891,11 @@
                 "allowConnectionUsageInGateway": {
                     "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
                     "type": "boolean"
+                },
+                "allowUsageInUserControlledCode": {
+                    "type": "boolean",
+                    "description": "Allow this connection to be used with items that allow user-controlled code such as Notebook",
+                    "default": false
                 }
             }
         },
@@ -1050,6 +1055,10 @@
                 "allowConnectionUsageInGateway": {
                     "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
                     "type": "boolean"
+                },
+                "allowUsageInUserControlledCode": {
+                    "type": "boolean",
+                    "description": "Allow this connection to be used with items that allow user-controlled code such as Notebook."
                 }
             },
             "x-ms-discriminator-value": "ShareableCloud"
@@ -1184,37 +1193,44 @@
         "ConnectionCreationMetadata": {
             "required": ["type", "creationMethods", "supportedCredentialTypes", "supportedConnectionEncryptionTypes", "supportsSkipTestConnection"],
             "type": "object",
-            "properties": {
-                "type": {
-                    "description": "The type of the connection.",
-                    "type": "string"
-                },
-                "creationMethods": {
-                    "description": "A list of creation methods for the connection.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ConnectionCreationMethod"
-                    }
-                },
-                "supportedCredentialTypes": {
-                    "description": "A list of credential type values that the connection supports.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CredentialType"
-                    }
-                },
-                "supportedConnectionEncryptionTypes": {
-                    "description": "A list of connection encryption values that the connection supports.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ConnectionEncryption"
-                    }
-                },
-                "supportsSkipTestConnection": {
-                    "description": "Whether the connection type supports skip test connection. True - The connection type supports skip test connection, False - The connection type does not support skip test connection.",
-                    "type": "boolean"
-                }
+          "properties": {
+            "type": {
+              "description": "The type of the connection.",
+              "type": "string"
+            },
+            "creationMethods": {
+              "description": "A list of creation methods for the connection.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ConnectionCreationMethod"
+              }
+            },
+            "supportedCredentialTypes": {
+              "description": "A list of credential type values that the connection supports.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CredentialType"
+              }
+            },
+            "supportedConnectionEncryptionTypes": {
+              "description": "A list of connection encryption values that the connection supports.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ConnectionEncryption"
+              }
+            },
+            "supportsSkipTestConnection": {
+              "description": "Whether the connection type supports skip test connection. True - The connection type supports skip test connection, False - The connection type does not support skip test connection.",
+              "type": "boolean"
+            },
+            "supportedCredentialTypesForUsageInUserControlledCode": {
+              "description": "A list of credential type values that the connection supports for allowing with items that allow user-controlled code such as Notebook.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CredentialType"
+              }
             }
+          }
         },
         "ListSupportedConnectionTypesResponse": {
             "required": ["value"],

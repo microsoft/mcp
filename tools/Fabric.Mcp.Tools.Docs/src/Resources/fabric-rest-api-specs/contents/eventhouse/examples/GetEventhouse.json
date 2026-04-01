@@ -19,7 +19,10 @@
 						"8187f108-2404-4771-6e7a-5b218778e7a5"
 					],
                     "minimumConsumptionUnits": 0
-				}
+				},
+                "sensitivityLabel": {
+                    "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+                }
 			}
 		}
 	}

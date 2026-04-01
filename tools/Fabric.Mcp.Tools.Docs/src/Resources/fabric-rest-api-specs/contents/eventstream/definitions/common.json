@@ -239,6 +239,23 @@
                     "format": "date-time"
                 }
             }
+        },
+        "KeyStringValuePair": {
+            "type": "object",
+            "required": [
+                "key",
+                "value"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "The key."
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The value."
+                }
+            }
         }
     }
 }

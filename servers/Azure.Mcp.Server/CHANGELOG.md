@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.30 (Unreleased)
+## 2.0.0-beta.36 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,145 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.35 (2026-03-30)
+
+### Bugs Fixed
+
+- Configured the right audience based on Cloud configuration when creating SDK clients for tools in:
+  - AppConfiguration [[#2287](https://github.com/microsoft/mcp/pull/2287)]
+  - Container Registry [[#2286](https://github.com/microsoft/mcp/pull/2286)]
+  - Monitor Query [[#2285](https://github.com/microsoft/mcp/pull/2285)]
+  - Search [[#2283](https://github.com/microsoft/mcp/pull/2283)]
+- Fixed JSON deserialization issues for `resourcehealth` events with timezone-less datetime values. [[#2293](https://github.com/microsoft/mcp/pull/2293)]
+
+### Other Changes
+
+- Added skill name and tool name validation to the `plugin-telemetry` tool. Skill names are validated against an allowlist to prevent logging of customer-defined custom skill names. Tool names are validated by stripping known client prefixes (Claude Code, VS Code, Copilot CLI) and matching against registered commands or area names, with normalized names logged for consistent telemetry. Added an allowlist for Azure extension tools that are not azmcp commands but still tracked. Expanded the plugin file-reference allowlist with additional azure-enterprise-infra-planner reference paths. [[#2291](https://github.com/microsoft/mcp/pull/2291)]
+- Refactored `PluginTelemetryCommand` to use constructor injection for allowlist providers and lazy resolution of `ICommandFactory` via `IServiceProvider` to avoid circular dependency during startup. [[#2291](https://github.com/microsoft/mcp/pull/2291)]
+
+## 2.0.0-beta.34 (2026-03-27)
+
+### Features Added
+
+- Added `--dangerously-disable-retry-limits` server start option to bypass retry policy bounds enforcement when explicitly required. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+
+### Breaking Changes
+
+- Removed support for custom URL-based authority hosts in the `--cloud` option. The option now accepts only well-known cloud names. Unrecognized values now throw an `ArgumentException` instead of defaulting to the public cloud. Supported values are: [[#2257](https://github.com/microsoft/mcp/pull/2257)]
+  - `AzureCloud`
+  - `AzurePublicCloud`
+  - `Public`
+  - `AzurePublic`
+  - `AzureChinaCloud`
+  - `China`
+  - `AzureChina`
+  - `AzureUSGovernment`
+  - `AzureUSGovernmentCloud`
+  - `USGov`
+  - `USGovernment`
+
+### Bugs Fixed
+
+- Enforced read-only and HTTP mode restrictions at tool execution time, not just during tool listing. [[#2226](https://github.com/microsoft/mcp/pull/2226)]
+- Improved reliability by adding regex timeouts to prevent hangs, limiting large resource listings, and allowing cancellation to propagate correctly through exception handling. [[#2223](https://github.com/microsoft/mcp/pull/2223)]
+- Fixed Cosmos DB cache key generation to include the authentication method, preventing incorrect client reuse across authentication types. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
+- Fixed validation gap in `BaseAzureResourceService` where the `additionalFilter` parameter could be concatenated into Resource Graph queries without validation. Pipe operators are now rejected. [[#2217](https://github.com/microsoft/mcp/pull/2217)]
+- Added input validation for ledger names in `ConfidentialLedgerService` to ensure only valid characters are accepted. [[#2211](https://github.com/microsoft/mcp/pull/2211)]
+- Fixed elicitation for GitHub Copilot CLI by updating from `UntitledSingleSelectEnumSchema` to `TitledSingleSelectEnumSchema`. [[#2253](https://github.com/microsoft/mcp/pull/2253)]
+- Fixed incorrect SignalR caching where runtime results were not stored in the cache, causing every request to re-fetch instead of returning cached data. [[#2254](https://github.com/microsoft/mcp/pull/2254)]
+- Added `CacheKeyBuilder` to construct cache keys using characters disallowed in Azure resource and subscription names, preventing cache collisions in multi-client remote scenarios. [[#2259](https://github.com/microsoft/mcp/pull/2259)]
+- Added vault name validation in `KeyVaultService` to prevent unsafe input from being interpolated into Key Vault and Managed HSM URIs. [[#2238](https://github.com/microsoft/mcp/pull/2238)]
+
+### Other Changes
+
+- Enforced upper bounds on retry policy values to prevent excessively large retry configurations. [[#2239](https://github.com/microsoft/mcp/pull/2239)]
+- Bumped `@azure/msal-browser` to 5.2.0+ to comply with Component Governance requirements. [[#2260](https://github.com/microsoft/mcp/pull/2260)]
+- Removed references to the non-existent `--public-access-level` parameter from the `storage_blob_container_create` tool description and associated e2e test prompts. [[#2264](https://github.com/microsoft/mcp/pull/2264)]
+
+## 2.0.0-beta.33 (2026-03-25)
+
+### Features Added
+
+- Updated secret elicitation to require explicit user confirmation before proceeding with sensitive operations. [[#2197](https://github.com/microsoft/mcp/pull/2197)]
+
+### Bugs Fixed
+
+- Added IPv4 format validation and blocked dangerous IP ranges in the `sql_server_firewall-rule_create` command to prevent overly permissive firewall rules. [[#2206](https://github.com/microsoft/mcp/pull/2206)]
+- Improved `HttpRequestException` handling to return the actual HTTP status code when available instead of defaulting to `503 Service Unavailable`. [[#2200](https://github.com/microsoft/mcp/pull/2200)]
+
+### Other Changes
+
+- Extended elicitations/user consent prompts to cover destructive operations (delete, modify, create) in addition to secret operations, and consolidated both into a single prompt to avoid duplicate confirmation. [[#2208](https://github.com/microsoft/mcp/pull/2208)]
+
+## 2.0.0-beta.32 (2026-03-24)
+
+### Features Added
+
+- Added blocklist validation for security-sensitive PostgreSQL server parameters (audit logging, TLS/SSL, authentication, shared libraries, row-level security) in the `server param set` command to prevent accidental weakening of server security. [[#2164](https://github.com/microsoft/mcp/pull/2164)]
+- Added `--public-network-access` option to the `redis_create` command to control public network access for Azure Managed Redis resources (defaults to disabled). [[#2179](https://github.com/microsoft/mcp/pull/2179)]
+
+### Bugs Fixed
+
+- Fixed PostgreSQL and MySQL server name validation to require allowed Azure domain suffixes when a fully qualified domain name is provided. [[#2159](https://github.com/microsoft/mcp/pull/2159)]
+- Fixed Cosmos DB credential authentication to strictly honor the requested authentication method instead of falling back to account-key authentication. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Fixed snapshot lookup in the `FileShares` namespace to use exact resource ID matching instead of substring matching. [[#2168](https://github.com/microsoft/mcp/pull/2168)]
+- Improved Cosmos DB query validator to detect a broader range of boolean tautology patterns. [[#2171](https://github.com/microsoft/mcp/pull/2171)]
+- Fixed the `sql_server_create` command to default `--public-network-access` to `Disabled` for secure-by-default server creation. [[#2181](https://github.com/microsoft/mcp/pull/2181)]
+
+### Other Changes
+
+- Centralized Foundry and Azure OpenAI endpoint validation using the shared `EndpointValidator` with sovereign cloud support. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added file path validation and canonicalization for the `speech_stt_recognize` and `speech_tts_synthesize` commands. [[#2162](https://github.com/microsoft/mcp/pull/2162)]
+- Added skill name allowlist validation to the `plugin-telemetry` tool to prevent logging of customer-defined custom skill names, and expanded the plugin file-reference allowlist with additional `azure-enterprise-infra-planner` reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
+- Removed structured logging of the full options payload from the `sql_server_create` command to prevent accidental exposure of sensitive values. [[#2158](https://github.com/microsoft/mcp/pull/2158)]
+- Updated Docker release pipeline to publish additional minor version tags (e.g., `2.0`, `2.0-amd64`, `2.0-arm64`) allowing consumers to pin to a minor release stream. [[#2144](https://github.com/microsoft/mcp/pull/2144)]
+
+## 2.0.0-beta.31 (2026-03-20)
+
+### Features Added
+
+- Added new `compute` commands to delete VMs and VM scale sets with `--force-deletion` support: [[#2065](https://github.com/microsoft/mcp/pull/2065)]
+  - `compute_vm_delete`
+  - `compute_vmss_delete`
+- Added `containerapps_list` tool to list Azure Container Apps in a subscription. [[#1981](https://github.com/microsoft/mcp/pull/1981)]
+- Enhanced `monitor` instrumentation tools with framework-aware onboarding for .NET, Node.js, and Python, including guidance for Application Insights 3.x migration and Azure Monitor Distro adoption, and added the `send_enhancement_select` tool to submit selected enhancements to an active orchestrator session. [[#2115](https://github.com/microsoft/mcp/pull/2115)]
+- Added default subscription resolution from the Azure CLI profile (`~/.azure/azureProfile.json`) for all subscription-scoped commands, falling back to `AZURE_SUBSCRIPTION_ID` environment variable. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
+- Added `group_resource_list` tool to list all resources within an Azure Resource Group, including generic and non-specialized resources. [[#1975](https://github.com/microsoft/mcp/pull/1975)]
+
+### Breaking Changes
+
+- Renamed the following `monitor` tools to use dash-separated names instead of underscores: [[#2134](https://github.com/microsoft/mcp/pull/2134)]
+  - `get-learning-resource`
+  - `orchestrator-start`
+  - `orchestrator-next`
+  - `send-brownfield-analysis`
+- Narrowed the `subscription list` command response model to include only (`subscriptionId`, `displayName`, `state`, `tenantId`, `isDefault`) instead of the full Azure SDK `SubscriptionData` type. [[#1974](https://github.com/microsoft/mcp/pull/1974)]
+
+### Other Changes
+
+- Added skill name and tool name validation to the plugin-telemetry tool. Skill names are validated against an allowlist to prevent logging of customer-defined custom skill names. Tool names are validated by stripping known client prefixes (Claude Code, VS Code, Copilot CLI) and matching against registered commands or area names, with normalized names logged for consistent telemetry. Added an allowlist for Azure extension tools that are not azmcp commands but still tracked. Expanded the plugin file-reference allowlist with additional azure-enterprise-infra-planner reference paths. [[#2149](https://github.com/microsoft/mcp/pull/2149)]
+- Refactored PluginTelemetryCommand to use constructor injection for allowlist providers and lazy resolution of ICommandFactory via IServiceProvider to avoid circular dependency during startup.
+- Improved tool descriptions to enahnce LLM selection accuracy for the following tools: [[#2131](https://github.com/microsoft/mcp/pull/2131)]
+  - `extension_azqr`
+  - `extension_cli_generate`
+  - `extension_cli_install`
+
+## 2.0.0-beta.30 (2026-03-19)
+
+### Breaking Changes
+
+- Moved the following tools from the `monitorinstrumentation` namespace to the `monitor` namespace: [[#2087](https://github.com/microsoft/mcp/pull/2087)]
+  - `list_learning_resources`
+  - `get_learning_resource`
+  - `orchestrator_start`
+  - `orchestrator_next`
+  - `send_brownfield_analysis`
+- Consolidated the `list_learning_resources` and `get_learning_resource` tools into a single `get_learning_resource` tool in the `monitor` namespace. [[#2113](https://github.com/microsoft/mcp/pull/2113)]
+
+### Other Changes
+- Extended command telemetry to include additional attributes (`plugin-version`, `skill-name`, `skill-version`). [[#2114](https://github.com/microsoft/mcp/pull/2114)]
+- Reviewed MCP tool Command definitions and resolved validation inconsistencies, aligning implementations with tool development guidelines and improving consistency across multiple tool areas. [[#2086](https://github.com/microsoft/mcp/pull/2086)]
 
 ## 2.0.0-beta.29 (2026-03-18)
 

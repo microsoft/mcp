@@ -344,6 +344,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "hardDelete",
+            "description": "Specifies whether to perform a hard delete. When set to `true`, the item is permanently deleted and cannot be recovered. When set to `false` or not specified, the item is soft-deleted if the item type supports it.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -364,7 +371,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InsufficientWorkspaceRole - User doesn't have sufficient workspace role.\n\n* FeatureNotAvailable - This could be due to the soft deletion feature not being available.\n\n* UnsupportedItemType - This could be due to the soft deletion feature not supported by the requested item type.\n\n* TenantSwitchDisabled - This could be due to the soft deletion feature being disabled by the tenant admin.\n\n* InvalidTargetItemStateForSoftDeletion - The item is in invalid states for soft deletion.\n\n* InvalidParentItemStateForSoftDeletion - The item's parent item is not in Active state.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -373,6 +380,9 @@
         "x-ms-examples": {
           "Delete a lakehouse example": {
             "$ref": "./examples/DeleteLakehouse.json"
+          },
+          "Hard delete a lakehouse example": {
+            "$ref": "./examples/HardDeleteLakehouse.json"
           }
         }
       }
@@ -558,7 +568,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/TableMaintenance/instances": {
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/tableMaintenance/instances": {
       "post": {
         "summary": "Run on-demand [table maintenance](/fabric/data-engineering/lakehouse-table-maintenance) job instance.",
         "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n## Required Delegated Scopes \n\nLakehouse.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -643,7 +653,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/RefreshMaterializedLakeViews/schedules": {
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/schedules": {
       "post": {
         "summary": "Create a new Refresh MaterializedLakeViews schedule for a lakehouse.",
         "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Limitations \n- A lakehouse can create maximum 20 schedulers.\n- Materialized Lake View supports only one active refresh schedule per lineage.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -975,7 +985,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/RefreshMaterializedLakeViews/instances": {
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/instances": {
       "post": {
         "summary": "Run on-demand [Refresh MaterializedLakeViews](/fabric/data-engineering/materialized-lake-views/refresh-materialized-lake-view) job instance.",
         "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n> [!NOTE]\n> The URL for this API has been updated to include the job type as part of the path, replacing the previous use of a query parameter. For backward compatibility, invocations using the query parameter are still supported.\n\n## Required Delegated Scopes\n\nLakehouse.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
@@ -1045,7 +1055,7 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/RefreshMaterializedLakeViews/schedules/{scheduleId}": {
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/refreshMaterializedLakeViews/schedules/{scheduleId}": {
       "patch": {
         "summary": "Update an existing Refresh MaterializedLakeViews schedule for a lakehouse.",
         "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes: \n\n(Lakehouse.Execute.All or Item.Execute.All) and (Lakehouse.ReadWrite.All or Item.ReadWrite.All)\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",

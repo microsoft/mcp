@@ -27,6 +27,34 @@
 /.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
 ##################
+# Packages
+##################
+
+# ServiceLabel: %packages-Docker
+# ServiceOwners:                       @conniey @microsoft/azure-mcp
+
+# ServiceLabel: %packages-Eclipse
+# ServiceOwners:                       @srnagar @microsoft/azure-mcp
+
+# ServiceLabel: %packages-IntelliJ
+# ServiceOwners:                       @srnagar @microsoft/azure-mcp
+
+# ServiceLabel: %packages-mcpb
+# ServiceOwners:                       @vcolin7 @microsoft/azure-mcp
+
+# ServiceLabel: %packages-npx
+# ServiceOwners:                       @KarishmaGhiya @hallipr @microsoft/azure-mcp
+
+# ServiceLabel: %packages-NuGet
+# ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
+
+# ServiceLabel: %packages-PyPi
+# ServiceOwners:                       @xiangyan99 @microsoft/azure-mcp
+
+# ServiceLabel: %packages-VSIX
+# ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
+
+##################
 # Servers
 ##################
 
@@ -37,7 +65,7 @@
 # ServiceOwners:                       @microsoft/fabric-mcp
 
 ##################
-# Services
+# Tools
 ##################
 
 # PRLabel: %tools-ACR
@@ -169,12 +197,6 @@
 # ServiceLabel: %tools-Deploy
 # ServiceOwners:                       @qianwens @xfz11 @wchigit
 
-# ServiceLabel: %tools-Docker
-# ServiceOwners:                       @conniey @microsoft/azure-mcp
-
-# ServiceLabel: %tools-Eclipse
-# ServiceOwners:                       @srnagar @microsoft/azure-mcp
-
 # PRLabel: %tools-DeviceRegistry
 /tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
 
@@ -222,9 +244,6 @@
 
 # ServiceLabel: %tools-Grafana
 # ServiceOwners:                       @weng5e @xiangyan99
-
-# ServiceLabel: %tools-IntelliJ
-# ServiceOwners:                       @srnagar @microsoft/azure-mcp
 
 # PRLabel: %tools-ISV
 /tools/Azure.Mcp.Tools.AzureIsv/       @agrimayadav @pachaturvedi @microsoft/azure-mcp
@@ -276,12 +295,6 @@
 
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @mattkohnms @ramnov
-
-# ServiceLabel: %tools-npx
-# ServiceOwners:                       @KarishmaGhiya @hallipr @microsoft/azure-mcp
-
-# ServiceLabel: %tools-NuGet
-# ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-Policy
 /tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp
@@ -394,9 +407,6 @@
 
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
-
-# ServiceLabel: %tools-VSIX
-# ServiceOwners:                       @g2vinay @hallipr @microsoft/azure-mcp
 
 # PRLabel: %tools-WellArchitectedFramework
 /tools/Azure.Mcp.Tools.WellArchitectedFramework/   @skakara @arunrab @microsoft/azure-mcp

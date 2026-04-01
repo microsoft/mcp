@@ -202,6 +202,13 @@
     <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests/Azure.Mcp.Tools.ConfidentialLedger.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.ConfidentialLedger/tests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests/Azure.Mcp.Tools.ConfidentialLedger.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/src/">
+    <Project Path="tools/Azure.Mcp.Tools.ContainerApps/src/Azure.Mcp.Tools.ContainerApps.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ContainerApps/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.ContainerApps/tests/Azure.Mcp.Tools.ContainerApps.UnitTests/Azure.Mcp.Tools.ContainerApps.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Cosmos/src/">
     <Project Path="tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj" />
@@ -223,8 +230,8 @@
     <Project Path="tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.LiveTests/Azure.Mcp.Tools.DeviceRegistry.LiveTests.csproj" />
+    <Project Path="tools/Azure.Mcp.Tools.DeviceRegistry/tests/Azure.Mcp.Tools.DeviceRegistry.UnitTests/Azure.Mcp.Tools.DeviceRegistry.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/" />
   <Folder Name="/tools/Azure.Mcp.Tools.EventGrid/src/">
@@ -278,6 +285,7 @@
     <Project Path="tools/Azure.Mcp.Tools.Functions/src/Azure.Mcp.Tools.Functions.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Functions/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.LiveTests/Azure.Mcp.Tools.Functions.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.Functions/tests/Azure.Mcp.Tools.Functions.UnitTests/Azure.Mcp.Tools.Functions.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/" />
@@ -461,6 +469,13 @@
     <Project Path="tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.LiveTests/Azure.Mcp.Tools.VirtualDesktop.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.VirtualDesktop/tests/Azure.Mcp.Tools.VirtualDesktop.UnitTests/Azure.Mcp.Tools.VirtualDesktop.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/src/">
+    <Project Path="tools/Azure.Mcp.Tools.WellArchitectedFramework/src/Azure.Mcp.Tools.WellArchitectedFramework.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.WellArchitectedFramework/tests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests/Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/src/">
     <Project Path="tools/Azure.Mcp.Tools.Workbooks/src/Azure.Mcp.Tools.Workbooks.csproj" />
@@ -468,13 +483,6 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Workbooks/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Workbooks/tests/Azure.Mcp.Tools.Workbooks.LiveTests/Azure.Mcp.Tools.Workbooks.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.Workbooks/tests/Azure.Mcp.Tools.Workbooks.UnitTests/Azure.Mcp.Tools.Workbooks.UnitTests.csproj" />
-  </Folder>
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">
-    <Project Path="tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
-  </Folder>
-  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
-    <Project Path="tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Core/" />
   <Folder Name="/tools/Fabric.Mcp.Tools.Core/src/">
@@ -489,5 +497,12 @@
   </Folder>
   <Folder Name="/tools/Fabric.Mcp.Tools.Docs/tests/">
     <Project Path="tools/Fabric.Mcp.Tools.Docs/tests/Fabric.Mcp.Tools.Docs.UnitTests/Fabric.Mcp.Tools.Docs.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/" />
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/src/">
+    <Project Path="tools/Fabric.Mcp.Tools.OneLake/src/Fabric.Mcp.Tools.OneLake.csproj" />
+  </Folder>
+  <Folder Name="/tools/Fabric.Mcp.Tools.OneLake/tests/">
+    <Project Path="tools/Fabric.Mcp.Tools.OneLake/tests/Fabric.Mcp.Tools.OneLake.Tests.csproj" />
   </Folder>
 </Solution>

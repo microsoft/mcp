@@ -257,7 +257,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(argumentException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address invalid --end-ip-address invalid");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 10.0.0.1 --end-ip-address 10.0.0.2");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
@@ -361,7 +361,7 @@ public class FirewallRuleCreateCommandTests
     [Theory]
     [InlineData("10.0.0.1", "10.0.0.1")] // Single IP
     [InlineData("192.168.1.1", "192.168.1.255")] // IP range
-    [InlineData("0.0.0.0", "255.255.255.255")] // Full range
+    [InlineData("10.0.0.0", "10.255.255.255")] //Class A private range
     public async Task ExecuteAsync_HandlesVariousIPFormats(string startIp, string endIp)
     {
         // Arrange
@@ -392,5 +392,72 @@ public class FirewallRuleCreateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
+    }
+
+    [Theory]
+    [InlineData("not-an-ip", "192.168.1.255")]
+    [InlineData("125.168.100.4", "not-an-ip")]
+    [InlineData("abc.def.ghi.jkl", "192.168.1.255")]
+    [InlineData("192.168.1.1", "999.999.999.999")]
+    [InlineData("::1", "192.168.1.255")]
+    [InlineData("192.168.1.1", "::1")]
+    [InlineData("not-an-ip", "also-not-an-ip")]
+    public async Task ExecuteAsync_RejectsInvalidIpAddressFormat(string startIp, string endIp)
+    {
+        // Arrange
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid", response.Message);
+        Assert.Contains("IP address format", response.Message);
+
+        // Verify service was never called due to validation failure
+        await _service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("0.0.0.0", "0.0.0.0")]
+    [InlineData("0.0.0.0", "255.255.255.255")]
+    public async Task ExecuteAsync_RejectsDangerousIpRanges(string startIp, string endIp)
+    {
+        // Arrange
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not allowed", response.Message);
+        Assert.Contains("security", response.Message);
+
+        // Verify service was never called due to validation failure
+        await _service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+
+    }
+
+    [Fact]
+    public void IsValidIpAddress_ValidatesCorrectly()
+    {
+        Assert.False(FirewallRuleCreateCommand.IsValidIpAddress("365272"));
+        Assert.True(FirewallRuleCreateCommand.IsValidIpAddress("255.255.255.255"));
+        Assert.False(FirewallRuleCreateCommand.IsValidIpAddress("not-an-ip"));
+        Assert.False(FirewallRuleCreateCommand.IsValidIpAddress("999.999.999.999"));
+        Assert.False(FirewallRuleCreateCommand.IsValidIpAddress("::1"));
+    }
+
+    [Fact]
+    public void IsDangerousRange_DetectsCorrectly()
+    {
+        Assert.True(FirewallRuleCreateCommand.IsDangerousRange("0.0.0.0", "0.0.0.0"));
+        Assert.True(FirewallRuleCreateCommand.IsDangerousRange("0.0.0.0", "255.255.255.255"));
+        Assert.False(FirewallRuleCreateCommand.IsDangerousRange("192.168.1.1", "192.168.1.255"));
+        Assert.False(FirewallRuleCreateCommand.IsDangerousRange("10.0.0.1", "10.0.0.1"));
     }
 }

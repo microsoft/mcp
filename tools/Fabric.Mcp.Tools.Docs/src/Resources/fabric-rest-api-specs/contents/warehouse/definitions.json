@@ -109,6 +109,11 @@
             "description": "The warehouse creation payload. Use `creationPayload`. You can't use `definition` or `creationPayload` at the same time.",
             "$ref": "#/definitions/WarehouseCreationPayload",
             "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+            "description": "The sensitivity label settings for the warehouse.",
+            "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+            "readOnly": false
         }
       }
     },

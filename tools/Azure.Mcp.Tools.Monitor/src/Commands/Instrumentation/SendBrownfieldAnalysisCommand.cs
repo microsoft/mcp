@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -21,12 +20,12 @@ public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysis
 
     public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
 
-    public override string Name => "send_brownfield_analysis";
+    public override string Name => "send-brownfield-analysis";
 
-    public override string Description => @"Send brownfield code analysis findings after orchestrator_start returned status 'analysis_needed'.
+    public override string Description => @"Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
 You must have scanned the workspace source files and filled in the analysis template.
 For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
-After this call succeeds, continue with orchestrator_next as usual.";
+After this call succeeds, continue with orchestrator-next as usual.";
 
     public override string Title => "Send Brownfield Analysis";
 
@@ -34,8 +33,8 @@ After this call succeeds, continue with orchestrator_next as usual.";
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = true,
+        OpenWorld = false,
+        ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };
@@ -50,8 +49,8 @@ After this call succeeds, continue with orchestrator_next as usual.";
     {
         return new SendBrownfieldAnalysisOptions
         {
-            SessionId = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.SessionId),
-            FindingsJson = parseResult.CommandResult.GetValueOrDefault(MonitorInstrumentationOptionDefinitions.FindingsJson)
+            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
+            FindingsJson = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.FindingsJson.Name)
         };
     }
 
@@ -82,7 +81,8 @@ After this call succeeds, continue with orchestrator_next as usual.";
                 findings.Processors,
                 findings.ClientUsage,
                 findings.Sampling,
-                findings.TelemetryPipeline);
+                findings.TelemetryPipeline,
+                findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);

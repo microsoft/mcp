@@ -101,6 +101,11 @@
                     "description": "The eventhouse public definition. Use `definition` or `creationPayload`. You can't use both at the same time.",
                     "$ref": "#/definitions/EventhouseDefinition",
                     "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the eventhouse.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
                 }
             }
         },
@@ -132,7 +137,7 @@
             }
         },
         "EventhouseDefinition" : {
-            "description": "Eventhouse public definition object.",
+            "description": "Eventhouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/eventhouse-definition) for more details on the structure of the Eventhouse definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {

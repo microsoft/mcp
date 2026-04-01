@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Kusto.Models;
+using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
@@ -53,10 +54,10 @@ public sealed class KustoService(
     }
 
     // Provider cache key generator
-    private static string GetProviderCacheKey(string clusterUri, string? tenant)
+    private static string GetProviderCacheKey(string clusterUri, string? tenant, string suffix)
     {
         var tenantKey = string.IsNullOrEmpty(tenant) ? "default" : tenant;
-        return $"{tenantKey}:{clusterUri}";
+        return CacheKeyBuilder.Build(tenantKey, clusterUri, suffix);
     }
 
     public async Task<ResourceQueryResults<string>> ListClustersAsync(
@@ -203,6 +204,10 @@ public sealed class KustoService(
             (nameof(databaseName), databaseName),
             (nameof(tableName), tableName));
 
+        // Validate table name to prevent KQL injection — while the query endpoint is read-only
+        // (no data modification), injection could still enable information disclosure or resource abuse
+        KustoIdentifierValidator.ValidateIdentifier(tableName, nameof(tableName));
+
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant, cancellationToken);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(
             databaseName,
@@ -330,7 +335,7 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateKustoClientAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_command";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "command");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
@@ -344,7 +349,7 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateCslQueryProviderAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_query";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "query");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {

@@ -4,9 +4,6 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Logging;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -27,6 +24,8 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry;
@@ -98,6 +97,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
         command.Validators.Add(commandResult =>
         {
@@ -176,6 +176,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
             SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
+            DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableRetryLimits.Name),
             Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
         };
         return options;
