@@ -14,6 +14,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `Azure.Mcp.Core.Extensions` → `Microsoft.Mcp.Core.Extensions` [#2306](https://github.com/microsoft/mcp/pull/2306)
   - `Azure.Mcp.Core.Helpers` → `Microsoft.Mcp.Core.Helpers` [#2310](https://github.com/microsoft/mcp/pull/2310)
   - `Azure.Mcp.Core.Logging` → `Microsoft.Mcp.Core.Logging` [#2312](https://github.com/microsoft/mcp/pull/2312)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2319](https://github.com/microsoft/mcp/pull/2319)
+  - `Azure.Mcp.Core.Services` → `Microsoft.Mcp.Core.Services` [#2321](https://github.com/microsoft/mcp/pull/2321)
 
 #### Dependency Updates
 
@@ -24,8 +26,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
-
-- Added `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. Added unit tests for the new fields.
 
 ## 2.0.0-beta.35 (2026-03-30)
 

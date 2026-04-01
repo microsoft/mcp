@@ -12,6 +12,8 @@
   - `Azure.Mcp.Core.Extensions` → `Microsoft.Mcp.Core.Extensions` [#2306](https://github.com/microsoft/mcp/pull/2306)
   - `Azure.Mcp.Core.Helpers` → `Microsoft.Mcp.Core.Helpers` [#2310](https://github.com/microsoft/mcp/pull/2310)
   - `Azure.Mcp.Core.Logging` → `Microsoft.Mcp.Core.Logging` [#2312](https://github.com/microsoft/mcp/pull/2312)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2319](https://github.com/microsoft/mcp/pull/2319)
+  - `Azure.Mcp.Core.Services` → `Microsoft.Mcp.Core.Services` [#2321](https://github.com/microsoft/mcp/pull/2321)
 - Updated `ModelContextProtocol` and `ModelContextProtocol.AspNetCore` dependencies to version 1.1.0. [#1963](https://github.com/microsoft/mcp/pull/1963)
 
 ## 2.0.36 (2026-03-31) (pre-release)
