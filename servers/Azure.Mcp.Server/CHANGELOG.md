@@ -4,7 +4,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 3.0.0-beta.1 (2026-04-01)
 
-### Other Changes
+### Breaking Changes
 
 - Updated internal namespaces to align with the `Microsoft.Mcp.Core` convention:
   - `Azure.Mcp.TestUtilities` → `Microsoft.Mcp.Core.TestUtilities` [#2300](https://github.com/microsoft/mcp/pull/2300)

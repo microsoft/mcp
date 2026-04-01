@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Updated internal namespaces to align with the `Microsoft.Mcp.Core` convention:
+- **Breaking:** Updated internal namespaces to align with the `Microsoft.Mcp.Core` convention:
   - `Azure.Mcp.TestUtilities` → `Microsoft.Mcp.Core.TestUtilities` [#2300](https://github.com/microsoft/mcp/pull/2300)
   - `Microsoft.Mcp.Core.Areas.Server.Commands` → `Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions` [#2301](https://github.com/microsoft/mcp/pull/2301)
   - Fixed `Microsoft.Mcp.Core.Areas.Tools` namespaces [#2303](https://github.com/microsoft/mcp/pull/2303)
