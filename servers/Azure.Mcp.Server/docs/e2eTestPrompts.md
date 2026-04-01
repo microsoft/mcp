@@ -119,6 +119,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> |
 | appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> |
 
+## Azure Application Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components |
+| applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
+| applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
+| applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
 ## Azure Backup
 
 | Tool Name | Test Prompt |
@@ -153,15 +162,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> |
 | azurebackup_dr_enablecrr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> |
 | azurebackup_dr_enablecrr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
-
-## Azure Application Insights
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components |
-| applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
-| applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
-| applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
 ## Azure CLI
 
