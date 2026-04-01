@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Models;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 

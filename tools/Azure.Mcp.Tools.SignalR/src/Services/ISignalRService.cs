@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.SignalR.Models;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 

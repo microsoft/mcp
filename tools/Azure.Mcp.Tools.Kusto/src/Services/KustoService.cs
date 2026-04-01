@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
