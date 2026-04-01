@@ -45,14 +45,14 @@ public static class PluginTelemetryOptionDefinitions
         $"--{ClientTypeName}"
     )
     {
-        Description = "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code'). Deprecated: prefer --client-name."
+        Description = "Type of client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'vscode'). Deprecated: prefer --client-name."
     };
 
     public static readonly Option<string> ClientName = new(
         $"--{ClientNameName}"
     )
     {
-        Description = "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code').",
+        Description = "Name of the client invoking the telemetry (e.g., 'copilot-cli', 'claude-code', 'Visual Studio Code', 'Visual Studio Code - Insiders').",
         Required = false
     };
 
