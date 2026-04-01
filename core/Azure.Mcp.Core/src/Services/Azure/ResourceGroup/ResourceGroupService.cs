@@ -3,11 +3,11 @@
 
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Models.Resource;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 

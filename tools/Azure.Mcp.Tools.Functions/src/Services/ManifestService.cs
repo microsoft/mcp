@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Functions.Services;
 

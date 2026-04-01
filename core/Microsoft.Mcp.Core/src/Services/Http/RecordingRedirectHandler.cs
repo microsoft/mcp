@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Http;
+namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
 /// DelegatingHandler that rewrites outgoing requests to a recording/replace proxy specified by TEST_PROXY_URL.

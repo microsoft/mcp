@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Identity;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
