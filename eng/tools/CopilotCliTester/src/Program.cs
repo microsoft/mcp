@@ -92,23 +92,7 @@ static class Program
                     break;
             }
         }
-        //         case "--mcp-url" when i + 1 < args.Length:
-        //             mcpUrl = args[++i];
-        //             break;
-        //         case "--auto-server":
-        //             autoServer = true;
-        //             // Check if next arg is a port number (optional)
-        //             if (i + 1 < args.Length && int.TryParse(args[i + 1], out var port))
-        //             {
-        //                 serverPort = port;
-        //                 i++;
-        //             }
-        //             break;
-        //         case "--batch-size" when i + 1 < args.Length:
-        //             int.TryParse(args[++i], out batchSize);
-        //             break;
-        //     }
-        // }
+
         if (parallel < 1) {
             Console.WriteLine("Warning: --parallel must be >= 1. Using 1.");
             parallel = 1;
@@ -119,45 +103,6 @@ static class Program
 
         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
     }
-    
-    //     CleanStaleWorkspaces();
-
-    //     // Auto-start MCP server if requested
-    //     McpServerManager? serverManager = null;
-    //     if (autoServer)
-    //     {
-    //         var serverPath = McpServerManager.FindServerPath();
-    //         if (serverPath is null)
-    //         {
-    //             Console.Error.WriteLine("ERROR: Could not find Azure MCP Server path. Make sure you're running from the repo.");
-    //             return 1;
-    //         }
-
-    //         serverManager = new McpServerManager(serverPath, serverPort, debug: !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG")));
-    //         try
-    //         {
-    //             await serverManager.StartAsync();
-    //             mcpUrl = serverManager.Url;  // Override mcpUrl with auto-started server
-    //         }
-    //         catch (Exception ex)
-    //         {
-    //             Console.Error.WriteLine($"ERROR: Failed to start MCP server: {ex.Message}");
-    //             return 1;
-    //         }
-    //     }
-
-    //     try
-    //     {
-    //         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile, mcpUrl, batchSize, serverManager);
-    //     }
-    //     finally
-    //     {
-    //         if (serverManager is not null)
-    //         {
-    //             await serverManager.DisposeAsync();
-    //         }
-    //     }
-    // }
 
     static void CleanStaleWorkspaces()
     {
@@ -183,7 +128,6 @@ static class Program
     }
 
     static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null)
-    // static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null, string? mcpUrl = null, int batchSize = 20, McpServerManager? serverManager = null)
     {
         CleanStaleWorkspaces();
 
@@ -266,18 +210,6 @@ static class Program
         InitializeMarkdownReport(reportFile);
         Console.WriteLine($"Report: {reportFile}");
         Console.WriteLine($"Parallel workers: {parallel}");
-        // if (!string.IsNullOrEmpty(mcpUrl))
-        // {
-        //     Console.WriteLine($"MCP Server (HTTP): {mcpUrl}");
-        //     if (serverManager is not null)
-        //     {
-        //         Console.WriteLine($"Batch size (restart server every N prompts): {batchSize}");
-        //     }
-        // }
-        // else
-        // {
-        //     Console.WriteLine("MCP Server: stdio (spawning per session)");
-        // }
         Console.WriteLine();
 
         var debug = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG"));
@@ -289,9 +221,7 @@ static class Program
             await semaphore.WaitAsync();
             try
             {
-                // Create a dedicated client per task (matching TS pattern).
-                // When the client is disposed, it kills its CLI process tree,
-                // ensuring child azmcp.exe processes are cleaned up.
+                // Create a dedicated client per task. When the client is disposed, it kills its CLI process tree, ensuring child azmcp.exe processes are cleaned up.
                 await using var client = AgentRunner.CreateSharedClient(debug);
                 await using var runner = new AgentRunner(client);
                 var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
@@ -306,60 +236,6 @@ static class Program
         
         var taskResults = await Task.WhenAll(tasks);
         var results = taskResults.OrderBy(r => r.Tool).ThenBy(r => r.Prompt).ToList();
-
-        // var results = new List<TestResult>();
-        
-        // // Split prompts into batches to prevent server resource exhaustion
-        // var batches = allPrompts
-        //     .Select((prompt, index) => new { prompt, index })
-        //     .GroupBy(x => x.index / batchSize)
-        //     .Select(g => g.Select(x => x.prompt).ToList())
-        //     .ToList();
-
-        // var batchNumber = 0;
-        // foreach (var batch in batches)
-        // {
-        //     batchNumber++;
-        //     if (batches.Count > 1)
-        //     {
-        //         Console.WriteLine($"\n--- Batch {batchNumber}/{batches.Count} ({batch.Count} prompts) ---");
-        //     }
-            
-        //     var tasks = batch.Select(async prompt =>
-        //     {
-        //         await semaphore.WaitAsync();
-        //         try
-        //         {
-        //             await using var runner = new AgentRunner(sharedClient);
-        //             var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries, mcpUrl);
-        //             AppendResultToMarkdown(reportFile, result);
-        //             return result;
-        //         }
-        //         finally
-        //         {
-        //             semaphore.Release();
-        //         }
-        //     }).ToList();
-
-            
-        //     var taskResults = await Task.WhenAll(tasks);
-        //     results.AddRange(taskResults);
-            
-        //     // Restart server between batches to prevent resource exhaustion (CLOSE_WAIT accumulation)
-        //     if (serverManager is not null && batchNumber < batches.Count)
-        //     {
-        //         try
-        //         {
-        //             await serverManager.RestartAsync();
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             Console.Error.WriteLine($"Warning: Failed to restart server: {ex.Message}");
-        //         }
-        //     }
-        // }
-
-        // results = results.OrderBy(r => r.Tool).ThenBy(r => r.Prompt).ToList();
 
         totalStopwatch.Stop();
 
@@ -387,7 +263,7 @@ static class Program
         AppendMarkdownSummary(reportFile, results, totalStopwatch.Elapsed);
         Console.WriteLine($"✓ Report finalized: {reportFile}");
 
-        // Final safety net: kill any remaining azmcp.exe processes that survived cleanup
+        // kill any remaining azmcp.exe processes that survived cleanup
         // AgentRunner.KillAllAzmcpProcesses();
 
         return passRate >= PassThreshold ? 0 : 1;
@@ -403,7 +279,6 @@ static class Program
         string testContext,
         string model,
         int retries)
-        //string? mcpUrl = null)
     {
         var stopwatch = Stopwatch.StartNew();
         var allAttemptTools = new List<List<string>>();

@@ -29,7 +29,7 @@ e2eTestPrompts.md  (from servers/Azure.Mcp.Server/docs/)
        ▼
   CopilotClient (GitHub.Copilot.SDK)
        │
-       ├── mcpServers: { azure: npx -y @azure/mcp server start }
+       ├── mcpServers: { azure: <local azmcp executable> server start }
        └── session.SendAsync({ prompt })
               │
               ▼
@@ -71,9 +71,7 @@ CopilotCliTester/
    ```bash
    az login
    ```
-5. **Node.js 20+** — Required to run the Azure MCP server via npx
-   - [Download Node.js](https://nodejs.org/)
-   - The tool uses `npx -y @azure/mcp server start` to invoke the Azure MCP server
+5. **Local azmcp build** — The tool discovers or builds the local `azmcp` executable from the repo (`servers/Azure.Mcp.Server/`). No external npm/npx dependency is needed.
 
 ## Usage
 
@@ -103,8 +101,8 @@ Options:
   --retries <n>           Maximum retry attempts per prompt (default: 3)
   --one-per-tool          Test only one prompt per tool
   --output <dir>          Output directory for reports (default: reports)
-  --model <name>          LLM model to use (default: claude-sonnet-4.5)
-  --parallel <n>          Number of prompts to test concurrently (default: 1)
+  --model <name>          LLM model to use (default: claude-opus-4.6)
+  --parallel <n>          Number of prompts to test concurrently (default: 4)
   --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
 ```
 
@@ -195,7 +193,7 @@ SUCCESS: Loading prompts from: .../e2eTestPrompts.md
   → Filtered to namespace "redis": 8 prompts
 
 Testing 8 prompts across 1 namespaces
-Retries: 3, Model: claude-sonnet-4.5
+Retries: 3, Model: claude-opus-4.6
 --------------------------------------------------------------------------------
 
 Report: reports/e2e-report-redis-20260227-123456.md

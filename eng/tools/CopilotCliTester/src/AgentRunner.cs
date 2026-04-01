@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Data;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,8 +11,7 @@ namespace CopilotCliTester;
 
 /// <summary>
 /// Agent runner for MCP E2E tests using Copilot SDK.
-/// Creates CopilotClient + session with MCP Azure server, runs prompts,
-/// collects events, and supports early termination when expected tool is invoked.
+/// Creates CopilotClient + session with MCP Azure server, runs prompts, collects events, and supports early termination when expected tool is invoked.
 /// </summary>
 internal sealed partial class AgentRunner : IAsyncDisposable
 {
@@ -41,8 +39,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     /// <summary>
-    /// Creates a shared CopilotClient that should be reused across all test runs.
-    /// One CLI process instead of one-per-prompt avoids file handle exhaustion (EMFILE).
+    /// Creates a CopilotClient instance for running test sessions.
     /// </summary>
     public static CopilotClient CreateSharedClient(bool debug = false)
     {
@@ -66,9 +63,6 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         var workspace = CreateTempWorkspace("mcp-test-");
         var isComplete = false;
         AgentMetadata? metadata = null;
-
-        // Snapshot azmcp processes before session creation so we can kill leaked ones after
-        // var preSessionPids = GetAzmcpProcessIds();
 
         try
         {
@@ -172,10 +166,6 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                     // Best-effort; ignore disposal errors
                 }
 
-                // Kill any azmcp.exe processes that were spawned during this session
-                // and survived the abort/dispose. This is a safety net because the SDK
-                // doesn't always reliably terminate child stdio processes.
-                // KillLeakedAzmcpProcesses(preSessionPids);
             }
         }
         catch (Exception ex)
@@ -350,8 +340,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     /// <summary>
-    /// Builds the MCP servers configuration for stdio transport.
-    /// Discovers or builds the local azmcp executable from the repo.
+    /// Builds the MCP servers configuration for stdio transport. Discovers or builds the local azmcp executable from the repo.
     /// </summary>
     private static Dictionary<string, object> BuildMcpServersConfig()
     {
@@ -377,8 +366,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
 
     /// <summary>
-    /// Resolves the azmcp server executable. Walks up from the current assembly location
-    /// to find the repo root (containing Microsoft.Mcp.slnx), then checks for an existing
+    /// Resolves the azmcp server executable. Walks up from the current assembly location to find the repo root (containing Microsoft.Mcp.slnx), then checks for an existing
     /// build artifact. If none is found, builds the server project.
     /// </summary>
     private static string ResolveServerExecutable()
@@ -393,9 +381,8 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 "Make sure you're running from within the repo.");
         }
 
-        // Check Debug then Release for an existing build output
+        // Check for an existing Debug build output
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        // string[] configurations = ["Debug", "Release"];
 
         var file = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
 
@@ -404,20 +391,8 @@ internal sealed partial class AgentRunner : IAsyncDisposable
             Console.WriteLine($"Using existing server build: {file}");
             return file;
         }
-        
-        // foreach (var config in configurations)
-        // {
-        //     var candidate = Path.Combine(
-        //         repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", config, "net10.0", exeName);
 
-        //     if (File.Exists(candidate))
-        //     {
-        //         Console.WriteLine($"Using existing server build: {candidate}");
-        //         return candidate;
-        //     }
-        // }
-
-        // No pre-built artifact found — build the server project
+        // If no pre-built artifact found, build the server project
         Console.WriteLine("No pre-built azmcp found. Building Azure.Mcp.Server...");
         var psi = new ProcessStartInfo
         {
@@ -455,8 +430,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     /// <summary>
-    /// Walks up from the executing assembly's directory to find the repo root
-    /// (the directory containing Microsoft.Mcp.slnx).
+    /// Walks up from the executing assembly's directory to find the repo root (the directory containing Microsoft.Mcp.slnx).
     /// </summary>
     private static string FindRepoRoot()
     {
@@ -473,8 +447,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         }
 
         throw new InvalidOperationException(
-            "Could not find repo root (directory containing Microsoft.Mcp.slnx). " +
-            "Make sure you're running from within the repo.");
+            "Could not find repo root (directory containing Microsoft.Mcp.slnx). Make sure you're running from within the repo.");
     }
 
     private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)
@@ -600,86 +573,5 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "... (truncated)";
-
-    /// <summary>
-    /// Returns the set of currently running azmcp.exe process IDs.
-    /// </summary>
-    // private static HashSet<int> GetAzmcpProcessIds()
-    // {
-    //     try
-    //     {
-    //         return Process.GetProcessesByName("azmcp")
-    //             .Select(p => { using (p) return p.Id; })
-    //             .ToHashSet();
-    //     }
-    //     catch
-    //     {
-    //         return [];
-    //     }
-    // }
-
-    /// <summary>
-    /// Kills azmcp.exe processes that were spawned after the pre-session snapshot.
-    /// This catches processes leaked by the SDK when session.AbortAsync/DisposeAsync
-    /// fails to terminate the child stdio process.
-    /// </summary>
-    // private static void KillLeakedAzmcpProcesses(HashSet<int> preSessionPids)
-    // {
-    //     try
-    //     {
-    //         foreach (var process in Process.GetProcessesByName("azmcp"))
-    //         {
-    //             using (process)
-    //             {
-    //                 if (!preSessionPids.Contains(process.Id))
-    //                 {
-    //                     try
-    //                     {
-    //                         process.Kill(entireProcessTree: true);
-    //                         process.WaitForExit(3000);
-    //                     }
-    //                     catch
-    //                     {
-    //                         // Process may have already exited
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     catch
-    //     {
-    //         // Ignore errors during cleanup
-    //     }
-    // }
-
-    /// <summary>
-    /// Kills all running azmcp.exe processes. Used as a final safety net
-    /// at program exit to ensure no orphaned processes remain.
-    /// </summary>
-    // public static void KillAllAzmcpProcesses()
-    // {
-    //     try
-    //     {
-    //         foreach (var process in Process.GetProcessesByName("azmcp"))
-    //         {
-    //             using (process)
-    //             {
-    //                 try
-    //                 {
-    //                     process.Kill(entireProcessTree: true);
-    //                     process.WaitForExit(3000);
-    //                 }
-    //                 catch
-    //                 {
-    //                     // Process may have already exited
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     catch
-    //     {
-    //         // Ignore errors during cleanup
-    //     }
-    // }
 
 }

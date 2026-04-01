@@ -32,5 +32,7 @@ eng/tools/ToolDescriptionEvaluator/results.md
 eng/tools/ToolDescriptionEvaluator/tools.json
 deploy-log.txt
 
+eng/tools/CopilotCliTester/src/reports/
+
 # VM-specific documentation (internal/personal notes)
 docs/vm-docs/
