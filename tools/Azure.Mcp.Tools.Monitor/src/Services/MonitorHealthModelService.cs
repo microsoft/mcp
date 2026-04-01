@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 

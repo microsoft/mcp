@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Models.Resource;
+namespace Microsoft.Mcp.Core.Models.Resource;
 
 public class GenericResourceInfo(string name, string id, string type, string location)
 {

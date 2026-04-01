@@ -4,7 +4,7 @@
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Models.Elicitation;
+namespace Microsoft.Mcp.Core.Models.Elicitation;
 
 /// <summary>
 /// Response from an elicitation/create request containing the user's action and data.

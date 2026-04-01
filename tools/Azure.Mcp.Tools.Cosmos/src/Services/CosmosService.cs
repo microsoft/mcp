@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 

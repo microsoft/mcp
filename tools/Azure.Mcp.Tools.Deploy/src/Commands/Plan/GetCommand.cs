@@ -4,7 +4,6 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;

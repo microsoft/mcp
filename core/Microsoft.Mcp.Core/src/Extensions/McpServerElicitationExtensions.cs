@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Models.Elicitation;
+using Microsoft.Mcp.Core.Models.Elicitation;
 
 namespace Microsoft.Mcp.Core.Extensions;
 

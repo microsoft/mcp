@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Models;
 
 namespace Microsoft.Mcp.Core.Commands;
 
