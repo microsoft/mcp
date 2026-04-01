@@ -265,7 +265,7 @@ The `azmcp server start` command supports the following options:
 > This option controls how the server authenticates when making requests to downstream Azure services:
 > - `NotSet` (default): A safe default is chosen based on other settings
 > - `UseHostingEnvironmentIdentity`: Uses the hosting environment's identity (similar to `DefaultAzureCredential`). All outgoing requests use the same identity regardless of the incoming request's identity
-> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`)
+> - `UseOnBehalfOf`: Exchanges the incoming request's access token for a new token valid for the downstream service. Only valid when the server is running with HTTP transport and incoming HTTP authentication enabled (i.e., `--transport http` without `--dangerously-disable-http-incoming-auth`). **Important:** OBO requires a delegated (user) token — callers using service principals, managed identities, or client credentials flow cannot use this strategy. See [#2192](https://github.com/microsoft/mcp/issues/2192) for details.
 
 > **Note on `--cloud`:**
 >

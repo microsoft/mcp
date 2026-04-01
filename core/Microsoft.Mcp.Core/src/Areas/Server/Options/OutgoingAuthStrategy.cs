@@ -30,5 +30,12 @@ public enum OutgoingAuthStrategy
     /// request's access token for a new access token valid for the downstream
     /// service. This is only valid for remote MCP server scenarios.
     /// </summary>
+    /// <remarks>
+    /// The OBO flow requires a delegated (user) token as the assertion. Callers
+    /// that authenticate with app-only tokens (service principals, managed
+    /// identities, client credentials flow) cannot use this strategy because
+    /// Entra ID does not support service-principal-to-service-principal OBO.
+    /// See <see href="https://github.com/microsoft/mcp/issues/2192"/> for details.
+    /// </remarks>
     UseOnBehalfOf = 2
 }
