@@ -11,6 +11,7 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Identity;
 
 namespace Azure.Mcp.Tools.SignalR.Services;

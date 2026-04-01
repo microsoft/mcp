@@ -16,7 +16,7 @@ using Microsoft.Mcp.Core.Models.Identity;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Core.Models.ETag;
+using ETag = Microsoft.Mcp.Core.Models.ETag;
 
 public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger, IHttpClientFactory httpClientFactory)
     : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService

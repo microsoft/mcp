@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
