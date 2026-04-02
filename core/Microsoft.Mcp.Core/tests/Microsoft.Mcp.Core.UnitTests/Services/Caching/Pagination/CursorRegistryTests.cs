@@ -1,21 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Mcp.Core.Services.Caching.Pagination;
-using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Caching.Pagination;
 
-public class CursorRegistryTests
+public class CursorRegistryTests : IDisposable
 {
-    private readonly ICacheService _cacheService = Substitute.For<ICacheService>();
+    private readonly MemoryCache _memoryCache = new(new MemoryCacheOptions());
     private readonly CursorRegistry _registry;
 
     public CursorRegistryTests()
     {
-        _registry = new CursorRegistry(_cacheService);
+        _registry = new CursorRegistry(_memoryCache);
     }
 
     private static CursorRecord CreateRecord(string? cursorId = null, DateTimeOffset? expiresAt = null) => new()
@@ -39,12 +38,11 @@ public class CursorRegistryTests
         var result = await _registry.SetAsync(record, ct);
 
         Assert.Equal(record.CursorId, result);
-        await _cacheService.Received(1).SetAsync(
-            CursorRegistry.CacheGroup,
-            record.CursorId,
-            record,
-            Arg.Is<TimeSpan?>(t => t!.Value > TimeSpan.Zero),
-            ct);
+
+        // Verify the record was actually stored
+        var retrieved = await _registry.GetAsync(record.CursorId, ct);
+        Assert.NotNull(retrieved);
+        Assert.Equal(record.CursorId, retrieved.CursorId);
     }
 
     [Fact]
@@ -69,8 +67,7 @@ public class CursorRegistryTests
     {
         var ct = TestContext.Current.CancellationToken;
         var record = CreateRecord();
-        _cacheService.GetAsync<CursorRecord>(CursorRegistry.CacheGroup, record.CursorId, cancellationToken: ct)
-            .Returns(new ValueTask<CursorRecord?>(record));
+        await _registry.SetAsync(record, ct);
 
         var result = await _registry.GetAsync(record.CursorId, ct);
 
@@ -83,8 +80,6 @@ public class CursorRegistryTests
     public async Task GetAsync_ReturnsNullForUnknownCursor()
     {
         var ct = TestContext.Current.CancellationToken;
-        _cacheService.GetAsync<CursorRecord>(CursorRegistry.CacheGroup, "cur_unknown", cancellationToken: ct)
-            .Returns(new ValueTask<CursorRecord?>(default(CursorRecord)));
 
         var result = await _registry.GetAsync("cur_unknown", ct);
 
@@ -108,14 +103,17 @@ public class CursorRegistryTests
     }
 
     [Fact]
-    public async Task DeleteAsync_DelegatesToCacheService()
+    public async Task DeleteAsync_RemovesFromCache()
     {
         var ct = TestContext.Current.CancellationToken;
         var cursorId = CursorRegistry.GenerateCursorId();
+        var record = CreateRecord(cursorId: cursorId);
+        await _registry.SetAsync(record, ct);
 
         await _registry.DeleteAsync(cursorId, ct);
 
-        await _cacheService.Received(1).DeleteAsync(CursorRegistry.CacheGroup, cursorId, ct);
+        var result = await _registry.GetAsync(cursorId, ct);
+        Assert.Null(result);
     }
 
     [Fact]
@@ -148,5 +146,10 @@ public class CursorRegistryTests
         var ids = Enumerable.Range(0, 100).Select(_ => CursorRegistry.GenerateCursorId()).ToHashSet();
 
         Assert.Equal(100, ids.Count);
+    }
+
+    public void Dispose()
+    {
+        _memoryCache.Dispose();
     }
 }

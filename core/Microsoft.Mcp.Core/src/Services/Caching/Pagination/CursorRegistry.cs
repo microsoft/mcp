@@ -3,20 +3,19 @@
 
 using System.Buffers.Text;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
 
 /// <summary>
-/// Implementation of <see cref="ICursorRegistry"/> that delegates storage to <see cref="ICacheService"/>.
-/// Cursor records are stored under a dedicated cache group with TTL derived from
-/// <see cref="CursorRecord.ExpiresAtUtc"/>.
+/// Implementation of <see cref="ICursorRegistry"/> that stores cursor records directly
+/// in <see cref="IMemoryCache"/> with TTL derived from <see cref="CursorRecord.ExpiresAtUtc"/>.
 /// </summary>
-public sealed class CursorRegistry(ICacheService cacheService) : ICursorRegistry
+public sealed class CursorRegistry(IMemoryCache memoryCache) : ICursorRegistry
 {
-    internal const string CacheGroup = "cursors";
     internal const string CursorPrefix = "cur_";
 
-    public async ValueTask<string> SetAsync(CursorRecord record, CancellationToken cancellationToken = default)
+    public ValueTask<string> SetAsync(CursorRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
 
@@ -26,23 +25,28 @@ public sealed class CursorRegistry(ICacheService cacheService) : ICursorRegistry
             throw new ArgumentException("Cursor record has already expired.", nameof(record));
         }
 
-        await cacheService.SetAsync(CacheGroup, record.CursorId, record, ttl, cancellationToken);
+        memoryCache.Set(record.CursorId, record, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = ttl
+        });
 
-        return record.CursorId;
+        return new ValueTask<string>(record.CursorId);
     }
 
-    public async ValueTask<CursorRecord?> GetAsync(string cursorId, CancellationToken cancellationToken = default)
+    public ValueTask<CursorRecord?> GetAsync(string cursorId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(cursorId);
 
-        return await cacheService.GetAsync<CursorRecord>(CacheGroup, cursorId, cancellationToken: cancellationToken);
+        memoryCache.TryGetValue(cursorId, out CursorRecord? record);
+        return new ValueTask<CursorRecord?>(record);
     }
 
-    public async ValueTask DeleteAsync(string cursorId, CancellationToken cancellationToken = default)
+    public ValueTask DeleteAsync(string cursorId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(cursorId);
 
-        await cacheService.DeleteAsync(CacheGroup, cursorId, cancellationToken);
+        memoryCache.Remove(cursorId);
+        return default;
     }
 
     /// <summary>
