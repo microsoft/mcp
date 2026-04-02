@@ -34,19 +34,24 @@ public sealed class FunctionsService(
     private const long MaxFileSizeBytes = 1_048_576; // 1 MB
     private const long MaxTreeSizeBytes = 5_242_880; // 5 MB for tree API response
 
-    private const string FunctionTemplateMergeInstructions =
+    private const string TemplateFileInstructions =
         """
-        ## Merging Template Files with Existing Project
+        ## Template Files
 
-        **Project files** (host.json, local.settings.json, etc.) may already exist if you used `functions project get`.
-        - **local.settings.json**: Merge new "Values" entries with existing ones. Do not overwrite existing connection strings.
-        - **host.json**: Keep existing extensionBundle settings. Merge other configuration sections.
-        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates.
-        - **.funcignore**: Merge ignore patterns, avoid duplicates.
+        This template includes three file sets:
+        - **Files**: All template files combined - use this for new (greenfield) projects
+        - **FunctionFiles**: Function code and related files (code, infra, docs)
+        - **ProjectFiles**: Project configuration files (host.json, local.settings.json, etc.)
 
-        **Function files** are new files to add to the project:
+        For brownfield scenarios (adding functions to existing projects), merge ProjectFiles carefully:
+        - **local.settings.json**: Merge "Values" entries, don't overwrite existing connection strings
+        - **host.json**: Keep existing extensionBundle settings, merge other sections
+        - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates
+        If anything conflicts, ask the user before overwriting.
+
+        Function files placement by language:
         - Python: Add/merge function code into `function_app.py`
-        - TypeScript: Place files in `src/functions/`
+        - TypeScript/JavaScript: Place files in `src/functions/`
         - Java: Place files in `src/main/java/com/function/`
         - C#: Place files in the project root alongside the .csproj
         """;
@@ -214,12 +219,13 @@ public sealed class FunctionsService(
 
         var allFiles = await FetchTemplateFilesAsync(entry, normalizedLanguage, runtimeVersion, cancellationToken);
 
+        // Separate files into function and project files (used in both modes for backward compatibility)
+        var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
+        var projectFiles = allFiles.Where(f => _languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
+
         if (output == TemplateOutput.Add)
         {
-            // Separate files for merge scenario
-            var functionFiles = allFiles.Where(f => !_languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
-            var projectFiles = allFiles.Where(f => _languageMetadata.KnownProjectFiles.Contains(GitHubUrlValidator.GetFileName(f.FileName))).ToList();
-
+            // Add mode: return separated files with merge instructions (no combined Files list)
             return new FunctionTemplateResult
             {
                 Language = normalizedLanguage,
@@ -230,11 +236,13 @@ public sealed class FunctionsService(
                 Resource = entry.Resource,
                 FunctionFiles = functionFiles,
                 ProjectFiles = projectFiles,
-                MergeInstructions = FunctionTemplateMergeInstructions
+                MergeInstructions = TemplateFileInstructions
             };
         }
 
         // Default: TemplateOutput.New (--output New) - return all files together
+        // Also populate FunctionFiles/ProjectFiles for backward compatibility with existing consumers
+        // Provide TemplateFileInstructions to explain the file sets
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,
@@ -243,7 +251,10 @@ public sealed class FunctionsService(
             Description = entry.LongDescription ?? entry.ShortDescription,
             BindingType = entry.BindingType,
             Resource = entry.Resource,
-            Files = allFiles.ToList()
+            Files = allFiles.ToList(),
+            FunctionFiles = functionFiles,
+            ProjectFiles = projectFiles,
+            MergeInstructions = TemplateFileInstructions
         };
     }
 

@@ -143,7 +143,7 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_GetMode_ReturnsFunctionTemplate()
     {
-        // Arrange - default mode is New which returns all files in 'Files'
+        // Arrange - default mode is New which returns all files in 'Files' plus separated FunctionFiles/ProjectFiles/MergeInstructions for backward compat
         var expectedResult = new FunctionTemplateResult
         {
             Language = "python",
@@ -159,7 +159,19 @@ public sealed class TemplateGetCommandTests
                 new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
                 new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
                 new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
-            ]
+            ],
+            FunctionFiles =
+            [
+                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" }
+            ],
+            ProjectFiles =
+            [
+                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+            ],
+            MergeInstructions = "## Merging Template Files"
         };
 
         _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
@@ -187,8 +199,11 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("trigger", result.FunctionTemplate.BindingType);
         Assert.NotNull(result.FunctionTemplate.Files);
         Assert.Equal(5, result.FunctionTemplate.Files.Count);
-        Assert.Null(result.FunctionTemplate.FunctionFiles);
-        Assert.Null(result.FunctionTemplate.ProjectFiles);
+        Assert.NotNull(result.FunctionTemplate.FunctionFiles);
+        Assert.Equal(2, result.FunctionTemplate.FunctionFiles.Count);
+        Assert.NotNull(result.FunctionTemplate.ProjectFiles);
+        Assert.Equal(3, result.FunctionTemplate.ProjectFiles.Count);
+        Assert.NotNull(result.FunctionTemplate.MergeInstructions);
     }
 
     [Fact]
