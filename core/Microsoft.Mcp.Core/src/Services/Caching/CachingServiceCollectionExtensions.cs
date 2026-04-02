@@ -54,4 +54,25 @@ public static class CachingServiceCollectionExtensions
         services.AddSingleton<ICacheService, HttpServiceCacheService>();
         return services;
     }
+
+    /// <summary>
+    /// Adds <see cref="NoopCacheService"/> as an <see cref="ICacheService"/> with lifetime
+    /// <see cref="ServiceLifetime.Singleton"/> into the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method registers the no-op service cache service which is used when caching is disabled.
+    /// </para>
+    /// <para>
+    /// This method will override any existing <see cref="ICacheService"/> registration.
+    /// This is unlike <see cref="AddSingleUserCliCacheService"/>.
+    /// </para>
+    /// </remarks>
+    public static IServiceCollection AddNoopCacheService(this IServiceCollection services)
+    {
+        services.AddSingleton<ICacheService, NoopCacheService>();
+        return services;
+    }
 }

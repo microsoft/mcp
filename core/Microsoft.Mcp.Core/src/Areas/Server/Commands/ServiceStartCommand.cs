@@ -100,6 +100,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
+        command.Options.Add(ServiceOptionDefinitions.DisableCaching);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -178,7 +179,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             OutgoingAuthStrategy = outgoingAuthStrategy,
             SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
             DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableRetryLimits.Name),
-            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
+            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name),
+            DisableCaching = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DisableCaching.Name)
         };
         return options;
     }
@@ -449,6 +451,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 // Configure the outgoing authentication strategy.
                 services.AddSingleIdentityTokenCredentialProvider();
 
+                if (serverOptions.DisableCaching)
+                {
+                    services.AddNoopCacheService();
+                }
+                else
+                {
+                    services.AddSingleUserCliCacheService();
+                }
+
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
             })
@@ -554,9 +565,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             services.AddSingleIdentityTokenCredentialProvider();
         }
 
-        // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
-        services.AddHttpServiceCacheService();
-
+        if (serverOptions.DisableCaching)
+        {
+            services.AddNoopCacheService();
+        }
+        else
+        {
+            // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
+            services.AddHttpServiceCacheService();
+        }
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -680,11 +697,18 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
-        // We still use the multi-user, HTTP context-aware caching strategy here
-        // because we don't yet know what security model we want for this "insecure" mode.
-        // As a positive, it gives some isolation locally, but that's not a
-        // design strategy we've fully vetted or endorsed.
-        services.AddHttpServiceCacheService();
+        if (serverOptions.DisableCaching)
+        {
+            services.AddNoopCacheService();
+        }
+        else
+        {
+            // We still use the multi-user, HTTP context-aware caching strategy here
+            // because we don't yet know what security model we want for this "insecure" mode.
+            // As a positive, it gives some isolation locally, but that's not a
+            // design strategy we've fully vetted or endorsed.
+            services.AddHttpServiceCacheService();
+        }
 
         WebApplication app = builder.Build();
 
