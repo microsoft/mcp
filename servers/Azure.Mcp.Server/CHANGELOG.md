@@ -2,23 +2,21 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.37 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.0-beta.37 (2026-04-02)
 
 ### Bugs Fixed
 
+- Fix endpoint validation on non-Public cloud environments. [[#2322](https://github.com/microsoft/mcp/pull/2322)]
+
 ### Other Changes
 
-- Added `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. Added unit tests for the new fields.
+- Added a `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. [[#2324](https://github.com/microsoft/mcp/pull/2324)]
 
 ## 2.0.0-beta.36 (2026-03-31)
 
 ### Bugs Fixed
 
-- Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
+- Added service name validation for Azure AI Search tools. [[#2307](https://github.com/microsoft/mcp/pull/2307)]
 
 ## 2.0.0-beta.35 (2026-03-30)
 
@@ -1314,8 +1312,8 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 - Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/pull/454)]
 - Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [[#488](https://github.com/microsoft/mcp/pull/488)]
 - Added support for listing Event Grid subscriptions via the command `azmcp_eventgrid_subscription_list`. [[#364](https://github.com/microsoft/mcp/pull/364)]
-- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list`. [#387](https://github.com/microsoft/mcp/pull/387)
-- **Errata**: The following was announced as part of release `0.7.0, but was not actually included then.
+- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list`. [[#387](https://github.com/microsoft/mcp/pull/387)]
+- **Errata**: The following was announced as part of release `0.7.0`, but was not actually included then.
   - Added support for creating and deleting SQL databases via the commands `azmcp_sql_db_create` and `azmcp_sql_db_delete`. [[#434](https://github.com/microsoft/mcp/pull/434)]
 - Restored support for the following Key Vault commands: [[#506](https://github.com/microsoft/mcp/pull/506)]
   - `azmcp_keyvault_key_get`
@@ -1841,8 +1839,8 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Bugs Fixed
 
-- Fixed issue where tool listing incorrectly returned resources instead of text. [#465](https://github.com/Azure/azure-mcp/issues/465)
-- Fixed invalid modification to HttpClient in KustoClient. [#433](https://github.com/Azure/azure-mcp/issues/433)
+- Fixed issue where tool listing incorrectly returned resources instead of text. [[#465](https://github.com/Azure/azure-mcp/issues/465)]
+- Fixed invalid modification to HttpClient in KustoClient. [[#433](https://github.com/Azure/azure-mcp/issues/433)]
 
 ## 0.2.4 (2025-06-24)
 
@@ -1859,7 +1857,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Bugs Fixed
 
-- Fixed handling of non-retrievable fields in Azure AI Search. [#416](https://github.com/Azure/azure-mcp/issues/416)
+- Fixed handling of non-retrievable fields in Azure AI Search. [[#416](https://github.com/Azure/azure-mcp/issues/416)]
 
 ### Other Changes
 
