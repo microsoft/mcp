@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.AzureBackup.Models;
 
 public sealed record RecoveryPointInfo(
-    [property: JsonPropertyName("id")] string? Id,
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("vaultType")] string VaultType,
-    [property: JsonPropertyName("recoveryPointTime")] DateTimeOffset? RecoveryPointTime,
-    [property: JsonPropertyName("recoveryPointType")] string? RecoveryPointType);
+    string? Id,
+    string Name,
+    string VaultType,
+    DateTimeOffset? RecoveryPointTime,
+    string? RecoveryPointType);
