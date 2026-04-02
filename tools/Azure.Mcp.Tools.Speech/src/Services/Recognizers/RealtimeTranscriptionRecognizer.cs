@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;

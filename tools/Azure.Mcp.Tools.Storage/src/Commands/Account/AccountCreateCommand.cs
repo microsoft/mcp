@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;

@@ -4,19 +4,19 @@
 using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
-using Azure.Mcp.Core.Models.Identity;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Core.Models.ETag;
+using ETag = Microsoft.Mcp.Core.Models.ETag;
 
 public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger, IHttpClientFactory httpClientFactory)
     : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
@@ -176,7 +176,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             throw new InvalidOperationException($"The App Configuration store '{accountName}' does not have a valid endpoint.");
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = new ConfigurationClientOptions();

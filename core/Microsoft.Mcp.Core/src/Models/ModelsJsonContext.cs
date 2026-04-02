@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Core.Models;
+namespace Microsoft.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(CommandResponse))]

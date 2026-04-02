@@ -4,12 +4,12 @@
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -35,7 +35,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(from), from),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -116,7 +116,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(subject), subject),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)

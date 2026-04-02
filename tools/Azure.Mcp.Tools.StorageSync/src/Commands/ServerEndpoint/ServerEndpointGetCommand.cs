@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;

@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.36 (Unreleased)
+## 3.0.0-beta.2 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,31 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.1 (2026-04-01)
+
+### Breaking Changes
+
+- Updated internal namespaces to align with the `Microsoft.Mcp.Core` convention:
+  - `Azure.Mcp.TestUtilities` → `Microsoft.Mcp.Core.TestUtilities` [#2300](https://github.com/microsoft/mcp/pull/2300)
+  - `Microsoft.Mcp.Core.Areas.Server.Commands` → `Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions` [#2301](https://github.com/microsoft/mcp/pull/2301)
+  - Fixed `Microsoft.Mcp.Core.Areas.Tools` namespaces [#2303](https://github.com/microsoft/mcp/pull/2303)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2304](https://github.com/microsoft/mcp/pull/2304)
+  - `Azure.Mcp.Core.Extensions` → `Microsoft.Mcp.Core.Extensions` [#2306](https://github.com/microsoft/mcp/pull/2306)
+  - `Azure.Mcp.Core.Helpers` → `Microsoft.Mcp.Core.Helpers` [#2310](https://github.com/microsoft/mcp/pull/2310)
+  - `Azure.Mcp.Core.Logging` → `Microsoft.Mcp.Core.Logging` [#2312](https://github.com/microsoft/mcp/pull/2312)
+  - `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands` [#2319](https://github.com/microsoft/mcp/pull/2319)
+  - `Azure.Mcp.Core.Services` → `Microsoft.Mcp.Core.Services` [#2321](https://github.com/microsoft/mcp/pull/2321)
+
+#### Dependency Updates
+
+- Updated `ModelContextProtocol` and `ModelContextProtocol.AspNetCore` dependencies to version 1.1.0. [#1963](https://github.com/microsoft/mcp/pull/1963)
+
+## 2.0.0-beta.36 (2026-03-31)
+
+### Bugs Fixed
+
+- Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
 
 ## 2.0.0-beta.35 (2026-03-30)
 

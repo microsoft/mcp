@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Options;
 

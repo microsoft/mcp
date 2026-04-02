@@ -3,8 +3,9 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// A utility class for handling Azure authentication.

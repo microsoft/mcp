@@ -8,7 +8,7 @@ using Azure.Identity.Broker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// A custom token credential that chains multiple Azure credentials with a broker-enabled instance of
