@@ -106,7 +106,7 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => null
     };
 
-    public static readonly Option<bool> DisableCaching = new ($"--{DisableCachingName}")
+    public static readonly Option<bool> DisableCaching = new($"--{DisableCachingName}")
     {
         Required = false,
         Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.",

@@ -71,6 +71,21 @@ public class ServiceStartCommandTests
         Assert.Equal(expectedValue, actualValue);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DisableCachingOption_ParsesCorrectly(bool expectedValue)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithDisableCaching(expectedValue);
+
+        // Act
+        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DisableCaching);
+
+        // Assert
+        Assert.Equal(expectedValue, actualValue);
+    }
+
     [Fact]
     public void DangerouslyDisableElicitationOption_DefaultsToFalse()
     {
@@ -802,6 +817,22 @@ public class ServiceStartCommandTests
         if (dangerouslyDisableElicitation)
         {
             args.Add("--dangerously-disable-elicitation");
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithDisableCaching(bool disableCaching)
+    {
+        var args = new List<string>
+        {
+            "--transport",
+            "stdio"
+        };
+
+        if (disableCaching)
+        {
+            args.Add("--disable-caching");
         }
 
         return _command.GetCommand().Parse([.. args]);

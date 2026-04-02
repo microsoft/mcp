@@ -450,15 +450,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             {
                 // Configure the outgoing authentication strategy.
                 services.AddSingleIdentityTokenCredentialProvider();
-
-                if (serverOptions.DisableCaching)
-                {
-                    services.AddNoopCacheService();
-                }
-                else
-                {
-                    services.AddSingleUserCliCacheService();
-                }
+                services.AddSingleUserCliCacheService(serverOptions.DisableCaching);
 
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
@@ -565,15 +557,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             services.AddSingleIdentityTokenCredentialProvider();
         }
 
-        if (serverOptions.DisableCaching)
-        {
-            services.AddNoopCacheService();
-        }
-        else
-        {
-            // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
-            services.AddHttpServiceCacheService();
-        }
+        // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -697,18 +682,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
-        if (serverOptions.DisableCaching)
-        {
-            services.AddNoopCacheService();
-        }
-        else
-        {
-            // We still use the multi-user, HTTP context-aware caching strategy here
-            // because we don't yet know what security model we want for this "insecure" mode.
-            // As a positive, it gives some isolation locally, but that's not a
-            // design strategy we've fully vetted or endorsed.
-            services.AddHttpServiceCacheService();
-        }
+        // We still use the multi-user, HTTP context-aware caching strategy here
+        // because we don't yet know what security model we want for this "insecure" mode.
+        // As a positive, it gives some isolation locally, but that's not a
+        // design strategy we've fully vetted or endorsed.
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         WebApplication app = builder.Build();
 
