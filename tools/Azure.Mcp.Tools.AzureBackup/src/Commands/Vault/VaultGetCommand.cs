@@ -4,7 +4,6 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;

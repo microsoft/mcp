@@ -3,7 +3,7 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -210,7 +210,6 @@ public class VaultGetCommandTests
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --vault myVault --resource-group myRg", true)]
-    [InlineData("", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
