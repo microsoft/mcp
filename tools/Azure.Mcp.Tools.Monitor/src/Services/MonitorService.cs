@@ -4,9 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -17,6 +15,8 @@ using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -49,6 +49,7 @@ public class MonitorService(
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
+        options.Audience = GetLogsQueryAudience();
 
         if (retryPolicy != null)
         {
@@ -113,6 +114,7 @@ public class MonitorService(
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
+        options.Audience = GetLogsQueryAudience();
 
         if (retryPolicy != null)
         {
@@ -236,6 +238,7 @@ public class MonitorService(
         {
             var credential = await GetCredential(tenant, cancellationToken);
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
+            options.Audience = GetLogsQueryAudience();
 
             if (retryPolicy != null)
             {
@@ -504,6 +507,17 @@ public class MonitorService(
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
             _ => $"https://management.azure.com/{subscriptionPath}"
+        };
+    }
+
+    private LogsQueryAudience GetLogsQueryAudience()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => LogsQueryAudience.AzurePublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => LogsQueryAudience.AzureChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => LogsQueryAudience.AzureGovernment,
+            _ => LogsQueryAudience.AzurePublicCloud
         };
     }
 }

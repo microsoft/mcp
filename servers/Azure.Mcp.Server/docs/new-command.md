@@ -719,13 +719,13 @@ Ensure all necessary using statements are included, especially for option defini
 
 ```csharp
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.{Toolset}.Models;
 using Azure.Mcp.Tools.{Toolset}.Options;  // REQUIRED: For {Toolset}OptionDefinitions
 using Azure.Mcp.Tools.{Toolset}.Options.{Resource};  // For resource-specific options
 using Azure.Mcp.Tools.{Toolset}.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
@@ -1081,10 +1081,10 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 

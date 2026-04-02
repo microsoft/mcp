@@ -4,7 +4,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 

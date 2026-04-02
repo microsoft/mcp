@@ -25,6 +25,7 @@ public sealed class SendBrownfieldAnalysisToolTests
             null,
             null,
             null,
+            null,
             null));
 
         // Assert
@@ -49,6 +50,7 @@ public sealed class SendBrownfieldAnalysisToolTests
         // Act
         var response = ParseJson(tool.Submit(
             sessionId!,
+            null,
             null,
             null,
             null,
@@ -83,6 +85,7 @@ public sealed class SendBrownfieldAnalysisToolTests
             null,
             null,
             null,
+            null,
             null));
 
         // Assert
@@ -112,7 +115,8 @@ public sealed class SendBrownfieldAnalysisToolTests
             new ProcessorFindings { Found = false },
             new ClientUsageFindings { DirectUsage = false },
             new SamplingFindings { HasCustomSampling = false },
-            new TelemetryPipelineFindings { Found = false }));
+            new TelemetryPipelineFindings { Found = false },
+            null));
 
         // Assert
         Assert.Equal("in_progress", response.GetProperty("status").GetString());

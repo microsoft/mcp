@@ -4,7 +4,6 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -13,6 +12,7 @@ using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
@@ -644,14 +644,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
         };
 
-        // Set PublicNetworkAccess if specified
-        if (!string.IsNullOrEmpty(publicNetworkAccess))
-        {
-            // Set the public network access value - defaults to "Enabled" if not "Disabled"
-            serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+        // Default to Disabled for secure-by-default behavior
+        serverData.PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
+            publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
                 ? ServerNetworkAccessFlag.Enabled
                 : ServerNetworkAccessFlag.Disabled;
-        }
 
         var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
             WaitUntil.Completed,

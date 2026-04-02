@@ -1,4 +1,6 @@
-using System.Text.Json;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Tools.Monitor.Generators;
 using Azure.Mcp.Tools.Monitor.Models;
 
@@ -6,7 +8,7 @@ namespace Azure.Mcp.Tools.Monitor.Tools;
 
 /// <summary>
 /// Receives brownfield analysis findings from the LLM and generates a targeted migration plan.
-/// Called after orchestrator_start returns status "analysis_needed".
+/// Called after orchestrator-start returns status "analysis_needed".
 /// </summary>
 public class SendBrownfieldAnalysisTool
 {
@@ -24,15 +26,16 @@ public class SendBrownfieldAnalysisTool
         ProcessorFindings? processors,
         ClientUsageFindings? clientUsage,
         SamplingFindings? sampling,
-        TelemetryPipelineFindings? telemetryPipeline)
+        TelemetryPipelineFindings? telemetryPipeline,
+        LoggingFindings? logging)
     {
         if (!OrchestratorTool.Sessions.TryGetValue(sessionId, out var session))
         {
             return Respond(new OrchestratorResponse
             {
                 Status = "error",
-                Message = "No active session. Call orchestrator_start first.",
-                Instruction = "Call orchestrator_start with the workspace path to begin."
+                Message = "No active session. Call orchestrator-start first.",
+                Instruction = "Call orchestrator-start with the workspace path to begin."
             });
         }
 
@@ -42,8 +45,8 @@ public class SendBrownfieldAnalysisTool
             {
                 Status = "error",
                 SessionId = sessionId,
-                Message = "Session is not awaiting analysis. This tool is only valid after orchestrator_start returns 'analysis_needed'.",
-                Instruction = "Call orchestrator_next to continue with the current session."
+                Message = "Session is not awaiting analysis. This tool is only valid after orchestrator-start returns 'analysis_needed'.",
+                Instruction = "Call orchestrator-next to continue with the current session."
             });
         }
 
@@ -54,7 +57,8 @@ public class SendBrownfieldAnalysisTool
             Processors = processors,
             ClientUsage = clientUsage,
             Sampling = sampling,
-            TelemetryPipeline = telemetryPipeline
+            TelemetryPipeline = telemetryPipeline,
+            Logging = logging
         };
 
         // Store findings and attach to analysis for generator

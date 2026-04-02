@@ -4,16 +4,15 @@
 using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
@@ -32,10 +31,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionServic
 
     public override string Description =>
         """
-        Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.
-        This tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.
-        Requires a subscription id and optionally a resource group name. Returns the generated report file's path.
-        Note that Azure Quick Review CLI (azqr) is different from Azure CLI (az).
+        Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).
         """;
 
     public override string Title => CommandTitle;

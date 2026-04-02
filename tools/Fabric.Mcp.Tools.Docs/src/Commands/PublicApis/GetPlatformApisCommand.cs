@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
 
     public override string Id => "2338df97-d6d9-4f1d-9e92-e118efe9c643";
 
-    public override string Name => "platform_api_spec";
+    public override string Name => "platform-api-spec";
 
     public override string Description =>
         "Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-workload platform APIs like workspace management. Returns complete platform API specification.";

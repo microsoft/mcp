@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Models;
+namespace Microsoft.Mcp.Core.Models;
 
 public class ETag
 {

@@ -18,10 +18,14 @@ public class EndpointValidatorTests
     [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
+    [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
+    [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
+    [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
+    [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
 
@@ -30,6 +34,12 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com/.communication.azure.com", "communication", "not a valid communication domain")]
     [InlineData("http://mycomm.communication.azure.com", "communication", "must use HTTPS")]
     [InlineData("ftp://myconfig.azconfig.io", "appconfig", "must use HTTPS")]
+    [InlineData("https://evil.com", "foundry", "not a valid foundry domain")]
+    [InlineData("http://my-foundry.services.ai.azure.com", "foundry", "must use HTTPS")]
+    [InlineData("https://my-foundry.services.ai.azure.com.evil.com", "foundry", "not a valid foundry domain")]
+    [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
+    [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
     public void ValidateAzureServiceEndpoint_InvalidEndpoints_ThrowsSecurityException(
         string endpoint,
         string serviceType,
@@ -37,7 +47,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -50,7 +60,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]
@@ -58,7 +68,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication"));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication", ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]
@@ -69,7 +79,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication"));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication", ArmEnvironment.AzurePublicCloud));
         Assert.Contains("Invalid endpoint format", exception.Message);
     }
 
@@ -82,7 +92,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType, ArmEnvironment.AzurePublicCloud));
         Assert.Contains("Unknown service type", exception.Message);
     }
 
@@ -95,6 +105,9 @@ public class EndpointValidatorTests
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
+    [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
+    [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
+    [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -108,6 +121,9 @@ public class EndpointValidatorTests
     [InlineData("https://myregistry.azurecr.us", "acr")]
     [InlineData("https://myconfig.azconfig.azure.us", "appconfig")]
     [InlineData("https://mycomm.communication.azure.us", "communication")]
+    [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
+    [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
+    [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -197,8 +213,7 @@ public class EndpointValidatorTests
     public void ValidateExternalUrl_NullUrl_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateExternalUrl(null!, new[] { "github.com" }));
+        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidateExternalUrl(null!, ["github.com"]));
     }
 
     #endregion
@@ -387,7 +402,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
 
@@ -401,7 +416,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]

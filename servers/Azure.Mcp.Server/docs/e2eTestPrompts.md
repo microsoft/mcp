@@ -132,10 +132,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI |
+| extension_cli_generate | What's the Azure CLI command for getting a storage account's details? |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
-| extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-| extension_cli_install | <Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> |
+| extension_cli_generate | Show me the details of the storage account <account_name> using Azure CLI commands |
+| extension_cli_install | \<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> |
 | extension_cli_install | How to install azd |
 | extension_cli_install | What is Azure Functions Core tools and how to install it |
 
@@ -677,6 +677,24 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
 | monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
+| monitor_instrumentation_get-learning-resource | List all available Azure Monitor onboarding learning resources |
+| monitor_instrumentation_get-learning-resource | Show me all learning resource paths for Azure Monitor instrumentation |
+| monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
+| monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
+| monitor_instrumentation_orchestrator-next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
+| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
+| monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
+| monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
+| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
+| monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
+| monitor_instrumentation_send-brownfield-analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
+| monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
+| monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented |
+| monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> |
+| monitor_instrumentation_send-enhancement-select | Send chosen enhancement option key list <enhancement_keys> for onboarding session <session_id> |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
@@ -700,21 +718,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | monitor_workspace_list | Show me my Log Analytics workspaces |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
-| monitor_instrumentation_get_learning_resource | Get the onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | Get the content of the Azure Monitor learning resource file at path <resource_path> |
-| monitor_instrumentation_get_learning_resource | List all available Azure Monitor onboarding learning resources |
-| monitor_instrumentation_get_learning_resource | Show me all learning resource paths for Azure Monitor instrumentation |
-| monitor_instrumentation_get_learning_resource | What learning resources are available for Azure Monitor instrumentation onboarding? |
-| monitor_instrumentation_orchestrator_next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> |
-| monitor_instrumentation_orchestrator_next | Get the next onboarding action using session <session_id> after I completed <completion_note> |
-| monitor_instrumentation_orchestrator_next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> |
-| monitor_instrumentation_orchestrator_start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> |
-| monitor_instrumentation_orchestrator_start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step |
-| monitor_instrumentation_orchestrator_start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one |
-| monitor_instrumentation_send_brownfield_analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested |
-| monitor_instrumentation_send_brownfield_analysis | Continue migration orchestration by submitting analysis payload <findings_json> to session <session_id> |
-| monitor_instrumentation_send_brownfield_analysis | Send completed brownfield telemetry analysis <findings_json> for onboarding session <session_id> |
 
 ## Azure Native ISV
 
@@ -903,8 +906,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
 | storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
 | storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
-| storage_blob_container_create | Create the container using blob public access in storage account <account> |
-| storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
 | storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
 | storage_blob_container_get | List all blob containers in the storage account <account> |
 | storage_blob_container_get | List all blob containers in the storage account <account> with prefix <prefix> |
