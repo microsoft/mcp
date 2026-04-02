@@ -41,4 +41,10 @@ public static class CacheDurations
     /// helps avoid stale data while reducing service load.
     /// </summary>
     public static readonly TimeSpan ServiceData = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Cache duration for pagination cursors (1 hour).
+    /// Cursors are short-lived, forward-only continuation tokens.
+    /// </summary>
+    public static readonly TimeSpan Cursor = TimeSpan.FromHours(1);
 }
