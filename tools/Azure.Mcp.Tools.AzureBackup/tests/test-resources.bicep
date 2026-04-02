@@ -11,7 +11,8 @@ param location string = resourceGroup().location
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
-resource vault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
+// Recovery Services Vault (RSV)
+resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
   location: location
   sku: {
@@ -23,14 +24,48 @@ resource vault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   }
 }
 
+// Backup Vault (Data Protection / DPP)
+resource dppVault 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
+  name: '${baseName}-dpp'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    storageSettings: [
+      {
+        datastoreType: 'VaultStore'
+        type: 'LocallyRedundant'
+      }
+    ]
+    securitySettings: {
+      softDeleteSettings: {
+        state: 'Off'
+      }
+    }
+  }
+}
+
+// Backup Contributor role on RSV vault
 resource backupContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   name: '5e467623-bb1f-42f4-a55d-6e525e11384b'
 }
 
 resource appBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(backupContributorRoleDefinition.id, testApplicationOid, vault.id)
-  scope: vault
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, rsvVault.id)
+  scope: rsvVault
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: backupContributorRoleDefinition.id
+    description: 'Backup Contributor for ${testApplicationOid}'
+  }
+}
+
+// Backup Contributor role on DPP vault
+resource appDppBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, dppVault.id)
+  scope: dppVault
   properties: {
     principalId: testApplicationOid
     roleDefinitionId: backupContributorRoleDefinition.id
