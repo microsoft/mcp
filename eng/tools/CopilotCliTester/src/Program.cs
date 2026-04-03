@@ -16,9 +16,6 @@ static class Program
 
     private static readonly Lock _consoleLock = new();
     private static readonly Lock _reportLock = new();
-
-    private const double PassThreshold = 95.0;
-    private const int MaxParallelAllowed = 8;
     private static readonly string runId = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 6);
     static async Task<int> Main(string[] args)
     {
@@ -111,9 +108,9 @@ static class Program
         if (parallel < 1) {
             Console.WriteLine("Warning: --parallel must be >= 1. Using 1.");
             parallel = 1;
-        } else if (parallel > MaxParallelAllowed) {
-            Console.WriteLine($"Warning: --parallel must be <= {MaxParallelAllowed}. Using {MaxParallelAllowed}.");
-            parallel = MaxParallelAllowed;
+        } else if (parallel > CopilotTestConstants.MaxParallelAllowed) {
+            Console.WriteLine($"Warning: --parallel must be <= {CopilotTestConstants.MaxParallelAllowed}. Using {CopilotTestConstants.MaxParallelAllowed}.");
+            parallel = CopilotTestConstants.MaxParallelAllowed;
         }
 
         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
@@ -123,11 +120,11 @@ static class Program
     {
         try
         {
-            var staleDirectoryDeleteThreshold = DateTimeOffset.UtcNow.AddMinutes(-15);
-            var staleDirectories = Directory.GetDirectories(Path.GetTempPath(), $"mcp-test-{runId}-*")
-                .Where(dir => Directory.GetCreationTimeUtc(dir) < staleDirectoryDeleteThreshold);
+            var staleDirectoryDeleteThreshold = DateTimeOffset.UtcNow.AddMinutes(-20);
+            var allDirectories = Directory.GetDirectories(Path.GetTempPath(), $"mcp-test-*")
+                .Where(dir => !dir.Contains(runId) && Directory.GetCreationTimeUtc(dir) < staleDirectoryDeleteThreshold);
             var count = 0;
-            foreach (var directory in staleDirectories)
+            foreach (var directory in allDirectories)
             {
                 try
                 {
@@ -137,7 +134,9 @@ static class Program
                 catch{}
             }
             if (count > 0)
-            Console.WriteLine($"Cleaned up {count} stale temp directories");
+            {
+                Console.WriteLine($"Cleaned up {count} stale temp directories");
+            }
         }
         catch {}
     }

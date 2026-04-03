@@ -9,5 +9,4 @@ internal static class CopilotTestConstants
     internal const string OutputDirectory = "results";
     internal const double PassThreshold = 95.0;
     internal const int MaxParallelAllowed = 8;
-
 }

@@ -391,7 +391,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
 
         if (File.Exists(file))
         {
-            Console.WriteLine($"Using existing server build: {file}");
+            Debug.WriteLine($"Using existing server build: {file}");
             return file;
         }
 
