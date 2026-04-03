@@ -80,11 +80,18 @@ public sealed class RegistryServerInfo
 
     /// <summary>
     /// Gets the command-line arguments used to query the command's version.
-    /// Only used when <see cref="MinVersion"/> is set.
-    /// Defaults to <c>["--version"]</c> if not specified.
+    /// Required when <see cref="MinVersion"/> is set.
     /// </summary>
     [JsonPropertyName("versionArgs")]
     public List<string>? VersionArgs { get; init; }
+
+    /// <summary>
+    /// Gets the regex pattern used to extract a version from the command output.
+    /// The pattern must contain a capture group for the version string.
+    /// Defaults to a semver pattern <c>(\d+\.\d+\.\d+)</c> if not specified.
+    /// </summary>
+    [JsonPropertyName("versionPattern")]
+    public string? VersionPattern { get; init; }
 
     /// <summary>
     /// Gets installation instructions for the server.

@@ -17,14 +17,13 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
 /// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
-public sealed partial class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
+public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    [GeneratedRegex(@"(\d+\.\d+\.\d+)")]
-    private static partial Regex SemVerPattern();
+    private const string DefaultVersionPattern = @"(\d+\.\d+\.\d+)";
 
     /// <summary>
     /// Creates metadata that describes this registry-based server.
@@ -63,8 +62,15 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
             !string.IsNullOrWhiteSpace(_serverInfo.MinVersion) &&
             !string.IsNullOrWhiteSpace(_serverInfo.Command))
         {
+            if (_serverInfo.VersionArgs == null || _serverInfo.VersionArgs.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Registry server '{_id}' specifies 'minVersion' but is missing 'versionArgs'. Both are required for version checking.");
+            }
+
             var versionError = await CheckCommandVersionAsync(
-                _serverInfo.Command, _serverInfo.VersionArgs, _serverInfo.MinVersion, cancellationToken);
+                _serverInfo.Command, _serverInfo.VersionArgs, _serverInfo.MinVersion,
+                _serverInfo.VersionPattern, cancellationToken);
 
             if (versionError != null)
             {
@@ -109,12 +115,14 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
     /// Checks whether the specified command is installed and meets the minimum version requirement.
     /// </summary>
     /// <param name="command">The command to check (e.g., "azd").</param>
-    /// <param name="versionArgs">Arguments to pass to get version output, defaults to ["--version"].</param>
+    /// <param name="versionArgs">Arguments to pass to get version output.</param>
     /// <param name="minVersion">The minimum required version string (e.g., "1.20.0").</param>
+    /// <param name="versionPattern">Regex pattern with a capture group for the version. Defaults to semver pattern.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>An error message if the check fails, or null if the command meets requirements.</returns>
     internal static async Task<string?> CheckCommandVersionAsync(
-        string command, IList<string>? versionArgs, string minVersion, CancellationToken cancellationToken)
+        string command, IList<string> versionArgs, string minVersion,
+        string? versionPattern, CancellationToken cancellationToken)
     {
         try
         {
@@ -123,13 +131,11 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
             {
                 FileName = command,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
-            var args = versionArgs ?? (IList<string>)["--version"];
-            foreach (var arg in args)
+            foreach (var arg in versionArgs)
             {
                 process.StartInfo.ArgumentList.Add(arg);
             }
@@ -139,9 +145,7 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
                 return $"'{command}' failed to start.";
             }
 
-            // Read both streams concurrently to avoid pipe-buffer deadlocks
-            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
 
             // Apply a hard timeout so a hung command cannot block indefinitely
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -163,19 +167,10 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
                     // Best-effort cleanup
                 }
 
-                // Observe stream tasks to prevent unobserved task exceptions
+                // Observe stream task to prevent unobserved task exceptions
                 try
                 {
-                    await stdoutTask;
-                }
-                catch
-                {
-                    // Process killed - stream disposed
-                }
-
-                try
-                {
-                    await stderrTask;
+                    await outputTask;
                 }
                 catch
                 {
@@ -185,10 +180,9 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
                 return null;
             }
 
-            var output = await stdoutTask;
-            var errorOutput = await stderrTask;
+            var output = await outputTask;
 
-            var installedVersion = ParseVersionFromOutput(output) ?? ParseVersionFromOutput(errorOutput);
+            var installedVersion = ParseVersionFromOutput(output, versionPattern);
             if (installedVersion != null && Version.TryParse(minVersion, out var requiredVersion))
             {
                 if (installedVersion < requiredVersion)
@@ -215,14 +209,15 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
     }
 
     /// <summary>
-    /// Extracts a semantic version (major.minor.patch) from command output text.
+    /// Extracts a version from command output text using the specified pattern.
     /// </summary>
     /// <param name="output">The stdout text from a version command.</param>
+    /// <param name="versionPattern">Regex with a capture group for the version, or null for default semver pattern.</param>
     /// <returns>The parsed <see cref="Version"/>, or null if no version was found.</returns>
-    internal static Version? ParseVersionFromOutput(string output)
+    internal static Version? ParseVersionFromOutput(string output, string? versionPattern = null)
     {
-        var match = SemVerPattern().Match(output);
-        return match.Success && Version.TryParse(match.Groups[1].Value, out var version) ? version : null;
+        var match = Regex.Match(output, versionPattern ?? DefaultVersionPattern);
+        return match.Success && match.Groups.Count > 1 && Version.TryParse(match.Groups[1].Value, out var version) ? version : null;
     }
 
     /// <summary>

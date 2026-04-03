@@ -271,6 +271,21 @@ public class RegistryServerProviderTests
     }
 
     [Fact]
+    public void ParseVersionFromOutput_CustomPattern_ExtractsVersion()
+    {
+        // Arrange - a tool that outputs "build-2024.1.5"
+        var output = "build-2024.1.5";
+        var pattern = @"build-(\d+\.\d+\.\d+)";
+
+        // Act
+        var result = RegistryServerProvider.ParseVersionFromOutput(output, pattern);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(Version.Parse("2024.1.5"), result);
+    }
+
+    [Fact]
     public async Task CheckCommandVersionAsync_CommandNotFound_ReturnsNotInstalledMessage()
     {
         // Arrange
@@ -278,7 +293,7 @@ public class RegistryServerProviderTests
 
         // Act
         var result = await RegistryServerProvider.CheckCommandVersionAsync(
-            command, ["--version"], "1.0.0", CancellationToken.None);
+            command, ["--version"], "1.0.0", null, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -340,15 +355,37 @@ public class RegistryServerProviderTests
     }
 
     [Fact]
+    public async Task CreateClientAsync_WithMinVersion_MissingVersionArgs_ThrowsInvalidOperation()
+    {
+        // Arrange
+        string testId = "toolMissingVersionArgs";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "Tool with minVersion but no versionArgs",
+            Type = "stdio",
+            Command = "some-tool",
+            Args = ["serve"],
+            MinVersion = "1.0.0"
+            // VersionArgs intentionally omitted
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("missing 'versionArgs'", exception.Message);
+    }
+
+    [Fact]
     public async Task CheckCommandVersionAsync_VersionTooOld_ReturnsUpgradeMessage()
     {
         // Arrange - use dotnet which is always available in the test environment
-        // dotnet --version outputs something like "10.0.100"
         string command = "dotnet";
 
         // Act - require an impossibly high version so the installed version is always "too old"
         var result = await RegistryServerProvider.CheckCommandVersionAsync(
-            command, ["--version"], "999.0.0", CancellationToken.None);
+            command, ["--version"], "999.0.0", null, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -365,7 +402,7 @@ public class RegistryServerProviderTests
 
         // Act - require a very low version so the installed version always passes
         var result = await RegistryServerProvider.CheckCommandVersionAsync(
-            command, ["--version"], "1.0.0", CancellationToken.None);
+            command, ["--version"], "1.0.0", null, CancellationToken.None);
 
         // Assert - null means check passed
         Assert.Null(result);
