@@ -81,7 +81,7 @@ public static class EndpointValidator
         }
 
         // Validate domain: must exactly match suffix or be a proper subdomain
-        var resolvedSuffixes = allowedSuffixes.Select(s => s.GetSuffixForEnvironment(armEnvironment)).ToList(); 
+        var resolvedSuffixes = allowedSuffixes.Select(s => s.GetSuffixForEnvironment(armEnvironment)).ToList();
         var isValid = resolvedSuffixes.Any(suffix =>
         {
             // Exact match (e.g., "azconfig.io")
