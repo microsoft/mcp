@@ -90,7 +90,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calculating AMLFS subnet size. Options: {@Options}", options);
+            _logger.LogError(ex, "Error calculating AMLFS subnet size. Subscription: {Subscription}, Sku: {Sku}.", options.Subscription, options.Sku);
             HandleException(context, ex);
         }
         return context.Response;

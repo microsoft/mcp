@@ -94,9 +94,9 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error sending SMS. From: {From}, To: {To}, Message Length: {MessageLength}, Options: {@Options}",
+                "Error sending SMS. From: {From}, To: {To}, Message Length: {MessageLength}.",
                 options.From, options.To != null ? string.Join(",", options.To) : "null",
-                options.Message?.Length ?? 0, options);
+                options.Message?.Length ?? 0);
             HandleException(context, ex);
         }
 

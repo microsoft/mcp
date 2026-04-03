@@ -116,8 +116,8 @@ public sealed class DirectoryCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating directory {DirectoryPath} in item {ItemId}. Options: {@Options}",
-                options.DirectoryPath, options.ItemId, options);
+            _logger.LogError(ex, "Error creating directory {DirectoryPath} in item {ItemId}.",
+                options.DirectoryPath, options.ItemId);
             HandleException(context, ex);
         }
 

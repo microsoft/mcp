@@ -121,8 +121,8 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating autoimport job for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.FileSystemName, options);
+            _logger.LogError(ex, "Error creating autoimport job for AMLFS filesystem {FileSystem}.",
+                options.FileSystemName);
             HandleException(context, ex);
         }
 

@@ -105,8 +105,8 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting import job(s) for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.FileSystemName, options);
+            _logger.LogError(ex, "Error getting import job(s) for AMLFS filesystem {FileSystem}.",
+                options.FileSystemName);
             HandleException(context, ex);
         }
 

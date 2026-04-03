@@ -80,8 +80,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.FirewallRuleName, options);
+                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}.",
+                options.Server, options.ResourceGroup, options.FirewallRuleName);
             HandleException(context, ex);
         }
 

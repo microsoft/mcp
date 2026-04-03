@@ -138,8 +138,8 @@ public sealed class BlobListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}. Options: {@Options}",
-                options.WorkspaceId, options.ItemId, options.Path, options);
+            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}.",
+                options.WorkspaceId, options.ItemId, options.Path);
             HandleException(context, ex);
         }
 

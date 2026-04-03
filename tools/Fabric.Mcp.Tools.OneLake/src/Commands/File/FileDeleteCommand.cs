@@ -104,8 +104,8 @@ public sealed class FileDeleteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error deleting file {FilePath} from workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

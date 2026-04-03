@@ -135,8 +135,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error retrieving VM(s). VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.VmName, options.ResourceGroup, options.Subscription, options);
+                "Error retrieving VM(s). VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.VmName, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

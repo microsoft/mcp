@@ -87,7 +87,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. CliType: {CliType}.", Name, options.CliType);
             HandleException(context, ex);
         }
 

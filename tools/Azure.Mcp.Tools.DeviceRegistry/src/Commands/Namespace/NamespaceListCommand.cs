@@ -86,10 +86,9 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
         {
             _logger.LogError(
                 ex,
-                "Error listing Device Registry namespaces. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
+                "Error listing Device Registry namespaces. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
                 options.Subscription,
-                options.ResourceGroup,
-                options);
+                options.ResourceGroup);
             HandleException(context, ex);
         }
 

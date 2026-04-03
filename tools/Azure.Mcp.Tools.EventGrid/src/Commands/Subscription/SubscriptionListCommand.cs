@@ -143,8 +143,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Location: {Location}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.TopicName, options.Location, options);
+                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Location: {Location}.",
+                options.Subscription, options.ResourceGroup, options.TopicName, options.Location);
             HandleException(context, ex);
         }
 

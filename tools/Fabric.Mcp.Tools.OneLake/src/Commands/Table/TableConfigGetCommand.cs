@@ -96,7 +96,7 @@ public sealed class TableConfigGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving table configuration. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving table configuration. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}.", options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

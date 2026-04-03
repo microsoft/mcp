@@ -155,8 +155,8 @@ public sealed class FileWriteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error writing file {FilePath} to workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

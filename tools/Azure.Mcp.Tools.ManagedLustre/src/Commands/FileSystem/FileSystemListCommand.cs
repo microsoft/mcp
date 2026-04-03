@@ -76,8 +76,8 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup} Options: {@Options}",
-                options.ResourceGroup, options);
+                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup}.",
+                options.ResourceGroup);
             HandleException(context, ex);
         }
 

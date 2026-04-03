@@ -113,8 +113,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         catch (Exception ex)
         {            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error listing metric definitions. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNamespace: {MetricNamespace}, Options: {@Options}",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNamespace, options);
+                "Error listing metric definitions. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNamespace: {MetricNamespace}.",
+                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNamespace);
             HandleException(context, ex);
         }
 
