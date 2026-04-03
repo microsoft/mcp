@@ -105,7 +105,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, BindOptions(parseResult));
+            _logger.LogError(ex, "Error in {Operation}.", Name);
             HandleException(context, ex);
         }
 
