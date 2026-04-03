@@ -1219,4 +1219,152 @@ public class DiskCreateCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public void CreateDiskFromHttpSource_ThrowsArgumentException()
+    {
+        // Arrange - HTTP source should be rejected; the HTTP check happens
+        // in CreateDiskCreationData before ValidateAzureBlobStorageUri is called.
+        // ValidateAzureBlobStorageUri itself only validates the host suffix,
+        // so pass a non-Azure host via HTTP to verify host validation independently.
+        var nonAzureHttpUri = new Uri("http://evil-server.com/vhds/mydisk.vhd");
+
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ComputeService.ValidateAzureBlobStorageUri(nonAzureHttpUri));
+        Assert.Contains("Azure Blob Storage endpoint", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("https://evil-server.com/vhds/mydisk.vhd")]
+    [InlineData("https://internal-host:8080/secret")]
+    [InlineData("https://169.254.169.254/latest/meta-data")]
+    [InlineData("https://myaccount.blob.core.windows.net.evil.com/vhds/disk.vhd")]
+    [InlineData("https://notblob.core.windows.net/vhds/disk.vhd")]
+    [InlineData("https://myaccount.table.core.windows.net/vhds/disk.vhd")]
+    [InlineData("https://myaccount.file.core.windows.net/vhds/disk.vhd")]
+    public void CreateDiskFromNonBlobUri_ThrowsArgumentException(string source)
+    {
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ComputeService.ValidateAzureBlobStorageUri(new Uri(source)));
+        Assert.Contains("Azure Blob Storage endpoint", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("https://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd")]
+    [InlineData("https://account123.blob.core.windows.net/container/path/to/disk.vhd")]
+    [InlineData("https://myaccount.blob.core.chinacloudapi.cn/vhds/mydisk.vhd")]
+    [InlineData("https://myaccount.blob.core.usgovcloudapi.net/vhds/mydisk.vhd")]
+    public void CreateDiskFromValidBlobUri_DoesNotThrow(string source)
+    {
+        // Act & Assert - should not throw
+        ComputeService.ValidateAzureBlobStorageUri(new Uri(source));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromHttpSource_ReturnsError()
+    {
+        // Arrange - service throws ArgumentException for HTTP source
+        var source = "http://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd";
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            source,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Source URI must use HTTPS. HTTP endpoints are not allowed."));
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-sub",
+            "--resource-group", "testrg",
+            "--disk-name", "testdisk",
+            "--source", source
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("HTTPS", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreateDiskFromNonAzureBlobUri_ReturnsError()
+    {
+        // Arrange - service throws ArgumentException for non-Azure blob URI
+        var source = "https://evil-server.com/vhds/mydisk.vhd";
+
+        _computeService.CreateDiskAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            source,
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Source URI must point to an Azure Blob Storage endpoint."));
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-sub",
+            "--resource-group", "testrg",
+            "--disk-name", "testdisk",
+            "--source", source
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure Blob Storage endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
