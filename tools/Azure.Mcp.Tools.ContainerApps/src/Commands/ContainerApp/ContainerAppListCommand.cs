@@ -60,8 +60,8 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing container apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options);
+                "Error listing container apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 
