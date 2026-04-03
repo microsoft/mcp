@@ -108,7 +108,7 @@ public sealed class AutoexportJobGetCommand(IManagedLustreService service, ILogg
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting autoexport job {JobName} for AMLFS filesystem {FileSystemName}. Options: {@Options}", options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error getting autoexport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 

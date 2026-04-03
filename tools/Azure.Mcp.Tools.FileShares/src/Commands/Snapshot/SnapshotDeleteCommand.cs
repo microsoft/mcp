@@ -82,7 +82,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting snapshot. Options: {@Options}", options);
+            _logger.LogError(ex, "Error deleting snapshot. SnapshotName: {SnapshotName}, FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.SnapshotName, options.FileShareName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

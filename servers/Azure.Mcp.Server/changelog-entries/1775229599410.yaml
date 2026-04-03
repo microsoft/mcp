@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands"

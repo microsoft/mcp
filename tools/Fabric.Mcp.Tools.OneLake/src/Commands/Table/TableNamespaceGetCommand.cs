@@ -99,7 +99,7 @@ public sealed class TableNamespaceGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving table namespace. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving table namespace. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Namespace: {Namespace}.", options.WorkspaceId, options.ItemId, options.Namespace);
             HandleException(context, ex);
         }
 

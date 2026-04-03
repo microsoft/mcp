@@ -92,14 +92,14 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         {
             if (options.FunctionAppName is null)
             {
-                _logger.LogError(ex, "Error listing function apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                    options.Subscription, options.ResourceGroup, options);
+                _logger.LogError(ex, "Error listing function apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                    options.Subscription, options.ResourceGroup);
             }
             else
             {
                 _logger.LogError(ex,
-                    "Error getting function app. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FunctionApp: {FunctionApp}, Options: {@Options}",
-                    options.Subscription, options.ResourceGroup, options.FunctionAppName, options);
+                    "Error getting function app. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FunctionApp: {FunctionApp}.",
+                    options.Subscription, options.ResourceGroup, options.FunctionAppName);
             }
             HandleException(context, ex);
         }

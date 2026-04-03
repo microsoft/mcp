@@ -92,8 +92,8 @@ public sealed class DiskDeleteCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.DiskName, options.ResourceGroup, options);
+                "Error deleting disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.",
+                options.DiskName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

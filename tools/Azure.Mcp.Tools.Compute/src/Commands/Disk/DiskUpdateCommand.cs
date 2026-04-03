@@ -204,7 +204,7 @@ public sealed class DiskUpdateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating disk. Options: {@Options}", options);
+            _logger.LogError(ex, "Error updating disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
             HandleException(context, ex);
         }
 

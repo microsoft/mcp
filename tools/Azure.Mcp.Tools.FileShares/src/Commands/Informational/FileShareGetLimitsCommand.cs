@@ -71,7 +71,7 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting file share limits. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting file share limits. Subscription: {Subscription}, Location: {Location}.", options.Subscription, options.Location);
             HandleException(context, ex);
         }
 

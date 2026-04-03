@@ -95,7 +95,7 @@ public sealed class TableNamespaceListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing table namespaces. Options: {@Options}", options);
+            _logger.LogError(ex, "Error listing table namespaces. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}.", options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

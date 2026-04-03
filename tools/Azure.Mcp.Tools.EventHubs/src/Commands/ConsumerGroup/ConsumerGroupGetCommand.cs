@@ -111,7 +111,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting consumer group(s). Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting consumer group(s). ConsumerGroup: {ConsumerGroup}, EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}.", options.ConsumerGroup, options.EventHub, options.Namespace, options.ResourceGroup);
             HandleException(context, ex);
         }
 

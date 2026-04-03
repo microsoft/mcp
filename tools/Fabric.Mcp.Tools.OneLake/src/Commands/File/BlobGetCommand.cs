@@ -169,8 +169,8 @@ public sealed class BlobGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error retrieving blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 
