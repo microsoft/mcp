@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-
 namespace Azure.Mcp.Tools.Functions.Models;
 
 /// <summary>
 /// Specifies how template files should be returned.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter<TemplateOutput>))]
 public enum TemplateOutput
 {
     /// <summary>

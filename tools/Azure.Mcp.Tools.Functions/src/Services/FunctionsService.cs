@@ -34,7 +34,7 @@ public sealed class FunctionsService(
     private const long MaxFileSizeBytes = 1_048_576; // 1 MB
     private const long MaxTreeSizeBytes = 5_242_880; // 5 MB for tree API response
 
-    private const string TemplateFileInstructions =
+    private const string NewModeInstructions =
         """
         ## Template Files
 
@@ -43,7 +43,18 @@ public sealed class FunctionsService(
         - **FunctionFiles**: Function code and related files (code, infra, docs)
         - **ProjectFiles**: Project configuration files (host.json, local.settings.json, etc.)
 
-        For brownfield scenarios (adding functions to existing projects), merge ProjectFiles carefully:
+        For new projects, use the 'Files' list to create all files at once.
+        """;
+
+    private const string AddModeInstructions =
+        """
+        ## Template Files (Add Mode)
+
+        This response contains two file sets for adding a function to an existing project:
+        - **FunctionFiles**: Function code and related files to add
+        - **ProjectFiles**: Project configuration files that may need merging
+
+        Merge ProjectFiles carefully with existing project files:
         - **local.settings.json**: Merge "Values" entries, don't overwrite existing connection strings
         - **host.json**: Keep existing extensionBundle settings, merge other sections
         - **requirements.txt / package.json / pom.xml**: Add new dependencies, avoid duplicates
@@ -236,13 +247,12 @@ public sealed class FunctionsService(
                 Resource = entry.Resource,
                 FunctionFiles = functionFiles,
                 ProjectFiles = projectFiles,
-                MergeInstructions = TemplateFileInstructions
+                MergeInstructions = AddModeInstructions
             };
         }
 
         // Default: TemplateOutput.New (--output New) - return all files together
         // Also populate FunctionFiles/ProjectFiles for backward compatibility with existing consumers
-        // Provide TemplateFileInstructions to explain the file sets
         return new FunctionTemplateResult
         {
             Language = normalizedLanguage,
@@ -254,7 +264,7 @@ public sealed class FunctionsService(
             Files = allFiles.ToList(),
             FunctionFiles = functionFiles,
             ProjectFiles = projectFiles,
-            MergeInstructions = TemplateFileInstructions
+            MergeInstructions = NewModeInstructions
         };
     }
 
