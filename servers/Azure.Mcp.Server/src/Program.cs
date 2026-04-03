@@ -237,7 +237,7 @@ internal class Program
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
-        services.AddSingleUserCliCacheService(true);
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {

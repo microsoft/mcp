@@ -450,6 +450,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             {
                 // Configure the outgoing authentication strategy.
                 services.AddSingleIdentityTokenCredentialProvider();
+
+                // Configure Single User CLI Cache for stdio transport here, before ConfigureServices is called.
+                // ConfigureServices will also add in Single User CLI Cache tentatively, but this spot knows about
+                // server configurations and will take precedent.
                 services.AddSingleUserCliCacheService(serverOptions.DisableCaching);
 
                 ConfigureServices(services);

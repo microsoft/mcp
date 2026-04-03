@@ -6,7 +6,7 @@ namespace Microsoft.Mcp.Core.Services.Caching;
 /// <summary>
 /// An implementation of <see cref="ICacheService"/> that never caches.
 /// </summary>
-public class NoopCacheService : ICacheService
+public sealed class NoopCacheService : ICacheService
 {
     public ValueTask ClearAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
 

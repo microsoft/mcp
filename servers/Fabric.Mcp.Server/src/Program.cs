@@ -151,7 +151,7 @@ internal class Program
         // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
-        services.AddSingleUserCliCacheService(true);
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
