@@ -91,8 +91,8 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
+                "Error deleting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

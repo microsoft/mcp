@@ -109,8 +109,8 @@ public sealed class BlobDeleteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error deleting blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

@@ -97,8 +97,8 @@ public sealed class ItemCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}. Options: {@Options}",
-                options.ItemName, options.WorkspaceId, options);
+            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}.",
+                options.ItemName, options.WorkspaceId);
             HandleException(context, ex);
         }
 

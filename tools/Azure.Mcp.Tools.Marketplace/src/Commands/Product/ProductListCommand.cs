@@ -103,8 +103,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}, Options: {@Options}",
-                options.Subscription, options.Search, options);
+                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}.",
+                options.Subscription, options.Search);
             HandleException(context, ex);
         }
 

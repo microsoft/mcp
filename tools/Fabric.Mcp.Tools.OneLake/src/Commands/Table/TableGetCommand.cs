@@ -99,7 +99,7 @@ public sealed class TableGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving table. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving table. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Table: {Table}.", options.WorkspaceId, options.ItemId, options.Table);
             HandleException(context, ex);
         }
 

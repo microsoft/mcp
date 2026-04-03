@@ -107,8 +107,8 @@ public sealed class DirectoryDeleteCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting directory {DirectoryPath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.DirectoryPath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error deleting directory {DirectoryPath} from workspace {WorkspaceId}, item {ItemId}.",
+                options.DirectoryPath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

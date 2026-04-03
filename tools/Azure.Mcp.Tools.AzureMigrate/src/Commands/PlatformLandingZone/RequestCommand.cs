@@ -173,7 +173,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            logger.LogError(ex, "Error in {Operation}. Action: {Action}, ResourceGroup: {ResourceGroup}.", Name, options.Action, options.ResourceGroup);
             HandleException(context, ex);
         }
 

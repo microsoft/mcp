@@ -1747,13 +1747,21 @@ public class ComputeService(
             return new(DiskCreateOption.Empty);
         }
 
-        // Blob URIs start with http:// or https://
+        // Blob URIs must use https:// and point to Azure Blob Storage
         if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
+            if (!source.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Source URI must use HTTPS. HTTP endpoints are not allowed.", nameof(source));
+            }
+
+            var uri = new Uri(source);
+            ValidateAzureBlobStorageUri(uri);
+
             return new(DiskCreateOption.Import)
             {
-                SourceUri = new(source)
+                SourceUri = uri
             };
         }
 
@@ -1762,6 +1770,29 @@ public class ComputeService(
         {
             SourceResourceId = new(source)
         };
+    }
+
+    internal static readonly string[] s_allowedBlobHostSuffixes =
+    [
+        ".blob.core.windows.net",
+        ".blob.core.chinacloudapi.cn",
+        ".blob.core.usgovcloudapi.net",
+    ];
+
+    internal static void ValidateAzureBlobStorageUri(Uri uri)
+    {
+        var host = uri.Host;
+        foreach (var suffix in s_allowedBlobHostSuffixes)
+        {
+            if (host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+
+        throw new ArgumentException(
+            $"Source URI must point to an Azure Blob Storage endpoint (e.g., https://<account>.blob.core.windows.net/...). The host '{uri.Host}' is not a recognized Azure Blob Storage endpoint.",
+            "source");
     }
 
     public async Task<bool> DeleteDiskAsync(
