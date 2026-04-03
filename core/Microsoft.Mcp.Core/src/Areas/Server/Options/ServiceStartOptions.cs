@@ -106,6 +106,6 @@ public class ServiceStartOptions
     /// <summary>
     /// Gets or sets whether caching is disabled.
     /// </summary>
-    [JsonPropertyName("cachingDisabled")]
+    [JsonPropertyName("disableCaching")]
     public bool DisableCaching { get; set; } = false;
 }
