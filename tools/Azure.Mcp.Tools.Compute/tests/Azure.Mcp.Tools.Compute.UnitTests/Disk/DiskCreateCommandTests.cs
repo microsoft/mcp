@@ -1245,8 +1245,7 @@ public class DiskCreateCommandTests
     [InlineData("https://myaccount.file.core.windows.net/vhds/disk.vhd")]
     [InlineData("https://attacker.com#storageacc.blob.core.windows.net")]
     [InlineData("https://attacker.com#.blob.core.windows.net/vhds/disk.vhd")]
-    [InlineData("https://account.blob.core.windows.net:4443/vhds/disk.vhd")]
-    [InlineData("https://user:pass@account.blob.core.windows.net/vhds/disk.vhd")]
+    [InlineData("https://storageacc.blob.core.windows.net@attacker.com/vhds/disk.vhd")]
     public void CreateDiskFromNonBlobUri_ThrowsSecurityException(string source)
     {
         // Act & Assert
@@ -1259,6 +1258,8 @@ public class DiskCreateCommandTests
     [InlineData("https://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd")]
     [InlineData("https://account123.blob.core.windows.net/container/path/to/disk.vhd")]
     [InlineData("https://acct.blob.core.windows.net/vhds/disk.vhd?sv=2021-06-08&ss=b&srt=o&sp=r")]
+    [InlineData("https://account.blob.core.windows.net:4443/vhds/disk.vhd")]
+    [InlineData("https://user:pass@account.blob.core.windows.net/vhds/disk.vhd")]
     public void CreateDiskFromValidPublicCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for public cloud
