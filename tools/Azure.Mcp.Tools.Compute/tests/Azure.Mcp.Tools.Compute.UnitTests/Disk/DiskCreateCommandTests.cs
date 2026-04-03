@@ -1311,7 +1311,8 @@ public class DiskCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("HTTPS", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1363,6 +1364,7 @@ public class DiskCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure Blob Storage endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

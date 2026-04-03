@@ -1778,7 +1778,7 @@ public class ComputeService(
 
         throw new ArgumentException(
             $"Source URI must point to an Azure Blob Storage endpoint (e.g., https://<account>.blob.core.windows.net/...). The host '{uri.Host}' is not a recognized Azure Blob Storage endpoint.",
-            nameof(uri));
+            "source");
     }
 
     public async Task<bool> DeleteDiskAsync(
