@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints"
