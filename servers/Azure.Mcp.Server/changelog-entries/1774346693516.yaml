@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added --output option to functions template get command with New (default) and Add values for controlling template file output"

@@ -139,7 +139,7 @@ public class TemplateGetCommandLiveTests(
         var httpTemplate = FindTemplateByPattern(templateList, "http-trigger-python");
         Assert.NotNull(httpTemplate);
 
-        // Act
+        // Act - Default mode is "New" which returns all files in "files" property
         var result = await CallToolAsync(
             "functions_template_get",
             new()
@@ -153,7 +153,8 @@ public class TemplateGetCommandLiveTests(
         var templateResult = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
         Assert.NotNull(templateResult?.FunctionTemplate);
         Assert.Equal("python", templateResult.FunctionTemplate.Language);
-        Assert.NotNull(templateResult.FunctionTemplate.FunctionFiles);
+        Assert.NotNull(templateResult.FunctionTemplate.Files);
+        Assert.NotEmpty(templateResult.FunctionTemplate.Files);
     }
 
     [Fact]
@@ -204,6 +205,39 @@ public class TemplateGetCommandLiveTests(
         var templateResult = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
         Assert.NotNull(templateResult?.FunctionTemplate);
         Assert.Equal("csharp", templateResult.FunctionTemplate.Language);
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task ExecuteAsync_HttpTrigger_AddOutput_ReturnsSeparatedFiles()
+    {
+        // Arrange
+        var templateList = await GetTemplateListAsync("python");
+        var httpTemplate = FindTemplateByPattern(templateList, "http-trigger-python");
+        Assert.NotNull(httpTemplate);
+
+        // Act - Use Add output to get separated files with merge instructions
+        var result = await CallToolAsync(
+            "functions_template_get",
+            new()
+            {
+                { "language", "python" },
+                { "template", httpTemplate },
+                { "output", "Add" }
+            });
+
+        // Assert
+        Assert.NotNull(result);
+        var templateResult = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
+        Assert.NotNull(templateResult?.FunctionTemplate);
+        Assert.Equal("python", templateResult.FunctionTemplate.Language);
+
+        // Add output should return separated files, not combined
+        Assert.Null(templateResult.FunctionTemplate.Files);
+        Assert.NotNull(templateResult.FunctionTemplate.FunctionFiles);
+        Assert.NotEmpty(templateResult.FunctionTemplate.FunctionFiles);
+        Assert.NotNull(templateResult.FunctionTemplate.ProjectFiles);
+        Assert.NotNull(templateResult.FunctionTemplate.MergeInstructions);
     }
 
     #endregion
@@ -264,7 +298,7 @@ public class TemplateGetCommandLiveTests(
         var httpTemplate = FindTemplateByPattern(templateList, "http-trigger-python");
         Assert.NotNull(httpTemplate);
 
-        // Act - Request with runtime version
+        // Act - Request with runtime version (default New mode returns combined files)
         var result = await CallToolAsync(
             "functions_template_get",
             new()
@@ -278,9 +312,10 @@ public class TemplateGetCommandLiveTests(
         Assert.NotNull(result);
         var templateResult = JsonSerializer.Deserialize(result.Value, FunctionsJsonContext.Default.TemplateGetCommandResult);
         Assert.NotNull(templateResult?.FunctionTemplate);
+        Assert.NotNull(templateResult.FunctionTemplate.Files);
 
-        // Verify no unreplaced placeholders
-        foreach (var file in templateResult.FunctionTemplate.FunctionFiles ?? [])
+        // Verify no unreplaced placeholders in combined files list
+        foreach (var file in templateResult.FunctionTemplate.Files)
         {
             Assert.DoesNotContain("{{pythonVersion}}", file.Content);
         }
