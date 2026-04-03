@@ -81,8 +81,8 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.NewDatabaseName, options.ResourceGroup, options);
+                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.NewDatabaseName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

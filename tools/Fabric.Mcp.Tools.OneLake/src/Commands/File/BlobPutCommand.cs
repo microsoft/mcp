@@ -139,8 +139,8 @@ public sealed class BlobPutCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error uploading blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

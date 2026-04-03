@@ -86,8 +86,8 @@ public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error cancelling import job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error cancelling import job {JobName} for AMLFS filesystem {FileSystem}.",
+                options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 

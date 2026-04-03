@@ -203,7 +203,7 @@ public sealed class DiskCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating disk. Options: {@Options}", options);
+            _logger.LogError(ex, "Error creating disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
             HandleException(context, ex);
         }
 

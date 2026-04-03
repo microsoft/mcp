@@ -98,8 +98,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Account, options.ResourceGroup, options.Location, options);
+                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}.",
+                options.Account, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 
