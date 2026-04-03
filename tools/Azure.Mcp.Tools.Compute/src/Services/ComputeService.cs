@@ -8,11 +8,14 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Utilities;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
@@ -1462,7 +1465,7 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
-        var creationData = CreateDiskCreationData(source, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
+        var creationData = CreateDiskCreationData(source, TenantService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
         var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
         {
@@ -1696,7 +1699,7 @@ public class ComputeService(
         return ConvertToDiskModel(result.Value, resourceGroup);
     }
 
-    private static DiskCreationData CreateDiskCreationData(string? source, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
+    private static DiskCreationData CreateDiskCreationData(string? source, ArmEnvironment armEnvironment, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
     {
         if (!string.IsNullOrEmpty(uploadType))
         {
@@ -1733,21 +1736,14 @@ public class ComputeService(
             return new DiskCreationData(DiskCreateOption.Empty);
         }
 
-        // Blob URIs must use https:// and point to Azure Blob Storage
+        // Blob URIs start with http:// or https:// - validate via EndpointValidator
         if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            if (!source.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Source URI must use HTTPS. HTTP endpoints are not allowed.", nameof(source));
-            }
-
-            var uri = new Uri(source);
-            ValidateAzureBlobStorageUri(uri);
-
+            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", armEnvironment);
             return new DiskCreationData(DiskCreateOption.Import)
             {
-                SourceUri = uri
+                SourceUri = new Uri(source)
             };
         }
 
@@ -1756,29 +1752,6 @@ public class ComputeService(
         {
             SourceResourceId = new Azure.Core.ResourceIdentifier(source)
         };
-    }
-
-    internal static readonly string[] s_allowedBlobHostSuffixes =
-    [
-        ".blob.core.windows.net",
-        ".blob.core.chinacloudapi.cn",
-        ".blob.core.usgovcloudapi.net",
-    ];
-
-    internal static void ValidateAzureBlobStorageUri(Uri uri)
-    {
-        var host = uri.Host;
-        foreach (var suffix in s_allowedBlobHostSuffixes)
-        {
-            if (host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-        }
-
-        throw new ArgumentException(
-            $"Source URI must point to an Azure Blob Storage endpoint (e.g., https://<account>.blob.core.windows.net/...). The host '{uri.Host}' is not a recognized Azure Blob Storage endpoint.",
-            "source");
     }
 
     public async Task<bool> DeleteDiskAsync(

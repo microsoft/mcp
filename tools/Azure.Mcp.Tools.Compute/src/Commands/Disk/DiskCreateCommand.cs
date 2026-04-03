@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
+using System.Security;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
@@ -215,6 +215,7 @@ public sealed class DiskCreateCommand(
     {
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        SecurityException => HttpStatusCode.BadRequest,
         ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
@@ -229,6 +230,8 @@ public sealed class DiskCreateCommand(
             $"Authorization failed. Details: {reqEx.Message}",
         Identity.AuthenticationFailedException =>
             "Authentication failed. Please run 'az login' to sign in.",
+        SecurityException secEx =>
+            $"Invalid parameter: {secEx.Message}",
         ArgumentException argEx =>
             $"Invalid parameter: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
