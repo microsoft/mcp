@@ -152,6 +152,7 @@ internal class Program
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
         services.AddSingleUserCliCacheService();
+        services.AddPaginationService();
 
         foreach (var area in Areas)
         {

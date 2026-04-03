@@ -548,6 +548,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
             services.AddHttpOnBehalfOfTokenCredentialProvider();
+            services.AddHttpOboPaginationService();
         }
         else
         {

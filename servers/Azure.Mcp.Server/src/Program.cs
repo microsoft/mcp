@@ -238,6 +238,7 @@ internal class Program
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
+        services.AddPaginationService();
 
         foreach (var area in Areas)
         {
