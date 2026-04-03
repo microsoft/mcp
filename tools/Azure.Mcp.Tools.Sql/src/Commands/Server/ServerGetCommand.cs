@@ -99,8 +99,8 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting SQL server(s). Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error getting SQL server(s). Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 

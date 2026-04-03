@@ -139,7 +139,7 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting Azure pricing. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting Azure pricing. Service: {Service}, Region: {Region}.", options.Service, options.Region);
             HandleException(context, ex);
         }
 

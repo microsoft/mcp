@@ -123,7 +123,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, ResourceGroup: {ResourceGroup}.", Name, options.Account, options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -111,7 +111,7 @@ public sealed class DiskGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting disks. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
             HandleException(context, ex);
         }
 

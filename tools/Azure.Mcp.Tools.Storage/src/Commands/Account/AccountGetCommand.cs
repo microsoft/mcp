@@ -80,12 +80,12 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
         {
             if (options.Account is null)
             {
-                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}, Options: {@Options}", options.Subscription, options);
+                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}.", options.Subscription);
             }
             else
             {
-                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}, Options: {@Options}",
-                    options.Account, options.Subscription, options);
+                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}.",
+                    options.Account, options.Subscription);
             }
             HandleException(context, ex);
         }

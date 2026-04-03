@@ -109,8 +109,8 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.FileSystemName, options);
+            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}.",
+                options.FileSystemName);
             HandleException(context, ex);
         }
 

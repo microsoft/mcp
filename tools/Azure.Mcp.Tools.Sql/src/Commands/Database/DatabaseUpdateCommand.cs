@@ -103,8 +103,8 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 

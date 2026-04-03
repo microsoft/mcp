@@ -118,7 +118,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Endpoint: {Endpoint}.", Name, options.Endpoint);
             HandleException(context, ex);
         }
 

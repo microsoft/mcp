@@ -72,8 +72,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Event Grid topics. Subscription: {Subscription}, Options: {@Options}",
-                options.Subscription, options);
+                "Error listing Event Grid topics. Subscription: {Subscription}.",
+                options.Subscription);
             HandleException(context, ex);
         }
 

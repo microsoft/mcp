@@ -97,8 +97,8 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Node: {Node}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeName, options);
+                "Error getting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Node: {Node}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeName);
             HandleException(context, ex);
         }
 

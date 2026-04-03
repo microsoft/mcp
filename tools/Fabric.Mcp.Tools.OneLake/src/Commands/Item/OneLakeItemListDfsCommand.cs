@@ -91,7 +91,7 @@ public sealed class OneLakeItemListDfsCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing OneLake items (DFS) in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
+            _logger.LogError(ex, "Error listing OneLake items (DFS) in workspace {WorkspaceId}.", options.WorkspaceId);
             HandleException(context, ex);
         }
 

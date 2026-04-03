@@ -190,8 +190,8 @@ public sealed class FileReadCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reading file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error reading file {FilePath} from workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

@@ -131,8 +131,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription, options);
+                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

@@ -89,8 +89,8 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error restarting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, NodeType: {NodeType}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeType, options);
+                "Error restarting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, NodeType: {NodeType}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeType);
             HandleException(context, ex);
         }
 

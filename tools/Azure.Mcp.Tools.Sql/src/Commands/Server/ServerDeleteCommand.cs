@@ -97,8 +97,8 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 

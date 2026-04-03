@@ -101,8 +101,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error publishing events to Event Grid topic. Subscription: {Subscription}, Topic: {TopicName}, Options: {@Options}",
-                options.Subscription, options.TopicName, options);
+                "Error publishing events to Event Grid topic. Subscription: {Subscription}, Topic: {TopicName}.",
+                options.Subscription, options.TopicName);
             HandleException(context, ex);
         }
 

@@ -71,7 +71,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting file share usage data. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting file share usage data. Subscription: {Subscription}, Location: {Location}.", options.Subscription, options.Location);
             HandleException(context, ex);
         }
 

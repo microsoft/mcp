@@ -76,7 +76,7 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting file share. Options: {@Options}", options);
+            _logger.LogError(ex, "Error deleting file share. FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.FileShareName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

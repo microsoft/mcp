@@ -79,8 +79,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS node pool. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Nodepool: {Nodepool}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodepoolName, options);
+                "Error getting AKS node pool. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Nodepool: {Nodepool}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodepoolName);
             HandleException(context, ex);
         }
 

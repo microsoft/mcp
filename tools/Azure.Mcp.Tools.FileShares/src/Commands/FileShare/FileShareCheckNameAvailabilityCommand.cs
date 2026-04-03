@@ -77,7 +77,7 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking file share name availability. Options: {@Options}", options);
+            _logger.LogError(ex, "Error checking file share name availability. FileShareName: {FileShareName}, Location: {Location}.", options.FileShareName, options.Location);
             HandleException(context, ex);
         }
 

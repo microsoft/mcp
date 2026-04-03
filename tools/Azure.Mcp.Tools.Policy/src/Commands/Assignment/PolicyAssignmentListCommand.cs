@@ -84,8 +84,8 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'. Options: {@Options}",
-                options.Subscription, options.Scope ?? "all", options);
+                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'.",
+                options.Subscription, options.Scope ?? "all");
             HandleException(context, ex);
         }
 

@@ -84,7 +84,7 @@ public sealed class OneLakeWorkspaceListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing OneLake workspaces. Options: {@Options}", options);
+            _logger.LogError(ex, "Error listing OneLake workspaces.");
             HandleException(context, ex);
         }
 

@@ -102,8 +102,8 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -64,8 +64,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error listing SQL server Entra ID administrators. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -92,7 +92,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. CliType: {CliType}.", Name, options.CliType);
             HandleException(context, ex);
         }
 

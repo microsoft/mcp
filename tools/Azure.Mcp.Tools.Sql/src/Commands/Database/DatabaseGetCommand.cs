@@ -101,8 +101,8 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting SQL database(s). Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error getting SQL database(s). Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 
