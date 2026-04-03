@@ -12,7 +12,8 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
+    : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -65,7 +66,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
-    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
     {
         try
         {
@@ -90,22 +91,22 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
 
-        if (proxy != null && proxy.Proxy != null)
-        {
-            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
-
-            if (TestMode is TestMode.Playback)
-            {
-                envVarDictionary.Add("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
-            }
-        }
-
         // Add any custom environment variables from settings
         if (Settings?.EnvironmentVariables != null)
         {
             foreach (var kvp in Settings.EnvironmentVariables)
             {
                 envVarDictionary[kvp.Key] = kvp.Value;
+            }
+        }
+
+        if (proxy != null && proxy.Proxy != null)
+        {
+            envVarDictionary["TEST_PROXY_URL"] = proxy.Proxy.BaseUri;
+
+            if (TestMode is TestMode.Playback)
+            {
+                envVarDictionary["AZURE_TOKEN_CREDENTIALS"] = "PlaybackTokenCredential";
             }
         }
 
@@ -263,8 +264,5 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
-    protected virtual ValueTask DisposeAsyncCore()
-    {
-        return ValueTask.CompletedTask;
-    }
+    protected virtual ValueTask DisposeAsyncCore() => ValueTask.CompletedTask;
 }
