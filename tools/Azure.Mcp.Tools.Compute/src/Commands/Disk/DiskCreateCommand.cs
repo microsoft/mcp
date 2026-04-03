@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Security;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
