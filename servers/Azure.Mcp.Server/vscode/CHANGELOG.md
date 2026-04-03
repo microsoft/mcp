@@ -1,10 +1,20 @@
 # Release History
 
+## 2.0.37 (2026-04-02) (pre-release)
+
+### Fixed
+
+- Fix endpoint validation on non-Public cloud environments. [[#2322](https://github.com/microsoft/mcp/pull/2322)]
+
+### Changed
+
+- Added a `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. [[#2324](https://github.com/microsoft/mcp/pull/2324)]
+
 ## 2.0.36 (2026-03-31) (pre-release)
 
 ### Fixed
 
-- Added service name validation for Azure AI Search tools. [#2307](https://github.com/microsoft/mcp/pull/2307)
+- Added service name validation for Azure AI Search tools. [[#2307](https://github.com/microsoft/mcp/pull/2307)]
 
 ## 2.0.35 (2026-03-30) (pre-release)
 
@@ -1116,8 +1126,8 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
   - For more details, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#controlling-authentication-methods-with-azure_token_credentials)
 - Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [[#488](https://github.com/microsoft/mcp/pull/488)]
 - Added support for listing Event Grid subscriptions via the command `azmcp_eventgrid_subscription_list`. [[#364](https://github.com/microsoft/mcp/pull/364)]
-- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list`. [#387](https://github.com/microsoft/mcp/pull/387)
-- **Errata**: The following was announced as part of release `0.7.0, but was not actually included then.
+- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list`. [[#387](https://github.com/microsoft/mcp/pull/387)]
+- **Errata**: The following was announced as part of release `0.7.0`, but was not actually included then.
   - Added support for creating and deleting SQL databases via the commands `azmcp_sql_db_create` and `azmcp_sql_db_delete`. [[#434](https://github.com/microsoft/mcp/pull/434)]
 - Restored support for the following Key Vault commands: [[#506](https://github.com/microsoft/mcp/pull/506)]
   - `azmcp_keyvault_key_get`
@@ -1327,7 +1337,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 - Improved Azure MCP display name in VS Code from 'azure-mcp-server-ext' to 'Azure MCP' for better user experience in the Configure Tools interface. [[#871](https://github.com/Azure/azure-mcp/issues/871), [#876](https://github.com/Azure/azure-mcp/pull/876)]
 - Updated the description of the following `CommandGroup`s to improve their tool usage by Agents:
   - Azure AI Search [[#874](https://github.com/Azure/azure-mcp/pull/874)]
-  - Storage [#879](https://github.com/Azure/azure-mcp/pull/879)
+  - Storage [[#879](https://github.com/Azure/azure-mcp/pull/879)]
 
 ### Fixed
 
