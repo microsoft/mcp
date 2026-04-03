@@ -3,14 +3,17 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Security;
 using System.Text.Json;
 using Azure.Mcp.Tests;
+using Azure.ResourceManager;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using NSubstitute;
@@ -1221,18 +1224,15 @@ public class DiskCreateCommandTests
     }
 
     [Fact]
-    public void CreateDiskFromHttpSource_ThrowsArgumentException()
+    public void CreateDiskFromHttpSource_ThrowsSecurityException()
     {
-        // Arrange - HTTP source should be rejected; the HTTP check happens
-        // in CreateDiskCreationData before ValidateAzureBlobStorageUri is called.
-        // ValidateAzureBlobStorageUri itself only validates the host suffix,
-        // so pass a non-Azure host via HTTP to verify host validation independently.
-        var nonAzureHttpUri = new Uri("http://evil-server.com/vhds/mydisk.vhd");
+        // Arrange - HTTP source should be rejected by EndpointValidator
+        var source = "http://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd";
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            ComputeService.ValidateAzureBlobStorageUri(nonAzureHttpUri));
-        Assert.Contains("Azure Blob Storage endpoint", ex.Message);
+        var ex = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+        Assert.Contains("HTTPS", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -1245,23 +1245,52 @@ public class DiskCreateCommandTests
     [InlineData("https://myaccount.file.core.windows.net/vhds/disk.vhd")]
     [InlineData("https://attacker.com#storageacc.blob.core.windows.net")]
     [InlineData("https://attacker.com#.blob.core.windows.net/vhds/disk.vhd")]
-    public void CreateDiskFromNonBlobUri_ThrowsArgumentException(string source)
+    [InlineData("https://account.blob.core.windows.net:4443/vhds/disk.vhd")]
+    [InlineData("https://user:pass@account.blob.core.windows.net/vhds/disk.vhd")]
+    public void CreateDiskFromNonBlobUri_ThrowsSecurityException(string source)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
-            ComputeService.ValidateAzureBlobStorageUri(new Uri(source)));
-        Assert.Contains("Azure Blob Storage endpoint", ex.Message);
+        var ex = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+        Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData("https://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd")]
     [InlineData("https://account123.blob.core.windows.net/container/path/to/disk.vhd")]
-    [InlineData("https://myaccount.blob.core.chinacloudapi.cn/vhds/mydisk.vhd")]
-    [InlineData("https://myaccount.blob.core.usgovcloudapi.net/vhds/mydisk.vhd")]
-    public void CreateDiskFromValidBlobUri_DoesNotThrow(string source)
+    [InlineData("https://acct.blob.core.windows.net/vhds/disk.vhd?sv=2021-06-08&ss=b&srt=o&sp=r")]
+    public void CreateDiskFromValidPublicCloudBlobUri_DoesNotThrow(string source)
     {
-        // Act & Assert - should not throw
-        ComputeService.ValidateAzureBlobStorageUri(new Uri(source));
+        // Act & Assert - should not throw for public cloud
+        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud);
+    }
+
+    [Theory]
+    [InlineData("https://myaccount.blob.core.chinacloudapi.cn/vhds/mydisk.vhd")]
+    public void CreateDiskFromValidChinaCloudBlobUri_DoesNotThrow(string source)
+    {
+        // Act & Assert - should not throw for China cloud
+        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureChina);
+    }
+
+    [Theory]
+    [InlineData("https://myaccount.blob.core.usgovcloudapi.net/vhds/mydisk.vhd")]
+    public void CreateDiskFromValidGovCloudBlobUri_DoesNotThrow(string source)
+    {
+        // Act & Assert - should not throw for US Government cloud
+        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureGovernment);
+    }
+
+    [Fact]
+    public void CreateDiskFromChinaCloudUri_RejectedInPublicCloud()
+    {
+        // Arrange - China cloud URI should be rejected when using public cloud environment
+        var source = "https://myaccount.blob.core.chinacloudapi.cn/vhds/mydisk.vhd";
+
+        // Act & Assert
+        var ex = Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+        Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1299,7 +1328,7 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("Source URI must use HTTPS. HTTP endpoints are not allowed."));
+            .ThrowsAsync(new SecurityException("Endpoint must use HTTPS protocol. Got: http"));
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
@@ -1352,7 +1381,7 @@ public class DiskCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("Source URI must point to an Azure Blob Storage endpoint."));
+            .ThrowsAsync(new SecurityException("Endpoint host 'evil-server.com' is not a valid storage-blob domain for Azure Public Cloud."));
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-sub",
@@ -1367,6 +1396,6 @@ public class DiskCreateCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Azure Blob Storage endpoint", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("storage-blob", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
