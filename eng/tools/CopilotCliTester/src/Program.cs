@@ -19,6 +19,7 @@ static class Program
 
     private const double PassThreshold = 95.0;
     private const int MaxParallelAllowed = 8;
+    private static readonly string runId = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 6);
     static async Task<int> Main(string[] args)
     {
         var command = args.Length > 0 ? args[0].ToLowerInvariant() : "run";
@@ -45,7 +46,7 @@ static class Program
               --max <n>           Maximum number of prompts to test (0 = all)
               --retries <n>       Maximum retry attempts per prompt (default: 3)
               --one-per-tool      Test only one prompt per tool
-              --output <dir>      Output directory for reports
+              --output <dir>      Output directory for reports (default: results)
               --model <name>      Model to use (default: claude-opus-4.6)
               --parallel <n>      Number of prompts to test concurrently (default: 4)
               --prompts-file <path>  Custom prompts file (markdown format)
@@ -55,8 +56,8 @@ static class Program
 
     static async Task<int> RunE2ETestsFromArgs(string[] args)
     {
-        string? namespaceFilter = null, tool = null, outputDir = "reports", model = "claude-opus-4.6", promptsFile = null;
-        int max = 0, retries = 3, parallel = 4;
+        string? namespaceFilter = null, tool = null, outputDir = CopilotTestConstants.OutputDirectory, model = CopilotTestConstants.ModelName, promptsFile = null;
+        int max = CopilotTestConstants.MaxPrompts, retries = CopilotTestConstants.MaxRetryAttempts, parallel = CopilotTestConstants.Parallel;
         bool onePerTool = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -70,10 +71,24 @@ static class Program
                     tool = args[++i];
                     break;
                 case "--max" when i + 1 < args.Length:
-                    int.TryParse(args[++i], out max);
+                    if (!int.TryParse(args[++i], out var parsedMax))
+                    {
+                        Console.WriteLine("Invalid value for --max. Using default: " + CopilotTestConstants.MaxPrompts);
+                    }
+                    else
+                    {
+                        max = parsedMax;
+                    }
                     break;
                 case "--retries" when i + 1 < args.Length:
-                    int.TryParse(args[++i], out retries);
+                    if (!int.TryParse(args[++i], out var parsedRetries))
+                    {
+                        Console.WriteLine("Invalid value for --retries. Using default: " + CopilotTestConstants.MaxRetryAttempts);
+                    }
+                    else
+                    {
+                        retries = parsedRetries;
+                    }
                     break;
                 case "--one-per-tool":
                     onePerTool = true;
@@ -108,8 +123,8 @@ static class Program
     {
         try
         {
-            var staleDirectoryDeleteThreshold = DateTime.UtcNow.AddMinutes(-15);
-            var staleDirectories = Directory.GetDirectories(Path.GetTempPath(), "mcp-test-*")
+            var staleDirectoryDeleteThreshold = DateTimeOffset.UtcNow.AddMinutes(-15);
+            var staleDirectories = Directory.GetDirectories(Path.GetTempPath(), $"mcp-test-{runId}-*")
                 .Where(dir => Directory.GetCreationTimeUtc(dir) < staleDirectoryDeleteThreshold);
             var count = 0;
             foreach (var directory in staleDirectories)
@@ -204,7 +219,7 @@ static class Program
         var totalStopwatch = Stopwatch.StartNew();
 
         Directory.CreateDirectory(outputDir);
-        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
         var title = !string.IsNullOrWhiteSpace(namespaceFilter) ? $"-{namespaceFilter}" : "";
         var reportFile = Path.Combine(outputDir, $"e2e-report{title}-{timestamp}.md");
         InitializeMarkdownReport(reportFile);
@@ -222,8 +237,9 @@ static class Program
             try
             {
                 // Create a dedicated client per task. When the client is disposed, it kills its CLI process tree, ensuring child azmcp.exe processes are cleaned up.
-                await using var client = AgentRunner.CreateSharedClient(debug);
-                await using var runner = new AgentRunner(client);
+                var (client, workspacePath) = AgentRunner.CreateSharedClient(runId, debug, outputDir);
+                await using var _ = client;
+                await using var runner = new AgentRunner(client, outputDir, workspacePath);
                 var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
                 AppendResultToMarkdown(reportFile, result);
                 return result;
@@ -263,10 +279,7 @@ static class Program
         AppendMarkdownSummary(reportFile, results, totalStopwatch.Elapsed);
         Console.WriteLine($"✓ Report finalized: {reportFile}");
 
-        // kill any remaining azmcp.exe processes that survived cleanup
-        // AgentRunner.KillAllAzmcpProcesses();
-
-        return passRate >= PassThreshold ? 0 : 1;
+        return passRate >= CopilotTestConstants.PassThreshold ? 0 : 1;
     }
 
     /// <summary>
@@ -287,7 +300,7 @@ static class Program
         var toolTag = $"[{prompt.Tool}]";
         WriteLineLock($"  {toolTag} {prompt.Prompt}");
 
-        for (var attempt = 1; attempt <= retries; attempt++)
+        for (var attempt = 1; attempt <= retries+1; attempt++)
         {
             attempts = attempt;
             using var cts = new CancellationTokenSource(PerAttemptTimeout);
@@ -375,7 +388,7 @@ static class Program
         using var writer = new StreamWriter(filePath, append: false);
         writer.WriteLine("# Azure MCP E2E Test Report");
         writer.WriteLine();
-        writer.WriteLine($"**Date:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        writer.WriteLine($"**Date:** {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}");
         writer.WriteLine();
         writer.WriteLine("## Results");
         writer.WriteLine();
@@ -416,7 +429,8 @@ static class Program
     static void AppendMarkdownSummary(string filePath, List<TestResult> results, TimeSpan duration)
     {
         var passed = results.Count(r => r.Status == TestStatus.PASS);
-        var failed = results.Count(r => r.Status != TestStatus.PASS);
+        var failed = results.Count(r => r.Status == TestStatus.FAIL);
+        var skipped = results.Count(r => r.Status == TestStatus.ERROR);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         using var writer = new StreamWriter(filePath, append: true);
@@ -428,6 +442,7 @@ static class Program
         writer.WriteLine($"| Total | {results.Count} |");
         writer.WriteLine($"| Passed | {passed} |");
         writer.WriteLine($"| Failed | {failed} |");
+        writer.WriteLine($"| Skipped | {skipped} |");
         writer.WriteLine($"| Pass Rate | {passRate:F1}% |");
         writer.WriteLine($"| Duration | {duration.TotalSeconds:F1}s |");
         writer.WriteLine();
@@ -438,11 +453,25 @@ static class Program
             writer.WriteLine();
             writer.WriteLine("| Tool | Prompt | Tools Called |");
             writer.WriteLine("|------|--------|--------------|");
-            foreach (var result in results.Where(r => r.Status != TestStatus.PASS))
+            foreach (var result in results.Where(r => r.Status == TestStatus.FAIL))
             {
                 var toolsCalled = result.ToolsCalled is not null ? string.Join(", ", result.ToolsCalled) : "";
                 var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
                 writer.WriteLine($"| `{result.Tool}` | {promptShort} | {toolsCalled} |");
+            }
+        }
+
+        if (skipped > 0)
+        {
+            writer.WriteLine("## Skipped Tests");
+            writer.WriteLine();
+            writer.WriteLine("| Tool | Prompt | Error |");
+            writer.WriteLine("|------|--------|-------|");
+            foreach (var result in results.Where(r => r.Status == TestStatus.ERROR))
+            {
+                var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
+                var error = result.Error ?? "";
+                writer.WriteLine($"| `{result.Tool}` | {promptShort} | {error} |");
             }
         }
     }
@@ -457,7 +486,7 @@ static class Program
 
     static (string? TestContextPath, string? PromptsPath) LoadFiles()
     {
-        var root = FindRepoRoot();
+        var root = AgentRunnerUtils.FindRepoRoot(Directory.GetCurrentDirectory());
         var context = Path.Combine(root, "eng", "tools", "CopilotCliTester", "src", "test-context.md");
         var prompts = Path.Combine(root, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
 
@@ -465,20 +494,5 @@ static class Program
             TestContextPath: File.Exists(context) ? context : null,
             PromptsPath: File.Exists(prompts) ? prompts : null
         );
-    }
-
-    static string FindRepoRoot()
-    {
-        var dir = Directory.GetCurrentDirectory();
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir, "Microsoft.Mcp.slnx")) ||
-                File.Exists(Path.Combine(dir, "mcp.sln")))
-            {
-                return dir;
-            }
-            dir = Path.GetDirectoryName(dir);
-        }
-        return Directory.GetCurrentDirectory();
     }
 }

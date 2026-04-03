@@ -15,8 +15,8 @@ namespace CopilotCliTester;
 /// </summary>
 internal sealed partial class AgentRunner : IAsyncDisposable
 {
-    private static readonly string DefaultReportDir = Path.Combine(AppContext.BaseDirectory, "reports");
     private static readonly string TimeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
+    private readonly object eventLock = new();
 
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")]
     private static partial Regex JwtPattern();
@@ -28,39 +28,52 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     private static partial Regex SecretKeyValuePattern();
 
     private readonly CopilotClient _client;
-    public AgentRunner(CopilotClient client)
+    private readonly string _outputDirectory;
+    private readonly string? _workspacePath;
+
+    public AgentRunner(CopilotClient client, string? outputDir = null, string? workspacePath = null)
     {
         _client = client;
+        _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
+        _workspacePath = workspacePath;
     }
 
     public async ValueTask DisposeAsync()
     {
         await _client.DisposeAsync();
+
+        if (_workspacePath is not null && Directory.Exists(_workspacePath))
+        {
+            try { Directory.Delete(_workspacePath, recursive: true); }
+            catch { /* best-effort cleanup */ }
+        }
     }
 
     /// <summary>
     /// Creates a CopilotClient instance for running test sessions.
     /// </summary>
-    public static CopilotClient CreateSharedClient(bool debug = false)
+    public static (CopilotClient Client, string WorkspacePath) CreateSharedClient(string runId, bool debug = false, string? outputDir = null)
     {
-        var workspace = CreateTempWorkspace("mcp-test-");
+        var workspace = CreateTempWorkspace($"mcp-test-{runId}-");
         var cliArgs = new List<string> { "--yolo", "--allow-all-tools", "--allow-all-paths" };
         if (debug)
         {
+            var logDir = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
             cliArgs.Add("--log-dir");
-            cliArgs.Add(Path.Combine(DefaultReportDir, "copilot-logs"));
+            cliArgs.Add(Path.Combine(logDir, "copilot-logs"));
         }
 
-        return new CopilotClient(new CopilotClientOptions
+        var client = new CopilotClient(new CopilotClientOptions
         {
             CliArgs = [.. cliArgs],
             Cwd = workspace,
         });
+
+        return (client, workspace);
     }
 
     public async Task<AgentMetadata> RunAsync(AgentRunConfig config, CancellationToken cancellationToken = default)
     {
-        var workspace = CreateTempWorkspace("mcp-test-");
         var isComplete = false;
         AgentMetadata? metadata = null;
 
@@ -82,10 +95,10 @@ internal sealed partial class AgentRunner : IAsyncDisposable
 
             var session = await _client.CreateSessionAsync(new SessionConfig
             {
-                Model = config.Model ?? "claude-sonnet-4.5",
+                Model = config.Model ?? CopilotTestConstants.ModelName,
                 Streaming = true,
                 OnPermissionRequest = PermissionHandler.ApproveAll,
-                McpServers = BuildMcpServersConfig(),
+                McpServers = await BuildMcpServersConfigAsync(),
                 SystemMessage = systemMessage
             }, cancellationToken);
 
@@ -93,36 +106,42 @@ internal sealed partial class AgentRunner : IAsyncDisposable
             {
                 metadata = new AgentMetadata();
 
+
                 var idleTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
                 session.On(ev =>
                 {
-                    if (isComplete) return;
-
-                    if (TryMapEvent(ev, out var mapped))
+                    lock (eventLock)
                     {
-                        if (debug)
-                            Console.WriteLine($"--- Session event: {mapped.Type}");
+                        if (isComplete) return;
 
-                        if (mapped.Type == "session.idle")
+                        if (TryMapEvent(ev, out var mapped))
                         {
-                            isComplete = true;
-                            idleTcs.TrySetResult();
-                            return;
+                            if (debug) 
+                            {
+                                Console.WriteLine($"--- Session event: {mapped.Type}");
+                            }
+
+                            if (mapped.Type == "session.idle")
+                            {
+                                isComplete = true;
+                                idleTcs.TrySetResult();
+                                return;
+                            }
+
+                            metadata.Events.Add(mapped);
+
+                            if (config.ShouldEarlyTerminate is not null && config.ShouldEarlyTerminate(metadata))
+                            {
+                                isComplete = true;
+                                idleTcs.TrySetResult();
+                                return;
+                            }
                         }
-
-                        metadata.Events.Add(mapped);
-
-                        if (config.ShouldEarlyTerminate is not null && config.ShouldEarlyTerminate(metadata))
+                        else if (debug)
                         {
-                            isComplete = true;
-                            idleTcs.TrySetResult();
-                            return;
+                            Console.WriteLine($"--- Unmapped event: {ev.GetType().Name}");
                         }
-                    }
-                    else if (debug)
-                    {
-                        Console.WriteLine($"--- Unmapped event: {ev.GetType().Name}");
                     }
                 });
 
@@ -135,7 +154,10 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    isComplete = true;
+                    lock (eventLock)
+                    {
+                        isComplete = true;
+                    }
                 }
 
                 WriteMarkdownReport(config, metadata);
@@ -186,29 +208,10 @@ internal sealed partial class AgentRunner : IAsyncDisposable
             
             throw;
         }
-        finally
-        {
-            // Clean up workspace, ignore failures, OS will clean `temp` eventually
-            for(int i=0;i <3; i++)
-            {
-                try
-                {
-                    if (Directory.Exists(workspace))
-                    {
-                        await Task.Delay(500 * (i+1), CancellationToken.None);  
-                        Directory.Delete(workspace, recursive: true);
-                    }
-                    break;
-                } 
-                catch
-                {
-                    // Ignore cleanup failures 
-                }
-            }
-        }
+
     }
 
-    private static void WriteMarkdownReport(AgentRunConfig config, AgentMetadata metadata)
+    private void WriteMarkdownReport(AgentRunConfig config, AgentMetadata metadata)
     {
         var filePath = BuildReportFilePath(config);
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
@@ -323,13 +326,13 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         return result;
     }
 
-    private static string BuildReportFilePath(AgentRunConfig config)
+    private string BuildReportFilePath(AgentRunConfig config)
     {
         var runDir = $"test-run-{TimeStamp}";
         var ns = config.Namespace ?? "unknown";
-        var tool = config.ToolName ?? $"test-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var tool = config.ToolName ?? $"test-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
         var file = $"{tool}-{DateTimeOffset.UtcNow:HHmmssfff}.md";
-        return Path.Combine(DefaultReportDir, runDir, ns, file);
+        return Path.Combine(_outputDirectory, runDir, ns, file);
     }
 
     private static string CreateTempWorkspace(string prefix)
@@ -342,9 +345,9 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     /// <summary>
     /// Builds the MCP servers configuration for stdio transport. Discovers or builds the local azmcp executable from the repo.
     /// </summary>
-    private static Dictionary<string, object> BuildMcpServersConfig()
+    private static async Task<Dictionary<string, object>> BuildMcpServersConfigAsync()
     {
-        var serverPath = ResolveServerExecutable();
+        var serverPath = await ResolveServerExecutable();
 
         return new Dictionary<string, object>
         {
@@ -366,12 +369,12 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
 
     /// <summary>
-    /// Resolves the azmcp server executable. Walks up from the current assembly location to find the repo root (containing Microsoft.Mcp.slnx), then checks for an existing
+    /// Resolves the azmcp server executable. Walks up from the current assembly location to find the repo root, then checks for an existing
     /// build artifact. If none is found, builds the server project.
     /// </summary>
-    private static string ResolveServerExecutable()
+    private static async Task<string> ResolveServerExecutable()
     {
-        var repoRoot = FindRepoRoot();
+        var repoRoot = AgentRunnerUtils.FindRepoRoot(AppContext.BaseDirectory);
         var serverProject = Path.Combine(repoRoot, ServerProjectRelativePath);
 
         if (!File.Exists(serverProject))
@@ -406,11 +409,25 @@ internal sealed partial class AgentRunner : IAsyncDisposable
         using var process = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
 
-        process.WaitForExit();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+
+        try
+        {
+            await process.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree:  true);
+            }
+            throw new TimeoutException(
+                $"'dotnet build' timed out after 15 minutes. The build process has been terminated.");
+        }
 
         if (process.ExitCode != 0)
         {
-            var stderr = process.StandardError.ReadToEnd();
+            var stderr = await process.StandardError.ReadToEndAsync();
             throw new InvalidOperationException(
                 $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
         }
@@ -427,27 +444,6 @@ internal sealed partial class AgentRunner : IAsyncDisposable
 
         Console.WriteLine($"Build complete: {builtPath}");
         return builtPath;
-    }
-
-    /// <summary>
-    /// Walks up from the executing assembly's directory to find the repo root (the directory containing Microsoft.Mcp.slnx).
-    /// </summary>
-    private static string FindRepoRoot()
-    {
-        var dir = AppContext.BaseDirectory;
-
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir, "Microsoft.Mcp.slnx")))
-            {
-                return dir;
-            }
-
-            dir = Path.GetDirectoryName(dir);
-        }
-
-        throw new InvalidOperationException(
-            "Could not find repo root (directory containing Microsoft.Mcp.slnx). Make sure you're running from within the repo.");
     }
 
     private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)

@@ -56,6 +56,12 @@ For any placeholder values in angle brackets (e.g., `<storage_account_name>`), u
 - Bicep Template: 
   ```bicep
   param location string = 'eastus2'
+
+  @secure()
+  param adminPassword string
+
+  param adminUsername string = 'azureuser'
+
   resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     name: 'myVM'
     location: location
@@ -64,7 +70,7 @@ For any placeholder values in angle brackets (e.g., `<storage_account_name>`), u
       storageProfile: {
         osDisk: { createOption: 'FromImage', managedDisk: { storageAccountType: 'Premium_LRS' } }
       }
-      osProfile: { computerName: 'myVM', adminUsername: 'azureuser', adminPassword: 'P@ssw0rd1234!' }
+      osProfile: { computerName: 'myVM', adminUsername: adminUsername, adminPassword: adminPassword }
       networkProfile: { networkInterfaces: [{ id: nic.id }] }
     }
   }

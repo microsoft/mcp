@@ -37,46 +37,84 @@ internal static class AgentRunnerUtils
     /// </summary>
     public static bool WasToolInvoked(AgentMetadata metadata, string expectedTool)
     {
-        var toolStartEvents = GetToolCalls(metadata);
-
-        return toolStartEvents.Any(evt =>
+        return GetToolCalls(metadata).Any(evt =>
         {
-            if (evt.Data.TryGetValue("mcpToolName", out var mcp) && mcp is string mcpToolName)
-            {
-                if (string.Equals(mcpToolName, expectedTool, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
+            var resolved = ResolveToolName(evt);
 
-            var toolName = evt.Data.TryGetValue("toolName", out var tn) ? tn?.ToString() ?? "" : "";
-
-            if (string.Equals(toolName, expectedTool, StringComparison.OrdinalIgnoreCase)) return true;
-
-            // Namespace-prefixed matches
-            if (toolName.EndsWith($"_{expectedTool}", StringComparison.OrdinalIgnoreCase) ||
-                toolName.EndsWith($"-{expectedTool}", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(resolved, expectedTool, StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            // Check if tool appears as "command" parameter. e.g., tool="azure-workbooks" with arguments: { "command": "workbooks_create" }
-            if (evt.Data.TryGetValue("arguments", out var argsObj) && argsObj is not null)
-            {
-                var argsJson = SafeJson(argsObj);
-                if (argsJson.Contains($"\"command\":\"{expectedTool}\"", StringComparison.OrdinalIgnoreCase) ||
-                    argsJson.Contains($"\"command\": \"{expectedTool}\"", StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
+            // Namespace-prefixed matches (e.g., resolved="azure-storage_account_list" matches expectedTool="storage_account_list")
+            if (resolved.EndsWith($"_{expectedTool}", StringComparison.OrdinalIgnoreCase) ||
+                resolved.EndsWith($"-{expectedTool}", StringComparison.OrdinalIgnoreCase))
+                return true;
 
             return false;
         });
     }
 
     /// <summary>
-    /// Collect all tool names that were invoked during the session.
+    /// Collect all tool names that were invoked during the session. Prefer mcpToolName, then arguments.command, then fall back to toolName.
     /// </summary>
     public static List<string> GetInvokedToolNames(AgentMetadata metadata)
     {
         return GetToolCalls(metadata)
-            .Select(evt => evt.Data.TryGetValue("toolName", out var tn) ? tn?.ToString() ?? "unknown" : "unknown")
+            .Select(ResolveToolName)
             .ToList();
+    }
+
+    private static string ResolveToolName(AgentSessionEvent evt)
+    {
+        // 1. Try arguments.command first (namespace-proxy wraps real command here)
+        if (evt.Data.TryGetValue("arguments", out var argsObj) && argsObj is not null)
+        {
+            try
+            {
+                // Handle dictionary-like types
+                if (argsObj is IReadOnlyDictionary<string, object?> dict && dict.TryGetValue("command", out var cmdVal) &&
+                    cmdVal?.ToString() is string cmd && !string.IsNullOrWhiteSpace(cmd))
+                {
+                    return cmd;
+                }
+
+                // Handle JsonElement or string
+                JsonDocument? doc = null;
+
+                if (argsObj is JsonElement je)
+                {
+                    doc = JsonDocument.Parse(je.GetRawText());
+                }
+                else if (argsObj is string s)
+                {
+                    doc = JsonDocument.Parse(s);
+                }
+                else
+                {
+                    doc = JsonDocument.Parse(SafeJson(argsObj));
+                }
+
+                using (doc)
+                {
+                    if (doc.RootElement.TryGetProperty("command", out var cmdProp))
+                    {
+                        var command = cmdProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(command))
+                            return command;
+                    }
+                }
+            }
+            catch
+            {
+                // fall through to mcpToolName / toolName
+            }
+        }
+
+        // 2. Try mcpToolName
+        if (evt.Data.TryGetValue("mcpToolName", out var mcp) && mcp is string mcpToolName && !string.IsNullOrWhiteSpace(mcpToolName))
+            return mcpToolName;
+
+        // 3. Fall back to toolName
+        return evt.Data.TryGetValue("toolName", out var tn) ? tn?.ToString() ?? "unknown" : "unknown";
     }
 
     internal static string SafeJson(object? value)
@@ -89,5 +127,22 @@ internal static class AgentRunnerUtils
         {
             return value?.ToString() ?? "null"; 
         }
+    }
+
+    public static string FindRepoRoot(string startingDir)
+    {
+        string? dir = startingDir;
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir, "Microsoft.Mcp.slnx")) ||
+                File.Exists(Path.Combine(dir, "mcp.sln")))
+            {
+                return dir;
+            }
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        throw new InvalidOperationException(
+            "Could not find repo root (directory containing Microsoft.Mcp.slnx). Make sure you're running from within the repo.");    
     }
 }
