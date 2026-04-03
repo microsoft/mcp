@@ -70,7 +70,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             retryPolicy: retryPolicy,
             converter: ConvertToSqlDatabaseModel,
             additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
-            cancellationToken: cancellationToken) 
+            cancellationToken: cancellationToken)
             ?? throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
 
         return result;
@@ -642,7 +642,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             AdministratorLogin = administratorLogin,
             AdministratorLoginPassword = administratorPassword,
             Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
-                                         // Default to Disabled for secure-by-default behavior
+            // Default to Disabled for secure-by-default behavior
             PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
                 publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
                     ? ServerNetworkAccessFlag.Enabled
