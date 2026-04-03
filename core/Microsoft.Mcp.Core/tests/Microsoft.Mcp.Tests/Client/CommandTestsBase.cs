@@ -107,6 +107,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             if (TestMode is TestMode.Playback)
             {
                 envVarDictionary["AZURE_TOKEN_CREDENTIALS"] = "PlaybackTokenCredential";
+                envVarDictionary["TEST_MODE"] = "Playback";
             }
         }
 

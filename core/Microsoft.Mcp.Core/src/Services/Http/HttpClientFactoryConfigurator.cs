@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -69,9 +68,7 @@ public static class HttpClientFactoryConfigurator
         var proxyUri = ResolveRecordingProxy(recordingProxyResolver);
         if (proxyUri != null)
         {
-            var tokenCredentialEnv = Environment.GetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS");
-            var isPlayback = string.IsNullOrEmpty(tokenCredentialEnv) || string.Equals(tokenCredentialEnv, "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
-            return new RecordingRedirectHandler(proxyUri, isPlayback)
+            return new RecordingRedirectHandler(proxyUri)
             {
                 InnerHandler = handler
             };

@@ -80,10 +80,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
         var tokenCredential = await GetCredential(cancellationToken);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
@@ -403,7 +401,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         var configData = configuration.Value.Data;
         configData.Value = value;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http.Headers;
+using Microsoft.Mcp.Core.Helpers;
+
 namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
@@ -11,12 +14,11 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// that it rewrites the final outgoing wire request.
 /// </summary>
 /// <param name="proxyUri">The URI of the recording/replace proxy to redirect requests to.</param>
-/// <param name="stripRetryAfterHeaders">Whether to strip Retry-After headers from responses, which can interfere with test proxy behavior in playback mode.</param>
-internal sealed class RecordingRedirectHandler(Uri proxyUri, bool stripRetryAfterHeaders) : DelegatingHandler
+internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler
 {
     private const string CosmosSerializationHeader = "x-ms-cosmos-supported-serialization-formats";
     private readonly Uri _proxyUri = proxyUri ?? throw new ArgumentNullException(nameof(proxyUri));
-    private readonly bool _stripRetryAfterHeaders = stripRetryAfterHeaders;
+    private readonly bool _playbackTesting = EnvironmentHelpers.IsPlaybackTesting();
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
     {
@@ -61,11 +63,20 @@ internal sealed class RecordingRedirectHandler(Uri proxyUri, bool stripRetryAfte
 
     private HttpResponseMessage StripRetryAfter(HttpResponseMessage response)
     {
-        if (_stripRetryAfterHeaders)
+        if (_playbackTesting)
         {
-            response.Headers.Remove("Retry-After");
-            response.Headers.Remove("x-ms-retry-after-ms");
-            response.Headers.Remove("retry-after-ms");
+            if (response.Headers.Remove("Retry-After"))
+            {
+                response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromMilliseconds(0));
+            }
+            if (response.Headers.Remove("x-ms-retry-after-ms"))
+            {
+                response.Headers.Add("x-ms-retry-after-ms", "0");
+            }
+            if (response.Headers.Remove("retry-after-ms"))
+            {
+                response.Headers.Add("retry-after-ms", "0");
+            }
         }
         return response;
     }

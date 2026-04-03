@@ -71,7 +71,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
             {
-                results.Add(new SmsResult
+                results.Add(new()
                 {
                     MessageId = result.MessageId,
                     To = result.To,
@@ -138,7 +138,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), retryPolicy);
             emailClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
 
-            var emailClient = new EmailClient(new Uri(endpoint), credential, emailClientOptions);
+            var emailClient = new EmailClient(new(endpoint), credential, emailClientOptions);
 
             // Create the email content
             var emailContent = new EmailContent(subject);
@@ -160,14 +160,14 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var emailMessage = new EmailMessage(
                 senderAddress: from,
                 content: emailContent,
-                recipients: new EmailRecipients(recipientList, recipientCc, recipientBcc));
+                recipients: new(recipientList, recipientCc, recipientBcc));
 
             // Add reply-to addresses if provided
             if (replyTo != null && replyTo.Length > 0)
             {
                 foreach (var address in replyTo)
                 {
-                    emailMessage.ReplyTo.Add(new EmailAddress(address));
+                    emailMessage.ReplyTo.Add(new(address));
                 }
             }
 
@@ -175,20 +175,21 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
                 from, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
 
             // Send the email
-            var response = await emailClient.SendAsync(
-                WaitUntil.Completed,
+            var sendOperation = await emailClient.SendAsync(
+                WaitUntil.Started,
                 emailMessage,
                 cancellationToken);
+            await WaitForLroCompletionAsync(sendOperation, cancellationToken);
 
             // Get the operation result
-            var operationResult = response.Value;
+            var operationResult = sendOperation.Value;
 
             _logger.LogInformation("Email sent successfully. MessageId={MessageId}, Status={Status}",
-                response.Id, operationResult.Status);
+                sendOperation.Id, operationResult.Status);
 
-            return new Models.EmailSendResult
+            return new()
             {
-                MessageId = response.Id,
+                MessageId = sendOperation.Id,
                 Status = operationResult.Status.ToString()
             };
         }
