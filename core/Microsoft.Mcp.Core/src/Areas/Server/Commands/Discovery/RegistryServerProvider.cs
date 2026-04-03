@@ -59,7 +59,8 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
         }
 
         // Pre-flight version check for stdio servers with version requirements
-        if (!string.IsNullOrWhiteSpace(_serverInfo.MinVersion) &&
+        if (clientFactory == CreateStdioClientAsync &&
+            !string.IsNullOrWhiteSpace(_serverInfo.MinVersion) &&
             !string.IsNullOrWhiteSpace(_serverInfo.Command))
         {
             var versionError = await CheckCommandVersionAsync(
@@ -152,7 +153,7 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                // Timeout fired, not caller cancellation — kill and fail-open
+                // Timeout fired, not caller cancellation - kill and fail-open
                 try
                 {
                     process.Kill(entireProcessTree: true);
@@ -162,13 +163,32 @@ public sealed partial class RegistryServerProvider(string id, RegistryServerInfo
                     // Best-effort cleanup
                 }
 
+                // Observe stream tasks to prevent unobserved task exceptions
+                try
+                {
+                    await stdoutTask;
+                }
+                catch
+                {
+                    // Process killed - stream disposed
+                }
+
+                try
+                {
+                    await stderrTask;
+                }
+                catch
+                {
+                    // Process killed - stream disposed
+                }
+
                 return null;
             }
 
             var output = await stdoutTask;
-            _ = await stderrTask;
+            var errorOutput = await stderrTask;
 
-            var installedVersion = ParseVersionFromOutput(output);
+            var installedVersion = ParseVersionFromOutput(output) ?? ParseVersionFromOutput(errorOutput);
             if (installedVersion != null && Version.TryParse(minVersion, out var requiredVersion))
             {
                 if (installedVersion < requiredVersion)
