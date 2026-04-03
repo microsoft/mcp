@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
@@ -15,11 +17,14 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
 /// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
-public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
+public sealed partial class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+
+    [GeneratedRegex(@"(\d+\.\d+\.\d+)")]
+    private static partial Regex SemVerPattern();
 
     /// <summary>
     /// Creates metadata that describes this registry-based server.
@@ -53,6 +58,29 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             throw new ArgumentException($"Registry server '{_id}' does not have a valid transport type. Either 'url' for HTTP transport or 'type=stdio' with 'command' must be specified.");
         }
 
+        // Pre-flight version check for stdio servers with version requirements
+        if (!string.IsNullOrWhiteSpace(_serverInfo.MinVersion) &&
+            !string.IsNullOrWhiteSpace(_serverInfo.Command))
+        {
+            var versionError = await CheckCommandVersionAsync(
+                _serverInfo.Command, _serverInfo.VersionArgs, _serverInfo.MinVersion, cancellationToken);
+
+            if (versionError != null)
+            {
+                var message = string.IsNullOrWhiteSpace(_serverInfo.InstallInstructions)
+                    ? $"Failed to initialize the '{_id}' MCP tool. {versionError}"
+                    : $"""
+                        Failed to initialize the '{_id}' MCP tool.
+                        {versionError}
+
+                        Installation Instructions:
+                        {_serverInfo.InstallInstructions}
+                        """;
+
+                throw new InvalidOperationException(message.Trim());
+            }
+        }
+
         try
         {
             return await clientFactory(clientOptions, cancellationToken);
@@ -74,6 +102,107 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
 
             throw new InvalidOperationException($"Failed to create MCP client for registry server '{_id}': {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// Checks whether the specified command is installed and meets the minimum version requirement.
+    /// </summary>
+    /// <param name="command">The command to check (e.g., "azd").</param>
+    /// <param name="versionArgs">Arguments to pass to get version output, defaults to ["--version"].</param>
+    /// <param name="minVersion">The minimum required version string (e.g., "1.20.0").</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>An error message if the check fails, or null if the command meets requirements.</returns>
+    internal static async Task<string?> CheckCommandVersionAsync(
+        string command, IList<string>? versionArgs, string minVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = command,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var args = versionArgs ?? (IList<string>)["--version"];
+            foreach (var arg in args)
+            {
+                process.StartInfo.ArgumentList.Add(arg);
+            }
+
+            if (!process.Start())
+            {
+                return $"'{command}' failed to start.";
+            }
+
+            // Read both streams concurrently to avoid pipe-buffer deadlocks
+            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+            // Apply a hard timeout so a hung command cannot block indefinitely
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(30));
+
+            try
+            {
+                await process.WaitForExitAsync(timeoutCts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Timeout fired, not caller cancellation — kill and fail-open
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                    // Best-effort cleanup
+                }
+
+                return null;
+            }
+
+            var output = await stdoutTask;
+            _ = await stderrTask;
+
+            var installedVersion = ParseVersionFromOutput(output);
+            if (installedVersion != null && Version.TryParse(minVersion, out var requiredVersion))
+            {
+                if (installedVersion < requiredVersion)
+                {
+                    return $"'{command}' version {installedVersion} is installed, but version {requiredVersion} or later is required.";
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or FileNotFoundException)
+        {
+            return $"'{command}' is not installed or not found in the system PATH.";
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // Unknown error checking version - let the normal connection attempt proceed
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts a semantic version (major.minor.patch) from command output text.
+    /// </summary>
+    /// <param name="output">The stdout text from a version command.</param>
+    /// <returns>The parsed <see cref="Version"/>, or null if no version was found.</returns>
+    internal static Version? ParseVersionFromOutput(string output)
+    {
+        var match = SemVerPattern().Match(output);
+        return match.Success && Version.TryParse(match.Groups[1].Value, out var version) ? version : null;
     }
 
     /// <summary>

@@ -70,6 +70,23 @@ public sealed class RegistryServerInfo
     public Dictionary<string, string>? Env { get; init; }
 
     /// <summary>
+    /// Gets the minimum required version for the command.
+    /// When set along with a stdio command, a pre-flight version check is
+    /// performed before creating the client. The version is parsed from
+    /// the output of running the command with <see cref="VersionArgs"/>.
+    /// </summary>
+    [JsonPropertyName("minVersion")]
+    public string? MinVersion { get; init; }
+
+    /// <summary>
+    /// Gets the command-line arguments used to query the command's version.
+    /// Only used when <see cref="MinVersion"/> is set.
+    /// Defaults to <c>["--version"]</c> if not specified.
+    /// </summary>
+    [JsonPropertyName("versionArgs")]
+    public List<string>? VersionArgs { get; init; }
+
+    /// <summary>
     /// Gets installation instructions for the server.
     /// </summary>
     [JsonPropertyName("installInstructions")]
