@@ -1243,6 +1243,8 @@ public class DiskCreateCommandTests
     [InlineData("https://notblob.core.windows.net/vhds/disk.vhd")]
     [InlineData("https://myaccount.table.core.windows.net/vhds/disk.vhd")]
     [InlineData("https://myaccount.file.core.windows.net/vhds/disk.vhd")]
+    [InlineData("https://attacker.com#storageacc.blob.core.windows.net")]
+    [InlineData("https://attacker.com#.blob.core.windows.net/vhds/disk.vhd")]
     public void CreateDiskFromNonBlobUri_ThrowsArgumentException(string source)
     {
         // Act & Assert
