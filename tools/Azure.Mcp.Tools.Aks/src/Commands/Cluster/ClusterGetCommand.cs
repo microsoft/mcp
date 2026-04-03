@@ -85,8 +85,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options);
+                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName);
             HandleException(context, ex);
         }
 

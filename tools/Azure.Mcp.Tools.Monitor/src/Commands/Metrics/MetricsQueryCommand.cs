@@ -167,8 +167,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         catch (Exception ex)
         {            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}, Options: {@Options}",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames, options);
+                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}.",
+                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames);
             HandleException(context, ex);
         }
 
