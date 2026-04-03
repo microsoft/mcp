@@ -86,7 +86,7 @@ public class VaultUpdateCommandTests
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--redundancy", "GeoRedundant"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -96,8 +96,45 @@ public class VaultUpdateCommandTests
         Assert.Contains("Test error", response.Message);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsUpdateWithNoChanges()
+    {
+        // Arrange - no update options provided, only required base options
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("At least one update option must be provided", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFoundError()
+    {
+        // Arrange
+        _backupService.UpdateVaultAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Not found"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--redundancy", "GeoRedundant"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Vault not found", response.Message);
+    }
+
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --redundancy GeoRedundant", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --tags {}", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg", false)] // No update options
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {

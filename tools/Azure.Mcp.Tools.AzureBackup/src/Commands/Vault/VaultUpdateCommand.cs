@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
@@ -34,6 +35,22 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger) : Bas
         command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState);
         command.Options.Add(AzureBackupOptionDefinitions.IdentityType);
         command.Options.Add(AzureBackupOptionDefinitions.Tags);
+        command.Validators.Add(commandResult =>
+        {
+            bool hasUpdate =
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.Redundancy.Name) ||
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDelete.Name) ||
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name) ||
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.ImmutabilityState.Name) ||
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.IdentityType.Name) ||
+                commandResult.HasOptionResult(AzureBackupOptionDefinitions.Tags.Name);
+
+            if (!hasUpdate)
+            {
+                commandResult.AddError(
+                    "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, or --tags.");
+            }
+        });
     }
 
     protected override VaultUpdateOptions BindOptions(ParseResult parseResult)
@@ -51,17 +68,56 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger) : Bas
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
             return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
             var service = context.GetService<IAzureBackupService>();
-            var result = await service.UpdateVaultAsync(options.Vault!, options.ResourceGroup!, options.Subscription!, options.VaultType, options.Redundancy, options.SoftDeleteState, options.SoftDeleteRetentionDays, options.ImmutabilityState, options.IdentityType, options.Tags, options.Tenant, options.RetryPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new VaultUpdateCommandResult(result), AzureBackupJsonContext.Default.VaultUpdateCommandResult);
+            var result = await service.UpdateVaultAsync(
+                options.Vault!,
+                options.ResourceGroup!,
+                options.Subscription!,
+                options.VaultType,
+                options.Redundancy,
+                options.SoftDeleteState,
+                options.SoftDeleteRetentionDays,
+                options.ImmutabilityState,
+                options.IdentityType,
+                options.Tags,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new VaultUpdateCommandResult(result),
+                AzureBackupJsonContext.Default.VaultUpdateCommandResult);
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error updating vault"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating vault. Vault: {Vault}, ResourceGroup: {ResourceGroup}",
+                options.Vault, options.ResourceGroup);
+            HandleException(context, ex);
+        }
+
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx => argEx.Message,
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Vault not found. Verify the vault name and resource group.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            "Update conflict. The vault settings may have been modified concurrently.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed updating the vault. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     internal record VaultUpdateCommandResult([property: JsonPropertyName("result")] OperationResult Result);
 }

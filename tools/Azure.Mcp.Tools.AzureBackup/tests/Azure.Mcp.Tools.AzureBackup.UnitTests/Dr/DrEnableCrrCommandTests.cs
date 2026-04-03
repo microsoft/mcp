@@ -94,6 +94,63 @@ public class DrEnableCrrCommandTests
         Assert.Contains("Test error", response.Message);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFoundError()
+    {
+        // Arrange
+        _backupService.ConfigureCrossRegionRestoreAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Not found"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Vault not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesBadRequestForNonGrsVault()
+    {
+        // Arrange
+        _backupService.ConfigureCrossRegionRestoreAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, "CRR not supported"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("GRS", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesConflictWhenAlreadyEnabled()
+    {
+        // Arrange
+        _backupService.ConfigureCrossRegionRestoreAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "Already enabled"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("already enabled", response.Message);
+    }
+
     [Theory]
     [InlineData("--subscription sub --vault v --resource-group rg", true)]
     [InlineData("--subscription sub", false)] // Missing vault and resource-group

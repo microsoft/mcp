@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
@@ -55,17 +56,58 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger) : B
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
             return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
             var service = context.GetService<IAzureBackupService>();
-            var result = await service.CreatePolicyAsync(options.Vault!, options.ResourceGroup!, options.Subscription!, options.Policy!, options.WorkloadType!, options.VaultType, options.ScheduleFrequency, options.ScheduleTime, options.DailyRetentionDays, options.WeeklyRetentionWeeks, options.MonthlyRetentionMonths, options.YearlyRetentionYears, options.Tenant, options.RetryPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(new PolicyCreateCommandResult(result), AzureBackupJsonContext.Default.PolicyCreateCommandResult);
+            var result = await service.CreatePolicyAsync(
+                options.Vault!,
+                options.ResourceGroup!,
+                options.Subscription!,
+                options.Policy!,
+                options.WorkloadType!,
+                options.VaultType,
+                options.ScheduleFrequency,
+                options.ScheduleTime,
+                options.DailyRetentionDays,
+                options.WeeklyRetentionWeeks,
+                options.MonthlyRetentionMonths,
+                options.YearlyRetentionYears,
+                options.Tenant,
+                options.RetryPolicy,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new PolicyCreateCommandResult(result),
+                AzureBackupJsonContext.Default.PolicyCreateCommandResult);
         }
-        catch (Exception ex) { _logger.LogError(ex, "Error creating policy"); HandleException(context, ex); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating policy. Policy: {Policy}, Vault: {Vault}, WorkloadType: {WorkloadType}",
+                options.Policy, options.Vault, options.WorkloadType);
+            HandleException(context, ex);
+        }
+
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx => argEx.Message,
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Vault not found. Verify the vault name and resource group.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            "A policy with this name already exists. Choose a different name.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed creating the policy. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     internal record PolicyCreateCommandResult([property: JsonPropertyName("result")] OperationResult Result);
 }
