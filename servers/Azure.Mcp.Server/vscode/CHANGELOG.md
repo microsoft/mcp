@@ -1,7 +1,7 @@
 # Release History
 
 
-## 2.0.0-beta.38 (2026-04-03) (pre-release)
+## 2.0.38 (2026-04-03) (pre-release)
 
 ### Fixed
 
