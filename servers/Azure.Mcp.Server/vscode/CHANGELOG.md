@@ -1,5 +1,13 @@
 # Release History
 
+
+## 2.0.38 (2026-04-03) (pre-release)
+
+### Fixed
+
+- Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands. [[#2336](https://github.com/microsoft/mcp/pull/2336)]
+- Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints. [[#2339](https://github.com/microsoft/mcp/pull/2339)]
+
 ## 2.0.37 (2026-04-02) (pre-release)
 
 ### Fixed
