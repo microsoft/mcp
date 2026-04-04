@@ -2,15 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.38 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.0-beta.38 (2026-04-03)
 
 ### Bugs Fixed
 
-### Other Changes
+- Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands. [[#2336](https://github.com/microsoft/mcp/pull/2336)]
+- Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints. [[#2339](https://github.com/microsoft/mcp/pull/2339)]
 
 ## 2.0.0-beta.37 (2026-04-02)
 
