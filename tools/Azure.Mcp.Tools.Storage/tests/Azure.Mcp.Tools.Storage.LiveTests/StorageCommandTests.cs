@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             .. base.BodyKeySanitizers,
             new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
             {
-                Value = "Sanitized"
+                Value = "sanitized"
             })
         ];
 
