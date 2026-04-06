@@ -14,6 +14,17 @@ param workspaceId string
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+var isGov = environment().name == 'AzureUSGovernment'
+var webTestLocations = isGov
+  ? [
+      { Id: 'usgov-va-azr' }
+      { Id: 'usgov-tx-azr' }
+    ]
+  : [
+      { Id: 'us-ca-sjc-azr' }
+      { Id: 'us-tx-sn1-azr' }
+    ]
+
 // Application Insights resource with cheapest SKU
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${baseName}-ai'
@@ -43,14 +54,7 @@ resource bingAvailabilityTest 'Microsoft.Insights/webtests@2022-06-15' = {
     Timeout: 30
     Kind: 'standard'
     RetryEnabled: true
-    Locations: [
-      {
-        Id: 'us-ca-sjc-azr' // US West (San Jose)
-      }
-      {
-        Id: 'us-tx-sn1-azr' // US South Central (San Antonio)
-      }
-    ]
+    Locations: webTestLocations
     Request: {
       RequestUrl: 'https://www.bing.com'
       HttpVerb: 'GET'
@@ -132,14 +136,7 @@ resource microsoftAvailabilityTest 'Microsoft.Insights/webtests@2022-06-15' = {
     Timeout: 30
     Kind: 'standard'
     RetryEnabled: true
-    Locations: [
-      {
-        Id: 'us-ca-sjc-azr' // US West (San Jose)
-      }
-      {
-        Id: 'us-tx-sn1-azr' // US South Central (San Antonio)
-      }
-    ]
+    Locations: webTestLocations
     Request: {
       RequestUrl: 'https://www.microsoft.com'
       Headers: null
