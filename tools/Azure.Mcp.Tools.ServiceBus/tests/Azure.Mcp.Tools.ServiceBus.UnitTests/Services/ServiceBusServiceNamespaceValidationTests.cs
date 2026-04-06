@@ -85,20 +85,25 @@ public class ServiceBusServiceNamespaceValidationTests
     [Theory]
     [InlineData("ns#fragment.servicebus.windows.net")]
     [InlineData("test.servicebus.windows.net#evil.com")]
-    public async Task GetQueueDetails_RejectsHashCharacterInNamespace(string namespaceName)
+    [InlineData("test.servicebus.windows.net/extraPath")]
+    [InlineData("test.servicebus.windows.net:443")]
+    [InlineData("test.servicebus.windows.net?q=1")]
+    [InlineData("https://test.servicebus.windows.net")]
+    public async Task GetQueueDetails_RejectsNonHostNamespaceValues(string namespaceName)
     {
         var ex = await Assert.ThrowsAsync<SecurityException>(
             () => _service.GetQueueDetails(namespaceName, "testQueue", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("#", ex.Message);
+        Assert.Contains("host name only", ex.Message);
     }
 
     [Theory]
     [InlineData("ns#fragment.servicebus.windows.net")]
-    [InlineData("test.servicebus.windows.net#evil.com")]
-    public async Task PeekQueueMessages_RejectsHashCharacterInNamespace(string namespaceName)
+    [InlineData("test.servicebus.windows.net/extraPath")]
+    [InlineData("test.servicebus.windows.net:443")]
+    public async Task PeekQueueMessages_RejectsNonHostNamespaceValues(string namespaceName)
     {
         var ex = await Assert.ThrowsAsync<SecurityException>(
             () => _service.PeekQueueMessages(namespaceName, "testQueue", 1, cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("#", ex.Message);
+        Assert.Contains("host name only", ex.Message);
     }
 }

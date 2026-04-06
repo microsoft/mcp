@@ -17,9 +17,12 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
 {
     private void ValidateNamespace(string namespaceName)
     {
-        if (namespaceName.Contains('#'))
+        // Reject any characters that would introduce scheme, path, query, fragment, or port components.
+        // A fully-qualified namespace must be a bare hostname (e.g. "mynamespace.servicebus.windows.net").
+        if (namespaceName.AsSpan().IndexOfAny("/:?#@") >= 0)
         {
-            throw new SecurityException("Service Bus namespace must not contain '#' characters.");
+            throw new SecurityException(
+                "Service Bus namespace must be a host name only, without scheme, port, path, query, or fragment components.");
         }
 
         EndpointValidator.ValidateAzureServiceEndpoint(
