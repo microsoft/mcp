@@ -16,6 +16,6 @@ param testApplicationOid string
 
 resource loadTest 'Microsoft.LoadTestService/loadtests@2022-12-01' = {
   name: baseName
-  location: 'eastus'
+  location: location
   properties: {}
 }

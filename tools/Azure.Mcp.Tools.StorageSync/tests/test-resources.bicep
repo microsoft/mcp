@@ -11,6 +11,11 @@ param location string = resourceGroup().location
 @description('The storage account name for cloud endpoint.')
 param storageAccountName string = 'sa${uniqueString(resourceGroup().id, baseName)}'
 
+// Use the correct service principal ID based on the cloud environment
+var testApplicationOid = environment().name == 'AzureUSGovernment'
+  ? 'dcacb2fb-288d-4b5c-96bd-5a3ea38bd0e8'
+  : '9469b9f5-6722-4481-a2b2-14ed560b706f'
+
 // Storage Sync Service
 resource storageSyncService 'Microsoft.StorageSync/storageSyncServices@2022-06-01' = {
   name: baseName
@@ -49,10 +54,10 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 
 // Role Assignment - Reader and Data Access
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, '9469b9f5-6722-4481-a2b2-14ed560b706f')
+  name: guid(storageAccount.id, testApplicationOid)
   scope: storageAccount
   properties: {
-    principalId: '9469b9f5-6722-4481-a2b2-14ed560b706f'
+    principalId: testApplicationOid
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'c12c1c16-33a1-487b-954d-41c89c60f349')
     principalType: 'ServicePrincipal'
   }

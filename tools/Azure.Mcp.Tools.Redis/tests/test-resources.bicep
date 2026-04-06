@@ -14,6 +14,8 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+var isGovCloud = environment().name == 'AzureUSGovernment'
+
 resource redisCache 'Microsoft.Cache/Redis@2024-11-01' = {
   name: baseName
   location: location
@@ -42,7 +44,7 @@ resource redisCacheAccessPolicyAssignment 'Microsoft.Cache/Redis/accessPolicyAss
   }
 }
 
-resource redisCluster 'Microsoft.Cache/redisEnterprise@2025-05-01-preview' = {
+resource redisCluster 'Microsoft.Cache/redisEnterprise@2025-05-01-preview' = if (!isGovCloud) {
   location: location
   name: baseName
   sku: {
@@ -56,7 +58,7 @@ resource redisCluster 'Microsoft.Cache/redisEnterprise@2025-05-01-preview' = {
   }
 }
 
-resource redisClusterDatabase 'Microsoft.Cache/redisEnterprise/databases@2025-05-01-preview' = {
+resource redisClusterDatabase 'Microsoft.Cache/redisEnterprise/databases@2025-05-01-preview' = if (!isGovCloud) {
   parent: redisCluster
   name: 'default'
   properties:{
