@@ -6,9 +6,12 @@
 #Requires -Version 6.0
 #Requires -PSEdition Core
 
-[CmdletBinding()]
 param (
-    [Parameter(Mandatory)]
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs,
     [hashtable] $AdditionalParameters
 )
 
@@ -16,9 +19,9 @@ Write-Host "Running ResourceHealth post-deployment setup..."
 
 try {
     # Extract outputs from deployment
-    $storageAccountResourceId = $AdditionalParameters['RESOURCEHEALTH_STORAGE_ACCOUNT_RESOURCE_ID']
-    $storageAccountName = $AdditionalParameters['RESOURCEHEALTH_STORAGE_ACCOUNT_NAME']
-    
+    $storageAccountResourceId = $DeploymentOutputs['storageAccountResourceId']
+    $storageAccountName = $DeploymentOutputs['storageAccountName']
+
     if ($storageAccountResourceId) {
         Write-Host "Storage account created for ResourceHealth testing: $storageAccountName"
         Write-Host "Resource ID: $storageAccountResourceId"
