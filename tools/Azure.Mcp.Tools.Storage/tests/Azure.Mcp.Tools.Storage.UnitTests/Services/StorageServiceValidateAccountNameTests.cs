@@ -13,7 +13,6 @@ public class StorageServiceValidateAccountNameTests
     [InlineData("abc")]
     [InlineData("storage123")]
     [InlineData("a1b2c3d4e5f6g7h8i9j0k1l2")]
-    [InlineData("MYSTORAGEACCOUNT")]
     public static void ValidateStorageAccountName_AcceptsValidNames(string account)
     {
         var exception = Record.Exception(() => StorageService.ValidateStorageAccountName(account));
@@ -58,11 +57,13 @@ public class StorageServiceValidateAccountNameTests
     [InlineData("account?query", '?')]
     [InlineData("account-name", '-')]
     [InlineData("account_name", '_')]
+    [InlineData("MyStorage", 'M')]
+    [InlineData("storageACCOUNT", 'A')]
     public static void ValidateStorageAccountName_RejectsInvalidCharacters(string account, char invalidChar)
     {
         var ex = Assert.Throws<ArgumentException>(() => StorageService.ValidateStorageAccountName(account));
         Assert.Contains($"'{invalidChar}'", ex.Message);
-        Assert.Contains("Only lowercase ASCII alphanumeric characters are allowed", ex.Message);
+        Assert.Contains("Only lowercase ASCII letters and numbers are allowed", ex.Message);
     }
 
     [Fact]

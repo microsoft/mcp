@@ -479,10 +479,10 @@ public class StorageService(
 
         foreach (var c in account)
         {
-            if (!char.IsAsciiLetterOrDigit(c))
+            if (!char.IsAsciiLetter(c) && !char.IsAsciiDigit(c) || char.IsAsciiLetterUpper(c))
             {
                 throw new ArgumentException(
-                    $"Storage account name contains invalid character '{c}'. Only lowercase ASCII alphanumeric characters are allowed.", nameof(account));
+                    $"Storage account name contains invalid character '{c}'. Only lowercase ASCII letters and numbers are allowed.", nameof(account));
             }
         }
     }
