@@ -75,48 +75,28 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-// Flex Consumption Plan for Linux Function App
-resource flexConsumptionPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: '${baseName}-flex-plan'
+// Consumption Plan for Linux Function App
+resource linuxConsumptionPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: '${baseName}-linux-plan'
   location: location
   sku: {
-    name: 'FC1'
-    tier: 'FlexConsumption'
+    name: 'Y1'
+    tier: 'Dynamic'
   }
   properties: {
     reserved: true
   }
 }
 
-// Linux Function App with Flex Consumption plan
+// Linux Function App with Consumption plan
 resource linuxFunctionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: '${baseName}-linux-func'
   location: location
   kind: 'functionapp,linux'
   properties: {
-    serverFarmId: flexConsumptionPlan.id
+    serverFarmId: linuxConsumptionPlan.id
     httpsOnly: true
     reserved: true
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${storageAccount.properties.primaryEndpoints.blob}deployments'
-          authentication: {
-            type: 'StorageAccountConnectionString'
-            storageAccountConnectionStringName: 'AzureWebJobsStorage'
-          }
-        }
-      }
-      scaleAndConcurrency: {
-        maximumInstanceCount: 100
-        instanceMemoryMB: 2048
-      }
-      runtime: {
-        name: 'python'
-        version: '3.11'
-      }
-    }
     siteConfig: {
       appSettings: [
         {
@@ -124,10 +104,27 @@ resource linuxFunctionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
         }
         {
+          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'WEBSITE_CONTENTSHARE'
+          value: toLower('${baseName}-linux-func')
+        }
+        {
           name: 'FUNCTIONS_EXTENSION_VERSION'
           value: '~4'
         }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
       ]
+      linuxFxVersion: 'Python|3.11'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
     }
