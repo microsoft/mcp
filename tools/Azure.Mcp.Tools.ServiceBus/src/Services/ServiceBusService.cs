@@ -1,18 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
 public class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
 {
+    private void ValidateNamespace(string namespaceName)
+    {
+        if (namespaceName.Contains('#'))
+        {
+            throw new SecurityException("Service Bus namespace must not contain '#' characters.");
+        }
+
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            $"https://{namespaceName}/",
+            "servicebus",
+            TenantService.CloudConfiguration.ArmEnvironment);
+    }
+
     public async Task<QueueDetails> GetQueueDetails(
         string namespaceName,
         string queueName,
@@ -20,6 +35,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
@@ -60,6 +76,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
@@ -93,6 +110,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
@@ -123,6 +141,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
@@ -143,6 +162,7 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
