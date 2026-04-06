@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Commands.Descriptors;
 
 namespace Microsoft.Mcp.Core.Commands;

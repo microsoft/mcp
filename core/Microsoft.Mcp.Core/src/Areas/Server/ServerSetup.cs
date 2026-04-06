@@ -56,6 +56,7 @@ public sealed class ServerSetup : AreaRegistrationInfo
                         Name = "mode",
                         Description = "Server mode.",
                         TypeName = "string",
+                        DefaultValue = "namespace",
                     },
                     new OptionDescriptor
                     {
