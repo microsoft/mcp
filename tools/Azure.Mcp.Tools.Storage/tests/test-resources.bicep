@@ -14,6 +14,9 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@description('The provisioner OID to grant access to test resources (defaults to the deployer).')
+param provisionerApplicationOid string = deployer().objectId
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: baseName
   location: location
@@ -62,5 +65,15 @@ resource appBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalId: testApplicationOid
     roleDefinitionId: blobContributorRoleDefinition.id
     description: 'Blob Contributor for testApplicationOid'
+  }
+}
+
+resource provisionerBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (provisionerApplicationOid != testApplicationOid) {
+  name: guid(blobContributorRoleDefinition.id, provisionerApplicationOid, storageAccount.id)
+  scope: storageAccount
+  properties: {
+    principalId: provisionerApplicationOid
+    roleDefinitionId: blobContributorRoleDefinition.id
+    description: 'Blob Contributor for provisionerApplicationOid'
   }
 }
