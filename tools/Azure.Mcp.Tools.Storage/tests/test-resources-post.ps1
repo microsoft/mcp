@@ -15,7 +15,9 @@ $ErrorActionPreference = "Stop"
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # Write a blob to storage
-$context = New-AzStorageContext -StorageAccountName $testSettings.ResourceBaseName -UseConnectedAccount
+$isGovCloud = $DeploymentOutputs['ENVIRONMENT'] -eq 'AzureUSGovernment'
+$storageEndpointSuffix = if ($isGovCloud) { 'core.usgovcloudapi.net' } else { 'core.windows.net' }
+$context = New-AzStorageContext -StorageAccountName $testSettings.ResourceBaseName -UseConnectedAccount -Endpoint $storageEndpointSuffix
 
 Write-Host "Uploading README.md to blob storage: $BaseName/bar" -ForegroundColor Yellow
 Set-AzStorageBlobContent `
