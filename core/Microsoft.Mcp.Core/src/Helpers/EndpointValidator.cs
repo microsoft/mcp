@@ -40,14 +40,16 @@ public static class EndpointValidator
 
     private static readonly ReadOnlyDictionary<string, IEnumerable<AllowedSuffixManager>> s_allowedDomainSuffixes = new Dictionary<string, IEnumerable<AllowedSuffixManager>>
     {
-        ["appconfig"] = [new AllowedSuffixManager(".azconfig.io", ".azconfig.azure.cn", ".azconfig.azure.us", ".azconfig.azure.de")],
         ["acr"] = [new AllowedSuffixManager(".azurecr.io", ".azurecr.cn", ".azurecr.us", ".azurecr.de")],
-        ["communication"] = [new AllowedSuffixManager(".communication.azure.com", ".communication.azure.cn", ".communication.azure.us", ".communication.azure.de")],
-        ["foundry"] = [new AllowedSuffixManager(".services.ai.azure.com", ".services.ai.azure.cn", ".services.ai.azure.us", ".services.ai.azure.de")],
+        ["appconfig"] = [new AllowedSuffixManager(".azconfig.io", ".azconfig.azure.cn", ".azconfig.azure.us", ".azconfig.azure.de")],
         ["azure-openai"] = [
             new AllowedSuffixManager(".openai.azure.com", ".openai.azure.cn", ".openai.azure.us", ".openai.azure.de"),
             new AllowedSuffixManager(".cognitiveservices.azure.com", ".cognitiveservices.azure.cn", ".cognitiveservices.azure.us", ".cognitiveservices.azure.de")
-        ]
+        ],
+        ["communication"] = [new AllowedSuffixManager(".communication.azure.com", ".communication.azure.cn", ".communication.azure.us", ".communication.azure.de")],
+        ["foundry"] = [new AllowedSuffixManager(".services.ai.azure.com", ".services.ai.azure.cn", ".services.ai.azure.us", ".services.ai.azure.de")],
+        ["servicebus"] = [new AllowedSuffixManager(".servicebus.windows.net", ".servicebus.chinacloudapi.cn", ".servicebus.usgovcloudapi.net", ".servicebus.cloudapi.de")],
+        ["storage-blob"] = [new AllowedSuffixManager(".blob.core.windows.net", ".blob.core.chinacloudapi.cn", ".blob.core.usgovcloudapi.net", ".blob.core.cloudapi.de")]
     }.AsReadOnly();
 
     /// <summary>
