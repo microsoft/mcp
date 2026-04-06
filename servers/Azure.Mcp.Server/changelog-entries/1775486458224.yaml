@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added endpoint validation for Service Bus namespace parameter to ensure it resolves to a valid Azure Service Bus domain"
