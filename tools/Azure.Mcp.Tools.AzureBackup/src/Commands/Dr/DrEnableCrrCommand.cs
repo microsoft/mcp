@@ -66,7 +66,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger) : Bas
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault not found. Verify the vault name and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            "Cross-Region Restore requires GRS (Geo-Redundant Storage) redundancy. Verify the vault uses GRS.",
+            $"Bad request enabling CRR (often means vault isn't GRS). Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Cross-Region Restore is already enabled on this vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

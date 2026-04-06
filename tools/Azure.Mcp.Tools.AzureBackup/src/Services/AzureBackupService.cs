@@ -378,7 +378,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string datasourceId, string subscription, string location,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new BackupStatusResult(datasourceId, "Unknown", null, null, null, null, null));
+        throw new NotImplementedException("GetBackupStatusAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public async Task<OperationResult> CancelJobAsync(
@@ -398,7 +398,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string principalId, string roleName, string scope,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"RBAC role '{roleName}' assigned to principal '{principalId}' at scope '{scope}'."));
+        throw new NotImplementedException("ConfigureRbacAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> ConfigureMuaAsync(
@@ -406,7 +406,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string resourceGuardId, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Multi-User Authorization configured with Resource Guard '{resourceGuardId}' for vault '{vaultName}'."));
+        throw new NotImplementedException("ConfigureMuaAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> ConfigurePrivateEndpointAsync(
@@ -414,7 +414,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string vnetId, string subnetId, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Private endpoint configuration initiated for vault '{vaultName}'."));
+        throw new NotImplementedException("ConfigurePrivateEndpointAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> ConfigureEncryptionAsync(
@@ -423,7 +423,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? keyVersion, string? userAssignedIdentityId,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Encryption configured with CMK from '{keyVaultUri}' for vault '{vaultName}'."));
+        throw new NotImplementedException("ConfigureEncryptionAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> ConfigureMonitoringAsync(
@@ -431,7 +431,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? logAnalyticsWorkspaceId, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Monitoring configured for vault '{vaultName}'."));
+        throw new NotImplementedException("ConfigureMonitoringAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> GetBackupReportsAsync(
@@ -439,7 +439,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? timeRangeDays, string? workloadFilter,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Succeeded", null, $"Generated '{reportType}' report from Log Analytics workspace."));
+        throw new NotImplementedException("GetBackupReportsAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
@@ -447,9 +447,12 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? tagFilter, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        // Step 1: List all vaults (RSV + DPP) in the subscription
-        var rsvVaults = await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
-        var dppVaults = await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        // Step 1: List all vaults (RSV + DPP) in the subscription (parallelized)
+        var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var dppVaultsTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+        await Task.WhenAll(rsvVaultsTask, dppVaultsTask);
+        var rsvVaults = rsvVaultsTask.Result;
+        var dppVaults = dppVaultsTask.Result;
 
         // Step 2: Collect all protected datasource ARM IDs from every vault
         var protectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -557,7 +560,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool deployRemediation, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Azure Policy '{policyDefinitionId}' applied at scope '{scope}'."));
+        throw new NotImplementedException("ApplyAzurePolicyAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
@@ -602,7 +605,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? containerName, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new RestoreTriggerResult("Accepted", null, $"Cross-region restore triggered for '{protectedItemName}' to region '{secondaryRegion}'."));
+        throw new NotImplementedException("TriggerCrossRegionRestoreAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public async Task<DrValidationResult> ValidateDrReadinessAsync(
@@ -626,7 +629,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? workloadType, bool includeArchiveProjection,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new CostEstimateResult(vaultName, vaultType, null, null, null, "Cost estimation requires Azure Cost Management API integration."));
+        throw new NotImplementedException("EstimateBackupCostAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> DiagnoseBackupFailureAsync(
@@ -634,7 +637,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? jobId, string? datasourceId,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Succeeded", null, "Backup failure diagnosis completed. Check job details for specific error codes."));
+        throw new NotImplementedException("DiagnoseBackupFailureAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> ValidateBackupPrerequisitesAsync(
@@ -643,7 +646,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? policyName, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Succeeded", null, $"Backup prerequisites validated for datasource '{datasourceId}'."));
+        throw new NotImplementedException("ValidateBackupPrerequisitesAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public async Task<HealthCheckResult> RunBackupHealthCheckAsync(
@@ -663,7 +666,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? tagFilter, string? resourceIds, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Bulk backup enablement initiated for workload type '{workloadType}' with policy '{policyName}'."));
+        throw new NotImplementedException("BulkEnableBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> BulkTriggerBackupAsync(
@@ -671,7 +674,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? vaultType, string? workloadType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Bulk backup trigger initiated for all items in vault '{vaultName}'."));
+        throw new NotImplementedException("BulkTriggerBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> BulkUpdatePolicyAsync(
@@ -679,7 +682,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string sourcePolicyName, string targetPolicyName, string? vaultType,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Accepted", null, $"Bulk policy update from '{sourcePolicyName}' to '{targetPolicyName}' initiated."));
+        throw new NotImplementedException("BulkUpdatePolicyAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> GenerateIacFromVaultAsync(
@@ -688,7 +691,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool includeRbac, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new OperationResult("Succeeded", null, $"IaC template generated in '{iacFormat}' format for vault '{vaultName}'."));
+        throw new NotImplementedException("GenerateIacFromVaultAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<OperationResult> MoveRecoveryPointToArchiveAsync(
@@ -697,11 +700,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool checkEligibilityOnly, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        if (checkEligibilityOnly)
-        {
-            return Task.FromResult(new OperationResult("Succeeded", null, "Archive eligibility check completed."));
-        }
-        return Task.FromResult(new OperationResult("Accepted", null, $"Recovery point archive initiated for '{protectedItemName}'."));
+        throw new NotImplementedException("MoveRecoveryPointToArchiveAsync is not yet implemented. Will be added in a future drop.");
     }
 
 
@@ -711,18 +710,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? dailyRetentionDays, bool triggerFirstBackup, string? outputIac,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("CreateVault", "Pending", $"Will create RSV vault '{vaultName ?? "auto-generated"}' in {location}"),
-            new("CreatePolicy", "Pending", "Will create default VM backup policy"),
-            new("EnableProtection", "Pending", $"Will protect resources: {resourceIds}"),
-        };
-        if (triggerFirstBackup)
-            steps.Add(new("TriggerBackup", "Pending", "Will trigger initial backup"));
-        if (!string.IsNullOrEmpty(outputIac))
-            steps.Add(new("GenerateIaC", "Pending", $"Will generate {outputIac} template"));
-
-        return Task.FromResult(new WorkflowResult("Planned", "SetupVmBackup", steps, "Workflow ready to execute. Implementation pending."));
+        throw new NotImplementedException("SetupVmBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> SetupSqlHanaBackupAsync(
@@ -731,15 +719,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool autoProtect, string? outputIac, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("CreateVault", "Pending", $"Will create RSV vault in {location}"),
-            new("RegisterContainer", "Pending", $"Will register VM '{vmResourceId}' as container"),
-            new("CreatePolicy", "Pending", $"Will create {workloadType} backup policy"),
-            new("EnableAutoProtection", "Pending", autoProtect ? "Will enable auto-protection" : "Will protect individual databases"),
-        };
-
-        return Task.FromResult(new WorkflowResult("Planned", "SetupSqlHanaBackup", steps, "Workflow ready to execute."));
+        throw new NotImplementedException("SetupSqlHanaBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> SetupAksBackupAsync(
@@ -748,15 +728,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? outputIac, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("CreateBackupVault", "Pending", $"Will create DPP vault in {location}"),
-            new("InstallExtension", "Pending", "Will install backup extension on AKS cluster"),
-            new("CreatePolicy", "Pending", "Will create AKS backup policy"),
-            new("EnableProtection", "Pending", $"Will protect cluster with snapshot RG '{snapshotResourceGroup}'"),
-        };
-
-        return Task.FromResult(new WorkflowResult("Planned", "SetupAksBackup", steps, "Workflow ready to execute."));
+        throw new NotImplementedException("SetupAksBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> SetupDatasourceBackupAsync(
@@ -765,14 +737,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? outputIac, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("CreateVault", "Pending", $"Will create appropriate vault in {location}"),
-            new("CreatePolicy", "Pending", $"Will create {workloadType} backup policy"),
-            new("EnableProtection", "Pending", $"Will protect datasource '{datasourceId}'"),
-        };
-
-        return Task.FromResult(new WorkflowResult("Planned", "SetupDatasourceBackup", steps, "Workflow ready to execute."));
+        throw new NotImplementedException("SetupDatasourceBackupAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> SecureVaultAsync(
@@ -781,19 +746,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? keyVaultUri, string? keyName, string? logAnalyticsWorkspaceId,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("EnableSoftDelete", "Pending", "Will enable soft delete with 14-day retention"),
-            new("EnableImmutability", "Pending", "Will enable vault immutability"),
-        };
-        if (!string.IsNullOrEmpty(resourceGuardId))
-            steps.Add(new("ConfigureMUA", "Pending", "Will configure Multi-User Authorization"));
-        if (!string.IsNullOrEmpty(keyVaultUri))
-            steps.Add(new("ConfigureCMK", "Pending", "Will configure customer-managed keys"));
-        if (!string.IsNullOrEmpty(logAnalyticsWorkspaceId))
-            steps.Add(new("ConfigureMonitoring", "Pending", "Will configure diagnostics"));
-
-        return Task.FromResult(new WorkflowResult("Planned", "SecureVault", steps, "Security workflow ready to execute."));
+        throw new NotImplementedException("SecureVaultAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> SetupDisasterRecoveryAsync(
@@ -802,14 +755,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? outputIac, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("ConfigureGRS", "Pending", "Will configure GRS storage redundancy"),
-            new("EnableCRR", "Pending", "Will enable Cross-Region Restore"),
-            new("ValidateDR", "Pending", "Will validate DR readiness"),
-        };
-
-        return Task.FromResult(new WorkflowResult("Planned", "SetupDisasterRecovery", steps, "DR workflow ready to execute."));
+        throw new NotImplementedException("SetupDisasterRecoveryAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> ComplianceRemediationAsync(
@@ -818,16 +764,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool autoRemediate, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("AuditResources", "Pending", "Will scan for unprotected resources"),
-            new("CheckPolicies", "Pending", "Will verify backup policies"),
-            new("CheckSecurity", "Pending", "Will verify security posture"),
-        };
-        if (autoRemediate)
-            steps.Add(new("Remediate", "Pending", "Will auto-remediate compliance gaps"));
-
-        return Task.FromResult(new WorkflowResult("Planned", "ComplianceRemediation", steps, "Compliance audit workflow ready to execute."));
+        throw new NotImplementedException("ComplianceRemediationAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> MigrateBackupConfigAsync(
@@ -836,17 +773,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? targetLocation, bool decommissionSource, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("ReadSourceConfig", "Pending", $"Will read config from vault '{sourceVaultName}'"),
-            new("CreateTargetVault", "Pending", $"Will create target vault '{targetVaultName ?? "auto-generated"}'"),
-            new("MigratePolicies", "Pending", "Will recreate policies in target vault"),
-            new("ReprotectItems", "Pending", "Will re-protect items in target vault"),
-        };
-        if (decommissionSource)
-            steps.Add(new("DecommissionSource", "Pending", "Will decommission source vault"));
-
-        return Task.FromResult(new WorkflowResult("Planned", "MigrateBackupConfig", steps, "Migration workflow ready to execute."));
+        throw new NotImplementedException("MigrateBackupConfigAsync is not yet implemented. Will be added in a future drop.");
     }
 
     public Task<WorkflowResult> RansomwareRecoveryAsync(
@@ -855,15 +782,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         bool restoreToIsolatedEnv, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var steps = new List<WorkflowStep>
-        {
-            new("IdentifyCleanPoints", "Pending", $"Will find recovery points before '{infectionTimestamp}'"),
-            new("ValidateRecoveryPoints", "Pending", "Will validate recovery point integrity"),
-            new("RestoreResources", "Pending", restoreToIsolatedEnv ? "Will restore to isolated environment" : "Will restore in-place"),
-            new("VerifyRecovery", "Pending", "Will verify restored resources"),
-        };
-
-        return Task.FromResult(new WorkflowResult("Planned", "RansomwareRecovery", steps, "Ransomware recovery workflow ready to execute."));
+        throw new NotImplementedException("RansomwareRecoveryAsync is not yet implemented. Will be added in a future drop.");
     }
 
     private async Task<string> ResolveVaultTypeAsync(
