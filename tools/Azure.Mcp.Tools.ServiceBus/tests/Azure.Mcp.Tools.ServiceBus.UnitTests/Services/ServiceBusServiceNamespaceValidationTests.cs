@@ -4,9 +4,9 @@
 using System.Security;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
