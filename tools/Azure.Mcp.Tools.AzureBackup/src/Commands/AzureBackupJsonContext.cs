@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 using Azure.Mcp.Tools.AzureBackup.Commands.Dr;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -23,6 +24,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(ProtectedItemGetCommand.ProtectedItemGetCommandResult))]
 [JsonSerializable(typeof(ProtectedItemProtectCommand.ProtectedItemProtectCommandResult))]
 [JsonSerializable(typeof(ProtectableItemListCommand.ProtectableItemListCommandResult))]
+[JsonSerializable(typeof(BackupStatusCommand.BackupStatusCommandResult))]
 [JsonSerializable(typeof(JobGetCommand.JobGetCommandResult))]
 [JsonSerializable(typeof(RecoveryPointGetCommand.RecoveryPointGetCommandResult))]
 [JsonSerializable(typeof(GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult))]

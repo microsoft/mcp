@@ -833,6 +833,16 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        [--container <container>]
 ```
 
+#### Backup
+
+```bash
+# Checks whether a datasource is protected and returns vault and policy details.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup backup status --subscription <subscription> \
+                                --datasource-id <datasource-id> \
+                                --location <location>
+```
+
 #### Job
 
 ```bash

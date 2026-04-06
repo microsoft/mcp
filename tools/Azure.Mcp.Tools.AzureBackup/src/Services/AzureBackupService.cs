@@ -1,11 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.RecoveryServicesBackup;
+using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Options;
+
+using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -374,11 +380,30 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         return rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
     }
 
-    public Task<BackupStatusResult> GetBackupStatusAsync(
+    public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
         string datasourceId, string subscription, string location,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException("GetBackupStatusAsync is not yet implemented. Will be added in a future drop.");
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+        var subResource = armClient.GetSubscriptionResource(subId);
+
+        var content = new BackupStatusContent
+        {
+            ResourceId = new ResourceIdentifier(datasourceId)
+        };
+
+        Response<SdkBackupStatusResult> response = await subResource.GetBackupStatusAsync(new AzureLocation(location), content, cancellationToken);
+        SdkBackupStatusResult status = response.Value;
+
+        return new Models.BackupStatusResult(
+            datasourceId,
+            status.ProtectionStatus?.ToString(),
+            status.VaultId?.ToString(),
+            status.PolicyName,
+            null,
+            null,
+            null);
     }
 
     public async Task<OperationResult> CancelJobAsync(

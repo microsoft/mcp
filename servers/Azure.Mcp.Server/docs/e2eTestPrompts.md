@@ -148,6 +148,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_protect | Protect item <item_name> with backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> |
+| azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> |
+| azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |

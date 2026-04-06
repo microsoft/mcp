@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 using Azure.Mcp.Tools.AzureBackup.Commands.Dr;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -39,6 +40,8 @@ public class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemProtectCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+
+        services.AddSingleton<BackupStatusCommand>();
 
         services.AddSingleton<JobGetCommand>();
 
@@ -81,6 +84,10 @@ public class AzureBackupSetup : IAreaSetup
         var protectableItem = new CommandGroup("protectableitem", "Protectable item operations – List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);
         RegisterCommand<ProtectableItemListCommand>(serviceProvider, protectableItem);
+
+        var backup = new CommandGroup("backup", "Backup operations – Check backup status for a datasource.");
+        azureBackup.AddSubGroup(backup);
+        RegisterCommand<BackupStatusCommand>(serviceProvider, backup);
 
         var job = new CommandGroup("job", "Backup job operations – Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);

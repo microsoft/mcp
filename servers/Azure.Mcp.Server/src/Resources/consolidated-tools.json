@@ -3697,6 +3697,7 @@
         "azurebackup_policy_get",
         "azurebackup_protecteditem_get",
         "azurebackup_protectableitem_list",
+        "azurebackup_backup_status",
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected"
