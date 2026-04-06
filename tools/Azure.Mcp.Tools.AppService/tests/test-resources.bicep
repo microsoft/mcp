@@ -33,7 +33,7 @@ var cosmosContributorRoleId = '00000000-0000-0000-0000-000000000002' // Built-in
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
-  location: 'westus2'
+  location: location
   sku: {
     name: appServicePlanSku
     tier: 'Standard'
@@ -58,7 +58,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 // Web App
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
-  location: 'westus2'
+  location: location
   kind: 'app'
   properties: {
     enabled: true
@@ -115,7 +115,7 @@ resource webAppAppSettings 'Microsoft.Web/sites/config@2023-01-01' = {
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
-  location: 'westus2'
+  location: location
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
@@ -127,7 +127,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   // Test SQL Database
   resource testDatabase 'databases@2023-05-01-preview' = {
     name: sqlDatabaseName
-    location: 'westus2'
+    location: location
     sku: {
       name: 'Basic'
       tier: 'Basic'
@@ -148,7 +148,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: cosmosAccountName
-  location: 'westus2'
+  location: location
   tags: {
     defaultExperience: 'Core (SQL)'
     CosmosAccountType: 'Non-Production'
@@ -179,7 +179,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
     }
     locations: [
       {
-        locationName: 'westus2'
+        locationName: location
         failoverPriority: 0
         isZoneRedundant: false
       }

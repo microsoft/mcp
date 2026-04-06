@@ -10,7 +10,8 @@ param(
     [int]$DeleteAfterHours = 12,
     [switch]$Unique,
     [switch]$Parallel,
-    [switch]$UseHttpTransport
+    [switch]$UseHttpTransport,
+    [switch]$ServicePrincipalAuth
 )
 
 $ErrorActionPreference = 'Stop'
@@ -76,7 +77,8 @@ function Deploy-TestResources
         [string]$Environment,
         [int]$DeleteAfterHours,
         [string]$TestResourcesDirectory,
-        [switch]$AsJob
+        [switch]$AsJob,
+        [switch]$ServicePrincipalAuth
     )
 
     Write-Host @"
@@ -94,7 +96,7 @@ Deploying$($AsJob ? ' in background job' : ''):
 
     if($AsJob) {
         Start-Job -ScriptBlock {
-            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport)
+            param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $testResourcesDirectory, $DeleteAfterHours, $UseHttpTransport, $ServicePrincipalAuth)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
                 -SubscriptionId $SubscriptionId `
@@ -105,9 +107,10 @@ Deploying$($AsJob ? ' in background job' : ''):
                 -TestResourcesDirectory $testResourcesDirectory `
                 -DeleteAfterHours $DeleteAfterHours `
                 -UseHttpTransport:$UseHttpTransport `
+                -ServicePrincipalAuth:$ServicePrincipalAuth `
                 -Force
 
-        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport
+        } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $Location, $Environment, $TestResourcesDirectory, $DeleteAfterHours, $UseHttpTransport, $ServicePrincipalAuth
     } else {
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
@@ -118,6 +121,7 @@ Deploying$($AsJob ? ' in background job' : ''):
             -TestResourcesDirectory $testResourcesDirectory `
             -DeleteAfterHours $DeleteAfterHours `
             -UseHttpTransport:$UseHttpTransport `
+            -ServicePrincipalAuth:$ServicePrincipalAuth `
             -Force
     }
 }
@@ -144,6 +148,7 @@ $jobInputs = $testablePaths | ForEach-Object {
         Environment = $Environment
         DeleteAfterHours = $DeleteAfterHours
         TestResourcesDirectory = Resolve-Path -Path "$RepoRoot/$_/tests"
+        ServicePrincipalAuth = $ServicePrincipalAuth
     }
 }
 

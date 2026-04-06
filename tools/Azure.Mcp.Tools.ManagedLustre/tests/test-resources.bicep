@@ -33,8 +33,8 @@ param amlfsCapacityTiB int = 4
 @description('The resource ID of the test application user-assigned managed identity. If not provided, a new one will be created.')
 param testApplicationUamiId string = ''
 
-@description('The object ID of the HPC Cache Resource Provider service principal.')
-param hpcCacheRpObjectId string
+@description('The object ID of the HPC Cache Resource Provider service principal. When not provided, the user-assigned managed identity is used for blob storage access instead.')
+param hpcCacheRpObjectId string = ''
 
 var kvCryptoUserRoleDefinitionId = '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
 
@@ -133,9 +133,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
+var uamiPrincipalId = empty(testApplicationUamiId) ? userAssignedIdentity.properties.principalId : reference(uamiResourceId, '2024-11-30').principalId
+
 // Role assignments granting the HPC Cache RP required access to the storage account for HSM (imports/exports)
+// Conditionally created when hpcCacheRpObjectId is provided; otherwise the UAMI is used instead.
 // Storage Account Contributor
-resource storageAccountContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource storageAccountContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(hpcCacheRpObjectId)) {
   name: guid(storageAccount.id, '17d1049b-9a84-46fb-8f53-869881c3d3ab', 'hpc-cache-rp-sa-contributor')
   scope: storageAccount
   properties: {
@@ -146,12 +149,34 @@ resource storageAccountContributorRole 'Microsoft.Authorization/roleAssignments@
 }
 
 // Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(hpcCacheRpObjectId)) {
   name: guid(storageAccount.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe', 'hpc-cache-rp-blob-contributor')
   scope: storageAccount
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: hpcCacheRpObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// UAMI Storage Account Contributor — used when hpcCacheRpObjectId is not provided
+resource uamiStorageAccountContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, '17d1049b-9a84-46fb-8f53-869881c3d3ab', 'uami-sa-contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
+    principalId: uamiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// UAMI Storage Blob Data Contributor — used when hpcCacheRpObjectId is not provided
+resource uamiBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe', 'uami-blob-contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: uamiPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -204,7 +229,7 @@ resource keyVaultCryptoUser 'Microsoft.Authorization/roleAssignments@2022-04-01'
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvCryptoUserRoleDefinitionId)
-    principalId: empty(testApplicationUamiId) ? userAssignedIdentity.properties.principalId : reference(uamiResourceId, '2024-11-30').principalId
+    principalId: uamiPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -223,6 +248,12 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   location: location
   sku: {
     name: amlfsSku
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${uamiResourceId}': {}
+    }
   }
   properties: {
     storageCapacityTiB: amlfsCapacityTiB

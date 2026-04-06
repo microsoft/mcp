@@ -48,14 +48,15 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_B2s",
+      "defaultValue": "[if(equals(environment().name, 'AzureUSGovernment'), 'Standard_D2as_v6', 'Standard_B2s')]",
       "metadata": {
         "description": "The VM size to use for testing."
       }
     }
   },
   "variables": {
-    "location": "eastus2"
+    "location": "[parameters('location')]",
+    "diskControllerType": "[if(equals(environment().name, 'AzureUSGovernment'), 'NVMe', 'SCSI')]"
   },
   "resources": {
     "vnet": {
@@ -123,7 +124,7 @@
               "storageAccountType": "Standard_LRS"
             }
           },
-          "diskControllerType": "SCSI"
+          "diskControllerType": "[variables('diskControllerType')]"
         },
         "osProfile": {
           "computerName": "[format('{0}-vm', parameters('baseName'))]",
@@ -181,7 +182,7 @@
                 "storageAccountType": "Standard_LRS"
               }
             },
-            "diskControllerType": "SCSI"
+            "diskControllerType": "[variables('diskControllerType')]"
           },
           "osProfile": {
             "computerNamePrefix": "[format('{0}-', parameters('baseName'))]",
