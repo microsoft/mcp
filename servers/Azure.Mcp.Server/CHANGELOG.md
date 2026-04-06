@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.39 (Unreleased)
+## 2.0.0-beta.39 (2026-04-06)
 
 ### Features Added
 
-### Breaking Changes
+- Added endpoint validation for the namespace parameter in `servicebus` tools to ensure it resolves to a valid Azure Service Bus domain. [[#2349](https://github.com/microsoft/mcp/pull/2349)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Added input validation for Azure Storage account names in `StorageService`. [[#2350](https://github.com/microsoft/mcp/pull/2350)]
 
 ## 2.0.0-beta.38 (2026-04-03)
 

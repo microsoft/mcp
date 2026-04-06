@@ -1,5 +1,14 @@
 # Release History
 
+## 2.0.0-beta.39 (2026-04-06) (pre-release)
+
+### Added
+
+- Added endpoint validation for the namespace parameter in `servicebus` tools to ensure it resolves to a valid Azure Service Bus domain. [[#2349](https://github.com/microsoft/mcp/pull/2349)]
+
+### Fixed
+
+- Added input validation for Azure Storage account names in `StorageService`. [[#2350](https://github.com/microsoft/mcp/pull/2350)]
 
 ## 2.0.38 (2026-04-03) (pre-release)
 
