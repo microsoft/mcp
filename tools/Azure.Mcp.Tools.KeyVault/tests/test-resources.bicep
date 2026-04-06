@@ -14,6 +14,9 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@description('The deployer OID to grant access for post-deployment scripts.')
+param provisionerApplicationOid string = deployer().objectId
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   name: baseName
@@ -88,6 +91,16 @@ resource keyVaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@20
   properties: {
     principalId: testApplicationOid
     roleDefinitionId: keyVaultAdminRoleDefinition.id
+  }
+}
+
+// Assign Certificate Officer to deployer so post-deployment script can create certificates
+resource deployerCertificatesRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (provisionerApplicationOid != testApplicationOid) {
+  name: guid(certificateOfficerRoleDefinition.id, provisionerApplicationOid, keyVault.id)
+  scope: keyVault
+  properties: {
+    principalId: provisionerApplicationOid
+    roleDefinitionId: certificateOfficerRoleDefinition.id
   }
 }
 
