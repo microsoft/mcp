@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             .. base.BodyKeySanitizers,
             new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
             {
-                Value = "sanitized"
+                Value = "Sanitized"
             })
         ];
 
@@ -69,7 +69,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind.GetString());
 
             var skuName = account.GetProperty("skuName");
-            Assert.Equal(TestMode == TestMode.Playback ? "sanitized" : "Standard_LRS", skuName.GetString());
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
 
             var hnsEnabled = account.GetProperty("hnsEnabled");
             Assert.True(hnsEnabled.GetBoolean());
