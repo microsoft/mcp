@@ -489,6 +489,7 @@ public class StorageService(
 
     private string GetBlobEndpoint(string account)
     {
+        account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
@@ -501,7 +502,8 @@ public class StorageService(
 
     private string GetTableEndpoint(string? account)
     {
-        ValidateStorageAccountName(account!);
+        account = account!.ToLowerInvariant();
+        ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
