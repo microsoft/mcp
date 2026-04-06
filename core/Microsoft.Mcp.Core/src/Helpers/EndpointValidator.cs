@@ -83,6 +83,12 @@ public static class EndpointValidator
             : isGermanyCloud ? "cognitiveservices.azure.de"
             : "cognitiveservices.azure.com";
 
+        var serviceBusSuffix = isPublicCloud ? "servicebus.windows.net"
+            : isChinaCloud ? "servicebus.chinacloudapi.cn"
+            : isGovCloud ? "servicebus.usgovcloudapi.net"
+            : isGermanyCloud ? "servicebus.cloudapi.de"
+            : "servicebus.windows.net";
+
         return new Dictionary<string, string[]>
         {
             // Azure Communication Services
@@ -102,6 +108,9 @@ public static class EndpointValidator
 
             // Azure OpenAI
             { "azure-openai", [$".{openaiSuffix}", $".{cognitiveServicesSuffix}"] },
+
+            // Azure Service Bus
+            { "servicebus", [$".{serviceBusSuffix}"] },
         };
     }
 
