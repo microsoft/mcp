@@ -1,9 +1,9 @@
 targetScope = 'resourceGroup'
 
 @minLength(3)
-@maxLength(24)
+@maxLength(20)
 @description('The base resource name.')
-param baseName string = take(resourceGroup().name, 24)
+param baseName string = take(resourceGroup().name, 20)
 
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = resourceGroup().location

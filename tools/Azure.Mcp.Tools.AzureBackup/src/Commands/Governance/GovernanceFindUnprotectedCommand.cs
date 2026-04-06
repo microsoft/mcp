@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Serialization;
+using Azure;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
@@ -90,4 +92,12 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     }
 
     internal record GovernanceFindUnprotectedCommandResult([property: JsonPropertyName("resources")] List<UnprotectedResourceInfo> Resources);
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed. Ensure you have Reader access to the subscription. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 }

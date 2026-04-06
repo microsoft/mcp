@@ -620,7 +620,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         {
             return await rsvOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         }
-        return new OperationResult("NotSupported", null, "Cross-Region Restore is an RSV-only feature.");
+        return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
     public Task<RestoreTriggerResult> TriggerCrossRegionRestoreAsync(

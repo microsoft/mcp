@@ -597,6 +597,51 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
                     : Azure.ResourceManager.Models.ManagedServiceIdentityType.None);
         }
 
+        var securitySettings = new BackupVaultSecuritySettings();
+        var hasSecurityUpdate = false;
+
+        if (!string.IsNullOrEmpty(softDelete))
+        {
+            var softDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = new BackupVaultSoftDeleteState(softDelete)
+            };
+            if (double.TryParse(softDeleteRetentionDays, out var retDays))
+            {
+                softDeleteSettings.RetentionDurationInDays = retDays;
+            }
+            securitySettings.SoftDeleteSettings = softDeleteSettings;
+            hasSecurityUpdate = true;
+        }
+
+        if (!string.IsNullOrEmpty(immutabilityState))
+        {
+            securitySettings.ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState);
+            hasSecurityUpdate = true;
+        }
+
+        if (hasSecurityUpdate)
+        {
+            patchData.Properties ??= new DataProtectionBackupVaultPatchProperties();
+            patchData.Properties.SecuritySettings = securitySettings;
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(tags);
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    patchData.Tags[prop.Name] = prop.Value.GetString() ?? string.Empty;
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Ignore invalid tag JSON
+            }
+        }
+
         await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -814,6 +859,34 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         return Task.FromResult(new OperationResult("NotSupported", null, "Undelete for DPP backup instances is managed automatically during the soft-delete retention period."));
     }
 
+    public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                FeatureSettings = new BackupVaultFeatureSettings
+                {
+                    CrossRegionRestoreState = CrossRegionRestoreState.Enabled
+                }
+            }
+        };
+        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
+    }
+
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
         string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -828,7 +901,16 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        var patchData = new DataProtectionBackupVaultPatch();
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = new BackupVaultSecuritySettings
+                {
+                    ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState)
+                }
+            }
+        };
         await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
@@ -849,7 +931,26 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        var patchData = new DataProtectionBackupVaultPatch();
+        var softDeleteSettings = new BackupVaultSoftDeleteSettings
+        {
+            State = new BackupVaultSoftDeleteState(softDeleteState)
+        };
+
+        if (double.TryParse(softDeleteRetentionDays, out var retentionDays))
+        {
+            softDeleteSettings.RetentionDurationInDays = retentionDays;
+        }
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = new BackupVaultSecuritySettings
+                {
+                    SoftDeleteSettings = softDeleteSettings
+                }
+            }
+        };
         await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");

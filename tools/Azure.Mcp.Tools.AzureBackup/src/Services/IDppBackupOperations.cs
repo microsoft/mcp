@@ -34,5 +34,6 @@ public interface IDppBackupOperations
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, string softDeleteState, string? softDeleteRetentionDays, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
+    Task<OperationResult> ConfigureCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
     Task<HealthCheckResult> RunBackupHealthCheckAsync(string vaultName, string resourceGroup, string subscription, int? rpoThresholdHours, bool includeSecurityPosture, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken);
 }
