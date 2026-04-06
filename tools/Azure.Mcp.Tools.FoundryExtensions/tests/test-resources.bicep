@@ -18,6 +18,8 @@ var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' 
 var azureAiDeveloperRoleId = '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer role
 var azureAiUserRoleId = '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User role (includes CognitiveServices/* data actions for agents)
 
+var isGov = environment().name == 'AzureUSGovernment'
+
 resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: baseName
   location: location
@@ -121,13 +123,13 @@ resource gpt4oMiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   dependsOn: [modelDeployment]
   name: 'gpt-4o-mini'
   sku: {
-    name: 'GlobalStandard'
+    name: isGov ? 'Standard' : 'GlobalStandard'
     capacity: 30
   }
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4o-mini'
+      name: isGov ? 'gpt-4o' : 'gpt-4o-mini'
     }
   }
 }
@@ -137,13 +139,13 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   dependsOn: [gpt4oMiniDeployment]
   name: 'embedding-model'
   sku: {
-    name: 'GlobalStandard'
+    name: isGov ? 'Standard' : 'GlobalStandard'
     capacity: 30
   }
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'text-embedding-3-small'
+      name: isGov ? 'text-embedding-ada-002' : 'text-embedding-3-small'
     }
   }
 }

@@ -33,7 +33,7 @@ if (Test-Path $templateFile) {
             $sp = Get-AzADServicePrincipal -DisplayName 'HPC Cache Resource Provider' -ErrorAction Stop
             if ($sp -and $sp.Id) {
                 # Set the parameter for the template deployment
-                $templateFileParameters['hpcCacheRpObjectId'] = $sp.Id
+                $AdditionalParameters['hpcCacheRpObjectId'] = $sp.Id
                 Write-Host "Success ✓ Set hpcCacheRpObjectId."
             } else {
                 Write-Warning "HPC Cache Resource Provider service principal not found; 'hpcCacheRpObjectId' will be missing and deployment may fail."
