@@ -33,7 +33,7 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 
 // Create a storage account to monitor
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: '${baseName}mon'
+  name: take('${baseName}mon${uniqueString(resourceGroup().id)}', 24)
   location: location
   sku: {
     name: 'Standard_LRS'
