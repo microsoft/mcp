@@ -72,12 +72,14 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DisableCachingOption_ParsesCorrectly(bool expectedValue)
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void DisableCachingOption_ParsesCorrectly(bool expectedValue, bool implicitBool)
     {
         // Arrange
-        var parseResult = CreateParseResultWithDisableCaching(expectedValue);
+        var parseResult = CreateParseResultWithDisableCaching(expectedValue, implicitBool);
 
         // Act
         var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DisableCaching);
@@ -822,7 +824,7 @@ public class ServiceStartCommandTests
         return _command.GetCommand().Parse([.. args]);
     }
 
-    private ParseResult CreateParseResultWithDisableCaching(bool disableCaching)
+    private ParseResult CreateParseResultWithDisableCaching(bool disableCaching, bool implicitBool)
     {
         var args = new List<string>
         {
@@ -833,6 +835,15 @@ public class ServiceStartCommandTests
         if (disableCaching)
         {
             args.Add("--disable-caching");
+            if (implicitBool)
+            {
+                args.Add("true");
+            }
+        }
+        else if (implicitBool)
+        {
+            args.Add("--disable-caching");
+            args.Add("false");
         }
 
         return _command.GetCommand().Parse([.. args]);
