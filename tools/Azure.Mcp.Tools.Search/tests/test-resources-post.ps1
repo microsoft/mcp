@@ -20,12 +20,13 @@ $samplesPath = "$PSScriptRoot/samples".Replace('\', '/')
 $tenantId = $testSettings.TenantId
 $subscriptionId = $testSettings.SubscriptionId
 
-#cspell: words STATICRESOURCEGROUPNAME, STATICBASENAME, STORAGEACCOUNTNAME, CONTAINERNAME
+#cspell: words STATICRESOURCEGROUPNAME, STATICBASENAME, STORAGEACCOUNTNAME, CONTAINERNAME, EMBEDDINGMODELNAME
 
 $staticBaseName = $DeploymentOutputs.STATICBASENAME
 $staticResourceGroupName = $DeploymentOutputs.STATICRESOURCEGROUPNAME
 $storageAccountName = $DeploymentOutputs.STORAGEACCOUNTNAME
 $containerName = $DeploymentOutputs.CONTAINERNAME
+$embeddingModelName = $DeploymentOutputs.EMBEDDINGMODELNAME
 
 $isTmeTenant = $tenantId -eq '70a036f6-8e4d-4615-bad6-149c02e7720d'
 
@@ -52,8 +53,24 @@ Write-Host "  Managed Identity Name: $managedIdentityName"
 
 $managedIdentity = Get-AzUserAssignedIdentity -ResourceGroupName $managedIdentityResourceGroup -Name $managedIdentityName
 
-$token = Get-AzAccessToken -ResourceUrl https://search.azure.com -AsSecureString | Select-Object -ExpandProperty Token
-$uri = "https://$BaseName.search.windows.net"
+# Use environment-specific endpoint suffixes (AzureUSGovernment uses 'search.azure.us')
+$isGovCloud = (Get-AzContext).Environment.Name -eq 'AzureUSGovernment'
+$searchEndpointSuffix = if ($isGovCloud) { 'search.azure.us' } else { 'search.windows.net' }
+$openaiEndpointSuffix = if ($isGovCloud) { 'openai.azure.us' } else { 'openai.azure.com' }
+$searchTokenResourceUrl = "https://$searchEndpointSuffix"
+
+# The deployment runs under the provisioner identity (e.g. MSI) which lacks data plane roles.
+# Switch to the test service principal, which was granted the required roles in the Bicep template,
+# for all data plane operations (storage uploads, search REST calls).
+if ($DeploymentOutputs.CLIENT_SECRET) {
+    $testSpSecret = ConvertTo-SecureString -String $DeploymentOutputs.CLIENT_SECRET -AsPlainText -Force
+    $testSpCredential = [System.Management.Automation.PSCredential]::new($DeploymentOutputs.CLIENT_ID, $testSpSecret)
+    Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential $testSpCredential `
+        -Environment (Get-AzContext).Environment.Name -Subscription $subscriptionId -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null
+}
+
+$token = Get-AzAccessToken -ResourceUrl $searchTokenResourceUrl -AsSecureString | Select-Object -ExpandProperty Token
+$uri = "https://$BaseName.$searchEndpointSuffix"
 
 $apiVersion = "2024-09-01-preview"
 
@@ -114,9 +131,9 @@ $indexDefinition = [ordered]@{
         name = "products-azureOpenAi-text-vectorizer"
         kind = "azureOpenAI"
         azureOpenAIParameters = @{
-          resourceUri = "https://$openAiResourceName.openai.azure.com"
+          resourceUri = "https://$openAiResourceName.$openaiEndpointSuffix"
           deploymentId = "embedding-model"
-          modelName = "text-embedding-3-small"
+          modelName = $embeddingModelName
           authIdentity = @{
             "@odata.type"= "#Microsoft.Azure.Search.DataUserAssignedIdentity"
             userAssignedIdentity= $managedIdentity.Id
@@ -184,14 +201,14 @@ $skillsetDefinition = @{
         '@odata.type' = "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill"
         name = "#2"
         context = "/document/pages/*"
-        resourceUri = "https://$openAiResourceName.openai.azure.com"
+        resourceUri = "https://$openAiResourceName.$openaiEndpointSuffix"
         authIdentity = @{
             "@odata.type"= "#Microsoft.Azure.Search.DataUserAssignedIdentity"
             userAssignedIdentity= $managedIdentity.Id
         }
         deploymentId = "embedding-model"
         dimensions = 1536
-        modelName = "text-embedding-3-small"
+        modelName = $embeddingModelName
         inputs = @(
             @{
                 name = "text"
@@ -252,7 +269,7 @@ $indexerDefinition = @{
 }
 
 # Upload sample files
-$context = New-AzStorageContext -StorageAccountName $storageAccountName -UseConnectedAccount
+$storageEndpointSuffix = if ($isGovCloud) { 'core.usgovcloudapi.net' } else { 'core.windows.net' }
 $categories = @('A', 'B', 'C')
 Write-Host "Uploading sample files to blob storage: $storageAccountName/$containerName" -ForegroundColor Yellow
 $files = Get-ChildItem -Path $samplesPath -Filter '*.md'
@@ -260,7 +277,22 @@ $i = 0;
 foreach ($file in $files) {
     $category = $categories[$i++ % $categories.Count]
     Write-Host "  $($file.Name)`: { category: $category }" -ForegroundColor Yellow
-    Set-AzStorageBlobContent -File $file.FullName -Container $containerName -Blob $file.Name -Metadata @{ category = $category } -Context $context -Force -ProgressAction SilentlyContinue | Out-Null
+    $maxRetries = 6
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        try {
+            # Refresh storage context on each attempt to pick up newly propagated RBAC tokens
+            $context = New-AzStorageContext -StorageAccountName $storageAccountName -UseConnectedAccount -Endpoint $storageEndpointSuffix
+            Set-AzStorageBlobContent -File $file.FullName -Container $containerName -Blob $file.Name -Metadata @{ category = $category } -Context $context -Force -ProgressAction SilentlyContinue -ErrorAction Stop | Out-Null
+            break
+        } catch {
+            if ($attempt -lt $maxRetries) {
+                Write-Host "    Attempt $attempt failed, retrying in 30s (RBAC propagation may be in progress)..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 30
+            } else {
+                throw
+            }
+        }
+    }
 }
 
 # Create the index
