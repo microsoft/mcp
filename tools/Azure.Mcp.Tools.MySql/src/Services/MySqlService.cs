@@ -231,6 +231,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
+
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, "mysql", cancellationToken);
@@ -264,10 +267,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         ValidateQuerySafety(query);
 
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
+
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
-        await using var command = new MySqlCommand(query, resource.Connection);
+        await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var rows = new List<string>();
