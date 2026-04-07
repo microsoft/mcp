@@ -192,4 +192,37 @@ public class SanitizeKqlStringLiteralsTests
 
         Assert.Equal(input, result);
     }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_DoubleQuotedWithSingleQuotes_PreservedAsIs()
+    {
+        // Double-quoted string containing single quotes: "\'\''", should be skipped entirely
+        var input = "let T = datatable (a: string) [\"\\'\\''\"]";
+
+        var result = KustoService.SanitizeKqlStringLiterals(input);
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_SingleQuotedWithDoubleQuotes_Sanitized()
+    {
+        // Single-quoted string containing double quotes: '\"\"', should be sanitized (content preserved)
+        var input = "let T = datatable (a: string) ['\\\"\\\"']";
+
+        var result = KustoService.SanitizeKqlStringLiterals(input);
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_MixedQuoteStyles_BothHandledCorrectly()
+    {
+        // Both single and double quotes as string wrappers: ["\'\''", '\"\"']
+        var input = "[\"\\'\\''\", '\\\"\\\"']";
+
+        var result = KustoService.SanitizeKqlStringLiterals(input);
+
+        Assert.Equal(input, result);
+    }
 }
