@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
@@ -28,29 +28,29 @@ public static class EndpointValidator
         "xip.io",                // Wildcard DNS - resolves to embedded IP
     ];
 
-    private record AllowedSuffixManager(string PublicSuffix, string ChinaSuffix, string GovSuffix, string GermanySuffix)
+    private record AllowedSuffixManager(string Public, string China, string UsGov, string Germany)
     {
-        public string GetSuffixForEnvironment(ArmEnvironment environment) =>
-            environment.Equals(ArmEnvironment.AzurePublicCloud) ? PublicSuffix :
-            environment.Equals(ArmEnvironment.AzureChina) ? ChinaSuffix :
-            environment.Equals(ArmEnvironment.AzureGovernment) ? GovSuffix :
-            environment.Equals(ArmEnvironment.AzureGermany) ? GermanySuffix :
-            PublicSuffix;
+        public string GetSuffix(ArmEnvironment environment) =>
+            ArmEnvironment.AzurePublicCloud.Equals(environment) ? Public :
+            ArmEnvironment.AzureChina.Equals(environment) ? China :
+            ArmEnvironment.AzureGovernment.Equals(environment) ? UsGov :
+            ArmEnvironment.AzureGermany.Equals(environment) ? Germany :
+            Public;
     }
 
-    private static readonly ReadOnlyDictionary<string, IEnumerable<AllowedSuffixManager>> s_allowedDomainSuffixes = new Dictionary<string, IEnumerable<AllowedSuffixManager>>
+    private static readonly FrozenDictionary<string, AllowedSuffixManager[]> s_allowedDomainSuffixes = new Dictionary<string, AllowedSuffixManager[]>
     {
-        ["acr"] = [new AllowedSuffixManager(".azurecr.io", ".azurecr.cn", ".azurecr.us", ".azurecr.de")],
-        ["appconfig"] = [new AllowedSuffixManager(".azconfig.io", ".azconfig.azure.cn", ".azconfig.azure.us", ".azconfig.azure.de")],
+        ["acr"] = [new AllowedSuffixManager(Public: ".azurecr.io", China: ".azurecr.cn", UsGov: ".azurecr.us", Germany: ".azurecr.de")],
+        ["appconfig"] = [new AllowedSuffixManager(Public: ".azconfig.io", China: ".azconfig.azure.cn", UsGov: ".azconfig.azure.us", Germany: ".azconfig.azure.de")],
         ["azure-openai"] = [
-            new AllowedSuffixManager(".openai.azure.com", ".openai.azure.cn", ".openai.azure.us", ".openai.azure.de"),
-            new AllowedSuffixManager(".cognitiveservices.azure.com", ".cognitiveservices.azure.cn", ".cognitiveservices.azure.us", ".cognitiveservices.azure.de")
+            new AllowedSuffixManager(Public: ".openai.azure.com", China: ".openai.azure.cn", UsGov: ".openai.azure.us", Germany: ".openai.azure.de"),
+            new AllowedSuffixManager(Public: ".cognitiveservices.azure.com", China: ".cognitiveservices.azure.cn", UsGov: ".cognitiveservices.azure.us", Germany: ".cognitiveservices.azure.de")
         ],
-        ["communication"] = [new AllowedSuffixManager(".communication.azure.com", ".communication.azure.cn", ".communication.azure.us", ".communication.azure.de")],
-        ["foundry"] = [new AllowedSuffixManager(".services.ai.azure.com", ".services.ai.azure.cn", ".services.ai.azure.us", ".services.ai.azure.de")],
-        ["servicebus"] = [new AllowedSuffixManager(".servicebus.windows.net", ".servicebus.chinacloudapi.cn", ".servicebus.usgovcloudapi.net", ".servicebus.cloudapi.de")],
-        ["storage-blob"] = [new AllowedSuffixManager(".blob.core.windows.net", ".blob.core.chinacloudapi.cn", ".blob.core.usgovcloudapi.net", ".blob.core.cloudapi.de")]
-    }.AsReadOnly();
+        ["communication"] = [new AllowedSuffixManager(Public: ".communication.azure.com", China: ".communication.azure.cn", UsGov: ".communication.azure.us", Germany: ".communication.azure.de")],
+        ["foundry"] = [new AllowedSuffixManager(Public: ".services.ai.azure.com", China: ".services.ai.azure.cn", UsGov: ".services.ai.azure.us", Germany: ".services.ai.azure.de")],
+        ["servicebus"] = [new AllowedSuffixManager(Public: ".servicebus.windows.net", China: ".servicebus.chinacloudapi.cn", UsGov: ".servicebus.usgovcloudapi.net", Germany: ".servicebus.cloudapi.de")],
+        ["storage-blob"] = [new AllowedSuffixManager(Public: ".blob.core.windows.net", China: ".blob.core.chinacloudapi.cn", UsGov: ".blob.core.usgovcloudapi.net", Germany: ".blob.core.cloudapi.de")]
+    }.ToFrozenDictionary();
 
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
@@ -83,9 +83,10 @@ public static class EndpointValidator
         }
 
         // Validate domain: must exactly match suffix or be a proper subdomain
-        var resolvedSuffixes = allowedSuffixes.Select(s => s.GetSuffixForEnvironment(armEnvironment)).ToList();
-        var isValid = resolvedSuffixes.Any(suffix =>
+        var isValid = allowedSuffixes.Any(s =>
         {
+            var suffix = s.GetSuffix(armEnvironment);
+
             // Exact match (e.g., "azconfig.io")
             if (uri.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -112,9 +113,10 @@ public static class EndpointValidator
                 : armEnvironment.Equals(ArmEnvironment.AzureGermany) ? "Azure Germany Cloud"
                 : "configured Azure cloud";
 
+            var expectedDomains = string.Join(", ", allowedSuffixes.Select(s => s.GetSuffix(armEnvironment)));
             throw new SecurityException(
                 $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
-                $"Expected domains: {string.Join(", ", resolvedSuffixes)}");
+                $"Expected domains: {expectedDomains}");
         }
     }
 
