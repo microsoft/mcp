@@ -40,7 +40,7 @@ jobs:
         codeql:
           compiled:
             enabled: true
-            querySuite: 'sdl-required, active-ssirp'
+            querySuite: 'sdl-required, active-ssirp, secure-future-initiative'
 
   steps:
   - download: current
