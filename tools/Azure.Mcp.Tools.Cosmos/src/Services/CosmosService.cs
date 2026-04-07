@@ -12,10 +12,6 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Azure;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
-using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 

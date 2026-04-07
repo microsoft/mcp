@@ -17,7 +17,6 @@ using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
 
