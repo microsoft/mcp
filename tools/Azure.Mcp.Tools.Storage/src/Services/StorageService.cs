@@ -247,6 +247,41 @@ public class StorageService(
         return blobInfos;
     }
 
+    public async Task<PagedResourceQueryResults<BlobInfo>> GetBlobDetailsPaged(
+        string account,
+        string container,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container),
+            (nameof(subscription), subscription));
+
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var containerClient = blobServiceClient.GetBlobContainerClient(container);
+
+        var items = new List<BlobInfo>();
+        string? nextContinuationToken = null;
+
+        await foreach (var page in containerClient.GetBlobsAsync(cancellationToken: cancellationToken)
+            .AsPages(continuationToken, pageSizeHint: 10))
+        {
+            foreach (var blobItem in page.Values)
+            {
+                items.Add(ConvertToBlobInfoModel(blobItem));
+            }
+
+            nextContinuationToken = page.ContinuationToken;
+            break; // Only fetch one page
+        }
+
+        return new PagedResourceQueryResults<BlobInfo>(items, nextContinuationToken);
+    }
+
     public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
@@ -444,6 +479,28 @@ public class StorageService(
             AllowBlobPublicAccess: storageAccount.Properties?.AllowBlobPublicAccess,
             EnableHttpsTrafficOnly: storageAccount.Properties?.EnableHttpsTrafficOnly);
     }
+
+    private static BlobInfo ConvertToBlobInfoModel(BlobItem blobItem) => new(
+        blobItem.Name,
+        blobItem.Properties.LastModified,
+        blobItem.Properties.ETag?.ToString(),
+        blobItem.Properties.ContentLength,
+        blobItem.Properties.ContentType,
+        blobItem.Properties.ContentHash,
+        blobItem.Properties.BlobType?.ToString(),
+        blobItem.Metadata,
+        blobItem.Properties.LeaseStatus?.ToString(),
+        blobItem.Properties.LeaseState?.ToString(),
+        blobItem.Properties.LeaseDuration?.ToString(),
+        blobItem.Properties.CopyStatus?.ToString(),
+        blobItem.Properties.CopySource,
+        blobItem.Properties.CopyCompletedOn,
+        blobItem.Properties.AccessTier?.ToString(),
+        blobItem.Properties.AccessTierChangedOn,
+        blobItem.Properties.HasLegalHold,
+        blobItem.Properties.CreatedOn,
+        blobItem.Properties.ArchiveStatus?.ToString(),
+        blobItem.VersionId);
 
     protected async Task<TableServiceClient> CreateTableServiceClient(
         string? account,

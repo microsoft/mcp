@@ -44,6 +44,15 @@ public interface IStorageService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<PagedResourceQueryResults<BlobInfo>> GetBlobDetailsPaged(
+        string account,
+        string container,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
