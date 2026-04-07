@@ -7,6 +7,7 @@ param(
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [string] $Cloud = 'AzureCloud',
     [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
