@@ -176,4 +176,28 @@ public class SqlQueryParameterizerTests
         Assert.Equal("@p0", parameters[0].Name);
         Assert.Equal("Alice", parameters[0].Value);
     }
+
+    [Fact]
+    public void Parameterize_PostgresEscapeStringLiteral_StripsEPrefixAndDecodesBackslash()
+    {
+        var (query, parameters) = Parameterize(
+            "SELECT * FROM t WHERE col = E'\\n'",
+            SqlDialect.Standard);
+
+        Assert.Equal("SELECT * FROM t WHERE col = @p0", query);
+        Assert.Single(parameters);
+        Assert.Equal("\n", parameters[0].Value);  // actual newline, not backslash-n
+    }
+
+    [Fact]
+    public void Parameterize_PostgresEscapeStringLiteralLowercase_StripsEPrefixAndDecodesBackslash()
+    {
+        var (query, parameters) = Parameterize(
+            "SELECT * FROM t WHERE col = e'\\t'",
+            SqlDialect.Standard);
+
+        Assert.Equal("SELECT * FROM t WHERE col = @p0", query);
+        Assert.Single(parameters);
+        Assert.Equal("\t", parameters[0].Value);  // actual tab
+    }
 }

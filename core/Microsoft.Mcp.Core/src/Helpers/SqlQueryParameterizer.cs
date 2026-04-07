@@ -67,6 +67,19 @@ public static class SqlQueryParameterizer
         {
             if (query[i] == '\'')
             {
+                // Detect PostgreSQL E'...' escape string prefix
+                var isEscapeString = false;
+                if (i > 0 && (query[i - 1] == 'E' || query[i - 1] == 'e'))
+                {
+                    // Ensure E/e is a standalone prefix, not part of a longer identifier
+                    if (i - 1 == 0 || !(char.IsLetterOrDigit(query[i - 2]) || query[i - 2] == '_'))
+                    {
+                        isEscapeString = true;
+                        // Remove the E/e already appended to result
+                        result.Length--;
+                    }
+                }
+
                 var isTypedLiteral = IsTypedLiteralContext(query, i);
                 var literalStart = i;
                 var value = new StringBuilder();
@@ -74,9 +87,9 @@ public static class SqlQueryParameterizer
 
                 while (i < query.Length)
                 {
-                    if (dialect == SqlDialect.MySql && query[i] == '\\' && i + 1 < query.Length)
+                    if ((dialect == SqlDialect.MySql || isEscapeString) && query[i] == '\\' && i + 1 < query.Length)
                     {
-                        // MySQL backslash escape sequences
+                        // Backslash escape sequences (MySQL or PostgreSQL E'...')
                         var next = query[i + 1];
                         value.Append(next switch
                         {
@@ -112,6 +125,12 @@ public static class SqlQueryParameterizer
                 if (isTypedLiteral)
                 {
                     // Preserve original literal text for typed-literal contexts
+                    if (isEscapeString)
+                    {
+                        // Re-insert the stripped E/e prefix
+                        result.Append(query[literalStart - 1]);
+                    }
+
                     result.Append(query.AsSpan(literalStart, i - literalStart));
                 }
                 else
