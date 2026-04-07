@@ -106,6 +106,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
             if (TestMode is TestMode.Playback)
             {
+                // AZURE_TOKEN_CREDENTIALS=PlaybackTokenCredential tells the server to use a special credential that
+                // returns fake tokens in playback mode, which prevents any accidental live calls if a test is misconfigured
                 envVarDictionary["AZURE_TOKEN_CREDENTIALS"] = "PlaybackTokenCredential";
                 envVarDictionary["TEST_MODE"] = "Playback";
             }
