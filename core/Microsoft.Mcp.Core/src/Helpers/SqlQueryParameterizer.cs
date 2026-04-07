@@ -121,6 +121,121 @@ public static class SqlQueryParameterizer
                     result.Append(paramName);
                 }
             }
+            else if (query[i] == '"')
+            {
+                // Skip double-quoted identifier (standard SQL, Cosmos DB, PostgreSQL)
+                result.Append(query[i]);
+                i++;
+                while (i < query.Length)
+                {
+                    result.Append(query[i]);
+                    if (query[i] == '"')
+                    {
+                        i++;
+                        if (i < query.Length && query[i] == '"')
+                        {
+                            // Escaped double quote ("") inside identifier
+                            result.Append(query[i]);
+                            i++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            else if (query[i] == '[')
+            {
+                // Skip bracket-quoted identifier (Cosmos DB, SQL Server)
+                result.Append(query[i]);
+                i++;
+                while (i < query.Length)
+                {
+                    result.Append(query[i]);
+                    if (query[i] == ']')
+                    {
+                        i++;
+                        if (i < query.Length && query[i] == ']')
+                        {
+                            // Escaped bracket (]]) inside identifier
+                            result.Append(query[i]);
+                            i++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            else if (dialect == SqlDialect.MySql && query[i] == '`')
+            {
+                // Skip backtick-quoted identifier (MySQL)
+                result.Append(query[i]);
+                i++;
+                while (i < query.Length)
+                {
+                    result.Append(query[i]);
+                    if (query[i] == '`')
+                    {
+                        i++;
+                        if (i < query.Length && query[i] == '`')
+                        {
+                            // Escaped backtick (``) inside identifier
+                            result.Append(query[i]);
+                            i++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            else if (query[i] == '-' && i + 1 < query.Length && query[i + 1] == '-')
+            {
+                // Skip single-line comment (-- to end of line)
+                while (i < query.Length && query[i] != '\n')
+                {
+                    result.Append(query[i]);
+                    i++;
+                }
+            }
+            else if (query[i] == '/' && i + 1 < query.Length && query[i + 1] == '*')
+            {
+                // Skip block comment (/* ... */)
+                result.Append(query[i]);
+                i++;
+                result.Append(query[i]);
+                i++;
+                while (i < query.Length)
+                {
+                    if (query[i] == '*' && i + 1 < query.Length && query[i + 1] == '/')
+                    {
+                        result.Append(query[i]);
+                        i++;
+                        result.Append(query[i]);
+                        i++;
+                        break;
+                    }
+
+                    result.Append(query[i]);
+                    i++;
+                }
+            }
             else
             {
                 result.Append(query[i]);
