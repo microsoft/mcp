@@ -43,8 +43,7 @@ jobs:
           querySuites:
             - active-ssirp
             - sdl-required
-            - liberty-shield-2
-            - ssirp
+            - secure-future-initiative
 
   steps:
   - download: current
