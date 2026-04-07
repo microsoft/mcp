@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
@@ -34,6 +35,10 @@ public sealed class KustoService(
     /// <summary>
     /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
     /// </summary>
+    /// <summary>
+    /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
+    /// Normalizes any existing bracket escape sequences before re-escaping.
+    /// </summary>
     internal static string EscapeKqlIdentifier(string identifier)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
@@ -50,9 +55,11 @@ public sealed class KustoService(
             throw new ArgumentException("Identifier is empty after removing escape characters.", nameof(identifier));
         }
 
-        // Use KQL bracket notation with escaped single quotes
-        return $"['{unescaped.Replace("'", "''")}']";
+        return KqlSanitizer.EscapeIdentifier(unescaped);
     }
+
+    internal static string SanitizeKqlStringLiterals(string query) =>
+        KqlSanitizer.SanitizeStringLiterals(query);
 
     // Provider cache key generator
     private static string GetProviderCacheKey(string clusterUri, string? tenant, string suffix)
@@ -255,9 +262,12 @@ public sealed class KustoService(
             (nameof(databaseName), databaseName),
             (nameof(query), query));
 
+        KqlQueryValidator.ValidateQuerySafety(query);
+
         var cslQueryProvider = await GetOrCreateCslQueryProviderAsync(clusterUri, tenant, cancellationToken);
         var result = new List<JsonElement>();
-        var kustoResult = await cslQueryProvider.ExecuteQueryCommandAsync(databaseName, query, cancellationToken);
+        var sanitizedQuery = SanitizeKqlStringLiterals(query);
+        var kustoResult = await cslQueryProvider.ExecuteQueryCommandAsync(databaseName, sanitizedQuery, cancellationToken);
         if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
         {
             return result;
