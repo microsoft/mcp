@@ -7,7 +7,8 @@ param(
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
-    [string] $Cloud = 'AzureCloud',
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'Dogfood')]
+    [string] $Environment = 'AzureCloud',
     [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
@@ -299,11 +300,12 @@ try {
         exit $LastExitCode
     }
 
+    $environmentArg = "--environment AZURE_CLOUD=$Environment"
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
 
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg $environmentArg"
 
     if($Members.Count -gt 0) {
         $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
