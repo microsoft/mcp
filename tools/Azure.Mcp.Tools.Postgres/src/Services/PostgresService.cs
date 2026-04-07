@@ -351,7 +351,7 @@ public class PostgresService(
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
-        SqlQueryParameterizer.Parameterize(query);
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private async Task<string> GetPassword(string authType, string? password, CancellationToken cancellationToken)
     {

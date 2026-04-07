@@ -54,7 +54,7 @@ public static class SqlQueryParameterizer
     /// </returns>
     public static (string Query, List<(string Name, string Value)> Parameters) Parameterize(
         string query,
-        SqlDialect dialect = SqlDialect.Standard)
+        SqlDialect dialect)
     {
         ArgumentNullException.ThrowIfNull(query);
 

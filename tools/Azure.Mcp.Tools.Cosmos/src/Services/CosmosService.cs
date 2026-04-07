@@ -296,7 +296,7 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
     }
 
     internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
-        SqlQueryParameterizer.Parameterize(query);
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
 
