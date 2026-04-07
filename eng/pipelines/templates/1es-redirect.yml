@@ -49,7 +49,7 @@ extends:
         justificationForDisabling: "ESLint injected task has failures because it uses an old version of mkdirp. We should not fail for tools not controlled by the repo. See: https://dev.azure.com/azure-sdk/internal/_build/results?buildId=3556850"
       codeql:
         compiled:
-          enabled: false
+          enabled: true
           justificationForDisabling: "To reduce redundant CodeQL runs across all our pipeline jobs we are disabling and only running in our main build job."
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/eng/CredScanSuppression.json
