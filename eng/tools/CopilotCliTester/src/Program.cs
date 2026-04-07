@@ -16,6 +16,8 @@ static class Program
 
     private static readonly Lock _consoleLock = new();
     private static readonly Lock _reportLock = new();
+    private static readonly string ServerProjectRelativePath =
+        Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
     private static readonly string runId = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 6);
     static async Task<int> Main(string[] args)
     {
@@ -228,6 +230,10 @@ static class Program
 
         var debug = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG"));
 
+        // Resolve the server executable once before launching parallel workers
+        // to avoid N concurrent dotnet build races on cold start.
+        var serverExecutablePath = await ResolveServerExecutable();
+
         using var semaphore = new SemaphoreSlim(parallel);
 
         var tasks = allPrompts.Select(async prompt =>
@@ -237,8 +243,7 @@ static class Program
             {
                 // Create a dedicated client per task. When the client is disposed, it kills its CLI process tree, ensuring child azmcp.exe processes are cleaned up.
                 var (client, workspacePath) = AgentRunner.CreateSharedClient(runId, debug, outputDir);
-                await using var _ = client;
-                await using var runner = new AgentRunner(client, outputDir, workspacePath);
+                await using var runner = new AgentRunner(client, serverExecutablePath, outputDir, workspacePath);
                 var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
                 AppendResultToMarkdown(reportFile, result);
                 return result;
@@ -273,10 +278,10 @@ static class Program
         var resultsFile = Path.Combine(outputDir, $"e2e-results{title}-{timestamp}.json");
         var resultsJson = JsonSerializer.Serialize(results.ToArray(), JsonContext.Default.TestResultArray);
         File.WriteAllText(resultsFile, resultsJson);
-        Console.WriteLine($"\n✓ Final results: {resultsFile}");
+        Console.WriteLine($"\n Final results: {resultsFile}");
 
         AppendMarkdownSummary(reportFile, results, totalStopwatch.Elapsed);
-        Console.WriteLine($"✓ Report finalized: {reportFile}");
+        Console.WriteLine($" Report finalized: {reportFile}");
 
         return passRate >= CopilotTestConstants.PassThreshold ? 0 : 1;
     }
@@ -485,7 +490,16 @@ static class Program
 
     static (string? TestContextPath, string? PromptsPath) LoadFiles()
     {
-        var root = AgentRunnerUtils.FindRepoRoot(Directory.GetCurrentDirectory());
+        string? root = null;
+        try 
+        {
+            root = AgentRunnerUtils.FindRepoRoot(Directory.GetCurrentDirectory());
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.Error.WriteLine($"Warning: {ex.Message}");
+            return (null, null);
+        }
         var context = Path.Combine(root, "eng", "tools", "CopilotCliTester", "src", "test-context.md");
         var prompts = Path.Combine(root, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
 
@@ -493,5 +507,83 @@ static class Program
             TestContextPath: File.Exists(context) ? context : null,
             PromptsPath: File.Exists(prompts) ? prompts : null
         );
+    }
+
+    /// <summary>
+    /// Resolves the azmcp server executable. Walks up from the current assembly location to find the repo root, then checks for an existing
+    /// build artifact. If none is found, builds the server project.
+    /// </summary>
+    private static async Task<string> ResolveServerExecutable()
+    {
+        var repoRoot = AgentRunnerUtils.FindRepoRoot(AppContext.BaseDirectory);
+        var serverProject = Path.Combine(repoRoot, ServerProjectRelativePath);
+
+        if (!File.Exists(serverProject))
+        {
+            throw new InvalidOperationException(
+                $"Azure MCP Server project not found at '{serverProject}'. " +
+                "Make sure you're running from within the repo.");
+        }
+
+        // Check for an existing Debug build output
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+
+        var file = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+
+        if (File.Exists(file))
+        {
+            Debug.WriteLine($"Using existing server build: {file}");
+            return file;
+        }
+
+        // If no pre-built artifact found, build the server project
+        Console.WriteLine("No pre-built azmcp found. Building Azure.Mcp.Server...");
+        var psi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            ArgumentList = { "build", serverProject },
+            RedirectStandardOutput = false,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+
+        using var process = Process.Start(psi)
+            ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+
+        try
+        {
+            await process.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree:  true);
+            }
+            throw new TimeoutException(
+                $"'dotnet build' timed out after 15 minutes. The build process has been terminated.");
+        }
+
+        if (process.ExitCode != 0)
+        {
+            var stderr = await process.StandardError.ReadToEndAsync();
+            throw new InvalidOperationException(
+                $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
+        }
+
+        // After build, the Debug output should exist
+        var builtPath = Path.Combine(
+            repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+
+        if (!File.Exists(builtPath))
+        {
+            throw new InvalidOperationException(
+                $"Build succeeded but server executable not found at '{builtPath}'.");
+        }
+
+        Console.WriteLine($"Build complete: {builtPath}");
+        return builtPath;
     }
 }

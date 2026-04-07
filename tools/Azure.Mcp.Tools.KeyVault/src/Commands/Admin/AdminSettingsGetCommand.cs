@@ -32,8 +32,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     };
 
     public override string Description =>
-        // "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.";
-        "Retrieves Managed HSM account settings (by setting name or all settings) for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. " +
+        "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. " +
         "This is NOT for secrets, keys, or certificates — use this when the user asks about vault configuration settings or account-level settings. This tool ONLY applies to Managed HSM vaults.";
 
     protected override void RegisterOptions(Command command)

@@ -30,10 +30,12 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     private readonly CopilotClient _client;
     private readonly string _outputDirectory;
     private readonly string? _workspacePath;
+    private readonly string _serverExecutablePath;
 
-    public AgentRunner(CopilotClient client, string? outputDir = null, string? workspacePath = null)
+    public AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null)
     {
         _client = client;
+        _serverExecutablePath = serverExecutablePath;
         _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
         _workspacePath = workspacePath;
     }
@@ -98,7 +100,7 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 Model = config.Model ?? CopilotTestConstants.ModelName,
                 Streaming = true,
                 OnPermissionRequest = PermissionHandler.ApproveAll,
-                McpServers = await BuildMcpServersConfigAsync(),
+                McpServers = BuildMcpServersConfig(_serverExecutablePath),
                 SystemMessage = systemMessage
             }, cancellationToken);
 
@@ -343,12 +345,10 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     }
 
     /// <summary>
-    /// Builds the MCP servers configuration for stdio transport. Discovers or builds the local azmcp executable from the repo.
+    /// Builds the MCP servers configuration for stdio transport using a pre-resolved server executable path.
     /// </summary>
-    private static async Task<Dictionary<string, object>> BuildMcpServersConfigAsync()
+    private static Dictionary<string, object> BuildMcpServersConfig(string serverPath)
     {
-        var serverPath = await ResolveServerExecutable();
-
         return new Dictionary<string, object>
         {
             ["azure"] = new McpLocalServerConfig
@@ -363,87 +363,6 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 Tools = ["*"]
             }
         };
-    }
-
-    private static readonly string ServerProjectRelativePath =
-        Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
-
-    /// <summary>
-    /// Resolves the azmcp server executable. Walks up from the current assembly location to find the repo root, then checks for an existing
-    /// build artifact. If none is found, builds the server project.
-    /// </summary>
-    private static async Task<string> ResolveServerExecutable()
-    {
-        var repoRoot = AgentRunnerUtils.FindRepoRoot(AppContext.BaseDirectory);
-        var serverProject = Path.Combine(repoRoot, ServerProjectRelativePath);
-
-        if (!File.Exists(serverProject))
-        {
-            throw new InvalidOperationException(
-                $"Azure MCP Server project not found at '{serverProject}'. " +
-                "Make sure you're running from within the repo.");
-        }
-
-        // Check for an existing Debug build output
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-
-        var file = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
-
-        if (File.Exists(file))
-        {
-            Debug.WriteLine($"Using existing server build: {file}");
-            return file;
-        }
-
-        // If no pre-built artifact found, build the server project
-        Console.WriteLine("No pre-built azmcp found. Building Azure.Mcp.Server...");
-        var psi = new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            ArgumentList = { "build", serverProject },
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-
-        using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(15));
-
-        try
-        {
-            await process.WaitForExitAsync(cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree:  true);
-            }
-            throw new TimeoutException(
-                $"'dotnet build' timed out after 15 minutes. The build process has been terminated.");
-        }
-
-        if (process.ExitCode != 0)
-        {
-            var stderr = await process.StandardError.ReadToEndAsync();
-            throw new InvalidOperationException(
-                $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
-        }
-
-        // After build, the Debug output should exist
-        var builtPath = Path.Combine(
-            repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
-
-        if (!File.Exists(builtPath))
-        {
-            throw new InvalidOperationException(
-                $"Build succeeded but server executable not found at '{builtPath}'.");
-        }
-
-        Console.WriteLine($"Build complete: {builtPath}");
-        return builtPath;
     }
 
     private static bool TryMapEvent(object ev, out AgentSessionEvent mapped)
