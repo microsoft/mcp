@@ -67,7 +67,7 @@ internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler
         {
             if (response.Headers.Remove("Retry-After"))
             {
-                response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromMilliseconds(0));
+                response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
             }
             if (response.Headers.Remove("x-ms-retry-after-ms"))
             {

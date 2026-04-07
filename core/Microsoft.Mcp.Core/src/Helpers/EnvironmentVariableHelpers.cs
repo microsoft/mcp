@@ -42,8 +42,8 @@ public static class EnvironmentHelpers
     {
 #if DEBUG
         // In debug builds, check for the presence of an environment variable to determine if we're in playback testing mode.
-        var tokenCredentialEnv = Environment.GetEnvironmentVariable("TEST_MODE");
-        return string.Equals(tokenCredentialEnv, "Playback", StringComparison.OrdinalIgnoreCase);
+        var testModeEnv = Environment.GetEnvironmentVariable("TEST_MODE");
+        return string.Equals(testModeEnv, "Playback", StringComparison.OrdinalIgnoreCase);
 #else
         // In non-debug builds, never consider ourselves to be in playback testing mode.
         return false;

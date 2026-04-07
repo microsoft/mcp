@@ -169,7 +169,7 @@ public sealed class KeyVaultService(
         return await client.GetCertificateAsync(certificateName, cancellationToken);
     }
 
-    public async Task<CertificateOperation> CreateCertificate(
+    public async Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
         string subscriptionId,
@@ -182,7 +182,9 @@ public sealed class KeyVaultService(
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
-        return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
+        var certificateOperation = await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
+        await WaitForLroCompletionAsync(certificateOperation, cancellationToken);
+        return certificateOperation.Value;
     }
 
     public async Task<KeyVaultCertificateWithPolicy> ImportCertificate(

@@ -59,6 +59,12 @@ public static class EndpointValidator
             : isGermanyCloud ? "communication.azure.de"
             : "communication.azure.com";
 
+        var storageBlobSuffix = isPublicCloud ? "blob.core.windows.net"
+            : isChinaCloud ? "blob.core.chinacloudapi.cn"
+            : isGovCloud ? "blob.core.usgovcloudapi.net"
+            : isGermanyCloud ? "blob.core.cloudapi.de"
+            : "blob.core.windows.net";
+
         var foundrySuffix = isPublicCloud ? "services.ai.azure.com"
             : isChinaCloud ? "services.ai.azure.cn"
             : isGovCloud ? "services.ai.azure.us"
@@ -77,10 +83,19 @@ public static class EndpointValidator
             : isGermanyCloud ? "cognitiveservices.azure.de"
             : "cognitiveservices.azure.com";
 
+        var serviceBusSuffix = isPublicCloud ? "servicebus.windows.net"
+            : isChinaCloud ? "servicebus.chinacloudapi.cn"
+            : isGovCloud ? "servicebus.usgovcloudapi.net"
+            : isGermanyCloud ? "servicebus.cloudapi.de"
+            : "servicebus.windows.net";
+
         return new Dictionary<string, string[]>
         {
             // Azure Communication Services
             { "communication", [$".{commSuffix}"] },
+
+            // Azure Blob Storage
+            { "storage-blob", [$".{storageBlobSuffix}"] },
 
             // Azure App Configuration
             { "appconfig", [$".{appConfigSuffix}"] },
@@ -93,6 +108,9 @@ public static class EndpointValidator
 
             // Azure OpenAI
             { "azure-openai", [$".{openaiSuffix}", $".{cognitiveServicesSuffix}"] },
+
+            // Azure Service Bus
+            { "servicebus", [$".{serviceBusSuffix}"] },
         };
     }
 

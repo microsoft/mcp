@@ -241,8 +241,8 @@ public class LoadTestingService(
             context: new() { CancellationToken = cancellationToken })
             ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
 
-        var loadTestRunOperation = await loadTestRunResponse.WaitForCompletionAsync(cancellationToken);
-        var loadTestRun = loadTestRunOperation.Value.ToString();
+        await WaitForLroCompletionAsync(loadTestRunResponse, cancellationToken);
+        var loadTestRun = loadTestRunResponse.Value.ToString();
         return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new();
     }
 
