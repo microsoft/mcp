@@ -40,6 +40,11 @@ jobs:
         codeql:
           compiled:
             enabled: true
+          querySuites:
+            - active-ssirp
+            - sdl-required
+            - liberty-shield-2
+            - ssirp
 
   steps:
   - download: current
