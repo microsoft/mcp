@@ -35,7 +35,7 @@ public sealed class KustoService(
     /// <summary>
     /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
     /// </summary>
-     internal static string EscapeKqlIdentifier(string identifier)
+    internal static string EscapeKqlIdentifier(string identifier)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
 
