@@ -18,7 +18,7 @@ public class CacheServiceCollectionExtensionsTests
         var services = new ServiceCollection();
 
         // Act
-        services.AddSingleton<IMemoryCache>(Substitute.For<IMemoryCache>());
+        services.AddSingleton(Substitute.For<IMemoryCache>());
         services.AddSingleUserCliCacheService(disabled: false);
         var serviceProvider = services.BuildServiceProvider();
         var cacheService = serviceProvider.GetRequiredService<ICacheService>();
@@ -121,5 +121,22 @@ public class CacheServiceCollectionExtensionsTests
 
         // Assert
         Assert.IsType<HttpServiceCacheService>(cacheService);
+    }
+
+    [Fact]
+    public void AddHttpServiceCacheService_WithDisabled_ShouldOverrideExistingCacheService()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var customCacheService = Substitute.For<ICacheService>();
+        services.AddSingleton(customCacheService);
+
+        // Act
+        services.AddHttpServiceCacheService(disabled: true);
+        var serviceProvider = services.BuildServiceProvider();
+        var cacheService = serviceProvider.GetRequiredService<ICacheService>();
+
+        // Assert
+        Assert.IsType<NoopCacheService>(cacheService);
     }
 }

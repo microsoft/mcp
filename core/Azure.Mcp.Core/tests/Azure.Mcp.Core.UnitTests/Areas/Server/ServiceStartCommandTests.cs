@@ -216,6 +216,7 @@ public class ServiceStartCommandTests
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.DangerouslyDisableElicitation);
+        Assert.True(options.DisableCaching);
     }
 
     [Fact]
@@ -271,6 +272,7 @@ public class ServiceStartCommandTests
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.DangerouslyDisableElicitation);
         Assert.Null(options.SupportLoggingFolder);
+        Assert.False(options.DisableCaching);
     }
 
     [Theory]
