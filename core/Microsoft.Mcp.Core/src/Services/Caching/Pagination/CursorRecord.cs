@@ -58,6 +58,13 @@ public sealed class CursorRecord
     public IReadOnlyDictionary<string, string>? ResourceMetadata { get; init; }
 
     /// <summary>
+    /// Optional delegate that fetches the next page of results.
+    /// Stored in-memory only; not serialized.
+    /// </summary>
+    [JsonIgnore]
+    public PageFetchDelegate? Fetcher { get; init; }
+
+    /// <summary>
     /// When the cursor record was created (UTC).
     /// </summary>
     [JsonPropertyName("createdAtUtc")]

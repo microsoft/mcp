@@ -4,6 +4,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Services.Caching.Pagination;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Services.Caching;
 
@@ -63,13 +64,15 @@ public static class CachingServiceCollectionExtensions
     /// <returns>The service collection.</returns>
     /// <remarks>
     /// <para>
-    /// This registers <see cref="ICursorRegistry"/> and <see cref="IPaginationService"/> as singletons.
+    /// This registers <see cref="ICursorRegistry"/>, <see cref="IPaginationService"/>,
+    /// and the <see cref="PaginationResource"/> MCP resource as singletons.
     /// </para>
     /// </remarks>
     public static IServiceCollection AddPaginationService(this IServiceCollection services)
     {
         services.TryAddSingleton<ICursorRegistry, CursorRegistry>();
         services.TryAddSingleton<IPaginationService, PaginationService>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<McpServerResource, PaginationResource>());
         return services;
     }
 }

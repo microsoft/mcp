@@ -46,6 +46,7 @@ public sealed class PaginationService(
         string operation,
         string requestFingerprint,
         string nativeState,
+        PageFetchDelegate? fetcher = null,
         IReadOnlyDictionary<string, string>? resourceMetadata = null,
         TimeSpan? ttl = null,
         CancellationToken cancellationToken = default)
@@ -65,6 +66,7 @@ public sealed class PaginationService(
             Operation = operation,
             RequestFingerprint = requestFingerprint,
             NativeState = nativeState,
+            Fetcher = fetcher,
             ResourceMetadata = resourceMetadata,
             CreatedAtUtc = now,
             ExpiresAtUtc = now + effectiveTtl,

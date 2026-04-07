@@ -29,6 +29,7 @@ public interface IPaginationService
     /// <param name="operation">The logical MCP tool or operation name (e.g., "resourcegroup.list").</param>
     /// <param name="requestFingerprint">The fingerprint of the semantic request shape.</param>
     /// <param name="nativeState">Provider-native continuation state.</param>
+    /// <param name="fetcher">Optional delegate that fetches the next page of results.</param>
     /// <param name="resourceMetadata">Optional metadata about the resource scope.</param>
     /// <param name="ttl">Optional cursor TTL. Defaults to 1 hour if not specified.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
@@ -38,6 +39,7 @@ public interface IPaginationService
         string operation,
         string requestFingerprint,
         string nativeState,
+        PageFetchDelegate? fetcher = null,
         IReadOnlyDictionary<string, string>? resourceMetadata = null,
         TimeSpan? ttl = null,
         CancellationToken cancellationToken = default);
