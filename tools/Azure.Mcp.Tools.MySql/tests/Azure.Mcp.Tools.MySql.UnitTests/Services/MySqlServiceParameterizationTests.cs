@@ -172,4 +172,45 @@ public class MySqlServiceParameterizationTests
         Assert.Equal("y", parameters[1].Value);
         Assert.Equal("z", parameters[2].Value);
     }
+
+    [Fact]
+    public void ParameterizeStringLiterals_DateLiteral_PreservedAsIs()
+    {
+        var (query, parameters) = MySqlService.ParameterizeStringLiterals(
+            "SELECT * FROM orders WHERE order_date = DATE '2024-01-01'");
+
+        Assert.Equal("SELECT * FROM orders WHERE order_date = DATE '2024-01-01'", query);
+        Assert.Empty(parameters);
+    }
+
+    [Fact]
+    public void ParameterizeStringLiterals_TimestampLiteral_PreservedAsIs()
+    {
+        var (query, parameters) = MySqlService.ParameterizeStringLiterals(
+            "SELECT * FROM logs WHERE ts >= TIMESTAMP '2024-06-15 08:00:00'");
+
+        Assert.Equal("SELECT * FROM logs WHERE ts >= TIMESTAMP '2024-06-15 08:00:00'", query);
+        Assert.Empty(parameters);
+    }
+
+    [Fact]
+    public void ParameterizeStringLiterals_IntervalLiteral_PreservedAsIs()
+    {
+        var (query, parameters) = MySqlService.ParameterizeStringLiterals(
+            "SELECT * FROM events WHERE created_at > NOW() - INTERVAL '1 DAY'");
+
+        Assert.Equal("SELECT * FROM events WHERE created_at > NOW() - INTERVAL '1 DAY'", query);
+        Assert.Empty(parameters);
+    }
+
+    [Fact]
+    public void ParameterizeStringLiterals_MixedTypedAndValueLiterals_HandledCorrectly()
+    {
+        var (query, parameters) = MySqlService.ParameterizeStringLiterals(
+            "SELECT * FROM events WHERE name = 'launch' AND created_at > NOW() - INTERVAL '7 days'");
+
+        Assert.Equal("SELECT * FROM events WHERE name = @p0 AND created_at > NOW() - INTERVAL '7 days'", query);
+        Assert.Single(parameters);
+        Assert.Equal("launch", parameters[0].Value);
+    }
 }

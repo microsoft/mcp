@@ -32,8 +32,20 @@ public static class SqlQueryParameterizer
     }
 
     /// <summary>
+    /// SQL keywords that introduce typed literals where the string token is part
+    /// of the type syntax and cannot be replaced with a parameter placeholder.
+    /// For example: <c>INTERVAL '1 day'</c>, <c>DATE '2024-01-01'</c>.
+    /// </summary>
+    private static readonly HashSet<string> TypedLiteralKeywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "DATE", "TIME", "TIMESTAMP", "TIMESTAMPTZ", "TIMETZ", "INTERVAL",
+    };
+
+    /// <summary>
     /// Extracts single-quoted string literals from <paramref name="query"/> and replaces
     /// each one with a numbered parameter placeholder (@p0, @p1, …).
+    /// Literals that follow typed-literal keywords (e.g. DATE, INTERVAL) are preserved
+    /// as-is because the SQL parser requires a literal token in those positions.
     /// </summary>
     /// <param name="query">The SQL query containing string literals.</param>
     /// <param name="dialect">Which escape sequences to decode. Defaults to <see cref="SqlDialect.Standard"/>.</param>
@@ -44,6 +56,8 @@ public static class SqlQueryParameterizer
         string query,
         SqlDialect dialect = SqlDialect.Standard)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         var parameters = new List<(string Name, string Value)>();
         var result = new StringBuilder(query.Length);
         var paramIndex = 0;
@@ -53,7 +67,8 @@ public static class SqlQueryParameterizer
         {
             if (query[i] == '\'')
             {
-                var paramName = $"@p{paramIndex++}";
+                var isTypedLiteral = IsTypedLiteralContext(query, i);
+                var literalStart = i;
                 var value = new StringBuilder();
                 i++; // skip opening quote
 
@@ -94,8 +109,17 @@ public static class SqlQueryParameterizer
                     }
                 }
 
-                parameters.Add((paramName, value.ToString()));
-                result.Append(paramName);
+                if (isTypedLiteral)
+                {
+                    // Preserve original literal text for typed-literal contexts
+                    result.Append(query.AsSpan(literalStart, i - literalStart));
+                }
+                else
+                {
+                    var paramName = $"@p{paramIndex++}";
+                    parameters.Add((paramName, value.ToString()));
+                    result.Append(paramName);
+                }
             }
             else
             {
@@ -105,5 +129,34 @@ public static class SqlQueryParameterizer
         }
 
         return (result.ToString(), parameters);
+    }
+
+    /// <summary>
+    /// Checks whether the string literal at <paramref name="quoteIndex"/> is preceded
+    /// (ignoring whitespace) by a typed-literal keyword such as DATE or INTERVAL.
+    /// </summary>
+    private static bool IsTypedLiteralContext(string query, int quoteIndex)
+    {
+        var j = quoteIndex - 1;
+
+        // Skip whitespace between keyword and opening quote
+        while (j >= 0 && char.IsWhiteSpace(query[j]))
+        {
+            j--;
+        }
+
+        if (j < 0 || !(char.IsLetterOrDigit(query[j]) || query[j] == '_'))
+        {
+            return false;
+        }
+
+        var wordEnd = j + 1;
+        while (j >= 0 && (char.IsLetterOrDigit(query[j]) || query[j] == '_'))
+        {
+            j--;
+        }
+
+        var word = query.Substring(j + 1, wordEnd - j - 1);
+        return TypedLiteralKeywords.Contains(word);
     }
 }

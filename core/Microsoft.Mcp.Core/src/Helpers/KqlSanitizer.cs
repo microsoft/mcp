@@ -17,25 +17,32 @@ public static class KqlSanitizer
     /// Use this when interpolating a value into a KQL <c>where</c> clause, e.g.:
     /// <c>$"MyTable | where Name == '{KqlSanitizer.EscapeStringValue(name)}'"</c>
     /// </summary>
-    public static string EscapeStringValue(string value) =>
-        value.Replace("'", "''", StringComparison.Ordinal);
+    public static string EscapeStringValue(string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return value.Replace("'", "''", StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Wraps a KQL identifier (table name, column name, etc.) in bracket notation
     /// with proper escaping: <c>['identifier']</c>. This prevents injection when
     /// an identifier is supplied by user input.
     /// </summary>
-    public static string EscapeIdentifier(string identifier) =>
-        $"['{identifier.Replace("'", "''", StringComparison.Ordinal)}']";
+    public static string EscapeIdentifier(string identifier)
+    {
+        ArgumentNullException.ThrowIfNull(identifier);
+        return $"['{identifier.Replace("'", "''", StringComparison.Ordinal)}']";
+    }
 
     /// <summary>
     /// Sanitizes KQL string literals by parsing each single-quoted literal,
-    /// decoding escape sequences, and re-encoding with proper escaping.
+    /// normalizing doubled-quote escapes, and re-encoding with proper escaping.
     /// This prevents injection through string literal breakout where a crafted
     /// literal value could escape the quote context and inject KQL operators.
     /// </summary>
     public static string SanitizeStringLiterals(string query)
     {
+        ArgumentNullException.ThrowIfNull(query);
         var result = new StringBuilder(query.Length);
         var i = 0;
 
