@@ -50,7 +50,6 @@ extends:
       codeql:
         compiled:
           enabled: true
-          justificationForDisabling: "To reduce redundant CodeQL runs across all our pipeline jobs we are disabling and only running in our main build job."
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/eng/CredScanSuppression.json
       psscriptanalyzer:
