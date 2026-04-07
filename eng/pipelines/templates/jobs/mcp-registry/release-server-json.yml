@@ -71,8 +71,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)
       artifact: server.json_${{ parameters.ServerName }}
   
-  - task: ESRPRelease@10
-    displayName: Publish native platform packages to npmjs.com
+  - task: ESRPRelease@11
+    displayName: Publish server.json to MCP Repository
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'
       ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
