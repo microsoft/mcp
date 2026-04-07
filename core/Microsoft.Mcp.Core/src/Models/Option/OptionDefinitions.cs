@@ -94,8 +94,10 @@ public static partial class OptionDefinitions
     {
         public const string CursorName = "cursor";
 
-        public static readonly OptionDefinition<string> Cursor = new(
-            CursorName,
-            "Opaque continuation cursor from a previous response. Omit on the first request.");
+        public static readonly Option<string> Cursor = new($"--{CursorName}")
+        {
+            Description = "Opaque continuation cursor from a previous response. Omit on the first request.",
+            Required = false,
+        };
     }
 }

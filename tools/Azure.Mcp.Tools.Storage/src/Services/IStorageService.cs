@@ -16,6 +16,13 @@ public interface IStorageService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task<PagedResourceQueryResults<StorageAccountInfo>> GetAccountDetailsPaged(
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        string? skipToken = null,
+        CancellationToken cancellationToken = default);
+
     Task<StorageAccountResult> CreateStorageAccount(
         string account,
         string resourceGroup,

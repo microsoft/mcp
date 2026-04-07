@@ -9,11 +9,10 @@ namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
 
 /// <summary>
 /// Default implementation of <see cref="IPaginationService"/>.
-/// Orchestrates fingerprinting, caller binding resolution, and cursor lifecycle management.
+/// Orchestrates fingerprinting and cursor lifecycle management.
 /// </summary>
 public sealed class PaginationService(
     ICursorRegistry cursorRegistry,
-    ICallerIdentityResolver callerIdentityResolver,
     ILogger<PaginationService> logger) : IPaginationService
 {
     internal const int SupportedVersion = 1;
@@ -42,14 +41,10 @@ public sealed class PaginationService(
         return string.Concat("sha256:", Convert.ToHexStringLower(hash));
     }
 
-    public ValueTask<CallerBinding> ResolveCallerBindingAsync(CancellationToken cancellationToken = default) =>
-        callerIdentityResolver.ResolveAsync(cancellationToken);
-
     public async ValueTask<string> SaveCursorAsync(
         string provider,
         string operation,
         string requestFingerprint,
-        CallerBinding callerBinding,
         string nativeState,
         IReadOnlyDictionary<string, string>? resourceMetadata = null,
         TimeSpan? ttl = null,
@@ -58,7 +53,6 @@ public sealed class PaginationService(
         ArgumentException.ThrowIfNullOrEmpty(provider);
         ArgumentException.ThrowIfNullOrEmpty(operation);
         ArgumentException.ThrowIfNullOrEmpty(requestFingerprint);
-        ArgumentNullException.ThrowIfNull(callerBinding);
         ArgumentException.ThrowIfNullOrEmpty(nativeState);
 
         var effectiveTtl = ttl ?? DefaultTtl;
@@ -70,7 +64,6 @@ public sealed class PaginationService(
             Provider = provider,
             Operation = operation,
             RequestFingerprint = requestFingerprint,
-            CallerBinding = callerBinding,
             NativeState = nativeState,
             ResourceMetadata = resourceMetadata,
             CreatedAtUtc = now,
@@ -101,15 +94,6 @@ public sealed class PaginationService(
                 "The specified cursor is invalid or has expired.");
         }
 
-        if (record.ExpiresAtUtc <= DateTimeOffset.UtcNow)
-        {
-            logger.LogWarning("Cursor {CursorId} has expired (expiry={ExpiresAtUtc}).", cursorId, record.ExpiresAtUtc);
-            await cursorRegistry.DeleteAsync(cursorId, cancellationToken);
-            throw new InvalidCursorException(
-                InvalidCursorReason.Expired,
-                "The specified cursor has expired.");
-        }
-
         if (record.Version != SupportedVersion)
         {
             logger.LogWarning("Cursor {CursorId} has unsupported version {Version}.", cursorId, record.Version);
@@ -127,22 +111,7 @@ public sealed class PaginationService(
                 "The specified cursor is invalid or has expired.");
         }
 
-        var currentBinding = await callerIdentityResolver.ResolveAsync(cancellationToken);
-        if (!CallerBindingsMatch(record.CallerBinding, currentBinding))
-        {
-            logger.LogWarning("Cursor {CursorId} caller binding mismatch. StoredMode={StoredMode}, CurrentMode={CurrentMode}",
-                cursorId, record.CallerBinding.Mode, currentBinding.Mode);
-            throw new InvalidCursorException(
-                InvalidCursorReason.CallerBindingMismatch,
-                "The specified cursor is invalid or has expired.");
-        }
-
         logger.LogDebug("Cursor {CursorId} validated successfully for {Operation}.", cursorId, record.Operation);
         return record;
     }
-
-    internal static bool CallerBindingsMatch(CallerBinding stored, CallerBinding current) =>
-        string.Equals(stored.Mode, current.Mode, StringComparison.Ordinal) &&
-        string.Equals(stored.TenantId, current.TenantId, StringComparison.Ordinal) &&
-        string.Equals(stored.PrincipalIdHash, current.PrincipalIdHash, StringComparison.Ordinal);
 }

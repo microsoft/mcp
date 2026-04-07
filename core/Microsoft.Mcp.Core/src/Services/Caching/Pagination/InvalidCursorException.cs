@@ -5,8 +5,8 @@ namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
 
 /// <summary>
 /// Thrown when a cursor cannot be loaded or fails validation.
-/// All external-facing cursor errors (not found, expired, fingerprint mismatch,
-/// caller binding mismatch) are surfaced as this type. The <see cref="Reason"/>
+/// All external-facing cursor errors (not found, fingerprint mismatch,
+/// unsupported version) are surfaced as this type. The <see cref="Reason"/>
 /// property provides the internal diagnostic reason.
 /// </summary>
 public sealed class InvalidCursorException : Exception

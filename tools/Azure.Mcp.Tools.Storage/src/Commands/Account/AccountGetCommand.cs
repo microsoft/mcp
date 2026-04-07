@@ -2,23 +2,41 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Pagination;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Services.Caching.Pagination;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
 {
     private const string CommandTitle = "Get Storage Account Details";
-    private readonly ILogger<AccountGetCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
+    private const string OperationName = "storage.account.get";
+    private readonly ILogger<AccountGetCommand> _logger;
+    private readonly IStorageService _storageService;
+    private readonly IPaginationService? _paginationService;
+
+    public AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService)
+        : this(logger, storageService, null)
+    {
+    }
+
+    public AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService, IPaginationService? paginationService)
+    {
+        _logger = logger;
+        _storageService = storageService;
+        _paginationService = paginationService;
+    }
 
     public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
 
@@ -45,12 +63,14 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
     {
         base.RegisterOptions(command);
         command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
+        command.Options.Add(OptionDefinitions.Pagination.Cursor.AsOptional());
     }
 
     protected override AccountGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
+        options.Cursor = parseResult.GetValueOrDefault<string>(OptionDefinitions.Pagination.Cursor.Name);
         return options;
     }
 
@@ -65,7 +85,12 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
 
         try
         {
-            // Call service operation with required parameters
+            if (_paginationService is not null && String.IsNullOrEmpty(options.Account))
+            {
+                return await ExecutePagedAsync(context, options, cancellationToken);
+            }
+
+            // Original path — call GetAccountDetails as before
             var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
@@ -73,8 +98,9 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
                 options.RetryPolicy,
                 cancellationToken);
 
-            // Set results
-            context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new AccountGetCommandResult(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false),
+                StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -93,6 +119,47 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
         return context.Response;
     }
 
-    // Strongly-typed result record
-    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated);
+    private async Task<CommandResponse> ExecutePagedAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
+    {
+        var fingerprintParams = new Dictionary<string, string?>
+        {
+            ["operation"] = OperationName,
+            ["subscription"] = options.Subscription,
+        };
+        var fingerprint = _paginationService!.ComputeRequestFingerprint(fingerprintParams);
+
+        var adapter = new KqlPaginationAdapter<StorageAccountInfo>(
+            skipToken => _storageService.GetAccountDetailsPaged(
+                options.Subscription!, options.Tenant, options.RetryPolicy, skipToken, cancellationToken));
+
+        PageResult<StorageAccountInfo>? pagedResult = null;
+        if (String.IsNullOrEmpty(options.Cursor))
+        {
+            pagedResult = await adapter.FetchFirstPageAsync(cancellationToken);
+        }
+        else
+        {
+            var cursorRecord = await _paginationService.LoadAndValidateCursorAsync(
+                options.Cursor!, fingerprint, cancellationToken);
+            pagedResult = await adapter.FetchNextPageAsync(cursorRecord.NativeState, cancellationToken);
+        }
+
+        string? nextCursor = null;
+        if (pagedResult.NativeState is not null)
+        {
+            nextCursor = await _paginationService.SaveCursorAsync(
+                KqlPaginationAdapter<StorageAccountInfo>.ProviderName, OperationName,
+                fingerprint, pagedResult.NativeState,
+                cancellationToken: cancellationToken);
+        }
+
+        context.Response.Results = ResponseResult.Create(
+            new AccountGetCommandResult(pagedResult.Items, false, nextCursor),
+            StorageJsonContext.Default.AccountGetCommandResult);
+
+        return context.Response;
+    }
+
+    // Strongly-typed result record — NextCursor is additive and null by default
+    internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated, string? NextCursor = null);
 }

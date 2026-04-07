@@ -12,14 +12,8 @@ public enum InvalidCursorReason
     /// <summary>The cursor ID was not found in the registry (may have expired from the cache).</summary>
     NotFound,
 
-    /// <summary>The cursor record exists but its TTL has expired.</summary>
-    Expired,
-
     /// <summary>The request fingerprint does not match the stored fingerprint.</summary>
     FingerprintMismatch,
-
-    /// <summary>The caller binding does not match the stored binding.</summary>
-    CallerBindingMismatch,
 
     /// <summary>The cursor record version is not supported.</summary>
     UnsupportedVersion,

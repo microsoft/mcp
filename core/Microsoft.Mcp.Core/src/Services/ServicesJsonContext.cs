@@ -10,7 +10,6 @@ namespace Microsoft.Mcp.Core.Services;
 [JsonSerializable(typeof(ExternalProcessService.ParseError))]
 [JsonSerializable(typeof(ExternalProcessService.ParseOutput))]
 [JsonSerializable(typeof(CursorRecord))]
-[JsonSerializable(typeof(CallerBinding))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class ServicesJsonContext : JsonSerializerContext
 {

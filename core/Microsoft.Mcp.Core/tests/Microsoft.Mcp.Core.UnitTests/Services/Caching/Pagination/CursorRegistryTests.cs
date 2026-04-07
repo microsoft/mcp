@@ -23,7 +23,6 @@ public class CursorRegistryTests : IDisposable
         Provider = "arm",
         Operation = "resourcegroup.list",
         RequestFingerprint = "sha256:abc123",
-        CallerBinding = new CallerBinding { Mode = "hostIdentity" },
         NativeState = "https://management.azure.com/next",
         CreatedAtUtc = DateTimeOffset.UtcNow,
         ExpiresAtUtc = expiresAt ?? DateTimeOffset.UtcNow.AddHours(1),

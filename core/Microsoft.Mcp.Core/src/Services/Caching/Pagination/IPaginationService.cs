@@ -23,21 +23,11 @@ public interface IPaginationService
     string ComputeRequestFingerprint(IReadOnlyDictionary<string, string?> parameters);
 
     /// <summary>
-    /// Resolves the caller binding for the current request context.
-    /// In stdio mode this returns a host-identity binding.
-    /// In HTTP OBO mode this extracts tenant and principal from the authenticated user.
-    /// </summary>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
-    /// <returns>The resolved <see cref="CallerBinding"/>.</returns>
-    ValueTask<CallerBinding> ResolveCallerBindingAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Creates a new cursor record and stores it in the registry.
     /// </summary>
     /// <param name="provider">The provider adapter family (e.g., "arm", "cosmos", "kql").</param>
     /// <param name="operation">The logical MCP tool or operation name (e.g., "resourcegroup.list").</param>
     /// <param name="requestFingerprint">The fingerprint of the semantic request shape.</param>
-    /// <param name="callerBinding">The caller's security context binding.</param>
     /// <param name="nativeState">Provider-native continuation state.</param>
     /// <param name="resourceMetadata">Optional metadata about the resource scope.</param>
     /// <param name="ttl">Optional cursor TTL. Defaults to 1 hour if not specified.</param>
@@ -47,7 +37,6 @@ public interface IPaginationService
         string provider,
         string operation,
         string requestFingerprint,
-        CallerBinding callerBinding,
         string nativeState,
         IReadOnlyDictionary<string, string>? resourceMetadata = null,
         TimeSpan? ttl = null,
@@ -55,7 +44,7 @@ public interface IPaginationService
 
     /// <summary>
     /// Loads a cursor record from the registry and validates the request fingerprint
-    /// and caller binding against the current request context.
+    /// against the current request context.
     /// </summary>
     /// <param name="cursorId">The opaque cursor ID to load.</param>
     /// <param name="requestFingerprint">The fingerprint of the current request for validation.</param>

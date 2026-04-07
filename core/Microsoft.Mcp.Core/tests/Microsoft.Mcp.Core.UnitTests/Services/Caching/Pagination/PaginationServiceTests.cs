@@ -4,7 +4,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.Caching.Pagination;
-using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.UnitTests.Services.Caching.Pagination;
@@ -13,19 +12,13 @@ public class PaginationServiceTests : IDisposable
 {
     private readonly MemoryCache _memoryCache = new(new MemoryCacheOptions());
     private readonly CursorRegistry _cursorRegistry;
-    private readonly ICallerIdentityResolver _callerIdentityResolver = Substitute.For<ICallerIdentityResolver>();
     private readonly PaginationService _service;
-
-    private static readonly CallerBinding s_hostBinding = new() { Mode = "hostIdentity" };
 
     public PaginationServiceTests()
     {
         _cursorRegistry = new CursorRegistry(_memoryCache);
-        _callerIdentityResolver.ResolveAsync(Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallerBinding>(s_hostBinding));
         _service = new PaginationService(
             _cursorRegistry,
-            _callerIdentityResolver,
             NullLogger<PaginationService>.Instance);
     }
 
@@ -109,19 +102,6 @@ public class PaginationServiceTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => _service.ComputeRequestFingerprint(null!));
     }
 
-    // --- ResolveCallerBindingAsync ---
-
-    [Fact]
-    public async Task ResolveCallerBindingAsync_DelegatesToResolver()
-    {
-        var ct = TestContext.Current.CancellationToken;
-
-        var result = await _service.ResolveCallerBindingAsync(ct);
-
-        Assert.Equal("hostIdentity", result.Mode);
-        await _callerIdentityResolver.Received(1).ResolveAsync(ct);
-    }
-
     // --- SaveCursorAsync ---
 
     [Fact]
@@ -130,7 +110,7 @@ public class PaginationServiceTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "resourcegroup.list", "sha256:abc", s_hostBinding,
+            "arm", "resourcegroup.list", "sha256:abc",
             "https://next", cancellationToken: ct);
 
         Assert.StartsWith(CursorRegistry.CursorPrefix, cursorId);
@@ -142,7 +122,7 @@ public class PaginationServiceTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "resourcegroup.list", "sha256:abc", s_hostBinding,
+            "arm", "resourcegroup.list", "sha256:abc",
             "https://next", cancellationToken: ct);
 
         var record = await _cursorRegistry.GetAsync(cursorId, ct);
@@ -160,7 +140,7 @@ public class PaginationServiceTests : IDisposable
         var metadata = new Dictionary<string, string> { ["subscription"] = "sub-1" };
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "resourcegroup.list", "sha256:abc", s_hostBinding,
+            "arm", "resourcegroup.list", "sha256:abc",
             "https://next", resourceMetadata: metadata, cancellationToken: ct);
 
         var record = await _cursorRegistry.GetAsync(cursorId, ct);
@@ -176,7 +156,7 @@ public class PaginationServiceTests : IDisposable
         var customTtl = TimeSpan.FromMinutes(5);
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "op", "sha256:abc", s_hostBinding,
+            "arm", "op", "sha256:abc",
             "state", ttl: customTtl, cancellationToken: ct);
 
         var record = await _cursorRegistry.GetAsync(cursorId, ct);
@@ -202,16 +182,7 @@ public class PaginationServiceTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
 
         await Assert.ThrowsAnyAsync<ArgumentException>(() =>
-            _service.SaveCursorAsync(provider!, operation!, fingerprint!, s_hostBinding, nativeState!, cancellationToken: ct).AsTask());
-    }
-
-    [Fact]
-    public async Task SaveCursorAsync_ThrowsForNullCallerBinding()
-    {
-        var ct = TestContext.Current.CancellationToken;
-
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            _service.SaveCursorAsync("arm", "op", "fp", null!, "state", cancellationToken: ct).AsTask());
+            _service.SaveCursorAsync(provider!, operation!, fingerprint!, nativeState!, cancellationToken: ct).AsTask());
     }
 
     // --- LoadAndValidateCursorAsync ---
@@ -223,7 +194,7 @@ public class PaginationServiceTests : IDisposable
         var fingerprint = "sha256:test";
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "resourcegroup.list", fingerprint, s_hostBinding,
+            "arm", "resourcegroup.list", fingerprint,
             "https://next", cancellationToken: ct);
 
         var record = await _service.LoadAndValidateCursorAsync(cursorId, fingerprint, ct);
@@ -250,40 +221,13 @@ public class PaginationServiceTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
 
         var cursorId = await _service.SaveCursorAsync(
-            "arm", "op", "sha256:original", s_hostBinding,
+            "arm", "op", "sha256:original",
             "state", cancellationToken: ct);
 
         var ex = await Assert.ThrowsAsync<InvalidCursorException>(() =>
             _service.LoadAndValidateCursorAsync(cursorId, "sha256:different", ct).AsTask());
 
         Assert.Equal(InvalidCursorReason.FingerprintMismatch, ex.Reason);
-    }
-
-    [Fact]
-    public async Task LoadAndValidateCursorAsync_ThrowsCallerBindingMismatch()
-    {
-        var ct = TestContext.Current.CancellationToken;
-        var fingerprint = "sha256:test";
-
-        // Save with host identity binding
-        var cursorId = await _service.SaveCursorAsync(
-            "arm", "op", fingerprint, s_hostBinding,
-            "state", cancellationToken: ct);
-
-        // Now the resolver returns a different binding
-        var oboBinding = new CallerBinding
-        {
-            Mode = "obo",
-            TenantId = "tenant-1",
-            PrincipalIdHash = "sha256:user1",
-        };
-        _callerIdentityResolver.ResolveAsync(Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<CallerBinding>(oboBinding));
-
-        var ex = await Assert.ThrowsAsync<InvalidCursorException>(() =>
-            _service.LoadAndValidateCursorAsync(cursorId, fingerprint, ct).AsTask());
-
-        Assert.Equal(InvalidCursorReason.CallerBindingMismatch, ex.Reason);
     }
 
     [Fact]
@@ -302,53 +246,6 @@ public class PaginationServiceTests : IDisposable
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.LoadAndValidateCursorAsync("cur_abc", "", ct).AsTask());
-    }
-
-    // --- CallerBindingsMatch ---
-
-    [Fact]
-    public void CallerBindingsMatch_ReturnsTrueForIdenticalBindings()
-    {
-        var a = new CallerBinding { Mode = "obo", TenantId = "t1", PrincipalIdHash = "sha256:p1" };
-        var b = new CallerBinding { Mode = "obo", TenantId = "t1", PrincipalIdHash = "sha256:p1" };
-
-        Assert.True(PaginationService.CallerBindingsMatch(a, b));
-    }
-
-    [Fact]
-    public void CallerBindingsMatch_ReturnsTrueForHostIdentityBindings()
-    {
-        var a = new CallerBinding { Mode = "hostIdentity" };
-        var b = new CallerBinding { Mode = "hostIdentity" };
-
-        Assert.True(PaginationService.CallerBindingsMatch(a, b));
-    }
-
-    [Fact]
-    public void CallerBindingsMatch_ReturnsFalseForDifferentModes()
-    {
-        var a = new CallerBinding { Mode = "hostIdentity" };
-        var b = new CallerBinding { Mode = "obo", TenantId = "t1" };
-
-        Assert.False(PaginationService.CallerBindingsMatch(a, b));
-    }
-
-    [Fact]
-    public void CallerBindingsMatch_ReturnsFalseForDifferentTenants()
-    {
-        var a = new CallerBinding { Mode = "obo", TenantId = "t1", PrincipalIdHash = "sha256:p1" };
-        var b = new CallerBinding { Mode = "obo", TenantId = "t2", PrincipalIdHash = "sha256:p1" };
-
-        Assert.False(PaginationService.CallerBindingsMatch(a, b));
-    }
-
-    [Fact]
-    public void CallerBindingsMatch_ReturnsFalseForDifferentPrincipals()
-    {
-        var a = new CallerBinding { Mode = "obo", TenantId = "t1", PrincipalIdHash = "sha256:p1" };
-        var b = new CallerBinding { Mode = "obo", TenantId = "t1", PrincipalIdHash = "sha256:p2" };
-
-        Assert.False(PaginationService.CallerBindingsMatch(a, b));
     }
 
     public void Dispose()

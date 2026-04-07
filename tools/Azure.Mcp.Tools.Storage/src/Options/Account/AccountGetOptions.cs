@@ -3,4 +3,7 @@
 
 namespace Azure.Mcp.Tools.Storage.Options.Account;
 
-public class AccountGetOptions : BaseStorageOptions;
+public class AccountGetOptions : BaseStorageOptions
+{
+    public string? Cursor { get; set; }
+}

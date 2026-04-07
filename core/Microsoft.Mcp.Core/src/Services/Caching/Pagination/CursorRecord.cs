@@ -43,12 +43,6 @@ public sealed class CursorRecord
     public required string RequestFingerprint { get; init; }
 
     /// <summary>
-    /// Caller security context binding. Used to prevent cross-user cursor reuse.
-    /// </summary>
-    [JsonPropertyName("callerBinding")]
-    public required CallerBinding CallerBinding { get; init; }
-
-    /// <summary>
     /// Provider-native continuation state (e.g., ARM nextLink, Cosmos continuation token).
     /// Opaque to everything outside the owning provider adapter.
     /// </summary>
