@@ -50,6 +50,7 @@ extends:
       codeql:
         compiled:
           enabled: true
+          QuerySuite: sdl-required,active-ssirp
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/eng/CredScanSuppression.json
       psscriptanalyzer:
