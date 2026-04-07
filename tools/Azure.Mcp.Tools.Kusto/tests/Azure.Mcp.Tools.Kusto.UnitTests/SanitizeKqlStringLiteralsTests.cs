@@ -73,4 +73,123 @@ public class SanitizeKqlStringLiteralsTests
 
         Assert.Equal("MyTable | where Status in ('active','pending','done')", result);
     }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_VerbatimSingleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Path == @'C:\\Program Files\\App'");
+
+        Assert.Equal("MyTable | where Path == @'C:\\Program Files\\App'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_VerbatimDoubleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Path == @\"it's a path\"");
+
+        Assert.Equal("MyTable | where Path == @\"it's a path\"", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_DoubleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Name == \"it's here\"");
+
+        Assert.Equal("MyTable | where Name == \"it's here\"", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_DoubleQuotedStringWithEscapedQuote_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Name == \"say \"\"hello\"\"\"");
+
+        Assert.Equal("MyTable | where Name == \"say \"\"hello\"\"\"", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_ObfuscatedSingleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Secret == h'password123'");
+
+        Assert.Equal("MyTable | where Secret == h'password123'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_ObfuscatedDoubleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Secret == h\"it's secret\"");
+
+        Assert.Equal("MyTable | where Secret == h\"it's secret\"", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_ObfuscatedVerbatimSingleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Secret == h@'C:\\secret\\path'");
+
+        Assert.Equal("MyTable | where Secret == h@'C:\\secret\\path'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_ObfuscatedVerbatimDoubleQuotedString_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Secret == h@\"it's secret\"");
+
+        Assert.Equal("MyTable | where Secret == h@\"it's secret\"", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_LineCommentWithQuote_PreservesComment()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Age > 21 // find 'active' users\n| where Name == 'Alice'");
+
+        Assert.Equal("MyTable | where Age > 21 // find 'active' users\n| where Name == 'Alice'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_MixedStringTypes_HandledCorrectly()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Path == @\"it's here\" and Name == 'Alice' and Secret == h'password'");
+
+        Assert.Equal("MyTable | where Path == @\"it's here\" and Name == 'Alice' and Secret == h'password'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_VerbatimSingleQuotedWithEscapedQuote_PreservedAsIs()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where Name == @'it''s here'");
+
+        Assert.Equal("MyTable | where Name == @'it''s here'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_HFollowedByNonString_NotTreatedAsPrefix()
+    {
+        var result = KustoService.SanitizeKqlStringLiterals(
+            "MyTable | where hostname == 'test'");
+
+        Assert.Equal("MyTable | where hostname == 'test'", result);
+    }
+
+    [Fact]
+    public void SanitizeKqlStringLiterals_VerbatimDoubleQuotedWithSingleQuotesAndBackslashes_PreservedAsIs()
+    {
+        // Real-world KQL: @"..." verbatim strings containing single quotes and backslashes
+        var input = "let T = datatable (a: string ) [ @\"/\\sdf'\\\\\\'\\'\\\\\\'\"];\nT | where a  == @\"/\\sdf'\\\\\\'\\'\\\\\\'\"\n";
+
+        var result = KustoService.SanitizeKqlStringLiterals(input);
+
+        Assert.Equal(input, result);
+    }
 }
