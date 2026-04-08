@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
-public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger) : BaseAzureBackupCommand<VaultCreateOptions>()
+public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultCreateOptions>()
 {
     private const string CommandTitle = "Create Backup Vault";
     private readonly ILogger<VaultCreateCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "1dccdb24-d81c-4bde-9437-577a7bd0cf09";
     public override string Name => "create";
@@ -73,8 +74,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger) : Bas
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.CreateVaultAsync(
+            var result = await _azureBackupService.CreateVaultAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions>()
+public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceSoftDeleteOptions>()
 {
     private const string CommandTitle = "Configure Soft Delete";
     private readonly ILogger<GovernanceSoftDeleteCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "b3f1ea2d-5535-4155-849c-61f2fc49f1d9";
     public override string Name => "soft-delete";
@@ -64,8 +65,7 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.ConfigureSoftDeleteAsync(
+            var result = await _azureBackupService.ConfigureSoftDeleteAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

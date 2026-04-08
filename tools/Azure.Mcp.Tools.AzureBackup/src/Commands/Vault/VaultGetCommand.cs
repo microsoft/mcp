@@ -20,10 +20,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 /// Consolidated vault command: when --vault is supplied returns a single vault's details;
 /// otherwise lists all vaults in the subscription (optionally filtered by --vault-type).
 /// </summary>
-public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : SubscriptionCommand<VaultGetOptions>()
+public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<VaultGetOptions>()
 {
     private const string CommandTitle = "Get Backup Vault";
     private readonly ILogger<VaultGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "4a1084d5-50d9-489f-9e4c-acc594441b1f";
     public override string Name => "get";
@@ -73,8 +74,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-
             if (!string.IsNullOrEmpty(options.Vault))
             {
                 if (string.IsNullOrEmpty(options.ResourceGroup))
@@ -84,7 +83,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
                     return context.Response;
                 }
 
-                var vault = await service.GetVaultAsync(
+                var vault = await _azureBackupService.GetVaultAsync(
                     options.Vault,
                     options.ResourceGroup,
                     options.Subscription!,
@@ -99,7 +98,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger) : Subscript
             }
             else
             {
-                var vaults = await service.ListVaultsAsync(
+                var vaults = await _azureBackupService.ListVaultsAsync(
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,

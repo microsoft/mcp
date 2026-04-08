@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Dr;
 
-public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger) : BaseAzureBackupCommand<DrEnableCrrOptions>()
+public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<DrEnableCrrOptions>()
 {
     private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DrEnableCrrCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "917b66e5-483f-43ac-9620-9403e1689dbe";
     public override string Name => "enablecrr";
@@ -36,8 +37,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger) : Bas
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.ConfigureCrossRegionRestoreAsync(
+            var result = await _azureBackupService.ConfigureCrossRegionRestoreAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

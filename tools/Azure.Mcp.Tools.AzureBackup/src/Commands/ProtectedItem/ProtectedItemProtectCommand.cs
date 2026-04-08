@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
-public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
+public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
 {
     private const string CommandTitle = "Protect Resource";
     private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "7a6fc193-ca3c-4309-97c5-ee1e7fe90e69";
     public override string Name => "protect";
@@ -71,8 +72,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.ProtectItemAsync(
+            var result = await _azureBackupService.ProtectItemAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

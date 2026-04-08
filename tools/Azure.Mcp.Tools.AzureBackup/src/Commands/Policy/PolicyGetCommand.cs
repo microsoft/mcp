@@ -19,10 +19,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 /// Consolidated policy command: when --policy is supplied returns a single policy's details;
 /// otherwise lists all policies in the vault.
 /// </summary>
-public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzureBackupCommand<PolicyGetOptions>()
+public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions>()
 {
     private const string CommandTitle = "Get Backup Policy";
     private readonly ILogger<PolicyGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "5f7ef3ae-72f3-4fe8-bd1e-ea56e4db86df";
     public override string Name => "get";
@@ -67,11 +68,9 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzu
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-
             if (!string.IsNullOrEmpty(options.Policy))
             {
-                var policy = await service.GetPolicyAsync(
+                var policy = await _azureBackupService.GetPolicyAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -87,7 +86,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger) : BaseAzu
             }
             else
             {
-                var policies = await service.ListPoliciesAsync(
+                var policies = await _azureBackupService.ListPoliciesAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,

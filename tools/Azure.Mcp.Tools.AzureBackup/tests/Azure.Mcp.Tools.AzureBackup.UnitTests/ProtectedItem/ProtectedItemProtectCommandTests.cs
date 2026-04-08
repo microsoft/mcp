@@ -34,7 +34,7 @@ public class ProtectedItemProtectCommandTests
         var collection = new ServiceCollection().AddSingleton(_backupService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _backupService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

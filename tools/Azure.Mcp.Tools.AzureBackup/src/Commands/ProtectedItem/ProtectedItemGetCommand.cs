@@ -19,10 +19,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 /// Consolidated protected item command: when --protected-item is supplied returns a single
 /// item's details; otherwise lists all protected items in the vault.
 /// </summary>
-public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger) : BaseAzureBackupCommand<ProtectedItemGetOptions>()
+public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemGetOptions>()
 {
     private const string CommandTitle = "Get Protected Item";
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "bc985e4f-8945-447a-9aba-ef13df309001";
     public override string Name => "get";
@@ -71,11 +72,9 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-
             if (!string.IsNullOrEmpty(options.ProtectedItem))
             {
-                var item = await service.GetProtectedItemAsync(
+                var item = await _azureBackupService.GetProtectedItemAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -92,7 +91,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
             }
             else
             {
-                var items = await service.ListProtectedItemsAsync(
+                var items = await _azureBackupService.ListProtectedItemsAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,

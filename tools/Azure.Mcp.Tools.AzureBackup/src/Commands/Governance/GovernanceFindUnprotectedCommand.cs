@@ -17,10 +17,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
 {
     private const string CommandTitle = "Find Unprotected Resources";
     private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "73b050ca-2e20-448c-a76c-08e8cd5bbe25";
     public override string Name => "find-unprotected";
@@ -68,8 +69,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var resources = await service.FindUnprotectedResourcesAsync(
+            var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
                 options.Subscription!,
                 options.ResourceTypeFilter,
                 options.ResourceGroupFilter,

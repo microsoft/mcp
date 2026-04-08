@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
-public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger) : BaseAzureBackupCommand<VaultUpdateOptions>()
+public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultUpdateOptions>()
 {
     private const string CommandTitle = "Update Backup Vault";
     private readonly ILogger<VaultUpdateCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "da7f163e-471c-4d7d-ae00-d41f5f4b939e";
     public override string Name => "update";
@@ -76,8 +77,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger) : Bas
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.UpdateVaultAsync(
+            var result = await _azureBackupService.UpdateVaultAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

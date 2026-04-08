@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
-public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger) : BaseAzureBackupCommand<PolicyCreateOptions>()
+public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyCreateOptions>()
 {
     private const string CommandTitle = "Create Backup Policy";
     private readonly ILogger<PolicyCreateCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "bc5e600b-c414-4bce-8b7d-a6021cfd3d23";
     public override string Name => "create";
@@ -64,8 +65,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger) : B
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.CreatePolicyAsync(
+            var result = await _azureBackupService.CreatePolicyAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

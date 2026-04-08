@@ -19,10 +19,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 /// Consolidated recovery point command: when --recovery-point is supplied returns a single
 /// recovery point's details; otherwise lists all recovery points for the protected item.
 /// </summary>
-public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger) : BaseProtectedItemCommand<RecoveryPointGetOptions>()
+public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> logger, IAzureBackupService azureBackupService) : BaseProtectedItemCommand<RecoveryPointGetOptions>()
 {
     private const string CommandTitle = "Get Recovery Point";
     private readonly ILogger<RecoveryPointGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "e930bbb6-b495-454b-bae4-46b9da14eb1c";
     public override string Name => "get";
@@ -67,11 +68,9 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-
             if (!string.IsNullOrEmpty(options.RecoveryPoint))
             {
-                var rp = await service.GetRecoveryPointAsync(
+                var rp = await _azureBackupService.GetRecoveryPointAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -89,7 +88,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
             }
             else
             {
-                var points = await service.ListRecoveryPointsAsync(
+                var points = await _azureBackupService.ListRecoveryPointsAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,

@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger) : BaseAzureBackupCommand<GovernanceImmutabilityOptions>()
+public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceImmutabilityOptions>()
 {
     private const string CommandTitle = "Configure Vault Immutability";
     private readonly ILogger<GovernanceImmutabilityCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "a0ac7596-9a80-4b53-b459-06f27598a2e2";
     public override string Name => "immutability";
@@ -62,8 +63,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.ConfigureImmutabilityAsync(
+            var result = await _azureBackupService.ConfigureImmutabilityAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,

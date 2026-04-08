@@ -16,10 +16,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 
-public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger) : SubscriptionCommand<BackupStatusOptions>()
+public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions>()
 {
     private const string CommandTitle = "Check Backup Status";
     private readonly ILogger<BackupStatusCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "f5612c55-054d-4fd8-964c-952e8e6b87f8";
     public override string Name => "status";
@@ -53,8 +54,7 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger) : S
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.GetBackupStatusAsync(
+            var result = await _azureBackupService.GetBackupStatusAsync(
                 options.DatasourceId!,
                 options.Subscription!,
                 options.Location!,

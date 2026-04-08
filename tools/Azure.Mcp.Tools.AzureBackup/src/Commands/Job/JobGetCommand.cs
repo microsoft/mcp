@@ -19,10 +19,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
 /// Consolidated job command: when --job is supplied returns a single job's details;
 /// otherwise lists all jobs in the vault.
 /// </summary>
-public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBackupCommand<JobGetOptions>()
+public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<JobGetOptions>()
 {
     private const string CommandTitle = "Get Backup Job";
     private readonly ILogger<JobGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "f1291650-8ff2-413c-8001-e4b33f157a3b";
     public override string Name => "get";
@@ -67,11 +68,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBack
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-
             if (!string.IsNullOrEmpty(options.Job))
             {
-                var job = await service.GetJobAsync(
+                var job = await _azureBackupService.GetJobAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -87,7 +86,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger) : BaseAzureBack
             }
             else
             {
-                var jobs = await service.ListJobsAsync(
+                var jobs = await _azureBackupService.ListJobsAsync(
                     options.Vault!,
                     options.ResourceGroup!,
                     options.Subscription!,

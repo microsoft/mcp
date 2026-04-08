@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 
-public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger) : BaseAzureBackupCommand<ProtectableItemListOptions>()
+public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectableItemListOptions>()
 {
     private const string CommandTitle = "List Protectable Items";
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "9f6b0a1e-1c2d-4e5f-8a9b-7c6d5e4f3a21";
     public override string Name => "list";
@@ -64,8 +65,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
 
         try
         {
-            var service = context.GetService<IAzureBackupService>();
-            var result = await service.ListProtectableItemsAsync(
+            var result = await _azureBackupService.ListProtectableItemsAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
