@@ -317,7 +317,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         var subResource = armClient.GetSubscriptionResource(subId);
 
         var targetTypes = !string.IsNullOrEmpty(resourceTypeFilter)
-            ? [resourceTypeFilter]
+            ? resourceTypeFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             : s_protectableResourceTypes;
 
         var unprotected = new List<UnprotectedResourceInfo>();

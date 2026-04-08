@@ -229,7 +229,7 @@ public static class DppDatasourceRegistry
             DppInstanceNamingMode.ParentChild =>
                 $"{GetParentResourceId(datasourceResourceId).Name}-{datasourceResourceId.Name}-{Guid.NewGuid()}",
             _ =>
-                $"{datasourceResourceId.Name}-{datasourceResourceId.Name}-{Guid.NewGuid().ToString("N")[..12]}",
+                $"{datasourceResourceId.ResourceGroupName}-{datasourceResourceId.Name}-{Guid.NewGuid().ToString("N")[..12]}",
         };
     }
 }

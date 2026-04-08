@@ -205,7 +205,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> TagFilter = new($"--{TagFilterName}")
     {
-        Description = "Tag-based filter as JSON key-value object.",
+        Description = "Tag-based filter in key=value format (e.g., 'environment=production').",
         Required = false
     };
 }

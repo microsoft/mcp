@@ -167,8 +167,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
                 await containerResource.InquireAsync(filter: null, cancellationToken);
                 await Task.Delay(5000, cancellationToken);
             }
-            catch (RequestFailedException)
+            catch (RequestFailedException ex) when (ex.Status is 404 or 409)
             {
+                // Inquiry may fail if container isn't registered yet (404) or is already being processed (409) - expected during protection setup
             }
 
             var fsProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
