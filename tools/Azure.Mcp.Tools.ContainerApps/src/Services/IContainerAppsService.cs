@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ContainerApps.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ContainerApps.Services;
 

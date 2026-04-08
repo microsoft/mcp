@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -77,7 +77,7 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking file share name availability. Options: {@Options}", options);
+            _logger.LogError(ex, "Error checking file share name availability. FileShareName: {FileShareName}, Location: {Location}.", options.FileShareName, options.Location);
             HandleException(context, ex);
         }
 

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Options.Sms;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
@@ -94,9 +94,9 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error sending SMS. From: {From}, To: {To}, Message Length: {MessageLength}, Options: {@Options}",
+                "Error sending SMS. From: {From}, To: {To}, Message Length: {MessageLength}.",
                 options.From, options.To != null ? string.Join(",", options.To) : "null",
-                options.Message?.Length ?? 0, options);
+                options.Message?.Length ?? 0);
             HandleException(context, ex);
         }
 

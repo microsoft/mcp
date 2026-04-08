@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Core.Services.Azure.Models;
+namespace Microsoft.Mcp.Core.Services.Azure.Models;
 
 /// <summary> User assigned identity properties. </summary>
 public sealed class UserAssignedIdentity

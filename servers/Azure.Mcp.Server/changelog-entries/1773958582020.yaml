@@ -1,4 +1,0 @@
-pr: 2115
-changes:
-  - section: "Features Added"
-    description: "Azure Monitor Instrumentation in the tool now supports guided onboarding for .NET, Node.js, and Python with framework-aware recommendations and code/package actions. Automated guidance currently includes .NET (ASP.NET Core, ASP.NET classic including MVC/WebForms, Worker Service, plus console/library migration paths), Node.js (Express, Fastify, NestJS, Next.js, LangChain.js, Postgres, MongoDB, Redis, MySQL, Winston, Bunyan, and console apps), and Python (Django, Flask, FastAPI, Falcon, Starlette, GenAI, and generic console/script apps). .NET also supports brownfield migration guidance for Application Insights SDK to 3.x and enhancement flows for projects already on Application Insights 3.x or Azure Monitor Distro."

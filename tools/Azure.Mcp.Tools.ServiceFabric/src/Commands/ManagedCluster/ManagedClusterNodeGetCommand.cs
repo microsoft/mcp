@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -99,8 +97,8 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Node: {Node}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeName, options);
+                "Error getting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, Node: {Node}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeName);
             HandleException(context, ex);
         }
 

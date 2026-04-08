@@ -3,14 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -99,8 +98,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Account, options.ResourceGroup, options.Location, options);
+                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}.",
+                options.Account, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 

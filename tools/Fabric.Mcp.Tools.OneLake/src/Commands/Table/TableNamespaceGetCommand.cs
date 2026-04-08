@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -99,7 +97,7 @@ public sealed class TableNamespaceGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving table namespace. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving table namespace. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Namespace: {Namespace}.", options.WorkspaceId, options.ItemId, options.Namespace);
             HandleException(context, ex);
         }
 

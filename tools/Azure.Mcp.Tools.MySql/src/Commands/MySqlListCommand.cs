@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -106,7 +105,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, BindOptions(parseResult));
+            _logger.LogError(ex, "Error in {Operation}.", Name);
             HandleException(context, ex);
         }
 

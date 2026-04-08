@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -110,8 +109,8 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.FileSystemName, options);
+            _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}.",
+                options.FileSystemName);
             HandleException(context, ex);
         }
 

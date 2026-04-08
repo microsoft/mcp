@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
@@ -10,6 +9,7 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
@@ -135,8 +135,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error retrieving VM(s). VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.VmName, options.ResourceGroup, options.Subscription, options);
+                "Error retrieving VM(s). VmName: {VmName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.VmName, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

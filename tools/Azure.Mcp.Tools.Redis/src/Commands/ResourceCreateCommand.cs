@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -53,6 +52,7 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
         command.Options.Add(RedisOptionDefinitions.Sku);
         command.Options.Add(RedisOptionDefinitions.Location);
         command.Options.Add(RedisOptionDefinitions.AccessKeyAuthenticationEnabled);
+        command.Options.Add(RedisOptionDefinitions.PublicNetworkAccess);
         command.Options.Add(RedisOptionDefinitions.Modules);
     }
 
@@ -64,6 +64,7 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
         options.Sku = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Sku.Name);
         options.Location = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Location.Name);
         options.AccessKeyAuthenticationEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.AccessKeyAuthenticationEnabled.Name);
+        options.PublicNetworkAccessEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.PublicNetworkAccess.Name);
         options.Modules = parseResult.GetValueOrDefault<string[]>(RedisOptionDefinitions.Modules.Name);
 
         return options;
@@ -87,6 +88,7 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
                 options.Location!,
                 options.Sku,
                 options.AccessKeyAuthenticationEnabled,
+                options.PublicNetworkAccessEnabled,
                 options.Modules,
                 options.Tenant,
                 options.RetryPolicy,

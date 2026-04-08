@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,7 +20,8 @@ public sealed class SingleProxyToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _discoveryStrategy = discoveryStrategy ?? throw new ArgumentNullException(nameof(discoveryStrategy));
     private string? _cachedRootToolsJson;
-    private readonly Dictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _cachedToolListsJson = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IList<McpClientTool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
     private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
     private const string ToolCallProxySchema = """
@@ -211,22 +213,35 @@ public sealed class SingleProxyToolLoader(
         }
 
         var listTools = await GetToolListAsync(request, tool, cancellationToken);
-        var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
+        var toolsJson = JsonSerializer.Serialize(listTools.Select(t => t.ProtocolTool), ServerJsonContext.Default.IEnumerableTool);
         _cachedToolListsJson[tool] = toolsJson;
 
         return toolsJson;
     }
 
-    internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<IList<McpClientTool>> GetAllToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
+        {
+            return cachedList;
+        }
+
         var clientOptions = CreateClientOptions(request.Server);
         var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-        listTools = listTools.Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
+        var all = listTools.ToArray();
+
+        _cachedAllToolLists[tool] = all;
+        return all;
+    }
+
+    internal async Task<IList<McpClientTool>> GetToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
+        return allTools
+            .Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
             .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.ProtocolTool))
             .ToArray();
-
-        return listTools;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)
@@ -331,6 +346,46 @@ public sealed class SingleProxyToolLoader(
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
             .SetTag(TagName.ToolArea, tool)
             .SetTag(TagName.ToolName, command);
+
+        // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
+        if (_options.Value.ReadOnly || _options.Value.IsHttpMode)
+        {
+            var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
+            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.ProtocolTool.Name, command, StringComparison.OrdinalIgnoreCase));
+
+            if (resolvedTool != null)
+            {
+                if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                            }
+                        ],
+                        IsError = true,
+                    };
+                }
+
+                if (_options.Value.IsHttpMode && HasLocalRequiredHint(resolvedTool.ProtocolTool))
+                {
+                    return new CallToolResult
+                    {
+                        Content =
+                        [
+                            new TextContentBlock
+                            {
+                                Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                            }
+                        ],
+                        IsError = true,
+                    };
+                }
+            }
+        }
 
         try
         {
@@ -515,6 +570,7 @@ public sealed class SingleProxyToolLoader(
     protected override async ValueTask DisposeAsyncCore()
     {
         // Clear caching collections
+        _cachedAllToolLists.Clear();
         _cachedToolListsJson.Clear();
         _cachedRootToolsJson = null;
 
