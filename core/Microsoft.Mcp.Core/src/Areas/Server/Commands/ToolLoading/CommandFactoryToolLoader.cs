@@ -177,7 +177,8 @@ public sealed class CommandFactoryToolLoader(
             };
         }
 
-        var commandContext = new CommandContext(_serviceProvider, activity);
+        var supportsApps = request.Server?.ClientCapabilities?.Extensions?.ContainsKey("io.modelcontextprotocol/ui") == true;
+        var commandContext = new CommandContext(_serviceProvider, activity, supportsApps);
 
         // Check if this tool requires elicitation for sensitive or destructive operations
         var metadata = command.Metadata;
@@ -280,6 +281,12 @@ public sealed class CommandFactoryToolLoader(
         {
             meta ??= new();
             meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        // Add SupportsPagination metadata to tool.Meta if the property exists
+        if (metadata.SupportsPagination)
+        {
+            meta ??= new();
+            meta["PaginationHint"] = metadata.SupportsPagination;
         }
         tool.Meta = meta;
 

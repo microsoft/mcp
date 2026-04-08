@@ -19,6 +19,7 @@ public sealed class ToolMetadata
     private bool _readOnly = false;
     private bool _secret = false;
     private bool _localRequired = false;
+    private bool _supportsPagination = false;
 
     private MetadataDefinition? _destructiveProperty;
     private MetadataDefinition? _idempotentProperty;
@@ -26,6 +27,8 @@ public sealed class ToolMetadata
     private MetadataDefinition? _readOnlyProperty;
     private MetadataDefinition? _secretProperty;
     private MetadataDefinition? _localRequiredProperty;
+    private MetadataDefinition? _supportsPaginationProperty;
+
     /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.
     /// </summary>
@@ -212,6 +215,37 @@ public sealed class ToolMetadata
     };
 
     /// <summary>
+    /// Gets or sets whether this tool supports paginated results.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If <see langword="true"/>, the tool accepts an optional <c>cursor</c> parameter
+    /// and returns a <c>nextCursor</c> in its response for fetching subsequent pages.
+    /// </para>
+    /// <para>
+    /// The default is <see langword="false"/>.
+    /// </para>
+    /// </remarks>
+    [JsonIgnore]
+    public bool SupportsPagination
+    {
+        get => _supportsPagination;
+        init => _supportsPagination = value;
+    }
+
+    /// <summary>
+    /// Gets the supportsPagination metadata property with value and description for serialization.
+    /// </summary>
+    [JsonPropertyName("supportsPagination")]
+    public MetadataDefinition SupportsPaginationProperty => _supportsPaginationProperty ??= new MetadataDefinition
+    {
+        Value = _supportsPagination,
+        Description = _supportsPagination
+            ? "This tool returns paginated results. Pass the nextCursor value from a previous response as cursor to fetch additional pages. Confirm with the user before fetching more pages."
+            : "This tool does not support pagination."
+    };
+
+    /// <summary>
     /// Creates a new instance of <see cref="ToolMetadata"/> with default values.
     /// All properties default to their MCP specification defaults.
     /// </summary>
@@ -226,7 +260,8 @@ public sealed class ToolMetadata
         MetadataDefinition openWorld,
         MetadataDefinition readOnly,
         MetadataDefinition secret,
-        MetadataDefinition localRequired)
+        MetadataDefinition localRequired,
+        MetadataDefinition supportsPagination)
     {
         _destructive = destructive?.Value ?? true;
         _idempotent = idempotent?.Value ?? false;
@@ -234,6 +269,6 @@ public sealed class ToolMetadata
         _readOnly = readOnly?.Value ?? false;
         _secret = secret?.Value ?? false;
         _localRequired = localRequired?.Value ?? false;
+        _supportsPagination = supportsPagination?.Value ?? false;
     }
-
 }

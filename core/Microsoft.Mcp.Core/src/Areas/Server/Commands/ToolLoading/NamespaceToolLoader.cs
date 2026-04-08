@@ -414,7 +414,8 @@ public sealed class NamespaceToolLoader(
             }
 
             var currentActivity = Activity.Current;
-            var commandContext = new CommandContext(_serviceProvider, currentActivity);
+            var supportsApps = request.Server?.ClientCapabilities?.Extensions?.ContainsKey("io.modelcontextprotocol/ui") == true;
+            var commandContext = new CommandContext(_serviceProvider, currentActivity, supportsApps);
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;

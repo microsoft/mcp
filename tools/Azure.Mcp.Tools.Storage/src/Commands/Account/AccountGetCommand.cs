@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Pagination;
@@ -8,7 +9,6 @@ using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -56,7 +56,8 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
-        Secret = false
+        Secret = false,
+        SupportsPagination = _paginationService is not null
     };
 
     protected override void RegisterOptions(Command command)
@@ -87,7 +88,12 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         {
             if (_paginationService is not null && String.IsNullOrEmpty(options.Account))
             {
-                return await ExecutePagedAsync(context, options, cancellationToken);
+                if (context.SupportsApps)
+                {
+                    return await GetResourceUriAsync(context, options, cancellationToken);
+                }
+
+                return await GetPagedResultsAsync(context, options, cancellationToken);
             }
 
             // Original path — call GetAccountDetails as before
@@ -119,14 +125,43 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         return context.Response;
     }
 
-    private async Task<CommandResponse> ExecutePagedAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
+    private async Task<CommandResponse> GetResourceUriAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
     {
-        var fingerprintParams = new Dictionary<string, string?>
+        var fingerprint = ComputeFingerprint(options);
+
+        PageFetchDelegate fetcher = async (nativeState, ct) =>
         {
-            ["operation"] = OperationName,
-            ["subscription"] = options.Subscription,
+            var adapter = new KqlPaginationAdapter<StorageAccountInfo>(
+                skipToken => _storageService.GetAccountDetailsPaged(
+                    options.Subscription!, options.Tenant, options.RetryPolicy, skipToken, ct));
+
+            var page = nativeState is null
+                ? await adapter.FetchFirstPageAsync(ct)
+                : await adapter.FetchNextPageAsync(nativeState, ct);
+
+            var itemsJson = JsonSerializer.Serialize(page.Items, StorageJsonContext.Default.ListStorageAccountInfo);
+            return new PaginationPageData(itemsJson, page.NativeState);
         };
-        var fingerprint = _paginationService!.ComputeRequestFingerprint(fingerprintParams);
+
+        // Use a sentinel native state to indicate the cursor starts at page 1
+        var cursorId = await _paginationService!.SaveCursorAsync(
+            KqlPaginationAdapter<StorageAccountInfo>.ProviderName, OperationName,
+            fingerprint, PaginationResource.InitialNativeState,
+            fetcher: fetcher,
+            cancellationToken: cancellationToken);
+
+        var resourceUri = $"{PaginationResource.UriPrefix}{cursorId}";
+
+        context.Response.Results = ResponseResult.Create(
+            new AccountGetResourceResult(resourceUri),
+            StorageJsonContext.Default.AccountGetResourceResult);
+
+        return context.Response;
+    }
+
+    private async Task<CommandResponse> GetPagedResultsAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
+    {
+        var fingerprint = ComputeFingerprint(options);
 
         var adapter = new KqlPaginationAdapter<StorageAccountInfo>(
             skipToken => _storageService.GetAccountDetailsPaged(
@@ -139,7 +174,7 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         }
         else
         {
-            var cursorRecord = await _paginationService.LoadAndValidateCursorAsync(
+            var cursorRecord = await _paginationService!.LoadAndValidateCursorAsync(
                 options.Cursor!, fingerprint, cancellationToken);
             pagedResult = await adapter.FetchNextPageAsync(cursorRecord.NativeState, cancellationToken);
         }
@@ -147,7 +182,7 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         string? nextCursor = null;
         if (pagedResult.NativeState is not null)
         {
-            nextCursor = await _paginationService.SaveCursorAsync(
+            nextCursor = await _paginationService!.SaveCursorAsync(
                 KqlPaginationAdapter<StorageAccountInfo>.ProviderName, OperationName,
                 fingerprint, pagedResult.NativeState,
                 cancellationToken: cancellationToken);
@@ -160,6 +195,16 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         return context.Response;
     }
 
+    private string ComputeFingerprint(AccountGetOptions options) =>
+        _paginationService!.ComputeRequestFingerprint(new Dictionary<string, string?>
+        {
+            ["operation"] = OperationName,
+            ["subscription"] = options.Subscription,
+        });
+
     // Strongly-typed result record — NextCursor is additive and null by default
     internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated, string? NextCursor = null);
+
+    // Result when client supports resource-based pagination
+    internal record AccountGetResourceResult(string ResourceUri);
 }

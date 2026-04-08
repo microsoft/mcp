@@ -53,7 +53,8 @@ public sealed class BlobGetCommand : BaseContainerCommand<BlobGetOptions>
         OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
-        Secret = false
+        Secret = false,
+        SupportsPagination = _paginationService is not null
     };
 
     protected override void RegisterOptions(Command command)

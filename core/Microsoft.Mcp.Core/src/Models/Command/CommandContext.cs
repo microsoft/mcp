@@ -28,13 +28,21 @@ public class CommandContext
     public Activity? Activity { get; }
 
     /// <summary>
+    /// Whether the connected client advertised support for apps (resource-based pagination).
+    /// </summary>
+    public bool SupportsApps { get; }
+
+    /// <summary>
     /// Creates a new command context
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection</param>
-    public CommandContext(IServiceProvider serviceProvider, Activity? activity = default)
+    /// <param name="activity">Optional telemetry activity</param>
+    /// <param name="supportsApps">Whether the client supports apps / resource-based pagination</param>
+    public CommandContext(IServiceProvider serviceProvider, Activity? activity = default, bool supportsApps = false)
     {
         _serviceProvider = serviceProvider;
         Activity = activity;
+        SupportsApps = supportsApps;
         Response = new CommandResponse
         {
             Status = HttpStatusCode.OK,

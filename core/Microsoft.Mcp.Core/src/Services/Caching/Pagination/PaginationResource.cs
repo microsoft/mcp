@@ -24,9 +24,8 @@ public sealed class PaginationResource(
     /// initial cursor, indicating that the first page has not been fetched yet.
     /// </summary>
     public const string InitialNativeState = "__initial__";
-
     internal const string Scheme = "pagination";
-    internal const string UriPrefix = "pagination://pages/";
+    public const string UriPrefix = "pagination://pages/";
     private const string UriTemplateValue = "pagination://pages/{cursor}";
     private const string ResourceName = "pagination-pages";
     private const string ResourceDescription =

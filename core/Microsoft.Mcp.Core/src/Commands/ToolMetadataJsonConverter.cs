@@ -33,7 +33,8 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             GetMetadata("openWorld", true),
             GetMetadata("readOnly", false),
             GetMetadata("secret", false),
-            GetMetadata("localRequired", false)
+            GetMetadata("localRequired", false),
+            GetMetadata("supportsPagination", false)
         );
     }
 
@@ -53,6 +54,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         WriteMetadata("readOnly", value.ReadOnlyProperty);
         WriteMetadata("secret", value.SecretProperty);
         WriteMetadata("localRequired", value.LocalRequiredProperty);
+        WriteMetadata("supportsPagination", value.SupportsPaginationProperty);
 
         writer.WriteEndObject();
     }
