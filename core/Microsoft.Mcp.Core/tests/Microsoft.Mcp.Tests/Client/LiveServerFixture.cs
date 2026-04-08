@@ -17,7 +17,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     private bool _started;
 
     public Dictionary<string, string?> EnvironmentVariables { get; set; } = new();
-    public List<string> Arguments { get; set; } = new();
+    public List<string> Arguments { get; set; } = [];
     public ITestOutputHelper? Output { get; set; }
     public LiveTestSettings? Settings { get; set; }
 
