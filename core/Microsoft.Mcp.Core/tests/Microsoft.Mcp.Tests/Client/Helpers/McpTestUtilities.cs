@@ -313,7 +313,7 @@ public static class McpTestUtilities
             processArguments.Add("--dangerously-disable-http-incoming-auth");
         }
 
-        var processStartInfo = new System.Diagnostics.ProcessStartInfo(executablePath, string.Join(" ", processArguments))
+        var processStartInfo = new ProcessStartInfo(executablePath, string.Join(" ", processArguments))
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -327,7 +327,7 @@ public static class McpTestUtilities
             }
         }
 
-        var process = System.Diagnostics.Process.Start(processStartInfo);
+        var process = Process.Start(processStartInfo);
 
         if (process == null)
         {

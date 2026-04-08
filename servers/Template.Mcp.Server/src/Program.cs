@@ -147,7 +147,7 @@ internal class Program
         // stdio-transport-specific implementations of ICacheService.
         // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
-        services.AddSingleUserCliCacheService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
