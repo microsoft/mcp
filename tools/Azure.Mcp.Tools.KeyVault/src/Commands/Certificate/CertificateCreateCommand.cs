@@ -63,17 +63,13 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
         try
         {
-            var operation = await _keyVaultService.CreateCertificate(
+            var certificate = await _keyVaultService.CreateCertificate(
                 options.VaultName!,
                 options.CertificateName!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
-
-            // Wait for the certificate operation to complete
-            var completedOperation = await operation.WaitForCompletionAsync(cancellationToken);
-            var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
                 new(
