@@ -15,8 +15,8 @@ jobs:
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   variables:
-    CloudType: ${{ iif(parameters.GovTest, 'AzureUSGovernment', 'AzureCloud') }}
-    SubscriptionConfiguration: '{"Environment": "$(CloudType)"}'
+    Environment: ${{ iif(parameters.GovTest, 'AzureUSGovernment', 'AzureCloud') }}
+    SubscriptionConfiguration: '{"Environment": "$(Environment)"}'
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
@@ -79,7 +79,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Cloud $(CloudType) `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
@@ -107,7 +107,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Cloud $(CloudType) `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
