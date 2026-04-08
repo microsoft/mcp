@@ -10,11 +10,11 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
@@ -331,13 +331,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task ApplySanitizersAsync()
     {
-        List<SanitizerAddition> sanitizers = new();
-
-        sanitizers.AddRange(GeneralRegexSanitizers);
-        sanitizers.AddRange(BodyRegexSanitizers);
-        sanitizers.AddRange(HeaderRegexSanitizers);
-        sanitizers.AddRange(UriRegexSanitizers);
-        sanitizers.AddRange(BodyKeySanitizers);
+        List<SanitizerAddition> sanitizers =
+        [
+            .. GeneralRegexSanitizers,
+            .. BodyRegexSanitizers,
+            .. HeaderRegexSanitizers,
+            .. UriRegexSanitizers,
+            .. BodyKeySanitizers,
+        ];
 
         if (sanitizers.Count > 0)
         {

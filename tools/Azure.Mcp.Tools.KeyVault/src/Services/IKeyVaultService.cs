@@ -20,8 +20,8 @@ public interface IKeyVaultService
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
     /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>The certificate operation</returns>
-    Task<CertificateOperation> CreateCertificate(
+    /// <returns>The created certificate</returns>
+    Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
         string subscriptionId,

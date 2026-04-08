@@ -203,10 +203,11 @@ public class ComputeService(
         // Create the VM
         var vmCollection = resourceGroupResource.GetVirtualMachines();
         var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             vmName,
             vmData,
             cancellationToken);
+        await WaitForLroCompletionAsync(vmOperation, cancellationToken);
 
         var createdVm = vmOperation.Value;
 
@@ -336,10 +337,11 @@ public class ComputeService(
             }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 nsgName,
                 nsgData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(nsgOperation, cancellationToken);
             nsgResource = nsgOperation.Value;
         }
 
@@ -367,10 +369,11 @@ public class ComputeService(
             });
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 vnetName,
                 vnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -403,10 +406,11 @@ public class ComputeService(
                 };
 
                 var pipOperation = await pipCollection.CreateOrUpdateAsync(
-                    WaitUntil.Completed,
+                    WaitUntil.Started,
                     pipName,
                     pipData,
                     cancellationToken);
+                await WaitForLroCompletionAsync(pipOperation, cancellationToken);
                 publicIpResource = pipOperation.Value;
             }
         }
@@ -434,10 +438,11 @@ public class ComputeService(
         nicData.IPConfigurations.Add(ipConfig);
 
         var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             nicName,
             nicData,
             cancellationToken);
+        await WaitForLroCompletionAsync(nicOperation, cancellationToken);
 
         return nicOperation.Value.Id;
     }
@@ -843,10 +848,11 @@ public class ComputeService(
         // Create the VMSS
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             vmssName,
             vmssData,
             cancellationToken);
+        await WaitForLroCompletionAsync(vmssOperation, cancellationToken);
 
         var createdVmss = vmssOperation.Value;
 
@@ -954,9 +960,10 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmssResource.UpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 patch,
                 cancellationToken: cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmssResource = updateOperation.Value;
         }
 
@@ -1045,9 +1052,10 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmResource.UpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 patch,
                 cancellationToken: cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmResource = updateOperation.Value;
         }
 
@@ -1102,7 +1110,8 @@ public class ComputeService(
         {
             var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
             var vmResource = vmResponse.Value;
-            await vmResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            var deleteOperation = await vmResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1134,7 +1143,8 @@ public class ComputeService(
         {
             var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
             var vmssResource = vmssResponse.Value;
-            await vmssResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            var deleteOperation = await vmssResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1207,10 +1217,11 @@ public class ComputeService(
             };
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 vnetName,
                 vnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -1231,10 +1242,11 @@ public class ComputeService(
             };
 
             var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 subnetName,
                 subnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
             subnetResource = subnetOperation.Value;
         }
 
@@ -1466,7 +1478,7 @@ public class ComputeService(
 
         var creationData = CreateDiskCreationData(source, TenantService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
-        var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
+        var diskData = new ManagedDiskData(new(resolvedLocation))
         {
             CreationData = creationData
         };
@@ -1478,7 +1490,7 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(sku))
         {
-            diskData.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+            diskData.Sku = new() { Name = new(sku) };
         }
 
         if (!string.IsNullOrEmpty(osType))
@@ -1504,7 +1516,7 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(hyperVGeneration))
         {
-            diskData.HyperVGeneration = new HyperVGeneration(hyperVGeneration);
+            diskData.HyperVGeneration = new(hyperVGeneration);
         }
 
         if (maxShares.HasValue)
@@ -1514,7 +1526,7 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
-            diskData.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+            diskData.NetworkAccessPolicy = new(networkAccessPolicy);
         }
 
         if (!string.IsNullOrEmpty(enableBursting))
@@ -1540,21 +1552,21 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
         {
-            diskData.Encryption ??= new DiskEncryption();
+            diskData.Encryption ??= new();
             if (!string.IsNullOrEmpty(diskEncryptionSet))
             {
-                diskData.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+                diskData.Encryption.DiskEncryptionSetId = new(diskEncryptionSet);
             }
 
             if (!string.IsNullOrEmpty(encryptionType))
             {
-                diskData.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+                diskData.Encryption.EncryptionType = new(encryptionType);
             }
         }
 
         if (!string.IsNullOrEmpty(diskAccessId))
         {
-            diskData.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+            diskData.DiskAccessId = new(diskAccessId);
         }
 
         if (!string.IsNullOrEmpty(tier))
@@ -1574,18 +1586,19 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(securityType))
         {
-            diskData.SecurityProfile = new DiskSecurityProfile
+            diskData.SecurityProfile = new()
             {
-                SecurityType = new DiskSecurityType(securityType)
+                SecurityType = new(securityType)
             };
         }
 
         _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
-        var result = await rgResource.Value.GetManagedDisks()
-            .CreateOrUpdateAsync(Azure.WaitUntil.Completed, diskName, diskData, cancellationToken);
+        var createOperation = await rgResource.Value.GetManagedDisks()
+            .CreateOrUpdateAsync(WaitUntil.Started, diskName, diskData, cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
-        return ConvertToDiskModel(result.Value, resourceGroup);
+        return ConvertToDiskModel(createOperation.Value, resourceGroup);
     }
 
     public async Task<DiskInfo> UpdateDiskAsync(
@@ -1623,7 +1636,7 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(sku))
         {
-            diskPatch.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+            diskPatch.Sku = new() { Name = new(sku) };
         }
 
         if (diskIopsReadWrite.HasValue)
@@ -1643,7 +1656,7 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
-            diskPatch.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
+            diskPatch.NetworkAccessPolicy = new(networkAccessPolicy);
         }
 
         if (!string.IsNullOrEmpty(enableBursting))
@@ -1669,21 +1682,21 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
         {
-            diskPatch.Encryption ??= new DiskEncryption();
+            diskPatch.Encryption ??= new();
             if (!string.IsNullOrEmpty(diskEncryptionSet))
             {
-                diskPatch.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+                diskPatch.Encryption.DiskEncryptionSetId = new(diskEncryptionSet);
             }
 
             if (!string.IsNullOrEmpty(encryptionType))
             {
-                diskPatch.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+                diskPatch.Encryption.EncryptionType = new(encryptionType);
             }
         }
 
         if (!string.IsNullOrEmpty(diskAccessId))
         {
-            diskPatch.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+            diskPatch.DiskAccessId = new(diskAccessId);
         }
 
         if (!string.IsNullOrEmpty(tier))
@@ -1693,9 +1706,10 @@ public class ComputeService(
 
         _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
-        var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
+        var updateOperation = await diskResource.Value.UpdateAsync(WaitUntil.Started, diskPatch, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
 
-        return ConvertToDiskModel(result.Value, resourceGroup);
+        return ConvertToDiskModel(updateOperation.Value, resourceGroup);
     }
 
     private static DiskCreationData CreateDiskCreationData(string? source, ArmEnvironment armEnvironment, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
@@ -1706,7 +1720,7 @@ public class ComputeService(
                 ? DiskCreateOption.UploadPreparedSecure
                 : DiskCreateOption.Upload;
 
-            return new DiskCreationData(createOption)
+            return new(createOption)
             {
                 UploadSizeBytes = uploadSizeBytes
             };
@@ -1716,9 +1730,9 @@ public class ComputeService(
         {
             var creationData = new DiskCreationData(DiskCreateOption.FromImage)
             {
-                GalleryImageReference = new ImageDiskReference
+                GalleryImageReference = new()
                 {
-                    Id = new Azure.Core.ResourceIdentifier(galleryImageReference)
+                    Id = new(galleryImageReference)
                 }
             };
 
@@ -1732,7 +1746,7 @@ public class ComputeService(
 
         if (string.IsNullOrEmpty(source))
         {
-            return new DiskCreationData(DiskCreateOption.Empty);
+            return new(DiskCreateOption.Empty);
         }
 
         // Blob URIs start with http:// or https:// - validate via EndpointValidator
@@ -1740,16 +1754,16 @@ public class ComputeService(
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
             EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", armEnvironment);
-            return new DiskCreationData(DiskCreateOption.Import)
+            return new(DiskCreateOption.Import)
             {
-                SourceUri = new Uri(source)
+                SourceUri = new(source)
             };
         }
 
         // Otherwise treat as a resource ID (snapshot or managed disk)
-        return new DiskCreationData(DiskCreateOption.Copy)
+        return new(DiskCreateOption.Copy)
         {
-            SourceResourceId = new Azure.Core.ResourceIdentifier(source)
+            SourceResourceId = new(source)
         };
     }
 
@@ -1769,7 +1783,8 @@ public class ComputeService(
             var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
             var diskResource = await resourceGroupResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-            await diskResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await diskResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}",
