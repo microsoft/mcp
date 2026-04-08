@@ -1,5 +1,12 @@
 # Release History
 
+
+## 2.0.40 (2026-04-07) (pre-release)
+
+### Changed
+
+- Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in `Microsoft.Mcp.Core`. [[#2362](https://github.com/microsoft/mcp/pull/2362)]
+
 ## 2.0.39 (2026-04-06) (pre-release)
 
 ### Added
