@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Services.Caching.Pagination;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
@@ -223,7 +222,7 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return new CallToolResult
+            var callResult = new CallToolResult
             {
                 Content = [
                     new TextContentBlock {
@@ -232,6 +231,12 @@ public sealed class CommandFactoryToolLoader(
                 ],
                 IsError = isError
             };
+
+            // Propagate _meta.ui from the command response to the CallToolResult.Meta
+            // so that the host (e.g. VS Code) can render the MCP App inline.
+            callResult.Meta = ExtractUiMeta(jsonResponse);
+
+            return callResult;
         }
         catch (Exception ex)
         {
@@ -288,7 +293,6 @@ public sealed class CommandFactoryToolLoader(
         {
             meta ??= new();
             meta["PaginationHint"] = metadata.SupportsPagination;
-            meta["ui"] = new JsonObject { ["resourceUri"] = TableAppResource.UriPrefix };
         }
         tool.Meta = meta;
 
@@ -330,5 +334,25 @@ public sealed class CommandFactoryToolLoader(
     {
         // CommandFactoryToolLoader doesn't create or manage disposable resources
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Extracts _meta.ui from the serialized command response JSON and returns it
+    /// as a <see cref="JsonObject"/> suitable for <see cref="CallToolResult.Meta"/>.
+    /// Returns <c>null</c> when no ui metadata is present.
+    /// </summary>
+    private static JsonObject? ExtractUiMeta(string jsonResponse)
+    {
+        var doc = JsonNode.Parse(jsonResponse);
+        var uiNode = doc?["results"]?["_meta"]?["ui"];
+        if (uiNode is null)
+        {
+            return null;
+        }
+
+        return new JsonObject
+        {
+            ["ui"] = uiNode.DeepClone(),
+        };
     }
 }

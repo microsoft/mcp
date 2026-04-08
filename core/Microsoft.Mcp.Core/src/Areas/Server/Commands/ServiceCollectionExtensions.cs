@@ -16,7 +16,6 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -214,7 +213,7 @@ public static class ServiceCollectionExtensions
 
         var mcpServerOptions = services
             .AddOptions<McpServerOptions>()
-            .Configure<IMcpRuntime, IServerInstructionsProvider, IOptions<McpServerConfiguration>, IEnumerable<McpServerResource>>((mcpServerOptions, mcpRuntime, serverInstructionsProvider, serverConfiguration, resources) =>
+            .Configure<IMcpRuntime, IServerInstructionsProvider, IOptions<McpServerConfiguration>>((mcpServerOptions, mcpRuntime, serverInstructionsProvider, serverConfiguration) =>
             {
                 var configuration = serverConfiguration.Value;
 
@@ -224,33 +223,10 @@ public static class ServiceCollectionExtensions
                     Version = configuration.Version,
                 };
 
-                var resourceList = resources.ToList();
-
                 mcpServerOptions.Handlers = new()
                 {
                     CallToolHandler = mcpRuntime.CallToolHandler,
-                    ListToolsHandler = mcpRuntime.ListToolsHandler,
-                    ListResourceTemplatesHandler = (request, cancellationToken) =>
-                    {
-                        var templates = resourceList.Select(r => r.ProtocolResourceTemplate).ToList();
-                        return ValueTask.FromResult(new ListResourceTemplatesResult { ResourceTemplates = templates });
-                    },
-                    ReadResourceHandler = (request, cancellationToken) =>
-                    {
-                        var uri = request.Params?.Uri;
-                        if (string.IsNullOrEmpty(uri))
-                        {
-                            return ValueTask.FromResult(new ReadResourceResult { Contents = [] });
-                        }
-
-                        var resource = resourceList.FirstOrDefault(r => r.IsMatch(uri));
-                        if (resource is null)
-                        {
-                            return ValueTask.FromResult(new ReadResourceResult { Contents = [] });
-                        }
-
-                        return resource.ReadAsync(request, cancellationToken);
-                    },
+                    ListToolsHandler = mcpRuntime.ListToolsHandler
                 };
 
                 // Add instructions for the server
