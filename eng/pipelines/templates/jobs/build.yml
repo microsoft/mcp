@@ -38,7 +38,7 @@ jobs:
     templateContext:
       sdl:
         codeql:
-          querySuite: 'sdl-required, active-ssirp, secure-future-initiative'
+          querySuite: 'sdl-required, active-ssirp, secure-future-initiative, liberty-shield-2, ssirp'
           compiled:
             enabled: true
 
