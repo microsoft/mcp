@@ -2415,7 +2415,6 @@ azmcp monitor activitylog list --subscription <subscription> \
 
 ```bash
 # List tables in a Log Analytics workspace
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor table list --subscription <subscription> \
                          --workspace <workspace> \
                          --resource-group <resource-group>
@@ -2425,7 +2424,6 @@ azmcp monitor table list --subscription <subscription> \
 azmcp monitor workspace list --subscription <subscription>
 
 # Query logs from Azure Monitor using KQL
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
                                  --table <table> \
