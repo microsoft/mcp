@@ -11,6 +11,25 @@
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
 
+  <!-- Table App: Vite-built single-file HTML embedded as a resource -->
+  <PropertyGroup>
+    <TableAppDir>Services\Caching\Pagination\table-app</TableAppDir>
+    <TableAppDist>$(TableAppDir)\dist\mcp-app.html</TableAppDist>
+  </PropertyGroup>
+
+  <Target Name="BuildTableApp" BeforeTargets="BeforeBuild" Condition="!Exists('$(TableAppDist)')">
+    <Exec Command="npm ci --ignore-scripts" WorkingDirectory="$(TableAppDir)" />
+    <Exec Command="npm run build" WorkingDirectory="$(TableAppDir)" />
+  </Target>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(TableAppDist)" LogicalName="TableApp.html" Condition="Exists('$(TableAppDist)')" />
+    <!-- Exclude npm artifacts from the C# build -->
+    <None Remove="$(TableAppDir)\node_modules\**" />
+    <Compile Remove="$(TableAppDir)\**" />
+    <Content Remove="$(TableAppDir)\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.Identity" />

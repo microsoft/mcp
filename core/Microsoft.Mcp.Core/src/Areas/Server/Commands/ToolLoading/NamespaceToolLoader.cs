@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Caching.Pagination;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 
@@ -148,6 +149,17 @@ public sealed class NamespaceToolLoader(
                     ReadOnlyHint = group.ToolMetadata?.ReadOnly,
                 },
             };
+
+            // Add UI resource URI if any child command supports pagination
+            if (!AllToolsInGroupMatch(meta => !meta.SupportsPagination, group))
+            {
+                tool.Meta = new JsonObject
+                {
+                    ["PaginationHint"] = true,
+                    ["ui"] = new JsonObject { ["resourceUri"] = TableAppResource.UriPrefix },
+                };
+            }
+
 
             allToolsResponse.Tools.Add(tool);
         }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Caching.Pagination;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
@@ -287,6 +288,7 @@ public sealed class CommandFactoryToolLoader(
         {
             meta ??= new();
             meta["PaginationHint"] = metadata.SupportsPagination;
+            meta["ui"] = new JsonObject { ["resourceUri"] = TableAppResource.UriPrefix };
         }
         tool.Meta = meta;
 

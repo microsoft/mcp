@@ -73,6 +73,7 @@ public static class CachingServiceCollectionExtensions
         services.TryAddSingleton<ICursorRegistry, CursorRegistry>();
         services.TryAddSingleton<IPaginationService, PaginationService>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<McpServerResource, PaginationResource>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<McpServerResource, TableAppResource>());
         return services;
     }
 }

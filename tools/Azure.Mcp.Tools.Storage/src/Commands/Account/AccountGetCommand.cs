@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Pagination;
@@ -90,7 +91,7 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
             {
                 if (context.SupportsApps)
                 {
-                    return await GetResourceUriAsync(context, options, cancellationToken);
+                    return await GetPagedResourceUriAsync(context, options, cancellationToken);
                 }
 
                 return await GetPagedResultsAsync(context, options, cancellationToken);
@@ -125,7 +126,7 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         return context.Response;
     }
 
-    private async Task<CommandResponse> GetResourceUriAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
+    private async Task<CommandResponse>  GetPagedResourceUriAsync(CommandContext context, AccountGetOptions options, CancellationToken cancellationToken)
     {
         var fingerprint = ComputeFingerprint(options);
 
@@ -153,7 +154,7 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
         var resourceUri = $"{PaginationResource.UriPrefix}{cursorId}";
 
         context.Response.Results = ResponseResult.Create(
-            new AccountGetResourceResult(resourceUri),
+            new AccountGetResourceResult(resourceUri, new ResponseMeta(new ResponseMetaUi(TableAppResource.UriPrefix))),
             StorageJsonContext.Default.AccountGetResourceResult);
 
         return context.Response;
@@ -206,5 +207,9 @@ public sealed class AccountGetCommand : SubscriptionCommand<AccountGetOptions>
     internal record AccountGetCommandResult(List<StorageAccountInfo> Accounts, bool AreResultsTruncated, string? NextCursor = null);
 
     // Result when client supports resource-based pagination
-    internal record AccountGetResourceResult(string ResourceUri);
+    internal record AccountGetResourceResult(string PagedResourceUri, [property: JsonPropertyName("_meta")] ResponseMeta? Meta = null);
+
+    internal record ResponseMeta(ResponseMetaUi? Ui = null);
+
+    internal record ResponseMetaUi(string? ResourceUri = null);
 }
