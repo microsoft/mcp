@@ -240,6 +240,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
@@ -254,7 +255,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
+        Assert.Equal("Standard_B2s", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("linux", osType.GetString());
@@ -277,6 +278,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss123!" },
@@ -291,7 +293,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
+        Assert.Equal("Standard_B2s", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("windows", osType.GetString());
@@ -299,7 +301,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     /// <summary>
     /// Based on Azure CLI example:
-    /// az vm create -n MyVm -g MyResourceGroup --image Win2019Datacenter --size Standard_DS2_v2
+    /// az vm create -n MyVm -g MyResourceGroup --image Win2019Datacenter --size Standard_B2s
     /// Creates a Windows Server 2019 VM with a specific VM size and OS disk type.
     /// </summary>
     [Fact]
@@ -318,7 +320,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss456!" },
                 { "image", "Win2019Datacenter" },
-                { "vm-size", "Standard_DS2_v2" },
+                { "vm-size", "Standard_B2s" },
                 { "os-disk-type", "StandardSSD_LRS" },
                 { "no-public-ip", true }
             });
@@ -330,7 +332,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_DS2_v2", vmSize.GetString());
+        Assert.Equal("Standard_B2s", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("windows", osType.GetString());
@@ -401,6 +403,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
@@ -421,7 +424,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     /// <summary>
     /// Based on Azure CLI example:
-    /// az vmss create -n MyVmss -g MyResourceGroup --image Ubuntu2204 --vm-sku Standard_DS2_v2 --upgrade-policy-mode Manual
+    /// az vmss create -n MyVmss -g MyResourceGroup --image Ubuntu2204 --vm-sku Standard_B2s --upgrade-policy-mode Manual
     /// Creates a Linux VMSS with a custom VM size and Manual upgrade policy.
     /// </summary>
     [Fact]
@@ -436,11 +439,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
-                { "vm-size", "Standard_DS2_v2" },
                 { "instance-count", 1 },
                 { "upgrade-policy", "Manual" },
                 { "os-disk-type", "StandardSSD_LRS" }
@@ -520,6 +523,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
@@ -562,6 +566,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
+                { "vm-size", "Standard_B2s" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
