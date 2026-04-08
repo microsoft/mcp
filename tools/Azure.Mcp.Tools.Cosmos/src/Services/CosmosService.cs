@@ -10,6 +10,8 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.CosmosDB;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
@@ -267,7 +269,14 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         var container = client.GetContainer(databaseName, containerName);
         var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
-        var queryDef = new QueryDefinition(baseQuery);
+
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(baseQuery);
+        var queryDef = new QueryDefinition(parameterizedQuery);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            queryDef = queryDef.WithParameter(name, value);
+        }
 
         var items = new List<JsonElement>();
         var queryIterator = container.GetItemQueryStreamIterator(
@@ -284,6 +293,9 @@ public sealed class CosmosService(ISubscriptionService subscriptionService, ITen
 
         return items;
     }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private static readonly TimeSpan s_disposeTimeout = TimeSpan.FromSeconds(2);
 

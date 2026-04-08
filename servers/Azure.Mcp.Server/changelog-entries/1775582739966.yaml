@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in Microsoft.Mcp.Core"

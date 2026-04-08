@@ -17,6 +17,7 @@ using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager.OperationalInsights;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -282,7 +283,7 @@ public class MonitorService(
         if (!string.IsNullOrEmpty(query) && s_predefinedQueries.ContainsKey(query.Trim().ToLower()))
         {
             query = s_predefinedQueries[query.Trim().ToLower()];
-            query = query.Replace(TablePlaceholder, table);
+            query = query.Replace(TablePlaceholder, KqlSanitizer.EscapeIdentifier(table));
         }
         // Add limit if not present
         if (limit.HasValue && !query.Contains("limit", StringComparison.CurrentCultureIgnoreCase))
