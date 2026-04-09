@@ -117,9 +117,9 @@ function Get-LatestMarketplaceVersion {
                     )
                 }
             )
-            # flags 914 = IncludeVersions | IncludeFiles | IncludeAssetUri | IncludeStatistics
-            # This requests version information needed to determine the latest published version
-            flags = 914
+            # flags 387 = IncludeVersions (0x1) | IncludeFiles (0x2) | IncludeAssetUri (0x80) | IncludeStatistics (0x100)
+            # IncludeVersions (0x1) is required to retrieve all published versions, not just the latest.
+            flags = 387
         } | ConvertTo-Json -Depth 10
 
         $response = Invoke-RestMethod -Uri $marketplaceUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction SilentlyContinue
@@ -430,12 +430,12 @@ function Get-ServerDetails {
                             Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                         }
                         else {
-                            # No matching versions found - this is an illegal state for non-beta releases
-                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
-                            $script:exitCode = 1
-                            continue
+                            # No matching versions found in the marketplace for this major version series.
+                            # This is expected for the first GA release of a new major version (e.g., 2.0.0)
+                            # when no prior beta was published to the marketplace. Bootstrap from patch 0.
+                            $vsixVersion = "$($version.Major).0.0"
+                            $vsixIsPrerelease = $false
+                            Write-Host "No marketplace versions found for $($version.Major).0.X series. Bootstrapping first release with VSIX version: $vsixVersion" -ForegroundColor Yellow
                         }
                     }
                     else {
