@@ -13,6 +13,30 @@ public class CommandGroup(string name, string description, string? title = null)
     public Command Command { get; } = new Command(name, description);
     public ToolMetadata? ToolMetadata { get; set; }
 
+    /// <summary>
+    /// Adds a command to this group.
+    /// This calls 'AddCommand(string path, IBaseCommand command)' with the command's name as the path.
+    /// </summary>
+    /// <param name="command">The command to add to this group.</param>
+    public void AddCommand(IBaseCommand command) => AddCommand(command.Name, command);
+
+    /// <summary>
+    /// Adds a command to this group at the specified path, performing a recursive search for the correct subgroup if
+    /// the path contains dots.
+    /// <para>
+    /// For example, if the path is "subgroup1.subgroup2.command", this method will first look for a subgroup named
+    /// "subgroup1", then look for a subgroup named "subgroup2" within "subgroup1", and finally add the command to
+    /// "subgroup2".
+    /// </para>
+    /// <para>
+    /// Prefer using the overload that takes an IBaseCommand directly when possible, as it is simpler and less
+    /// error-prone. Use this overload when you need to specify a path that is different from the command's name or
+    /// when you want to add a command to a subgroup.
+    /// </para>
+    /// </summary>
+    /// <param name="path">The command path.</param>
+    /// <param name="command">The command to add to this group.</param>
+    /// <exception cref="InvalidOperationException">If any subgroups specified by the path don't exist.</exception>
     public void AddCommand(string path, IBaseCommand command)
     {
         // Split on first dot to get group and remaining path
