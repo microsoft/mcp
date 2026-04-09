@@ -38,7 +38,7 @@ public enum DppRestoreMode
 /// </summary>
 public enum DppInstanceNamingMode
 {
-    /// <summary>Standard naming: {resourceName}-{resourceName}-{shortGuid}.</summary>
+    /// <summary>Standard naming: {resourceGroupName}-{resourceName}-{shortGuid}.</summary>
     Standard,
 
     /// <summary>Parent-child naming for ESAN: {parentName}-{childName}-{guid}.</summary>

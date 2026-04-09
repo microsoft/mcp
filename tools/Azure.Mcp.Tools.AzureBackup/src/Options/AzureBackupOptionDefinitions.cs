@@ -85,13 +85,13 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> DatasourceId = new($"--{DatasourceIdName}")
     {
-        Description = "The ARM resource ID of the datasource to protect.",
+        Description = "The datasource identifier. For VM/FileShare/DPP workloads, use the ARM resource ID (e.g., '/subscriptions/.../virtualMachines/myvm'). For RSV in-guest workloads (SQL/SAPHANA), use the protectable item name from 'protectableitem list' (e.g., 'SAPHanaDatabase;instance;dbname').",
         Required = true
     };
 
     public static readonly Option<string> DatasourceType = new($"--{DatasourceTypeName}")
     {
-        Description = "The workload type hint: AzureVM, SQLDatabase, SAPHana, SAPASE, AzureFileShare, AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB.",
+        Description = "The workload type hint: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.",
         Required = false
     };
 
@@ -145,7 +145,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> WorkloadType = new($"--{WorkloadTypeName}")
     {
-        Description = "Workload type: AzureVM, SQLDatabase, SAPHana, SAPASE, AzureFileShare, AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB.",
+        Description = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.",
         Required = false
     };
 

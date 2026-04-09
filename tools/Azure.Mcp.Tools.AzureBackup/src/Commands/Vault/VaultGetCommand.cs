@@ -34,6 +34,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         returns detailed information about a single vault including type, location, SKU, and
         storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in
         the subscription, optionally filtered by --vault-type ('rsv' or 'dpp').
+        Note: --resource-group is only used when --vault is specified; listing vaults always
+        returns all vaults in the subscription regardless of resource group.
         """;
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()

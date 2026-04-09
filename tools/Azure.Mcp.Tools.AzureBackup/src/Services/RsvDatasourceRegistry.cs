@@ -20,7 +20,7 @@ public static class RsvDatasourceRegistry
     public static readonly RsvDatasourceProfile IaasVm = new()
     {
         FriendlyName = "VM",
-        Aliases = ["vm", "iaasvm", "virtualmachine", "iaasvmcontainer"],
+        Aliases = ["vm", "iaasvm", "azurevm", "azureiaasvm", "virtualmachine", "iaasvmcontainer"],
         IsWorkloadType = false,
         ProtectedItemType = RsvProtectedItemType.IaasVm,
         PolicyType = RsvPolicyType.IaasVm,
@@ -34,7 +34,7 @@ public static class RsvDatasourceRegistry
     public static readonly RsvDatasourceProfile SqlDatabase = new()
     {
         FriendlyName = "SQL",
-        Aliases = ["sql", "sqldatabase", "mssql", "sqldb"],
+        Aliases = ["sql", "sqldatabase", "sqldb", "mssql", "azuresql"],
         IsWorkloadType = true,
         ProtectedItemType = RsvProtectedItemType.SqlDatabase,
         PolicyType = RsvPolicyType.VmWorkload,
