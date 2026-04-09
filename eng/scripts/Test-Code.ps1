@@ -7,7 +7,7 @@ param(
     [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
-    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'Dogfood')]
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')]
     [string] $Environment = 'AzureCloud',
     [string] $TestResultsPath,
     [switch] $CollectCoverage,
