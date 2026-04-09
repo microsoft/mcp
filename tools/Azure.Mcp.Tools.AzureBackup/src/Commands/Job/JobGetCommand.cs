@@ -81,7 +81,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new JobGetCommandResult([job]),
+                    new([job]),
                     AzureBackupJsonContext.Default.JobGetCommandResult);
             }
             else
@@ -96,7 +96,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new JobGetCommandResult(jobs),
+                    new(jobs),
                     AzureBackupJsonContext.Default.JobGetCommandResult);
             }
         }
@@ -117,5 +117,5 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record JobGetCommandResult([property: JsonPropertyName("jobs")] List<BackupJobInfo> Jobs);
+    internal record JobGetCommandResult(List<BackupJobInfo> Jobs);
 }

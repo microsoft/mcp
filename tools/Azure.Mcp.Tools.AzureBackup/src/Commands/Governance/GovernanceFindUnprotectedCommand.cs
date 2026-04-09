@@ -79,7 +79,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new GovernanceFindUnprotectedCommandResult(resources),
+                new(resources),
                 AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
         }
         catch (Exception ex)
@@ -91,13 +91,5 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
         return context.Response;
     }
 
-    internal record GovernanceFindUnprotectedCommandResult([property: JsonPropertyName("resources")] List<UnprotectedResourceInfo> Resources);
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed. Ensure you have Reader access to the subscription. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
+    internal record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
 }

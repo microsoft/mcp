@@ -47,7 +47,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new DrEnableCrrCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.DrEnableCrrCommandResult);
         }
         catch (Exception ex)
@@ -66,14 +66,14 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault not found. Verify the vault name and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            $"Bad request enabling CRR (often means vault isn't GRS). Details: {reqEx.Message}",
+            $"Bad request enabling Cross-Region Restore. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Cross-Region Restore is already enabled on this vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed enabling CRR. Details: {reqEx.Message}",
+            $"Authorization failed enabling Cross-Region Restore. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DrEnableCrrCommandResult([property: JsonPropertyName("result")] OperationResult Result);
+    internal record DrEnableCrrCommandResult(OperationResult Result);
 }

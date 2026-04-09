@@ -129,7 +129,7 @@ public class DrEnableCrrCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Bad request enabling CRR", response.Message);
+        Assert.Contains("Bad request enabling Cross-Region Restore", response.Message);
     }
 
     [Fact]

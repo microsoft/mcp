@@ -87,7 +87,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ProtectedItemProtectCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.ProtectedItemProtectCommandResult);
         }
         catch (Exception ex)
@@ -109,5 +109,5 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemProtectCommandResult([property: JsonPropertyName("result")] ProtectResult Result);
+    internal record ProtectedItemProtectCommandResult(ProtectResult Result);
 }

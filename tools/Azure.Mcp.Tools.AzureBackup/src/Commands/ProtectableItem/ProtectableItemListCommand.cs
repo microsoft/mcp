@@ -77,7 +77,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ProtectableItemListCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.ProtectableItemListCommandResult);
         }
         catch (Exception ex)
@@ -96,5 +96,5 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectableItemListCommandResult([property: JsonPropertyName("items")] List<ProtectableItemInfo> Items);
+    internal record ProtectableItemListCommandResult(List<ProtectableItemInfo> Items);
 }

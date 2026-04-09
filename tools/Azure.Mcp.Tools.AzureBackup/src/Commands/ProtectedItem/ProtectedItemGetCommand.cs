@@ -86,7 +86,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new ProtectedItemGetCommandResult([item]),
+                    new([item]),
                     AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
             }
             else
@@ -101,7 +101,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new ProtectedItemGetCommandResult(items),
+                    new(items),
                     AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
             }
         }
@@ -124,5 +124,5 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemGetCommandResult([property: JsonPropertyName("protectedItems")] List<ProtectedItemInfo> ProtectedItems);
+    internal record ProtectedItemGetCommandResult(List<ProtectedItemInfo> ProtectedItems);
 }

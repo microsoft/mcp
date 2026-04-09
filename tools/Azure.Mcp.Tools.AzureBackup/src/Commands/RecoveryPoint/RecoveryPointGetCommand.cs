@@ -83,7 +83,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new RecoveryPointGetCommandResult([rp]),
+                    new([rp]),
                     AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
             }
             else
@@ -100,7 +100,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new RecoveryPointGetCommandResult(points),
+                    new(points),
                     AzureBackupJsonContext.Default.RecoveryPointGetCommandResult);
             }
         }
@@ -122,5 +122,5 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record RecoveryPointGetCommandResult([property: JsonPropertyName("recoveryPoints")] List<RecoveryPointInfo> RecoveryPoints);
+    internal record RecoveryPointGetCommandResult(List<RecoveryPointInfo> RecoveryPoints);
 }

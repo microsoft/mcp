@@ -83,7 +83,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new PolicyCreateCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.PolicyCreateCommandResult);
         }
         catch (Exception ex)
@@ -109,5 +109,5 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyCreateCommandResult([property: JsonPropertyName("result")] OperationResult Result);
+    internal record PolicyCreateCommandResult(OperationResult Result);
 }

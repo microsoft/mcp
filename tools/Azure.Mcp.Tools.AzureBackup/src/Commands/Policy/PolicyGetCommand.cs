@@ -81,7 +81,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PolicyGetCommandResult([policy]),
+                    new([policy]),
                     AzureBackupJsonContext.Default.PolicyGetCommandResult);
             }
             else
@@ -96,7 +96,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PolicyGetCommandResult(policies),
+                    new(policies),
                     AzureBackupJsonContext.Default.PolicyGetCommandResult);
             }
         }
@@ -117,5 +117,5 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyGetCommandResult([property: JsonPropertyName("policies")] List<BackupPolicyInfo> Policies);
+    internal record PolicyGetCommandResult(List<BackupPolicyInfo> Policies);
 }

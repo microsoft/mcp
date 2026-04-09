@@ -44,6 +44,20 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.SoftDelete.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDelete.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    !value.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("On", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("Off", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
+                }
+            }
+        });
     }
 
     protected override GovernanceSoftDeleteOptions BindOptions(ParseResult parseResult)
@@ -77,7 +91,7 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new GovernanceSoftDeleteCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult);
         }
         catch (Exception ex)
@@ -90,14 +104,5 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => argEx.Message,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Vault not found. Verify the vault name and resource group.",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    internal record GovernanceSoftDeleteCommandResult([property: JsonPropertyName("result")] OperationResult Result);
+    internal record GovernanceSoftDeleteCommandResult(OperationResult Result);
 }

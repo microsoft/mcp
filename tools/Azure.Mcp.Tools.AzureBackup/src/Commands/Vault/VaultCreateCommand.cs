@@ -51,6 +51,16 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
             {
                 commandResult.AddError("--vault-type is required for vault creation. Specify 'rsv' or 'dpp'.");
             }
+            else
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+                }
+            }
         });
     }
 
@@ -87,7 +97,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new VaultCreateCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.VaultCreateCommandResult);
         }
         catch (Exception ex)
@@ -111,5 +121,5 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultCreateCommandResult([property: JsonPropertyName("vault")] VaultCreateResult Vault);
+    internal record VaultCreateCommandResult(VaultCreateResult Vault);
 }

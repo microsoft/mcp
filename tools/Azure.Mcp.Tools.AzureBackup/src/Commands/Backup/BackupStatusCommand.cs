@@ -63,7 +63,7 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new BackupStatusCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.BackupStatusCommandResult);
         }
         catch (Exception ex)
@@ -86,5 +86,5 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record BackupStatusCommandResult([property: JsonPropertyName("status")] BackupStatusResult Status);
+    internal record BackupStatusCommandResult(BackupStatusResult Status);
 }

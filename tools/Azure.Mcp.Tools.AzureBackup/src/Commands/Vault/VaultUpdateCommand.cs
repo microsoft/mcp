@@ -93,7 +93,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new VaultUpdateCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.VaultUpdateCommandResult);
         }
         catch (Exception ex)
@@ -119,5 +119,5 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultUpdateCommandResult([property: JsonPropertyName("result")] OperationResult Result);
+    internal record VaultUpdateCommandResult(OperationResult Result);
 }

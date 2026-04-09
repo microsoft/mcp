@@ -54,6 +54,14 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(AzureBackupOptionDefinitions.Vault.AsOptional());
         command.Options.Add(AzureBackupOptionDefinitions.VaultType);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.Vault.Name) &&
+                !commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
+            {
+                commandResult.AddError("--resource-group is required when --vault is specified.");
+            }
+        });
     }
 
     protected override VaultGetOptions BindOptions(ParseResult parseResult)
@@ -78,16 +86,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         {
             if (!string.IsNullOrEmpty(options.Vault))
             {
-                if (string.IsNullOrEmpty(options.ResourceGroup))
-                {
-                    context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                    context.Response.Message = "--resource-group is required when --vault is specified.";
-                    return context.Response;
-                }
-
                 var vault = await _azureBackupService.GetVaultAsync(
                     options.Vault,
-                    options.ResourceGroup,
+                    options.ResourceGroup!,
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
@@ -95,7 +96,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new VaultGetCommandResult([vault]),
+                    new([vault]),
                     AzureBackupJsonContext.Default.VaultGetCommandResult);
             }
             else
@@ -108,7 +109,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new VaultGetCommandResult(vaults),
+                    new(vaults),
                     AzureBackupJsonContext.Default.VaultGetCommandResult);
             }
         }
@@ -131,5 +132,5 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultGetCommandResult([property: JsonPropertyName("vaults")] List<BackupVaultInfo> Vaults);
+    internal record VaultGetCommandResult(List<BackupVaultInfo> Vaults);
 }

@@ -43,6 +43,20 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     {
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState.AsRequired());
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.ImmutabilityState.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    !value.Equals("Disabled", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("Locked", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--immutability-state must be 'Disabled', 'Enabled', or 'Locked'. Warning: 'Locked' is irreversible.");
+                }
+            }
+        });
     }
 
     protected override GovernanceImmutabilityOptions BindOptions(ParseResult parseResult)
@@ -74,7 +88,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new GovernanceImmutabilityCommandResult(result),
+                new(result),
                 AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult);
         }
         catch (Exception ex)
@@ -98,5 +112,5 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record GovernanceImmutabilityCommandResult([property: JsonPropertyName("result")] OperationResult Result);
+    internal record GovernanceImmutabilityCommandResult(OperationResult Result);
 }
