@@ -110,14 +110,13 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [Fact]
     public async Task Should_get_specific_function_app()
     {
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         // List to obtain a real function app and its resource group
         var listResult = await CallToolAsync(
             "functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName }
+                { "resource-group", Settings.ResourceGroupName }
             });
 
         var functionApps = listResult.AssertProperty("functionApps");
