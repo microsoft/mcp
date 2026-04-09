@@ -409,7 +409,6 @@ function Get-ServerDetails {
                 $vsixIsPrerelease = $true
             }
             else {
-                # For all non-beta versions, calculate next patch version from marketplace
                 $vscodePath = "$RepoRoot/servers/$serverName/vscode"
                 $packageJsonPath = "$vscodePath/package.json"
 
@@ -419,23 +418,32 @@ function Get-ServerDetails {
                     $extensionName = $packageJson.name
 
                     if ($publisherId -and $extensionName) {
-                        Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
+                        $vsixVersion = $packageJson.version
 
-                        $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
-
-                        if ($marketplaceInfo) {
-                            # Use next patch version from marketplace
-                            $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
+                        # If the version in package.json is not empty or 0.0.0, use it directly. This allows us to specify a version for VS Code different than the one for all other distributions when needed.
+                        if ($vsixVersion -and $vsixVersion -ne "0.0.0") {
                             $vsixIsPrerelease = $false
-                            Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
-                        }
-                        else {
-                            # No matching versions found - this is an illegal state for non-beta releases
-                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
-                            $script:exitCode = 1
-                            continue
+                            Write-Host "Using VSIX version from package.json: $vsixVersion" -ForegroundColor Green
+                        } else {
+                            # For non-beta versions, calculate next patch version from marketplace
+                            Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
+
+                            $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
+
+                            if ($marketplaceInfo) {
+                                # Use next patch version from marketplace
+                                $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
+                                $vsixIsPrerelease = $false
+                                Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
+                            }
+                            else {
+                                # No matching versions found - this is an illegal state for non-beta releases
+                                LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
+                                LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
+                                LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
+                                $script:exitCode = 1
+                                continue
+                            }
                         }
                     }
                     else {
