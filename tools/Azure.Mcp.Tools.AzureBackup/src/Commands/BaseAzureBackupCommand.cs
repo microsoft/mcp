@@ -19,7 +19,7 @@ public abstract class BaseAzureBackupCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Vault);
+        command.Options.Add(AzureBackupOptionDefinitions.Vault.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.VaultType);
     }
 

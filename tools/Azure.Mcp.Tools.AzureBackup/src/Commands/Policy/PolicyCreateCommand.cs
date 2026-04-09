@@ -30,7 +30,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy);
+        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.WorkloadType.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.ScheduleFrequency);
         command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);

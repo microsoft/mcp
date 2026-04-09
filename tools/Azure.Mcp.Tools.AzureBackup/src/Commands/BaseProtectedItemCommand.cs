@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
@@ -16,7 +17,7 @@ public abstract class BaseProtectedItemCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.ProtectedItem);
+        command.Options.Add(AzureBackupOptionDefinitions.ProtectedItem.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Container);
     }
 

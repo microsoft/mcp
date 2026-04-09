@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
@@ -45,8 +46,8 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceId);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy);
+        command.Options.Add(AzureBackupOptionDefinitions.DatasourceId.AsRequired());
+        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Container);
         command.Options.Add(AzureBackupOptionDefinitions.DatasourceType);
     }

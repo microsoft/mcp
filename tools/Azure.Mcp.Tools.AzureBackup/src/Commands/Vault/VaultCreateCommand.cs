@@ -42,7 +42,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Location);
+        command.Options.Add(AzureBackupOptionDefinitions.Location.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Sku);
         command.Options.Add(AzureBackupOptionDefinitions.StorageType);
         command.Validators.Add(commandResult =>
