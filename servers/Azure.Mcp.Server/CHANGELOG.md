@@ -6,30 +6,43 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 **🚀 New Major Release — Azure MCP Server 2.0**
 
-We're thrilled to announce the second major release of the Azure MCP Server! Version 2.0 represents a significant evolution from the 1.0 release, bringing remote HTTP deployment, dramatically expanded Azure service coverage, comprehensive security hardening, and major performance improvements. This release spans over 40 beta iterations and hundreds of contributions.
+We're thrilled to announce the second major release of the Azure MCP Server! Version 2.0 represents a significant evolution from the 1.0 release, bringing remote HTTP deployment, dramatically expanded Azure service coverage, comprehensive security hardening, and major performance improvements. This release spans 40 beta iterations and hundreds of contributions.
 
 ### Key Features & Improvements
 
 - **Deploy as a Remote MCP Server**: Deploy the Azure MCP Server as a shared, multi-user HTTP service with Entra ID authentication and On-Behalf-Of (OBO) authorization
-- **Use with Sovereign Clouds**: Full support for Azure Government and Azure China clouds across multiple services
+- **Use with Sovereign Clouds**: Full support for Azure Government and Azure operated by 21Vianet Cloud (Azure in China) clouds across multiple services
 - **More Docker Options**: AMD64 and ARM64 images are now available. Trimmed binaries cut image size by ~60% compared to initial Docker builds
 - **New Installation Methods**: Added two new distribution formats:
   - **PyPI**: With UVX support for Python/uv-based workflows
   - **MCP Bundles (`.mcpb`)**: A portable format compatible with Claude Desktop
 - **Security Hardening**: Comprehensive input validation, SSRF protection, SQL/KQL injection prevention, query parameterization, and endpoint validation across all services
 - **User Confirmation Prompts**: Added user confirmation prompts for sensitive and destructive operations via MCP elicitation
-- **Foundry Integration**: Added integration with the external Azure AI Foundry MCP server (`https://mcp.ai.azure.com`) providing agent lifecycle, batch evaluation, prompt optimization, and project connection management tools
-- **More Tools**: Increased tool coverage from 170+ to 260+ across 50+ services
-- **Improved Performance**: Server startup reduced from ~20s to ~1-2s when proxied MCP servers are enabled (Microsoft Documentation, Azure Developer CLI, Azure AI Foundry)
+- **Foundry Integration**: Added integration with the external Microsoft Foundry MCP server (`https://mcp.ai.azure.com`) providing agent lifecycle, batch evaluation, prompt optimization, and project connection management tools
+- **More Tools**: Increased tool coverage from 170+ to 260+ across 50+ services, including the following new namespaces:
+  - Azure Advisor - `advisor`
+  - Azure Compute - `compute`
+  - Azure Container Apps - `containerapps`
+  - Azure Device Registry - `deviceregistry`
+  - Azure File Shares - `fileshares`
+  - Azure Functions - `functions`
+  - Azure Migrate - `azuremigrate`
+  - Azure Policy - `policy`
+  - Azure Pricing - `pricing`
+  - Azure Service Fabric - `servicefabric`
+  - Azure Storage Sync - `storagesync`
+  - Azure Well-Architected Framework - `wellarchitectedframework`
+- **Improved Performance**: Server startup reduced from ~20s to ~1-2s when proxied MCP servers are enabled (Microsoft Documentation, Azure Developer CLI, Microsoft Foundry)
 
 ### Getting Started
 
 Install the Azure MCP Server from your preferred platform:
 
-- **VS Code**: Install the [Azure MCP Server extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)
+- **VS Code**: Install the [Azure MCP Server extension in VS Code](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
+- **VS Code Insiders**: Install the [Azure MCP Server extension in VS Code Insiders](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server)
 - **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
 - **Visual Studio 2026**: Install the [Azure and AI Development workload](https://learn.microsoft.com/en-us/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026#install-github-copilot-for-azure)
-- **Claude and GitHub Copilot CLI**: Install the [Azure Copilot Plugin](https://github.com/microsoft/GitHub-Copilot-for-Azure?tab=readme-ov-file#usage)
+- **Claude and GitHub Copilot CLI**: Install the [Azure Skills Plugin](https://github.com/microsoft/azure-skills?tab=readme-ov-file#install-in-60-seconds)
 - **IntelliJ IDEA**: Install the [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
 - **Eclipse IDE**: Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 - **NuGet**: Run `dotnet tool install -g Azure.Mcp --version 2.0.0`
@@ -86,7 +99,7 @@ For a complete history of changes included in this release, see entries for vers
 
 **Namespace, Tool, and Option Renames**:
 
-- **Foundry**: Split the `foundry` namespace into `foundryextensions` for in-process tools and `foundry` for tools proxied from the external Azure AI Foundry MCP server.
+- **Foundry**: Split the `foundry` namespace into `foundryextensions` for in-process tools and `foundry` for tools proxied from the external Microsoft Foundry MCP server.
   - The following tools were migrated to the external server under new names:
     - `foundry agents list` → `foundry agent get`
     - `foundry agents create` → `foundry agent update`
@@ -446,7 +459,7 @@ For a complete history of changes included in this release, see entries for vers
 
 ### Features Added
 
-- Added new tools available via the external Azure AI Foundry MCP server (https://mcp.ai.azure.com) that provide capabilities not previously available in Azure MCP Server: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+- Added new tools available via the external Microsoft Foundry MCP server (https://mcp.ai.azure.com) that provide capabilities not previously available in Azure MCP Server: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
   - agent_container_control: Control an agent container
   - agent_container_status_get: Get the status of an agent container
   - agent_definition_schema_get: Get the schema for an agent definition
@@ -476,7 +489,7 @@ For a complete history of changes included in this release, see entries for vers
 ### Breaking Changes
 
 - Foundry tools previously under the `foundry` namespace have moved to the new `foundryextensions` namespace within Azure MCP Server, retaining direct in-process access to Azure OpenAI, knowledge indexes, agent threads, and resources: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
-  - foundryextensions_agents_get_sdk_sample: Get an SDK code sample for Azure AI Foundry Agents
+  - foundryextensions_agents_get_sdk_sample: Get an SDK code sample for Microsoft Foundry Agents
   - foundryextensions_knowledge_index_list: List knowledge indexes in a Foundry project
   - foundryextensions_knowledge_index_schema: Get the schema of a knowledge index
   - foundryextensions_openai_chat_completions_create: Create a chat completion using an Azure OpenAI deployment
@@ -487,7 +500,7 @@ For a complete history of changes included in this release, see entries for vers
   - foundryextensions_threads_create: Create a new agent thread
   - foundryextensions_threads_get_messages: Get messages from an agent thread
   - foundryextensions_threads_list: List agent threads
-- The following Azure AI Foundry tools were renamed as part of the migration to the external Foundry MCP server (https://mcp.ai.azure.com). See the Breaking Changes entry for the full list of removed tools: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
+- The following Microsoft Foundry tools were renamed as part of the migration to the external Foundry MCP server (https://mcp.ai.azure.com). See the Breaking Changes entry for the full list of removed tools: [[#1771](https://github.com/microsoft/mcp/pull/1771)]
   - foundry_agents_list → agent_get
   - foundry_agents_create → agent_update
   - foundry_agents_connect → agent_invoke
