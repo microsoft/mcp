@@ -13,7 +13,7 @@ param location string = resourceGroup().location == 'westus' ? 'westus2' : resou
 param testApplicationOid string
 
 @description('The VM size for the AKS node pool. Default is Standard_D2lds_v5.')
-param nodeVmSize string = environment().name == 'AzureUSGovernment' ? 'standard_d2alds_v6' : 'Standard_D2lds_v5'
+param nodeVmSize string = environment().name == 'AzureUSGovernment' ? 'Standard_D2alds_v6' : 'Standard_D2lds_v5'
 
 // Create a basic AKS cluster for testing
 resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
