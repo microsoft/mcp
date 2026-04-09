@@ -117,9 +117,9 @@ function Get-LatestMarketplaceVersion {
                     )
                 }
             )
-            # flags 914 = IncludeVersions | IncludeFiles | IncludeAssetUri | IncludeStatistics
-            # This requests version information needed to determine the latest published version
-            flags = 914
+            # flags 387 = IncludeVersions (0x1) | IncludeFiles (0x2) | IncludeAssetUri (0x80) | IncludeStatistics (0x100)
+            # IncludeVersions (0x1) is required to retrieve all published versions, not just the latest.
+            flags = 387
         } | ConvertTo-Json -Depth 10
 
         $response = Invoke-RestMethod -Uri $marketplaceUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction SilentlyContinue
