@@ -1,5 +1,58 @@
 # Release History
 
+## 2.0.0 (2026-04-09)
+
+**🚀 New Major Release — Azure MCP Server 2.0**
+
+We're thrilled to announce the second major release of the Azure MCP Server! Version 2.0 represents a significant evolution from the 1.0 release, bringing remote HTTP deployment, dramatically expanded Azure service coverage, comprehensive security hardening, and major performance improvements. This release spans over 40 beta iterations and hundreds of contributions.
+
+### Key Features & Improvements
+
+- **Deploy as a Remote MCP Server**: Deploy the Azure MCP Server as a shared, multi-user HTTP service with Entra ID authentication and On-Behalf-Of (OBO) authorization
+- **Use with Sovereign Clouds**: Full support for Azure Government and Azure China clouds across multiple services
+- **More Docker Options**: AMD64 and ARM64 images are now available. Trimmed binaries cut image size by ~60% compared to initial Docker builds
+- **New Installation Methods**: Added two new distribution formats:
+  - **PyPI**: With UVX support for Python/uv-based workflows
+  - **MCP Bundles (`.mcpb`)**: A portable format compatible with Claude Desktop
+- **Security Hardening**: Comprehensive input validation, SSRF protection, SQL/KQL injection prevention, query parameterization, and endpoint validation across all services
+- **User Confirmation Prompts**: Added user confirmation prompts for sensitive and destructive operations via MCP elicitation
+- **Foundry Integration**: Added integration with the external Azure AI Foundry MCP server (`https://mcp.ai.azure.com`) providing agent lifecycle, batch evaluation, prompt optimization, and project connection management tools
+- **More Tools**: Increased tool coverage from 170+ to 260+ across 50+ services
+- **Improved Performance**: Server startup reduced from ~20s to ~1-2s when proxied MCP servers are enabled (Microsoft Documentation, Azure Developer CLI, Azure AI Foundry)
+
+### Getting Started
+
+Install the Azure MCP Server from your preferred platform:
+
+- **VS Code**: Install the [Azure MCP Server extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)
+- **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
+- **Visual Studio 2026**: Install the [Azure and AI Development workload](https://learn.microsoft.com/en-us/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026#install-github-copilot-for-azure)
+- **Claude and GitHub Copilot CLI**: Install the [Azure Copilot Plugin](https://github.com/microsoft/GitHub-Copilot-for-Azure?tab=readme-ov-file#usage)
+- **IntelliJ IDEA**: Install the [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
+- **Eclipse IDE**: Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+- **NuGet**: Run `dotnet tool install -g Azure.Mcp --version 2.0.0`
+- **npm**: Run `npx @azure/mcp@2.0.0`
+- **Docker**: Run `docker pull mcr.microsoft.com/azure-mcp:2.0.0`
+- **PyPI**: Run `pip install msmcp-azure==2.0.0`
+- **MCP Bundles**: Download the `.mcpb` file for your platform/architecture and open it with your client, like Claude Desktop:
+  - Linux: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-linux-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-linux-arm64.mcpb)
+  - macOS: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-osx-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-osx-arm64.mcpb)
+  - Windows: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-win-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-win-arm64.mcpb)
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication](https://github.com/microsoft/mcp/blob/release/azure/2.x/docs/Authentication.md)
+- [Remote Server Deployment](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/README.md#remote-mcp-server-preview)
+- [Connecting to Sovereign Clouds](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/2.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 2.0!
+
+For a complete history of changes included in this release, see entries for versions [2.0.0-beta.1](#200-beta1-2025-10-29) through [2.0.0-beta.40](#200-beta40-2026-04-07).
 
 ## 2.0.40 (2026-04-07) (pre-release)
 
