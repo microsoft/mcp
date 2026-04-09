@@ -483,4 +483,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
     }
+
+    /// <summary>
+    /// Determines the polling interval to use for long-running operations. During live testing (Live or Record) the
+    /// poll interval will use liveMilliseconds for the interval. During playback testing a static 1 millisecond poll
+    /// interval is used.
+    /// </summary>
+    /// <param name="liveMilliseconds">Polling interval in milliseconds for live tests.</param>
+    /// <returns>The polling interval TimeSpan.</returns>
+    public TimeSpan PollInterval(long liveMilliseconds)
+        => TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(1) : TimeSpan.FromMilliseconds(liveMilliseconds);
 }
