@@ -99,7 +99,14 @@ static class Program
                     model = args[++i];
                     break;
                 case "--parallel" when i + 1 < args.Length:
-                    int.TryParse(args[++i], out parallel);
+                    if (!int.TryParse(args[++i], out var parsedParallel))
+                    {
+                        Console.WriteLine("Invalid value for --parallel. Using default: " + CopilotTestConstants.Parallel);
+                    }
+                    else
+                    {
+                        parallel = parsedParallel;
+                    }
                     break;
                 case "--prompts-file" when i + 1 < args.Length: 
                     promptsFile = args[++i];
@@ -327,7 +334,7 @@ static class Program
             catch (Exception e)
             {
                 WriteLineLock($"  {toolTag} WARNING: Attempt {attempt} failed: {e.Message}");
-                if (attempt < retries)
+                if (attempt <= retries)
                 {
                     continue;
                 }
@@ -363,7 +370,7 @@ static class Program
                 };
             }
 
-            if (attempt < retries)
+            if (attempt <= retries)
             {
                 WriteLineLock($"  {toolTag} RETRY (attempt {attempt + 1})...");
             }

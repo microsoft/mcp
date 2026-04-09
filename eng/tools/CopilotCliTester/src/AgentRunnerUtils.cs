@@ -60,8 +60,15 @@ internal static class AgentRunnerUtils
     {
         return GetToolCalls(metadata)
             .Select(ResolveToolName)
+            .Where(IsToolName)
             .ToList();
     }
+
+    /// <summary>
+    /// Returns true if the name looks like a tool identifier rather than a raw shell command. Tool names are alphanumeric with underscores, hyphens, and dots (e.g. "storage_account_list", "azure-storage", "grep_search").
+    /// </summary>
+    private static bool IsToolName(string name) =>
+        name.Length > 0 && name.All(c => char.IsLetterOrDigit(c) || c is '_' or '-' or '.');
 
     private static string ResolveToolName(AgentSessionEvent evt)
     {
