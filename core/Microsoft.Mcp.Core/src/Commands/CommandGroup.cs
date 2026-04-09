@@ -32,6 +32,7 @@ public class CommandGroup(string name, string description, string? title = null)
     /// Prefer using the overload that takes an IBaseCommand directly when possible, as it is simpler and less
     /// error-prone. Use this overload when you need to specify a path that is different from the command's name or
     /// when you want to add a command to a subgroup.
+    /// </para>
     /// </summary>
     /// <param name="path">The command path.</param>
     /// <param name="command">The command to add to this group.</param>
