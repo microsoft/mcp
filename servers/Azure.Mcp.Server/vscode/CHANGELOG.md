@@ -18,18 +18,18 @@ We're thrilled to announce the second major release of the Azure MCP Server! Ver
 - **User Confirmation Prompts**: Added user confirmation prompts for sensitive and destructive operations via MCP elicitation
 - **Foundry Integration**: Added integration with the external Microsoft Foundry MCP server (`https://mcp.ai.azure.com`) providing agent lifecycle, batch evaluation, prompt optimization, and project connection management tools
 - **More Tools**: Increased tool coverage from 170+ to 260+ across 50+ services, including the following new namespaces:
-  - Azure Advisor - `advisor`
-  - Azure Compute - `compute`
-  - Azure Container Apps - `containerapps`
-  - Azure Device Registry - `deviceregistry`
-  - Azure File Shares - `fileshares`
-  - Azure Functions - `functions`
-  - Azure Migrate - `azuremigrate`
-  - Azure Policy - `policy`
-  - Azure Pricing - `pricing`
-  - Azure Service Fabric - `servicefabric`
-  - Azure Storage Sync - `storagesync`
-  - Azure Well-Architected Framework - `wellarchitectedframework`
+  - Azure Advisor – `advisor`
+  - Azure Compute – `compute`
+  - Azure Container Apps – `containerapps`
+  - Azure Device Registry – `deviceregistry`
+  - Azure File Shares – `fileshares`
+  - Azure Functions – `functions`
+  - Azure Migrate – `azuremigrate`
+  - Azure Policy – `policy`
+  - Azure Pricing – `pricing`
+  - Azure Service Fabric – `servicefabric`
+  - Azure Storage Sync – `storagesync`
+  - Azure Well-Architected Framework – `wellarchitectedframework`
 - **Improved Performance**: Server startup reduced from ~20s to ~1-2s when proxied MCP servers are enabled (Microsoft Documentation, Azure Developer CLI, Microsoft Foundry)
 
 ### Getting Started
@@ -76,13 +76,13 @@ For a complete history of changes included in this release, see entries for vers
 **Tool Consolidation:** Numerous related tools were consolidated for a more streamlined tool surface:
 
 - **Cosmos DB/MySQL/PostgreSQL**: Consolidated **list** commands:
-    - Removed `cosmos account list`, `cosmos database list`, and `cosmos database container list` - use `cosmos list` with the appropriate parameters to route hierarchically
+    - Removed `cosmos account list`, `cosmos database list`, and `cosmos database container list` – use `cosmos list` with the appropriate parameters to route hierarchically
     - Removed `postgres server list`, `postgres database list`, `postgres table list` – use `postgres list` with the appropriate parameters to route hierarchically
     - Removed `mysql server list`, `mysql database list`, `mysql table list` – use `mysql list` with the appropriate parameters to route hierarchically
 - **Key Vault**: Merged **get**/**list** tools:
-    - Removed `keyvault key list` - use `keyvault key get` without providing a key name to list keys in a key vault
-    - Removed `keyvault secret list` - use `keyvault secret get` without providing a secret name to list secrets in a key vault
-    - Removed `keyvault certificate list` - use `keyvault certificate get` without providing a certificate name to list certificates in a key vault
+    - Removed `keyvault key list` – use `keyvault key get` without providing a key name to list keys in a key vault
+    - Removed `keyvault secret list` – use `keyvault secret get` without providing a secret name to list secrets in a key vault
+    - Removed `keyvault certificate list` – use `keyvault certificate get` without providing a certificate name to list certificates in a key vault
 - **Monitor WebTest**: Merged **get**/**list** and **create**/**update** tools:
     - Removed `monitor webtests list` – use `monitor webtests get` without providing a WebTest name to list WebTests in a resource group
     - Removed `monitor webtests update` – use `monitor webtests createorupdate` for both create and update scenarios
