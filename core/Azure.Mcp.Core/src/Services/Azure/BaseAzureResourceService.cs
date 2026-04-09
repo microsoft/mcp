@@ -87,7 +87,7 @@ public abstract class BaseAzureResourceService(
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
-        int limit = 10,
+        int limit = 50,
         CancellationToken cancellationToken = default,
         string? tenant = null)
     {
@@ -183,7 +183,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
-    /// <param name="pageSize">Maximum number of results per page (default: 50)</param>
+    /// <param name="pageSize">Maximum number of results per page (default: 10)</param>
     /// <param name="skipToken">Optional skip token for pagination continuation</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
     /// <param name="cancellationToken">Cancellation token</param>
