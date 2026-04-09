@@ -190,6 +190,8 @@ public sealed class FunctionsServiceTests
     [InlineData("https://github.com/AZURE/repo", true)]
     [InlineData("https://github.com/Azure-Samples/my-sample", true)]
     [InlineData("https://github.com/azure-samples/another-sample", true)]
+    [InlineData("https://github.com/microsoft/repo", true)]
+    [InlineData("https://github.com/Microsoft/azure-functions-agent", true)]
     public void IsValidRepositoryUrl_AllowedOrg_ReturnsTrue(string url, bool expected)
     {
         Assert.Equal(expected, GitHubUrlValidator.IsValidRepositoryUrl(url));
@@ -198,7 +200,7 @@ public sealed class FunctionsServiceTests
     [Theory]
     [InlineData("https://github.com/malicious-org/repo")]
     [InlineData("https://github.com/evil/templates")]
-    [InlineData("https://github.com/microsoft/repo")]
+    [InlineData("https://github.com/random-user/repo")]
     [InlineData("https://github.com/")]
     [InlineData("https://github.com/Azure/")]              // org only, no repo
     [InlineData("https://github.com/Azure")]               // org only, no trailing slash

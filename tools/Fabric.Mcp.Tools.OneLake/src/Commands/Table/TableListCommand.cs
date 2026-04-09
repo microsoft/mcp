@@ -97,7 +97,7 @@ public sealed class TableListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing tables. Options: {@Options}", options);
+            _logger.LogError(ex, "Error listing tables. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Namespace: {Namespace}.", options.WorkspaceId, options.ItemId, options.Namespace);
             HandleException(context, ex);
         }
 

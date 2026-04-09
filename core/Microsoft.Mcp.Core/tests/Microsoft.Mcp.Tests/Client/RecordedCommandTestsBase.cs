@@ -10,11 +10,11 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
@@ -331,13 +331,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task ApplySanitizersAsync()
     {
-        List<SanitizerAddition> sanitizers = new();
-
-        sanitizers.AddRange(GeneralRegexSanitizers);
-        sanitizers.AddRange(BodyRegexSanitizers);
-        sanitizers.AddRange(HeaderRegexSanitizers);
-        sanitizers.AddRange(UriRegexSanitizers);
-        sanitizers.AddRange(BodyKeySanitizers);
+        List<SanitizerAddition> sanitizers =
+        [
+            .. GeneralRegexSanitizers,
+            .. BodyRegexSanitizers,
+            .. HeaderRegexSanitizers,
+            .. UriRegexSanitizers,
+            .. BodyKeySanitizers,
+        ];
 
         if (sanitizers.Count > 0)
         {
@@ -482,4 +483,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
     }
+
+    /// <summary>
+    /// Determines the polling interval to use for long-running operations. During live testing (Live or Record) the
+    /// poll interval will use liveMilliseconds for the interval. During playback testing a static 1 millisecond poll
+    /// interval is used.
+    /// </summary>
+    /// <param name="liveMilliseconds">Polling interval in milliseconds for live tests.</param>
+    /// <returns>The polling interval TimeSpan.</returns>
+    public TimeSpan PollInterval(long liveMilliseconds)
+        => TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(1) : TimeSpan.FromMilliseconds(liveMilliseconds);
 }

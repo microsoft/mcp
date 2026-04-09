@@ -15,6 +15,7 @@ using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
@@ -116,8 +117,16 @@ public class PostgresService(
         var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
+
         await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType, cancellationToken);
-        await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        await using NpgsqlCommand command = _dbProvider.GetCommand(parameterizedQuery, resource);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command, cancellationToken);
 
         var rows = new List<string>();
@@ -318,7 +327,8 @@ public class PostgresService(
             Source = "user-override"
         };
 
-        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Completed, configData, cancellationToken);
+        var updateOperation = await configResponse.Value.UpdateAsync(WaitUntil.Started, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         if (updateOperation.HasCompleted && updateOperation.HasValue)
         {
             return $"Parameter '{param}' updated successfully to '{value}'.";
@@ -340,6 +350,9 @@ public class PostgresService(
         };
         return builder.ConnectionString;
     }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.Standard);
 
     private async Task<string> GetPassword(string authType, string? password, CancellationToken cancellationToken)
     {

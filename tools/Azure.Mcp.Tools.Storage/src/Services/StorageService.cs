@@ -461,8 +461,33 @@ public class StorageService(
         return tables;
     }
 
+    internal static void ValidateStorageAccountName(string account)
+    {
+        if (string.IsNullOrWhiteSpace(account))
+        {
+            throw new ArgumentException("Storage account name cannot be null or empty.", nameof(account));
+        }
+
+        if (account.Length < 3 || account.Length > 24)
+        {
+            throw new ArgumentException(
+                $"Storage account name must be between 3 and 24 characters. Got: {account.Length}.", nameof(account));
+        }
+
+        foreach (var c in account)
+        {
+            if (!char.IsAsciiLetter(c) && !char.IsAsciiDigit(c) || char.IsAsciiLetterUpper(c))
+            {
+                throw new ArgumentException(
+                    $"Storage account name contains invalid character '{c}'. Only lowercase ASCII letters and numbers are allowed.", nameof(account));
+            }
+        }
+    }
+
     private string GetBlobEndpoint(string account)
     {
+        account = account.ToLowerInvariant();
+        ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
@@ -474,6 +499,8 @@ public class StorageService(
 
     private string GetTableEndpoint(string? account)
     {
+        account = account!.ToLowerInvariant();
+        ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",

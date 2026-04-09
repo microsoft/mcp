@@ -12,7 +12,8 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
+    : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -65,7 +66,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
-    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
     {
         try
         {
@@ -90,16 +91,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
 
-        if (proxy != null && proxy.Proxy != null)
-        {
-            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
-
-            if (TestMode is TestMode.Playback)
-            {
-                envVarDictionary.Add("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
-            }
-        }
-
         // Add any custom environment variables from settings
         if (Settings?.EnvironmentVariables != null)
         {
@@ -109,20 +100,32 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             }
         }
 
+        if (proxy != null && proxy.Proxy != null)
+        {
+            envVarDictionary["TEST_PROXY_URL"] = proxy.Proxy.BaseUri;
+
+            if (TestMode is TestMode.Playback)
+            {
+                // AZURE_TOKEN_CREDENTIALS=PlaybackTokenCredential tells the server to use a special credential that
+                // returns fake tokens in playback mode, which prevents any accidental live calls if a test is misconfigured
+                envVarDictionary["AZURE_TOKEN_CREDENTIALS"] = "PlaybackTokenCredential";
+                envVarDictionary["TEST_MODE"] = "Playback";
+            }
+        }
+
         return envVarDictionary;
     }
 
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
         await LoadSettingsAsync();
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation"]
-            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation"];
+            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
+            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
@@ -263,8 +266,5 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
-    protected virtual ValueTask DisposeAsyncCore()
-    {
-        return ValueTask.CompletedTask;
-    }
+    protected virtual ValueTask DisposeAsyncCore() => ValueTask.CompletedTask;
 }
