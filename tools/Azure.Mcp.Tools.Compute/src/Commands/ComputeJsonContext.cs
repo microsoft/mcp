@@ -3,6 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.GalleryApplication;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
@@ -18,6 +19,20 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(DiskUpdateCommand.DiskUpdateCommandResult))]
 [JsonSerializable(typeof(Models.DiskInfo))]
 [JsonSerializable(typeof(List<Models.DiskInfo>))]
+[JsonSerializable(typeof(GalleryApplicationCreateCommand.GalleryApplicationCreateCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationDeleteCommand.GalleryApplicationDeleteCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationGetCommand.GalleryApplicationGetCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationGetCommand.GalleryApplicationGetListResult))]
+[JsonSerializable(typeof(GalleryApplicationUpdateCommand.GalleryApplicationUpdateCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationVersionCreateCommand.GalleryApplicationVersionCreateCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationVersionDeleteCommand.GalleryApplicationVersionDeleteCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationVersionGetCommand.GalleryApplicationVersionGetCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationVersionGetCommand.GalleryApplicationVersionGetListResult))]
+[JsonSerializable(typeof(GalleryApplicationVersionUpdateCommand.GalleryApplicationVersionUpdateCommandResult))]
+[JsonSerializable(typeof(GalleryApplicationInfo))]
+[JsonSerializable(typeof(GalleryApplicationVersionInfo))]
+[JsonSerializable(typeof(List<GalleryApplicationInfo>))]
+[JsonSerializable(typeof(List<GalleryApplicationVersionInfo>))]
 [JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
 [JsonSerializable(typeof(VmCreateResult))]
 [JsonSerializable(typeof(VmUpdateCommand.VmUpdateCommandResult))]

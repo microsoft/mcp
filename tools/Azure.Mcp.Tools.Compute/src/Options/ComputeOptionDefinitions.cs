@@ -5,6 +5,21 @@ namespace Azure.Mcp.Tools.Compute.Options;
 
 public static class ComputeOptionDefinitions
 {
+    public const string GalleryName = "gallery";
+    public const string GalleryApplicationName = "gallery-application";
+    public const string GalleryApplicationVersionName = "gallery-application-version";
+    public const string ExcludeFromLatestName = "exclude-from-latest";
+    public const string EndOfLifeDateName = "end-of-life-on";
+    public const string TargetRegionsName = "target-regions";
+    public const string SourceMediaLinkName = "source-media-link";
+    public const string DefaultConfigurationLinkName = "default-configuration-link";
+    public const string ReplicaCountName = "replica-count";
+    public const string ManageActionInstallName = "manage-action-install";
+    public const string ManageActionRemoveName = "manage-action-remove";
+    public const string ManageActionUpdateName = "manage-action-update";
+    public const string PackageFileNameName = "package-file-name";
+    public const string ConfigFileNameName = "config-file-name";
+    public const string ScriptBehaviorAfterRebootName = "script-behavior-after-reboot";
     public const string VmNameName = "vm-name";
     public const string VmssNameName = "vmss-name";
     public const string InstanceIdName = "instance-id";
@@ -180,6 +195,96 @@ public static class ComputeOptionDefinitions
     public static readonly Option<string> VmName = new($"--{VmNameName}", "--name")
     {
         Description = "The name of the virtual machine",
+        Required = false
+    };
+
+    public static readonly Option<string> Gallery = new($"--{GalleryName}")
+    {
+        Description = "The name of the Azure Compute Gallery.",
+        Required = false
+    };
+
+    public static readonly Option<string> GalleryApplication = new($"--{GalleryApplicationName}")
+    {
+        Description = "The name of the gallery application.",
+        Required = false
+    };
+
+    public static readonly Option<string> GalleryApplicationVersion = new($"--{GalleryApplicationVersionName}")
+    {
+        Description = "The name of the gallery application version.",
+        Required = false
+    };
+
+    public static readonly Option<bool?> ExcludeFromLatest = new($"--{ExcludeFromLatestName}")
+    {
+        Description = "Whether this gallery application version should be excluded from latest version selection.",
+        Required = false
+    };
+
+    public static readonly Option<string> EndOfLifeDate = new($"--{EndOfLifeDateName}")
+    {
+        Description = "End-of-life date for this version in ISO 8601 format (for example, 2027-12-31T00:00:00Z).",
+        Required = false
+    };
+
+    public static readonly Option<string> TargetRegions = new($"--{TargetRegionsName}")
+    {
+        Description = "Comma-separated Azure regions for replication (for example, eastus,westus2).",
+        Required = false
+    };
+
+    public static readonly Option<string> SourceMediaLink = new($"--{SourceMediaLinkName}")
+    {
+        Description = "Media link (URI) to the application package/source artifact for the gallery application version publishing profile.",
+        Required = false
+    };
+
+    public static readonly Option<string> DefaultConfigurationLink = new($"--{DefaultConfigurationLinkName}")
+    {
+        Description = "Default configuration file URI for the gallery application version package.",
+        Required = false
+    };
+
+    public static readonly Option<int?> ReplicaCount = new($"--{ReplicaCountName}")
+    {
+        Description = "Replica count for publishing profile replication.",
+        Required = false
+    };
+
+    public static readonly Option<string> ManageActionInstall = new($"--{ManageActionInstallName}")
+    {
+        Description = "Command/script used for install action in manage actions.",
+        Required = false
+    };
+
+    public static readonly Option<string> ManageActionRemove = new($"--{ManageActionRemoveName}")
+    {
+        Description = "Command/script used for remove action in manage actions.",
+        Required = false
+    };
+
+    public static readonly Option<string> ManageActionUpdate = new($"--{ManageActionUpdateName}")
+    {
+        Description = "Command/script used for update action in manage actions.",
+        Required = false
+    };
+
+    public static readonly Option<string> PackageFileName = new($"--{PackageFileNameName}")
+    {
+        Description = "Package file name to use on VM for this application version.",
+        Required = false
+    };
+
+    public static readonly Option<string> ConfigFileName = new($"--{ConfigFileNameName}")
+    {
+        Description = "Configuration file name to use on VM for this application version.",
+        Required = false
+    };
+
+    public static readonly Option<string> ScriptBehaviorAfterReboot = new($"--{ScriptBehaviorAfterRebootName}")
+    {
+        Description = "Behavior after reboot for install/update/remove; accepted values from GalleryApplicationScriptRebootBehavior.",
         Required = false
     };
 

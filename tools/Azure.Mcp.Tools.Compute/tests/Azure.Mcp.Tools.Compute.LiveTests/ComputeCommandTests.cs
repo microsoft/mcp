@@ -2,8 +2,25 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
+using System.Security.Cryptography;
+using Azure;
+using Azure.Core;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Compute;
+using Azure.ResourceManager.Compute.Models;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Storage;
+using Azure.ResourceManager.Storage.Models;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Helpers;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -13,10 +30,19 @@ namespace Azure.Mcp.Tools.Compute.LiveTests;
 
 public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    private readonly ITestOutputHelper _output = output;
+
     // Use Settings.ResourceBaseName with suffixes (following SQL pattern)
     private string VmName => $"{Settings.ResourceBaseName}-vm";
     private string VmssName => $"{Settings.ResourceBaseName}-vmss";
     private string DiskName => $"{Settings.ResourceBaseName}-disk";
+    private string GalleryName => $"{Settings.ResourceBaseName.Replace("-", string.Empty)}gallery";
+    private const string GalleryArtifactsContainerName = "galleryapp";
+    private const string GalleryApplicationPackageBlobName = "noop-package.zip";
+    private const string GalleryApplicationConfigBlobName = "noop-config.json";
+    private const string UserAssignedManagedIdentityApiVersion = "2024-11-30";
+    private const string RoleAssignmentsApiVersion = "2022-04-01";
+    private const string StorageBlobDataContributorRoleDefinitionId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe";
 
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
@@ -64,6 +90,22 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..adminPassword")
         {
             Value = "REDACTED",
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..['source-media-link']")
+        {
+            Value = "https://sanitized.example/source",
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..['default-configuration-link']")
+        {
+            Value = "https://sanitized.example/config",
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..sourceMediaLink")
+        {
+            Value = "https://sanitized.example/source",
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..defaultConfigurationLink")
+        {
+            Value = "https://sanitized.example/config",
         })
     ];
 
@@ -586,6 +628,642 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var success = result.AssertProperty("Success");
         Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
+
+    #endregion
+
+    #region Gallery Application Tests
+
+    [Fact]
+    public async Task Should_crud_gallery_application_and_version()
+    {
+        var galleryApplicationName = RegisterOrRetrieveVariable("galleryApplicationCrudName", $"ga-{DateTime.UtcNow:MMddHHmmss}");
+        var versionName = RegisterOrRetrieveVariable("galleryApplicationVersionCrudName", "1.0.0");
+
+        await EnsureGalleryExistsAsync(GalleryName, "eastus2", TestContext.Current.CancellationToken);
+        await EnsureGalleryManagedIdentityAsync(GalleryName, "eastus2", TestContext.Current.CancellationToken);
+        var galleryArtifacts = await EnsureGalleryArtifactsAsync("eastus2", TestContext.Current.CancellationToken);
+        var sourceMediaLink = RegisterOrRetrieveVariable("galleryApplicationSourceMediaLink", galleryArtifacts.SourceMediaLink);
+        var defaultConfigurationLink = RegisterOrRetrieveVariable("galleryApplicationDefaultConfigurationLink", galleryArtifacts.DefaultConfigurationLink);
+
+        var createAppResult = await CallToolAsync(
+            "compute_galleryapplication_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "gallery", GalleryName },
+                { "gallery-application", galleryApplicationName },
+                { "location", "eastus2" },
+                { "tags", "env=live owner=compute" }
+            });
+
+        var createdApp = createAppResult.AssertProperty("GalleryApplication");
+        Assert.Equal(galleryApplicationName, createdApp.GetProperty("name").GetString());
+
+        var getAppResult = await CallToolAsync(
+            "compute_galleryapplication_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "gallery", GalleryName },
+                { "gallery-application", galleryApplicationName }
+            });
+
+        var fetchedApp = getAppResult.AssertProperty("GalleryApplication");
+        Assert.Equal(galleryApplicationName, fetchedApp.GetProperty("name").GetString());
+
+        var updateAppResult = await CallToolAsync(
+            "compute_galleryapplication_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "gallery", GalleryName },
+                { "gallery-application", galleryApplicationName },
+                { "tags", "env=live owner=compute-updated" }
+            });
+
+        var updatedApp = updateAppResult.AssertProperty("GalleryApplication");
+        Assert.Equal(galleryApplicationName, updatedApp.GetProperty("name").GetString());
+
+        try
+        {
+            var createVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName },
+                    { "gallery-application-version", versionName },
+                    { "location", "eastus2" },
+                    { "source-media-link", sourceMediaLink },
+                    { "default-configuration-link", defaultConfigurationLink },
+                    { "replica-count", 1 },
+                    { "exclude-from-latest", true },
+                    { "manage-action-install", "install.sh" },
+                    { "manage-action-remove", "remove.sh" },
+                    { "manage-action-update", "update.sh" },
+                    { "package-file-name", "package.zip" },
+                    { "config-file-name", "settings.json" },
+                    { "script-behavior-after-reboot", "None" },
+                    { "target-regions", "eastus2" }
+                });
+
+            var createdVersion = createVersionResult.AssertProperty("GalleryApplicationVersion");
+            Assert.Equal(versionName, createdVersion.GetProperty("name").GetString());
+            Assert.Equal(sourceMediaLink, createdVersion.GetProperty("sourceMediaLink").GetString());
+
+            var getVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName },
+                    { "gallery-application-version", versionName }
+                });
+
+            var fetchedVersion = getVersionResult.AssertProperty("GalleryApplicationVersion");
+            Assert.Equal(versionName, fetchedVersion.GetProperty("name").GetString());
+
+            var listVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName }
+                });
+
+            var versions = listVersionResult.AssertProperty("GalleryApplicationVersions");
+            Assert.Equal(JsonValueKind.Array, versions.ValueKind);
+            Assert.Contains(versions.EnumerateArray(), v => v.GetProperty("name").GetString() == versionName);
+
+            var updateVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_update",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName },
+                    { "gallery-application-version", versionName },
+                    { "exclude-from-latest", false },
+                    { "target-regions", "eastus2,westus2" }
+                });
+
+            var updatedVersion = updateVersionResult.AssertProperty("GalleryApplicationVersion");
+            Assert.Equal(versionName, updatedVersion.GetProperty("name").GetString());
+            Assert.Equal(JsonValueKind.False, updatedVersion.GetProperty("excludeFromLatest").ValueKind);
+
+            var deleteVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName },
+                    { "gallery-application-version", versionName }
+                });
+
+            var versionDeleted = deleteVersionResult.AssertProperty("Deleted");
+            Assert.Equal(JsonValueKind.True, versionDeleted.ValueKind);
+
+            var getDeletedVersionResult = await CallToolAsync(
+                "compute_galleryapplicationversion_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName },
+                    { "gallery-application-version", versionName }
+                });
+
+            Assert.NotNull(getDeletedVersionResult);
+            Assert.True(getDeletedVersionResult.Value.TryGetProperty("message", out _));
+        }
+        finally
+        {
+            var deleteAppResult = await CallToolAsync(
+                "compute_galleryapplication_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName }
+                });
+
+            var appDeleted = deleteAppResult.AssertProperty("Deleted");
+            Assert.Equal(JsonValueKind.True, appDeleted.ValueKind);
+
+            var getDeletedAppResult = await CallToolAsync(
+                "compute_galleryapplication_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "gallery", GalleryName },
+                    { "gallery-application", galleryApplicationName }
+                });
+
+            Assert.NotNull(getDeletedAppResult);
+            Assert.True(getDeletedAppResult.Value.TryGetProperty("message", out _));
+
+            // Cleanup gallery artifacts storage account
+            await CleanupGalleryArtifactsAsync(TestContext.Current.CancellationToken);
+        }
+    }
+
+    private async Task EnsureGalleryExistsAsync(string galleryName, string location, CancellationToken cancellationToken)
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
+
+        var credentialOptions = new DefaultAzureCredentialOptions
+        {
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,
+        };
+
+        var armClient = new ArmClient(new DefaultAzureCredential(credentialOptions));
+        var subscription = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(Settings.SubscriptionId));
+        var resourceGroup = await subscription.GetResourceGroupAsync(Settings.ResourceGroupName, cancellationToken);
+        var galleries = resourceGroup.Value.GetGalleries();
+
+        try
+        {
+            await galleries.GetAsync(galleryName, cancellationToken: cancellationToken);
+            return;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            var galleryData = new GalleryData(new AzureLocation(location))
+            {
+                Description = "Compute live tests gallery"
+            };
+
+            await galleries.CreateOrUpdateAsync(WaitUntil.Completed, galleryName, galleryData, cancellationToken);
+        }
+    }
+
+    private async Task<(string SourceMediaLink, string DefaultConfigurationLink)> EnsureGalleryArtifactsAsync(string location, CancellationToken cancellationToken)
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return (
+                "https://sanitized.blob.core.windows.net/sanitized/noop-package.zip",
+                "https://sanitized.blob.core.windows.net/sanitized/noop-config.json");
+        }
+
+        var credentialOptions = new DefaultAzureCredentialOptions
+        {
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,
+        };
+
+        var armClient = new ArmClient(new DefaultAzureCredential(credentialOptions));
+        var subscription = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(Settings.SubscriptionId));
+        var resourceGroup = await subscription.GetResourceGroupAsync(Settings.ResourceGroupName, cancellationToken);
+
+        var storageAccountName = GetStorageAccountName();
+        var storageAccount = await EnsureStorageAccountAsync(resourceGroup.Value, storageAccountName, location, cancellationToken);
+        var galleryIdentity = await EnsureUserAssignedManagedIdentityAsync(resourceGroup.Value, location, cancellationToken);
+        var roleAssigned = await AssignRoleToPrincipalAsync(storageAccount.Id.ToString(), galleryIdentity.PrincipalId, "ServicePrincipal", cancellationToken);
+        if (roleAssigned)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+        }
+
+        // Use Azure AD credentials for the test runner to seed the artifacts.
+        var blobServiceClient = new BlobServiceClient(
+            new Uri($"https://{storageAccountName}.blob.core.windows.net"),
+            new DefaultAzureCredential(credentialOptions));
+
+        var containerClient = blobServiceClient.GetBlobContainerClient(GalleryArtifactsContainerName);
+        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+
+        var packageBlob = containerClient.GetBlobClient(GalleryApplicationPackageBlobName);
+        var packagePayload = CreateNoOpZipArchive();
+        using (var packageStream = new MemoryStream(packagePayload))
+        {
+            await UploadWithRetryAsync(packageBlob, packageStream, cancellationToken);
+        }
+
+        var configBlob = containerClient.GetBlobClient(GalleryApplicationConfigBlobName);
+        var configPayload = BinaryData.FromString("{\"description\":\"noop\"}");
+        using (var configStream = new MemoryStream(configPayload.ToArray()))
+        {
+            await UploadWithRetryAsync(configBlob, configStream, cancellationToken);
+        }
+
+        var sourceMediaLink = packageBlob.Uri.ToString();
+        var defaultConfigurationLink = configBlob.Uri.ToString();
+        return (sourceMediaLink, defaultConfigurationLink);
+    }
+
+    private static async Task UploadWithRetryAsync(BlobClient blob, Stream content, CancellationToken cancellationToken)
+    {
+        const int maxRetries = 6;
+        const int delayMs = 10000;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            try
+            {
+                // Reset stream position for retries
+                if (content.CanSeek)
+                    content.Seek(0, SeekOrigin.Begin);
+
+                await blob.UploadAsync(content, overwrite: true, cancellationToken);
+                return; // Success
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 403 && attempt < maxRetries - 1)
+            {
+                // Authorization error - likely RBAC propagation delay
+                // Wait and retry
+                await Task.Delay(delayMs, cancellationToken);
+            }
+        }
+
+        // All retries failed - let the last exception propagate
+        if (content.CanSeek)
+            content.Seek(0, SeekOrigin.Begin);
+        await blob.UploadAsync(content, overwrite: true, cancellationToken);
+    }
+
+    private static byte[] CreateNoOpZipArchive()
+    {
+        using var stream = new MemoryStream();
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var entry = archive.CreateEntry("install.sh");
+            using var writer = new StreamWriter(entry.Open());
+            writer.WriteLine("#!/usr/bin/env sh");
+            writer.WriteLine("echo noop");
+        }
+
+        return stream.ToArray();
+    }
+
+    private async Task<StorageAccountResource> EnsureStorageAccountAsync(ResourceGroupResource resourceGroup, string storageAccountName, string location, CancellationToken cancellationToken)
+    {
+        var storageAccounts = resourceGroup.GetStorageAccounts();
+        StorageAccountResource storageAccount;
+
+        try
+        {
+            var existing = await storageAccounts.GetAsync(storageAccountName, cancellationToken: cancellationToken);
+            storageAccount = existing.Value;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            var createParams = new StorageAccountCreateOrUpdateContent(
+                new StorageSku(StorageSkuName.StandardLrs),
+                StorageKind.StorageV2,
+                new AzureLocation(location))
+            {
+                AllowBlobPublicAccess = false,
+                AllowSharedKeyAccess = false,
+                MinimumTlsVersion = StorageMinimumTlsVersion.Tls1_2,
+            };
+
+            var created = await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, storageAccountName, createParams, cancellationToken);
+            storageAccount = created.Value;
+        }
+
+        // Assign Storage Blob Data Contributor role to the current user so the test can seed artifacts.
+        var currentUserObjectId = await GetCurrentUserObjectIdAsync(new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,
+        }), cancellationToken);
+        var roleAssigned = !string.IsNullOrEmpty(currentUserObjectId)
+            && await AssignRoleToPrincipalAsync(storageAccount.Id.ToString(), currentUserObjectId, "User", cancellationToken);
+
+        _output.WriteLine($"Uploader object ID resolved: {!string.IsNullOrEmpty(currentUserObjectId)}");
+        _output.WriteLine($"Uploader storage RBAC assigned: {roleAssigned}");
+
+        // Wait for RBAC propagation if role was assigned
+        if (roleAssigned)
+        {
+            _output.WriteLine("Waiting 60 seconds for uploader RBAC propagation.");
+            await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
+        }
+
+        return storageAccount;
+    }
+
+    private async Task EnsureGalleryManagedIdentityAsync(string galleryName, string location, CancellationToken cancellationToken)
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
+
+        try
+        {
+            var credentialOptions = new DefaultAzureCredentialOptions
+            {
+                TenantId = Settings.TenantId,
+                ExcludeManagedIdentityCredential = true,
+            };
+            var credential = new DefaultAzureCredential(credentialOptions);
+            var armClient = new ArmClient(credential);
+            var subscription = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(Settings.SubscriptionId));
+            var resourceGroup = await subscription.GetResourceGroupAsync(Settings.ResourceGroupName, cancellationToken);
+            var identity = await EnsureUserAssignedManagedIdentityAsync(resourceGroup.Value, location, cancellationToken);
+            var galleries = resourceGroup.Value.GetGalleries();
+            var gallery = await galleries.GetAsync(galleryName, cancellationToken: cancellationToken);
+            var galleryData = gallery.Value.Data;
+
+            galleryData.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned)
+            {
+                UserAssignedIdentities =
+                {
+                    [new ResourceIdentifier(identity.ResourceId)] = new UserAssignedIdentity()
+                }
+            };
+
+            await galleries.CreateOrUpdateAsync(WaitUntil.Completed, galleryName, galleryData, cancellationToken);
+        }
+        catch (Exception)
+        {
+            _output.WriteLine("Failed to configure gallery with a user-assigned managed identity.");
+        }
+    }
+
+    private async Task<(string ResourceId, string PrincipalId, string ClientId)> EnsureUserAssignedManagedIdentityAsync(ResourceGroupResource resourceGroup, string location, CancellationToken cancellationToken)
+    {
+        var identityName = GetGalleryManagedIdentityName();
+        var identityResourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{resourceGroup.Data.Name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}";
+
+        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,
+        });
+        var token = await credential.GetTokenAsync(
+            new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
+            cancellationToken);
+
+        using var httpClient = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"https://management.azure.com{identityResourceId}?api-version={UserAssignedManagedIdentityApiVersion}")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(new { location }),
+                System.Text.Encoding.UTF8,
+                "application/json")
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        using var document = JsonDocument.Parse(content);
+        var properties = document.RootElement.GetProperty("properties");
+
+        return (
+            identityResourceId,
+            properties.GetProperty("principalId").GetString() ?? string.Empty,
+            properties.GetProperty("clientId").GetString() ?? string.Empty);
+    }
+
+    private async Task<bool> AssignRoleToPrincipalAsync(string scope, string principalId, string principalType, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                TenantId = Settings.TenantId,
+                ExcludeManagedIdentityCredential = true,
+            });
+            var roleDefinitionId = $"/subscriptions/{Settings.SubscriptionId}/providers/Microsoft.Authorization/roleDefinitions/{StorageBlobDataContributorRoleDefinitionId}";
+            var roleAssignmentName = CreateDeterministicRoleAssignmentName(scope, principalId, roleDefinitionId);
+            var requestUri = $"https://management.azure.com{scope}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}?api-version={RoleAssignmentsApiVersion}";
+            var requestBody = new
+            {
+                properties = new
+                {
+                    roleDefinitionId,
+                    principalId,
+                    principalType
+                }
+            };
+
+            var armToken = await credential.GetTokenAsync(
+                new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
+                cancellationToken);
+
+            using var httpClient = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Put, requestUri)
+            {
+                Content = new StringContent(
+                    JsonSerializer.Serialize(requestBody),
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", armToken.Token);
+
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            if (response.IsSuccessStatusCode || (int)response.StatusCode == 409)
+            {
+                _output.WriteLine($"Role assignment succeeded for scope {scope} and principal type {principalType}.");
+                return true;
+            }
+
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            _output.WriteLine($"Role assignment failed for scope {scope} with status {(int)response.StatusCode}: {responseBody}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _output.WriteLine($"Role assignment threw for scope {scope}: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static string? GetObjectIdFromJwt(string jwt)
+    {
+        var tokenParts = jwt.Split('.');
+        if (tokenParts.Length != 3)
+        {
+            return null;
+        }
+
+        var payload = tokenParts[1];
+        var padded = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(padded));
+        using var json = JsonDocument.Parse(decoded);
+
+        if (json.RootElement.TryGetProperty("idtyp", out var identityType) && string.Equals(identityType.GetString(), "app", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return json.RootElement.TryGetProperty("oid", out var oidElement) ? oidElement.GetString() : null;
+    }
+
+    private async Task<string?> GetCurrentUserObjectIdAsync(TokenCredential credential, CancellationToken cancellationToken)
+    {
+        using var httpClient = new HttpClient();
+
+        var graphToken = await credential.GetTokenAsync(
+            new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }),
+            cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me?$select=id");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", graphToken.Token);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(content);
+            if (document.RootElement.TryGetProperty("id", out var idElement))
+            {
+                return idElement.GetString();
+            }
+        }
+
+        _output.WriteLine($"Microsoft Graph /me lookup failed with status {(int)response.StatusCode}.");
+
+        var armToken = await credential.GetTokenAsync(
+            new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
+            cancellationToken);
+        var fallbackOid = GetObjectIdFromJwt(armToken.Token);
+        _output.WriteLine($"ARM token OID fallback resolved: {!string.IsNullOrEmpty(fallbackOid)}");
+        return fallbackOid;
+    }
+
+    private static string CreateDeterministicRoleAssignmentName(string scope, string principalId, string roleDefinitionId)
+    {
+        var input = System.Text.Encoding.UTF8.GetBytes($"{scope}|{principalId}|{roleDefinitionId}");
+        var hash = SHA256.HashData(input);
+        Span<byte> guidBytes = stackalloc byte[16];
+        hash.AsSpan(0, 16).CopyTo(guidBytes);
+        return new Guid(guidBytes).ToString();
+    }
+
+    private string GetStorageAccountName()
+    {
+        var baseName = Settings.ResourceBaseName.Replace("-", string.Empty).ToLowerInvariant();
+        var suffix = "gappsa";
+        var maxBaseLength = 24 - suffix.Length;
+        if (baseName.Length > maxBaseLength)
+        {
+            baseName = baseName[..maxBaseLength];
+        }
+
+        return RegisterOrRetrieveVariable("galleryApplicationStorageAccountName", $"{baseName}{suffix}");
+    }
+
+    private string GetGalleryManagedIdentityName()
+    {
+        var baseName = Settings.ResourceBaseName.Replace("-", string.Empty).ToLowerInvariant();
+        var suffix = "gappuai";
+        var maxBaseLength = 128 - suffix.Length - 1;
+        if (baseName.Length > maxBaseLength)
+        {
+            baseName = baseName[..maxBaseLength];
+        }
+
+        return RegisterOrRetrieveVariable("galleryApplicationManagedIdentityName", $"{baseName}-{suffix}");
+    }
+
+    private async Task CleanupGalleryArtifactsAsync(CancellationToken cancellationToken)
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
+
+        try
+        {
+            var storageAccountName = RegisterOrRetrieveVariable("galleryApplicationStorageAccountName", string.Empty);
+            if (string.IsNullOrEmpty(storageAccountName))
+            {
+                return; // No storage account was created
+            }
+
+            var credentialOptions = new DefaultAzureCredentialOptions
+            {
+                TenantId = Settings.TenantId,
+                ExcludeManagedIdentityCredential = true,
+            };
+
+            var armClient = new ArmClient(new DefaultAzureCredential(credentialOptions));
+            var subscription = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(Settings.SubscriptionId));
+            var resourceGroup = await subscription.GetResourceGroupAsync(Settings.ResourceGroupName, cancellationToken);
+            var storageAccounts = resourceGroup.Value.GetStorageAccounts();
+
+            var storageAccount = await storageAccounts.GetAsync(storageAccountName, cancellationToken: cancellationToken);
+            await storageAccount.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Storage account already deleted or doesn't exist, no cleanup needed
+        }
+        catch (Exception)
+        {
+            // Ignore cleanup failures - storage account may be in a transient state
+        }
+    }
+
+    #endregion
+
+    #region Gallery Application Version Tests
+
+    // Combined into Should_crud_gallery_application_and_version.
 
     #endregion
 

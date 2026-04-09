@@ -1334,6 +1334,604 @@ public class ComputeService(
         );
     }
 
+    public async Task<GalleryApplicationInfo> GetGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        var galleryApplicationResource = await galleryResource
+            .GetGalleryApplications()
+            .GetAsync(galleryApplication, cancellationToken: cancellationToken);
+
+        return MapToGalleryApplicationInfo(galleryApplicationResource.Value.Data);
+    }
+
+    public async Task<List<GalleryApplicationInfo>> ListGalleryApplicationsAsync(
+        string gallery,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        var galleryApplications = new List<GalleryApplicationInfo>();
+        await foreach (var galleryApplicationResource in galleryResource.GetGalleryApplications().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            galleryApplications.Add(MapToGalleryApplicationInfo(galleryApplicationResource.Data));
+        }
+
+        return galleryApplications;
+    }
+
+    public async Task<GalleryApplicationInfo> CreateGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        var galleryApplicationData = new GalleryApplicationData(new(location));
+        ApplyTags(galleryApplicationData.Tags, tags);
+
+        var galleryApplicationResource = await galleryResource
+            .GetGalleryApplications()
+            .CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                galleryApplication,
+                galleryApplicationData,
+                cancellationToken);
+
+        return MapToGalleryApplicationInfo(galleryApplicationResource.Value.Data);
+    }
+
+    public async Task<GalleryApplicationInfo> UpdateGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        var galleryApplicationCollection = galleryResource.GetGalleryApplications();
+        var existingGalleryApplication = await galleryApplicationCollection.GetAsync(galleryApplication, cancellationToken: cancellationToken);
+        var galleryApplicationData = existingGalleryApplication.Value.Data;
+
+        if (!string.IsNullOrEmpty(location))
+        {
+            galleryApplicationData.Location = new(location);
+        }
+
+        if (tags is not null)
+        {
+            galleryApplicationData.Tags.Clear();
+            ApplyTags(galleryApplicationData.Tags, tags);
+        }
+
+        var updatedGalleryApplication = await galleryApplicationCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            galleryApplication,
+            galleryApplicationData,
+            cancellationToken);
+
+        return MapToGalleryApplicationInfo(updatedGalleryApplication.Value.Data);
+    }
+
+    public async Task<bool> DeleteGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        try
+        {
+            var galleryApplicationResource = await galleryResource
+                .GetGalleryApplications()
+                .GetAsync(galleryApplication, cancellationToken: cancellationToken);
+
+            await galleryApplicationResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogDebug(
+                ex,
+                "Gallery application {GalleryApplication} not found in gallery {Gallery} and resource group {ResourceGroup}",
+                galleryApplication,
+                gallery,
+                resourceGroup);
+            return false;
+        }
+    }
+
+    public async Task<GalleryApplicationVersionInfo> GetGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryApplicationResource = await GetGalleryApplicationResourceAsync(
+            subscriptionResource,
+            gallery,
+            galleryApplication,
+            resourceGroup,
+            cancellationToken);
+
+        var versionResource = await galleryApplicationResource
+            .GetGalleryApplicationVersions()
+            .GetAsync(galleryApplicationVersion, cancellationToken: cancellationToken);
+
+        return MapToGalleryApplicationVersionInfo(versionResource.Value.Data);
+    }
+
+    public async Task<List<GalleryApplicationVersionInfo>> ListGalleryApplicationVersionsAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryApplicationResource = await GetGalleryApplicationResourceAsync(
+            subscriptionResource,
+            gallery,
+            galleryApplication,
+            resourceGroup,
+            cancellationToken);
+
+        var versions = new List<GalleryApplicationVersionInfo>();
+        await foreach (var versionResource in galleryApplicationResource.GetGalleryApplicationVersions().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            versions.Add(MapToGalleryApplicationVersionInfo(versionResource.Data));
+        }
+
+        return versions;
+    }
+
+    public async Task<GalleryApplicationVersionInfo> CreateGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string? tags = null,
+        string sourceMediaLink = "",
+        string? defaultConfigurationLink = null,
+        int? replicaCount = null,
+        bool? excludeFromLatest = null,
+        string? manageActionInstall = null,
+        string? manageActionRemove = null,
+        string? manageActionUpdate = null,
+        string? packageFileName = null,
+        string? configFileName = null,
+        string? scriptBehaviorAfterReboot = null,
+        string? endOfLifeDate = null,
+        string? targetRegions = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryApplicationResource = await GetGalleryApplicationResourceAsync(
+            subscriptionResource,
+            gallery,
+            galleryApplication,
+            resourceGroup,
+            cancellationToken);
+
+        var data = new GalleryApplicationVersionData(new(location));
+        ApplyTags(data.Tags, tags);
+        ApplyFlattenedPublishingProfile(
+            data,
+            sourceMediaLink,
+            excludeFromLatest,
+            endOfLifeDate,
+            targetRegions,
+            defaultConfigurationLink,
+            replicaCount,
+            manageActionInstall,
+            manageActionRemove,
+            manageActionUpdate,
+            packageFileName,
+            configFileName,
+            scriptBehaviorAfterReboot);
+
+        var versionResource = await galleryApplicationResource
+            .GetGalleryApplicationVersions()
+            .CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                galleryApplicationVersion,
+                data,
+                cancellationToken);
+
+        return MapToGalleryApplicationVersionInfo(versionResource.Value.Data);
+    }
+
+    public async Task<GalleryApplicationVersionInfo> UpdateGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? tags = null,
+        string? sourceMediaLink = null,
+        bool? excludeFromLatest = null,
+        string? endOfLifeDate = null,
+        string? targetRegions = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryApplicationResource = await GetGalleryApplicationResourceAsync(
+            subscriptionResource,
+            gallery,
+            galleryApplication,
+            resourceGroup,
+            cancellationToken);
+
+        var versionCollection = galleryApplicationResource.GetGalleryApplicationVersions();
+        var existingVersion = await versionCollection.GetAsync(galleryApplicationVersion, cancellationToken: cancellationToken);
+        var data = existingVersion.Value.Data;
+
+        if (!string.IsNullOrEmpty(location))
+        {
+            data.Location = new(location);
+        }
+
+        if (tags is not null)
+        {
+            data.Tags.Clear();
+            ApplyTags(data.Tags, tags);
+        }
+
+        ApplyFlattenedPublishingProfile(data, sourceMediaLink, excludeFromLatest, endOfLifeDate, targetRegions);
+
+        var updatedVersion = await versionCollection.CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            galleryApplicationVersion,
+            data,
+            cancellationToken);
+
+        return MapToGalleryApplicationVersionInfo(updatedVersion.Value.Data);
+    }
+
+    public async Task<bool> DeleteGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var galleryApplicationResource = await GetGalleryApplicationResourceAsync(
+            subscriptionResource,
+            gallery,
+            galleryApplication,
+            resourceGroup,
+            cancellationToken);
+
+        try
+        {
+            var versionResource = await galleryApplicationResource
+                .GetGalleryApplicationVersions()
+                .GetAsync(galleryApplicationVersion, cancellationToken: cancellationToken);
+
+            await versionResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogDebug(
+                ex,
+                "Gallery application version {GalleryApplicationVersion} not found under gallery application {GalleryApplication} in gallery {Gallery} and resource group {ResourceGroup}",
+                galleryApplicationVersion,
+                galleryApplication,
+                gallery,
+                resourceGroup);
+            return false;
+        }
+    }
+
+    private static async Task<GalleryResource> GetGalleryResourceAsync(
+        SubscriptionResource subscriptionResource,
+        string gallery,
+        string resourceGroup,
+        CancellationToken cancellationToken)
+    {
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
+
+        await foreach (var galleryCandidate in resourceGroupResource.Value.GetGalleries().GetAllAsync(cancellationToken: cancellationToken))
+        {
+            if (string.Equals(galleryCandidate.Data.Name, gallery, StringComparison.OrdinalIgnoreCase))
+            {
+                return galleryCandidate;
+            }
+        }
+
+        throw new RequestFailedException(404, $"Gallery '{gallery}' was not found in resource group '{resourceGroup}'.");
+    }
+
+    private static async Task<GalleryApplicationResource> GetGalleryApplicationResourceAsync(
+        SubscriptionResource subscriptionResource,
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        CancellationToken cancellationToken)
+    {
+        var galleryResource = await GetGalleryResourceAsync(
+            subscriptionResource,
+            gallery,
+            resourceGroup,
+            cancellationToken);
+
+        var galleryApplicationResource = await galleryResource
+            .GetGalleryApplications()
+            .GetAsync(galleryApplication, cancellationToken: cancellationToken);
+
+        return galleryApplicationResource.Value;
+    }
+
+    private static GalleryApplicationInfo MapToGalleryApplicationInfo(GalleryApplicationData data)
+    {
+        return new(
+            Name: data.Name,
+            Id: data.Id?.ToString(),
+            Location: data.Location.Name,
+            Tags: data.Tags as IReadOnlyDictionary<string, string>);
+    }
+
+    private static void ApplyTags(IDictionary<string, string> destinationTags, string? tags)
+    {
+        if (string.IsNullOrEmpty(tags))
+        {
+            return;
+        }
+
+        foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = pair.Split('=', 2);
+            if (parts.Length == 2)
+            {
+                destinationTags[parts[0]] = parts[1];
+            }
+        }
+    }
+
+    private static GalleryApplicationVersionInfo MapToGalleryApplicationVersionInfo(GalleryApplicationVersionData data)
+    {
+        var publishingProfile = data.PublishingProfile;
+        var targetRegions = publishingProfile?.TargetRegions?.Select(r => r.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        var targetExtendedLocations = publishingProfile?.TargetExtendedLocations?.Select(l => l.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        var customActionNames = publishingProfile?.CustomActions?.Select(a => a.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        var advancedSettings = publishingProfile?.AdvancedSettings?.ToDictionary(setting => setting.Key, setting => setting.Value.ToString());
+
+        return new(
+            Name: data.Name,
+            Id: data.Id?.ToString(),
+            Location: data.Location.Name,
+            SourceMediaLink: publishingProfile?.Source?.MediaLink,
+            DefaultConfigurationLink: publishingProfile?.Source?.DefaultConfigurationLink,
+            ExcludeFromLatest: publishingProfile?.ExcludeFromLatest,
+            ReplicaCount: publishingProfile?.ReplicaCount,
+            PublishedOn: publishingProfile?.PublishedOn?.ToString("O"),
+            EndOfLifeOn: publishingProfile?.EndOfLifeOn?.ToString("O"),
+            StorageAccountType: publishingProfile?.StorageAccountType?.ToString(),
+            ReplicationMode: publishingProfile?.ReplicationMode?.ToString(),
+            TargetRegions: targetRegions,
+            TargetExtendedLocations: targetExtendedLocations,
+            ManageActionInstall: publishingProfile?.ManageActions?.Install,
+            ManageActionRemove: publishingProfile?.ManageActions?.Remove,
+            ManageActionUpdate: publishingProfile?.ManageActions?.Update,
+            PackageFileName: publishingProfile?.Settings?.PackageFileName,
+            ConfigFileName: publishingProfile?.Settings?.ConfigFileName,
+            ScriptBehaviorAfterReboot: publishingProfile?.Settings?.ScriptBehaviorAfterReboot?.ToString(),
+            AdvancedSettings: advancedSettings,
+            EnableHealthCheck: publishingProfile?.EnableHealthCheck,
+            CustomActionNames: customActionNames,
+            Tags: data.Tags as IReadOnlyDictionary<string, string>);
+    }
+
+    private static void ApplyFlattenedPublishingProfile(
+        GalleryApplicationVersionData data,
+        string? sourceMediaLink,
+        bool? excludeFromLatest,
+        string? endOfLifeDate,
+        string? targetRegions,
+        string? defaultConfigurationLink = null,
+        int? replicaCount = null,
+        string? manageActionInstall = null,
+        string? manageActionRemove = null,
+        string? manageActionUpdate = null,
+        string? packageFileName = null,
+        string? configFileName = null,
+        string? scriptBehaviorAfterReboot = null)
+    {
+        var shouldApplyProfile = sourceMediaLink is not null
+            || excludeFromLatest.HasValue
+            || endOfLifeDate is not null
+            || targetRegions is not null
+            || defaultConfigurationLink is not null
+            || replicaCount.HasValue
+            || manageActionInstall is not null
+            || manageActionRemove is not null
+            || manageActionUpdate is not null
+            || packageFileName is not null
+            || configFileName is not null
+            || scriptBehaviorAfterReboot is not null;
+        if (!shouldApplyProfile)
+        {
+            return;
+        }
+
+        data.PublishingProfile ??= new GalleryApplicationVersionPublishingProfile(new(sourceMediaLink ?? string.Empty));
+        var profile = data.PublishingProfile;
+
+        if (sourceMediaLink is not null)
+        {
+            profile.Source ??= new(string.Empty);
+            profile.Source.MediaLink = sourceMediaLink;
+        }
+
+        if (defaultConfigurationLink is not null)
+        {
+            profile.Source ??= new(string.Empty);
+            profile.Source.DefaultConfigurationLink = defaultConfigurationLink;
+        }
+
+        if (replicaCount.HasValue)
+        {
+            profile.ReplicaCount = replicaCount.Value;
+        }
+
+        if (excludeFromLatest.HasValue)
+        {
+            profile.ExcludeFromLatest = excludeFromLatest.Value;
+        }
+
+        if (manageActionInstall is not null || manageActionRemove is not null || manageActionUpdate is not null)
+        {
+            profile.ManageActions ??= new(manageActionInstall ?? string.Empty, manageActionRemove ?? string.Empty);
+            if (manageActionInstall is not null)
+            {
+                profile.ManageActions.Install = manageActionInstall;
+            }
+
+            if (manageActionRemove is not null)
+            {
+                profile.ManageActions.Remove = manageActionRemove;
+            }
+
+            if (manageActionUpdate is not null)
+            {
+                profile.ManageActions.Update = manageActionUpdate;
+            }
+        }
+
+        if (packageFileName is not null || configFileName is not null || scriptBehaviorAfterReboot is not null)
+        {
+            profile.Settings ??= new();
+            if (packageFileName is not null)
+            {
+                profile.Settings.PackageFileName = packageFileName;
+            }
+
+            if (configFileName is not null)
+            {
+                profile.Settings.ConfigFileName = configFileName;
+            }
+
+            if (scriptBehaviorAfterReboot is not null)
+            {
+                profile.Settings.ScriptBehaviorAfterReboot = new GalleryApplicationScriptRebootBehavior(scriptBehaviorAfterReboot);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(endOfLifeDate) && DateTimeOffset.TryParse(endOfLifeDate, out var parsedEndOfLifeDate))
+        {
+            profile.EndOfLifeOn = parsedEndOfLifeDate;
+        }
+
+        if (targetRegions is not null)
+        {
+            profile.TargetRegions.Clear();
+            foreach (var region in targetRegions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                profile.TargetRegions.Add(new(region));
+            }
+        }
+    }
+
     public async Task<DiskInfo> GetDiskAsync(
         string diskName,
         string resourceGroup,

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.GalleryApplication;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -41,6 +42,18 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
         services.AddSingleton<DiskUpdateCommand>();
+
+        // Gallery application commands
+        services.AddSingleton<GalleryApplicationCreateCommand>();
+        services.AddSingleton<GalleryApplicationDeleteCommand>();
+        services.AddSingleton<GalleryApplicationGetCommand>();
+        services.AddSingleton<GalleryApplicationUpdateCommand>();
+
+        // Gallery application version commands
+        services.AddSingleton<GalleryApplicationVersionCreateCommand>();
+        services.AddSingleton<GalleryApplicationVersionDeleteCommand>();
+        services.AddSingleton<GalleryApplicationVersionGetCommand>();
+        services.AddSingleton<GalleryApplicationVersionUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -110,6 +123,44 @@ public class ComputeSetup : IAreaSetup
 
         var diskUpdate = serviceProvider.GetRequiredService<DiskUpdateCommand>();
         disk.AddCommand(diskUpdate.Name, diskUpdate);
+
+        // Create Gallery Application subgroup
+        var galleryApplication = new CommandGroup(
+            "galleryapplication",
+            "Gallery application operations - Get an Azure Compute Gallery application from a gallery in a resource group.");
+        compute.AddSubGroup(galleryApplication);
+
+        // Register Gallery Application commands
+        var galleryApplicationCreate = serviceProvider.GetRequiredService<GalleryApplicationCreateCommand>();
+        galleryApplication.AddCommand(galleryApplicationCreate.Name, galleryApplicationCreate);
+
+        var galleryApplicationDelete = serviceProvider.GetRequiredService<GalleryApplicationDeleteCommand>();
+        galleryApplication.AddCommand(galleryApplicationDelete.Name, galleryApplicationDelete);
+
+        var galleryApplicationGet = serviceProvider.GetRequiredService<GalleryApplicationGetCommand>();
+        galleryApplication.AddCommand(galleryApplicationGet.Name, galleryApplicationGet);
+
+        var galleryApplicationUpdate = serviceProvider.GetRequiredService<GalleryApplicationUpdateCommand>();
+        galleryApplication.AddCommand(galleryApplicationUpdate.Name, galleryApplicationUpdate);
+
+        // Create Gallery Application Version subgroup
+        var galleryApplicationVersion = new CommandGroup(
+            "galleryapplicationversion",
+            "Gallery application version operations - Manage versions under an Azure Compute Gallery application.");
+        compute.AddSubGroup(galleryApplicationVersion);
+
+        // Register Gallery Application Version commands
+        var galleryApplicationVersionCreate = serviceProvider.GetRequiredService<GalleryApplicationVersionCreateCommand>();
+        galleryApplicationVersion.AddCommand(galleryApplicationVersionCreate.Name, galleryApplicationVersionCreate);
+
+        var galleryApplicationVersionDelete = serviceProvider.GetRequiredService<GalleryApplicationVersionDeleteCommand>();
+        galleryApplicationVersion.AddCommand(galleryApplicationVersionDelete.Name, galleryApplicationVersionDelete);
+
+        var galleryApplicationVersionGet = serviceProvider.GetRequiredService<GalleryApplicationVersionGetCommand>();
+        galleryApplicationVersion.AddCommand(galleryApplicationVersionGet.Name, galleryApplicationVersionGet);
+
+        var galleryApplicationVersionUpdate = serviceProvider.GetRequiredService<GalleryApplicationVersionUpdateCommand>();
+        galleryApplicationVersion.AddCommand(galleryApplicationVersionUpdate.Name, galleryApplicationVersionUpdate);
 
         return compute;
     }

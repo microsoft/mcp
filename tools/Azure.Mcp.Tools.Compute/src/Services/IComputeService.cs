@@ -8,6 +8,124 @@ namespace Azure.Mcp.Tools.Compute.Services;
 
 public interface IComputeService
 {
+    // Gallery Application operations
+    Task<GalleryApplicationInfo> GetGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<GalleryApplicationInfo>> ListGalleryApplicationsAsync(
+        string gallery,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<GalleryApplicationInfo> CreateGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<GalleryApplicationInfo> UpdateGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? tags = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteGalleryApplicationAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<GalleryApplicationVersionInfo> GetGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<GalleryApplicationVersionInfo>> ListGalleryApplicationVersionsAsync(
+        string gallery,
+        string galleryApplication,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<GalleryApplicationVersionInfo> CreateGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string? tags = null,
+        string sourceMediaLink = "",
+        string? defaultConfigurationLink = null,
+        int? replicaCount = null,
+        bool? excludeFromLatest = null,
+        string? manageActionInstall = null,
+        string? manageActionRemove = null,
+        string? manageActionUpdate = null,
+        string? packageFileName = null,
+        string? configFileName = null,
+        string? scriptBehaviorAfterReboot = null,
+        string? endOfLifeDate = null,
+        string? targetRegions = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<GalleryApplicationVersionInfo> UpdateGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? tags = null,
+        string? sourceMediaLink = null,
+        bool? excludeFromLatest = null,
+        string? endOfLifeDate = null,
+        string? targetRegions = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteGalleryApplicationVersionAsync(
+        string gallery,
+        string galleryApplication,
+        string galleryApplicationVersion,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     // Virtual Machine operations
     Task<VmInfo> GetVmAsync(
         string vmName,
