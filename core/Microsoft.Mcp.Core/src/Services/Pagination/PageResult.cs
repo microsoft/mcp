@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// Result returned by a <see cref="IPaginationProviderAdapter{TItem}"/> when fetching a page.

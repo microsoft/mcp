@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// Default implementation of <see cref="IPaginationService"/>.

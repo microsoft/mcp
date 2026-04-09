@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// Thrown when a cursor cannot be loaded or fails validation.

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Mcp.Core.Services.Pagination;
 using Xunit;
 
-namespace Microsoft.Mcp.Core.UnitTests.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Pagination;
 
 public class CursorRegistryTests : IDisposable
 {

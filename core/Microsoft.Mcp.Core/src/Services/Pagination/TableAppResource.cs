@@ -5,7 +5,7 @@ using System.Reflection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// MCP resource that serves a single-page HTML table app for browsing

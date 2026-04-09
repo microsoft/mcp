@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Mcp.Core.Services.Caching.Pagination;
+using Microsoft.Mcp.Core.Services.Pagination;
 using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Services.Caching;

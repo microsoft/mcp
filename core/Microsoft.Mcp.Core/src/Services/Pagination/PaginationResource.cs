@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// Central MCP resource that serves paginated results for any tool.

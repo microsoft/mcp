@@ -5,7 +5,7 @@ using System.Buffers.Text;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Microsoft.Mcp.Core.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.Services.Pagination;
 
 /// <summary>
 /// Implementation of <see cref="ICursorRegistry"/> that stores cursor records directly

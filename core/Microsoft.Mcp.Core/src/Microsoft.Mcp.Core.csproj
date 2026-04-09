@@ -13,7 +13,7 @@
 
   <!-- Table App: Vite-built single-file HTML embedded as a resource -->
   <PropertyGroup>
-    <TableAppDir>Services\Caching\Pagination\table-app</TableAppDir>
+    <TableAppDir>Services\Pagination\table-app</TableAppDir>
     <TableAppDist>$(TableAppDir)\dist\mcp-app.html</TableAppDist>
   </PropertyGroup>
 

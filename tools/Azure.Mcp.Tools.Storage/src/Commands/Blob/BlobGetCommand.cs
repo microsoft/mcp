@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Services.Caching.Pagination;
+using Microsoft.Mcp.Core.Services.Pagination;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.Pagination;
 using Xunit;
 
-namespace Microsoft.Mcp.Core.UnitTests.Services.Caching.Pagination;
+namespace Microsoft.Mcp.Core.UnitTests.Services.Pagination;
 
 public class PaginationServiceTests : IDisposable
 {

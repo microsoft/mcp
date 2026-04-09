@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Services.Caching.Pagination;
+using Microsoft.Mcp.Core.Services.Pagination;
 
 namespace Azure.Mcp.Core.Services.Pagination;
 

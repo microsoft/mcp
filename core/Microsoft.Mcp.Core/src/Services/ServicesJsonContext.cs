@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Services.Caching.Pagination;
+using Microsoft.Mcp.Core.Services.Pagination;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 
 namespace Microsoft.Mcp.Core.Services;

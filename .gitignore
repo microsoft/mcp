@@ -34,3 +34,6 @@ deploy-log.txt
 
 # VM-specific documentation (internal/personal notes)
 docs/vm-docs/
+
+# Table app build output (embedded as resource during dotnet build)
+core/Microsoft.Mcp.Core/src/Services/Pagination/table-app/dist/
