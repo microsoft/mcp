@@ -136,9 +136,17 @@ public static class DppDatasourceRegistry
     ];
 
     /// <summary>
+    /// Returns the list of all known workload type names (friendly names plus aliases).
+    /// Useful for user-facing validation messages.
+    /// </summary>
+    public static IReadOnlyList<string> KnownTypeNames { get; } = AllProfiles
+        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases))
+        .ToArray();
+
+    /// <summary>
     /// Resolves a user-supplied workload type or ARM resource type to the matching profile.
     /// Case-insensitive match against FriendlyName, Aliases, and ArmResourceType.
-    /// Falls back to a generic profile if no match is found (preserves backward compatibility).
+    /// Throws ArgumentException if no match is found to prevent silent misconfiguration.
     /// </summary>
     public static DppDatasourceProfile Resolve(string workloadTypeOrArmType)
     {
@@ -165,16 +173,10 @@ public static class DppDatasourceRegistry
             }
         }
 
-        return new DppDatasourceProfile
-        {
-            FriendlyName = workloadTypeOrArmType,
-            ArmResourceType = workloadTypeOrArmType,
-            UsesOperationalStore = false,
-            ScheduleInterval = "P1D",
-            BackupType = "Full",
-            BackupRuleName = "BackupDaily",
-            DefaultRetentionDays = 30,
-        };
+        throw new ArgumentException(
+            $"Unknown DPP workload type '{workloadTypeOrArmType}'. " +
+            $"Supported types: {string.Join(", ", KnownTypeNames)}.",
+            nameof(workloadTypeOrArmType));
     }
 
     /// <summary>

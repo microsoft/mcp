@@ -9,13 +9,14 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
 using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService)
+public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ILogger<AzureBackupService> logger)
     : BaseAzureService(tenantService), IAzureBackupService
 {
     /// <summary>
@@ -82,11 +83,40 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
         var dppTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
 
-        await Task.WhenAll(rsvTask, dppTask);
+        try
+        {
+            await Task.WhenAll(rsvTask, dppTask);
+        }
+        catch
+        {
+            // Individual task results are inspected below
+        }
 
         var merged = new List<BackupVaultInfo>();
-        merged.AddRange(await rsvTask);
-        merged.AddRange(await dppTask);
+
+        if (rsvTask.IsCompletedSuccessfully)
+        {
+            merged.AddRange(rsvTask.Result);
+        }
+        else if (rsvTask.IsFaulted)
+        {
+            logger.LogWarning(rsvTask.Exception, "Failed to list Recovery Services vaults. DPP results will still be returned.");
+        }
+
+        if (dppTask.IsCompletedSuccessfully)
+        {
+            merged.AddRange(dppTask.Result);
+        }
+        else if (dppTask.IsFaulted)
+        {
+            logger.LogWarning(dppTask.Exception, "Failed to list Data Protection vaults. RSV results will still be returned.");
+        }
+
+        if (rsvTask.IsFaulted && dppTask.IsFaulted)
+        {
+            throw new AggregateException("Both RSV and DPP vault listing failed.", rsvTask.Exception!, dppTask.Exception!);
+        }
+
         return merged;
     }
 
@@ -270,9 +300,28 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         // Step 1: List all vaults (RSV + DPP) in the subscription (parallelized)
         var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
         var dppVaultsTask = dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
-        await Task.WhenAll(rsvVaultsTask, dppVaultsTask);
-        var rsvVaults = rsvVaultsTask.Result;
-        var dppVaults = dppVaultsTask.Result;
+
+        try
+        {
+            await Task.WhenAll(rsvVaultsTask, dppVaultsTask);
+        }
+        catch
+        {
+            // Individual task results are inspected below
+        }
+
+        var rsvVaults = rsvVaultsTask.IsCompletedSuccessfully ? rsvVaultsTask.Result : [];
+        var dppVaults = dppVaultsTask.IsCompletedSuccessfully ? dppVaultsTask.Result : [];
+
+        if (rsvVaultsTask.IsFaulted)
+        {
+            logger.LogWarning(rsvVaultsTask.Exception, "Failed to list RSV vaults for unprotected resource scan. DPP vaults will still be checked.");
+        }
+
+        if (dppVaultsTask.IsFaulted)
+        {
+            logger.LogWarning(dppVaultsTask.Exception, "Failed to list DPP vaults for unprotected resource scan. RSV vaults will still be checked.");
+        }
 
         // Step 2: Collect all protected datasource ARM IDs from every vault
         var protectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

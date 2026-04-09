@@ -39,10 +39,11 @@ public class DppDatasourceRegistryTests
     }
 
     [Fact]
-    public void Resolve_UnknownType_ReturnsFallbackProfile()
+    public void Resolve_UnknownType_ThrowsArgumentException()
     {
-        var profile = DppDatasourceRegistry.Resolve("some.custom/resourceType");
-        Assert.Equal("some.custom/resourceType", profile.FriendlyName);
+        var ex = Assert.Throws<ArgumentException>(() => DppDatasourceRegistry.Resolve("some.custom/resourceType"));
+        Assert.Contains("Unknown DPP workload type", ex.Message);
+        Assert.Contains("some.custom/resourceType", ex.Message);
     }
 
     #endregion

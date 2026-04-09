@@ -105,6 +105,14 @@ public static class RsvDatasourceRegistry
     ];
 
     /// <summary>
+    /// Returns the list of all known workload type names (friendly names plus aliases).
+    /// Useful for user-facing validation messages.
+    /// </summary>
+    public static IReadOnlyList<string> KnownTypeNames { get; } = AllProfiles
+        .SelectMany(p => new[] { p.FriendlyName }.Concat(p.Aliases))
+        .ToArray();
+
+    /// <summary>
     /// Resolves a user-supplied datasource type to the matching RSV profile.
     /// Case-insensitive match against FriendlyName and Aliases.
     /// Returns null if no match is found (caller should default to VM).
@@ -139,10 +147,20 @@ public static class RsvDatasourceRegistry
 
     /// <summary>
     /// Resolves a datasource type to a profile, defaulting to VM if no match.
+    /// When datasourceType is explicitly provided but not recognized, throws ArgumentException.
     /// </summary>
     public static RsvDatasourceProfile ResolveOrDefault(string? datasourceType)
     {
-        return Resolve(datasourceType) ?? IaasVm;
+        if (string.IsNullOrEmpty(datasourceType))
+        {
+            return IaasVm;
+        }
+
+        return Resolve(datasourceType)
+            ?? throw new ArgumentException(
+                $"Unknown RSV workload type '{datasourceType}'. " +
+                $"Supported types: {string.Join(", ", KnownTypeNames)}.",
+                nameof(datasourceType));
     }
 
     /// <summary>
