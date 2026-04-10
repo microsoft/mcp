@@ -57,13 +57,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// </summary>
     public virtual List<UriRegexSanitizer> UriRegexSanitizers { get; } = [
         // Sanitize Resource Group name from the URI. This is needed as there is another default GeneralRegexSanitizer for
-        // Settings.ResourceBaseName. But there is two issues we hit with that:
+        // Settings.ResourceBaseName. But there are two issues we hit with that:
         // 1. Resource group names often have other characters added to it, like prepending or appending for uniqueness.
-        // 2. In playback, Settings.ResourceBaseName is configured to be 'Sanitized', so it won't find the right string.
+        // 2. In playback, Settings.ResourceBaseName and Settings.ResourceGroupName are both configured to be 'Sanitized',
+        //    so it won't find the right string.
         new UriRegexSanitizer(new()
         {
             Value = "Sanitized",
-            Regex = "/resource[gG]roups/(?<rgname>[\\w\\-.()]{1,90})/",
+            Regex = "/resource[gG]roups/(?<rgname>[\\w\\-.()]{1,90})(?=/|\\?|$)",
             GroupForReplace = "rgname"
         })
     ];
