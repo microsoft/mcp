@@ -48,7 +48,13 @@ public class KqlQueryValidatorTests
 
     [Theory]
     [InlineData("testtable | take 10; .drop table testtable")]
-    public void ValidateQuerySafety_WithManagementCommandAfterSemicolon_ShouldThrow(string query)
+    [InlineData("testtable | take 10;\n.drop table testtable")]
+    [InlineData("testtable | take 10;\r\n.drop table testtable")]
+    [InlineData("testtable | take 10;\t.drop table testtable")]
+    [InlineData("testtable |\n.drop table other")]
+    [InlineData("testtable |\r\n.drop table other")]
+    [InlineData("testtable |\t.drop table other")]
+    public void ValidateQuerySafety_WithManagementCommandAfterWhitespace_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
         Assert.Contains("not allowed", ex.Message);
