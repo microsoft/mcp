@@ -98,8 +98,8 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
     {
         var options = base.BindOptions(parseResult);
 
-        options.ResourceName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name)!;
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceName = parseResult.GetValueOrDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName)!;
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         options.AppInsightsComponentId = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.AppInsightsComponentId);
         options.Location = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.ResourceLocation);
         options.Locations = parseResult.CommandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.Locations);

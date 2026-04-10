@@ -3,6 +3,8 @@
 
 using System.CommandLine;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Extensions;
@@ -502,5 +504,102 @@ public class CommandResultExtensionsTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false)]
+    [InlineData(new string[0], true, false)]
+    [InlineData(new[] { "--name", "value" }, false, true)]
+    [InlineData(new[] { "--name", "value" }, true, true)]
+    public void HasOptionResult_TypeOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    {
+        // Arrange
+        var option = new Option<string?>("--name");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act
+        var hasResult = parseResult.CommandResult.HasOptionResult(option);
+
+        // Assert
+        Assert.Equal(expected, hasResult);
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false)]
+    [InlineData(new string[0], true, false)]
+    [InlineData(new[] { "--flag" }, false, true)]
+    [InlineData(new[] { "--flag" }, true, true)]
+    [InlineData(new[] { "--flag", "true" }, false, true)]
+    [InlineData(new[] { "--flag", "true" }, true, true)]
+    public void HasOptionResult_TypedOptionWithVariousBoolScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    {
+        // Arrange
+        var option = new Option<bool?>("--flag");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act
+        var hasResult = parseResult.CommandResult.HasOptionResult(option);
+
+        // Assert
+        Assert.Equal(expected, hasResult);
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false)]
+    [InlineData(new string[0], true, false)]
+    [InlineData(new[] { "--name", "value" }, false, true)]
+    [InlineData(new[] { "--name", "value" }, true, true)]
+    public void HasOptionResult_UntypeOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    {
+        // Arrange
+        var option = new Option<string?>("--name");
+
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act
+        var hasResult = parseResult.CommandResult.HasOptionResult((Option) option);
+
+        // Assert
+        Assert.Equal(expected, hasResult);
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false)]
+    [InlineData(new string[0], true, false)]
+    [InlineData(new[] { "--flag" }, false, true)]
+    [InlineData(new[] { "--flag" }, true, true)]
+    [InlineData(new[] { "--flag", "true" }, false, true)]
+    [InlineData(new[] { "--flag", "true" }, true, true)]
+    public void HasOptionResult_UntypedOptionWithVariousBoolScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    {
+        // Arrange
+        var option = new Option<bool?>("--flag");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act
+        var hasResult = parseResult.CommandResult.HasOptionResult((Option) option);
+
+        // Assert
+        Assert.Equal(expected, hasResult);
     }
 }

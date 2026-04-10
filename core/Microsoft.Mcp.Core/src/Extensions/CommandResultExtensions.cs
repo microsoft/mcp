@@ -8,7 +8,25 @@ namespace Microsoft.Mcp.Core.Extensions;
 public static class CommandResultExtensions
 {
     public static bool HasOptionResult(this CommandResult commandResult, Option option)
+        => HasOptionResult(commandResult, option.Name);
+
+    public static bool HasOptionResult<T>(this CommandResult commandResult, Option<T> option)
+        => HasOptionResult(commandResult, option.Name);
+
+    /// <summary>
+    /// Checks if an option with the specified name has a result in the command result.
+    /// </summary>
+    /// <param name="commandResult">The command result to check.</param>
+    /// <param name="optionName">The name of the option to check for (including -- prefix).</param>
+    /// <returns>True if the option has a result, false otherwise.</returns>
+    public static bool HasOptionResult(this CommandResult commandResult, string optionName)
     {
+        // Find the option by name in the command
+        var option = commandResult.Command.Options
+            .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));
+        if (option is null)
+            return false;
+
         var result = commandResult.GetResult(option);
         if (result is null)
             return false;
@@ -36,26 +54,20 @@ public static class CommandResultExtensions
         return hasNonEmptyValue;
     }
 
-    public static bool HasOptionResult<T>(this CommandResult commandResult, Option<T> option)
-        => HasOptionResult(commandResult, option.Name);
+    public static bool TryGetValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
+        => TryGetValue(commandResult, option.Name, out value);
 
-    /// <summary>
-    /// Checks if an option with the specified name has a result in the command result.
-    /// </summary>
-    /// <param name="commandResult">The command result to check.</param>
-    /// <param name="optionName">The name of the option to check for (including -- prefix).</param>
-    /// <returns>True if the option has a result, false otherwise.</returns>
-    public static bool HasOptionResult(this CommandResult commandResult, string optionName)
+    public static bool TryGetValue<T>(this CommandResult commandResult, string optionName, out T? value)
     {
         // Find the option by name in the command
-        var option = commandResult.Command.Options
-            .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));
+        var option = FindOptionTByName<T>(commandResult, optionName);
 
-        return option != null && HasOptionResult(commandResult, option);
-    }
+        if (option is null)
+        {
+            value = default;
+            return false;
+        }
 
-    public static bool TryGetValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
-    {
         // If the option has any result (explicit or implicit), attempt to read its value.
         var result = commandResult.GetResult(option);
         if (result is not null)
@@ -92,20 +104,6 @@ public static class CommandResultExtensions
         return false;
     }
 
-    public static bool TryGetValue<T>(this CommandResult commandResult, string optionName, out T? value)
-    {
-        // Find the option by name in the command
-        var option = FindOptionTByName<T>(commandResult, optionName);
-
-        if (option is null)
-        {
-            value = default;
-            return false;
-        }
-
-        return TryGetValue(commandResult, option, out value);
-    }
-
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
         => GetValueOrDefault<T>(commandResult, option.Name);
 
@@ -121,7 +119,7 @@ public static class CommandResultExtensions
         return GetValueOrDefaultImpl(commandResult, option);
     }
 
-    private static T? GetValueOrDefaultImpl<T>(this CommandResult commandResult, Option<T> option)
+    private static T? GetValueOrDefaultImpl<T>(CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);
         ArgumentNullException.ThrowIfNull(option);
@@ -170,7 +168,7 @@ public static class CommandResultExtensions
         return GetValueWithoutDefaultImpl(commandResult, option);
     }
 
-    private static T? GetValueWithoutDefaultImpl<T>(this CommandResult commandResult, Option<T> option)
+    private static T? GetValueWithoutDefaultImpl<T>(CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);
         ArgumentNullException.ThrowIfNull(option);
