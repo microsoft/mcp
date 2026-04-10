@@ -157,6 +157,13 @@
     <Project Path="tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.LiveTests/Azure.Mcp.Tools.AzureMigrate.LiveTests.csproj" />
     <Project Path="tools/Azure.Mcp.Tools.AzureMigrate/tests/Azure.Mcp.Tools.AzureMigrate.UnitTests/Azure.Mcp.Tools.AzureMigrate.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/src/">
+    <Project Path="tools/Azure.Mcp.Tools.AzureTerraform/src/Azure.Mcp.Tools.AzureTerraform.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraform/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.AzureTerraform/tests/Azure.Mcp.Tools.AzureTerraform.UnitTests/Azure.Mcp.Tools.AzureTerraform.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/" />
   <Folder Name="/tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/">
     <Project Path="tools/Azure.Mcp.Tools.AzureTerraformBestPractices/src/Azure.Mcp.Tools.AzureTerraformBestPractices.csproj" />

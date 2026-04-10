@@ -3773,6 +3773,80 @@
         "azurebackup_governance_soft-delete",
         "azurebackup_dr_enablecrr"
       ]
+    },
+    {
+      "name": "get_azure_terraform_documentation",
+      "description": "Retrieve Terraform provider documentation for Azure resources. Get AzureRM and AzAPI provider docs including arguments, attributes, and examples. List, get versions, and read documentation for Azure Verified Modules (AVM).",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete, modify, or otherwise change resources or state."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azureterraform_avm_get",
+        "azureterraform_avm_list",
+        "azureterraform_avm_versions",
+        "azureterraform_azapi_get",
+        "azureterraform_azurerm_get"
+      ]
+    },
+    {
+      "name": "generate_azure_terraform_export_and_validation_commands",
+      "description": "Generate aztfexport commands to export Azure resources, resource groups, or query-matched resources to Terraform configuration. Generate conftest commands to validate Terraform workspace files or plan files against Azure policies.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete, modify, or otherwise change resources or state."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "azureterraform_aztfexport_query",
+        "azureterraform_aztfexport_resource",
+        "azureterraform_aztfexport_resourcegroup",
+        "azureterraform_conftest_plan",
+        "azureterraform_conftest_workspace"
+      ]
     }
   ]
 }

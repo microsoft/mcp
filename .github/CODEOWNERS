@@ -149,6 +149,12 @@
 # ServiceLabel: %tools-BestPractices
 # ServiceOwners:                                @conniey @fanyang-mono @g2vinay @XiaofuHuang
 
+# PRLabel: %tools-Terraform
+/tools/Azure.Mcp.Tools.AzureTerraform/          @yunliu1 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Terraform
+# ServiceOwners:                                @yunliu1
+
 # PRLabel: %tools-Bicep
 /tools/Azure.Mcp.Tools.BicepSchema/             @msalaman @saikoumudi @microsoft/azure-mcp
 

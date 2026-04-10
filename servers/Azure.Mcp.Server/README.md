@@ -1149,7 +1149,21 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
-### 🏛️ Azure Well-Architected Framework
+### �️ Azure Terraform
+
+* "Get the documentation for azurerm_virtual_network"
+* "Show me the arguments for azurerm_storage_account"
+* "Get AzAPI documentation for Microsoft.Storage/storageAccounts"
+* "Get AzAPI docs for Microsoft.Compute/virtualMachines with API version 2024-07-01"
+* "List all available Azure Verified Modules"
+* "Show all versions of avm-res-network-virtualnetwork"
+* "Get the documentation for avm-res-storage-storageaccount version 0.1.0"
+* "Export all resources in resource group my-rg to Terraform"
+* "Export all storage accounts in my subscription using a resource graph query"
+* "Validate Terraform files in ./my-terraform-folder against Azure security policies"
+* "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies"
+
+### �🏛️ Azure Well-Architected Framework
 
 * "List all services with Well-Architected Framework guidance"
 * "What services have architectural guidance?"
@@ -1206,6 +1220,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 💾 **Azure Storage** - Blob storage
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
+- 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
 - 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns
