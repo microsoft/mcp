@@ -1,0 +1,62 @@
+{
+  "rules": [
+    {
+      "ruleId": "Migrate_Away_From_AI_Health_Insights",
+      "description": "Azure AI Health Insights, Clinical Trials Matcher model, and Radiology Insights model are retiring. Azure AI Health Insights, Clinical Trials Matcher model, and Radiology Insights model are no longer available for use or integration.",
+      "query": "where kind =~ 'HealthInsights'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "kind",
+            "equals": "HealthInsights"
+          }
+        ]
+      },
+      "fix": "use or integration",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "retire",
+        "details": "Azure AI Health Insights is retiring. Remove the resource from the ARM template and migrate workloads to alternative Azure AI services."
+      }
+    },
+    {
+      "ruleId": "Migrate_LUIS_To_Conversational_Language_Understanding",
+      "description": "Language Understanding (LUIS) is retiring. Migrate to conversational language understanding, a capability of Azure AI Service for Language.",
+      "query": "where kind contains 'LUIS'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "kind",
+            "contains": "LUIS"
+          }
+        ]
+      },
+      "fix": "Language Understanding (LUIS) is retiring. Migrate to conversational language understanding, a capability of Azure AI Service for Language.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetService": "Microsoft.CognitiveServices/accounts",
+        "details": "Replace the LUIS Cognitive Services resource (kind: LUIS) with an Azure AI Language account (kind: TextAnalytics) and migrate knowledge bases to Conversational Language Understanding."
+      }
+    },
+    {
+      "ruleId": "Migrate_QnAMaker_To_Alternative_Service",
+      "description": "Beginning October 1, 2022, you aren't be able to create new QnA Maker resources or knowledge bases. All QnA Maker resources and knowledge bases created before that date are supported until the retirement date.",
+      "query": "where kind == 'QnAMaker'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "kind",
+            "equals": "QnAMaker"
+          }
+        ]
+      },
+      "fix": "Review and remediate based on recommendation",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "retire",
+        "details": "QnA Maker is retired. Remove the resource from the ARM template and migrate knowledge bases to Azure AI Language custom question answering (kind: TextAnalytics)."
+      }
+    }
+  ]
+}

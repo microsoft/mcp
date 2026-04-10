@@ -1,0 +1,59 @@
+{
+  "rules": [
+    {
+      "ruleId": "Configure_Snapshot_Policy_For_NetApp_Volume",
+      "description": "Configure a snapshot for the Azure NetApp Files volume. Restore a snapshot to a new volume, restore a single file using a client, or revert an existing volume using a snapshot.",
+      "query": "where isempty( properties['dataProtection']['snapshot']['snapshotPolicyId']) and isempty(properties['snapshotId']) | where properties['provisioningState'] has \"Succeeded\"",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.dataProtection.snapshot.snapshotPolicyId",
+            "exists": false
+          },
+          {
+            "field": "properties.snapshotId",
+            "exists": false
+          },
+          {
+            "field": "properties.provisioningState",
+            "equals": "Succeeded"
+          }
+        ]
+      },
+      "fix": "Configure a snapshot for the Azure NetApp Files volume. Restore a snapshot to a new volume, restore a single file using a client, or revert an existing volume using a snapshot.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "createAndLink",
+        "targetService": "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
+        "details": "Add a Microsoft.NetApp/netAppAccounts/snapshotPolicies resource to the ARM template with the desired schedule, then set properties.dataProtection.snapshot.snapshotPolicyId on the volume to the policy resource ID."
+      }
+    },
+    {
+      "ruleId": "Migrate_NetApp_Volumes_To_Standard_Network_Features",
+      "description": "An Azure NetApp Files volume using Basic network features is subject to an IP route limit of 1600. IP route limits aren't adjustable. To prevent the IP route limit, migrate volumes to Standard network features from Basic network features.",
+      "query": "where properties['provisioningState'] has \"Succeeded\" or properties['provisioningState'] has \"succeeded\"| where properties['networkFeatures'] has \"Basic\"",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.provisioningState",
+            "equals": "Succeeded"
+          },
+          {
+            "field": "properties.networkFeatures",
+            "contains": "Basic"
+          }
+        ]
+      },
+      "fix": "An Azure NetApp Files volume using Basic network features is subject to an IP route limit of 1600. IP route limits aren't adjustable. To prevent the IP route limit, migrate volumes to Standard network features from Basic network features.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.networkFeatures",
+            "value": "Standard"
+          }
+        ]
+      }
+    }
+  ]
+}

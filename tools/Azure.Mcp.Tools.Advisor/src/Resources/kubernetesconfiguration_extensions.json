@@ -1,0 +1,24 @@
+{
+  "rules": [
+    {
+      "ruleId": "Migrate_Arc_App_Service_Extension_To_Container_Apps",
+      "description": "Azure App Service on Azure Arc-enabled Kubernetes is retiring. Installation of the Application Services extension is no longer available.",
+      "query": "where project id",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "id",
+            "exists": true
+          }
+        ]
+      },
+      "fix": "Azure App Service on Azure Arc-enabled Kubernetes is retiring. Installation of the Application Services extension is no longer available.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetService": "Microsoft.App/containerApps",
+        "details": "Remove the Application Services extension resource from the ARM template. Redeploy hosted applications as Microsoft.App/containerApps resources targeting an Azure Container Apps environment."
+      }
+    }
+  ]
+}

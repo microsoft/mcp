@@ -1,0 +1,34 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enforce_TLS_1_2_For_Cosmos_DB",
+      "description": "All Cosmos DB database accounts must use Transport Layer Security (TLS) 1.2 or higher",
+      "query": "where (isempty(properties['minimalTlsVersion']) or properties['minimalTlsVersion'] in ('Tls11','Tls'))",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.minimalTlsVersion",
+            "exists": false
+          },
+          {
+            "field": "properties.minimalTlsVersion",
+            "in": [
+              "Tls",
+              "Tls11"
+            ]
+          }
+        ]
+      },
+      "fix": "use Transport Layer Security (TLS) 1",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.minimalTlsVersion",
+            "value": "Tls12"
+          }
+        ]
+      }
+    }
+  ]
+}

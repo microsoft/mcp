@@ -1,0 +1,50 @@
+{
+  "rules": [
+    {
+      "ruleId": "Upgrade_TLS_To_1_2_For_Entra_Domain_Services",
+      "description": "Support for TLS 1.0 and 1.1 on Entra domain services is retiring. Update the TLS policy to the latest version.",
+      "query": "where properties.domainSecuritySettings.tlsV1 =~ 'Enabled'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.domainSecuritySettings.tlsV1",
+            "equals": "Enabled"
+          }
+        ]
+      },
+      "fix": "Support for TLS 1.0 and 1.1 on Entra domain services is retiring. Update the TLS policy to the latest version.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.domainSecuritySettings.tlsV1",
+            "value": "Disabled"
+          }
+        ]
+      }
+    },
+    {
+      "ruleId": "Use_Enterprise_SKU_For_Domain_Services_Replica_Sets",
+      "description": "You need to use a minimum of Enterprise SKU for your managed domain to support replica sets.",
+      "query": "extend sku = properties.sku | where sku =~ 'Standard'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.sku",
+            "equals": "Standard"
+          }
+        ]
+      },
+      "fix": "use a minimum of Enterprise SKU for your managed domain to support replica sets",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.sku",
+            "value": "Enterprise"
+          }
+        ]
+      }
+    }
+  ]
+}

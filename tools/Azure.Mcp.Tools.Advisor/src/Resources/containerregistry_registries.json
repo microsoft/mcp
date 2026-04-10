@@ -1,0 +1,27 @@
+{
+  "rules": [
+    {
+      "ruleId": "Use_Premium_Tier_For_Production_Container_Registries",
+      "description": "Premium registries provide the highest amount of included storage, concurrent operations and network bandwidth, enabling high-volume scenarios. The Premium tier also adds features such as geo-replication, availability zone support, content-trust, customer-managed keys and private endpoints.",
+      "query": "where sku.name != \"Premium\"",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "sku.name",
+            "notEquals": "Premium"
+          }
+        ]
+      },
+      "fix": "Review and remediate based on recommendation",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "sku.name",
+            "value": "Premium"
+          }
+        ]
+      }
+    }
+  ]
+}

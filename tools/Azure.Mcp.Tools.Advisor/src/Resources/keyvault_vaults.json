@@ -1,0 +1,31 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enable_Soft_Delete_For_Key_Vaults",
+      "description": "Key Vault's soft-delete feature enables recovery of deleted vaults and objects like keys, secrets, and certificates. When enabled, marked resources are retained for 90 days, allowing for their recovery, essentially undoing deletion.",
+      "query": "where isnull(properties.enableSoftDelete) or properties.enableSoftDelete != 'true'",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.enableSoftDelete",
+            "exists": false
+          },
+          {
+            "field": "properties.enableSoftDelete",
+            "notEquals": true
+          }
+        ]
+      },
+      "fix": "Key Vault's soft-delete feature enables recovery of deleted vaults and objects like keys, secrets, and certificates. When enabled, marked resources are retained for 90 days, allowing for their recovery, essentially undoing deletion.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.enableSoftDelete",
+            "value": true
+          }
+        ]
+      }
+    }
+  ]
+}

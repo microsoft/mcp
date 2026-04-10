@@ -25,7 +25,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     public override string Name => "apply";
 
     public override string Description =>
-        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Bicep) for Azure resources. It returns the rules that can be applied to the IaaC file. This tool can also be used to fetch advisor recommendations to apply to a technical design or architecture diagram.";
+        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Bicep) for Azure resources. It returns the rules that can be applied to the IaaC file.";
 
     public override string Title => CommandTitle;
 
@@ -143,7 +143,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
         string resourcePrefix = "Azure.Mcp.Tools.Advisor.Resources.";
 
         var resourceNames = assembly.GetManifestResourceNames()
-            .Where(name => name.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase) && 
+            .Where(name => name.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase) &&
                            name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             .Select(name => name.Substring(resourcePrefix.Length, name.Length - resourcePrefix.Length - 5)) // Remove prefix and .json
             .ToList();

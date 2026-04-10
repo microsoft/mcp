@@ -1,0 +1,39 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enable_Custom_Maintenance_Schedule_PostgreSQL_Flexible_Server",
+      "description": "Use custom maintenance schedule on flexible server instances to select a preferred time for service updates to be applied.",
+      "query": "where properties.maintenanceWindow.customWindow != 'Enabled'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.maintenanceWindow.customWindow",
+            "notEquals": "Enabled"
+          }
+        ]
+      },
+      "fix": "Use custom maintenance schedule on flexible server instances to select a preferred time for service updates to be applied",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.maintenanceWindow.customWindow",
+            "value": "Enabled"
+          },
+          {
+            "field": "properties.maintenanceWindow.dayOfWeek",
+            "value": 0
+          },
+          {
+            "field": "properties.maintenanceWindow.startHour",
+            "value": 2
+          },
+          {
+            "field": "properties.maintenanceWindow.startMinute",
+            "value": 0
+          }
+        ]
+      }
+    }
+  ]
+}

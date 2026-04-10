@@ -1,0 +1,35 @@
+{
+  "rules": [
+    {
+      "ruleId": "Migrate_To_AKS_On_Azure_Local",
+      "description": "Migrate to Azure Kubernetes Service on Azure Local for enhanced capabilities. The platform recommends migrating to Azure Kubernetes Service on Azure Local for improved features.",
+      "query": "where properties['distribution'] in ('aks_management','aks_workload') | where properties['infrastructure'] contains 'vSphere' | where properties['kind'] !~ ('ProvisionedCluster')",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "properties.distribution",
+            "in": [
+              "aks_management",
+              "aks_workload"
+            ]
+          },
+          {
+            "field": "properties.infrastructure",
+            "contains": "vSphere"
+          },
+          {
+            "field": "properties.kind",
+            "notEquals": "ProvisionedCluster"
+          }
+        ]
+      },
+      "fix": "Migrate to Azure Kubernetes Service on Azure Local for enhanced capabilities. The platform recommends migrating to Azure Kubernetes Service on Azure Local for improved features.",
+      "ARM_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetService": "Microsoft.HybridContainerService/provisionedClusters",
+        "details": "Provision a new AKS on Azure Local cluster, redeploy workloads, then remove the legacy connected cluster resource from the ARM template."
+      }
+    }
+  ]
+}

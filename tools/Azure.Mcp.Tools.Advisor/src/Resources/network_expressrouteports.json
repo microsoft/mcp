@@ -1,0 +1,35 @@
+{
+  "rules": [
+    {
+      "ruleId": "Enable_Admin_State_For_ExpressRoute_Direct_Links",
+      "description": "In Azure ExpressRoute Direct, the Admin State specifies the administrative status of the layer 1 link as Enabled or Disabled. The Admin State is the same as turning the physical port on or off. Billing begins when Admin State for either link is set to Enabled.",
+      "query": "where properties['links'][0]['properties']['adminState'] == 'Disabled' or properties['links'][1]['properties']['adminState'] == 'Disabled'",
+      "ARM_Query": {
+        "anyOf": [
+          {
+            "field": "properties.links[0].properties.adminState",
+            "equals": "Disabled"
+          },
+          {
+            "field": "properties.links[1].properties.adminState",
+            "equals": "Disabled"
+          }
+        ]
+      },
+      "fix": "In Azure ExpressRoute Direct, the Admin State specifies the administrative status of the layer 1 link as Enabled or Disabled. The Admin State is the same as turning the physical port on or off. Billing begins when Admin State for either link is set to Enabled.",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "properties.links[0].properties.adminState",
+            "value": "Enabled"
+          },
+          {
+            "field": "properties.links[1].properties.adminState",
+            "value": "Enabled"
+          }
+        ]
+      }
+    }
+  ]
+}

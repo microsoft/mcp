@@ -1,0 +1,31 @@
+{
+  "rules": [
+    {
+      "ruleId": "Migrate_Static_Web_Apps_From_Dedicated_Pricing_Plan",
+      "description": "Static Web Apps Dedicated pricing plan is retiring. Migrate deployments that use the Dedicated pricing plan to the Static Web Apps Standard pricing plan or to Azure Container Apps.",
+      "query": "where tostring(sku.name) =~ 'Dedicated'",
+      "ARM_Query": {
+        "allOf": [
+          {
+            "field": "sku.name",
+            "equals": "Dedicated"
+          }
+        ]
+      },
+      "fix": "use the Dedicated pricing plan to the Static Web Apps Standard pricing plan or to Azure Container Apps",
+      "ARM_Fix": {
+        "type": "propertyUpdate",
+        "operations": [
+          {
+            "field": "sku.name",
+            "value": "Standard"
+          },
+          {
+            "field": "sku.tier",
+            "value": "Standard"
+          }
+        ]
+      }
+    }
+  ]
+}
