@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
@@ -137,8 +136,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.FirewallRuleName, options);
+                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}.",
+                options.Server, options.ResourceGroup, options.FirewallRuleName);
             HandleException(context, ex);
         }
 

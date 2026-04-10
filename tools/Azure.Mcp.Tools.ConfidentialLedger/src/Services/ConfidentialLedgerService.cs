@@ -5,10 +5,10 @@ using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
@@ -49,7 +49,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
-        var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
+        var operation = await client.PostLedgerEntryAsync(WaitUntil.Started, content, collectionId, new RequestContext() { CancellationToken = cancellationToken });
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         var response = operation.GetRawResponse();
 
         return new()

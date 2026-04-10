@@ -1,0 +1,4 @@
+pr: 2325
+changes:
+  - section: "Other Changes"
+    description: "Enhanced the description for the main Azure Monitor command group to provide a more comprehensive overview of its capabilities and usage."

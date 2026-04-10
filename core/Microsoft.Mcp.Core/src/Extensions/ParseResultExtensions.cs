@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Extensions;
+using System.CommandLine.Parsing;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Extensions;
+namespace Microsoft.Mcp.Core.Extensions;
 
 public static class ParseResultExtensions
 {
@@ -41,4 +43,44 @@ public static class ParseResultExtensions
 
         return option != null ? parseResult.GetValueOrDefault(option) : default;
     }
+
+    public static bool HasAnyRetryOptions(this ParseResult parseResult)
+    {
+        foreach (var child in parseResult.CommandResult.Children)
+        {
+            if (child is OptionResult optionResult)
+            {
+                var option = optionResult.Option;
+                if (option is null)
+                {
+                    continue;
+                }
+
+                var name = NameNormalization.NormalizeOptionName(option.Name);
+                if (RetryOptionNames.Contains(name))
+                    return true;
+
+                var aliases = option.Aliases ?? [];
+                foreach (var alias in aliases)
+                {
+                    var normalized = NameNormalization.NormalizeOptionName(alias);
+                    if (RetryOptionNames.Contains(normalized))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static readonly HashSet<string> RetryOptionNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        NameNormalization.NormalizeOptionName(OptionDefinitions.RetryPolicy.DelayName),
+        NameNormalization.NormalizeOptionName(OptionDefinitions.RetryPolicy.MaxDelayName),
+        NameNormalization.NormalizeOptionName(OptionDefinitions.RetryPolicy.MaxRetriesName),
+        NameNormalization.NormalizeOptionName(OptionDefinitions.RetryPolicy.ModeName),
+        NameNormalization.NormalizeOptionName(OptionDefinitions.RetryPolicy.NetworkTimeoutName),
+    };
 }

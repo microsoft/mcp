@@ -906,8 +906,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
 | storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
 | storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
-| storage_blob_container_create | Create the container using blob public access in storage account <account> |
-| storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
 | storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
 | storage_blob_container_get | List all blob containers in the storage account <account> |
 | storage_blob_container_get | Show me the containers in the storage account <account> |

@@ -5,13 +5,13 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
 using Xunit;
 
@@ -381,7 +381,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("rate limit", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -404,7 +404,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("network", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -429,7 +429,7 @@ public sealed class FunctionsServiceHttpTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, CancellationToken.None));
+            () => service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, CancellationToken.None));
 
         Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
     }

@@ -3,16 +3,16 @@
 
 using System.Net;
 using Azure.Core;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
 using Xunit;
 
@@ -119,14 +119,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the credential-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the key-auth cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -147,14 +147,14 @@ public class CosmosServiceTests : IAsyncDisposable
         // Assert: cache was queried with the key-auth-specific key
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         // Assert: the credential cache key was NOT queried (no cross-contamination)
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }
@@ -184,13 +184,13 @@ public class CosmosServiceTests : IAsyncDisposable
         // This proves a Key-cached client can never be served to a Credential request and vice versa.
         await _cacheService.Received().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Key",
+            CacheKeyBuilder.Build("clients", "myaccount", "Key"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
 
         await _cacheService.DidNotReceive().GetAsync<CosmosClient>(
             "cosmos",
-            "clients_myaccount_Credential",
+            CacheKeyBuilder.Build("clients", "myaccount", "Credential"),
             Arg.Any<TimeSpan?>(),
             Arg.Any<CancellationToken>());
     }

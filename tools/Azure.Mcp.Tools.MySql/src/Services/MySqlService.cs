@@ -4,13 +4,13 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
@@ -80,10 +80,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
         var tokenCredential = await GetCredential(cancellationToken);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
@@ -231,6 +229,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
+
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, "mysql", cancellationToken);
@@ -264,10 +265,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         ValidateQuerySafety(query);
 
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
+
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
-        await using var command = new MySqlCommand(query, resource.Connection);
+        await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var rows = new List<string>();
@@ -403,7 +412,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         var configData = configuration.Value.Data;
         configData.Value = value;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

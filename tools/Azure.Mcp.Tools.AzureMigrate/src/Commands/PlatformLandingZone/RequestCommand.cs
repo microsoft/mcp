@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -174,7 +173,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            logger.LogError(ex, "Error in {Operation}. Action: {Action}, ResourceGroup: {ResourceGroup}.", Name, options.Action, options.ResourceGroup);
             HandleException(context, ex);
         }
 

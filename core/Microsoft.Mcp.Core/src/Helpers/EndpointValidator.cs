@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Frozen;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
@@ -27,85 +28,29 @@ public static class EndpointValidator
         "xip.io",                // Wildcard DNS - resolves to embedded IP
     ];
 
-    /// <summary>
-    /// Gets the allowed domain suffixes for Azure services based on the cloud environment.
-    /// </summary>
-    /// <param name="armEnvironment">The ARM environment (cloud) to get suffixes for.</param>
-    /// <returns>Dictionary mapping service types to their allowed domain suffixes.</returns>
-    private static Dictionary<string, string[]> GetAllowedDomainSuffixes(ArmEnvironment armEnvironment)
+    private record AllowedSuffixManager(string Public, string China, string UsGov, string Germany)
     {
-        // Determine which cloud we're in
-        var isPublicCloud = armEnvironment.Equals(ArmEnvironment.AzurePublicCloud);
-        var isChinaCloud = armEnvironment.Equals(ArmEnvironment.AzureChina);
-        var isGovCloud = armEnvironment.Equals(ArmEnvironment.AzureGovernment);
-        var isGermanyCloud = armEnvironment.Equals(ArmEnvironment.AzureGermany);
-
-        // Build cloud-specific suffixes for services that require validation
-        var acrSuffix = isPublicCloud ? "azurecr.io"
-            : isChinaCloud ? "azurecr.cn"
-            : isGovCloud ? "azurecr.us"
-            : isGermanyCloud ? "azurecr.de"
-            : "azurecr.io";
-
-        var appConfigSuffix = isPublicCloud ? "azconfig.io"
-            : isChinaCloud ? "azconfig.azure.cn"
-            : isGovCloud ? "azconfig.azure.us"
-            : isGermanyCloud ? "azconfig.azure.de"
-            : "azconfig.io";
-
-        var commSuffix = isPublicCloud ? "communication.azure.com"
-            : isChinaCloud ? "communication.azure.cn"
-            : isGovCloud ? "communication.azure.us"
-            : isGermanyCloud ? "communication.azure.de"
-            : "communication.azure.com";
-
-        var foundrySuffix = isPublicCloud ? "services.ai.azure.com"
-            : isChinaCloud ? "services.ai.azure.cn"
-            : isGovCloud ? "services.ai.azure.us"
-            : isGermanyCloud ? "services.ai.azure.de"
-            : "services.ai.azure.com";
-
-        var openaiSuffix = isPublicCloud ? "openai.azure.com"
-            : isChinaCloud ? "openai.azure.cn"
-            : isGovCloud ? "openai.azure.us"
-            : isGermanyCloud ? "openai.azure.de"
-            : "openai.azure.com";
-
-        var cognitiveServicesSuffix = isPublicCloud ? "cognitiveservices.azure.com"
-            : isChinaCloud ? "cognitiveservices.azure.cn"
-            : isGovCloud ? "cognitiveservices.azure.us"
-            : isGermanyCloud ? "cognitiveservices.azure.de"
-            : "cognitiveservices.azure.com";
-
-        return new Dictionary<string, string[]>
-        {
-            // Azure Communication Services
-            { "communication", [$".{commSuffix}"] },
-
-            // Azure App Configuration
-            { "appconfig", [$".{appConfigSuffix}"] },
-
-            // Azure Container Registry
-            { "acr", [$".{acrSuffix}"] },
-
-            // Microsoft Foundry (AI Services project endpoints)
-            { "foundry", [$".{foundrySuffix}"] },
-
-            // Azure OpenAI
-            { "azure-openai", [$".{openaiSuffix}", $".{cognitiveServicesSuffix}"] },
-        };
+        public string GetSuffix(ArmEnvironment environment) =>
+            ArmEnvironment.AzurePublicCloud.Equals(environment) ? Public :
+            ArmEnvironment.AzureChina.Equals(environment) ? China :
+            ArmEnvironment.AzureGovernment.Equals(environment) ? UsGov :
+            ArmEnvironment.AzureGermany.Equals(environment) ? Germany :
+            Public;
     }
 
-    /// <summary>
-    /// Validates that an endpoint belongs to an allowed Azure service domain.
-    /// Uses Azure Public Cloud domains by default.
-    /// </summary>
-    /// <param name="endpoint">The endpoint URL to validate.</param>
-    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
-    public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType)
+    private static readonly FrozenDictionary<string, AllowedSuffixManager[]> s_allowedDomainSuffixes = new Dictionary<string, AllowedSuffixManager[]>
     {
-        ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud);
-    }
+        ["acr"] = [new AllowedSuffixManager(Public: ".azurecr.io", China: ".azurecr.cn", UsGov: ".azurecr.us", Germany: ".azurecr.de")],
+        ["appconfig"] = [new AllowedSuffixManager(Public: ".azconfig.io", China: ".azconfig.azure.cn", UsGov: ".azconfig.azure.us", Germany: ".azconfig.azure.de")],
+        ["azure-openai"] = [
+            new AllowedSuffixManager(Public: ".openai.azure.com", China: ".openai.azure.cn", UsGov: ".openai.azure.us", Germany: ".openai.azure.de"),
+            new AllowedSuffixManager(Public: ".cognitiveservices.azure.com", China: ".cognitiveservices.azure.cn", UsGov: ".cognitiveservices.azure.us", Germany: ".cognitiveservices.azure.de")
+        ],
+        ["communication"] = [new AllowedSuffixManager(Public: ".communication.azure.com", China: ".communication.azure.cn", UsGov: ".communication.azure.us", Germany: ".communication.azure.de")],
+        ["foundry"] = [new AllowedSuffixManager(Public: ".services.ai.azure.com", China: ".services.ai.azure.cn", UsGov: ".services.ai.azure.us", Germany: ".services.ai.azure.de")],
+        ["servicebus"] = [new AllowedSuffixManager(Public: ".servicebus.windows.net", China: ".servicebus.chinacloudapi.cn", UsGov: ".servicebus.usgovcloudapi.net", Germany: ".servicebus.cloudapi.de")],
+        ["storage-blob"] = [new AllowedSuffixManager(Public: ".blob.core.windows.net", China: ".blob.core.chinacloudapi.cn", UsGov: ".blob.core.usgovcloudapi.net", Germany: ".blob.core.cloudapi.de")]
+    }.ToFrozenDictionary();
 
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
@@ -132,16 +77,16 @@ public static class EndpointValidator
                 $"Endpoint must use HTTPS protocol. Got: {uri.Scheme}");
         }
 
-        var allowedDomainSuffixes = GetAllowedDomainSuffixes(armEnvironment);
-
-        if (!allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
+        if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
         {
             throw new ArgumentException($"Unknown service type: {serviceType}", nameof(serviceType));
         }
 
         // Validate domain: must exactly match suffix or be a proper subdomain
-        var isValid = allowedSuffixes.Any(suffix =>
+        var isValid = allowedSuffixes.Any(s =>
         {
+            var suffix = s.GetSuffix(armEnvironment);
+
             // Exact match (e.g., "azconfig.io")
             if (uri.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -168,9 +113,10 @@ public static class EndpointValidator
                 : armEnvironment.Equals(ArmEnvironment.AzureGermany) ? "Azure Germany Cloud"
                 : "configured Azure cloud";
 
+            var expectedDomains = string.Join(", ", allowedSuffixes.Select(s => s.GetSuffix(armEnvironment)));
             throw new SecurityException(
                 $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
-                $"Expected domains: {string.Join(", ", allowedSuffixes)}");
+                $"Expected domains: {expectedDomains}");
         }
     }
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Extensions;
 using Xunit;
 

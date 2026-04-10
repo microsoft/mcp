@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -108,7 +107,7 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting autoimport job {JobName} for AMLFS filesystem {FileSystemName}. Options: {@Options}", options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error getting autoimport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 

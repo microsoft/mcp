@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Mcp.Core.Models;
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// An implementation of <see cref="ICacheService"/> for single-user CLI scenarios using in-memory caching.
@@ -21,14 +21,13 @@ namespace Azure.Mcp.Core.Services.Caching;
 /// </remarks>
 public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 {
-    private static readonly object s_sentinal = new();
     private readonly IMemoryCache _memoryCache = memoryCache;
 
     private static readonly ConcurrentDictionary<string, ConcurrentHashSet<string>> s_groupKeys = new();
 
     public ValueTask<T?> GetAsync<T>(string group, string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
-        string cacheKey = GetGroupKey(group, key);
+        string cacheKey = CacheKeyBuilder.Build(group, key);
         return _memoryCache.TryGetValue(cacheKey, out T? value) ? new ValueTask<T?>(value) : default;
     }
 
@@ -37,7 +36,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         if (data == null)
             return default;
 
-        string cacheKey = GetGroupKey(group, key);
+        string cacheKey = CacheKeyBuilder.Build(group, key);
 
         var options = new MemoryCacheEntryOptions
         {
@@ -60,7 +59,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
     public ValueTask DeleteAsync(string group, string key, CancellationToken cancellationToken)
     {
-        string cacheKey = GetGroupKey(group, key);
+        string cacheKey = CacheKeyBuilder.Build(group, key);
         _memoryCache.Remove(cacheKey);
 
         // Remove from group tracking
@@ -110,7 +109,7 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
         // Remove each key in the group from the cache
         foreach (var key in keysSnapshot)
         {
-            string cacheKey = GetGroupKey(group, key);
+            string cacheKey = CacheKeyBuilder.Build(group, key);
             _memoryCache.Remove(cacheKey);
         }
 
@@ -119,6 +118,4 @@ public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 
         return default;
     }
-
-    private static string GetGroupKey(string group, string key) => $"{group}:{key}";
 }

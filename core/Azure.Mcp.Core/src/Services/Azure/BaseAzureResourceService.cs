@@ -4,13 +4,13 @@
 using System.ClientModel.Primitives;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -196,10 +196,9 @@ public abstract class BaseAzureResourceService(
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
-    protected async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
+    protected static async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
     {
-        if (armClient == null)
-            throw new ArgumentNullException(nameof(armClient));
+        ArgumentNullException.ThrowIfNull(armClient);
 
         var genericResources = armClient.GetGenericResources();
         var response = await genericResources.GetAsync(resourceIdentifier, cancellationToken).ConfigureAwait(false);
@@ -224,10 +223,15 @@ public abstract class BaseAzureResourceService(
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>
-    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
+    protected static async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(
+        ArmClient armClient,
+        ResourceIdentifier resourceIdentifier,
+        AzureLocation azureLocation,
+        T content,
+        JsonTypeInfo<T> jsonTypeInfo,
+        CancellationToken cancellationToken)
     {
-        if (armClient == null)
-            throw new ArgumentNullException(nameof(armClient));
+        ArgumentNullException.ThrowIfNull(armClient);
 
         // Convert from T to GenericResourceData
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(content, jsonTypeInfo);
@@ -236,7 +240,8 @@ public abstract class BaseAzureResourceService(
         GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
             ?? throw new InvalidOperationException("Failed to create deployment data");
         // Create the resource
-        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data, cancellationToken);
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Started, resourceIdentifier, data, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
         return result.Value;
     }
 }

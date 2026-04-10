@@ -5,9 +5,11 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -29,6 +31,7 @@ public abstract class BaseAzureService
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
+    private static readonly TimeSpan? s_defaultPollInterval;
 
     static BaseAzureService()
     {
@@ -40,6 +43,13 @@ public abstract class BaseAzureService
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            s_defaultPollInterval = TimeSpan.FromMilliseconds(1);
+        }
+#endif
     }
 
     /// <summary>
@@ -75,20 +85,12 @@ public abstract class BaseAzureService
     /// Disables upper bounds enforcement on retry policy values (delays, timeouts, max retries).
     /// This method should be called once during application startup when the --dangerously-disable-retry-limits flag is set.
     /// </summary>
-    public static void DisableRetryLimits()
-    {
-        s_retryLimitsDisabled = true;
-    }
+    public static void DisableRetryLimits() => s_retryLimitsDisabled = true;
 
     /// <summary>
     /// Resets the retry limits flag. For testing only.
     /// </summary>
-    internal static void ResetRetryLimits()
-    {
-        s_retryLimitsDisabled = false;
-    }
-
-
+    internal static void ResetRetryLimits() => s_retryLimitsDisabled = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
@@ -174,7 +176,7 @@ public abstract class BaseAzureService
 
         try
         {
-            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
+            return await TenantService.GetTokenCredentialAsync(tenantId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -292,6 +294,47 @@ public abstract class BaseAzureService
         {
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
+        }
+    }
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
+    /// </summary>
+    /// <typeparam name="T">The return type.</typeparam>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync<T>(Operation<T> operation, CancellationToken cancellationToken = default) where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await operation.WaitForCompletionAsync(s_defaultPollInterval.Value, cancellationToken);
+        }
+        else
+        {
+            await operation.WaitForCompletionAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Waits for the completion of a long-running operation, periodically polling the operation status until it completes.
+    /// </summary>
+    /// <param name="operation">The long-running operation.</param>
+    /// <param name="cancellationToken">The cancellation token that can cancel the request.</param>
+    /// <returns>The response once the long-running operation completes.</returns>
+    protected static async Task WaitForLroCompletionAsync(Operation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        if (s_defaultPollInterval.HasValue)
+        {
+            await operation.WaitForCompletionResponseAsync(s_defaultPollInterval.Value, cancellationToken);
+        }
+        else
+        {
+            await operation.WaitForCompletionResponseAsync(cancellationToken);
         }
     }
 }

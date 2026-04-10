@@ -4,9 +4,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -47,7 +45,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         var mcpServer = Substitute.For<McpServer>();
         var serviceProvider = Substitute.For<IServiceProvider>();
         var commandFactory = Substitute.For<ICommandFactory>();
-        var options = Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions(Tool: ["nevercalled"]));
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
@@ -73,7 +71,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             ["nevercalled"] = Substitute.For<IBaseCommand>()
         });
-        var options = Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
@@ -105,7 +103,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
@@ -140,7 +138,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
@@ -176,7 +174,7 @@ public class ToolLoaderTelemetryTests : IDisposable
         {
             [toolName] = toolCommand
         });
-        var options = Options.Create(new ToolLoaderOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
         var logger = Substitute.For<ILogger<CommandFactoryToolLoader>>();
 
         var mcpRuntime = CreateRuntime(new CommandFactoryToolLoader(serviceProvider, commandFactory, options, logger));
@@ -193,7 +191,7 @@ public class ToolLoaderTelemetryTests : IDisposable
 
     private IMcpRuntime CreateRuntime(IToolLoader toolLoader)
     {
-        var options = Options.Create(new ServiceStartOptions());
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var telemetry = Substitute.For<ITelemetryService>();
         telemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>()).Returns(_activity);
         var logger = Substitute.For<ILogger<McpRuntime>>();
