@@ -13,10 +13,11 @@ namespace CopilotCliTester;
 /// Agent runner for MCP E2E tests using Copilot SDK.
 /// Creates CopilotClient + session with MCP Azure server, runs prompts, collects events, and supports early termination when expected tool is invoked.
 /// </summary>
-internal sealed partial class AgentRunner : IAsyncDisposable
+internal sealed partial class AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null) : IAsyncDisposable
 {
     private static readonly string TimeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
     private readonly object eventLock = new();
+    private readonly string _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
 
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")]
     private static partial Regex JwtPattern();
@@ -27,26 +28,13 @@ internal sealed partial class AgentRunner : IAsyncDisposable
     [GeneratedRegex(@"(?:password|secret|token|api[_-]?key)\s*[:=]\s*[""']?[^\s""',]{6,}", RegexOptions.IgnoreCase)]
     private static partial Regex SecretKeyValuePattern();
 
-    private readonly CopilotClient _client;
-    private readonly string _outputDirectory;
-    private readonly string? _workspacePath;
-    private readonly string _serverExecutablePath;
-
-    public AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null)
-    {
-        _client = client;
-        _serverExecutablePath = serverExecutablePath;
-        _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
-        _workspacePath = workspacePath;
-    }
-
     public async ValueTask DisposeAsync()
     {
-        await _client.DisposeAsync();
+        await client.DisposeAsync();
 
-        if (_workspacePath is not null && Directory.Exists(_workspacePath))
+        if (workspacePath is not null && Directory.Exists(workspacePath))
         {
-            try { Directory.Delete(_workspacePath, recursive: true); }
+            try { Directory.Delete(workspacePath, recursive: true); }
             catch { /* best-effort cleanup */ }
         }
     }
@@ -95,12 +83,12 @@ internal sealed partial class AgentRunner : IAsyncDisposable
                 };
             }
 
-            var session = await _client.CreateSessionAsync(new SessionConfig
+            var session = await client.CreateSessionAsync(new SessionConfig
             {
                 Model = config.Model ?? CopilotTestConstants.ModelName,
                 Streaming = true,
                 OnPermissionRequest = PermissionHandler.ApproveAll,
-                McpServers = BuildMcpServersConfig(_serverExecutablePath),
+                McpServers = BuildMcpServersConfig(serverExecutablePath),
                 SystemMessage = systemMessage
             }, cancellationToken);
 

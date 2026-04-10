@@ -46,24 +46,11 @@ internal static partial class PromptParser
                     continue;
                 }
 
-                var toolNamespace = GetNamespace(tool);
-                prompts.Add(new TestPrompt(currentSection, tool, prompt, toolNamespace));
+                prompts.Add(new TestPrompt(currentSection, tool, prompt, currentSection));
             }
         }
 
         return prompts;
     }
 
-    /// <summary>
-    /// Extracts namespace from tool name, handling multi-part namespaces.
-    /// </summary>
-    private static string GetNamespace(string tool)
-    {
-        if (tool.StartsWith("get_azure_bestpractices_", StringComparison.OrdinalIgnoreCase))
-        {
-            return "get_azure_bestpractices";
-        }
-
-        return tool.Split('_')[0];
-    }
 }

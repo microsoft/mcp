@@ -15,9 +15,3 @@ internal sealed record TestResult {
     public required TestStatus Status { get; init; }
     public string? Error { get; init; } = null;
 }
-
-internal enum TestStatus {
-    FAIL,
-    PASS,
-    ERROR
-}

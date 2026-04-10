@@ -533,9 +533,7 @@ static class Program
         }
 
         // Check for an existing Debug build output
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-
-        var file = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+        var file = FindBuildExecutable(repoRoot);
 
         if (File.Exists(file))
         {
@@ -581,8 +579,7 @@ static class Program
         }
 
         // After build, the Debug output should exist
-        var builtPath = Path.Combine(
-            repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", exeName);
+        var builtPath = FindBuildExecutable(repoRoot);
 
         if (!File.Exists(builtPath))
         {
@@ -592,5 +589,16 @@ static class Program
 
         Console.WriteLine($"Build complete: {builtPath}");
         return builtPath;
+    }
+
+    private static string? FindBuildExecutable(string repoRoot)
+    {
+        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
+
+        var binDirectory = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin");
+
+        return Directory.Exists(binDirectory)
+            ? Directory.GetFiles(binDirectory, exeName, SearchOption.AllDirectories).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault()
+            : null;
     }
 }
