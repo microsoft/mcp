@@ -61,14 +61,6 @@ internal static class KqlQueryValidator
         // Strip string literals before structural analysis to avoid false positives
         var queryWithoutStrings = Regex.Replace(query, "'([^']|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
-        // Detect KQL comments (// line comments)
-        if (queryWithoutStrings.Contains("//", StringComparison.Ordinal))
-        {
-            throw new CommandValidationException(
-                "KQL comments are not allowed for security reasons.",
-                HttpStatusCode.BadRequest);
-        }
-
         // Detect tautology patterns (e.g., or 1==1, or true)
         if (TautologyPattern.IsMatch(queryWithoutStrings))
         {
@@ -90,20 +82,6 @@ internal static class KqlQueryValidator
                     $"Management command '{cmd}' is not allowed in queries for security reasons.",
                     HttpStatusCode.BadRequest);
             }
-        }
-
-        // Detect stacked commands via semicolons (after stripping strings)
-        var withoutTrailingSemicolon = queryWithoutStrings.TrimEnd();
-        if (withoutTrailingSemicolon.EndsWith(';'))
-        {
-            withoutTrailingSemicolon = withoutTrailingSemicolon[..^1];
-        }
-
-        if (withoutTrailingSemicolon.Contains(';', StringComparison.Ordinal))
-        {
-            throw new CommandValidationException(
-                "Multiple KQL statements are not allowed. Use only a single query.",
-                HttpStatusCode.BadRequest);
         }
     }
 }

@@ -48,20 +48,28 @@ public class KqlQueryValidatorTests
 
     [Theory]
     [InlineData("testtable | take 10; .drop table testtable")]
-    [InlineData("testtable; testtable2")]
-    public void ValidateQuerySafety_WithStackedStatements_ShouldThrow(string query)
+    public void ValidateQuerySafety_WithManagementCommandAfterSemicolon_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
         Assert.Contains("not allowed", ex.Message);
     }
 
     [Theory]
+    [InlineData("// Check model distribution\ntesttable | summarize count() by Model")]
     [InlineData("testtable // this is a comment")]
     [InlineData("testtable | where Name == 'a' // get all")]
-    public void ValidateQuerySafety_WithComments_ShouldThrow(string query)
+    public void ValidateQuerySafety_WithComments_ShouldNotThrow(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
-        Assert.Contains("comments", ex.Message, StringComparison.OrdinalIgnoreCase);
+        KqlQueryValidator.ValidateQuerySafety(query);
+    }
+
+    [Theory]
+    [InlineData("let recent = testtable | where Timestamp > ago(4d) | distinct Id;\nOtherTable | where Id in (recent) | summarize count()")]
+    [InlineData("let x = 5;\ntesttable | take x")]
+    [InlineData("testtable; testtable2")]
+    public void ValidateQuerySafety_WithLetStatementsAndSemicolons_ShouldNotThrow(string query)
+    {
+        KqlQueryValidator.ValidateQuerySafety(query);
     }
 
     [Fact]
