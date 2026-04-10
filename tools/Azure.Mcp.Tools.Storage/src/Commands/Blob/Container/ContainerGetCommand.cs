@@ -13,7 +13,6 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
-
 public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
 {
     private const string CommandTitle = "Get Storage Container Details";
@@ -28,12 +27,12 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         """
         Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
         show details for a specific Storage container. If no container specified, shows all containers in the storage
-        account, optionally filtering on a prefix.
+        account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
         
         Required: --account, --subscription
         Optional: --container, --tenant, --prefix
-        
-        Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties.
+
+        Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
         Do not use this tool to list blobs in a container.
         """;
 

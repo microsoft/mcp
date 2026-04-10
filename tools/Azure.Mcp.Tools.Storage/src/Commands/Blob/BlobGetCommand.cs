@@ -28,12 +28,12 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
         get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
-        filtering on a prefix.
+        filtering on a prefix. The prefix is ignored if a blob is specified.
 
         Required: --account, --container, --subscription
         Optional: --blob, --tenant, --prefix
         
-        Returns: blob name, size, lastModified, contentType, contentMD5, metadata, and blob properties.
+        Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
         Do not use this tool to list containers in the storage account.
         """;
 
