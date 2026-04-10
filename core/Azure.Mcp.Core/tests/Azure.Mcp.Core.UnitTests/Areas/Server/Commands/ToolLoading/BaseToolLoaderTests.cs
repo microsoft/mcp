@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -303,6 +304,205 @@ public class BaseToolLoaderTests
             await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task HandleSecretElicitation_WhenElicitationDisabled_ProceedsWithoutConsent()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: true, logger, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result); // Should proceed
+        logger.Received(1).Log(
+            LogLevel.Warning,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains("elicitation is disabled")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenClientDoesNotSupportElicitation_RejectsOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("does not support elicitation", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserAccepts_ProceedsWithOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result); // Should proceed
+        await mockServer.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(req => req.Method == "elicitation/create"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserDeclines_RejectsOperation()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_UsesDecisionEnumSchema()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+
+        JsonRpcRequest? capturedRequest = null;
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(callInfo =>
+                  {
+                      capturedRequest = callInfo.Arg<JsonRpcRequest>();
+                      return Task.FromResult(mockResponse);
+                  });
+
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert - verify the schema has a decision single-select enum property with approve/reject
+        Assert.NotNull(capturedRequest);
+        Assert.NotNull(capturedRequest.Params);
+        var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params.ToJsonString());
+        Assert.NotNull(elicitParams);
+        Assert.NotNull(elicitParams.RequestedSchema);
+        Assert.NotNull(elicitParams.RequestedSchema.Properties);
+        Assert.Single(elicitParams.RequestedSchema.Properties);
+        Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("decision"));
+        var decisionSchema = Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(elicitParams.RequestedSchema.Properties["decision"]);
+        Assert.Equal("Decision", decisionSchema.Title);
+        Assert.Equal("Approve or reject this sensitive operation.", decisionSchema.Description);
+        Assert.NotNull(decisionSchema.OneOf);
+        Assert.Equal(2, decisionSchema.OneOf.Count);
+        Assert.Equal("Approve", decisionSchema.OneOf[0].Title);
+        Assert.Equal("accept", decisionSchema.OneOf[0].Const);
+        Assert.Equal("Reject", decisionSchema.OneOf[1].Title);
+        Assert.Equal("reject", decisionSchema.OneOf[1].Const);
+        Assert.NotNull(elicitParams.RequestedSchema.Required);
+        Assert.Single(elicitParams.RequestedSchema.Required);
+        Assert.Contains("decision", elicitParams.RequestedSchema.Required);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenExceptionOccurs_ReturnsErrorResult()
+    {
+        // Arrange
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns<JsonRpcResponse>(_ => throw new InvalidOperationException("Elicitation failed"));
+
+        var jsonRpcRequest = new JsonRpcRequest
+        {
+            Method = "tools/call",
+            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+        };
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var logger = Substitute.For<ILogger>();
+
+        // Act
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
+    }
+
     internal sealed class TestableBaseToolLoader : BaseToolLoader
     {
         public TestableBaseToolLoader(ILogger logger)
@@ -313,6 +513,17 @@ public class BaseToolLoaderTests
         public McpClientOptions CreateClientOptionsPublic(McpServer server)
         {
             return CreateClientOptions(server);
+        }
+
+        public static Task<CallToolResult?> HandleElicitationAsyncPublic(
+            RequestContext<CallToolRequestParams> request,
+            string toolName,
+            ToolMetadata metadata,
+            bool dangerouslyDisableElicitation,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            return HandleElicitationAsync(request, toolName, metadata, dangerouslyDisableElicitation, logger, cancellationToken);
         }
 
         public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)

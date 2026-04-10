@@ -8,6 +8,8 @@ public static class AppLensOptionDefinitions
     public const string QuestionName = "question";
     public const string ResourceName = "resource";
     public const string ResourceTypeName = "resource-type";
+    public const string ResourceGroupName = "resource-group";
+    public const string SubscriptionName = "subscription";
 
     public static readonly Option<string> Question = new(
         $"--{QuestionName}")
@@ -23,10 +25,24 @@ public static class AppLensOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string?> Subscription = new(
+        $"--{SubscriptionName}")
+    {
+        Description = "Azure subscription ID or name. Provide this when disambiguating between multiple resources of the same name.",
+        Required = false
+    };
+
+    public static readonly Option<string?> ResourceGroup = new(
+        $"--{ResourceGroupName}")
+    {
+        Description = "Azure resource group name. Provide this when disambiguating between multiple resources of the same name.",
+        Required = false
+    };
+
     public static readonly Option<string?> ResourceType = new(
         $"--{ResourceTypeName}")
     {
-        Description = "Resource type. Try to get this information using the Azure CLI tool before asking the user.",
-        Required = true
+        Description = "Resource type. Provide this when disambiguating between multiple resources of the same name.",
+        Required = false
     };
 }

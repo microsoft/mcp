@@ -23,17 +23,15 @@ public class SqlSetup : IAreaSetup
     {
         services.AddSingleton<ISqlService, SqlService>();
 
-        services.AddSingleton<DatabaseShowCommand>();
-        services.AddSingleton<DatabaseListCommand>();
+        services.AddSingleton<DatabaseGetCommand>();
         services.AddSingleton<DatabaseCreateCommand>();
         services.AddSingleton<DatabaseRenameCommand>();
         services.AddSingleton<DatabaseUpdateCommand>();
         services.AddSingleton<DatabaseDeleteCommand>();
 
+        services.AddSingleton<ServerGetCommand>();
         services.AddSingleton<ServerCreateCommand>();
         services.AddSingleton<ServerDeleteCommand>();
-        services.AddSingleton<ServerListCommand>();
-        services.AddSingleton<ServerShowCommand>();
 
         services.AddSingleton<ElasticPoolListCommand>();
 
@@ -51,10 +49,8 @@ public class SqlSetup : IAreaSetup
         var database = new CommandGroup("db", "SQL database operations");
         sql.AddSubGroup(database);
 
-        var databaseShow = serviceProvider.GetRequiredService<DatabaseShowCommand>();
-        database.AddCommand(databaseShow.Name, databaseShow);
-        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
-        database.AddCommand(databaseList.Name, databaseList);
+        var databaseGet = serviceProvider.GetRequiredService<DatabaseGetCommand>();
+        database.AddCommand(databaseGet.Name, databaseGet);
         var databaseCreate = serviceProvider.GetRequiredService<DatabaseCreateCommand>();
         database.AddCommand(databaseCreate.Name, databaseCreate);
         var databaseRename = serviceProvider.GetRequiredService<DatabaseRenameCommand>();
@@ -67,14 +63,12 @@ public class SqlSetup : IAreaSetup
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);
 
+        var serverGet = serviceProvider.GetRequiredService<ServerGetCommand>();
+        server.AddCommand(serverGet.Name, serverGet);
         var serverCreate = serviceProvider.GetRequiredService<ServerCreateCommand>();
         server.AddCommand(serverCreate.Name, serverCreate);
         var serverDelete = serviceProvider.GetRequiredService<ServerDeleteCommand>();
         server.AddCommand(serverDelete.Name, serverDelete);
-        var serverList = serviceProvider.GetRequiredService<ServerListCommand>();
-        server.AddCommand(serverList.Name, serverList);
-        var serverShow = serviceProvider.GetRequiredService<ServerShowCommand>();
-        server.AddCommand(serverShow.Name, serverShow);
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");
         sql.AddSubGroup(elasticPool);

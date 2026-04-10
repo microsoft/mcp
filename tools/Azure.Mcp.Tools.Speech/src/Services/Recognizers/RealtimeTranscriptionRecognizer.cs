@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
@@ -19,6 +20,7 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogger<RealtimeTranscriptionRecognizer> logger)
     : BaseAzureService(tenantService), IRealtimeTranscriptionRecognizer
 {
+    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -39,6 +41,9 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             language = "en-US"; // Default to en-US if not specified or unsupported
             _logger.LogWarning("Language not specified or unsupported for Realtime Transcription. Defaulting to 'en-US'.");
         }
+
+        // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+        filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
 
         if (!File.Exists(filePath))
         {
@@ -61,11 +66,10 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
-                var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-                var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
+                var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
                 // Configure Speech SDK with endpoint
-                var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
+                var config = SpeechConfig.FromEndpoint(new(endpoint));
 
                 // Set the authorization token
                 config.AuthorizationToken = accessToken.Token;
@@ -371,14 +375,9 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
     /// Binary file reader callback for PullAudioInputStream.
     /// Reads binary audio data from file for compressed audio processing.
     /// </summary>
-    private sealed class BinaryFileReaderCallback : PullAudioInputStreamCallback
+    private sealed class BinaryFileReaderCallback(string filePath) : PullAudioInputStreamCallback
     {
-        private readonly FileStream _fileStream;
-
-        public BinaryFileReaderCallback(string filePath)
-        {
-            _fileStream = File.OpenRead(filePath);
-        }
+        private readonly FileStream _fileStream = File.OpenRead(filePath);
 
         public override int Read(byte[] dataBuffer, uint size)
         {
@@ -401,7 +400,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
     private static RealtimeRecognitionResult CreateNoMatchResult()
     {
-        return new RealtimeRecognitionResult
+        return new()
         {
             Text = string.Empty,
             Reason = ResultReason.NoMatch.ToString()
@@ -476,7 +475,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                             }).ToList();
                         }
 
-                        nbestResults.Add(new RealtimeRecognitionNBestResult
+                        nbestResults.Add(new()
                         {
                             Confidence = confidence,
                             Lexical = lexical,
@@ -495,5 +494,16 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         }
 
         return nbestResults;
+    }
+
+    private string GetCognitiveServicesScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
+            _ => "https://cognitiveservices.azure.com/.default"
+        };
     }
 }

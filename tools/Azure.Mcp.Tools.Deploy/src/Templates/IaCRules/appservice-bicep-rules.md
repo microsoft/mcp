@@ -1,0 +1,4 @@
+﻿- Enable application insights via environment variable APPLICATIONINSIGHTS_CONNECTION_STRING.
+- Enable CORS in SiteConfig.cors.
+- Must define diagnostic settings (type: "Microsoft.Insights/diagnosticSettings").
+- On the App Service Plan (Microsoft.Web/serverfarms), properties.reserved must be 'true' for Linux, and 'false' for Windows.

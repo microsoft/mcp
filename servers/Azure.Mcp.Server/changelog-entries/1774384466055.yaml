@@ -1,0 +1,4 @@
+pr: 2187
+changes:
+  - section: "Other Changes"
+    description: "Added bounds for RetryPolicyOptions"

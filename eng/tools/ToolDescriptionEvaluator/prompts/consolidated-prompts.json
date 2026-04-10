@@ -378,9 +378,7 @@
     "List all blob containers in the storage account <account>",
     "List all blobs in the blob container <container> in the storage account <account>",
     "List all storage accounts in my subscription including their location and SKU",
-    "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
-    "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
-    "List the Azure Managed Lustre SKUs available in location <location>",
+    "List all tables in the storage account <storage-account>",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the blobs in the blob container <container> in the storage account <account>",
     "Show me the containers in the storage account <account>",
@@ -388,6 +386,12 @@
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Show me the properties of the storage container <container> in the storage account <account>",
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
+    "Show me the tables in the storage account <storage-account>"
+  ],
+  "get_azure_managed_lustre_details": [
+    "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
+    "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
+    "List the Azure Managed Lustre SKUs available in location <location>",
     "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>",
     "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
@@ -396,15 +400,19 @@
     "Create a new storage account called testaccount123 in East US region",
     "Create a new storage account with Data Lake Storage Gen2 enabled",
     "Create a storage account with premium performance and LRS replication",
-    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>",
     "Create the container using blob public access in storage account <account>",
     "Create the storage container mycontainer in storage account <account>"
+  ],
+  "create_azure_managed_lustre": [
+    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
   ],
   "update_azure_managed_lustre_filesystems": [
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "upload_azure_storage_blobs": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
+    "Upload a local file to my Azure blob storage container",
+    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
   ],
   "get_azure_cache_for_redis_details": [
     "Get Redis clusters",

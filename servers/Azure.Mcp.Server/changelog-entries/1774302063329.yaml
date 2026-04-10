@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `--public-network-access` option to the Redis `create` command, allowing users to configure public network access when creating Azure Managed Redis resources. Defaults to disabled."

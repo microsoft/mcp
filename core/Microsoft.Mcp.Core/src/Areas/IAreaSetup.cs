@@ -19,6 +19,11 @@ public interface IAreaSetup
     string Title { get; }
 
     /// <summary>
+    /// Gets the category the command belongs to.
+    /// </summary>
+    CommandCategory Category => CommandCategory.AzureServices;
+
+    /// <summary>
     /// Configure any dependencies.
     /// </summary>
     void ConfigureServices(IServiceCollection services);

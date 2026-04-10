@@ -10,9 +10,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger)
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService)
     : BaseAdvisorCommand<RecommendationListOptions>(logger)
 {
+    private readonly IAdvisorService _advisorService = advisorService;
     private const string CommandTitle = "List Advisor Recommendations";
 
     public override string Id => "e3f09221-523a-4107-a715-823cebd97902";
@@ -47,9 +48,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
 
         try
         {
-            var advisorService = context.GetService<IAdvisorService>();
-
-            var recommendations = await advisorService.ListRecommendationsAsync(
+            var recommendations = await _advisorService.ListRecommendationsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.RetryPolicy,

@@ -11,16 +11,18 @@ namespace Azure.Mcp.Tools.KeyVault.Commands;
 
 [JsonSerializable(typeof(CertificateCreateCommand.CertificateCreateCommandResult))]
 [JsonSerializable(typeof(CertificateGetCommand.CertificateGetCommandResult))]
-[JsonSerializable(typeof(CertificateListCommand.CertificateListCommandResult))]
+[JsonSerializable(typeof(CertificateGetCommand.CertificateDetails))]
 [JsonSerializable(typeof(CertificateImportCommand.CertificateImportCommandResult))]
 [JsonSerializable(typeof(KeyCreateCommand.KeyCreateCommandResult))]
 [JsonSerializable(typeof(KeyGetCommand.KeyGetCommandResult))]
-[JsonSerializable(typeof(KeyListCommand.KeyListCommandResult))]
+[JsonSerializable(typeof(KeyGetCommand.KeyDetails))]
 [JsonSerializable(typeof(SecretCreateCommand.SecretCreateCommandResult))]
 [JsonSerializable(typeof(SecretGetCommand.SecretGetCommandResult))]
-[JsonSerializable(typeof(SecretListCommand.SecretListCommandResult))]
+[JsonSerializable(typeof(SecretGetCommand.SecretDetails))]
 [JsonSerializable(typeof(AdminSettingsGetCommand.AdminSettingsGetCommandResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class KeyVaultJsonContext : JsonSerializerContext
 {
 }

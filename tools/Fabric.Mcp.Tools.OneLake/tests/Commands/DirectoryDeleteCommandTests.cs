@@ -4,7 +4,9 @@
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -21,9 +23,9 @@ public class DirectoryDeleteCommandTests
         var command = new DirectoryDeleteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("delete", command.Name);
+        Assert.Equal("delete_directory", command.Name);
         Assert.Equal("Delete OneLake Directory", command.Title);
-        Assert.Contains("Delete a directory from OneLake storage", command.Description);
+        Assert.Contains("Deletes a directory from OneLake storage", command.Description);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
@@ -42,7 +44,7 @@ public class DirectoryDeleteCommandTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("delete", systemCommand.Name);
+        Assert.Equal("delete_directory", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
@@ -99,5 +101,34 @@ public class DirectoryDeleteCommandTests
         Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Theory]
+    [InlineData("../../dir")]
+    [InlineData("Files/../../other-item")]
+    [InlineData("../subdir")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DirectoryDeleteCommand>();
+        var oneLakeService = Substitute.For<IOneLakeService>();
+        var command = new DirectoryDeleteCommand(logger, oneLakeService);
+
+        oneLakeService
+            .DeleteDirectoryAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "directoryPath"));
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var systemCommand = command.GetCommand();
+        var parseResult = systemCommand.Parse($"--workspace-id workspace --item-id item --directory-path {traversalPath}");
+        var context = new CommandContext(serviceProvider);
+
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+
+        Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
     }
 }

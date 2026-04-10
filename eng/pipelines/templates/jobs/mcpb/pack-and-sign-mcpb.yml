@@ -1,0 +1,129 @@
+# Pipeline template for packaging and signing MCPB bundles via ESRP
+#
+# This template:
+# 1. Downloads signed server binaries and build_info.json
+# 2. Packages the binaries into MCP bundles (.mcpb) using the MCPB CLI
+# 3. Signs the bundles using ESRP's Pkcs7DetachedSign operation
+# 4. Converts the detached .p7s signatures to MCPB embedded format
+# 5. Verifies the signatures using mcpb verify
+#
+# Prerequisites:
+# - Signed binaries artifact must exist (binaries_signed)
+# - build_info.json must exist with server and platform definitions
+# - The server must have a manifest.json in servers/{ServerName}/mcpb/
+
+parameters:
+- name: DependsOn
+  type: object
+
+jobs:
+- job: SignAndPackMcpb
+  displayName: "Sign and Pack MCPB"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: "Download build_info"
+    artifact: build_info
+
+  - download: current
+    displayName: "Download binaries_signed"
+    artifact: binaries_signed
+
+  # Install .NET SDK 10.0.x (required by global.json for dotnet CLI commands)
+  - task: UseDotNet@2
+    displayName: "Install .NET SDK 10.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 10.0.x
+
+  # Install .NET SDK 8.0.x (required by MCPB CLI which targets .NET 8.0)
+  - task: UseDotNet@2
+    displayName: "Install .NET SDK 8.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 8.0.x
+
+  - pwsh: |
+      Write-Host "Restoring MCPB CLI from local tool manifest..."
+      dotnet tool restore
+      dotnet mcpb --version
+    displayName: "Restore MCPB CLI"
+    workingDirectory: $(Build.SourcesDirectory)
+
+  - task: Powershell@2
+    displayName: "Pack MCP bundles"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Mcpb.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/mcpb'
+
+  - task: Powershell@2
+    displayName: "Stage MCPB files for signing"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Stage-McpbForSigning.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/mcpb'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/to_sign'
+
+  # Sign with ESRP using Pkcs7DetachedSign operation
+  # This produces detached PKCS#7 signatures that we'll embed in the MCPB format
+  - task: EsrpCodeSigning@6
+    displayName: "Sign MCPB - Detached PKCS#7"
+    inputs:
+      ConnectedServiceName: 'Azure SDK PME Managed Identity'
+      UseMSIAuthentication: true
+      AppRegistrationClientId: '4fa2001b-ad7a-4a1e-9185-d6ea881f8712'
+      AppRegistrationTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+      EsrpClientId: '5e796b8d-3c4d-4e28-93f6-12a44f4368a0'
+      AuthAKVName: 'kv-azuresdk-codesign'
+      AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
+      FolderPath: $(Build.ArtifactStagingDirectory)/to_sign
+      Pattern: '**/*.signature.p7s'
+      UseMinimatch: true
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "Pkcs7DetachedSign",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {
+              "P7CE": "/p7ce DetachedSignedData",
+              "P7EKU": "1.2.840.113549.1.7.1",
+              "FileDigest": "/fd SHA256"
+            }
+          }
+        ]
+
+  - task: Powershell@2
+    displayName: "Apply MCPB signatures"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Apply-McpbSignatures.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/to_sign'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
+
+  - task: Powershell@2
+    displayName: "Verify MCPB signatures"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-McpbSignatures.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
+      ArtifactName: packages_mcpb_signed
+      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

@@ -6,4 +6,5 @@ namespace Azure.Mcp.Tools.KeyVault.Options.Key;
 public class KeyGetOptions : BaseKeyVaultOptions
 {
     public string? KeyName { get; set; }
+    public bool IncludeManagedKeys { get; set; } = false;
 }

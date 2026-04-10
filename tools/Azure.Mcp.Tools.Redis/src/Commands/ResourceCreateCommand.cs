@@ -17,9 +17,11 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// <summary>
 /// Creates a new Azure Managed Redis resource.
 /// </summary>
-public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger) : SubscriptionCommand<ResourceCreateOptions>()
+public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<ResourceCreateCommand> logger)
+    : SubscriptionCommand<ResourceCreateOptions>()
 {
     private const string CommandTitle = "Create Redis Resource";
+    private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceCreateCommand> _logger = logger;
 
     public override string Id => "750133dd-d57f-4ed4-9488-c1d406ad4a83";
@@ -51,6 +53,7 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
         command.Options.Add(RedisOptionDefinitions.Sku);
         command.Options.Add(RedisOptionDefinitions.Location);
         command.Options.Add(RedisOptionDefinitions.AccessKeyAuthenticationEnabled);
+        command.Options.Add(RedisOptionDefinitions.PublicNetworkAccess);
         command.Options.Add(RedisOptionDefinitions.Modules);
     }
 
@@ -62,6 +65,7 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
         options.Sku = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Sku.Name);
         options.Location = parseResult.GetValueOrDefault<string>(RedisOptionDefinitions.Location.Name);
         options.AccessKeyAuthenticationEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.AccessKeyAuthenticationEnabled.Name);
+        options.PublicNetworkAccessEnabled = parseResult.GetValueOrDefault<bool>(RedisOptionDefinitions.PublicNetworkAccess.Name);
         options.Modules = parseResult.GetValueOrDefault<string[]>(RedisOptionDefinitions.Modules.Name);
 
         return options;
@@ -78,22 +82,21 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
 
         try
         {
-            var redisService = context.GetService<IRedisService>() ?? throw new InvalidOperationException("Redis service is not available.");
-
-            var resource = await redisService.CreateResourceAsync(
+            var resource = await _redisService.CreateResourceAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,
                 options.Location!,
                 options.Sku,
                 options.AccessKeyAuthenticationEnabled,
+                options.PublicNetworkAccessEnabled,
                 options.Modules,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ResourceCreateCommandResult(resource),
+                new(resource),
                 RedisJsonContext.Default.ResourceCreateCommandResult);
         }
         catch (Exception ex)

@@ -26,9 +26,9 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     public override string Name => "definitions";
 
     public override string Description =>
-            $"""
-                List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
-            """;
+        """
+        List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.
+        """;
 
     public override string Title => CommandTitle;
 

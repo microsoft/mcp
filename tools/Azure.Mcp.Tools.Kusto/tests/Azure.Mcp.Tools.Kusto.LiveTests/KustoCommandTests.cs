@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using Azure.Identity;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
@@ -22,7 +22,7 @@ public class KustoCommandTests : RecordedCommandTestsBase
     private const string Sanitized = "Sanitized";
     private readonly ServiceProvider _httpClientProvider;
 
-    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
+    public KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : base(output, fixture, liveServerFixture)
     {
         _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
     }

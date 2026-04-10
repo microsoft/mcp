@@ -7,6 +7,10 @@ parameters:
   type: boolean
 - name: PackageVSIX
   type: boolean
+- name: PackagePyPI
+  type: boolean
+- name: PackageMCPB
+  type: boolean
 - name: IsTestPipeline
   type: boolean
 
@@ -55,11 +59,12 @@ jobs:
     IncludeNative: ${{ parameters.IncludeNative }}
     DependsOn: TagRepository
 
-- template: /eng/pipelines/templates/jobs/pypi/release-pypi.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    IncludeNative: ${{ parameters.IncludeNative }}
-    DependsOn: TagRepository
+- ${{ if parameters.PackagePyPI }}:
+  - template: /eng/pipelines/templates/jobs/pypi/release-pypi.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      IncludeNative: ${{ parameters.IncludeNative }}
+      DependsOn: TagRepository
 
 - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
   parameters:
@@ -68,6 +73,12 @@ jobs:
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      DependsOn: TagRepository
+
+- ${{ if parameters.PackageMCPB }}:
+  - template: /eng/pipelines/templates/jobs/mcpb/release-mcpb.yml
     parameters:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
@@ -83,9 +94,16 @@ jobs:
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
+    PackageMCPB: ${{ parameters.PackageMCPB }}
     DependsOn:
     - PublishNugetPackage
     - PublishNpm
+    - ${{ if parameters.PackageDocker }}:
+      - PublishACR
+    - ${{ if parameters.PackagePyPI }}:
+      - PublishPyPI
+    - ${{ if parameters.PackageMCPB }}:
+      - PublishMCPB
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"

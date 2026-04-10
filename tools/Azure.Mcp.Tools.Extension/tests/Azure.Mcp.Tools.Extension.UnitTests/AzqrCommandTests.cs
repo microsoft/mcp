@@ -45,7 +45,7 @@ public sealed class AzqrCommandTests
         var fixedDateTime = new DateTime(2024, 1, 15, 10, 30, 45, DateTimeKind.Utc);
         _dateTimeProvider.UtcNow.Returns(fixedDateTime);
 
-        var command = new AzqrCommand(_logger);
+        var command = new AzqrCommand(_logger, _subscriptionService, _dateTimeProvider, _processService);
 
         var mockSubscriptionId = "12345678-1234-1234-1234-123456789012";
         var args = command.GetCommand().Parse($"--subscription {mockSubscriptionId}");
@@ -116,7 +116,7 @@ public sealed class AzqrCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument()
     {
         // Arrange
-        var command = new AzqrCommand(_logger);
+        var command = new AzqrCommand(_logger, _subscriptionService, _dateTimeProvider, _processService);
 
         var args = command.GetCommand().Parse(""); // No subscription specified
         var context = new CommandContext(_serviceProvider);

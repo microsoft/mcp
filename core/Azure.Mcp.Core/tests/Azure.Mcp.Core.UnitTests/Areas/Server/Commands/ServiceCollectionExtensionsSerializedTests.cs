@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Configuration;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
@@ -21,7 +20,7 @@ public class ServiceCollectionExtensionsSerializedTests
     private IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
-        services.AddSingleton<CommandFactory>(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
+        services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
 
         return services;
     }
@@ -38,7 +37,7 @@ public class ServiceCollectionExtensionsSerializedTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -69,7 +68,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -93,7 +92,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
 
         Assert.NotNull(options.Value);
 
@@ -126,7 +125,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
         Assert.False(options.Value.IsTelemetryEnabled, "Telemetry should be disabled when support logging folder is set");
     }
 
@@ -150,7 +149,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
         Assert.False(options.Value.IsTelemetryEnabled, "Telemetry should be disabled when support logging folder is set, regardless of environment variable");
     }
 
@@ -176,7 +175,7 @@ public class ServiceCollectionExtensionsSerializedTests
         var provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var options = provider.GetRequiredService<IOptions<McpServerConfiguration>>();
         Assert.True(options.Value.IsTelemetryEnabled, $"Telemetry should be enabled when support logging folder is '{folderPath}'");
     }
 }

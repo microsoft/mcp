@@ -18,6 +18,12 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: PackagePyPI
+  type: boolean
+  default: false
+- name: PackageMCPB
+  type: boolean
+  default: false
 - name: TestTimeoutInMinutes
   type: number
   default: 30
@@ -76,8 +82,18 @@ extends:
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}
-            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrices.x64']
             MaxParallel: 4
+
+      - template: /eng/pipelines/templates/jobs/build.yml
+        parameters:
+          TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+          ServerName: ${{ parameters.ServerName }}
+          PublishTarget: ${{ parameters.PublishTarget }}
+          OSName: linux
+          Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.linuxBuildMatrices.arm64']
+          MaxParallel: 4
+          HostArchitecture: arm64
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
@@ -118,6 +134,8 @@ extends:
             ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
             PackageDocker: ${{ parameters.PackageDocker }}
             PackageVSIX: ${{ parameters.PackageVSIX }}
+            PackagePyPI: ${{ parameters.PackagePyPI }}
+            PackageMCPB: ${{ parameters.PackageMCPB }}
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
@@ -138,6 +156,8 @@ extends:
               IncludeNative: false
               PackageDocker: ${{ parameters.PackageDocker }}
               PackageVSIX: ${{ parameters.PackageVSIX }}
+              PackagePyPI: ${{ parameters.PackagePyPI }}
+              PackageMCPB: ${{ parameters.PackageMCPB }}
               IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
       - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:

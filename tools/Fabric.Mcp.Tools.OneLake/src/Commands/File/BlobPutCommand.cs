@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.IO;
 using System.Net;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -15,6 +11,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -27,9 +24,9 @@ public sealed class BlobPutCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "f6b3249d-6481-4e80-9d34-0d6867718dd7";
-    public override string Name => "file";
+    public override string Name => "upload_file";
     public override string Title => "Upload OneLake File";
-    public override string Description => "Upload content to OneLake storage. Supports inline content or local file uploads with optional overwrite control.";
+    public override string Description => "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -53,6 +50,23 @@ public sealed class BlobPutCommand(
         command.Options.Add(FabricOptionDefinitions.LocalFilePath);
         command.Options.Add(FabricOptionDefinitions.Overwrite);
         command.Options.Add(FabricOptionDefinitions.ContentType);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override BlobPutOptions BindOptions(ParseResult parseResult)
@@ -90,16 +104,6 @@ public sealed class BlobPutCommand(
 
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             using var contentStream = ResolveContentStream(options, out var contentLength);
 
             var result = await _oneLakeService.PutBlobAsync(

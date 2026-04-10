@@ -31,10 +31,9 @@ public class KeyValueDeleteCommandTests
         _appConfigService = Substitute.For<IAppConfigService>();
         _logger = Substitute.For<ILogger<KeyValueDeleteCommand>>();
 
-        _command = new(_logger);
+        _command = new(_logger, _appConfigService);
         _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
-            .AddSingleton(_appConfigService)
             .BuildServiceProvider();
         _context = new(_serviceProvider);
     }

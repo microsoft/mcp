@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
@@ -9,7 +10,11 @@ using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
+using Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Mcp.Tools.Monitor.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -29,6 +34,43 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
+        services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, NodeJsLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, PythonLanguageDetector>();
+        services.AddSingleton<IAppTypeDetector, DotNetAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, NodeJsAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, PythonAppTypeDetector>();
+        services.AddSingleton<IInstrumentationDetector, DotNetInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, NodeJsInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, PythonInstrumentationDetector>();
+
+        services.AddSingleton<IGenerator, AspNetCoreGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, DotNetEnhancementGenerator>();
+        services.AddSingleton<IGenerator, ExpressGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, FastifyGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NestJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NextJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, LangchainJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PostgresNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MongoDBNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, RedisNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MySQLNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WinstonNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, BunyanNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PythonGreenfieldGenerator>();
+
+        services.AddSingleton<WorkspaceAnalyzer>();
+        services.AddSingleton<OrchestratorTool>();
+        services.AddSingleton<SendBrownfieldAnalysisTool>();
+        services.AddSingleton<SendEnhancementSelectTool>();
+
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
@@ -45,9 +87,13 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<ActivityLogListCommand>();
 
         services.AddSingleton<WebTestsGetCommand>();
-        services.AddSingleton<WebTestsListCommand>();
-        services.AddSingleton<WebTestsCreateCommand>();
-        services.AddSingleton<WebTestsUpdateCommand>();
+        services.AddSingleton<WebTestsCreateOrUpdateCommand>();
+
+        services.AddSingleton<GetLearningResourceCommand>();
+        services.AddSingleton<OrchestratorStartCommand>();
+        services.AddSingleton<OrchestratorNextCommand>();
+        services.AddSingleton<SendBrownfieldAnalysisCommand>();
+        services.AddSingleton<SendEnhancementSelectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -119,12 +165,22 @@ public class MonitorSetup : IAreaSetup
 
         var webTestGet = serviceProvider.GetRequiredService<WebTestsGetCommand>();
         webTests.AddCommand(webTestGet.Name, webTestGet);
-        var webTestList = serviceProvider.GetRequiredService<WebTestsListCommand>();
-        webTests.AddCommand(webTestList.Name, webTestList);
-        var webTestCreate = serviceProvider.GetRequiredService<WebTestsCreateCommand>();
-        webTests.AddCommand(webTestCreate.Name, webTestCreate);
-        var webTestUpdate = serviceProvider.GetRequiredService<WebTestsUpdateCommand>();
-        webTests.AddCommand(webTestUpdate.Name, webTestUpdate);
+        var webTestCreateOrUpdate = serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>();
+        webTests.AddCommand(webTestCreateOrUpdate.Name, webTestCreateOrUpdate);
+
+        var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
+        monitor.AddSubGroup(instrumentation);
+
+        var getLearningResource = serviceProvider.GetRequiredService<GetLearningResourceCommand>();
+        instrumentation.AddCommand(getLearningResource.Name, getLearningResource);
+        var orchestratorStart = serviceProvider.GetRequiredService<OrchestratorStartCommand>();
+        instrumentation.AddCommand(orchestratorStart.Name, orchestratorStart);
+        var orchestratorNext = serviceProvider.GetRequiredService<OrchestratorNextCommand>();
+        instrumentation.AddCommand(orchestratorNext.Name, orchestratorNext);
+        var sendBrownfieldAnalysis = serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>();
+        instrumentation.AddCommand(sendBrownfieldAnalysis.Name, sendBrownfieldAnalysis);
+        var sendEnhancementSelect = serviceProvider.GetRequiredService<SendEnhancementSelectCommand>();
+        instrumentation.AddCommand(sendEnhancementSelect.Name, sendEnhancementSelect);
 
         return monitor;
     }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
@@ -79,8 +78,7 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
                 cancellationToken);
 
             context.Response.Message = "Sync group deleted successfully";
-            var results = new SyncGroupDeleteCommandResult("Sync group deleted successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Sync group deleted successfully"), StorageSyncJsonContext.Default.SyncGroupDeleteCommandResult);
         }
         catch (Exception ex)
         {

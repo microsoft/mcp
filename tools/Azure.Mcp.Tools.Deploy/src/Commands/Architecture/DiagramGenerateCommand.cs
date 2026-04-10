@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Deploy.Options.Architecture;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
@@ -23,13 +24,11 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     public override string Name => "generate";
 
     public override string Description =>
-        "Generates an azure service architecture diagram for the application based on the provided app topology."
-        + "Call this tool when the user need recommend or design the azure architecture of their application."
-        + "Do not call this tool when the user need detailed design of the azure architecture, such as the network topology, security design, etc."
-        + "Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services, also find the environment variables that used to create the connection strings."
-        + "If it's a .NET Aspire application, check aspireManifest.json file if there is. Try your best to fulfill the input schema with your analyze result.";
+        """
+        Generates an Azure service architecture diagram showing the recommended Azure services and their connections for an application. Use this tool when the user asks to generate, create, or visualize an Azure architecture diagram for their application, or wants to see which Azure services to use. Renders the diagram from an application topology (AppTopology) provided as input; scan the workspace first to build this topology by detecting services, frameworks, and environment variables for connection strings, and for .NET Aspire applications, check aspireManifest.json. Do not use this tool when the user needs a detailed network topology or security design.
+        """;
 
-    public override string Title => "Generate Architecture Diagram";
+    public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
@@ -44,13 +43,22 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
+        command.Validators.Add(result =>
+        {
+            var rawMcpToolInput = result.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
+            if (string.IsNullOrWhiteSpace(rawMcpToolInput))
+            {
+                result.AddError("App topology cannot be null or empty.");
+            }
+        });
     }
 
     protected override DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
-        var options = new DiagramGenerateOptions();
-        options.RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
-        return options;
+        return new()
+        {
+            RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name)
+        };
     }
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
@@ -59,21 +67,9 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         {
             var options = BindOptions(parseResult);
             var rawMcpToolInput = options.RawMcpToolInput;
-            if (string.IsNullOrWhiteSpace(rawMcpToolInput))
-            {
-                throw new ArgumentException("App topology cannot be null or empty.", nameof(options.RawMcpToolInput));
-            }
 
-            AppTopology appTopology;
-            try
-            {
-                appTopology = JsonSerializer.Deserialize(rawMcpToolInput, DeployJsonContext.Default.AppTopology)
-                    ?? throw new ArgumentException("Failed to deserialize app topology.", nameof(rawMcpToolInput));
-            }
-            catch (JsonException ex)
-            {
-                throw new ArgumentException($"Invalid JSON format: {ex.Message}", nameof(rawMcpToolInput), ex);
-            }
+            AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput!, DeployJsonContext.Default.AppTopology)
+                ?? throw new ArgumentException("Failed to deserialize app topology.", nameof(rawMcpToolInput));
 
             context.Activity?
                 .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
@@ -125,4 +121,10 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 
         return Task.FromResult(context.Response);
     }
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        JsonException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
 }

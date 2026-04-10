@@ -26,7 +26,6 @@ public sealed class DatabaseListCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<DatabaseListCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -55,7 +54,7 @@ public sealed class DatabaseListCommandTests
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedDatabases);
         }
-        var command = new DatabaseListCommand(_logger);
+        var command = new DatabaseListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -90,7 +89,7 @@ public sealed class DatabaseListCommandTests
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new DatabaseListCommand(_logger);
+        var command = new DatabaseListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -126,7 +125,7 @@ public sealed class DatabaseListCommandTests
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
-        var command = new DatabaseListCommand(_logger);
+        var command = new DatabaseListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -143,7 +142,7 @@ public sealed class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new DatabaseListCommand(_logger);
+        var command = new DatabaseListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
@@ -158,7 +157,7 @@ public sealed class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingAllRequiredOptions()
     {
-        var command = new DatabaseListCommand(_logger);
+        var command = new DatabaseListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);

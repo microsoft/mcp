@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
@@ -13,10 +13,9 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorHealthModelService(ITenantService tenantService, IHttpClientFactory httpClientFactory)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const string ManagementApiBaseUrl = "https://management.azure.com";
-    private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     /// <summary>
     /// Retrieves the health information for a specific entity in a health model.
@@ -68,10 +67,10 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     private async Task<string> GetDataplaneEndpointAsync(string subscriptionId, string resourceGroupName, string healthModelName, CancellationToken cancellationToken)
     {
         string token = await GetControlPlaneTokenAsync(cancellationToken);
-        string healthModelUrl = $"{ManagementApiBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
+        string healthModelUrl = $"{GetManagementEndpoint()}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new("Bearer", token);
 
         var client = _httpClientFactory.CreateClient();
         HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
@@ -104,21 +103,36 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<string> GetControlPlaneTokenAsync(CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([$"{ManagementApiBaseUrl}/.default"]),
-            cancellationToken);
-
-        return accessToken.Token;
+        return (await GetArmAccessTokenAsync(null, cancellationToken)).Token;
     }
 
     private async Task<string> GetDataplaneTokenAsync(CancellationToken cancellationToken)
     {
         TokenCredential credential = await GetCredential(cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([HealthModelsDataApiScope]),
+            new([GetHealthModelsDataApiScope()]),
             cancellationToken);
 
         return accessToken.Token;
+    }
+
+    private string GetManagementEndpoint()
+    {
+        return _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+    }
+
+    private string GetHealthModelsDataApiScope()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                "https://data.healthmodels.azure.com/.default",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                "https://data.healthmodels.azure.cn/.default",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                "https://data.healthmodels.azure.us/.default",
+            _ =>
+                "https://data.healthmodels.azure.com/.default"
+        };
     }
 }

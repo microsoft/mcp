@@ -28,11 +28,9 @@ public class TestResourceCreateCommandTests
         _service = Substitute.For<ILoadTestingService>();
         _logger = Substitute.For<ILogger<TestResourceCreateCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -57,7 +55,7 @@ public class TestResourceCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceCreateCommand(_logger);
+        var command = new TestResourceCreateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -91,7 +89,7 @@ public class TestResourceCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceCreateCommand(_logger);
+        var command = new TestResourceCreateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",

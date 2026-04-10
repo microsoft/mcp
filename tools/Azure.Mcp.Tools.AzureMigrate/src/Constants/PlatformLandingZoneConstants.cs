@@ -11,22 +11,14 @@ internal static class PlatformLandingZoneConstants
     /// <summary>
     /// Base URL for Azure Landing Zone scenario documentation.
     /// </summary>
-    public const string ScenarioDocsBaseUrl = "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones/main/docs/content/accelerator/startermodules/terraform-platform-landing-zone/options";
+    public const string ScenarioDocsBaseUrl = "https://aka.ms/azmcp/lzscenariodocs";
 
     /// <summary>
     /// Base URL for Azure Landing Zone archetype definitions.
     /// </summary>
-    public const string ArchetypeDefinitionsBaseUrl = "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones-Library/main/platform/alz/archetype_definitions";
+    public const string ArchetypeDefinitionsBaseUrl = "https://aka.ms/azmcp/lzarchetypedefs";
 
-    /// <summary>
-    /// Azure Resource Manager base URL.
-    /// </summary>
-    public const string ArmBaseUrl = "https://management.azure.com";
 
-    /// <summary>
-    /// Azure Management API scope.
-    /// </summary>
-    public const string ManagementScope = "https://management.azure.com/.default";
 
     /// <summary>
     /// API version for Azure Migrate operations.

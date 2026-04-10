@@ -27,7 +27,6 @@ public sealed class ClusterGetCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<ClusterGetCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -57,7 +56,7 @@ public sealed class ClusterGetCommandTests
         _kusto.GetClusterAsync(
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedCluster);
-        var command = new ClusterGetCommand(_logger);
+        var command = new ClusterGetCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
@@ -81,7 +80,7 @@ public sealed class ClusterGetCommandTests
         _kusto.GetClusterAsync(
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<KustoClusterModel>(new KeyNotFoundException("Kusto cluster 'clusterA' not found for subscription 'sub123'.")));
-        var command = new ClusterGetCommand(_logger);
+        var command = new ClusterGetCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
@@ -99,7 +98,7 @@ public sealed class ClusterGetCommandTests
         _kusto.GetClusterAsync(
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
-        var command = new ClusterGetCommand(_logger);
+        var command = new ClusterGetCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);

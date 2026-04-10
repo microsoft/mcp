@@ -5,6 +5,7 @@ using System.Text;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -12,26 +13,30 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
-using Azure.Search.Documents.Agents;
-using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
+using Azure.Search.Documents.KnowledgeBases;
+using Azure.Search.Documents.KnowledgeBases.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
 public sealed class SearchService(
     ISubscriptionService subscriptionService,
     ICacheService cacheService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<SearchService> logger)
     : BaseAzureService(tenantService), ISearchService
 {
+    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<SearchService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
-    private static readonly TimeSpan s_cacheDurationServices = TimeSpan.FromHours(1);
-    private static readonly TimeSpan s_cacheDurationClients = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
+    private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
 
     public async Task<List<string>> ListServices(
         string subscription,
@@ -42,8 +47,8 @@ public sealed class SearchService(
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         var cacheKey = string.IsNullOrEmpty(tenantId)
-            ? $"{SearchServicesCacheKey}_{subscription}"
-            : $"{SearchServicesCacheKey}_{subscription}_{tenantId}";
+            ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, _tenantService.CloudConfiguration.CloudType.ToString())
+            : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, tenantId, _tenantService.CloudConfiguration.CloudType.ToString());
 
         var cachedServices = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationServices, cancellationToken);
         if (cachedServices != null)
@@ -53,22 +58,15 @@ public sealed class SearchService(
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var services = new List<string>();
-        try
+        await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
         {
-            await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
+            if (service?.Data?.Name != null)
             {
-                if (service?.Data?.Name != null)
-                {
-                    services.Add(service.Data.Name);
-                }
+                services.Add(service.Data.Name);
             }
+        }
 
-            await _cacheService.SetAsync(CacheGroup, cacheKey, services, s_cacheDurationServices, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Search services: {ex.Message}", ex);
-        }
+        await _cacheService.SetAsync(CacheGroup, cacheKey, services, s_cacheDurationServices, cancellationToken);
 
         return services;
     }
@@ -85,33 +83,19 @@ public sealed class SearchService(
 
         if (string.IsNullOrEmpty(indexName))
         {
-            try
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+            await foreach (var index in searchClient.GetIndexesAsync(cancellationToken: cancellationToken))
             {
-                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
-                await foreach (var index in searchClient.GetIndexesAsync(cancellationToken: cancellationToken))
-                {
-                    indexes.Add(MapToIndexInfo(index));
-                }
-                return indexes;
+                indexes.Add(MapToIndexInfo(index));
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving Search indexes: {ex.Message}", ex);
-            }
+            return indexes;
         }
         else
         {
-            try
-            {
-                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
-                var index = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+            var index = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
 
-                indexes.Add(MapToIndexInfo(index.Value));
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving Search index details: {ex.Message}", ex);
-            }
+            indexes.Add(MapToIndexInfo(index.Value));
         }
 
         return indexes;
@@ -129,30 +113,24 @@ public sealed class SearchService(
             (nameof(indexName), indexName),
             (nameof(searchText), searchText));
 
-        try
+        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var indexDefinition = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
+        var client = searchClient.GetSearchClient(indexName);
+
+        var options = new SearchOptions
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
-            var indexDefinition = await searchClient.GetIndexAsync(indexName, cancellationToken: cancellationToken);
-            var client = searchClient.GetSearchClient(indexName);
+            IncludeTotalCount = true,
+            Size = 20
+        };
 
-            var options = new SearchOptions
-            {
-                IncludeTotalCount = true,
-                Size = 20
-            };
+        var vectorFields = FindVectorFields(indexDefinition.Value);
+        // TODO (alzimmer): this isn't useed and probably should be.
+        var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
+        ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
 
-            var vectorFields = FindVectorFields(indexDefinition.Value);
-            var vectorizableFields = FindVectorizableFields(indexDefinition.Value, vectorFields);
-            ConfigureSearchOptions(searchText, options, indexDefinition.Value, vectorFields);
+        var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
 
-            var searchResponse = await client.SearchAsync(searchText, SearchJsonContext.Default.JsonElement, options, cancellationToken: cancellationToken);
-
-            return await ProcessSearchResults(searchResponse);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error querying Search index: {ex.Message}", ex);
-        }
+        return await ProcessSearchResults(searchResponse, cancellationToken);
     }
 
     public async Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
@@ -163,33 +141,26 @@ public sealed class SearchService(
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
-        try
-        {
-            var sources = new List<KnowledgeSourceInfo>();
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var sources = new List<KnowledgeSourceInfo>();
+        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
 
-            if (string.IsNullOrEmpty(knowledgeSourceName))
-            {
-                await foreach (var source in searchClient.GetKnowledgeSourcesAsync(cancellationToken: cancellationToken))
-                {
-                    sources.Add(new KnowledgeSourceInfo(source.Name, source.GetType().Name, source.Description));
-                }
-            }
-            else
-            {
-                var result = await searchClient.GetKnowledgeSourceAsync(knowledgeSourceName, cancellationToken: cancellationToken);
-                if (result?.Value != null)
-                {
-                    sources.Add(new KnowledgeSourceInfo(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
-                }
-            }
-
-            return sources;
-        }
-        catch (Exception ex)
+        if (string.IsNullOrEmpty(knowledgeSourceName))
         {
-            throw new Exception($"Error retrieving Search knowledge sources: {ex.Message}", ex);
+            await foreach (var source in searchClient.GetKnowledgeSourcesAsync(cancellationToken: cancellationToken))
+            {
+                sources.Add(new(source.Name, source.GetType().Name, source.Description));
+            }
         }
+        else
+        {
+            var result = await searchClient.GetKnowledgeSourceAsync(knowledgeSourceName, cancellationToken: cancellationToken);
+            if (result?.Value != null)
+            {
+                sources.Add(new(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
+            }
+        }
+
+        return sources;
     }
 
     public async Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
@@ -200,36 +171,29 @@ public sealed class SearchService(
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
-        try
-        {
-            var bases = new List<KnowledgeBaseInfo>();
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+        var bases = new List<KnowledgeBaseInfo>();
+        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
 
-            if (string.IsNullOrEmpty(knowledgeBaseName))
+        if (string.IsNullOrEmpty(knowledgeBaseName))
+        {
+            await foreach (var knowledgeBase in searchClient.GetKnowledgeBasesAsync(cancellationToken: cancellationToken))
             {
-                await foreach (var knowledgeBase in searchClient.GetKnowledgeAgentsAsync(cancellationToken: cancellationToken))
+                bases.Add(new(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
+            }
+        }
+        else
+        {
+            var result = await searchClient.GetKnowledgeBaseAsync(knowledgeBaseName, cancellationToken: cancellationToken);
+            if (result?.Value != null)
+            {
+                if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
                 {
-                    bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
+                    bases.Add(new(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
                 }
             }
-            else
-            {
-                var result = await searchClient.GetKnowledgeAgentAsync(knowledgeBaseName, cancellationToken: cancellationToken);
-                if (result?.Value != null)
-                {
-                    if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        bases.Add(new KnowledgeBaseInfo(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
-                    }
-                }
-            }
+        }
 
-            return bases;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Search knowledge bases: {ex.Message}", ex);
-        }
+        return bases;
     }
 
     public async Task<string> RetrieveFromKnowledgeBase(
@@ -242,30 +206,58 @@ public sealed class SearchService(
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
 
-        try
+        var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
+
+        var knowledgeBase = await searchClient.GetKnowledgeBaseAsync(baseName, cancellationToken: cancellationToken);
+        if (knowledgeBase?.Value == null)
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy, cancellationToken);
-
-            var clientOptions = AddDefaultPolicies(new SearchClientOptions());
-            clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
-            ConfigureRetryPolicy(clientOptions, retryPolicy);
-
-            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
-
-            var request = new KnowledgeAgentRetrievalRequest(
-                messages != null ?
-                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
-                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
-
-            var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
-
-            var response = results.GetRawResponse().Content ?? throw new InvalidOperationException("Response had no content");
-            return await ProcessRetrieveResponse(response.ToStream());
+            throw new InvalidOperationException($"Knowledge base '{baseName}' not found in service '{serviceName}'.");
         }
-        catch (Exception ex)
+
+        var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+        clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+        clientOptions.Audience = GetSearchAudience();
+        ConfigureRetryPolicy(clientOptions, retryPolicy);
+
+        var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(cancellationToken: cancellationToken), clientOptions);
+        var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
+        var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
+
+        var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
+
+        var response = results.GetRawResponse().Content ?? throw new InvalidOperationException("Response had no content");
+        return await ProcessRetrieveResponse(response.ToStream());
+    }
+
+    internal static KnowledgeBaseRetrievalRequest BuildKnowledgeBaseRetrievalRequest(
+        bool useMinimalReasoning,
+        string? query,
+        IEnumerable<(string role, string message)>? messages)
+    {
+        var request = new KnowledgeBaseRetrievalRequest();
+
+        if (useMinimalReasoning)
         {
-            throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
+            var intent = messages != null && messages.Any()
+                ? string.Join("\n", messages.Select(m => m.message))
+                : query ?? string.Empty;
+
+            request.Intents.Add(new KnowledgeRetrievalSemanticIntent(intent));
+            return request;
         }
+
+        if (messages != null && messages.Any())
+        {
+            foreach ((string role, string message) in messages)
+            {
+                request.Messages.Add(new([new KnowledgeBaseMessageTextContent(message)]) { Role = role });
+            }
+
+            return request;
+        }
+
+        request.Messages.Add(new([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
+        return request;
     }
 
     internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
@@ -325,7 +317,7 @@ public sealed class SearchService(
 
     private async Task<SearchIndexClient> GetSearchIndexClient(string serviceName, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken = default)
     {
-        var key = $"{SearchServicesCacheKey}_{serviceName}";
+        var key = CacheKeyBuilder.Build(SearchServicesCacheKey, serviceName, _tenantService.CloudConfiguration.CloudType.ToString());
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
         {
@@ -333,9 +325,10 @@ public sealed class SearchService(
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
+            clientOptions.Audience = GetSearchAudience();
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var endpoint = new Uri($"https://{serviceName}.search.windows.net");
+            var endpoint = new Uri(GetSearchEndpoint(serviceName));
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
             await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients, cancellationToken);
         }
@@ -359,10 +352,10 @@ public sealed class SearchService(
         }
     }
 
-    private static async Task<List<JsonElement>> ProcessSearchResults(Response<SearchResults<JsonElement>> searchResponse)
+    private static async Task<List<JsonElement>> ProcessSearchResults(Response<SearchResults<JsonElement>> searchResponse, CancellationToken cancellationToken)
     {
         var results = new List<JsonElement>();
-        await foreach (var result in searchResponse.Value.GetResultsAsync())
+        await foreach (var result in searchResponse.Value.GetResultsAsync().WithCancellation(cancellationToken))
         {
             results.Add(result.Document);
         }
@@ -387,4 +380,26 @@ public sealed class SearchService(
     private static FieldInfo MapToFieldInfo(SearchField field)
         => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
             field.IsFacetable, field.IsHidden != true);
+
+    private string GetSearchEndpoint(string serviceName)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
+            _ => $"https://{serviceName}.search.windows.net"
+        };
+    }
+
+    private SearchAudience GetSearchAudience()
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => SearchAudience.AzureGovernment,
+            _ => SearchAudience.AzurePublicCloud
+        };
+    }
 }

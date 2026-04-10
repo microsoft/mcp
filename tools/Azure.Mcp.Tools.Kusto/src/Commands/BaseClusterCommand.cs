@@ -25,13 +25,14 @@ public abstract class BaseClusterCommand<
         command.Options.Add(KustoOptionDefinitions.Cluster);
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.TryGetValue(KustoOptionDefinitions.ClusterUri, out string? clusterUri) && !string.IsNullOrEmpty(clusterUri))
+            var clusterUri = commandResult.GetValueOrDefault<string>(KustoOptionDefinitions.ClusterUri.Name);
+            if (!string.IsNullOrEmpty(clusterUri))
             {
                 // If clusterUri is provided, subscription becomes optional
                 return;
             }
 
-            commandResult.TryGetValue(KustoOptionDefinitions.Cluster, out string? clusterName);
+            var clusterName = commandResult.GetValueOrDefault<string>(KustoOptionDefinitions.Cluster.Name);
 
             // clusterUri not provided, require both subscription and clusterName
             if (string.IsNullOrEmpty(clusterName) || !CommandHelper.HasSubscriptionAvailable(commandResult))

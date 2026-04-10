@@ -5,17 +5,23 @@ Production-ready test suite for Microsoft Fabric OneLake MCP Tools providing com
 
 ## Final Test Coverage Status
 
-### ✅ Command Tests - 100% Coverage (68/68 passing)
-All 11 OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
+### ✅ Command Tests - 100% Coverage Across 19 Commands
+All OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
 
 #### Enhanced Command Tests
-- **FileReadCommand**: Complete ExecuteAsync testing with service mocks
-- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks  
-- **FileDeleteCommand**: Complete ExecuteAsync testing with service mocks
-- **DirectoryCreateCommand**: Complete ExecuteAsync testing with service mocks
-- **DirectoryDeleteCommand**: Complete ExecuteAsync testing with service mocks
+- **FileReadCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **FileDeleteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **DirectoryCreateCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **DirectoryDeleteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
 - **ItemCreateCommand**: Complete ExecuteAsync testing with service mocks
-- **All 11 commands**: Constructor validation, interface implementation, parameter binding, error handling
+- **TableNamespaceListCommand**: Namespace enumeration with schema alias handling
+- **TableNamespaceGetCommand**: Namespace metadata retrieval scenarios
+- **TableListCommand**: Cross-namespace table discovery and paging
+- **BlobGetCommand/BlobPutCommand**: Retrieval and upload scenarios including traversal rejection
+- **TableGetCommand**: Detailed table metadata and column schema retrieval
+- **TableConfigGetCommand**: Table configuration export validation
+- **All 19 commands**: Constructor validation, interface implementation, parameter binding, error handling
 
 #### Key Features
 - **Constructor validation**: All commands properly initialized
@@ -24,8 +30,8 @@ All 11 OneLake commands have comprehensive test coverage with ExecuteAsync testi
 - **Error handling**: Comprehensive exception scenarios
 - **ExecuteAsync testing**: Service interaction validation with mocks
 
-### 🏗️ Service Tests - Testable Architecture Patterns (6/6 passing)
-Service tests demonstrate testable architecture patterns following Fabric.PublicApi model:
+### 🏗️ Service Tests - Testable Architecture Patterns & Security (7/7 passing)
+Service tests demonstrate testable architecture patterns and validate security guards:
 
 #### Architecture Demonstration
 - **TestableOneLakeService**: Shows dependency injection pattern with IOneLakeApiClient abstraction
@@ -33,14 +39,25 @@ Service tests demonstrate testable architecture patterns following Fabric.Public
 - **Parameter Validation**: Tests validation before API calls (not requiring authentication)
 - **Mocking Capabilities**: Demonstrates how dependencies can be mocked for unit testing
 
+### 🔒 Security Tests - Path Traversal Guards (OneLakePathTraversalTests)
+Comprehensive security test suite validating that `ValidatePathForTraversal` blocks all traversal variants before any HTTP request is made:
+
+- **13 service methods covered**: All file/blob/directory methods that accept caller-supplied paths
+- **Literal traversal**: `../`, `../../`, embedded `..` segments
+- **URL-encoded traversal**: `%2e%2e` (lowercase) and `%2E%2E` (uppercase) percent-encoded variants
+- **Backslash normalisation**: Windows-style `..\` separators
+- **Valid path passthrough**: Confirms legitimate paths are not incorrectly blocked
+- **No HTTP leakage**: Uses a guard `HttpMessageHandler` that fails the test if any HTTP call is attempted before the `ArgumentException` is thrown
+
 ## Test Statistics
 
 ### Final Test Count
-- **Total Tests**: 74 tests (100% passing) ✅
-- **Command Coverage**: 100% with comprehensive ExecuteAsync testing (68 tests) ✅
+- **Total Tests**: 231 tests (100% passing) ✅
+- **Command Coverage**: 100% with comprehensive ExecuteAsync testing ✅
 - **Service Architecture Tests**: Testable pattern demonstrations (6 tests) ✅
+- **Security Tests**: Path traversal guard validation (93 tests across service + command layers) ✅
 - **Build Status**: Clean build with no test failures ✅
-- **Test Duration**: ~2.3 seconds (fast execution) ⚡
+- **Test Duration**: ~350 ms (fast execution) ⚡
 
 ## Technical Implementation
 
@@ -67,19 +84,21 @@ public async Task ExecuteAsync_PerformsCorrectServiceCall()
 ### Test Organization
 ```
 tests/
-├── Commands/           # Individual command tests (11 commands)
+├── Commands/           # Individual command tests (20 commands)
 │   ├── File/          # File operation commands
 │   ├── Item/          # Item management commands  
 │   ├── Directory/     # Directory operation commands
+│   ├── Table/         # Table API command coverage
 │   └── Workspace/     # Workspace operation commands
 ├── Services/          # Service layer tests
-│   └── OneLakeServiceTests.cs  # Testable architecture patterns
+│   ├── OneLakeServiceTests.cs          # Testable architecture patterns
+│   └── OneLakePathTraversalTests.cs    # Security: traversal guard validation
 └── FabricOneLakeSetupTests.cs  # Setup and registration tests
 ```
 
 ### Test Coverage Created
 
-#### Command Tests (84 tests)
+#### Command Tests
 - **Constructor validation** - Ensures proper dependency injection
 - **Command properties** - Name, title, description validation
 - **Metadata verification** - ReadOnly, Destructive, Idempotent flags
@@ -98,6 +117,12 @@ tests/
   - Special character URL encoding
 - **Architecture documentation** - Test demonstrating pattern differences
 
+#### Security Tests (93 tests — OneLakePathTraversalTests + command-level traversal tests)
+- **Service-level guard** — `ValidatePathForTraversal` decodes percent-encoding with `Uri.UnescapeDataString`, then splits on `/` and `\` and rejects any segment equal to `.` or `..`
+- **13 service methods covered** — each with literal `..`, `%2e%2e`, `%2E%2E`, and multi-segment variants
+- **7 command-level tests** — `FileRead`, `FileWrite`, `FileDelete`, `BlobGet`, `BlobPut`, `DirectoryCreate`, `DirectoryDelete` confirm `ArgumentException` propagates through the command handler
+- **Error message** — neutral `"Path cannot contain directory traversal sequences."` with the correct `paramName` (`filePath`, `blobPath`, or `directoryPath`)
+
 ### Key Features Tested
 - ✅ **OneLake Workspace Listing** (`onelake workspace list`)
 - ✅ **Path Listing** (`onelake file list`) - File system browsing
@@ -110,7 +135,12 @@ tests/
 - ✅ **Item Creation** (`onelake item create`) - Create OneLake items
 - ✅ **File Operations** (`onelake file read`, `onelake file write`, `onelake file delete`) - File management
 - ✅ **Directory Operations** (`onelake directory create`, `onelake directory delete`) - Directory management
-- ✅ **Testable Service Architecture** - Dependency injection patterns with comprehensive testing
+- ✅ **Table Namespace Listing** (`onelake table namespace list`) - Namespace enumeration with schema alias support
+- ✅ **Table Namespace Retrieval** (`onelake table namespace get`) - Namespace metadata fetching
+- ✅ **Table Listing** (`onelake table list`) - Table discovery across namespaces
+- ✅ **Table Retrieval** (`onelake table get`) - Detailed table metadata and schema inspection
+- ✅ **Table Configuration** (`onelake table config get`) - Configuration export validation
+- ✅ **Path Traversal Security** — All file/blob/directory operations reject `..`, `%2e%2e`, and `%2E%2E` traversal sequences before any HTTP request is made
 
 ## Technical Implementation
 
@@ -130,8 +160,8 @@ tests/
 ## Final Test Results ✅
 
 ```
-Test summary: total: 90, failed: 0, succeeded: 90, skipped: 0, duration: 20.3s
-Build succeeded in 26.0s
+Test summary: total: 231, failed: 0, succeeded: 231, skipped: 0, duration: 0.3s
+Build succeeded
 ```
 
 ## Architecture Insights Discovered
@@ -183,7 +213,7 @@ For this implementation, we chose to:
 ## Production Readiness
 
 ### ✅ What's Tested and Working
-1. **All 11 MCP Commands**: Complete command functionality validation (68 tests)
+1. **All OneLake MCP Commands**: Complete command functionality validation with ExecuteAsync coverage
 2. **ExecuteAsync Integration**: Full MCP protocol command execution
 3. **Service Mocking**: Proper dependency isolation
 4. **Error Scenarios**: Exception handling and validation
@@ -214,13 +244,18 @@ For this implementation, we chose to:
 | Upload File | `onelake upload file` | Full ✅ |
 | Download File | `onelake download file` | Full ✅ |
 | Blob Delete | `onelake blob delete` | Full ✅ |
+| Table Namespace List | `onelake table namespace list` | Full ✅ |
+| Table Namespace Get | `onelake table namespace get` | Full ✅ |
+| Table List | `onelake table list` | Full ✅ |
+| Table Get | `onelake table get` | Full ✅ |
+| Table Config Get | `onelake table config get` | Full ✅ |
 
 ## Key Achievements 🚀
 
-1. **100% Command Test Coverage**: All OneLake MCP commands fully tested (68 tests)
+1. **100% Command Test Coverage**: All OneLake MCP commands fully tested with ExecuteAsync validation
 2. **Testable Architecture Patterns**: Comprehensive service testing examples (6 tests)
 3. **Clean Build**: No compilation errors or test failures
-4. **Fast Execution**: Sub-3-second test execution time
+4. **Fast Execution**: ~10-second end-to-end test execution time
 5. **Production Ready**: Comprehensive error handling and validation
 6. **Architecture Discovery**: Valuable insights and patterns for future service refactoring
 

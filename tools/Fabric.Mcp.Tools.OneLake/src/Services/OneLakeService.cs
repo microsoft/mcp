@@ -200,43 +200,10 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
     }
 
-    // OneLake Shortcuts Operations  
-    public async Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        var result = await JsonSerializer.DeserializeAsync<ShortcutsResponse>(response, OneLakeJsonContext.Default.ShortcutsResponse, cancellationToken);
-        return result?.Value ?? [];
-    }
-
-    public async Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
-    }
-
-    public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, string path, CreateShortcutRequest request, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts?path={Uri.EscapeDataString(path)}";
-        var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateShortcutRequest);
-        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
-    }
-
-    public async Task DeleteShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
-    {
-        var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{normalizedWorkspaceId}/items/{normalizedItemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
-        await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
-    }
-
     // Data Operations (OneLake Data Plane)
     public async Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/Files/{filePath.TrimStart('/')}";
         var response = await SendDataPlaneRequestAsync(HttpMethod.Head, url, cancellationToken: cancellationToken);
@@ -255,6 +222,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
 
         // If no path is specified, intelligently discover and search top-level folders
@@ -351,6 +320,205 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
         }
 
         return allFiles.OrderBy(f => f.IsDirectory ? 0 : 1).ThenBy(f => f.Name);
+    }
+
+    public async Task<TableConfigurationResult> GetTableConfigurationAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, _, warehouseQueryValue) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/config?warehouse={warehouseQueryValue}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table configuration response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var configuration = document.RootElement.Clone();
+
+        return new TableConfigurationResult(normalizedWorkspaceId, normalizedItemIdentifier, configuration, rawResponse);
+    }
+
+    public async Task<TableNamespaceListResult> ListTableNamespacesAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table namespace response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var namespaces = document.RootElement.Clone();
+
+        return new TableNamespaceListResult(normalizedWorkspaceId, normalizedItemIdentifier, namespaces, rawResponse);
+    }
+
+    public async Task<TableNamespaceGetResult> GetTableNamespaceAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table namespace response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var definition = document.RootElement.Clone();
+
+        return new TableNamespaceGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, definition, rawResponse);
+    }
+
+    public async Task<TableListResult> ListTablesAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table list response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var tables = document.RootElement.Clone();
+
+        return new TableListResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, tables, rawResponse);
+    }
+
+    public async Task<TableGetResult> GetTableAsync(string workspaceIdentifier, string itemIdentifier, string namespaceName, string tableName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceIdentifier))
+        {
+            throw new ArgumentException("Workspace identifier is required.", nameof(workspaceIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (string.IsNullOrWhiteSpace(namespaceName))
+        {
+            throw new ArgumentException("Namespace name is required.", nameof(namespaceName));
+        }
+
+        if (string.IsNullOrWhiteSpace(tableName))
+        {
+            throw new ArgumentException("Table name is required.", nameof(tableName));
+        }
+
+        var trimmedNamespace = namespaceName.Trim();
+        var trimmedTableName = tableName.Trim();
+
+        if (string.IsNullOrEmpty(trimmedNamespace))
+        {
+            throw new ArgumentException("Namespace name cannot be empty.", nameof(namespaceName));
+        }
+
+        if (string.IsNullOrEmpty(trimmedTableName))
+        {
+            throw new ArgumentException("Table name cannot be empty.", nameof(tableName));
+        }
+
+        var (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, _) = await GetWarehousePrefixAsync(workspaceIdentifier, itemIdentifier, cancellationToken);
+        var encodedNamespace = Uri.EscapeDataString(trimmedNamespace);
+        var encodedTable = Uri.EscapeDataString(trimmedTableName);
+        var url = $"{OneLakeEndpoints.OneLakeTableApiBaseUrl}/iceberg/v1/{warehousePrefix}/namespaces/{encodedNamespace}/tables/{encodedTable}";
+
+        using var responseStream = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        using var reader = new StreamReader(responseStream);
+        var rawResponse = await reader.ReadToEndAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(rawResponse))
+        {
+            throw new InvalidOperationException("Received empty table response.");
+        }
+
+        using var document = JsonDocument.Parse(rawResponse);
+        var tableDefinition = document.RootElement.Clone();
+
+        return new TableGetResult(normalizedWorkspaceId, normalizedItemIdentifier, trimmedNamespace, trimmedTableName, tableDefinition, rawResponse);
     }
 
     private List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
@@ -542,6 +710,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -709,6 +879,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -780,6 +952,8 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        if (path is not null)
+            ValidatePathForTraversal(path, nameof(path));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // If no path is specified, intelligently discover and search top-level folders
         if (string.IsNullOrEmpty(path))
@@ -1091,6 +1265,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public Task<BlobGetResult> ReadFileAsync(string workspaceId, string itemId, string filePath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         return DownloadBlobAsync(
             OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl,
             workspaceId,
@@ -1103,6 +1278,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         // Use DFS endpoint for file operations (similar to directory creation)
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
@@ -1138,6 +1314,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public async Task<BlobPutResult> PutBlobAsync(string workspaceId, string itemId, string blobPath, Stream content, long contentLength, string? contentType = null, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(content);
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
 
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
@@ -1223,6 +1400,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public Task<BlobGetResult> GetBlobAsync(string workspaceId, string itemId, string blobPath, BlobDownloadOptions? downloadOptions = null, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
         return DownloadBlobAsync(
             OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl,
             workspaceId,
@@ -1408,9 +1586,9 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task<BlobDeleteResult> DeleteBlobAsync(string workspaceId, string itemId, string blobPath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(blobPath, nameof(blobPath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBlobBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{blobPath.TrimStart('/')}";
-
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
         using var response = await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
 
@@ -1433,6 +1611,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(filePath, nameof(filePath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{filePath.TrimStart('/')}";
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
@@ -1440,6 +1619,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
 
     public async Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default)
     {
+        ValidatePathForTraversal(directoryPath, nameof(directoryPath));
         // Use blob endpoint for directory deletion, similar to file deletion
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}";
@@ -1460,6 +1640,7 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     {
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
         // However, we can create an empty directory using a PUT request with the appropriate headers
+        ValidatePathForTraversal(directoryPath, nameof(directoryPath));
         var (normalizedWorkspaceId, normalizedItemId) = await GetNormalizedIdentifiersAsync(workspaceId, itemId, cancellationToken);
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{normalizedWorkspaceId}/{normalizedItemId}/{directoryPath.TrimStart('/')}?resource=directory";
 
@@ -1470,6 +1651,34 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     }
 
     // Private helper methods
+    private static void ValidatePathForTraversal(string path, string paramName)
+    {
+        // Decode percent-encoding so that %2e%2e or %2E%2E variants are caught
+        // before checking for traversal segments.
+        string decoded;
+        try
+        {
+            decoded = Uri.UnescapeDataString(path);
+        }
+        catch (UriFormatException)
+        {
+            // Malformed percent-encoding — treat the raw string as-is.
+            decoded = path;
+        }
+
+        // Normalise both forward- and back-slash separators and reject any
+        // segment that resolves to ".", "..", or "~" (home-directory shorthand).
+        var segments = decoded.Split('/', '\\');
+        foreach (var segment in segments)
+        {
+            var trimmed = segment.Trim();
+            if (trimmed is "." or ".." or "~")
+            {
+                throw new ArgumentException("Path cannot contain directory traversal sequences.", paramName);
+            }
+        }
+    }
+
     private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
@@ -1628,5 +1837,39 @@ public class OneLakeService(HttpClient httpClient, TokenCredential? credential =
     public void Dispose()
     {
         // DefaultAzureCredential doesn't need disposal
+    }
+
+    private static string ExtractWarehouseQueryValue(string warehousePrefix)
+    {
+        const string WarehousePrefixRoot = "warehouse/";
+        if (warehousePrefix.StartsWith(WarehousePrefixRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            return warehousePrefix[WarehousePrefixRoot.Length..];
+        }
+
+        return warehousePrefix;
+    }
+
+    private async Task<(string WorkspaceId, string ItemIdentifier, string WarehousePrefix, string WarehouseQueryValue)> GetWarehousePrefixAsync(string workspaceIdentifier, string itemIdentifier, CancellationToken cancellationToken)
+    {
+        var normalizedWorkspaceId = NormalizeWorkspaceIdentifier(workspaceIdentifier);
+        var normalizedItemIdentifier = itemIdentifier?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(normalizedItemIdentifier))
+        {
+            throw new ArgumentException("Item identifier is required.", nameof(itemIdentifier));
+        }
+
+        if (Guid.TryParse(normalizedWorkspaceId, out _))
+        {
+            normalizedItemIdentifier = await ResolveItemIdentifierAsync(normalizedWorkspaceId, normalizedItemIdentifier, cancellationToken);
+        }
+
+        var workspaceSegment = Uri.EscapeDataString(normalizedWorkspaceId.TrimEnd('/'));
+        var itemSegment = Uri.EscapeDataString(normalizedItemIdentifier.TrimStart('/'));
+        var warehousePrefix = $"{workspaceSegment}/{itemSegment}";
+        var warehouseQueryValue = warehousePrefix;
+
+        return (normalizedWorkspaceId, normalizedItemIdentifier, warehousePrefix, warehouseQueryValue);
     }
 }

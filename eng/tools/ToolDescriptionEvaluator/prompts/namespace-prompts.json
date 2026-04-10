@@ -505,7 +505,9 @@
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Show me the properties of the storage container <container> in the storage account <account>",
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
+    "List all tables in the storage account <storage-account>",
+    "Show me the tables in the storage account <storage-account>"
   ],
   "subscription": [
     "List all subscriptions for my account",

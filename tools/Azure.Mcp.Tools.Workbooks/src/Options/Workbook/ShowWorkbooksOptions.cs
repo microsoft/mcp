@@ -7,6 +7,6 @@ namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
 public class ShowWorkbooksOptions : BaseWorkbooksOptions
 {
-    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdText)]
-    public string? WorkbookId { get; set; }
+    [JsonPropertyName(WorkbooksOptionDefinitions.WorkbookIdsText)]
+    public string[]? WorkbookIds { get; set; }
 }

@@ -9,13 +9,15 @@ using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger) : SubscriptionCommand<CertificateGetOptions>
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions>
 {
     private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
 
@@ -34,13 +36,13 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     };
 
     public override string Description =>
-        "Get/retrieve/show details for a single certificate in a Key Vault (latest version). Not for listing multiple certificates or importing existing ones. Required: --vault <vault>, --certificate <certificate> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer, thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer.";
+        """List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.""";
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificateName);
+        command.Options.Add(KeyVaultOptionDefinitions.CertificateName.AsOptional());
     }
 
     protected override CertificateGetOptions BindOptions(ParseResult parseResult)
@@ -62,17 +64,30 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-            var certificate = await keyVaultService.GetCertificate(
-                options.VaultName!,
-                options.CertificateName!,
-                options.Subscription!,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+            if (string.IsNullOrEmpty(options.CertificateName))
+            {
+                // List all certificates
+                var certificates = await _keyVaultService.ListCertificates(
+                    options.VaultName!,
+                    options.Subscription!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
+                context.Response.Results = ResponseResult.Create(new(Certificates: certificates ?? [], Certificate: null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+            }
+            else
+            {
+                // Get specific certificate
+                var certificate = await _keyVaultService.GetCertificate(
+                    options.VaultName!,
+                    options.CertificateName,
+                    options.Subscription!,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+
+                var certificateDetails = new CertificateDetails(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,
@@ -85,17 +100,27 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                     certificate.Properties.CreatedOn,
                     certificate.Properties.UpdatedOn,
                     certificate.Policy.Subject,
-                    certificate.Policy.IssuerName),
-                KeyVaultJsonContext.Default.CertificateGetCommandResult);
+                    certificate.Policy.IssuerName);
+
+                context.Response.Results = ResponseResult.Create(new(Certificates: null, Certificate: certificateDetails), KeyVaultJsonContext.Default.CertificateGetCommandResult);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting certificate {CertificateName} from vault {VaultName}", options.CertificateName, options.VaultName);
+            if (string.IsNullOrEmpty(options.CertificateName))
+            {
+                _logger.LogError(ex, "Error listing certificates from vault {VaultName}", options.VaultName);
+            }
+            else
+            {
+                _logger.LogError(ex, "Error getting certificate {CertificateName} from vault {VaultName}", options.CertificateName, options.VaultName);
+            }
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record CertificateGetCommandResult(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
+    internal record CertificateDetails(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
+    internal record CertificateGetCommandResult(List<string>? Certificates, CertificateDetails? Certificate);
 }

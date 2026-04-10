@@ -7,7 +7,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 ## Architecture Overview
 
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
-- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
+- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
@@ -252,7 +252,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 
 ## Additional Resources
 
-- [RecordedCommandTestsBase source](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
+- [RecordedCommandTestsBase source](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
 - [Azure SDK Test Proxy README](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/README.md)
 - [Test Proxy Asset Sync Guide](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/documentation/asset-sync/README.md)
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo

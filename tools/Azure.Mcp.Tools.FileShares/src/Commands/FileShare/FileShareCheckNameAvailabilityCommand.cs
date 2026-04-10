@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -69,8 +66,9 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new FileShareCheckNameAvailabilityCommandResult(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
+                FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
 
             _logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",

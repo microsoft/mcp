@@ -33,7 +33,7 @@ public class SubscriptionCommandTests
         var collection = new ServiceCollection().AddSingleton(_storageService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _storageService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

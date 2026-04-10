@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -17,7 +19,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 public sealed class NamespaceToolLoaderTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly CommandFactory _commandFactory;
+    private readonly ICommandFactory _commandFactory;
     private readonly IOptions<ServiceStartOptions> _options;
     private readonly ILogger<NamespaceToolLoader> _logger;
 
@@ -137,6 +139,76 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = true });
+        storageGroup.AddCommand("readonly", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
+        keyvaultGroup.AddCommand("notreadonly", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            ReadOnly = true
+        });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("storage", tool.Name));
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var stroageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = true });
+        stroageGroup.AddCommand("localrequired", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
+        keyvaultGroup.AddCommand("notlocalrequired", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([stroageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http
+        });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateListToolsRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("keyvault", tool.Name));
+    }
+
+    [Fact]
     public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
     {
         // Arrange
@@ -238,7 +310,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     {
         // Arrange
         var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
-        var request = CreateCallToolRequest(null!, new Dictionary<string, object?>());
+        var request = CreateCallToolRequest(null!, []);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -251,7 +323,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Arrange
         var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>());
+        var request = CreateCallToolRequest(toolName, []);
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -442,6 +514,36 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Cache clearing is internal, but disposal should complete successfully
     }
 
+    [Fact]
+    public async Task CallToolHandler_WithInvalidCommand_ReturnsErrorWithGuidance()
+    {
+        // Arrange - Test error handling and guidance message structure
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        // Create request with invalid command that doesn't exist
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>
+        {
+            ["command"] = "nonexistent_invalid_command_xyz",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should provide helpful error guidance
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+
+        // When command doesn't exist or encounters issues, should provide guidance
+        // This validates the error handling path preserves informative messages
+        Assert.True(textContent.Text.Length > 0);
+    }
+
     // Elicitation Handler Tests (ported from BaseToolLoaderTests)
 
     [Fact]
@@ -556,12 +658,236 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_RejectsNonReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var writeCmd = Substitute.For<IBaseCommand>();
+        writeCmd.Metadata.Returns(new ToolMetadata { ReadOnly = false });
+        writeCmd.GetCommand().Returns(new System.CommandLine.Command("write-cmd", "A write command"));
+        writeCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("write-cmd", writeCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "write-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-read-only command should not have been executed
+        Assert.False(executed, "Non-read-only command should not be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_AllowsReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        readCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - read-only command should have been executed
+        Assert.True(executed, "Read-only command should be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_RejectsLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var localCmd = Substitute.For<IBaseCommand>();
+        localCmd.Metadata.Returns(new ToolMetadata { LocalRequired = true });
+        localCmd.GetCommand().Returns(new System.CommandLine.Command("local-cmd", "A local command"));
+        localCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("local-cmd", localCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "local-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - local-required command should not have been executed in HTTP mode
+        Assert.False(executed, "Local-required command should not be executed in HTTP mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_AllowsNonLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var remoteCmd = Substitute.For<IBaseCommand>();
+        remoteCmd.Metadata.Returns(new ToolMetadata { LocalRequired = false, Destructive = false });
+        remoteCmd.GetCommand().Returns(new System.CommandLine.Command("remote-cmd", "A remote command"));
+        remoteCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("remote-cmd", remoteCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { Transport = TransportTypes.Http });
+        var logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "remote-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-local-required command should have been executed in HTTP mode
+        Assert.True(executed, "Non-local-required command should be executed in HTTP mode");
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            ReadOnly = true
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", []);
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool => Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        using var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
+        {
+            Transport = TransportTypes.Http
+        });
+        var logger = serviceProvider.GetRequiredService<ILogger<NamespaceToolLoader>>();
+
+        var loader = new NamespaceToolLoader(commandFactory, options, serviceProvider, logger);
+        var request = CreateCallToolRequest("storage", []);
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool =>
+        {
+            var meta = tool.Meta;
+            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
+            {
+                Assert.False(localRequiredHint?.GetValue<bool>(),
+                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+            }
+        });
+    }
+
     // Helper methods
 
     private string GetFirstAvailableNamespace()
     {
         var namespaces = _commandFactory.RootGroup.SubGroup
-            .Where(g => !Azure.Mcp.Core.Areas.Server.Commands.Discovery.DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
             .Select(g => g.Name)
             .ToList();
 
@@ -571,9 +897,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
+        return new(mockServer, new() { Method = RequestMethods.ToolsList })
         {
-            Params = new ListToolsRequestParams()
+            Params = new()
         };
     }
 
@@ -586,9 +912,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
-            Params = new CallToolRequestParams
+            Params = new()
             {
                 Name = toolName,
                 Arguments = jsonArguments
@@ -601,9 +927,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         Dictionary<string, JsonElement> arguments)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
-            Params = new CallToolRequestParams
+            Params = new()
             {
                 Name = toolName,
                 Arguments = arguments

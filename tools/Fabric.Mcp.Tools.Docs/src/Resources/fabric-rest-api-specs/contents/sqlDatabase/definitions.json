@@ -1,0 +1,342 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "SQLDatabase data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "SQLDatabase": {
+            "description": "A SQL database object.",
+            "type": "object", 
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The SQLDatabase properties.",
+                    "$ref": "#/definitions/SQLDatabaseProperties"
+                }
+            }
+        },
+        "SQLDatabases": {
+            "description": "A list of SQL databases.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of SQL databases.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SQLDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "SQLDatabaseProperties": {
+            "required": ["connectionString", "databaseName", "serverFqdn"],
+            "description": "The SQL database properties.",
+            "type": "object",
+            "properties": {
+                "connectionString": {
+                    "description": "The connection string of the database.",
+                    "type": "string"
+                },
+                "databaseName": {
+                    "description": "The database name.",
+                    "type": "string"
+                },
+                "serverFqdn": {
+                    "description": "The server fully qualified domain name (FQDN).",
+                    "type": "string"
+                },
+                "earliestRestorePoint": {
+                    "description": "The earliest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "latestRestorePoint": {
+                    "description": "The latest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "backupRetentionDays": {
+                    "description": "The backup retention period in days.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "collation": {
+                    "description": "The collation of the SQL database.",
+                    "type": "string"
+                }
+            }
+        },
+        "CreateSQLDatabaseRequest": {
+            "description": "Create SQL database request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The SQL database display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The SQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the SQL database is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The SQL database creation payload.",
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The SQL database definition.",
+                    "$ref": "#/definitions/SQLDatabaseDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the SQL database.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateSQLDatabaseRequest": {
+            "description": "Update SQL database request.",
+            "properties": {
+                "description": {
+                    "description": "The SQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateSQLDatabaseDefinitionRequest": {
+            "description": "Update SQL database public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SQLDatabaseDefinition"
+                }
+            }
+        },
+        "SQLDatabaseDefinitionResponse": {
+            "description": "The SQL database public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SQLDatabaseDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "SQLDatabaseCreationPayload": {
+            "description": "SQL database item payload.",
+            "type": "object",
+            "required": [
+                "creationMode"
+            ],
+            "discriminator": "creationMode",
+            "properties": {
+                "creationMode": {
+                    "description": "The creation mode of the SQL database creation.",
+                    "$ref": "#/definitions/CreationMode"
+                }
+            }
+        },
+        "CreationMode": {
+          "description": "The creation mode of the creation payload. Additional CreationMode types may be added over time.",
+          "type": "string",
+          "enum": [ "New", "Restore" ],
+          "x-ms-enum": {
+            "name": "CreationMode",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "New",
+                "description": "The default creation mode. The 'backupRetentionDays' and 'collation' properties are accepted in this mode."
+              },
+              {
+                "value": "Restore",
+                "description": "The creation mode for restoring from a source database. The 'sourceDatabaseReference' and 'restorePointInTime' properties are required. No other properties are accepted."
+              }
+            ]
+          }
+        },
+        "NewSQLDatabaseCreationPayload": {
+            "description": "Create a SQL database item creation payload with supported settings",
+            "type": "object",
+            "properties": {
+                "backupRetentionDays": {
+                    "description": "Set the backup retention period in days. The minimum is 1 days. The maximum is 35 days.",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 35
+                },
+                "collation": {
+                    "description": "Set the collation of the SQL database.",
+                    "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "New"
+        },
+        "RestoreSQLDatabaseCreationPayload": {
+            "description": "Create a SQL database item creation payload with restoring from a source database",
+            "type": "object",
+            "properties": {
+                "restorePointInTime": {
+                    "description": "Set the time to restore the source database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "sourceDatabaseReference": {
+                    "description": "Set the reference for the source database to be restored from.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "Restore"
+        },
+        "SQLDatabaseDefinition" : {
+            "description": "The SQL database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/sql-database-definition) for more details on the structure of the SQL database definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SQLDatabasePublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "SQLDatabasePublicDefinitionPart": {
+            "description": "SQL database definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The SQL database public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The SQL database public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "SqlDatabaseAuditSettings": {
+            "type": "object",
+            "description": "The current state of audit settings for a database.",
+            "required": ["state", "retentionDays", "auditActionsAndGroups", "storageEndpoint", "predicateExpression"],
+            "properties": {
+                "state": {
+                    "description": "Audit settings state type.",
+                    "$ref": "#/definitions/SqlAuditSettingsState"
+                },
+                "retentionDays": {
+                    "description": "Retention days. 0 indicates indefinite retention period.",
+                    "type": "integer",
+                    "default": 0
+                },
+                "auditActionsAndGroups": {
+                    "description": "Audit actions and groups.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [
+                      "BATCH_COMPLETED_GROUP",
+                      "FAILED_DATABASE_AUTHENTICATION_GROUP",
+                      "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP"
+                    ]
+                },
+                "storageEndpoint": {
+                    "description": "The storage endpoint where audit logs are stored.",
+                    "type": "string"
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression used to filter audit logs.",
+                    "type": "string"
+                }
+            }
+        },
+        "SqlDatabaseAuditSettingsUpdate": {
+            "type": "object",
+            "description": "Database audit settings update request.",
+            "properties": {
+                "state": {
+                    "description": "Audit settings state type.",
+                    "$ref": "#/definitions/SqlAuditSettingsState"
+                },
+                "retentionDays": {
+                    "description": "Retention days. For the first time, when state is set to Enabled and this property is not provided, retentionDays will be set to 0 (indefinite retention period) by default.",
+                    "type": "integer"
+                },
+                "auditActionsAndGroups": {
+                    "description": "Audit actions and groups. For the first time, when state is set to Enabled and this property is not provided, default audit actions and groups will be applied.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression used to filter audit logs. For the first time, when state is set to Enabled and this property is not provided, no predicate expression will be applied by default.",
+                    "type": "string"
+                }
+            }
+        },
+        "SqlAuditSettingsState": {
+            "description": "Sql Audit settings state. When enabling the audit policy for the first time after database creation (by setting state to 'Enabled' without other properties), default values are applied. For all subsequent enable/disable operations, the previous policy settings are preserved. Additional SqlAuditSettingsState may be added over time.",
+            "type": "string",
+            "enum": ["Enabled", "Disabled"],
+            "x-ms-enum": {
+                "name": "SqlAuditSettingsState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Enable the SQL audit."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Disable the SQL audit."
+                    }
+                ]
+            }
+        }
+    }
+  }

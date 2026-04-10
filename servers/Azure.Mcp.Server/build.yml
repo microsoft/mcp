@@ -3,12 +3,6 @@ parameters:
   type: string
   values: [ none, internal, public ]
   default: 'none'
-- name: PackageDocker
-  type: boolean
-  default: true
-- name: PackageVSIX
-  type: boolean
-  default: true
 - name: IncludeNative
   type: boolean
   default: true
@@ -26,7 +20,9 @@ extends:
     ServerName: Azure.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    PackageDocker: ${{ parameters.PackageDocker }}
-    PackageVSIX: ${{ parameters.PackageVSIX }}
+    PackageDocker: true
+    PackageVSIX: true
+    PackagePyPI: true
+    PackageMCPB: true
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}

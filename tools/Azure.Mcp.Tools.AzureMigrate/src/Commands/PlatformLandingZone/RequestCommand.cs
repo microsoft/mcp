@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
@@ -18,9 +18,11 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to generate and download platform landing zone configurations, update parameters, check existing platform landing zones, and view status.
 /// </summary>
-public sealed class RequestCommand(ILogger<RequestCommand> logger)
+public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
     : SubscriptionCommand<RequestOptions>()
 {
+    private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
+    private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
     private const string CommandTitle = "Platform Landing Zone Management";
 
     /// <inheritdoc/>
@@ -39,14 +41,18 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
         Updates parameters, check existing landing zones, and view parameters status.
 
         **Actions:**
+        - createmigrateproject: Create a new Azure Migrate project if one doesn't exist (requires location parameter)
         - check: Check if a platform landing zone already exists
         - update: Update all parameters for generation (collect ALL params in one call)
         - generate: Generate the platform landing zone
         - download: Download generated files to local workspace
         - status: View cached parameters
 
-        **Context (required for all actions):**
+        **Context (required for most actions):**
         - subscription, resourceGroup, migrateProjectName
+
+        **Create Azure Migrate Parameters (for 'createmigrateproject' action):**
+        - subscription, resourceGroup, migrateProjectName, location
 
         **Generation Parameters (for 'update' action - collect ALL at once from user):**
         | Parameter | Options | Default |
@@ -63,11 +69,13 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
         | connectivitySubscriptionId | GUID | (uses main subscription) |
 
         **Workflow:**
-        1. action='check' - See if one already exists
-        2. action='update' with ALL parameters - Ask user to confirm defaults or provide values
-        3. action='generate' - Create the landing zone
-        4. action='download' - Get the files
-        5. Extract zip to workspace root
+        1. Ask the user if they want to create a new Azure Migrate project or use an existing one. If creating, collect location parameter and create the project.
+        2. action='createmigrateproject' - Create a new Azure Migrate project only if the user doesn't have one already. Requires location parameter.
+        3. action='check' - See if one already exists
+        4. action='update' with ALL parameters - Ask user to confirm defaults or provide values
+        5. action='generate' - Create the landing zone
+        6. action='download' - Get the files
+        7. Extract zip to workspace root
 
         **IMPORTANT:** When using 'update', collect ALL parameters from the user in ONE call.
         Show them the defaults and ask which ones they want to change.
@@ -103,6 +111,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
         command.Options.Add(PlatformLandingZoneOptionDefinitions.OrganizationName);
         command.Options.Add(PlatformLandingZoneOptionDefinitions.MigrateProjectName);
         command.Options.Add(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId);
+        command.Options.Add(PlatformLandingZoneOptionDefinitions.Location);
     }
 
     /// <inheritdoc/>
@@ -124,6 +133,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
         options.OrganizationName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.OrganizationName.Name);
         options.MigrateProjectName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectName.Name)!;
         options.MigrateProjectResourceId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Location.Name);
         return options;
     }
 
@@ -142,43 +152,25 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
 
         try
         {
-            if (string.IsNullOrEmpty(options.Subscription))
-            {
-                throw new ArgumentException("Subscription is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                throw new ArgumentException("Resource group is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.MigrateProjectName))
-            {
-                throw new ArgumentException("Migrate project name is required.");
-            }
-
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.MigrateProjectName);
+                options.MigrateProjectName!);
 
             var action = options.Action?.ToLowerInvariant();
 
-            var platformLandingZoneService = context.GetService<IPlatformLandingZoneService>();
-
             var result = action switch
             {
-                "update" => await HandleUpdateActionAsync(platformLandingZoneService, landingZoneContext, options, cancellationToken),
-                "check" => await HandleCheckActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "generate" => await HandleGenerateActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "download" => await HandleDownloadActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "status" => HandleStatusAction(platformLandingZoneService, landingZoneContext),
-                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: update, check, generate, download, status.")
+                "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
+                "update" => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                "check" => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "generate" => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "status" => HandleStatusAction(_platformLandingZoneService, landingZoneContext),
+                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
-            context.Response.Results = ResponseResult.Create(
-                new RequestCommandResult(result),
-                AzureMigrateJsonContext.Default.RequestCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
         }
         catch (Exception ex)
         {
@@ -287,9 +279,38 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
         return service.GetParameterStatus(context);
     }
 
+    private static async Task<string> HandleCreateMigrateProjectActionAsync(
+        AzureMigrateProjectHelper azureMigrateProjectHelper,
+        RequestOptions options,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(options.Location))
+        {
+            throw new ArgumentException("Location is required for creating an Azure Migrate project. Specify the Azure region (e.g., 'eastus', 'westus2').");
+        }
+
+        var result = await azureMigrateProjectHelper.CreateAzureMigrateProjectAsync(
+            options.MigrateProjectName!,
+            options.ResourceGroup!,
+            options.Location,
+            options.Subscription!,
+            tenant: null,
+            retryPolicy: null,
+            cancellationToken);
+
+        if (!result.HasData)
+        {
+            return $"Failed to create Azure Migrate project '{options.MigrateProjectName}'. The operation completed but no data was returned.";
+        }
+
+        return $"Azure Migrate project '{result.Name}' created successfully in resource group '{options.ResourceGroup}' at location '{result.Location}'.\n" +
+               $"Resource ID: {result.Id}\n" +
+               "You can now use the 'check', 'update', 'generate', and 'download' actions to generate a platform landing zone.";
+    }
+
     /// <summary>
     /// Result for the platform landing zone generate command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record RequestCommandResult([property: JsonPropertyName("message")] string Message);
+    internal sealed record RequestCommandResult(string Message);
 }

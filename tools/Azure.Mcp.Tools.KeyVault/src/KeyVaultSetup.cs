@@ -22,15 +22,12 @@ public class KeyVaultSetup : IAreaSetup
     {
         services.AddSingleton<IKeyVaultService, KeyVaultService>();
 
-        services.AddSingleton<KeyListCommand>();
         services.AddSingleton<KeyGetCommand>();
         services.AddSingleton<KeyCreateCommand>();
 
-        services.AddSingleton<SecretListCommand>();
         services.AddSingleton<SecretCreateCommand>();
         services.AddSingleton<SecretGetCommand>();
 
-        services.AddSingleton<CertificateListCommand>();
         services.AddSingleton<CertificateGetCommand>();
         services.AddSingleton<CertificateCreateCommand>();
         services.AddSingleton<CertificateImportCommand>();
@@ -54,22 +51,16 @@ public class KeyVaultSetup : IAreaSetup
         var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
-        var keyList = serviceProvider.GetRequiredService<KeyListCommand>();
-        keys.AddCommand(keyList.Name, keyList);
         var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
         keys.AddCommand(keyGet.Name, keyGet);
         var keyCreate = serviceProvider.GetRequiredService<KeyCreateCommand>();
         keys.AddCommand(keyCreate.Name, keyCreate);
 
-        var secretList = serviceProvider.GetRequiredService<SecretListCommand>();
-        secret.AddCommand(secretList.Name, secretList);
         var secretCreate = serviceProvider.GetRequiredService<SecretCreateCommand>();
         secret.AddCommand(secretCreate.Name, secretCreate);
         var secretGet = serviceProvider.GetRequiredService<SecretGetCommand>();
         secret.AddCommand(secretGet.Name, secretGet);
 
-        var certificateList = serviceProvider.GetRequiredService<CertificateListCommand>();
-        certificate.AddCommand(certificateList.Name, certificateList);
         var certificateGet = serviceProvider.GetRequiredService<CertificateGetCommand>();
         certificate.AddCommand(certificateGet.Name, certificateGet);
         var certificateCreate = serviceProvider.GetRequiredService<CertificateCreateCommand>();

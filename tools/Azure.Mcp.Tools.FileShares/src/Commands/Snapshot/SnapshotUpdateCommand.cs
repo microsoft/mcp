@@ -1,17 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -95,8 +90,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new SnapshotUpdateCommandResult(snapshot);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);
 
             _logger.LogInformation("Snapshot updated successfully. SnapshotName: {SnapshotName}", options.SnapshotName);
         }
@@ -109,5 +103,5 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
         return context.Response;
     }
 
-    internal record SnapshotUpdateCommandResult([property: JsonPropertyName("snapshot")] FileShareSnapshotInfo Snapshot);
+    internal record SnapshotUpdateCommandResult(FileShareSnapshotInfo Snapshot);
 }

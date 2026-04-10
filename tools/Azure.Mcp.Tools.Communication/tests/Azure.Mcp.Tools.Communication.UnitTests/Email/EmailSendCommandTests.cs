@@ -31,11 +31,9 @@ public class EmailSendCommandTests
         _mockCommunicationService = Substitute.For<ICommunicationService>();
         _logger = Substitute.For<ILogger<EmailSendCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mockCommunicationService);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _mockCommunicationService);
         _context = new CommandContext(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -90,8 +89,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     return context.Response;
                 }
 
-                var singleResult = new SyncGroupGetCommandResult([syncGroup]);
-                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([syncGroup]), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
             }
             else
             {
@@ -107,8 +105,7 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.RetryPolicy,
                     cancellationToken);
 
-                var results = new SyncGroupGetCommandResult(syncGroups ?? []);
-                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(syncGroups ?? []), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);
             }
         }
         catch (Exception ex)

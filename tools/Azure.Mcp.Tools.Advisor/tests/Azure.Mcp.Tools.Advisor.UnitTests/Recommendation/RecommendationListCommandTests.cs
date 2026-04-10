@@ -29,9 +29,8 @@ public class RecommendationListCommandTests
         _advisorService = Substitute.For<IAdvisorService>();
         _logger = Substitute.For<ILogger<RecommendationListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_advisorService);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _advisorService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

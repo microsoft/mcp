@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Xunit;

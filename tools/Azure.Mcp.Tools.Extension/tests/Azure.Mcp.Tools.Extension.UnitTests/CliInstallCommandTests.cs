@@ -35,7 +35,7 @@ public sealed class CliInstallCommandTests
         collection.AddSingleton(_httpClientFactory);
         collection.AddSingleton(_cliInstallService);
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _cliInstallService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -1,16 +1,16 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
-# <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
-<!-- remove-section: start nuget;vsix;npm remove_note_ga -->
+# <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
 > Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
 <!-- remove-section: end remove_note_ga -->
 
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
-<!-- remove-section: start nuget;vsix;npm remove_install_links -->
+<!-- remove-section: start nuget;vsix;npm;pypi remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
@@ -20,7 +20,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm;pypi remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2026](#visual-studio-2026)
@@ -33,11 +33,11 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
-    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
-        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
+        - [MCPB](#mcpb)
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
+    - [Sovereign Cloud Support](#sovereign-cloud-support)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
     - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
 - [Support and Reference](#support-and-reference)
@@ -104,7 +104,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.}} -->
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
-<!-- remove-section: start nuget;npm remove_ide_sub_section -->
+<!-- remove-section: start nuget;npm;pypi remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
 > [!IMPORTANT]
@@ -159,7 +159,7 @@ Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients
 
 Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: end remove_ide_sub_section -->
-<!-- remove-section: start npm remove_dotnet_config_sub_section -->
+<!-- remove-section: start npm;pypi remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
@@ -187,7 +187,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     }
     ```
 <!-- remove-section: end remove_dotnet_config_sub_section -->
-<!-- remove-section: start nuget remove_node_config_sub_section -->
+<!-- remove-section: start nuget;pypi remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
 - To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
@@ -210,7 +210,8 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
 <!-- remove-section: start nuget;npm remove_uvx_config_sub_section -->
-#### Option 3: Configure using Python (uvx)
+<!-- remove-section: start pypi remove_pypi_config_sub_header -->
+#### Option 3: Configure using Python (uvx)<!-- remove-section: end remove_pypi_config_sub_header -->
 - To use Azure MCP server from Python, you must have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed. uv is a fast Python package installer and resolver. To verify your installation run: `uv --version` and `uvx --version`.
 -  Configure the `mcp.json` file with the following:
 
@@ -248,7 +249,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
 | **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
 <!-- remove-section: end remove_custom_client_config_table -->
-<!-- remove-section: start nuget;npm remove_package_manager_section -->
+<!-- remove-section: start nuget;npm;pypi remove_package_manager_section -->
 </details>
 
 ## Package Manager
@@ -402,6 +403,36 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 </details>
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+
+### MCPB
+
+MCP Bundles (`.mcpb`) are portable versions of MCP servers that can be installed directly into clients like [Claude Desktop](https://claude.com/download). We produce an `.mcpb` file for each supported platform (Windows, macOS, Linux) and architecture (x64, ARM64). The `.mcpb` file contains the server binary and all dependencies, so it can be installed without Node.js or .NET.
+
+<details>
+<summary>MCPB installation instructions</summary>
+
+#### Download
+
+Download the `.mcpb` file for your platform/architecture from **Assets** section of the latest release in our [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page:
+
+|           | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| **x64**   | `Azure.Mcp.Server-win-x64.mcpb` | `Azure.Mcp.Server-osx-x64.mcpb` | `Azure.Mcp.Server-linux-x64.mcpb` |
+| **ARM64** | `Azure.Mcp.Server-win-arm64.mcpb` | `Azure.Mcp.Server-osx-arm64.mcpb` | `Azure.Mcp.Server-linux-arm64.mcpb` |
+
+#### Install
+
+##### Claude Desktop
+
+- **Option 1 (Recommended):** Drag the downloaded `.mcpb` file into the Claude Desktop app window to install it. **This is the easiest method ✅.**
+- **Option 2:**
+    1. Open the hamburger menu on the top left of the Claude Desktop app.
+    2. Go to **File** > **Settings** > **Extensions** > **Advanced Settings** > **Install Extension**
+    3. Select the downloaded `.mcpb` file and click **Preview**.
+    4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.
+- **Option 3:** Set Claude Desktop to be the default application for `.mcpb` files on your computer. Then, double-click on the downloaded `.mcpb` file and Claude Desktop will automatically install the bundle.
+
+</details>
 
 ### GitHub Copilot CLI Configuration
 
@@ -812,14 +843,8 @@ class Program
 
 Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Microsoft Foundry
+Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-foundry-aca-mi) for Microsoft Foundry.
-2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
-
-### Microsoft Copilot Studio
-
-1. Follow the [deployment guide](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
@@ -834,6 +859,42 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+
+## Sovereign Cloud Support
+
+Azure MCP Server supports connecting to Azure sovereign clouds. By default, it authenticates against the Azure Public Cloud.
+
+| Cloud | Aliases |
+|-------|---------|
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
+| Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
+
+*_The aliases are case insensitive._
+
+Use the `--cloud` option when starting the server, or set the `AZURE_CLOUD` environment variable:
+
+```bash
+# Command line
+azmcp server start --cloud AzureChinaCloud
+
+# Environment variable (PowerShell)
+$env:AZURE_CLOUD = "AzureUSGovernment"
+azmcp server start
+```
+
+Before connecting, authenticate your local tools against the target cloud:
+
+```bash
+# Azure CLI
+az cloud set --name AzureChinaCloud
+az login
+
+# Azure PowerShell
+Connect-AzAccount -Environment AzureChinaCloud
+```
+
+For full configuration options, see the [Sovereign Clouds documentation](https://github.com/microsoft/mcp/blob/main/docs/sovereign-clouds.md).
 
 ## What can you do with the Azure MCP Server?
 
@@ -850,10 +911,6 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * List Microsoft Foundry agents
 * Connect and query Microsoft Foundry agents
 * Evaluate Microsoft Foundry agents
-* Get SDK samples for interacting with Microsoft Foundry agent
-* Create Microsoft Foundry agent threads
-* List Microsoft Foundry agent threads
-* Get messages of a Microsoft Foundry thread
 
 ### 📊 Azure Advisor
 
@@ -885,14 +942,24 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ### 🕸️ Azure App Service
 
-* "List the websites in my subscription"
-* "Show me the websites in my 'my-resource-group' resource group"
-* "Get the details for website 'my-website'"
-* "Get the details for app service plan 'my-app-service-plan'"
+* "Add a database connection for an App Service web app"
+* "List the web apps in my subscription"
+* "Show me the web apps in my 'my-resource-group' resource group"
+* "Get the details for web app 'my-webapp' in 'my-resource-group'"
+* "Get the application settings for my web app 'my-webapp' in 'my-resource-group'"
+* "Add application setting 'LogLevel' with value 'INFO' to my 'my-webapp' in 'my-resource-group'"
+* "Set application setting 'LogLevel' to 'WARNING' to my 'my-webapp' in 'my-resource-group'"
+* "Delete application setting 'LogLevel' from my 'my-webapp' in 'my-resource-group'"
+* "List the deployments for web app 'my-webapp' in 'my-resource-group'"
+* "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
 
 ### 🖥️ Azure CLI Generate
 
 * Generate Azure CLI commands based on user intent
+
+Example prompts that generate Azure CLI commands:
+
+* "Get the details for app service plan 'my-app-service-plan'"
 
 ### 🖥️ Azure CLI Install
 
@@ -910,7 +977,36 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Send an email from my communication service endpoint with custom sender name and multiple recipients"
 * "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
-### 📦 Azure Container Apps
+### 🖥️ Azure Compute
+
+* "List all my managed disks in subscription 'my-subscription'"
+* "Show me all disks in resource group 'my-resource-group'"
+* "Get details of disk 'my-disk' in resource group 'my-resource-group'"
+* "Create a 128 GB Premium_LRS managed disk named 'my-disk' in resource group 'my-resource-group'"
+* "Create a managed disk from snapshot in resource group 'my-resource-group'"
+* "Create a disk 'my-disk' in resource group 'my-resource-group' with tags env=prod team=infra"
+* "Delete managed disk 'my-disk' in resource group 'my-resource-group'"
+* "Update disk 'my-disk' in resource group 'my-resource-group' to 256 GB"
+* "Change the SKU of disk 'my-disk' to Premium_LRS"
+* "Set the IOPS limit on ultra disk 'my-disk' in resource group 'my-resource-group' to 10000"
+* "List all virtual machines in my subscription"
+* "Show me all VMs in resource group 'my-resource-group'"
+* "Get details for virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Get virtual machine 'my-vm' with instance view including power state and runtime status"
+* "Show me the power state and provisioning status of VM 'my-vm'"
+* "What is the current status of my virtual machine 'my-vm'?"
+* "Create a new VM named 'my-vm' in resource group 'my-rg' for web workloads"
+* "Create a Linux VM with Ubuntu 22.04 and SSH key authentication"
+* "Create a development VM with Standard_B2s size in East US"
+* "Update VM 'my-vm' tags to environment=production"
+* "Create a VMSS named 'my-vmss' with 3 instances for web workloads"
+* "Update VMSS 'my-vmss' capacity to 5 instances"
+* "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
+* "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
+
+### �📦 Azure Container Apps
 
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
@@ -996,6 +1092,14 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 * "Query my Log Analytics workspace"
 
+### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
+
+* "List available Azure Monitor onboarding learning resources"
+* "Get the learning resource at 'concepts/dotnet/opentelemetry-pipeline.md'"
+* "Start Azure Monitor instrumentation orchestration for my local workspace"
+* "Continue to the next orchestration step after I complete the previous action"
+* "Send brownfield analysis findings to continue migration planning"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
@@ -1033,9 +1137,16 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
+### 🏛️ Azure Well-Architected Framework
+
+* "List all services with Well-Architected Framework guidance"
+* "What services have architectural guidance?"
+* "Get Well-Architected Framework guidance for App Service"
+* "What's the architectural guidance for Azure Cosmos DB?"
+
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **41+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **43+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1046,16 +1157,18 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
-- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
+- � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
+- �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
-- � **Azure File Shares** - Azure managed file share operations
-- ⚡ **Azure Functions** - Function App management
+- 📁 **Azure File Shares** - Azure managed file share operations
+- ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
@@ -1063,7 +1176,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, and health monitoring
+- 📈 **Azure Monitor** - Logging, metrics, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
@@ -1072,6 +1185,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
+- 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
@@ -1081,6 +1195,7 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
+- 🏛️ **Azure Well-Architected Framework** - Architectural best practices and design patterns
 - 📊 **Azure Workbooks** - Custom visualizations
 - 🏗️ **Bicep** - Azure resource templates
 - 🏗️ **Cloud Architect** - Guided architecture design
@@ -1091,10 +1206,12 @@ The Azure MCP Server provides tools for interacting with **41+ Azure service are
 
 - See our [official documentation on learn.microsoft.com](https://learn.microsoft.com/azure/developer/azure-mcp-server/) to learn how to use the Azure MCP Server to interact with Azure resources through natural language commands from AI agents and other types of clients.
 - For additional command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
+- Use [Prompt Templates](https://github.com/microsoft/mcp/blob/main/docs/prompt-templates.md) to set tenant and subscription context once at the beginning of your Copilot session, avoiding repetitive information in subsequent prompts.
 
 ## Feedback and Support
 
 - Check the [Troubleshooting guide](https://aka.ms/azmcp/troubleshooting) to diagnose and resolve common issues with the Azure MCP Server.
+- Review the [Known Issues](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/KNOWN-ISSUES.md) for current limitations and workarounds.
 - For advanced troubleshooting, you can enable [support logging](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#support-logging) using the `--dangerously-write-support-logs-to-dir` option.
 - We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
     - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we’d love to hear from you!

@@ -58,17 +58,29 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         // Command-level validation for file-specific options
         command.Validators.Add(commandResult =>
         {
-            var fileValue = commandResult.GetValueOrDefault(SpeechOptionDefinitions.File);
+            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
+
+            // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+            string canonicalPath;
+            try
+            {
+                canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
+            }
+            catch (ArgumentException ex)
+            {
+                commandResult.AddError($"Invalid audio file path: {ex.Message}");
+                return;
+            }
 
             // Validate file path exists
-            if (!File.Exists(fileValue))
+            if (!File.Exists(canonicalPath))
             {
-                commandResult.AddError($"Audio file not found: {fileValue}");
+                commandResult.AddError($"Audio file not found: {canonicalPath}");
             }
             else
             {
                 // Validate file extension
-                var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+                var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
                 var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
                 if (!supportedExtensions.Contains(extension))
                 {
@@ -77,7 +89,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
 
             // Validate format option if provided
-            var formatValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format);
+            var formatValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Format.Name);
             if (!string.IsNullOrEmpty(formatValue))
             {
                 if (formatValue != "simple" && formatValue != "detailed")
@@ -87,7 +99,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
 
             // Validate profanity option if provided
-            var profanityValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Profanity);
+            var profanityValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Profanity.Name);
             if (!string.IsNullOrEmpty(profanityValue))
             {
                 if (profanityValue != "masked" && profanityValue != "removed" && profanityValue != "raw")
@@ -164,7 +176,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech recognition completed successfully.";
             context.Response.Results = ResponseResult.Create(
-                new SttRecognizeCommandResult(result),
+                new(result),
                 SpeechJsonContext.Default.SttRecognizeCommandResult);
         }
         catch (Exception ex)

@@ -145,6 +145,11 @@
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+                },
+                "azureMcp.dangerouslyWriteSupportLogsToDir": {
+                    "type": "string",
+                    "default": "",
+                    "markdownDescription": "**DANGER:** Enables detailed debug-level logging for support and troubleshooting purposes. Specify a folder path where log files will be automatically created with timestamp-based filenames (e.g., azmcp_20251202_143052.log). **This may include sensitive information in logs.** Use with extreme caution and only when requested by support. Leave empty to disable. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
                 }
             }
         }
@@ -180,7 +185,7 @@
         "mocha": "~11",
         "node-loader": "~2",
         "sinon": "^21.0.0",
-        "terser-webpack-plugin": "^5.3.14",
+        "terser-webpack-plugin": "^5.4.0",
         "ts-loader": "~9",
         "typescript": "~5.1",
         "webpack": "^5.99.9",
@@ -195,5 +200,23 @@
         "rxjs": "~7",
         "semver": "~7",
         "yaml": "~2"
+    },
+    "_overrideComments": {
+        "serialize-javascript": "Prototype pollution in serialize-javascript < 7.0.0 (via mocha)",
+        "diff": "GHSA-73rr-hh4g-fpgx: DoS in jsdiff 6.0.0-8.0.2 (via mocha)",
+        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)",
+        "flatted": "Prototype pollution in flatted < 3.4.2 (via eslint)",
+        "@azure/msal-browser": "MVS-2026-vmmw-f85q: auth code theft and COOP vulnerability in @azure/msal-browser < 5.2.0 (via @azure/identity)"
+    },
+    "overrides": {
+        "mocha": {
+            "serialize-javascript": "^7.0.0",
+            "diff": "^8.0.3"
+        },
+        "@vscode/vsce": {
+            "yauzl": "^3.2.1"
+        },
+        "flatted": "^3.4.2",
+        "@azure/msal-browser": "^5.2.0"
     }
 }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Cosmos DB credential authentication now strictly honors the requested auth method instead of falling back to account-key authentication"

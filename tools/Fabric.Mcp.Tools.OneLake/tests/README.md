@@ -9,18 +9,24 @@ The test suite includes comprehensive coverage for OneLake MCP commands:
 - **OneLakeWorkspaceListCommandTests** - Workspace listing functionality
 - **PathListCommandTests** - File system path navigation  
 - **BlobListCommandTests** - Blob storage operations
-- **BlobGetCommandTests** - Blob retrieval operations
-- **BlobPutCommandTests** - Blob upload scenarios including overwrite and headers
+- **BlobGetCommandTests** - Blob retrieval operations including traversal rejection
+- **BlobPutCommandTests** - Blob upload scenarios including overwrite, headers, and traversal rejection
 - **BlobDeleteCommandTests** - Blob deletion operations and auditing metadata
 - **OneLakeItemListCommandTests** - OneLake item enumeration
 - **OneLakeItemDataListCommandTests** - OneLake DFS API item enumeration
 - **ItemCreateCommandTests** - Item creation functionality
-- **FileReadCommandTests** - File reading operations
-- **FileWriteCommandTests** - File writing operations
-- **FileDeleteCommandTests** - File deletion operations
-- **DirectoryCreateCommandTests** - Directory creation functionality
-- **DirectoryDeleteCommandTests** - Directory deletion functionality
+- **FileReadCommandTests** - File reading operations including traversal rejection
+- **FileWriteCommandTests** - File writing operations including traversal rejection
+- **FileDeleteCommandTests** - File deletion operations including traversal rejection
+- **DirectoryCreateCommandTests** - Directory creation functionality including traversal rejection
+- **DirectoryDeleteCommandTests** - Directory deletion functionality including traversal rejection
+- **TableNamespaceListCommandTests** - Table namespace enumeration with schema alias handling
+- **TableNamespaceGetCommandTests** - Table namespace metadata retrieval
+- **TableListCommandTests** - Table listing across namespaces
+- **TableGetCommandTests** - Table metadata retrieval including column schemas
+- **TableConfigGetCommandTests** - Table configuration inspection
 - **OneLakeServiceTests** - Testable service architecture patterns
+- **OneLakePathTraversalTests** - Security tests validating directory traversal rejection across all file/blob/directory operations
 
 ## Unit Tests
 
@@ -77,23 +83,40 @@ ONELAKE_INTEGRATION_TESTS=true dotnet test tools/Fabric.Mcp.Tools.OneLake/tests/
 - `OneLakeWorkspaceListCommandTests` - Tests workspace listing command
 - `PathListCommandTests` - Tests path listing with raw response functionality
 - `BlobListCommandTests` - Tests blob listing with raw response functionality
-- `BlobGetCommandTests` - Tests blob download handling and result formatting
-- `BlobPutCommandTests` - Tests blob upload scenarios with inline and file sources
+- `BlobGetCommandTests` - Tests blob download handling, result formatting, and traversal rejection
+- `BlobPutCommandTests` - Tests blob upload scenarios with inline and file sources, and traversal rejection
 - `BlobDeleteCommandTests` - Tests blob deletion behavior and request metadata
 - `OneLakeItemListCommandTests` - Tests OneLake item enumeration
 - `OneLakeItemDataListCommandTests` - Tests OneLake DFS API item enumeration
 - `ItemCreateCommandTests` - Tests item creation functionality
-- `FileReadCommandTests` - Tests file reading operations
-- `FileWriteCommandTests` - Tests file writing operations
-- `FileDeleteCommandTests` - Tests file deletion operations
-- `DirectoryCreateCommandTests` - Tests directory creation functionality
-- `DirectoryDeleteCommandTests` - Tests directory deletion functionality
+- `FileReadCommandTests` - Tests file reading operations and traversal rejection
+- `FileWriteCommandTests` - Tests file writing operations and traversal rejection
+- `FileDeleteCommandTests` - Tests file deletion operations and traversal rejection
+- `DirectoryCreateCommandTests` - Tests directory creation functionality and traversal rejection
+- `DirectoryDeleteCommandTests` - Tests directory deletion functionality and traversal rejection
+- `TableNamespaceListCommandTests` - Tests namespace listing and schema alias handling
+- `TableNamespaceGetCommandTests` - Tests namespace metadata retrieval
+- `TableListCommandTests` - Tests table discovery across namespaces
+- `TableGetCommandTests` - Tests table detail retrieval including schema metadata
+- `TableConfigGetCommandTests` - Tests table configuration responses
 
 ### Service Tests
 - `OneLakeServiceTests` - Demonstrates testable architecture patterns with dependency injection and mocking
+- `OneLakePathTraversalTests` - Security tests verifying that all 13 file/blob/directory service methods reject directory traversal sequences (literal `..`, URL-encoded `%2e%2e`/`%2E%2E`, and backslash variants) before any HTTP request is made
 
 ### Setup Tests
 - `FabricOneLakeSetupTests` - Tests dependency injection and command registration
+
+## Security Tests
+
+The `OneLakePathTraversalTests` class validates the traversal guard in `OneLakeService.ValidatePathForTraversal` across all methods that accept caller-supplied paths:
+
+- **Literal traversal** — paths containing `..` segments (e.g., `../../secret.txt`, `Files/../../other`)
+- **URL-encoded traversal** — percent-encoded variants (`%2e%2e`, `%2E%2E`) that would decode to `..` server-side
+- **Backslash variants** — Windows-style separators normalised before checking
+- **Valid paths** — confirm that legitimate paths are not blocked and proceed to the HTTP layer
+
+Each method also has a corresponding command-level test that confirms the `ArgumentException` propagates correctly through the command handler.
 
 ## Raw Response Testing
 

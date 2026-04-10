@@ -2,24 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+using Microsoft.Mcp.Core.Services.Telemetry;
 
 internal class Program
 {
@@ -37,7 +39,6 @@ internal class Program
 
             services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -45,7 +46,7 @@ internal class Program
             var serviceProvider = services.BuildServiceProvider();
             await InitializeServicesAsync(serviceProvider);
 
-            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -73,13 +74,12 @@ internal class Program
 
         return [
             // Register core areas
-            new Azure.Mcp.Core.Areas.Group.GroupSetup(),
-            new Azure.Mcp.Core.Areas.Server.ServerSetup(),
-            new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
+            new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
-            new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
+            new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
+            new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
         ];
     }
 
@@ -99,7 +99,7 @@ internal class Program
     /// <item>
     /// <see cref="Main"/>'s command picking: The container used to populate instances of
     /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// baesd on the command line input. This container is a local variable in
+    /// based on the command line input. This container is a local variable in
     /// <see cref="Main"/>, and it is not tied to
     /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
@@ -125,7 +125,7 @@ internal class Program
     /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overriden within
+    /// but such transport-specific registrations must be overridden within
     /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
@@ -147,16 +147,13 @@ internal class Program
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<IResourceGroupService, ResourceGroupService>();
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
-        services.AddSingleton<CommandFactory>();
+        services.AddSingleton<ICommandFactory, CommandFactory>();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
-        // The http-traport-specific implementations and configurations must be registered
+        // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
-        services.AddAzureTenantService();
         services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
@@ -164,6 +161,19 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+
+        // There's no need to use assembly resource based registration if we know we have an empty registry.
+        services.AddSingleton<IRegistryRoot>(new RegistryRoot());
+
+        // Until there are server instructions to provide, just use an empty provider
+        services.AddSingleton<IServerInstructionsProvider>(new NullServerInstructionsProvider());
+
+        // Until there is a consolidated tool list, just use an empty provider
+        services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
+
+        // Plugin telemetry is not supported in Fabric - register no-op providers
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(new NullPluginFileReferenceAllowlistProvider());
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(new NullPluginSkillNameAllowlistProvider());
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)

@@ -7,17 +7,17 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
@@ -31,12 +31,13 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     private readonly ITenantService _tenantService;
     private readonly IMonitorService _monitorService;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<MonitorService> _logger;
     private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
 
-    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-        : base(output, fixture)
+    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+        : base(output, fixture, liveServerFixture)
     {
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         var cacheService = new SingleUserCliCacheService(_memoryCache);
@@ -44,11 +45,12 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
         var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration);
-        var subscriptionService = new SubscriptionService(cacheService, _tenantService);
+        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
+        var subscriptionService = new SubscriptionService(cacheService, _tenantService, NullLogger<SubscriptionService>.Instance);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
-        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory);
+        _logger = NullLogger<MonitorService>.Instance;
+        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory, _logger);
     }
 
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } = new List<UriRegexSanitizer>
@@ -523,7 +525,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public async Task Should_List_WebTests()
     {
         var result = await CallToolAsync(
-            "monitor_webtests_list",
+            "monitor_webtests_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -552,7 +554,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     public async Task Should_List_WebTests_ByResourceGroup()
     {
         var result = await CallToolAsync(
-            "monitor_webtests_list",
+            "monitor_webtests_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -638,7 +640,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
 
         var result = await CallToolAsync(
-            "monitor_webtests_create",
+            "monitor_webtests_createorupdate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -676,7 +678,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         var webTestName = _bingWebTestName;
 
         var result = await CallToolAsync(
-            "monitor_webtests_update",
+            "monitor_webtests_createorupdate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

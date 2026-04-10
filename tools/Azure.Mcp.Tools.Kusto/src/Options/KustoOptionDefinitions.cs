@@ -49,7 +49,7 @@ public static class KustoOptionDefinitions
         $"--{LimitName}"
     )
     {
-        Description = "The maximum number of results to return.",
+        Description = "The maximum number of results to return. Must be a positive integer between 1 and 10000. Default is 10.",
         DefaultValueFactory = _ => 10,
         Required = true
     };

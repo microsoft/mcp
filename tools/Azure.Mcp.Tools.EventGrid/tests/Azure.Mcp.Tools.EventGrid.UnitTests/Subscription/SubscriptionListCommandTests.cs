@@ -37,7 +37,7 @@ public class SubscriptionListCommandTests
             .AddSingleton(_eventGridService)
             .AddSingleton(_subscriptionService);
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _eventGridService, _subscriptionService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Default `--public-network-access` to `Disabled` for SQL server create command"

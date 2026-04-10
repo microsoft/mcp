@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture) : RecordedCommandTestsBase(output, testProxyFixture)
+public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
 {
 
     [Fact]

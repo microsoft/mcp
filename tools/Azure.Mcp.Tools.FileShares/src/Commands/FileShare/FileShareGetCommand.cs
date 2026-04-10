@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Commands;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -20,8 +16,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
     : BaseFileSharesCommand<FileShareGetOptions>(logger, service)
 {
     private const string CommandTitle = "Get File Share";
-
-
     public override string Id => "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f";
     public override string Name => "get";
     public override string Description => "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.";
@@ -77,8 +71,7 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.RetryPolicy,
                     cancellationToken);
 
-                var singleResult = new FileShareGetCommandResult([fileShare]);
-                context.Response.Results = ResponseResult.Create(singleResult, FileSharesJsonContext.Default.FileShareGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
 
                 _logger.LogInformation("Successfully retrieved file share. FileShareName: {FileShareName}", options.FileShareName);
             }
@@ -95,8 +88,7 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.RetryPolicy,
                     cancellationToken);
 
-                var result = new FileShareGetCommandResult(fileShares ?? []);
-                context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);
 
                 _logger.LogInformation("Successfully listed {Count} file shares", fileShares?.Count ?? 0);
             }
@@ -110,5 +102,5 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
         return context.Response;
     }
 
-    internal record FileShareGetCommandResult([property: JsonPropertyName("fileShares")] List<FileShareInfo> FileShares);
+    internal record FileShareGetCommandResult(List<FileShareInfo> FileShares);
 }

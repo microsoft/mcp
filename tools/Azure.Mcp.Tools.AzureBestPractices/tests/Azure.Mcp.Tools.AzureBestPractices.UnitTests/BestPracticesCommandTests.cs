@@ -85,7 +85,7 @@ public class BestPracticesCommandTests
         var result = JsonSerializer.Deserialize<string[]>(json);
 
         Assert.NotNull(result);
-        Assert.Contains("Use the latest programming models (v4 for JavaScript, v2 for Python)", result[0]);
+        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result[0]);
         Assert.Contains("Azure Functions Core Tools for creating Function Apps", result[0]);
     }
 
@@ -125,9 +125,9 @@ public class BestPracticesCommandTests
         var result = JsonSerializer.Deserialize<string[]>(json);
 
         Assert.NotNull(result);
-        Assert.Contains("Static Web Apps CLI", result[0]);
-        Assert.Contains("npx swa init --yes", result[0]);
-        Assert.Contains("npx swa build", result[0]);
+        Assert.Contains("Deployment Path Selection", result[0]);
+        Assert.Contains("**PREFERRED PATH: Azure Developer CLI (azd)**", result[0]);
+        Assert.Contains("**ALTERNATIVE PATH: SWA CLI**", result[0]);
         Assert.Contains("npx swa deploy --env production", result[0]);
     }
 
@@ -235,7 +235,7 @@ public class BestPracticesCommandTests
 
         Assert.NotNull(result);
         // Should contain content from both code-generation and deployment files
-        Assert.Contains("Use the latest programming models (v4 for JavaScript, v2 for Python)", result[0]);
+        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result[0]);
         Assert.Contains("Azure Functions Core Tools for creating Function Apps", result[0]);
         Assert.Contains("Flex Consumption plan (FC1)", result[0]);
         Assert.Contains("Always use Linux OS for Python", result[0]);

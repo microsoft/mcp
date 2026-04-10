@@ -32,7 +32,7 @@ public class NamespaceDeleteCommandTests
         collection.AddSingleton(_eventHubsService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _eventHubsService);
         _context = new(_serviceProvider);
     }
 
@@ -40,7 +40,7 @@ public class NamespaceDeleteCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange & Act
-        var command = new NamespaceDeleteCommand(_logger);
+        var command = new NamespaceDeleteCommand(_logger, _eventHubsService);
 
         // Assert
         Assert.NotNull(command);

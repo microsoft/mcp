@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Microsoft Fabric MCP Server is currently in **Public Preview**.
 <!-- remove-section: end remove_note_preview -->
 
-<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+<!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
@@ -20,21 +20,29 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
-    - [IDE](#ide)
-        - [VS Code (Recommended)](#vs-code-recommended)
-        - [Manual Setup](#manual-setup)<!-- remove-section: end remove_installation_sub_sections -->
+- [Installation](#installation)
+  - [IDE](#ide)
+    - [VS Code (Recommended)](#vs-code-recommended)
+    - [Manual Setup](#manual-setup)
 - [Usage](#usage)
-    - [Getting Started](#getting-started)
-    - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-    - [Available Tools](#available-tools)
+  - [Getting Started](#getting-started)
+  - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+    - [Fabric Workloads & APIs](#fabric-workloads--apis)
+    - [Resource Definitions & Schemas](#resource-definitions--schemas)
+    - [Best Practices & Examples](#best-practices--examples)
+    - [Development Workflows](#development-workflows)
+  - [Available Tools](#available-tools)
+    - [API Documentation & Best Practices](#api-documentation--best-practices)
+    - [OneLake Data Operations](#onelake-data-operations)
+    - [Core Fabric Operations](#core-fabric-operations)
 - [Support and Reference](#support-and-reference)
-    - [Documentation](#documentation)
-    - [Feedback and Support](#feedback-and-support)
-    - [Security](#security)
-    - [Data Collection](#data-collection)
-    - [Contributing](#contributing)
-    - [Code of Conduct](#code-of-conduct)
+  - [Documentation](#documentation)
+  - [Feedback and Support](#feedback-and-support)
+  - [Security](#security)
+  - [Data Collection](#data-collection)
+  - [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
+- [License](#license)
 
 # Overview
 
@@ -175,27 +183,27 @@ Use one of the following options to configure your `mcp.json`:
     - The agent should be able to use the Fabric MCP Server tools to complete your query
 1. Check out the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated!
-    - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
+    - [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
 ## What can you do with the Fabric MCP Server?
 
-✨ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
+The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
-### 📊 Fabric Workloads & APIs
+### Fabric Workloads & APIs
 
 * "What are the available Fabric workload types I can work with?"
 * "Show me the OpenAPI operations for 'notebook' and give a sample creation body"
 * "Get the platform-level API specifications for Microsoft Fabric"
 * "List all supported Fabric item types"
 
-### 🏗️ Resource Definitions & Schemas
+### Resource Definitions & Schemas
 
 * "Create a Lakehouse resource definition with a schema that enforces a string column and a datetime column"
 * "Show me the JSON schema for a Data Pipeline item definition"
 * "Generate a Semantic Model configuration with sample measures"
 * "What properties are required for creating a KQL Database?"
 
-### 📝 Best Practices & Examples
+### Best Practices & Examples
 
 * "Show me best practices for handling API throttling in Fabric"
 * "How should I implement retry logic for Fabric API rate limits?"
@@ -204,7 +212,7 @@ Use one of the following options to configure your `mcp.json`:
 * "Get example request/response payloads for creating a Notebook"
 * "What are the pagination patterns for Fabric REST APIs?"
 
-### 🔧 Development Workflows
+### Development Workflows
 
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
@@ -214,35 +222,46 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start vsix remove_available_tools_section -->
 ## Available Tools
 
-The Fabric MCP Server exposes the following tools for AI agents:
+The Fabric MCP Server exposes tools organized into three categories:
 
-| Tool | Tool Name | Description |
-|------|-----------|-------------|
-| List Public APIs | `publicapis_list` | List all Microsoft Fabric workload types that have public API specifications available |
-| Get Public API | `publicapis_get` | Retrieve the complete OpenAPI/Swagger specification for a specific Microsoft Fabric workload |
-| Get Platform API | `publicapis_platform_get` | Retrieve the OpenAPI/Swagger specification for Microsoft Fabric platform APIs |
-| Get Best Practices | `publicapis_bestpractices_get` | Retrieve embedded best practice documentation and guidance for a specific Microsoft Fabric topic |
-| Get Best Practices Examples | `publicapis_bestpractices_examples_get` | Retrieve all example API request/response files for a specific Microsoft Fabric workload |
-| Get Item Definition | `publicapis_bestpractices_itemdefinition_get` | Retrieve the JSON schema definitions for specific items within a Microsoft Fabric workload's API |
+### API Documentation & Best Practices
+
+| Tool Name | Description |
+|-----------|-------------|
+| `docs_workloads` | Lists Fabric workload types that have public API specifications available. |
+| `docs_workload-api-spec` | Retrieves the complete OpenAPI specification for a specific Fabric workload. |
+| `docs_platform-api-spec` | Retrieves the OpenAPI specification for core Fabric platform APIs. |
+| `docs_item-definitions` | Retrieves JSON schema definitions for items in a Fabric workload API. |
+| `docs_best-practices` | Retrieves best practice documentation and guidance for a specific topic. |
+| `docs_api-examples` | Retrieves example API request/response files for a specific workload. |
+
+### OneLake Data Operations
+
+| Tool Name | Description |
+|-----------|-------------|
+| `onelake_list_workspaces` | Lists available Microsoft Fabric workspaces. |
+| `onelake_list_items` | Lists workspace items with high-level metadata. |
+| `onelake_list_items_dfs` | Lists Fabric items via the DFS endpoint. |
+| `onelake_list_files` | Lists files using the hierarchical file-list endpoint. |
+| `onelake_download_file` | Downloads a OneLake file. |
+| `onelake_upload_file` | Uploads a file to OneLake storage. |
+| `onelake_delete_file` | Deletes a file from OneLake storage. |
+| `onelake_create_directory` | Creates a directory via the DFS endpoint. |
+| `onelake_delete_directory` | Deletes a directory (optionally recursive). |
+| `onelake_get_table_config` | Retrieves table API configuration for a workspace item. |
+| `onelake_list_table_namespaces` | Lists table namespaces (schemas) exposed through the table API. |
+| `onelake_get_table_namespace` | Retrieves metadata for a specific namespace. |
+| `onelake_list_tables` | Lists tables published within a namespace. |
+| `onelake_get_table` | Retrieves the definition for a specific table. |
+
+### Core Fabric Operations
+
+| Tool Name | Description |
+|-----------|-------------|
+| `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
 <!-- remove-section: end remove_available_tools_section -->
-
-## OneLake (`onelake`)
-
-| Command | Purpose |
-|---|---|
-| `onelake download file` | Download a OneLake file to disk. |
-| `onelake upload file` | Upload a local file into OneLake. |
-| `onelake directory create` | Create a directory via the DFS endpoint. |
-| `onelake directory delete` | Delete a directory (optionally recursive). |
-| `onelake file list` | List files using the hierarchical file-list endpoint. |
-| `onelake file delete` | Remove individual files from OneLake storage. |
-| `onelake item list` | List workspace items and high-level metadata. |
-| `onelake item list-data` | List Fabric items via the DFS endpoint. |
-| `onelake item create` | Provision new Fabric items (lakehouse, notebook, etc.). |
-
-All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 
 # Support and Reference
 
@@ -253,9 +272,10 @@ All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or f
 
 ## Feedback and Support
 
+- The Microsoft Fabric MCP Server is an **open-source project in Public Preview**. Support for this server implementation is primarily provided through community channels and GitHub repositories. Customers with qualifying Microsoft enterprise support agreements may have access to limited support for broader Microsoft Fabric and platform scenarios; review the [Microsoft Support Policy](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md#microsoft-support-policy) section of this project for more details.
 - Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md) to diagnose and resolve common issues.
 - We're building this in the open. Your feedback is much appreciated!
-    - 👉 [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
+    - [Open an issue](https://github.com/microsoft/mcp/issues) in the public GitHub repository — we'd love to hear from you!
 
 ## Security
 
@@ -276,10 +296,10 @@ We welcome contributions to the Fabric MCP Server! Whether you're fixing bugs, a
 
 Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for guidelines on:
 
-* 🛠️ Setting up your development environment
-* ✨ Adding new commands
-* 📝 Code style and testing requirements
-* 🔄 Making pull requests
+* Setting up your development environment
+* Adding new commands
+* Code style and testing requirements
+* Making pull requests
 
 ## Code of Conduct
 This project has adopted the

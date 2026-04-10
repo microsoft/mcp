@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "workspaceId": "cbe5fdd7-a54e-40d2-ae3b-8d2f63ed6e4b",
+    "kqlDatabaseId": "719688da-facb-4202-99e5-02626e4b32f6",
+    "shortcutName": "PricesShortcut"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "name": "PricesShortcut",
+        "enableQueryAcceleration": true,
+        "target": {
+          "type": "OneLake",
+          "oneLake": {
+            "itemId": "1fce2608-78e8-4472-86bc-fa8ff3e26c8f",
+            "workspaceId": "cbe5fdd7-a54e-40d2-ae3b-8d2f63ed6e4b",
+            "path": "Tables/Prices"
+          }
+        }
+      }
+    }
+  }
+}

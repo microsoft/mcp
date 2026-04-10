@@ -25,7 +25,6 @@ public class MonitoredResourcesListCommandTests
         _logger = Substitute.For<ILogger<MonitoredResourcesListCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_datadogService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -41,7 +40,7 @@ public class MonitoredResourcesListCommandTests
         _datadogService.ListMonitoredResources(Arg.Is("rg1"), Arg.Is("sub123"), Arg.Is("datadog1"), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new MonitoredResourcesListCommand(_logger);
+        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
         var context = new CommandContext(_serviceProvider);
 
@@ -60,7 +59,7 @@ public class MonitoredResourcesListCommandTests
         _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new MonitoredResourcesListCommand(_logger);
+        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
         var context = new CommandContext(_serviceProvider);
 
@@ -79,7 +78,7 @@ public class MonitoredResourcesListCommandTests
         _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new MonitoredResourcesListCommand(_logger);
+        var command = new MonitoredResourcesListCommand(_logger, _datadogService);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
         var context = new CommandContext(_serviceProvider);
 

@@ -4,7 +4,8 @@ param(
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
     [string] $BaseName,
-    [hashtable] $DeploymentOutputs
+    [hashtable] $DeploymentOutputs,
+    [hashtable] $AdditionalParameters
 )
 
 $ErrorActionPreference = "Stop"

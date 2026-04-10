@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -12,6 +10,7 @@ using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
@@ -27,9 +26,9 @@ public sealed class OneLakeItemListCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     public override string Id => "61eb86d8-3879-4d2d-969a-6c96f2e0ce0d";
-    public override string Name => "list";
+    public override string Name => "list_items";
     public override string Title => "List OneLake Items";
-    public override string Description => "List OneLake items in a workspace using the OneLake data plane API";
+    public override string Description => "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -47,6 +46,16 @@ public sealed class OneLakeItemListCommand(
         command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+        });
     }
 
     protected override OneLakeItemListOptions BindOptions(ParseResult parseResult)
@@ -71,11 +80,6 @@ public sealed class OneLakeItemListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
             var xmlResponse = await _oneLakeService.ListOneLakeItemsXmlAsync(
                 options.WorkspaceId,
                 continuationToken: options.ContinuationToken,

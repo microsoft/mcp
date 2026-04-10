@@ -41,6 +41,9 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         Secret = false
     };
 
+    private static readonly HashSet<string> validEventTypes = new(StringComparer.OrdinalIgnoreCase) { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+    private static readonly HashSet<string> validStatuses = new(StringComparer.OrdinalIgnoreCase) { "Active", "Resolved" };
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -57,8 +60,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate event-type enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
             {
-                var validEventTypes = new[] { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
-                if (!validEventTypes.Contains(eventType, StringComparer.OrdinalIgnoreCase))
+                if (!validEventTypes.Contains(eventType))
                 {
                     commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
                 }
@@ -67,8 +69,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
             // Validate status enum values
             if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
             {
-                var validStatuses = new[] { "Active", "Resolved" };
-                if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+                if (!validStatuses.Contains(status))
                 {
                     commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");
                 }

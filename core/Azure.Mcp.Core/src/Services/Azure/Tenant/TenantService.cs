@@ -7,28 +7,33 @@ using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
 public class TenantService : BaseAzureService, ITenantService
 {
+    private const int MaxTenants = 10_000;
     private readonly IAzureTokenCredentialProvider _credentialProvider;
     private readonly ICacheService _cacheService;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<TenantService> _logger;
     private const string CacheGroup = "tenant";
     private const string CacheKey = "tenants";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.Tenant;
 
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,
         ICacheService cacheService,
         IHttpClientFactory clientFactory,
-        IAzureCloudConfiguration cloudConfiguration)
+        IAzureCloudConfiguration cloudConfiguration,
+        ILogger<TenantService> logger)
     {
         _credentialProvider = credentialProvider;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _httpClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
         CloudConfiguration = cloudConfiguration ?? throw new ArgumentNullException(nameof(cloudConfiguration));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         TenantService = this;
     }
 
@@ -53,9 +58,14 @@ public class TenantService : BaseAzureService, ITenantService
         options.Environment = CloudConfiguration.ArmEnvironment;
         var client = new ArmClient(await GetCredential(cancellationToken), default, options);
 
-        await foreach (var tenant in client.GetTenants())
+        await foreach (var tenant in client.GetTenants().WithCancellation(cancellationToken))
         {
             results.Add(tenant);
+            if (results.Count >= MaxTenants)
+            {
+                _logger.LogWarning("Reached maximum tenant limit of {MaxTenants}. Some tenants may not be included in the results.", MaxTenants);
+                break;
+            }
         }
 
         // Cache the results
@@ -87,8 +97,7 @@ public class TenantService : BaseAzureService, ITenantService
         var tenant = tenants.FirstOrDefault(t => t.Data.DisplayName?.Equals(tenantName, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with name {tenantName}");
 
-        string? tenantId = tenant.Data.TenantId?.ToString();
-        if (tenantId == null)
+        string? tenantId = tenant.Data.TenantId?.ToString() ??
             throw new InvalidOperationException($"Tenant {tenantName} has a null TenantId");
 
         return tenantId.ToString();
@@ -101,8 +110,7 @@ public class TenantService : BaseAzureService, ITenantService
         var tenant = tenants.FirstOrDefault(t => t.Data.TenantId?.ToString().Equals(tenantId, StringComparison.OrdinalIgnoreCase) == true) ??
             throw new Exception($"Could not find tenant with ID {tenantId}");
 
-        string? tenantName = tenant.Data.DisplayName;
-        if (tenantName == null)
+        string? tenantName = tenant.Data.DisplayName ??
             throw new InvalidOperationException($"Tenant with ID {tenantId} has a null DisplayName");
 
         return tenantName;

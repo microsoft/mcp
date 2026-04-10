@@ -27,11 +27,9 @@ public class TestCreateCommandTests
         _service = Substitute.For<ILoadTestingService>();
         _logger = Substitute.For<ILogger<TestCreateCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -55,7 +53,7 @@ public class TestCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestCreateCommand(_logger);
+        var command = new TestCreateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -100,7 +98,7 @@ public class TestCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestCreateCommand(_logger);
+        var command = new TestCreateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -122,7 +120,7 @@ public class TestCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
-        var command = new TestCreateCommand(_logger);
+        var command = new TestCreateCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",

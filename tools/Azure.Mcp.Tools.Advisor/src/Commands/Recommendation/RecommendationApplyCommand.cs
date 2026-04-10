@@ -25,7 +25,7 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
     public override string Name => "apply";
 
     public override string Description =>
-        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Bicep) for Azure resources. It returns the rules that can be applied to the IaaC file.";
+        @"This tool applies advisor recommendations to create or modify IaaC files (like ARM, Bicep) for Azure resources. It returns the rules that can be applied to the IaaC file. This tool can also be used to fetch advisor recommendations to apply to a technical design or architecture diagram.";
 
     public override string Title => CommandTitle;
 

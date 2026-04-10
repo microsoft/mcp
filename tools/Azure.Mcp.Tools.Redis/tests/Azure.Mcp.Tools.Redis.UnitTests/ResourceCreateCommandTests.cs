@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
@@ -18,24 +19,25 @@ namespace Azure.Mcp.Tools.Redis.UnitTests;
 
 public class ResourceCreateCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IRedisService _redisService;
     private readonly ILogger<ResourceCreateCommand> _logger;
+    private readonly CommandContext _context;
+    private readonly ResourceCreateCommand _command;
+    private readonly Command _commandDefinition;
 
     public ResourceCreateCommandTests()
     {
         _redisService = Substitute.For<IRedisService>();
         _logger = Substitute.For<ILogger<ResourceCreateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_redisService);
-
-        _serviceProvider = collection.BuildServiceProvider();
+        _command = new ResourceCreateCommand(_redisService, _logger);
+        _commandDefinition = _command.GetCommand();
+        _context = new CommandContext(new ServiceCollection().BuildServiceProvider());
     }
 
     [Fact]
     public async Task ExecuteAsync_CreatesResource_WithBasicParameters()
     {
+        // Arrange
         var expectedResource = new Resource
         {
             Name = "test-redis",
@@ -53,32 +55,29 @@ public class ResourceCreateCommandTests
             "test-redis",
             "eastus",
             "Balanced_B0",
-            Arg.Any<bool?>(),
+            false,
+            false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
-        var command = new ResourceCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--resource-group", "test-rg",
             "--resource", "test-redis",
             "--location", "eastus",
             "--sku", "Balanced_B0"
         ]);
-        var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        // Assert
+        AssertSuccessResponse(response);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult);
+        var result = DeserializeResult(response.Results!);
 
         Assert.NotNull(result);
         Assert.Equal("test-redis", result.Resource.Name);
@@ -88,6 +87,19 @@ public class ResourceCreateCommandTests
         Assert.Equal("eastus", result.Resource.Location);
         Assert.Equal("Balanced_B0", result.Resource.Sku);
         Assert.Equal("Creating", result.Resource.Status);
+
+        await _redisService.Received(1).CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis",
+            "eastus",
+            "Balanced_B0",
+            false,
+            false,
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -97,7 +109,7 @@ public class ResourceCreateCommandTests
     [InlineData("--location")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var command = new ResourceCreateCommand(_logger);
+        // Arrange
         var argsList = new List<string>();
 
         if (missingParameter != "--subscription")
@@ -121,11 +133,12 @@ public class ResourceCreateCommandTests
             argsList.Add("eastus");
         }
 
-        var args = command.GetCommand().Parse([.. argsList]);
-        var context = new CommandContext(_serviceProvider);
+        var args = _commandDefinition.Parse([.. argsList]);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
+        // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
@@ -134,6 +147,7 @@ public class ResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesDownstreamException()
     {
+        // Arrange
         var expectedError = "Resource group 'test-rg' not found. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         _redisService.CreateResourceAsync(
@@ -143,24 +157,25 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .ThrowsAsync(new Exception("Resource group 'test-rg' not found"));
 
-        var command = new ResourceCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--resource-group", "test-rg",
             "--resource", "test-redis",
             "--location", "eastus",
             "--sku", "Balanced_B0"
         ]);
-        var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
+        // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
@@ -172,6 +187,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -181,6 +197,7 @@ public class ResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_CreatesResource_WithModules()
     {
+        // Arrange
         var expectedResource = new Resource
         {
             Name = "test-redis-with-modules",
@@ -199,6 +216,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             Arg.Any<bool?>(),
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
             modules != null &&
                 modules.Length == 2 &&
@@ -209,8 +227,7 @@ public class ResourceCreateCommandTests
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
-        var command = new ResourceCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--resource-group", "test-rg",
             "--resource", "test-redis-with-modules",
@@ -218,17 +235,14 @@ public class ResourceCreateCommandTests
             "--sku", "Balanced_B0",
             "--modules", "RedisBloom", "RedisJSON"
         ]);
-        var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        // Assert
+        AssertSuccessResponse(response);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult);
+        var result = DeserializeResult(response.Results!);
 
         Assert.NotNull(result);
         Assert.Equal("test-redis-with-modules", result.Resource.Name);
@@ -240,6 +254,7 @@ public class ResourceCreateCommandTests
             "test-redis-with-modules",
             "eastus",
             "Balanced_B0",
+            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
@@ -254,6 +269,7 @@ public class ResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_CreatesResource_WithAccessKeyAuthenticationEnabled()
     {
+        // Arrange
         var expectedResource = new Resource
         {
             Name = "test-redis-with-keys",
@@ -272,14 +288,14 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
-        var command = new ResourceCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--resource-group", "test-rg",
             "--resource", "test-redis-with-keys",
@@ -287,17 +303,14 @@ public class ResourceCreateCommandTests
             "--sku", "Balanced_B0",
             "--access-keys-authentication", "true"
         ]);
-        var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        // Assert
+        AssertSuccessResponse(response);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult);
+        var result = DeserializeResult(response.Results!);
 
         Assert.NotNull(result);
         Assert.Equal("test-redis-with-keys", result.Resource.Name);
@@ -310,6 +323,71 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreatesResource_WithPublicNetworkAccessEnabled()
+    {
+        // Arrange
+        var expectedResource = new Resource
+        {
+            Name = "test-redis-public",
+            Type = "AzureManagedRedis",
+            ResourceGroupName = "test-rg",
+            SubscriptionId = "sub123",
+            Location = "eastus",
+            Sku = "Balanced_B0",
+            Status = "Creating"
+        };
+
+        _redisService.CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis-public",
+            "eastus",
+            "Balanced_B0",
+            Arg.Any<bool?>(),
+            true,
+            Arg.Any<string[]?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+        .Returns(expectedResource);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub123",
+            "--resource-group", "test-rg",
+            "--resource", "test-redis-public",
+            "--location", "eastus",
+            "--sku", "Balanced_B0",
+            "--public-network-access", "true"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        AssertSuccessResponse(response);
+
+        var result = DeserializeResult(response.Results!);
+
+        Assert.NotNull(result);
+        Assert.Equal("test-redis-public", result.Resource.Name);
+        Assert.Equal("Creating", result.Resource.Status);
+
+        await _redisService.Received(1).CreateResourceAsync(
+            "sub123",
+            "test-rg",
+            "test-redis-public",
+            "eastus",
+            "Balanced_B0",
+            Arg.Any<bool?>(),
+            true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -319,6 +397,7 @@ public class ResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_CreatesResource_WithAllOptionalParameters()
     {
+        // Arrange
         var expectedResource = new Resource
         {
             Name = "test-redis-full",
@@ -337,6 +416,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
                 modules.Length == 1 &&
@@ -346,8 +426,7 @@ public class ResourceCreateCommandTests
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
-        var command = new ResourceCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--resource-group", "test-rg",
             "--resource", "test-redis-full",
@@ -356,17 +435,14 @@ public class ResourceCreateCommandTests
             "--access-keys-authentication", "true",
             "--modules", "RedisJSON"
         ]);
-        var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        // Assert
+        AssertSuccessResponse(response);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult);
+        var result = DeserializeResult(response.Results!);
 
         Assert.NotNull(result);
         Assert.Equal("test-redis-full", result.Resource.Name);
@@ -379,6 +455,7 @@ public class ResourceCreateCommandTests
             "eastus",
             "Balanced_B0",
             true,
+            Arg.Any<bool?>(),
             Arg.Is<string[]>(modules =>
                 modules != null &&
                 modules.Length == 1 &&
@@ -387,4 +464,19 @@ public class ResourceCreateCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
+
+    private static void AssertSuccessResponse(CommandResponse response)
+    {
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+        Assert.NotNull(response.Results);
+    }
+
+    private static ResourceCreateCommand.ResourceCreateCommandResult DeserializeResult(object results)
+    {
+        var json = JsonSerializer.Serialize(results);
+        return JsonSerializer.Deserialize(json, RedisJsonContext.Default.ResourceCreateCommandResult)!;
+    }
+
 }

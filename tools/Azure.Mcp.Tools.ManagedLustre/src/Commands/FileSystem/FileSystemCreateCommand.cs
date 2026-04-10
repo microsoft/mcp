@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> logger)
+public sealed class FileSystemCreateCommand(IManagedLustreService service, ILogger<FileSystemCreateCommand> logger)
     : BaseManagedLustreCommand<FileSystemCreateOptions>(logger)
 {
     private const string CommandTitle = "Create Azure Managed Lustre FileSystem";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<FileSystemCreateCommand> _logger = logger;
 
     public override string Id => "814acadf-ee84-47f9-ad68-2d65ec7dbb07";
@@ -111,8 +112,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
             var options = BindOptions(parseResult);
 
-            var svc = context.GetService<IManagedLustreService>();
-            var fs = await svc.CreateFileSystemAsync(
+            var fs = await _service.CreateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,

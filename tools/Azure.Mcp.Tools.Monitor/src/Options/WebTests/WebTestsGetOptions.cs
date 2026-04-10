@@ -8,5 +8,5 @@ namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 public class WebTestsGetOptions : BaseMonitorOptions
 {
     [JsonPropertyName(MonitorOptionDefinitions.WebTestResourceName)]
-    public string? ResourceName { get; set; }
+    public string? WebTestName { get; set; }
 }

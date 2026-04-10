@@ -1,0 +1,111 @@
+# Pipeline template for releasing signed MCPB bundles
+#
+# This template:
+# 1. Downloads signed MCPB bundles
+# 2. Uploads them to the GitHub Release created by TagRepository job
+#
+# Prerequisites:
+# - packages_mcpb_signed artifact must exist
+# - build_info.json must exist with server and version information
+# - GitHub Release must already be created (by TagRepository job)
+
+parameters:
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+
+jobs:
+- deployment: PublishMCPB
+  displayName: "Publish MCPB to GitHub Release"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  templateContext:
+    type: releaseJob
+    isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: packages_mcpb_signed
+      targetPath: $(Pipeline.Workspace)/mcpb
+    - input: pipelineArtifact
+      artifactName: build_info
+      targetPath: $(Pipeline.Workspace)/build_info
+  environment: package-publish
+  pool:
+    name: azsdk-pool
+    image: ubuntu-24.04
+    os: linux
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        # Note: checkout is not allowed in release jobs, so we inline the script logic here
+        - pwsh: |
+            $ErrorActionPreference = "Stop"
+            $serverName = '${{ parameters.ServerName }}'
+            $mcpbPath = '$(Pipeline.Workspace)/mcpb'
+            $buildInfoPath = '$(Pipeline.Workspace)/build_info/build_info.json'
+
+            Write-Host "Loading build info from $buildInfoPath..."
+            $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
+
+            $server = $buildInfo.servers | Where-Object { $_.name -eq $serverName } | Select-Object -First 1
+            if (-not $server) {
+                Write-Error "Server '$serverName' not found in build info."
+                exit 1
+            }
+
+            $version = $server.version
+            $tag = $server.releaseTag
+
+            Write-Host "Server: $serverName"
+            Write-Host "Version: $version"
+            Write-Host "Release Tag: $tag"
+
+            # Find MCPB files for this server
+            $serverMcpbPath = Join-Path $mcpbPath $serverName
+            if (-not (Test-Path $serverMcpbPath)) {
+                Write-Error "No MCPB files found for $serverName at $serverMcpbPath"
+                exit 1
+            }
+
+            $mcpbFiles = Get-ChildItem -Path $serverMcpbPath -Filter "*.mcpb" -Recurse
+
+            if ($mcpbFiles.Count -eq 0) {
+                Write-Error "No .mcpb files found in $serverMcpbPath"
+                exit 1
+            }
+
+            Write-Host "`nUploading $($mcpbFiles.Count) MCPB file(s) to release $tag..."
+
+            $uploadedCount = 0
+            $failedCount = 0
+
+            foreach ($mcpb in $mcpbFiles) {
+                Write-Host "  Uploading: $($mcpb.Name) ($($mcpb.Length) bytes)"
+                
+                # Note: --repo is required because checkout is not allowed in release jobs,
+                # so gh cannot determine the repository from the git context
+                & gh release upload $tag $mcpb.FullName --repo microsoft/mcp --clobber
+                
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Error "Failed to upload $($mcpb.Name)"
+                    $failedCount++
+                } else {
+                    $uploadedCount++
+                }
+            }
+
+            Write-Host "`nUpload Summary:"
+            Write-Host "  Uploaded: $uploadedCount"
+            Write-Host "  Failed: $failedCount"
+
+            if ($failedCount -gt 0) {
+                Write-Error "Some MCPB files failed to upload"
+                exit 1
+            }
+
+            Write-Host "`n✓ All MCPB files uploaded successfully"
+          displayName: "Upload MCPB to GitHub Release"
+          env:
+            GH_TOKEN: $(azuresdk-github-pat)

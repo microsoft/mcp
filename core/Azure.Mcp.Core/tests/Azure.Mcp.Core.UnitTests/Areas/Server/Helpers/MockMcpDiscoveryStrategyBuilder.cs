@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;
@@ -14,7 +14,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 /// </summary>
 public sealed class MockMcpDiscoveryStrategyBuilder
 {
-    private readonly List<IMcpServerProvider> _providers = new();
+    private readonly List<IMcpServerProvider> _providers = [];
 
     /// <summary>
     /// Initializes a new instance of the MockMcpDiscoveryStrategyBuilder.
@@ -31,14 +31,15 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="client">The mock client to return for this server.</param>
     /// <returns>The current instance for method chaining.</returns>
-    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null)
+    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null, string? toolPrefix = null)
     {
         var mockProvider = Substitute.For<IMcpServerProvider>();
         var metadata = new McpServerMetadata
         {
             Id = serverId,
             Name = serverName ?? serverId,
-            Description = description ?? $"Mock server for {serverId}"
+            Description = description ?? $"Mock server for {serverId}",
+            ToolPrefix = toolPrefix
         };
 
         mockProvider.CreateMetadata().Returns(metadata);
@@ -66,10 +67,10 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="clientBuilder">The MockMcpClientBuilder to use for creating the client.</param>
     /// <returns>The current instance for method chaining.</returns>
-    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName, string? description, MockMcpClientBuilder clientBuilder)
+    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName, string? description, MockMcpClientBuilder clientBuilder, string? toolPrefix = null)
     {
         var client = clientBuilder.Build();
-        return AddServer(serverId, serverName, description, client);
+        return AddServer(serverId, serverName, description, client, toolPrefix);
     }
 
     /// <summary>

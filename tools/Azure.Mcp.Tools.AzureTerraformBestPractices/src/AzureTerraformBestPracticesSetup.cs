@@ -14,6 +14,8 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
 
     public string Title => "Azure Terraform Best Practices";
 
+    public CommandCategory Category => CommandCategory.RecommendedTools;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<AzureTerraformBestPracticesGetCommand>();

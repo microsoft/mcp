@@ -110,7 +110,7 @@ public partial class AzmcpProgram
         }
         else
         {
-            return serverName.ToLowerInvariant();
+            return serverName;
         }
     }
 

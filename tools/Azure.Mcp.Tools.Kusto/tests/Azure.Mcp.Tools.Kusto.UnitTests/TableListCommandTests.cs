@@ -26,7 +26,6 @@ public sealed class TableListCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<TableListCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -56,7 +55,7 @@ public sealed class TableListCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedTables);
         }
-        var command = new TableListCommand(_logger);
+        var command = new TableListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -92,7 +91,7 @@ public sealed class TableListCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new TableListCommand(_logger);
+        var command = new TableListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -128,7 +127,7 @@ public sealed class TableListCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
-        var command = new TableListCommand(_logger);
+        var command = new TableListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -142,7 +141,7 @@ public sealed class TableListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new TableListCommand(_logger);
+        var command = new TableListCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);

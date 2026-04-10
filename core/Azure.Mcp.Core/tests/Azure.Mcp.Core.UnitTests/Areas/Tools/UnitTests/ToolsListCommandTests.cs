@@ -7,15 +7,15 @@ using System.Text.Json;
 using Azure.Mcp.Core.Areas.Tools.Commands;
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
@@ -223,7 +223,7 @@ public class ToolsListCommandTests
     {
         // Arrange
         var faultyServiceProvider = Substitute.For<IServiceProvider>();
-        faultyServiceProvider.GetService(typeof(CommandFactory))
+        faultyServiceProvider.GetService(typeof(ICommandFactory))
             .Returns(x => throw new InvalidOperationException("Corrupted command factory"));
 
         var faultyContext = new CommandContext(faultyServiceProvider);
@@ -282,7 +282,7 @@ public class ToolsListCommandTests
 
         // Verify specific known commands exist
         Assert.Contains(result, cmd => cmd.Command == "subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "keyvault key list");
+        Assert.Contains(result, cmd => cmd.Command == "keyvault key get");
         Assert.Contains(result, cmd => cmd.Command == "storage account get");
         Assert.Contains(result, cmd => cmd.Command == "appconfig account list");
 
@@ -397,7 +397,7 @@ public class ToolsListCommandTests
         var logger = tempServiceProvider.GetRequiredService<ILogger<CommandFactory>>();
         var telemetryService = Substitute.For<ITelemetryService>();
         var emptyAreaSetups = Array.Empty<IAreaSetup>();
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
+        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
             Version = "Test Version",
@@ -410,7 +410,7 @@ public class ToolsListCommandTests
         finalCollection.AddLogging();
 
         var emptyCommandFactory = new CommandFactory(tempServiceProvider, emptyAreaSetups, telemetryService, configurationOptions, logger);
-        finalCollection.AddSingleton(emptyCommandFactory);
+        finalCollection.AddSingleton<ICommandFactory>(emptyCommandFactory);
 
         var emptyServiceProvider = finalCollection.BuildServiceProvider();
         var emptyContext = new CommandContext(emptyServiceProvider);

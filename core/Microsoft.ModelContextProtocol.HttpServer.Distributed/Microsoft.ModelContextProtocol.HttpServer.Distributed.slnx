@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Microsoft.ModelContextProtocol.HttpServer.Distributed.csproj" />
+  <Project Path="tests/Microsoft.ModelContextProtocol.HttpServer.Distributed.Tests.csproj" />
+</Solution>

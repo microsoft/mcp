@@ -19,17 +19,16 @@ namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 public class DatabaseAddCommandTests
 {
     private readonly IAppServiceService _appServiceService;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DatabaseAddCommand> _logger;
+    private readonly DatabaseAddCommand _command;
+    private readonly CommandContext _context;
 
     public DatabaseAddCommandTests()
     {
         _appServiceService = Substitute.For<IAppServiceService>();
         _logger = Substitute.For<ILogger<DatabaseAddCommand>>();
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_appServiceService);
-        collection.AddSingleton(_logger);
-        _serviceProvider = collection.BuildServiceProvider();
+        _command = new(_logger, _appServiceService);
+        _context = new(new ServiceCollection().BuildServiceProvider());
     }
 
     [Theory]
@@ -117,12 +116,10 @@ public class DatabaseAddCommandTests
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
         // Arrange
-        var command = new DatabaseAddCommand(_logger);
-        var args = command.GetCommand().Parse(commandArgs);
-        var context = new CommandContext(_serviceProvider);
+        var args = _command.GetCommand().Parse(commandArgs);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -178,11 +175,9 @@ public class DatabaseAddCommandTests
             parameters.Add("retry-delay", retryDelay.Value);
 
         // Execute the command directly in unit tests rather than via the tool runner helper
-        var command = new DatabaseAddCommand(_logger);
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
-        var parseResult = command.GetCommand().Parse(argList);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var parseResult = _command.GetCommand().Parse(argList);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Test actual command execution and proper error handling
         Assert.NotNull(response);
@@ -240,8 +235,7 @@ public class DatabaseAddCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var command = new DatabaseAddCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var args = _command.GetCommand().Parse([
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--app", appName,
@@ -249,10 +243,9 @@ public class DatabaseAddCommandTests
             "--database-server", databaseServer,
             "--database", databaseName
         ]);
-        var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

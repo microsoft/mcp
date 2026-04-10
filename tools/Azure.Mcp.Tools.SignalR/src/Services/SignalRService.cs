@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
@@ -20,16 +21,17 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 public sealed class SignalRService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
+    ICacheService cacheService,
+    ILogger<SignalRService> logger) : BaseAzureService(tenantService), ISignalRService
 {
     private readonly ISubscriptionService _subscriptionService =
         subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
-    private readonly ICacheService
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<SignalRService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "signalr";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<IEnumerable<Runtime>> GetRuntimeAsync(
         string subscription,
@@ -45,52 +47,50 @@ public sealed class SignalRService(
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch
+            {
+                (true, true) => subscription,
+                (false, true) => CacheKeyBuilder.Build(subscription, resourceGroup),
+                (true, false) => CacheKeyBuilder.Build(subscription, tenant),
+                (false, false) => CacheKeyBuilder.Build(subscription, tenant, resourceGroup)
+            };
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
             {
                 return cachedResults;
             }
 
-            try
+            if (string.IsNullOrEmpty(resourceGroup))
             {
-                if (string.IsNullOrEmpty(resourceGroup))
+                var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
+                await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
                 {
-                    var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources)
-                    {
-                        runtimes.Add(ConvertToRuntimeModel(runtime));
-                    }
-                }
-                else
-                {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    if (!resourceGroupResource.HasValue)
-                    {
-                        throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                    }
-
-                    var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
-                    await foreach (var runtime in signalRResources)
-                    {
-                        runtimes.Add(ConvertToRuntimeModel(runtime));
-                    }
-
-                    await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
+                    runtimes.Add(ConvertToRuntimeModel(runtime));
                 }
             }
-            catch (Exception ex)
+            else
             {
-                throw new Exception($"Error get SignalR Runtimes: {ex.Message}", ex);
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                if (!resourceGroupResource.HasValue)
+                {
+                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                }
+
+                var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
+                await foreach (var runtime in signalRResources.WithCancellation(cancellationToken))
+                {
+                    runtimes.Add(ConvertToRuntimeModel(runtime));
+                }
             }
+
+            await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
         }
         else
         {
             ValidateRequiredParameters((nameof(signalRName), signalRName), (nameof(resourceGroup), resourceGroup));
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{signalRName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";
+                ? CacheKeyBuilder.Build(subscription, resourceGroup!, signalRName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, signalRName);
 
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
@@ -98,29 +98,20 @@ public sealed class SignalRService(
                 return cachedResults;
             }
 
-            try
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (!resourceGroupResource.HasValue)
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (!resourceGroupResource.HasValue)
-                {
-                    throw new Exception(
-                        $"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                }
-
-                var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
-                if (!signalRResource.HasValue)
-                {
-                    throw new Exception(
-                        $"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
-                }
-
-                runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
-                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
             }
-            catch (Exception ex)
+
+            var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
+            if (!signalRResource.HasValue)
             {
-                throw new Exception($"Error get SignalR Runtime: {ex.Message}", ex);
+                throw new Exception($"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
             }
+
+            runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
+            await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
         }
 
         return runtimes;
@@ -128,14 +119,14 @@ public sealed class SignalRService(
 
     private static Runtime ConvertToRuntimeModel(SignalRResource resource)
     {
-        var runtime = new Runtime
+        return new Runtime
         {
             Id = resource.Id.ToString(),
             Identity = ConvertToIdentityModel(resource.Data.Identity),
             Kind = resource.Data.Kind?.ToString(),
             Location = resource.Data.Location,
             Name = resource.Data.Name,
-            Properties = new RuntimeProperties
+            Properties = new()
             {
                 ExternalIP = resource.Data?.ExternalIP,
                 HostName = resource.Data?.HostName,
@@ -146,7 +137,7 @@ public sealed class SignalRService(
                 ServerPort = resource.Data?.ServerPort,
                 UpstreamTemplates = ConvertToUpstreamTemplatesModel(resource.Data?.UpstreamTemplates)
             },
-            Sku = new Sku
+            Sku = new()
             {
                 Capacity = resource.Data?.Sku?.Capacity,
                 Name = resource.Data?.Sku?.Name,
@@ -154,8 +145,7 @@ public sealed class SignalRService(
                 Tier = resource.Data?.Sku?.Tier.ToString()
             },
             Tags = resource.Data?.Tags
-        };
-        return runtime ?? throw new InvalidOperationException("Failed to parse SignalR runtime data");
+        } ?? throw new InvalidOperationException("Failed to parse SignalR runtime data");
     }
 
     private static NetworkAcls? ConvertToNetworkAclsModel(SignalRNetworkAcls? networkAcls)
@@ -172,7 +162,7 @@ public sealed class SignalRService(
             var deny = networkAcls.PublicNetwork.Deny?.Select(d => d.ToString()).ToList();
             if (allow != null || deny != null)
             {
-                publicNetwork = new PublicNetwork { Allow = allow, Deny = deny };
+                publicNetwork = new() { Allow = allow, Deny = deny };
             }
         }
 
@@ -183,7 +173,7 @@ public sealed class SignalRService(
             Deny = pe.Deny?.Select(d => d.ToString()).ToList()
         }).ToList();
 
-        return new NetworkAcls
+        return new()
         {
             DefaultAction = networkAcls.DefaultAction?.ToString(),
             PublicNetwork = publicNetwork,
@@ -223,7 +213,7 @@ public sealed class SignalRService(
             UserAssignedIdentities = userAssigned
         };
 
-        return new Models.Identity
+        return new()
         {
             Type = identity.ManagedServiceIdentityType.ToString(),
             ManagedIdentityInfo = managedIdentityInfo
@@ -235,7 +225,7 @@ public sealed class SignalRService(
     {
         return upstreamTemplates?.Select(ut => new UpstreamTemplate
         {
-            Auth = new AuthSettings
+            Auth = new()
             {
                 Type = ut.Auth?.AuthType?.ToString(),
                 Resource = ut.Auth?.ManagedIdentityResource

@@ -7,19 +7,23 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
 public sealed class FunctionAppService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), IFunctionAppService
+    ICacheService cacheService,
+    ILogger<FunctionAppService> logger) : BaseAzureService(tenantService), IFunctionAppService
 {
+    private const int MaxFunctionApps = 10_000;
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "functionapp";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
 
     public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
@@ -35,8 +39,13 @@ public sealed class FunctionAppService(
         var functionApps = new List<FunctionAppInfo>();
         if (string.IsNullOrEmpty(functionAppName))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cacheKey = (string.IsNullOrEmpty(tenant), string.IsNullOrEmpty(resourceGroup)) switch
+            {
+                (true, true) => subscription,
+                (false, true) => CacheKeyBuilder.Build(subscription, tenant),
+                (true, false) => CacheKeyBuilder.Build(subscription, resourceGroup),
+                (false, false) => CacheKeyBuilder.Build(subscription, tenant, resourceGroup)
+            };
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
@@ -44,29 +53,22 @@ public sealed class FunctionAppService(
                 return cachedResults;
             }
 
-            try
+            if (string.IsNullOrEmpty(resourceGroup))
             {
-                if (string.IsNullOrEmpty(resourceGroup))
+                await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps, _logger, cancellationToken);
+            }
+            else
+            {
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+                if (!resourceGroupResource.HasValue)
                 {
-                    await RetrieveAndAddFunctionApp(subscriptionResource.GetWebSitesAsync(cancellationToken), functionApps);
-                }
-                else
-                {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                    if (!resourceGroupResource.HasValue)
-                    {
-                        throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                    }
-
-                    await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps);
+                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                 }
 
-                await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
+                await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps, _logger, cancellationToken);
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error listing Function Apps: {ex.Message}", ex);
-            }
+
+            await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
         }
         else
         {
@@ -75,8 +77,8 @@ public sealed class FunctionAppService(
                 (nameof(resourceGroup), resourceGroup));
 
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{functionAppName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{functionAppName}";
+                ? CacheKeyBuilder.Build(subscription, resourceGroup!, functionAppName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, functionAppName);
 
             var cachedResults = await _cacheService.GetAsync<List<FunctionAppInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
@@ -84,32 +86,34 @@ public sealed class FunctionAppService(
                 return cachedResults;
             }
 
-            try
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            if (!resourceGroupResource.HasValue)
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
-                if (!resourceGroupResource.HasValue)
-                {
-                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-                }
-                var site = await resourceGroupResource.Value.GetWebSites().GetAsync(functionAppName, cancellationToken);
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            }
+            var site = await resourceGroupResource.Value.GetWebSites().GetAsync(functionAppName, cancellationToken);
 
-                TryAddFunctionApp(site.Value, functionApps);
-                await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving Function App '{functionAppName}' in resource group '{resourceGroup}': {ex.Message}", ex);
-            }
+            TryAddFunctionApp(site.Value, functionApps);
+            await _cacheService.SetAsync(CacheGroup, cacheKey, functionApps, s_cacheDuration, cancellationToken);
         }
 
         return functionApps;
     }
 
-    private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps)
+    private static async Task RetrieveAndAddFunctionApp(
+        AsyncPageable<WebSiteResource> sites,
+        List<FunctionAppInfo> functionApps,
+        ILogger<FunctionAppService> logger,
+        CancellationToken cancellationToken)
     {
-        await foreach (var site in sites)
+        await foreach (var site in sites.WithCancellation(cancellationToken))
         {
             TryAddFunctionApp(site, functionApps);
+            if (functionApps.Count >= MaxFunctionApps)
+            {
+                logger.LogWarning("Warning: Reached maximum function app limit of {MaxFunctionApps}. Some function apps may not be included in the results.", MaxFunctionApps);
+                break;
+            }
         }
     }
 

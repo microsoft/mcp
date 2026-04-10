@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
@@ -91,8 +90,7 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
                 cancellationToken);
 
             context.Response.Message = "Change detection triggered successfully";
-            var results = new CloudEndpointTriggerChangeDetectionCommandResult("Change detection triggered successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.CloudEndpointTriggerChangeDetectionCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Change detection triggered successfully"), StorageSyncJsonContext.Default.CloudEndpointTriggerChangeDetectionCommandResult);
         }
         catch (Exception ex)
         {

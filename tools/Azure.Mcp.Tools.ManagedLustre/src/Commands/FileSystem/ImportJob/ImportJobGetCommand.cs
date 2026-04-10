@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
@@ -14,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobGetCommand(ILogger<ImportJobGetCommand> logger)
+public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<ImportJobGetCommand> logger)
     : BaseManagedLustreCommand<ImportJobGetOptions>(logger)
 {
     private const string CommandTitle = "Get Azure Managed Lustre Import Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<ImportJobGetCommand> _logger = logger;
 
     public override string Id => "c2g4d6f8-0e3a-5c7d-9f1b-3e5a7c9f1d3f";
@@ -74,12 +74,11 @@ public sealed class ImportJobGetCommand(ILogger<ImportJobGetCommand> logger)
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
             if (!string.IsNullOrWhiteSpace(options.JobName))
             {
                 // Get specific job
-                var result = await svc.GetImportJobAsync(
+                var result = await _service.GetImportJobAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,
@@ -93,7 +92,7 @@ public sealed class ImportJobGetCommand(ILogger<ImportJobGetCommand> logger)
             else
             {
                 // List all jobs
-                var results = await svc.ListImportJobsAsync(
+                var results = await _service.ListImportJobsAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.FileSystemName!,

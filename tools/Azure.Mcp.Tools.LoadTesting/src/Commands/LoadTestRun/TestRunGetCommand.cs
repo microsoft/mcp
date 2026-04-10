@@ -2,28 +2,32 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
+public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestRunGetOptions>
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
     public override string Name => "get";
     public override string Description =>
         $"""
-        Get details for a specific test run by testrun ID.
-        Use this to retrieve a single run's execution details (not a list). Returns status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces). 
-        Does NOT return the test plan/configuration or the test resource. Only the test run details. Also it is used to get details of SINGLE testrun based on its id. For a list of runs use testrun list command instead.
+        Get load test run details by testrun ID, or list all test runs by test ID.
+        Returns execution details including status, start/end times, progress, metrics, and artifacts.
+        Does not return test configuration or resource details.
         """;
     public override string Title => _commandTitle;
 
@@ -40,13 +44,33 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestRun);
+        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
+        command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
+
+        command.Validators.Add(commandResult =>
+        {
+            var testRunId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
+            var testId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+
+            if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
+            {
+                commandResult.AddError("Either --testrun or --test must be provided.");
+                commandResult.AddError("Either --testrun or --test must be provided. Pass --testrun to get details about a specific run or pass --test to list all test runs for the test.");
+            }
+            else if (!string.IsNullOrEmpty(testRunId) && !string.IsNullOrEmpty(testId))
+            {
+                commandResult.AddError("Cannot specify both --testrun and --test. Use one or the other.");
+            }
+        });
     }
 
     protected override TestRunGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.TestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
         return options;
     }
 
@@ -61,21 +85,36 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-            // Call service operation(s)
-            var results = await service.GetLoadTestRunAsync(
-                options.Subscription!,
-                options.TestResourceName!,
-                options.TestRunId!,
-                options.ResourceGroup,
-                options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
-            // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunGetCommandResult) :
-                null;
+            // If TestRunId is provided, get a single test run
+            if (!string.IsNullOrEmpty(options.TestRunId))
+            {
+                var result = await _loadTestingService.GetLoadTestRunAsync(
+                    options.Subscription!,
+                    options.TestResourceName!,
+                    options.TestRunId!,
+                    options.ResourceGroup,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+                // Set results if any were returned
+                context.Response.Results = result != null
+                    ? ResponseResult.Create(new([result]), LoadTestJsonContext.Default.TestRunGetCommandResult)
+                    : null;
+            }
+            // Otherwise if TestId is provided, list all test runs for that test
+            else if (!string.IsNullOrEmpty(options.TestId))
+            {
+                var results = await _loadTestingService.GetLoadTestRunsFromTestIdAsync(
+                    options.Subscription!,
+                    options.TestResourceName!,
+                    options.TestId!,
+                    options.ResourceGroup,
+                    options.Tenant,
+                    options.RetryPolicy,
+                    cancellationToken);
+                context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
+            }
+            // If neither is provided, that's ok - validation will catch it
         }
         catch (Exception ex)
         {
@@ -86,5 +125,5 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         }
         return context.Response;
     }
-    internal record TestRunGetCommandResult(TestRun TestRun);
+    internal record TestRunGetCommandResult(List<TestRun> TestRuns);
 }

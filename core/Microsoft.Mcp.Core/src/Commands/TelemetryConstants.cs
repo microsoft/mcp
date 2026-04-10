@@ -8,11 +8,15 @@ namespace Microsoft.Mcp.Core.Commands;
 /// </summary>
 public class TagName
 {
-    public const string AzureMcpVersion = "Version";
+    public const string McpServerVersion = "Version";
+    public const string McpServerName = "McpServerName";
     public const string ClientName = "ClientName";
     public const string ClientVersion = "ClientVersion";
     public const string DevDeviceId = "DevDeviceId";
     public const string ErrorDetails = "ErrorDetails";
+    public const string ExceptionMessage = "exception.message";
+    public const string ExceptionType = "exception.type";
+    public const string ExceptionStackTrace = "exception.stacktrace";
     public const string EventId = "EventId";
     public const string MacAddressHash = "MacAddressHash";
     public const string ToolId = "ToolId";
@@ -30,6 +34,9 @@ public class TagName
     public const string Tool = "Tool";
     public const string VSCodeConversationId = "VSCodeConversationId";
     public const string VSCodeRequestId = "VSCodeRequestId";
+    public const string Host = "Host";
+    public const string ProcessorArchitecture = "ProcessorArchitecture";
+    public const string Cloud = "Cloud";
 }
 
 public class ActivityName
@@ -38,4 +45,11 @@ public class ActivityName
     public const string ListToolsHandler = "ListToolsHandler";
     public const string ToolExecuted = "ToolExecuted";
     public const string ServerStarted = "ServerStarted";
+    public const string PluginExecuted = "PluginExecuted";
+}
+
+public class AppInsightsInstanceType
+{
+    public const string Microsoft = "Microsoft";
+    public const string UserProvided = "UserProvided";
 }

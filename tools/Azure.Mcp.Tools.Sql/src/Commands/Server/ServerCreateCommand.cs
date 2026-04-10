@@ -93,8 +93,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.Location, options);
+                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Location: {Location}",
+                options.Server, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 

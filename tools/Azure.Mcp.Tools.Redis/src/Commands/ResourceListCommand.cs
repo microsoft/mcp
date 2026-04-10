@@ -14,9 +14,11 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// <summary>
 /// Lists Redis resources in a subscription. Returns details for all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.
 /// </summary>
-public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : SubscriptionCommand<ResourceListOptions>()
+public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger)
+    : SubscriptionCommand<ResourceListOptions>()
 {
     private const string CommandTitle = "List Redis Resources";
+    private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceListCommand> _logger = logger;
 
     public override string Id => "eded7479-4187-4742-957f-d7778e03a69d";
@@ -51,8 +53,7 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : S
 
         try
         {
-            var redisService = context.GetService<IRedisService>() ?? throw new InvalidOperationException("Redis service is not available.");
-            var resources = await redisService.ListResourcesAsync(
+            var resources = await _redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

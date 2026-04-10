@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Kusto.Models;
+using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
@@ -26,14 +27,37 @@ public sealed class KustoService(
 
     private const string CacheGroup = "kusto";
     private const string KustoClustersCacheKey = "clusters";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
-    private static readonly TimeSpan s_providerCacheDuration = TimeSpan.FromHours(2);
+    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
+    private static readonly TimeSpan s_providerCacheDuration = CacheDurations.AuthenticatedClient;
+
+    /// <summary>
+    /// Escapes a KQL identifier (e.g., table name) using bracket notation to prevent injection.
+    /// </summary>
+    internal static string EscapeKqlIdentifier(string identifier)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+        // Remove any existing KQL bracket escape sequences to normalize the identifier
+        var unescaped = identifier
+            .Replace("['", "", StringComparison.Ordinal)
+            .Replace("[\"", "", StringComparison.Ordinal)
+            .Replace("\"]", "", StringComparison.Ordinal)
+            .Replace("']", "", StringComparison.Ordinal);
+
+        if (string.IsNullOrWhiteSpace(unescaped))
+        {
+            throw new ArgumentException("Identifier is empty after removing escape characters.", nameof(identifier));
+        }
+
+        // Use KQL bracket notation with escaped single quotes
+        return $"['{unescaped.Replace("'", "''")}']";
+    }
 
     // Provider cache key generator
-    private static string GetProviderCacheKey(string clusterUri, string? tenant)
+    private static string GetProviderCacheKey(string clusterUri, string? tenant, string suffix)
     {
         var tenantKey = string.IsNullOrEmpty(tenant) ? "default" : tenant;
-        return $"{tenantKey}:{clusterUri}";
+        return CacheKeyBuilder.Build(tenantKey, clusterUri, suffix);
     }
 
     public async Task<ResourceQueryResults<string>> ListClustersAsync(
@@ -44,57 +68,42 @@ public sealed class KustoService(
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
-        try
-        {
-            var clusters = await ExecuteResourceQueryAsync(
-                "Microsoft.Kusto/clusters",
-                resourceGroup: null, // all resource groups
-                subscriptionId,
-                retryPolicy,
-                item => ConvertToClusterModel(item).ClusterName,
-                cancellationToken: cancellationToken);
+        var clusters = await ExecuteResourceQueryAsync(
+            "Microsoft.Kusto/clusters",
+            resourceGroup: null, // all resource groups
+            subscriptionId,
+            retryPolicy,
+            item => ConvertToClusterModel(item).ClusterName,
+            tenant: tenant,
+            cancellationToken: cancellationToken);
 
-            return clusters;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Kusto clusters: {ex.Message}", ex);
-        }
+        return clusters;
     }
 
     public async Task<KustoClusterModel> GetClusterAsync(
-            string subscriptionId,
-            string clusterName,
-            string? tenant = null,
-            RetryPolicyOptions? retryPolicy = null,
-            CancellationToken cancellationToken = default)
+        string subscriptionId,
+        string clusterName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
-        try
-        {
-            var cluster = await ExecuteSingleResourceQueryAsync(
-                        "Microsoft.Kusto/clusters",
-                        resourceGroup: null, // all resource groups
-                        subscription: subscriptionId,
-                        retryPolicy: retryPolicy,
-                        converter: ConvertToClusterModel,
-                        additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
-                        cancellationToken: cancellationToken);
+        var cluster = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.Kusto/clusters",
+            resourceGroup: null, // all resource groups
+            subscription: subscriptionId,
+            retryPolicy: retryPolicy,
+            converter: ConvertToClusterModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
+            tenant: tenant,
+            cancellationToken: cancellationToken);
 
-            if (cluster == null)
-            {
-                throw new KeyNotFoundException($"Kusto cluster '{clusterName}' not found for subscription '{subscriptionId}'.");
-            }
-            return cluster;
-        }
-        catch (Exception ex)
+        if (cluster == null)
         {
-            _logger.LogError(ex,
-                "Error retrieving Kusto cluster '{ClusterName}' for subscription '{Subscription}'",
-                clusterName, subscriptionId);
-            throw;
+            throw new KeyNotFoundException($"Kusto cluster '{clusterName}' not found for subscription '{subscriptionId}'.");
         }
+        return cluster;
     }
 
     public async Task<List<string>> ListDatabasesAsync(
@@ -195,10 +204,14 @@ public sealed class KustoService(
             (nameof(databaseName), databaseName),
             (nameof(tableName), tableName));
 
+        // Validate table name to prevent KQL injection — while the query endpoint is read-only
+        // (no data modification), injection could still enable information disclosure or resource abuse
+        KustoIdentifierValidator.ValidateIdentifier(tableName, nameof(tableName));
+
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant, cancellationToken);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(
             databaseName,
-            $".show table {tableName} cslschema", cancellationToken);
+            $".show table {EscapeKqlIdentifier(tableName)} cslschema", cancellationToken);
         var result = KustoResultToStringList(kustoResult);
         if (result.Count > 0)
         {
@@ -208,14 +221,14 @@ public sealed class KustoService(
     }
 
     public async Task<List<JsonElement>> QueryItemsAsync(
-            string subscriptionId,
-            string clusterName,
-            string databaseName,
-            string query,
-            string? tenant = null,
-            AuthMethod? authMethod = AuthMethod.Credential,
-            RetryPolicyOptions? retryPolicy = null,
-            CancellationToken cancellationToken = default)
+        string subscriptionId,
+        string clusterName,
+        string databaseName,
+        string query,
+        string? tenant = null,
+        AuthMethod? authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscriptionId), subscriptionId),
@@ -287,7 +300,7 @@ public sealed class KustoService(
         return result;
     }
 
-    private List<string> KustoResultToStringList(KustoResult kustoResult)
+    private static List<string> KustoResultToStringList(KustoResult kustoResult)
     {
         var result = new List<string>();
         if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
@@ -305,7 +318,7 @@ public sealed class KustoService(
             return result;
         }
         var columns = columnsElement.EnumerateArray()
-            .Select(column => ($"{column.GetProperty("ColumnName").GetString()}:{column.GetProperty("ColumnType").GetString()}"));
+            .Select(column => $"{column.GetProperty("ColumnName").GetString()}:{column.GetProperty("ColumnType").GetString()}");
         var columnsAsString = string.Join(",", columns);
         result.Add(columnsAsString);
         if (!table.TryGetProperty("Rows", out var items) || items.ValueKind != JsonValueKind.Array)
@@ -322,7 +335,7 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateKustoClientAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_command";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "command");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
@@ -336,7 +349,7 @@ public sealed class KustoService(
 
     private async Task<KustoClient> GetOrCreateCslQueryProviderAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant) + "_query";
+        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "query");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
@@ -372,15 +385,14 @@ public sealed class KustoService(
     /// <returns>The cluster model</returns>
     private static KustoClusterModel ConvertToClusterModel(JsonElement item)
     {
-        Models.KustoClusterData? kustoCluster = Models.KustoClusterData.FromJson(item);
-        if (kustoCluster == null)
-            throw new InvalidOperationException("Failed to parse Kusto cluster data");
+        Models.KustoClusterData? kustoCluster = Models.KustoClusterData.FromJson(item)
+            ?? throw new InvalidOperationException("Failed to parse Kusto cluster data");
 
         if (string.IsNullOrEmpty(kustoCluster.ResourceId))
             throw new InvalidOperationException("Resource ID is missing");
         var id = new ResourceIdentifier(kustoCluster.ResourceId);
 
-        return new KustoClusterModel(
+        return new(
             ClusterName: kustoCluster.ResourceName ?? "Unknown",
             Location: kustoCluster.Location,
             ResourceGroupName: id.ResourceGroupName,

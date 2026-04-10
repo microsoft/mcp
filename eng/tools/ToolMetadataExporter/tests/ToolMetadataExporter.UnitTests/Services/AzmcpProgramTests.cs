@@ -103,7 +103,7 @@ public class AzmcpProgramTests
         // Act
         var actual = await program.GetServerNameAsync();
 
-        Assert.Equal("template.mcp.server", actual);
+        Assert.Equal("Template.MCP.Server", actual);
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class AzmcpProgramTests
         var actual = await program.GetServerNameAsync();
 
         // Assert
-        Assert.Equal("null.results.server", actual);
+        Assert.Equal("Null.Results.Server", actual);
     }
 
     [Fact]

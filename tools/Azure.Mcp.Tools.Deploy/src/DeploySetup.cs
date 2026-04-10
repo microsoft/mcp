@@ -32,12 +32,7 @@ public sealed class DeploySetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var deploy = new CommandGroup(Name, "Deploy commands for deploying applications to Azure, including sub commands: "
-            + "- plan get: generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services; "
-            + "- iac rules get: offers guidelines for creating Bicep/Terraform files to deploy applications on Azure; "
-            + "- app logs get: fetch logs from log analytics workspace for Container Apps, App Services, function apps that were deployed through azd; "
-            + "- pipeline guidance get: guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure; "
-            + "- architecture diagram generate: generates an azure service architecture diagram for the application based on the provided app topology; ", Title);
+        var deploy = new CommandGroup(Name, "Deploy operations – Commands for deploying applications to Azure. Provides sub-commands to generate deployment plans, offer infrastructure-as-code (Bicep/Terraform) guidance, fetch application logs, generate CI/CD pipeline guidance, and produce Azure architecture diagrams based on application topology.", Title);
 
         // Application-specific commands
         // This command will be deprecated when 'azd cli' supports the same functionality

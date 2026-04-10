@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Updated secret elicitation to ask user for explicit confirmation before proceeding with sensitive operations"

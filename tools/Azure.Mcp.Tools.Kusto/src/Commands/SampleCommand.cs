@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableCommand<SampleOptions>
+public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService kustoService) : BaseTableCommand<SampleOptions>
 {
     private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
+    private readonly IKustoService _kustoService = kustoService;
 
     public override string Id => "41daed5c-bf44-4cdf-9f3c-1df775465e53";
 
@@ -58,13 +59,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
         try
         {
-            var kusto = context.GetService<IKustoService>();
             List<JsonElement> results;
-            var query = $"{options.Table} | sample {options.Limit}";
+            // Validate limit is within safe bounds to prevent resource abuse
+            var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
+
+            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {safeLimit}";
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     query,
@@ -75,7 +78,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
             }
             else
             {
-                results = await kusto.QueryItemsAsync(
+                results = await _kustoService.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

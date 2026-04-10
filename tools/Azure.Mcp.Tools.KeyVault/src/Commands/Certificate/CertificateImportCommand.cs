@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
-public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger) : SubscriptionCommand<CertificateImportOptions>
+public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateImportOptions>
 {
     private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "4ae12e3e-dee0-4d8d-ad34-ffeaf70c642b";
 
@@ -66,9 +67,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
-            var certificate = await keyVaultService.ImportCertificate(
+            var certificate = await _keyVaultService.ImportCertificate(
                 options.VaultName!,
                 options.CertificateName!,
                 options.CertificateData!,

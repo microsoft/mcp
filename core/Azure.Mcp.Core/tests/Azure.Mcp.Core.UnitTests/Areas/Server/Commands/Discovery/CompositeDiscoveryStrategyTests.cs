@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using NSubstitute;
 using Xunit;
 
@@ -42,7 +42,7 @@ public class CompositeDiscoveryStrategyTests
         var strategy2 = Substitute.For<IMcpDiscoveryStrategy>();
 
         // Act
-        var composite = CreateCompositeStrategy(new[] { strategy1, strategy2 });
+        var composite = CreateCompositeStrategy([strategy1, strategy2]);
 
         // Assert
         Assert.NotNull(composite);
@@ -89,7 +89,7 @@ public class CompositeDiscoveryStrategyTests
         var provider1 = CreateMockProvider("test1");
         var provider2 = CreateMockProvider("test2");
         var strategy = CreateMockStrategy(provider1, provider2);
-        var composite = CreateCompositeStrategy(new[] { strategy });
+        var composite = CreateCompositeStrategy([strategy]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -111,7 +111,7 @@ public class CompositeDiscoveryStrategyTests
 
         var strategy1 = CreateMockStrategy(provider1, provider2);
         var strategy2 = CreateMockStrategy(provider3, provider4);
-        var composite = CreateCompositeStrategy(new[] { strategy1, strategy2 });
+        var composite = CreateCompositeStrategy([strategy1, strategy2]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -133,7 +133,7 @@ public class CompositeDiscoveryStrategyTests
         var emptyStrategy1 = CreateMockStrategy(); // No providers
         var emptyStrategy2 = CreateMockStrategy(); // No providers
 
-        var composite = CreateCompositeStrategy(new[] { activeStrategy, emptyStrategy1, emptyStrategy2 });
+        var composite = CreateCompositeStrategy([activeStrategy, emptyStrategy1, emptyStrategy2]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -149,7 +149,7 @@ public class CompositeDiscoveryStrategyTests
         // Arrange
         var emptyStrategy1 = CreateMockStrategy();
         var emptyStrategy2 = CreateMockStrategy();
-        var composite = CreateCompositeStrategy(new[] { emptyStrategy1, emptyStrategy2 });
+        var composite = CreateCompositeStrategy([emptyStrategy1, emptyStrategy2]);
 
         // Act
         var result = await composite.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -171,7 +171,7 @@ public class CompositeDiscoveryStrategyTests
         var strategy2 = CreateMockStrategy(provider2);
         var strategy3 = CreateMockStrategy(provider3);
 
-        var composite = CreateCompositeStrategy(new[] { strategy1, strategy2, strategy3 });
+        var composite = CreateCompositeStrategy([strategy1, strategy2, strategy3]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -200,7 +200,7 @@ public class CompositeDiscoveryStrategyTests
         var strategy1 = CreateMockStrategy(provider1, provider2);
         var strategy2 = CreateMockStrategy(provider3, provider4);
 
-        var composite = CreateCompositeStrategy(new[] { strategy1, strategy2 });
+        var composite = CreateCompositeStrategy([strategy1, strategy2]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -221,7 +221,7 @@ public class CompositeDiscoveryStrategyTests
         var provider1 = CreateMockProvider("provider1");
         var provider2 = CreateMockProvider("provider2");
         var strategy = CreateMockStrategy(provider1, provider2);
-        var composite = CreateCompositeStrategy(new[] { strategy });
+        var composite = CreateCompositeStrategy([strategy]);
 
         // Act
         var result1 = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -246,7 +246,7 @@ public class CompositeDiscoveryStrategyTests
         var strategy1 = CreateMockStrategy(provider1);
         var strategy2 = CreateMockStrategy(provider2);
 
-        var composite = CreateCompositeStrategy(new[] { strategy1, strategy2 });
+        var composite = CreateCompositeStrategy([strategy1, strategy2]);
 
         // Act
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
@@ -263,7 +263,7 @@ public class CompositeDiscoveryStrategyTests
     {
         // Arrange
         var strategy = CreateMockStrategy();
-        var composite = CreateCompositeStrategy(new[] { strategy });
+        var composite = CreateCompositeStrategy([strategy]);
 
         // Act & Assert
         Assert.IsAssignableFrom<BaseDiscoveryStrategy>(composite);
@@ -281,9 +281,9 @@ public class CompositeDiscoveryStrategyTests
         var mockStrategy2 = Substitute.For<IMcpDiscoveryStrategy>();
         var provider1 = Substitute.For<IMcpServerProvider>();
         var provider2 = Substitute.For<IMcpServerProvider>();
-        mockStrategy1.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(new[] { provider1 }));
-        mockStrategy2.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(new[] { provider2 }));
-        var composite = CreateCompositeStrategy(new[] { mockStrategy1, mockStrategy2 });
+        mockStrategy1.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([provider1]));
+        mockStrategy2.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([provider2]));
+        var composite = CreateCompositeStrategy([mockStrategy1, mockStrategy2]);
         var result = await composite.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.Contains(provider1, result);
         Assert.Contains(provider2, result);
@@ -298,9 +298,9 @@ public class CompositeDiscoveryStrategyTests
         var provider2 = Substitute.For<IMcpServerProvider>();
         provider1.CreateMetadata().Returns(new McpServerMetadata { Id = "one", Name = "one", Description = "desc1" });
         provider2.CreateMetadata().Returns(new McpServerMetadata { Id = "two", Name = "two", Description = "desc2" });
-        mockStrategy1.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(new[] { provider1 }));
-        mockStrategy2.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(new[] { provider2 }));
-        var composite = CreateCompositeStrategy(new[] { mockStrategy1, mockStrategy2 });
+        mockStrategy1.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([provider1]));
+        mockStrategy2.DiscoverServersAsync(TestContext.Current.CancellationToken).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([provider2]));
+        var composite = CreateCompositeStrategy([mockStrategy1, mockStrategy2]);
         var result = (await composite.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
         Assert.Equal(2, result.Count);
         Assert.Contains(result, p => p.CreateMetadata().Id == "one");
@@ -312,7 +312,7 @@ public class CompositeDiscoveryStrategyTests
     {
         // Arrange
         var emptyStrategy = CreateMockStrategy(); // No providers
-        var composite = CreateCompositeStrategy(new[] { emptyStrategy });
+        var composite = CreateCompositeStrategy([emptyStrategy]);
 
         // Act
         var result = await composite.DiscoverServersAsync(TestContext.Current.CancellationToken);

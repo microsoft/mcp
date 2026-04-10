@@ -74,9 +74,10 @@ public abstract class BaseAzureResourceService(
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="tenant">Optional tenant to use for the query</param>
     /// <returns>List of resources converted to the specified type</returns>
     protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
@@ -87,15 +88,23 @@ public abstract class BaseAzureResourceService(
         string? tableName = "resources",
         string? additionalFilter = null,
         int limit = 50,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? tenant = null)
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
+        if (!string.IsNullOrEmpty(additionalFilter) && additionalFilter.Contains('|'))
+        {
+            throw new ArgumentException(
+                "additionalFilter must not contain the pipe operator '|' to prevent KQL injection.",
+                nameof(additionalFilter));
+        }
+
         var results = new List<T>();
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -143,7 +152,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
@@ -154,48 +163,12 @@ public abstract class BaseAzureResourceService(
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
-        ArgumentNullException.ThrowIfNull(converter);
-
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
-
-        var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
-            {
-                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
-            queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
-        }
-        if (!string.IsNullOrEmpty(additionalFilter))
-        {
-            queryFilter += $" and {additionalFilter}";
-        }
-        queryFilter += " | limit 1";
-
-        var queryContent = new ResourceQueryContent(queryFilter)
-        {
-            Subscriptions = { subscriptionResource.Data.SubscriptionId }
-        };
-
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result != null && result.Count > 0)
-        {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            var dataArray = jsonDocument.RootElement;
-            var item = dataArray.ValueKind == JsonValueKind.Array && dataArray.GetArrayLength() > 0
-                ? dataArray[0]
-                : default;
-            if (item.ValueKind == JsonValueKind.Object)
-            {
-                return converter(item);
-            }
-        }
-        return null;
+        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, retryPolicy, converter,
+            tableName, additionalFilter, 1, cancellationToken, tenant).ConfigureAwait(false);
+        return result.Results.FirstOrDefault();
     }
 
     /// <summary>
@@ -207,11 +180,11 @@ public abstract class BaseAzureResourceService(
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
     /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
-    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, retryPolicy, options).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, retryPolicy, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -251,7 +224,7 @@ public abstract class BaseAzureResourceService(
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>
-    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo)
+    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         if (armClient == null)
             throw new ArgumentNullException(nameof(armClient));
@@ -263,7 +236,7 @@ public abstract class BaseAzureResourceService(
         GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
             ?? throw new InvalidOperationException("Failed to create deployment data");
         // Create the resource
-        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data);
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data, cancellationToken);
         return result.Value;
     }
 }

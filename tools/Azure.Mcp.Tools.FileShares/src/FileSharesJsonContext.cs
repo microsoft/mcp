@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
+using Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
 using Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 using Azure.Mcp.Tools.FileShares.Models;
 
@@ -22,6 +23,10 @@ namespace Azure.Mcp.Tools.FileShares;
 [JsonSerializable(typeof(SnapshotGetCommand.SnapshotGetCommandResult))]
 [JsonSerializable(typeof(SnapshotDeleteCommand.SnapshotDeleteCommandResult))]
 [JsonSerializable(typeof(SnapshotUpdateCommand.SnapshotUpdateCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
+[JsonSerializable(typeof(List<PrivateEndpointConnectionInfo>))]
+[JsonSerializable(typeof(PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult))]
+[JsonSerializable(typeof(PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult))]
 [JsonSerializable(typeof(FileShareDataSchema))]
 [JsonSerializable(typeof(PrivateEndpointConnectionDataSchema))]
 [JsonSerializable(typeof(FileShareLimitsResult))]

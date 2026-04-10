@@ -12,11 +12,11 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 - Integrate with other Fabric workloads through OneLake
 
 **Features:**
-- 14 comprehensive OneLake commands with full MCP integration
+- 19 comprehensive OneLake commands with full MCP integration
+- Complete coverage for OneLake table APIs: configuration, namespace discovery, and table metadata
 - Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
-- Support for multiple Microsoft Fabric environments (PROD, DAILY, DXT, MSIT)
 - Robust error handling and authentication
-- Production-ready with 100% test coverage (90 tests)
+- Production-ready with 100% test coverage (132 tests)
 - Clean, focused API design optimized for AI agent interactions
 
 ## Prerequisites
@@ -35,161 +35,44 @@ az login
 
 ## Environment Configuration
 
-The OneLake MCP tools support multiple Microsoft Fabric environments. You can configure which environment to target using the `ONELAKE_ENVIRONMENT` environment variable.
+The OneLake MCP tools are configured to use the Microsoft Fabric production environment.
 
-### Supported Environments
+### Production Environment Endpoints
 
-| Environment | Description | Use Case |
-|-------------|-------------|----------|
-| **PROD** | Production Microsoft Fabric | Default environment for production workloads |
-| **DAILY** | Daily build environment | Testing with latest Fabric features |
-| **DXT** | Developer experience testing | Internal Microsoft testing |
-| **MSIT** | Microsoft IT environment | Microsoft internal operations |
-
-### Environment Endpoints
-
-Each environment has specific endpoints for different OneLake services:
-
-#### Production (PROD) - Default
 ```
 OneLake Data Plane: https://api.onelake.fabric.microsoft.com
 OneLake DFS API: https://onelake.dfs.fabric.microsoft.com
 OneLake Blob API: https://onelake.blob.fabric.microsoft.com
+OneLake Table API: https://onelake.table.fabric.microsoft.com
 Fabric API: https://api.fabric.microsoft.com/v1
 ```
 
-#### Daily Build (DAILY)
-```
-OneLake Data Plane: https://daily-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://daily-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://daily-onelake.blob.fabric.microsoft.com
-Fabric API: https://dailyapi.fabric.microsoft.com/v1
-```
+### Getting Started
 
-#### DXT Environment
-```
-OneLake Data Plane: https://dxt-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://dxt-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://dxt-onelake.blob.fabric.microsoft.com
-Fabric API: https://dxt-api.fabric.microsoft.com/v1
-```
+Simply use the commands without any environment configuration:
 
-#### MSIT Environment
-```
-OneLake Data Plane: https://msit-api.onelake.fabric.microsoft.com
-OneLake DFS API: https://msit-onelake.dfs.fabric.microsoft.com
-OneLake Blob API: https://msit-onelake.blob.fabric.microsoft.com
-Fabric API: https://msit-api.fabric.microsoft.com/v1
-```
-
-### Setting the Environment
-
-#### Windows (PowerShell)
-```powershell
-# Set environment for current session
-$env:ONELAKE_ENVIRONMENT = "DAILY"
-
-# Set environment permanently
-[Environment]::SetEnvironmentVariable("ONELAKE_ENVIRONMENT", "DAILY", "User")
-
-# Run commands with specific environment
-$env:ONELAKE_ENVIRONMENT = "DAILY"; dotnet run -- onelake workspace list
-```
-
-#### Windows (Command Prompt)
-```cmd
-# Set environment for current session
-set ONELAKE_ENVIRONMENT=DAILY
-
-# Set environment permanently
-setx ONELAKE_ENVIRONMENT DAILY
-
-# Run commands with specific environment
-set ONELAKE_ENVIRONMENT=DAILY && dotnet run -- onelake workspace list
-```
-
-#### Linux/macOS (Bash)
 ```bash
-# Set environment for current session
-export ONELAKE_ENVIRONMENT=DAILY
-
-# Set environment permanently (add to ~/.bashrc or ~/.zshrc)
-echo 'export ONELAKE_ENVIRONMENT=DAILY' >> ~/.bashrc
-
-# Run commands with specific environment
-ONELAKE_ENVIRONMENT=DAILY dotnet run -- onelake workspace list
-```
-
-### Environment-Specific Usage Examples
-
-#### Working with Production Environment (Default)
-```bash
-# No environment variable needed - PROD is default
+# List workspaces
 dotnet run -- onelake workspace list
+
+# Read files
 dotnet run -- onelake file read --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "data.json"
+
+# Write files
+dotnet run -- onelake file write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Hello OneLake"
 ```
 
-#### Working with Daily Build Environment
-```bash
-# Set environment variable
-export ONELAKE_ENVIRONMENT=DAILY
+### MCP Client Configuration
 
-# Now all commands will use DAILY endpoints
-dotnet run -- onelake workspace list
-dotnet run -- onelake file write --workspace-id "your-workspace-id" --item-id "your-item-id" --file-path "test.txt" --content "Testing daily build"
-```
-
-#### Testing with Multiple Environments
-```bash
-# Test against production
-unset ONELAKE_ENVIRONMENT
-dotnet run -- onelake workspace list
-
-# Test against daily build
-export ONELAKE_ENVIRONMENT=DAILY
-dotnet run -- onelake workspace list
-
-# Test against DXT
-export ONELAKE_ENVIRONMENT=DXT
-dotnet run -- onelake workspace list
-```
-
-### PowerShell Script Environment Configuration
-
-Update the PowerShell upload scripts to work with different environments:
-
-```powershell
-# At the top of upload_files.ps1
-$env:ONELAKE_ENVIRONMENT = "DAILY"  # or "PROD", "DXT", "MSIT"
-
-# Rest of the script remains the same
-$workspaceId = "your-workspace-id"
-$itemId = "your-item-id"
-# ... script continues
-```
-
-### MCP Client Configuration with Environments
-
-Configure your MCP client to use specific environments:
+Configure your MCP client to use OneLake tools:
 
 ```json
 {
   "servers": {
-    "fabric-onelake-prod": {
+    "fabric-onelake": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"],
-      "env": {
-        "ONELAKE_ENVIRONMENT": "PROD"
-      }
-    },
-    "fabric-onelake-daily": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"],
-      "env": {
-        "ONELAKE_ENVIRONMENT": "DAILY"
-      }
+      "args": ["run", "--project", "path/to/Fabric.Mcp.Server", "--", "server", "start", "--namespace", "onelake"]
     }
   }
 }
@@ -207,7 +90,7 @@ You can verify which environment you're targeting by checking the endpoints in t
 
 ### Workspace and Item Identifiers
 
-All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option.
+All commands except `item create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item create` currently requires the GUID-based `--workspace-id` option. Table-based commands additionally accept schema identifiers through `--namespace` or its alias `--schema`.
 
 ```bash
 dotnet run -- onelake file list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
@@ -694,6 +577,58 @@ dotnet run -- onelake directory delete --workspace-id "47242da5-ff3b-46fb-a94f-9
 }
 ```
 
+### Table Operations
+
+#### Get Table Configuration
+
+Retrieves the OneLake table API configuration payload for a warehouse or lakehouse endpoint.
+
+```bash
+dotnet run -- onelake table config get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**Parameters:**
+- `--workspace-id`/`--workspace`: Workspace identifier (GUID or name)
+- `--item-id`/`--item`: Item identifier (GUID or `<name>.<type>`)
+
+#### List Table Namespaces
+
+Enumerates the namespaces (schemas) exposed by the table API. Accepts either GUIDs or friendly names.
+
+```bash
+dotnet run -- onelake table namespace list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse"
+```
+
+#### Get Table Namespace Details
+
+Fetches metadata for a specific namespace. Use `--namespace` (or `--schema`) to target the schema.
+
+```bash
+dotnet run -- onelake table namespace get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales"
+```
+
+#### List Tables within a Namespace
+
+Returns the tables published under a namespace. The `--namespace` and `--schema` switches are interchangeable.
+
+```bash
+dotnet run -- onelake table list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales"
+```
+
+#### Get Table Metadata
+
+Retrieves the full table definition for a specific namespace/table combination.
+
+```bash
+dotnet run -- onelake table get --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales" --table "transactions"
+```
+
+**Parameters:**
+- `--workspace-id`/`--workspace`: Workspace identifier
+- `--item-id`/`--item`: Item identifier
+- `--namespace`/`--schema`: Namespace (schema) name
+- `--table`: Table name to retrieve
+
 ## Quick Reference - fabmcp.exe Commands
 
 For users with the compiled `fabmcp.exe` executable, here are ready-to-use commands:
@@ -744,6 +679,24 @@ fabmcp.exe onelake download file --workspace "47242da5-ff3b-46fb-a94f-977909b773
 
 # Delete a blob (Blob endpoint)
 fabmcp.exe onelake blob delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "Files/data/archive.bin"
+```
+
+### Table Operations
+```cmd
+# Inspect table API configuration
+fabmcp.exe onelake table config get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# List available namespaces (schemas)
+fabmcp.exe onelake table namespace list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+
+# Get namespace details
+fabmcp.exe onelake table namespace get --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --namespace "sales"
+
+# List tables published under a namespace
+fabmcp.exe onelake table list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales"
+
+# Retrieve a specific table definition
+fabmcp.exe onelake table get --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --schema "sales" --table "transactions"
 ```
 
 **Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).
@@ -837,9 +790,6 @@ The tool provides detailed error messages and proper HTTP status codes:
 You can set these environment variables for convenience:
 
 ```bash
-# Target environment (PROD, DAILY, DXT, MSIT)
-export ONELAKE_ENVIRONMENT=DAILY
-
 # Frequently used IDs to avoid repetitive typing
 export FABRIC_WORKSPACE_ID="47242da5-ff3b-46fb-a94f-977909b773d5"
 export FABRIC_ITEM_ID="0e67ed13-2bb6-49be-9c87-a1105a4ea342"

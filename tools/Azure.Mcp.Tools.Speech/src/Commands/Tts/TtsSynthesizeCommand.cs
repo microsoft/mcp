@@ -60,7 +60,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
         // Command-level validation
         command.Validators.Add(commandResult =>
         {
-            var textValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text);
+            var textValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text.Name);
 
             // Validate text is not empty
             if (string.IsNullOrWhiteSpace(textValue))
@@ -68,7 +68,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
                 commandResult.AddError("Text cannot be empty or whitespace.");
             }
 
-            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio);
+            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio.Name);
 
             // Validate output file path
             if (string.IsNullOrWhiteSpace(fileValue))
@@ -77,14 +77,26 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             }
             else
             {
-                // Check if file already exists (don't allow overwriting)
-                if (File.Exists(fileValue))
+                // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
+                string canonicalPath;
+                try
                 {
-                    commandResult.AddError($"Output file already exists: {fileValue}. Please specify a different file path or delete the existing file.");
+                    canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
+                }
+                catch (ArgumentException ex)
+                {
+                    commandResult.AddError($"Invalid output file path: {ex.Message}");
+                    return;
+                }
+
+                // Check if file already exists (don't allow overwriting)
+                if (File.Exists(canonicalPath))
+                {
+                    commandResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
                 }
 
                 // Validate file extension
-                var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+                var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
 
                 if (!SupportedExtensions.Contains(extension))
                 {
@@ -93,7 +105,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             }
 
             // Validate language format if provided
-            var languageValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language);
+            var languageValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Language.Name);
             if (!string.IsNullOrEmpty(languageValue))
             {
                 // Basic validation: language should be in format like "en-US", "es-ES"

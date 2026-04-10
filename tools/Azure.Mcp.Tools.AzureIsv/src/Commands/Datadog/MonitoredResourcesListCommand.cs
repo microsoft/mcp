@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 
-public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger) : SubscriptionCommand<MonitoredResourcesListOptions>
+public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesListCommand> logger, IDatadogService datadogService) : SubscriptionCommand<MonitoredResourcesListOptions>
 {
     private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
+    private readonly IDatadogService _datadogService = datadogService;
 
     public override string Id => "bbd026b6-df96-4c52-8b72-13734984a600";
 
@@ -69,8 +70,7 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
 
         try
         {
-            var service = context.GetService<IDatadogService>();
-            List<string> results = await service.ListMonitoredResources(
+            var results = await _datadogService.ListMonitoredResources(
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.DatadogResource!,

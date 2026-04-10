@@ -28,6 +28,11 @@ public class ResourceCreateOptions : SubscriptionOptions
     public bool? AccessKeyAuthenticationEnabled { get; set; }
 
     /// <summary>
+    /// Whether to enable public network access for the Redis resource. (Default: false)
+    /// </summary>
+    public bool? PublicNetworkAccessEnabled { get; set; }
+
+    /// <summary>
     /// A list of modules to enable on the Azure Managed Redis resource (e.g., RedisBloom, RedisJSON).
     /// </summary>
     public string[]? Modules { get; set; }

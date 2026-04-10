@@ -30,7 +30,7 @@ public class GetGuidanceCommandTests
         var collection = new ServiceCollection();
         collection.AddSingleton(_guidanceService);
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _guidanceService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

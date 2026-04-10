@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added parameter allowlist validation for the PostgreSQL server param set command to restrict modifications to safe, non-security-critical parameters only"

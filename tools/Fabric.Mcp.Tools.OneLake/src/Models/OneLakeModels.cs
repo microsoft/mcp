@@ -114,79 +114,6 @@ public class Lakehouse : OneLakeItem
     public string? DefaultLakehouseWorkspace { get; set; }
 }
 
-// OneLake shortcuts
-public class OneLakeShortcut
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("path")]
-    public string Path { get; set; } = string.Empty;
-
-    [JsonPropertyName("target")]
-    public ShortcutTarget Target { get; set; } = new();
-
-    [JsonPropertyName("createdDate")]
-    public DateTime? CreatedDate { get; set; }
-
-    [JsonPropertyName("lastModifiedDate")]
-    public DateTime? LastModifiedDate { get; set; }
-}
-
-public class ShortcutTarget
-{
-    [JsonPropertyName("oneLakeShortcut")]
-    public OneLakeShortcutTarget? OneLakeShortcut { get; set; }
-
-    [JsonPropertyName("adlsGen2")]
-    public AdlsGen2ShortcutTarget? AdlsGen2 { get; set; }
-
-    [JsonPropertyName("s3")]
-    public S3ShortcutTarget? S3 { get; set; }
-}
-
-public class OneLakeShortcutTarget
-{
-    [JsonPropertyName("workspaceId")]
-    public string WorkspaceId { get; set; } = string.Empty;
-
-    [JsonPropertyName("itemId")]
-    public string ItemId { get; set; } = string.Empty;
-
-    [JsonPropertyName("path")]
-    public string Path { get; set; } = string.Empty;
-}
-
-public class AdlsGen2ShortcutTarget
-{
-    [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
-
-    [JsonPropertyName("connectionId")]
-    public string? ConnectionId { get; set; }
-
-    [JsonPropertyName("location")]
-    public string Location { get; set; } = string.Empty;
-
-    [JsonPropertyName("subpath")]
-    public string? Subpath { get; set; }
-}
-
-public class S3ShortcutTarget
-{
-    [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
-
-    [JsonPropertyName("connectionId")]
-    public string? ConnectionId { get; set; }
-
-    [JsonPropertyName("location")]
-    public string Location { get; set; } = string.Empty;
-
-    [JsonPropertyName("subpath")]
-    public string? Subpath { get; set; }
-}
-
 // File and directory information
 public class OneLakeFileInfo
 {
@@ -304,15 +231,6 @@ public class UpdateItemRequest
     public object? Definition { get; set; }
 }
 
-public class CreateShortcutRequest
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("target")]
-    public ShortcutTarget Target { get; set; } = new();
-}
-
 // Collection response models
 public class WorkspacesResponse
 {
@@ -336,15 +254,6 @@ public class LakehousesResponse
 {
     [JsonPropertyName("value")]
     public List<Lakehouse> Value { get; set; } = [];
-
-    [JsonPropertyName("continuationToken")]
-    public string? ContinuationToken { get; set; }
-}
-
-public class ShortcutsResponse
-{
-    [JsonPropertyName("value")]
-    public List<OneLakeShortcut> Value { get; set; } = [];
 
     [JsonPropertyName("continuationToken")]
     public string? ContinuationToken { get; set; }
@@ -425,6 +334,7 @@ public static class OneLakeEndpoints
             OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
             OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
+            OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com",
             FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
             FabricScope = "https://api.fabric.microsoft.com/.default"
         },
@@ -433,6 +343,7 @@ public static class OneLakeEndpoints
             OneLakeDataPlaneBaseUrl = "https://daily-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://daily-onelake.dfs.fabric.microsoft.com",
             OneLakeDataPlaneBlobBaseUrl = "https://daily-onelake.blob.fabric.microsoft.com",
+            OneLakeTableApiBaseUrl = "https://daily-onelake.table.fabric.microsoft.com",
             FabricApiBaseUrl = "https://dailyapi.fabric.microsoft.com/v1",
             FabricScope = "https://api.fabric.microsoft.com/.default"
         },
@@ -441,6 +352,7 @@ public static class OneLakeEndpoints
             OneLakeDataPlaneBaseUrl = "https://dxt-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://dxt-onelake.dfs.fabric.microsoft.com",
             OneLakeDataPlaneBlobBaseUrl = "https://dxt-onelake.blob.fabric.microsoft.com",
+            OneLakeTableApiBaseUrl = "https://dxt-onelake.table.fabric.microsoft.com",
             FabricApiBaseUrl = "https://dxt-api.fabric.microsoft.com/v1",
             FabricScope = "https://api.fabric.microsoft.com/.default"
         },
@@ -449,6 +361,7 @@ public static class OneLakeEndpoints
             OneLakeDataPlaneBaseUrl = "https://msit-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://msit-onelake.dfs.fabric.microsoft.com",
             OneLakeDataPlaneBlobBaseUrl = "https://msit-onelake.blob.fabric.microsoft.com",
+            OneLakeTableApiBaseUrl = "https://msit-onelake.table.fabric.microsoft.com",
             FabricApiBaseUrl = "https://msit-api.fabric.microsoft.com/v1",
             FabricScope = "https://api.fabric.microsoft.com/.default"
         }
@@ -468,6 +381,9 @@ public static class OneLakeEndpoints
     public static string OneLakeDataPlaneBlobBaseUrl =>
         EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBlobBaseUrl;
 
+    public static string OneLakeTableApiBaseUrl =>
+        EnvironmentEndpoints[CurrentEnvironment].OneLakeTableApiBaseUrl;
+
     // Method to get endpoints for a specific environment
     public static OneLakeEnvironmentEndpoints GetEndpoints(string environment)
     {
@@ -486,6 +402,7 @@ public class OneLakeEnvironmentEndpoints
     public string OneLakeDataPlaneBaseUrl { get; set; } = string.Empty;
     public string OneLakeDataPlaneDfsBaseUrl { get; set; } = string.Empty;
     public string OneLakeDataPlaneBlobBaseUrl { get; set; } = string.Empty;
+    public string OneLakeTableApiBaseUrl { get; set; } = string.Empty;
     public string FabricApiBaseUrl { get; set; } = string.Empty;
     public string FabricScope { get; set; } = string.Empty;
 }

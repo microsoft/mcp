@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
@@ -60,7 +59,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
         var tagsString = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Tags.Name);
         if (!string.IsNullOrEmpty(tagsString))
         {
-            options.Tags = new Dictionary<string, object>();
+            options.Tags = [];
             var tagPairs = tagsString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             foreach (var pair in tagPairs)
             {
@@ -101,8 +100,7 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new StorageSyncServiceUpdateCommandResult(service);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult);
         }
         catch (Exception ex)
         {

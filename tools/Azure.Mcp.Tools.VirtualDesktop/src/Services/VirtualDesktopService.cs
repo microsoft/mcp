@@ -40,7 +40,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         var resourceGroupResource = await sub.GetResourceGroupAsync(resourceGroup, cancellationToken);
         await foreach (HostPoolResource resource in resourceGroupResource.Value.GetHostPools().GetAllAsync(cancellationToken))
         {
-            hostpools.Add(new HostPool(resource));
+            hostpools.Add(new(resource));
         }
         return hostpools;
     }
@@ -63,7 +63,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
                 var hostPool = armClient.GetHostPoolResource(resource.Id);
                 await foreach (SessionHostResource sessionHost in hostPool.GetSessionHosts().GetAllAsync(cancellationToken))
                 {
-                    sessionHosts.Add(new SessionHost(sessionHost));
+                    sessionHosts.Add(new(sessionHost));
                 }
                 break; // Found the host pool, no need to continue
             }
@@ -95,7 +95,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
                     {
                         await foreach (UserSessionResource userSession in sessionHost.GetUserSessions().GetAllAsync(cancellationToken))
                         {
-                            userSessions.Add(new UserSession(userSession));
+                            userSessions.Add(new(userSession));
                         }
                         break; // Found the session host, no need to continue
                     }
@@ -121,7 +121,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
         var hostPool = armClient.GetHostPoolResource(Azure.Core.ResourceIdentifier.Parse(hostPoolResourceId));
         await foreach (SessionHostResource sessionHost in hostPool.GetSessionHosts().GetAllAsync(cancellationToken))
         {
-            sessionHosts.Add(new SessionHost(sessionHost));
+            sessionHosts.Add(new(sessionHost));
         }
 
         return sessionHosts;
@@ -146,7 +146,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
             {
                 await foreach (UserSessionResource userSession in sessionHost.GetUserSessions().GetAllAsync(cancellationToken))
                 {
-                    userSessions.Add(new UserSession(userSession));
+                    userSessions.Add(new(userSession));
                 }
                 break; // Found the session host, no need to continue
             }
@@ -171,7 +171,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
 
         await foreach (SessionHostResource sessionHost in hostPool.Value.GetSessionHosts().GetAllAsync(cancellationToken))
         {
-            sessionHosts.Add(new SessionHost(sessionHost));
+            sessionHosts.Add(new(sessionHost));
         }
 
         return sessionHosts;
@@ -198,7 +198,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService) : I
             {
                 await foreach (UserSessionResource userSession in sessionHost.GetUserSessions().GetAllAsync(cancellationToken))
                 {
-                    userSessions.Add(new UserSession(userSession));
+                    userSessions.Add(new(userSession));
                 }
                 break; // Found the session host, no need to continue
             }

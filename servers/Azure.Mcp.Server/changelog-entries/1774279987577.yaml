@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Stop logging options in SQL ServerCreateCommand"
