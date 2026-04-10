@@ -228,7 +228,7 @@ public class CommandResultExtensionsTests
     [InlineData(new string[0], true, false)]
     [InlineData(new[] { "--name", "value" }, false, true)]
     [InlineData(new[] { "--name", "value" }, true, true)]
-    public void HasOptionResult_UntypeOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    public void HasOptionResult_UntypedOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
     {
         // Arrange
         var option = new Option<string?>("--name");
@@ -270,5 +270,142 @@ public class CommandResultExtensionsTests
 
         // Assert
         Assert.Equal(expected, hasResult);
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false, null)]
+    [InlineData(new string[0], true, false, null)]
+    [InlineData(new[] { "--flag" }, false, true, true)]
+    [InlineData(new[] { "--flag" }, true, true, true)]
+    [InlineData(new[] { "--flag", "false" }, false, true, false)]
+    [InlineData(new[] { "--flag", "false" }, true, true, false)]
+    public void TryGetValue_TypedOptionWithVariousBoolScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected, bool? expectedValue)
+    {
+        // Arrange
+        var option = new Option<bool?>("--flag");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.TryGetValue(option, out var value));
+        if (expected)
+        {
+            Assert.Equal(expectedValue, value);
+        }
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, false, null)]
+    [InlineData(new string[0], true, false, null)]
+    [InlineData(new[] { "--name", "value" }, false, true, "value")]
+    [InlineData(new[] { "--name", "value" }, true, true, "value")]
+    public void TryGetValue_UntypedOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected, string? expectedValue)
+    {
+        // Arrange
+        var option = new Option<string?>("--name");
+
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.TryGetValue(option, out var value));
+        if (expected)
+        {
+            Assert.Equal(expectedValue, value);
+        }
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, null)]
+    [InlineData(new string[0], true, null)]
+    [InlineData(new[] { "--flag" }, false, true)]
+    [InlineData(new[] { "--flag" }, true, true)]
+    [InlineData(new[] { "--flag", "false" }, false, false)]
+    [InlineData(new[] { "--flag", "false" }, true, false)]
+    public void GetValueOrDefault_TypedOptionWithVariousBoolScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool? expected)
+    {
+        // Arrange
+        var option = new Option<bool?>("--flag");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.GetValueOrDefault(option));
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, null)]
+    [InlineData(new string[0], true, null)]
+    [InlineData(new[] { "--name", "value" }, false, "value")]
+    [InlineData(new[] { "--name", "value" }, true, "value")]
+    public void GetValueOrDefault_UntypedOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, string? expected)
+    {
+        // Arrange
+        var option = new Option<string?>("--name");
+
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.GetValueOrDefault(option));
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, null)]
+    [InlineData(new string[0], true, null)]
+    [InlineData(new[] { "--flag" }, false, true)]
+    [InlineData(new[] { "--flag" }, true, true)]
+    [InlineData(new[] { "--flag", "false" }, false, false)]
+    [InlineData(new[] { "--flag", "false" }, true, false)]
+    public void GetValueWithoutDefault_TypedOptionWithVariousBoolScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool? expected)
+    {
+        // Arrange
+        var option = new Option<bool?>("--flag");
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.GetValueWithoutDefault(option));
+    }
+
+    [Theory]
+    [InlineData(new string[0], false, null)]
+    [InlineData(new string[0], true, null)]
+    [InlineData(new[] { "--name", "value" }, false, "value")]
+    [InlineData(new[] { "--name", "value" }, true, "value")]
+    public void GetValueWithoutDefault_UntypedOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, string? expected)
+    {
+        // Arrange
+        var option = new Option<string?>("--name");
+
+        if (changedRequiredness)
+        {
+            option = option.AsRequired();
+        }
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
+
+        // Act and Assert
+        Assert.Equal(expected, parseResult.CommandResult.GetValueWithoutDefault(option));
     }
 }

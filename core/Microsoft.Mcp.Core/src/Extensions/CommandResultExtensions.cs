@@ -14,10 +14,10 @@ public static class CommandResultExtensions
         => HasOptionResult(commandResult, option.Name);
 
     /// <summary>
-    /// Checks if an option with the specified name has a result in the command result.
+    /// Checks if an option with the specified name or alias has a result in the command result.
     /// </summary>
     /// <param name="commandResult">The command result to check.</param>
-    /// <param name="optionName">The name of the option to check for (including -- prefix).</param>
+    /// <param name="optionName">The option name or any configured alias to check for.</param>
     /// <returns>True if the option has a result, false otherwise.</returns>
     public static bool HasOptionResult(this CommandResult commandResult, string optionName)
     {
