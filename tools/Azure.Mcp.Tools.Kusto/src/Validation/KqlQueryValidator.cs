@@ -40,6 +40,10 @@ internal static class KqlQueryValidator
         ".execute",
     ];
 
+    // Matches a management command at the start of input, or after a pipe/semicolon
+    // with any amount of whitespace (spaces, tabs, newlines, etc.).
+    private static readonly Regex ManagementCommandPattern = BuildManagementCommandPattern();
+
     /// <summary>
     /// Validates the KQL query for safety. Throws <see cref="CommandValidationException"/>
     /// when a dangerous pattern is detected.
@@ -61,14 +65,6 @@ internal static class KqlQueryValidator
         // Strip string literals before structural analysis to avoid false positives
         var queryWithoutStrings = Regex.Replace(query, "'([^']|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
-        // Detect KQL comments (// line comments)
-        if (queryWithoutStrings.Contains("//", StringComparison.Ordinal))
-        {
-            throw new CommandValidationException(
-                "KQL comments are not allowed for security reasons.",
-                HttpStatusCode.BadRequest);
-        }
-
         // Detect tautology patterns (e.g., or 1==1, or true)
         if (TautologyPattern.IsMatch(queryWithoutStrings))
         {
@@ -77,33 +73,25 @@ internal static class KqlQueryValidator
                 HttpStatusCode.BadRequest);
         }
 
-        // Detect management/control commands
-        var lower = queryWithoutStrings.Trim().ToLowerInvariant();
-        foreach (var cmd in DangerousCommands)
-        {
-            if (lower.StartsWith(cmd, StringComparison.Ordinal) ||
-                lower.Contains($"| {cmd}", StringComparison.Ordinal) ||
-                lower.Contains($";{cmd}", StringComparison.Ordinal) ||
-                lower.Contains($"; {cmd}", StringComparison.Ordinal))
-            {
-                throw new CommandValidationException(
-                    $"Management command '{cmd}' is not allowed in queries for security reasons.",
-                    HttpStatusCode.BadRequest);
-            }
-        }
-
-        // Detect stacked commands via semicolons (after stripping strings)
-        var withoutTrailingSemicolon = queryWithoutStrings.TrimEnd();
-        if (withoutTrailingSemicolon.EndsWith(';'))
-        {
-            withoutTrailingSemicolon = withoutTrailingSemicolon[..^1];
-        }
-
-        if (withoutTrailingSemicolon.Contains(';', StringComparison.Ordinal))
+        // Detect management/control commands using regex to handle all whitespace
+        // variants (tabs, newlines, carriage returns) between separators and commands.
+        var match = ManagementCommandPattern.Match(queryWithoutStrings);
+        if (match.Success)
         {
             throw new CommandValidationException(
-                "Multiple KQL statements are not allowed. Use only a single query.",
+                $"Management command '{match.Value.TrimStart('|', ';').Trim()}' is not allowed in queries for security reasons.",
                 HttpStatusCode.BadRequest);
         }
+    }
+
+    private static Regex BuildManagementCommandPattern()
+    {
+        // Escape each command for regex, then join with alternation.
+        // Pattern: at start of string or after | or ; (with any whitespace), match the command.
+        var escaped = DangerousCommands.Select(Regex.Escape);
+        var alternatives = string.Join("|", escaped);
+        return RegexHelper.CreateRegex(
+            $@"(?:^|[|;])\s*(?:{alternatives})",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 }
