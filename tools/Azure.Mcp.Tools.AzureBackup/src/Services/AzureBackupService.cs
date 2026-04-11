@@ -87,6 +87,10 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         {
             await Task.WhenAll(rsvTask, dppTask);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch
         {
             // Individual task results are inspected below
@@ -252,10 +256,20 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? monthlyRetentionMonths, string? yearlyRetentionYears,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        var warnings = CollectUnsupportedPolicyOptionWarnings(scheduleFrequency, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears);
+
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
-        return VaultTypeResolver.IsRsv(resolved)
+        var result = VaultTypeResolver.IsRsv(resolved)
             ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken)
             : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken);
+
+        if (warnings.Count > 0)
+        {
+            var warningText = string.Join(" ", warnings);
+            result = result with { Message = $"{result.Message} Warning: {warningText}" };
+        }
+
+        return result;
     }
 
     public Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
@@ -263,6 +277,11 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? workloadType, string? containerName, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        if (VaultTypeResolver.IsDpp(vaultType))
+        {
+            throw new ArgumentException("Protectable item discovery is only supported for Recovery Services (RSV) vaults. DPP datasources are protected by their ARM resource ID directly.");
+        }
+
         return rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
     }
 
@@ -304,6 +323,10 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         try
         {
             await Task.WhenAll(rsvVaultsTask, dppVaultsTask);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -482,8 +505,9 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return VaultTypeResolver.Rsv;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
         {
+            logger.LogDebug(ex, "RSV probe for vault '{VaultName}' returned {Status}. Trying DPP.", vaultName, ex.Status);
         }
 
         try
@@ -491,9 +515,9 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return VaultTypeResolver.Dpp;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
         {
-            throw new KeyNotFoundException($"Vault '{vaultName}' not found in resource group '{resourceGroup}'. Verify the vault name and resource group, or specify --vault-type explicitly.");
+            throw new KeyNotFoundException($"Vault '{vaultName}' not found in resource group '{resourceGroup}'. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.");
         }
     }
 
@@ -504,7 +528,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         {
             return await rsvAction();
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
         {
         }
 
@@ -512,9 +536,38 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         {
             return await dppAction();
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
         {
-            throw new KeyNotFoundException($"Vault '{vaultName}' not found as either RSV or DPP vault. Verify the vault name and resource group, or specify --vault-type explicitly.");
+            throw new KeyNotFoundException($"Vault '{vaultName}' not found as either RSV or DPP vault. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.");
         }
+    }
+
+    private static List<string> CollectUnsupportedPolicyOptionWarnings(
+        string? scheduleFrequency, string? weeklyRetentionWeeks,
+        string? monthlyRetentionMonths, string? yearlyRetentionYears)
+    {
+        var warnings = new List<string>();
+
+        if (!string.IsNullOrEmpty(scheduleFrequency))
+        {
+            warnings.Add("--schedule-frequency was provided but is not yet applied; a daily schedule is always used.");
+        }
+
+        if (!string.IsNullOrEmpty(weeklyRetentionWeeks))
+        {
+            warnings.Add("--weekly-retention-weeks was provided but is not yet applied to the policy.");
+        }
+
+        if (!string.IsNullOrEmpty(monthlyRetentionMonths))
+        {
+            warnings.Add("--monthly-retention-months was provided but is not yet applied to the policy.");
+        }
+
+        if (!string.IsNullOrEmpty(yearlyRetentionYears))
+        {
+            warnings.Add("--yearly-retention-years was provided but is not yet applied to the policy.");
+        }
+
+        return warnings;
     }
 }

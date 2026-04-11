@@ -23,6 +23,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
     public override string Description =>
         """
         Lists protectable items (SQL databases, SAP HANA databases) discovered in the Recovery Services vault.
+        This command is only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
         Use after registering a container and running inquiry to discover databases available for protection.
         Filter results by workload type or container name. Valid workload-type values include:
         SAPHana, SAPHanaDatabase, SAPHanaSystem, SQL, SQLDataBase, SQLInstance.

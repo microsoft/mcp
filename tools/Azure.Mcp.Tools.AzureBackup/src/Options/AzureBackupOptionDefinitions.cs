@@ -151,7 +151,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> ScheduleFrequency = new($"--{ScheduleFrequencyName}")
     {
-        Description = "Backup schedule frequency: 'Hourly', 'Daily', or 'Weekly'.",
+        Description = "Backup schedule frequency: 'Hourly', 'Daily', or 'Weekly'. (Not yet applied — a daily schedule is always used.)",
         Required = false
     };
 
@@ -169,19 +169,19 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
     {
-        Description = "Weekly recovery point retention in weeks. (Planned: not yet applied to policies.)",
+        Description = "Weekly recovery point retention in weeks. (Not yet applied — reserved for a future release.)",
         Required = false
     };
 
     public static readonly Option<string> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
     {
-        Description = "Monthly recovery point retention in months. (Planned: not yet applied to policies.)",
+        Description = "Monthly recovery point retention in months. (Not yet applied — reserved for a future release.)",
         Required = false
     };
 
     public static readonly Option<string> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
     {
-        Description = "Yearly recovery point retention in years. (Planned: not yet applied to policies.)",
+        Description = "Yearly recovery point retention in years. (Not yet applied — reserved for a future release.)",
         Required = false
     };
 
