@@ -14,7 +14,6 @@ using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Governance;
 
 public class GovernanceSoftDeleteCommandTests
@@ -124,5 +123,65 @@ public class GovernanceSoftDeleteCommandTests
         {
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFoundError()
+    {
+        // Arrange
+        _backupService.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Not found"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Vault not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesConflictError()
+    {
+        // Arrange
+        _backupService.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "Cannot change"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("Soft delete state cannot be changed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesForbiddenError()
+    {
+        // Arrange
+        _backupService.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
     }
 }

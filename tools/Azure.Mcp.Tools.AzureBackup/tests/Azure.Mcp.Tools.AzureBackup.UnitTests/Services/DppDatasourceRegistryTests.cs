@@ -76,7 +76,7 @@ public class DppDatasourceRegistryTests
     [InlineData("azureblob", true)]
     [InlineData("AzureBlob", true)]
     [InlineData("adls", true)]
-    [InlineData("cosmosdb", true)]
+    [InlineData("cosmosdb", false)]
     [InlineData("azuredisk", false)]
     [InlineData("aks", false)]
     [InlineData("elasticsan", false)]

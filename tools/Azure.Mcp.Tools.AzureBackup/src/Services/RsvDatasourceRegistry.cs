@@ -31,6 +31,10 @@ public static class RsvDatasourceRegistry
         SupportsPolicyUpdate = true,
     };
 
+    /// <summary>
+    /// SQL in Azure VM: VmWorkload policy with Full + Log sub-policies.
+    /// Stage 3: Add Differential (optional) sub-policy. Full and Differential cannot be on same day.
+    /// </summary>
     public static readonly RsvDatasourceProfile SqlDatabase = new()
     {
         FriendlyName = "SQL",
@@ -48,6 +52,11 @@ public static class RsvDatasourceRegistry
         SupportsPolicyUpdate = true,
     };
 
+    /// <summary>
+    /// SAP HANA in Azure VM: VmWorkload policy with Full + Log (mandatory) sub-policies.
+    /// Stage 3: Add Differential (optional) and Incremental (optional) sub-policies.
+    /// Full, Differential, and Incremental cannot be scheduled on the same day.
+    /// </summary>
     public static readonly RsvDatasourceProfile SapHanaDatabase = new()
     {
         FriendlyName = "SAPHANA",
@@ -64,6 +73,11 @@ public static class RsvDatasourceRegistry
         SupportsPolicyUpdate = true,
     };
 
+    /// <summary>
+    /// SAP ASE in Azure VM: Same sub-policy support as SAP HANA.
+    /// Full (mandatory) + Log (mandatory) + Differential (optional) + Incremental (optional).
+    /// Full, Differential, and Incremental cannot be scheduled on the same day.
+    /// </summary>
     public static readonly RsvDatasourceProfile SapAse = new()
     {
         FriendlyName = "SAPASE",

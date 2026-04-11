@@ -4,7 +4,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options.Dr;
+using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Dr;
 
-public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<DrEnableCrrOptions>()
+public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
 {
     private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DrEnableCrrCommand> _logger = logger;
@@ -71,7 +71,6 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
             "Cross-Region Restore is already enabled on this vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed enabling Cross-Region Restore. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 

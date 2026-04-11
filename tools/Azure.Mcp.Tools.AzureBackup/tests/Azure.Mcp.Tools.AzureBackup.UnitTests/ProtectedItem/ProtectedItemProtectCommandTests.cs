@@ -124,4 +124,25 @@ public class ProtectedItemProtectCommandTests
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesForbiddenError()
+    {
+        // Arrange
+        _backupService.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1", "--policy", "DefaultPolicy"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("Backup Contributor", response.Message);
+    }
 }

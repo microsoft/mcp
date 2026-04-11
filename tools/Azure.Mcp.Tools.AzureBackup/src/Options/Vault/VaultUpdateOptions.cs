@@ -7,9 +7,6 @@ namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
 public class VaultUpdateOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.RedundancyName)]
-    public string? Redundancy { get; set; }
-
     [JsonPropertyName(AzureBackupOptionDefinitions.SoftDeleteName)]
     public string? SoftDeleteState { get; set; }
 

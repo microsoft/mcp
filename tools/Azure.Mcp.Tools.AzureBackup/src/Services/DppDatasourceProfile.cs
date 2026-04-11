@@ -64,6 +64,28 @@ public enum DppBackupParametersMode
 /// </summary>
 /// <remarks>
 /// AOT-safe: no reflection, no Func delegates — pure data record with enum-driven dispatch.
+///
+/// === Policy Create - Staged Implementation Plan ===
+///
+/// Stage 1 (current): Single backup rule per profile with --daily-retention-days only.
+///   BackupType, BackupRuleName, ScheduleInterval define the single backup rule.
+///   DefaultRetentionDays provides the fallback when user omits --daily-retention-days.
+///
+/// Stage 2 (planned): Multi-tier retention with profile-driven tagging templates.
+///   Add BackupRuleTemplate[] to define multiple backup rules per datasource
+///   (e.g., CosmosDB: Full weekly; future: Full daily + Incremental hourly).
+///   Add RetentionTierDefault[] to define per-tier defaults (Default, Daily, Weekly, Monthly, Yearly).
+///   Add DppTaggingTemplate[] to define tagging criteria per tier
+///   (e.g., Weekly: DayOfWeek:Monday or FirstOfWeek; Monthly: FirstOfMonth).
+///   Wire up --weekly-retention-weeks, --monthly-retention-months, --yearly-retention-years
+///   to create additional DataProtectionRetentionRule entries + DataProtectionBackupTaggingCriteria.
+///   Reference: DPP manifests at https://msazure.visualstudio.com/One/_git/Mgmt-RecoverySvcs-Common
+///   path: src/Dpp/ManifestParser/Manifests/DPPManifests-Prod-Datasource
+///
+/// Stage 3 (planned): Datasource-specific backup modes.
+///   Some datasources may support multiple backup type configurations
+///   (e.g., CosmosDB Full-only vs Full+Incremental when Incremental becomes GA).
+///   Add optional BackupMode enum to select between preset configurations.
 /// </remarks>
 public sealed record DppDatasourceProfile
 {

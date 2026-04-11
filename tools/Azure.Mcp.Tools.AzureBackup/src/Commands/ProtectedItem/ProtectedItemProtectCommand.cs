@@ -103,6 +103,8 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed protecting the resource. Ensure the caller has Backup Contributor role. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "This resource is already protected. Use 'azurebackup protecteditem get' to view its status.",
         RequestFailedException reqEx => reqEx.Message,

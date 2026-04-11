@@ -323,6 +323,14 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
             logger.LogWarning(dppVaultsTask.Exception, "Failed to list DPP vaults for unprotected resource scan. RSV vaults will still be checked.");
         }
 
+        if (rsvVaultsTask.IsFaulted && dppVaultsTask.IsFaulted)
+        {
+            throw new AggregateException(
+                "Both RSV and DPP vault listing failed during unprotected resource scan.",
+                rsvVaultsTask.Exception!,
+                dppVaultsTask.Exception!);
+        }
+
         // Step 2: Collect all protected datasource ARM IDs from every vault
         var protectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

@@ -11,7 +11,7 @@ param location string = resourceGroup().location
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
-// Recovery Services Vault (RSV)
+// Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
   location: location
@@ -24,7 +24,16 @@ resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   }
 }
 
-// Backup Vault (Data Protection / DPP)
+// Set RSV storage config to GeoRedundant (required for Cross-Region Restore)
+resource rsvBackupConfig 'Microsoft.RecoveryServices/vaults/backupconfig@2024-04-01' = {
+  parent: rsvVault
+  name: 'vaultconfig'
+  properties: {
+    storageModelType: 'GeoRedundant'
+  }
+}
+
+// Backup Vault (Data Protection / DPP) - GeoRedundant for CRR support
 resource dppVault 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
   name: '${baseName}-dpp'
   location: location
@@ -35,14 +44,9 @@ resource dppVault 'Microsoft.DataProtection/backupVaults@2024-04-01' = {
     storageSettings: [
       {
         datastoreType: 'VaultStore'
-        type: 'LocallyRedundant'
+        type: 'GeoRedundant'
       }
     ]
-    securitySettings: {
-      softDeleteSettings: {
-        state: 'Off'
-      }
-    }
   }
 }
 

@@ -60,7 +60,7 @@ public class VaultUpdateCommandTests
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--redundancy", "GeoRedundant"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--identity-type", "SystemAssigned"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -86,7 +86,7 @@ public class VaultUpdateCommandTests
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--redundancy", "GeoRedundant"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--identity-type", "SystemAssigned"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -120,7 +120,7 @@ public class VaultUpdateCommandTests
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--redundancy", "GeoRedundant"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--identity-type", "SystemAssigned"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -131,7 +131,7 @@ public class VaultUpdateCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg --redundancy GeoRedundant", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --identity-type SystemAssigned", true)]
     [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On", true)]
     [InlineData("--subscription sub --vault v --resource-group rg --tags {}", true)]
     [InlineData("--subscription sub --vault v --resource-group rg", false)] // No update options

@@ -77,6 +77,28 @@ public enum RsvRestoreContentType
 /// AOT-safe: no reflection, no Func delegates — pure data record with enum-driven dispatch.
 /// RSV SDK uses polymorphic types (IaasVmProtectedItem, VmWorkloadSqlDatabaseProtectedItem, etc.)
 /// so the profile maps user-facing names to the correct enum values that drive construction.
+///
+/// === Policy Create - Staged Implementation Plan ===
+///
+/// Stage 1 (current): Single schedule + daily retention only.
+///   VM/FileShare: IaasVmProtectionPolicy/FileShareProtectionPolicy with LongTermRetentionPolicy (daily only).
+///   VmWorkload (SQL/HANA/ASE): Full + Log sub-policies with default settings.
+///
+/// Stage 2 (planned): Multi-tier retention (weekly/monthly/yearly).
+///   Wire up --weekly-retention-weeks, --monthly-retention-months, --yearly-retention-years
+///   to LongTermRetentionPolicy.WeeklySchedule, MonthlySchedule, YearlySchedule.
+///   For VmWorkload, multi-tier retention goes on the Full sub-policy only.
+///   Log and Differential/Incremental sub-policies keep SimpleRetentionPolicy.
+///   Defaults: Weekly=Sunday, Monthly=First Sunday, Yearly=January First Sunday.
+///
+/// Stage 3 (planned): VmWorkload sub-policy opt-in.
+///   Supported sub-policy types per datasource:
+///     SQL:      Full (mandatory), Differential (optional), Log (optional)
+///     SAPHANA:  Full (mandatory), Differential (optional), Incremental (optional), Log (mandatory)
+///     SAPASE:   Full (mandatory), Differential (optional), Incremental (optional), Log (mandatory)
+///   Constraint: Full, Differential, and Incremental cannot be scheduled on the same day.
+///   New params: --enable-differential, --enable-incremental, --differential-days, --log-frequency-minutes.
+///   Add SubPolicyTemplate[] to profile to declare available sub-policies per datasource.
 /// </remarks>
 public sealed record RsvDatasourceProfile
 {

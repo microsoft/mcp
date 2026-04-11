@@ -5,7 +5,6 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
-using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -19,7 +18,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 /// Consolidated protected item command: when --protected-item is supplied returns a single
 /// item's details; otherwise lists all protected items in the vault.
 /// </summary>
-public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemGetOptions>()
+public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseProtectedItemOptions>()
 {
     private const string CommandTitle = "Get Protected Item";
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
@@ -53,7 +52,7 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
         command.Options.Add(AzureBackupOptionDefinitions.Container);
     }
 
-    protected override ProtectedItemGetOptions BindOptions(ParseResult parseResult)
+    protected override BaseProtectedItemOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ProtectedItem = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ProtectedItem.Name);

@@ -64,6 +64,9 @@ public static class DppDatasourceRegistry
         SupportsPolicyUpdate = false,
     };
 
+    /// <summary>
+    /// ElasticSAN: Operational Tier only (snapshots). Daily schedule. No Vault Tier support.
+    /// </summary>
     public static readonly DppDatasourceProfile ElasticSan = new()
     {
         FriendlyName = "ElasticSAN",
@@ -87,9 +90,9 @@ public static class DppDatasourceRegistry
         ArmResourceType = "Microsoft.DBforPostgreSQL/flexibleServers",
         Aliases = ["postgresqlflexible", "pgflex", "postgresql"],
         UsesOperationalStore = false,
-        ScheduleInterval = "P1D",
+        ScheduleInterval = "P1W",
         BackupType = "Full",
-        BackupRuleName = "BackupDaily",
+        BackupRuleName = "BackupWeekly",
         DefaultRetentionDays = 30,
         RequiresSnapshotResourceGroup = false,
         DefaultRestoreMode = DppRestoreMode.RestoreAsFiles,
@@ -109,16 +112,24 @@ public static class DppDatasourceRegistry
         SupportsPolicyUpdate = false,
     };
 
+    /// <summary>
+    /// CosmosDB: Full backups only. Weekly schedule (P7D). Vault store.
+    /// Multi-tier retention is supported (e.g., retain weekly backups for N months).
+    /// </summary>
     public static readonly DppDatasourceProfile CosmosDb = new()
     {
         FriendlyName = "CosmosDB",
         ArmResourceType = "Microsoft.DocumentDB/databaseAccounts",
         Aliases = ["cosmosdb", "cosmos"],
-        UsesOperationalStore = true,
-        IsContinuousBackup = true,
+        UsesOperationalStore = false,
+        IsContinuousBackup = false,
+        ScheduleInterval = "P7D",
+        BackupType = "Full",
+        BackupRuleName = "BackupWeekly",
         DefaultRetentionDays = 30,
         RequiresSnapshotResourceGroup = false,
-        DefaultRestoreMode = DppRestoreMode.PointInTime,
+        DataSourceSetMode = DppDataSourceSetMode.Self,
+        DefaultRestoreMode = DppRestoreMode.RecoveryPoint,
         SupportsPolicyUpdate = false,
     };
 

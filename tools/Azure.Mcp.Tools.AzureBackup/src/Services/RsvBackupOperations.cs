@@ -165,6 +165,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
             try
             {
                 await containerResource.InquireAsync(filter: null, cancellationToken);
+                // The container inquiry API is asynchronous on the server side. A brief delay
+                // allows the service to register the container before we attempt to configure
+                // protection on the file share. Without this, protection requests may fail with 404.
                 await Task.Delay(5000, cancellationToken);
             }
             catch (RequestFailedException ex) when (ex.Status is 404 or 409)
@@ -203,7 +206,9 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         var container = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId);
 
-        // Poll for container visibility after refresh (up to 60s with 5s intervals)
+        // Poll for container visibility after refresh (up to 60s with 5s intervals).
+        // The RSV RefreshProtectionContainerAsync API does not return a pollable LRO,
+        // so we must manually poll for the container to become visible.
         const int maxRetries = 12;
         const int delayMs = 5000;
         for (int i = 0; i < maxRetries; i++)
@@ -475,6 +480,18 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
+        // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
+        // since RSV vault patch only supports identity updates.
+        if (!string.IsNullOrEmpty(softDelete))
+        {
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken);
+        }
+
+        if (!string.IsNullOrEmpty(immutabilityState))
+        {
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, retryPolicy, cancellationToken);
+        }
+
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
     }
 
@@ -504,6 +521,19 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
 
         var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
+
+        // Stage 2 TODO: Multi-tier retention (--weekly-retention-weeks, --monthly-retention-months, --yearly-retention-years)
+        // Replace the current DailyRetentionSchedule-only approach with a full LongTermRetentionPolicy:
+        //   - DailySchedule: always present, using retentionDays.
+        //   - WeeklySchedule: if weeklyRetentionWeeks > 0, create WeeklyRetentionSchedule
+        //     with DaysOfTheWeek=[Sunday], RetentionDuration={Count=N, DurationType=Weeks}.
+        //   - MonthlySchedule: if monthlyRetentionMonths > 0, create MonthlyRetentionSchedule
+        //     with RetentionScheduleFormatType=Weekly, WeeksOfTheMonth=[First], DaysOfTheWeek=[Sunday].
+        //   - YearlySchedule: if yearlyRetentionYears > 0, create YearlyRetentionSchedule
+        //     with MonthsOfYear=[January], same weekly format as monthly.
+        // For VmWorkload: multi-tier retention goes on the Full sub-policy only.
+        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears params are
+        // accepted but not yet wired up.
 
         var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
         var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,

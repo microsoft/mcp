@@ -6,7 +6,6 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
-using Azure.Mcp.Tools.AzureBackup.Options.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -20,7 +19,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 /// Consolidated vault command: when --vault is supplied returns a single vault's details;
 /// otherwise lists all vaults in the subscription (optionally filtered by --vault-type).
 /// </summary>
-public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<VaultGetOptions>()
+public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions>()
 {
     private const string CommandTitle = "Get Backup Vault";
     private readonly ILogger<VaultGetCommand> _logger = logger;
@@ -64,7 +63,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         });
     }
 
-    protected override VaultGetOptions BindOptions(ParseResult parseResult)
+    protected override BaseAzureBackupOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);

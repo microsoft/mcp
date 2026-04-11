@@ -163,25 +163,25 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> DailyRetentionDays = new($"--{DailyRetentionDaysName}")
     {
-        Description = "Daily recovery point retention in days.",
+        Description = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.",
         Required = false
     };
 
     public static readonly Option<string> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
     {
-        Description = "Weekly recovery point retention in weeks.",
+        Description = "Weekly recovery point retention in weeks. (Planned: not yet applied to policies.)",
         Required = false
     };
 
     public static readonly Option<string> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
     {
-        Description = "Monthly recovery point retention in months.",
+        Description = "Monthly recovery point retention in months. (Planned: not yet applied to policies.)",
         Required = false
     };
 
     public static readonly Option<string> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
     {
-        Description = "Yearly recovery point retention in years.",
+        Description = "Yearly recovery point retention in years. (Planned: not yet applied to policies.)",
         Required = false
     };
 
