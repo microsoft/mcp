@@ -147,11 +147,11 @@ internal class Program
         services.AddSingleton<ICommandFactory, CommandFactory>();
 
         // !!! WARNING !!!
-        // stdio-transport-specific implementations of ITenantService and ICacheService.
+        // stdio-transport-specific implementations of ICacheService.
         // The http-transport-specific implementations and configurations must be registered
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
-        services.AddSingleUserCliCacheService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {

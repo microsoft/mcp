@@ -130,9 +130,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
 
 #if DEBUG
-        bool isPlaybackMode = string.Equals(tokenCredentials, "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
         // Short-circuit for playback to avoid any real auth & interactive prompts.
-        if (isPlaybackMode)
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
             logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
             return new PlaybackTokenCredential();

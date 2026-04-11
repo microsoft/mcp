@@ -107,7 +107,7 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting autoimport job {JobName} for AMLFS filesystem {FileSystemName}. Options: {@Options}", options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error getting autoimport job {JobName} for AMLFS filesystem {FileSystemName}.", options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 
