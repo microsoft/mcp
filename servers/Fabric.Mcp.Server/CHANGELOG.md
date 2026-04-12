@@ -5,15 +5,57 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.0.0-beta.11 (Unreleased)
+## 1.0.0 (2026-04-12)
+
+**First Stable Release**
+
+We're excited to announce the first stable release of the Microsoft Fabric MCP Server! After months of development across 10 beta releases, extensive testing, and valuable community feedback, the Fabric MCP Server is now generally available. It provides AI agents with comprehensive context about Microsoft Fabric through the Model Context Protocol (MCP) specification — enabling intelligent code generation, API guidance, and data platform operations.
+
+### What's Included in 1.0.0
+
+The Microsoft Fabric MCP Server now offers:
+
+- **Complete Fabric API Context**: Full OpenAPI specifications for all supported Fabric workloads including Lakehouse, Warehouse, KQL Database, Eventhouse, Data Pipeline, Dataflow, Notebook, Report, Semantic Model, and many more
+- **OneLake Data Operations**: Full support for OneLake file and directory operations, item management, workspace listing, and table metadata retrieval
+- **Item Definition Knowledge**: JSON schemas for every Fabric item type — enabling AI agents to generate correct item definitions out of the box
+- **Built-in Best Practices**: Embedded guidance for pagination, long-running operations, error handling, retry logic, API throttling, and authentication patterns
+- **Multiple Installation Methods**: Available through NuGet, npm, and Docker
+- **Flexible Server Modes**: Namespace mode, consolidated mode, single mode, and all mode for different tool organization preferences
+- **Production Ready**: Comprehensive error handling, telemetry, caching controls, and extensive test coverage
+- **Local-First Security**: Runs entirely on your machine with optional remote HTTP deployment for shared scenarios
+
+### Key Features
+
+- **OneLake Tools**: File read/write/delete/list, directory create/delete, item create/list, workspace list, table config/namespace/metadata retrieval
+- **Public API Tools**: Workload API specifications, best practices, item definitions, platform APIs, and example request/response files
+- **Enterprise Support**: Proxy configuration, managed identity authentication, on-behalf-of flow for multi-user remote scenarios, and caching controls
+- **Performance**: Selective caching for expensive operations, `--disable-caching` option for real-time data needs
+
+### Getting Started
+
+Install the Microsoft Fabric MCP Server from your preferred platform:
+
+- **NuGet**: `dotnet tool install -g Microsoft.Fabric.Mcp --version 1.0.0`
+- **npm**: `npx @microsoft/fabric-mcp@1.0.0`
+- **Docker**: `docker pull mcr.microsoft.com/fabric/fabric-mcp:1.0.0`
+
+### Thank You
+
+This release wouldn't have been possible without the contributions from our community, extensive testing from early adopters, and collaboration across the MCP ecosystem. Thank you for your feedback, bug reports, and feature requests that helped shape this stable release.
+
+For a complete history of pre-release changes, see versions [0.0.0-beta.10](#000-beta10-2026-03-24) through [0.0.0-beta.2](#000-beta2-2025-11-21) below.
 
 ### Features Added
 
-### Breaking Changes
-
-### Bugs Fixed
+- Add --disable-caching to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
 
 ### Other Changes
+
+- Update HttpRequestException to attempt to return a more specific status code for better troubleshooting. [[#2172](https://github.com/microsoft/mcp/pull/2172)]
+
+#### Dependency Updates
+
+- Updated ModelContextProtocol and ModelContextProtocol.AspNetCore dependencies to version 1.1.0. [[#1963](https://github.com/microsoft/mcp/pull/1963)]
 
 ## 0.0.0-beta.10 (2026-03-24)
 
