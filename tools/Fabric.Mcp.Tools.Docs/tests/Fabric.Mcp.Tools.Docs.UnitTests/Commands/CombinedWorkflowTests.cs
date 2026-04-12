@@ -16,32 +16,53 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 
 /// <summary>
-/// Combined workflow tests that exercise real service implementations (no mocks).
-/// Commands use the real EmbeddedResourceProviderService and FabricPublicApiService
-/// backed by assembly-embedded resources.
+/// Shared fixture for combined workflow tests. Creates the service provider
+/// and command instances once, shared across all tests in the class.
 /// </summary>
-public class CombinedWorkflowTests
+public sealed class CombinedWorkflowFixture : IDisposable
 {
-    private readonly ServiceProvider _serviceProvider;
-    private readonly ListWorkloadsCommand _listWorkloadsCommand;
-    private readonly GetWorkloadApisCommand _getWorkloadApisCommand;
-    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand;
-    private readonly GetExamplesCommand _getExamplesCommand;
+    public ServiceProvider ServiceProvider { get; }
+    public ListWorkloadsCommand ListWorkloadsCommand { get; }
+    public GetWorkloadApisCommand GetWorkloadApisCommand { get; }
+    public GetWorkloadDefinitionCommand GetWorkloadDefinitionCommand { get; }
+    public GetExamplesCommand GetExamplesCommand { get; }
 
-    public CombinedWorkflowTests()
+    private readonly LoggerFactory _loggerFactory;
+
+    public CombinedWorkflowFixture()
     {
-        var loggerFactory = LoggerFactory.Create(builder => { });
-        _listWorkloadsCommand = new ListWorkloadsCommand(loggerFactory.CreateLogger<ListWorkloadsCommand>());
-        _getWorkloadApisCommand = new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>());
-        _getWorkloadDefinitionCommand = new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>());
-        _getExamplesCommand = new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>());
+        _loggerFactory = new LoggerFactory();
+        ListWorkloadsCommand = new ListWorkloadsCommand(_loggerFactory.CreateLogger<ListWorkloadsCommand>());
+        GetWorkloadApisCommand = new GetWorkloadApisCommand(_loggerFactory.CreateLogger<GetWorkloadApisCommand>());
+        GetWorkloadDefinitionCommand = new GetWorkloadDefinitionCommand(_loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>());
+        GetExamplesCommand = new GetExamplesCommand(_loggerFactory.CreateLogger<GetExamplesCommand>());
 
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
-        _serviceProvider = services.BuildServiceProvider();
+        ServiceProvider = services.BuildServiceProvider();
     }
+
+    public void Dispose()
+    {
+        ServiceProvider.Dispose();
+        _loggerFactory.Dispose();
+    }
+}
+
+/// <summary>
+/// Combined workflow tests that exercise real service implementations (no mocks).
+/// Commands use the real EmbeddedResourceProviderService and FabricPublicApiService
+/// backed by assembly-embedded resources.
+/// </summary>
+public class CombinedWorkflowTests(CombinedWorkflowFixture fixture) : IClassFixture<CombinedWorkflowFixture>
+{
+    private readonly ServiceProvider _serviceProvider = fixture.ServiceProvider;
+    private readonly ListWorkloadsCommand _listWorkloadsCommand = fixture.ListWorkloadsCommand;
+    private readonly GetWorkloadApisCommand _getWorkloadApisCommand = fixture.GetWorkloadApisCommand;
+    private readonly GetWorkloadDefinitionCommand _getWorkloadDefinitionCommand = fixture.GetWorkloadDefinitionCommand;
+    private readonly GetExamplesCommand _getExamplesCommand = fixture.GetExamplesCommand;
 
     [Fact]
     public async Task ListWorkloads_ThenGetApisForEach_ReturnsApiSpecsForAllWorkloads()
@@ -91,7 +112,6 @@ public class CombinedWorkflowTests
         // Step 2: For each workload, get its item definition.
         // Not all workloads have embedded item definitions, so we accept OK or NotFound.
         var successCount = 0;
-        var failedWorkloads = new List<string>();
         foreach (var workload in workloads)
         {
             var defContext = new CommandContext(_serviceProvider);
@@ -108,10 +128,6 @@ public class CombinedWorkflowTests
             {
                 Assert.NotNull(defResult.Results);
                 successCount++;
-            }
-            else
-            {
-                failedWorkloads.Add(workload);
             }
         }
 
@@ -235,15 +251,14 @@ public class CombinedWorkflowTests
                 defResult.Status == HttpStatusCode.OK || defResult.Status == HttpStatusCode.NotFound,
                 $"Unexpected definition status {defResult.Status} for workload '{workload}'");
 
-            // Examples - may or may not exist
+            // Examples - should always succeed (returns empty dict if none exist)
             var exContext = new CommandContext(_serviceProvider);
             var exResult = await _getExamplesCommand.ExecuteAsync(
                 exContext,
                 _getExamplesCommand.GetCommand().Parse(["--workload-type", workload]),
                 cancellationToken);
-            Assert.True(
-                exResult.Status == HttpStatusCode.OK || exResult.Status == HttpStatusCode.InternalServerError,
-                $"Unexpected examples status {exResult.Status} for workload '{workload}'");
+            Assert.Equal(HttpStatusCode.OK, exResult.Status);
+            Assert.NotNull(exResult.Results);
         }
     }
 
@@ -323,11 +338,16 @@ public class CombinedWorkflowTests
 
             // Serialize the result to JSON and verify it contains an apiSpecification field
             var json = SerializeResults(apiResult);
-            var doc = JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(json);
             Assert.True(doc.RootElement.TryGetProperty("apiSpecification", out var apiSpecElement),
                 $"API result for workload '{workload}' should contain 'apiSpecification'");
-            Assert.False(string.IsNullOrEmpty(apiSpecElement.GetString()),
+            var apiSpecJson = apiSpecElement.GetString();
+            Assert.False(string.IsNullOrEmpty(apiSpecJson),
                 $"API specification for workload '{workload}' should not be empty");
+
+            // Verify the swagger spec inside apiSpecification is valid JSON
+            using var swaggerDoc = JsonDocument.Parse(apiSpecJson!);
+            Assert.NotEqual(JsonValueKind.Undefined, swaggerDoc.RootElement.ValueKind);
         }
     }
 
@@ -367,7 +387,7 @@ public class CombinedWorkflowTests
     private static IEnumerable<string> DeserializeWorkloads(CommandResponse response)
     {
         var json = SerializeResults(response);
-        var doc = JsonDocument.Parse(json);
+        using var doc = JsonDocument.Parse(json);
         var workloadsArray = doc.RootElement.GetProperty("Workloads");
         return workloadsArray.EnumerateArray().Select(e => e.GetString()!).ToArray();
     }
