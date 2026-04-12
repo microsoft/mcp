@@ -7,7 +7,6 @@ using System.Net;
 using System.Text.Json;
 using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Commands.PublicApis;
-using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
