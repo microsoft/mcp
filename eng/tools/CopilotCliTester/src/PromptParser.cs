@@ -14,7 +14,7 @@ internal static partial class PromptParser
     [GeneratedRegex(@"^## (.+)$")]
     private static partial Regex SectionHeaderRegex();
 
-    [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+?)\s*\|$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+)\s*\|$", RegexOptions.IgnoreCase)]
     private static partial Regex TableRowRegex();
 
     public static List<TestPrompt> ParseFile(string filePath)

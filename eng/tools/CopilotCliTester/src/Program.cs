@@ -140,14 +140,20 @@ static class Program
                     Directory.Delete(directory, recursive: true);
                     count++;
                 }
-                catch{}
+                catch
+                {
+                    // Best-effort cleanup
+                }
             }
             if (count > 0)
             {
                 Console.WriteLine($"Cleaned up {count} stale temp directories");
             }
         }
-        catch {}
+        catch
+        {
+            // Best-effort cleanup
+        }
     }
 
     static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null)
@@ -591,14 +597,48 @@ static class Program
         return builtPath;
     }
 
+    private static readonly string[] configurations = ["Debug", "Release"];
+
     private static string? FindBuildExecutable(string repoRoot)
     {
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-
         var binDirectory = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin");
 
-        return Directory.Exists(binDirectory)
-            ? Directory.GetFiles(binDirectory, exeName, SearchOption.AllDirectories).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault()
-            : null;
+        // Check well-known output paths (bin/{Debug,Release}/*/) and pick the most recent
+        var knownPath = configurations
+            .Select(config => Path.Combine(binDirectory, config))
+            .Where(Directory.Exists)
+            .SelectMany(configDir => Directory.GetFiles(configDir, exeName, SearchOption.AllDirectories))
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .FirstOrDefault();
+
+        if (knownPath is not null)
+        {
+            Console.WriteLine($"  Found server executable: {knownPath}");
+            return knownPath;
+        }
+
+        // Fallback: search bin/ subdirectories outside the known configurations.
+        if (!Directory.Exists(binDirectory))
+        {
+            return null;
+        }
+
+        var knownConfigDirs = configurations
+            .Select(config => Path.Combine(binDirectory, config))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var fallback = Directory.GetDirectories(binDirectory)
+            .Where(dir => !knownConfigDirs.Contains(dir))
+            .SelectMany(dir => Directory.GetFiles(dir, exeName, SearchOption.AllDirectories))
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .FirstOrDefault();
+
+        if (fallback is not null)
+        {
+            Console.WriteLine($"  WARNING: Known config builds not found. Using fallback: {fallback}");
+        }
+
+        return fallback;
     }
 }
