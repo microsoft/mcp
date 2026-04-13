@@ -57,7 +57,7 @@ public class ContainerAppListCommandTests
         try
         {
             // Ensure environment variable fallback does not interfere with validation tests
-            EnvironmentHelpers.SetAzureSubscriptionId(null);
+            EnvironmentHelpers.ClearAzureSubscriptionId();
             // Arrange
             if (shouldSucceed)
             {
@@ -87,7 +87,10 @@ public class ContainerAppListCommandTests
         }
         finally
         {
-            EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionId);
+            if (originalSubscriptionId != null)
+            {
+                EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionId);
+            }
         }
     }
 

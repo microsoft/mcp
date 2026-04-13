@@ -55,7 +55,7 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
         [
@@ -65,7 +65,7 @@ public class SubscriptionCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is("env-subs"),
+            Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -82,7 +82,7 @@ public class SubscriptionCommandTests
         // Verify the service was called with the environment variable subscription
         _ = _storageService.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            "env-subs",
+            subscription,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -92,7 +92,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var ignoredSubscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expectedSubscription = "option-subs";
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
         [
@@ -102,13 +103,13 @@ public class SubscriptionCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is("option-subs"),
+            Arg.Is(expectedSubscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccounts));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", expectedSubscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -119,13 +120,13 @@ public class SubscriptionCommandTests
         // Verify the service was called with the option subscription, not the environment variable
         _ = _storageService.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            "option-subs",
+            expectedSubscription,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         _ = _storageService.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            "env-subs",
+            ignoredSubscription,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
