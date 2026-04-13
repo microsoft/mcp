@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
+
 public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
 {
     private const string CommandTitle = "Get Storage Container Details";
