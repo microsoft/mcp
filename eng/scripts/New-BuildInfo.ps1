@@ -430,10 +430,13 @@ function Get-ServerDetails {
                             Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                         }
                         else {
-                            # No matching versions found on the marketplace.
-                            # If the .csproj carries a stable (non-prerelease) version this is the very first GA
-                            # release — no prior published version exists to increment from, so use the csproj
-                            # version directly (e.g. 1.0.0 on first publish).
+                            # No matching versions found on the marketplace for the Major.0.X series.
+                            # Special case: if the .csproj version is exactly 1.0.0 (stable, no prerelease label),
+                            # this is the very first GA publish — use the csproj version directly since there is
+                            # no prior marketplace version to increment from.
+                            # This exception is intentionally limited to 1.0.0; any other version with no
+                            # marketplace history (e.g. 1.0.1, 2.0.0) is an error because it implies a potential gap
+                            # in the published version history that must be investigated.
                             if ([string]::IsNullOrEmpty($version.PrereleaseLabel) -and
                                 $version.Major -eq 1 -and $version.Minor -eq 0 -and $version.Patch -eq 0) {
                                 $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
@@ -443,7 +446,7 @@ function Get-ServerDetails {
                             else {
                                 LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
                                 LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                                LogError "If this is the first GA release, ensure the .csproj version is a stable value (e.g., $($version.Major).0.0) before publishing."
+                                LogError "The 1.0.0 first-GA exception does not apply here. Ensure the extension has been published at least once before running a subsequent GA build."
                                 $script:exitCode = 1
                                 continue
                             }
