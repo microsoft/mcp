@@ -3,12 +3,12 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -96,17 +96,14 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 cancellationToken);
 
             // Return empty array if no results
-            var activityLogs = results ?? [];
-            context.Response.Results = ResponseResult.Create(
-                new ActivityLogListCommandResult(activityLogs),
-                MonitorJsonContext.Default.ActivityLogListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.ActivityLogListCommandResult);
         }
         catch (Exception ex)
         {
             // Log error with all relevant context
             logger.LogError(ex,
-                "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}, Options: {@Options}",
-                options.ResourceName, options.ResourceType, options.Hours, options);
+                "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}.",
+                options.ResourceName, options.ResourceType, options.Hours);
             HandleException(context, ex);
         }
 
@@ -116,9 +113,9 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource not found. Verify the resource name and that you have access to it.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the resource activity logs. Details: {reqEx.Message}",
         HttpRequestException httpEx when httpEx.Message.Contains("404") =>
             "Resource not found. Verify the resource name and that you have access to it.",

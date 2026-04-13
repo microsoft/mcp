@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Services.Http;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Extensions;

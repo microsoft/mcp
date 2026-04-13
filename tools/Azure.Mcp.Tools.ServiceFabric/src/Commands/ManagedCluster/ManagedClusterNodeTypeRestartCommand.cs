@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ServiceFabric.Options;
 using Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -85,14 +83,14 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ManagedClusterNodeTypeRestartCommandResult(response),
+                new(response),
                 ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error restarting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, NodeType: {NodeType}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeType, options);
+                "Error restarting Service Fabric managed cluster nodes. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Cluster: {Cluster}, NodeType: {NodeType}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodeType);
             HandleException(context, ex);
         }
 

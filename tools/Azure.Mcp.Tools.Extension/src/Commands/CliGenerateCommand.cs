@@ -1,21 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
-public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : GlobalCommand<CliGenerateOptions>
+public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService) : GlobalCommand<CliGenerateOptions>
 {
     private const string CommandTitle = "Generate CLI Command";
     private readonly ILogger<CliGenerateCommand> _logger = logger;
+    private readonly ICliGenerateService _cliGenerateService = cliGenerateService;
     private readonly string[] _allowedCliTypeValues = ["az"];
 
     public override string Id => "3de4ef37-90bf-41f1-8385-5e870c3ae911";
@@ -24,8 +23,8 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : Glo
 
     public override string Description =>
         """
-This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.
-""";
+        Generate Azure CLI (az) commands used to accomplish a goal described by the user. This tool incorporates CLI knowledge beyond what you know. Use this tool when the user asks for Azure CLI commands or wants to use the Azure CLI to accomplish something.
+        """;
 
     public override string Title => CommandTitle;
 
@@ -47,7 +46,7 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
 
         command.Validators.Add(result =>
         {
-            var cliType = result.GetValue(ExtensionOptionDefinitions.CliGenerate.CliType);
+            var cliType = result.GetValue(ExtensionOptionDefinitions.CliGenerate.CliType)?.ToLowerInvariant();
             if (!_allowedCliTypeValues.Contains(cliType))
             {
                 result.AddError($"Invalid CLI type: {cliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
@@ -75,33 +74,25 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
 
         try
         {
-            var intent = options.Intent;
-            ArgumentNullException.ThrowIfNull(intent);
-
             var cliType = options.CliType?.ToLowerInvariant();
-
-            if (!_allowedCliTypeValues.Contains(cliType))
-            {
-                throw new ArgumentException($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
-            }
-            ICliGenerateService cliGenerateService = context.GetService<ICliGenerateService>();
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
             if (cliType == Constants.AzureCliType)
             {
-                using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent, cancellationToken);
+                using HttpResponseMessage responseMessage = await _cliGenerateService.GenerateAzureCLICommandAsync(
+                    options.Intent!,
+                    cancellationToken);
                 responseMessage.EnsureSuccessStatusCode();
 
                 var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-                CliGenerateResult result = new(responseBody, cliType);
-                context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliGenerateResult);
+                context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateResult);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. CliType: {CliType}.", Name, options.CliType);
             HandleException(context, ex);
         }
 

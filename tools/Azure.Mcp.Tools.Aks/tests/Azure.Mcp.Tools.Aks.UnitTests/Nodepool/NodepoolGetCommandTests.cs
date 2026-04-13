@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -28,10 +28,9 @@ public sealed class NodepoolGetCommandTests
         _logger = Substitute.For<ILogger<NodepoolGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_aksService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _aksService);
     }
 
     [Fact]

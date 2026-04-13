@@ -1,7 +1,6 @@
 ﻿using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
@@ -9,6 +8,7 @@ using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -29,9 +29,8 @@ public class RecommendationListCommandTests
         _advisorService = Substitute.For<IAdvisorService>();
         _logger = Substitute.For<ILogger<RecommendationListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_advisorService);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _advisorService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

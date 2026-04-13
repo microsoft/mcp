@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
@@ -95,9 +94,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
                 if (webTest != null)
                 {
-                    context.Response.Results = ResponseResult.Create(
-                        new WebTestsGetCommandResult(webTest),
-                        MonitorJsonContext.Default.WebTestsGetCommandResult);
+                    context.Response.Results = ResponseResult.Create(new(webTest), MonitorJsonContext.Default.WebTestsGetCommandResult);
                 }
                 else
                 {
@@ -112,9 +109,7 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
                     ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
                     : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new WebTestsGetCommandListResult(webTests ?? []),
-                    MonitorJsonContext.Default.WebTestsGetCommandListResult);
+                context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandListResult);
             }
         }
         catch (Exception ex)

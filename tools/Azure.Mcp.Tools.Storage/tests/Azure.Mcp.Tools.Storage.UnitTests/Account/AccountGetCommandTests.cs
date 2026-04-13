@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -13,6 +12,7 @@ using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,10 +33,8 @@ public class AccountGetCommandTests
         _storageService = Substitute.For<IStorageService>();
         _logger = Substitute.For<ILogger<AccountGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_storageService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _storageService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -70,8 +70,39 @@ public sealed class RegistryServerInfo
     public Dictionary<string, string>? Env { get; init; }
 
     /// <summary>
+    /// Gets the minimum required version for the command.
+    /// When set along with a stdio command, a pre-flight version check is
+    /// performed before creating the client. The version is parsed from
+    /// the output of running the command with <see cref="VersionArgs"/>.
+    /// </summary>
+    [JsonPropertyName("minVersion")]
+    public string? MinVersion { get; init; }
+
+    /// <summary>
+    /// Gets the command-line arguments used to query the command's version.
+    /// Required when <see cref="MinVersion"/> is set.
+    /// </summary>
+    [JsonPropertyName("versionArgs")]
+    public List<string>? VersionArgs { get; init; }
+
+    /// <summary>
+    /// Gets the regex pattern used to extract a version from the command output.
+    /// The pattern must contain a capture group for the version string.
+    /// Defaults to a semver pattern <c>(\d+\.\d+\.\d+)</c> if not specified.
+    /// </summary>
+    [JsonPropertyName("versionPattern")]
+    public string? VersionPattern { get; init; }
+
+    /// <summary>
     /// Gets installation instructions for the server.
     /// </summary>
     [JsonPropertyName("installInstructions")]
     public string? InstallInstructions { get; init; }
+
+    /// <summary>
+    /// Gets the prefix to prepend to all tool names exposed from this server.
+    /// When set, tools from this server will be exposed with this prefix (e.g. "foundry_").
+    /// </summary>
+    [JsonPropertyName("toolPrefix")]
+    public string? ToolPrefix { get; init; }
 }

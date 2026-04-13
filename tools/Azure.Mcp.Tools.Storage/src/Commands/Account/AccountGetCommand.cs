@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : SubscriptionCommand<AccountGetOptions>()
+public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountGetOptions>()
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
 
@@ -65,11 +65,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
             // Call service operation with required parameters
-            var accounts = await storageService.GetAccountDetails(
+            var accounts = await _storageService.GetAccountDetails(
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
@@ -83,12 +80,12 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
         {
             if (options.Account is null)
             {
-                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}, Options: {@Options}", options.Subscription, options);
+                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}.", options.Subscription);
             }
             else
             {
-                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}, Options: {@Options}",
-                    options.Account, options.Subscription, options);
+                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}.",
+                    options.Account, options.Subscription);
             }
             HandleException(context, ex);
         }

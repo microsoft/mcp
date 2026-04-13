@@ -12,7 +12,10 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 /// <summary>
 /// JSON serialization context for Compute commands.
 /// </summary>
+[JsonSerializable(typeof(DiskCreateCommand.DiskCreateCommandResult))]
+[JsonSerializable(typeof(DiskDeleteCommand.DiskDeleteCommandResult))]
 [JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
+[JsonSerializable(typeof(DiskUpdateCommand.DiskUpdateCommandResult))]
 [JsonSerializable(typeof(Models.DiskInfo))]
 [JsonSerializable(typeof(List<Models.DiskInfo>))]
 [JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
@@ -26,6 +29,8 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(VmssGetCommand.VmssGetVmInstanceResult))]
 [JsonSerializable(typeof(VmssCreateCommand.VmssCreateCommandResult))]
 [JsonSerializable(typeof(VmssCreateResult))]
+[JsonSerializable(typeof(VmDeleteCommand.VmDeleteCommandResult))]
+[JsonSerializable(typeof(VmssDeleteCommand.VmssDeleteCommandResult))]
 [JsonSerializable(typeof(VmssUpdateCommand.VmssUpdateCommandResult))]
 [JsonSerializable(typeof(VmssUpdateResult))]
 [JsonSerializable(typeof(VmInfo))]

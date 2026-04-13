@@ -4,13 +4,15 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr;
+using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
 using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Tools.AppLens;
+using Azure.Mcp.Tools.AppService;
 using Azure.Mcp.Tools.Authorization;
 using Azure.Mcp.Tools.AzureBestPractices;
 using Azure.Mcp.Tools.AzureIsv;
@@ -44,8 +46,13 @@ using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 
@@ -62,8 +69,10 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
@@ -126,8 +135,10 @@ internal class CommandFactoryHelpers
             
             // Tool areas
             new AcrSetup(),
+            new AdvisorSetup(),
             new AksSetup(),
             new AppConfigSetup(),
+            new AppServiceSetup(),
             new AppLensSetup(),
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
@@ -165,8 +176,14 @@ internal class CommandFactoryHelpers
             .AddLogging()
             .AddSingleton<ITelemetryService, NoOpTelemetryService>()
             .AddSingleton(Substitute.For<ISubscriptionService>())
+            .AddSingleton(Substitute.For<IResourceGroupService>())
             .AddSingleton(Substitute.For<ITenantService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>());
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<ICacheService>())
+            .AddSingleton(Substitute.For<IDateTimeProvider>())
+            .AddSingleton(Substitute.For<IExternalProcessService>())
+            .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
+            .AddSingleton(Substitute.For<IAzureCloudConfiguration>());
 
         foreach (var area in areaSetups)
         {

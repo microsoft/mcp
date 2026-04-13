@@ -3,14 +3,12 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -85,9 +83,7 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    new List<SqlServer> { server },
-                    SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
             }
             else
             {
@@ -97,16 +93,14 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(
-                    servers ?? [],
-                    SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting SQL server(s). Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error getting SQL server(s). Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 

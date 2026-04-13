@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Time;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Extension.UnitTests;
@@ -17,6 +22,12 @@ public sealed class ExtensionSetupTests
 
         var setup = new ExtensionSetup();
         setup.ConfigureServices(services);
+
+        services.AddSingleton(Substitute.For<IExternalProcessService>());
+        services.AddSingleton(Substitute.For<ISubscriptionService>());
+        services.AddSingleton(Substitute.For<IDateTimeProvider>());
+        services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
+        services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());
 
         if (startOptions is not null)
         {

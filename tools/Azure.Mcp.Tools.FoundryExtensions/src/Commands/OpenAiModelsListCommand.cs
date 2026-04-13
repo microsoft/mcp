@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsListOptions>
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "List OpenAI Models";
 
     public override string Id => "a7b8c9d0-7890-bcde-0123-456789012345";
@@ -68,7 +69,7 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
             var result = await foundryService.ListOpenAiModelsAsync(
                 options.ResourceName!,
                 options.Subscription!,
@@ -78,8 +79,8 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiModelsListCommandResult>(
-                new OpenAiModelsListCommandResult(result, options.ResourceName!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!),
                 FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
         }
         catch (Exception ex)
@@ -90,7 +91,5 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
         return context.Response;
     }
 
-    internal record OpenAiModelsListCommandResult(
-        OpenAiModelsListResult ModelsListResult,
-        string ResourceName);
+    internal record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
 }

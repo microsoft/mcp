@@ -4,11 +4,11 @@
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
@@ -148,12 +148,11 @@ public class MarketplaceService(ITenantService tenantService)
         var productsListResponse = await ExecuteMarketplaceRequestAsync(
             url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant, cancellationToken);
 
-        var result = new ProductListResponseWithNextCursor
+        return new()
         {
             Items = productsListResponse?.Items ?? [],
             NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextPageLink)
         };
-        return result;
     }
 
 
@@ -211,15 +210,6 @@ public class MarketplaceService(ITenantService tenantService)
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
-    private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
-    {
-        var defaultScope = _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope;
-        var tokenRequestContext = new TokenRequestContext([defaultScope]);
-        var tokenCredential = await GetCredential(tenantId, cancellationToken);
-        return await tokenCredential
-            .GetTokenAsync(tokenRequestContext, cancellationToken);
-    }
-
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
@@ -237,12 +227,12 @@ public class MarketplaceService(ITenantService tenantService)
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, cancellationToken)).Token;
+        string accessToken = (await GetArmAccessTokenAsync(tenant, cancellationToken)).Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         using var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
-        request.Uri.Reset(new Uri(url));
+        request.Uri.Reset(new(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         using var response = await pipeline.SendRequestAsync(request, cancellationToken);

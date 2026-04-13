@@ -4,9 +4,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Commands;
@@ -15,6 +13,8 @@ using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppService.Services;
 
@@ -45,41 +45,30 @@ public class AppServiceService(
             "Adding database connection to App Service {AppName} in resource group {ResourceGroup}",
             appName, resourceGroup);
 
-        try
-        {
-            // Validate inputs
-            ValidateRequiredParameters(
-                (nameof(appName), appName),
-                (nameof(resourceGroup), resourceGroup),
-                (nameof(databaseType), databaseType),
-                (nameof(databaseServer), databaseServer),
-                (nameof(databaseName), databaseName),
-                (nameof(subscription), subscription));
+        // Validate inputs
+        ValidateRequiredParameters(
+            (nameof(appName), appName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(databaseType), databaseType),
+            (nameof(databaseServer), databaseServer),
+            (nameof(databaseName), databaseName),
+            (nameof(subscription), subscription));
 
-            // Get Azure resources
-            var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // Get Azure resources
+        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
 
-            // Prepare connection string
-            var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
-            var connectionStringName = $"{databaseName}Connection";
+        // Prepare connection string
+        var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
+        var connectionStringName = $"{databaseName}Connection";
 
-            // Update web app configuration
-            await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType, cancellationToken);
+        // Update web app configuration
+        await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType, cancellationToken);
 
-            _logger.LogInformation(
-                "Successfully added database connection {ConnectionName} to App Service {AppName}",
-                connectionStringName, appName);
+        _logger.LogInformation(
+            "Successfully added database connection {ConnectionName} to App Service {AppName}",
+            connectionStringName, appName);
 
-            return CreateDatabaseConnectionInfo(
-                databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Failed to add database connection to App Service {AppName} in resource group {ResourceGroup}",
-                appName, resourceGroup);
-            throw;
-        }
+        return CreateDatabaseConnectionInfo(databaseType, databaseServer, databaseName, finalConnectionString, connectionStringName);
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,
@@ -131,7 +120,7 @@ public class AppServiceService(
             string.Equals(cs.Name, connectionStringName, StringComparison.OrdinalIgnoreCase));
 
         // Add the new connection string
-        connectionStrings.Add(new ConnStringInfo
+        connectionStrings.Add(new()
         {
             Name = connectionStringName,
             ConnectionString = connectionString,
@@ -142,8 +131,9 @@ public class AppServiceService(
         var configData = config.Value.Data;
         configData.ConnectionStrings = connectionStrings;
 
-        var updatedConfig = await configResource.CreateOrUpdateAsync(WaitUntil.Completed, configData, cancellationToken);
-        if (updatedConfig?.Value == null)
+        var updateOperation = await configResource.CreateOrUpdateAsync(WaitUntil.Started, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        if (updateOperation?.Value == null)
         {
             throw new InvalidOperationException($"Failed to update configuration for web app '{webApp.Data.Name}'.");
         }
@@ -152,7 +142,7 @@ public class AppServiceService(
     private static DatabaseConnectionInfo CreateDatabaseConnectionInfo(string databaseType, string databaseServer,
         string databaseName, string connectionString, string connectionStringName)
     {
-        return new DatabaseConnectionInfo
+        return new()
         {
             DatabaseType = databaseType,
             DatabaseServer = databaseServer,
@@ -432,7 +422,7 @@ public class AppServiceService(
             ? analysisTypesElement.EnumerateArray().Select(at => at.GetString() ?? string.Empty).Where(at => !string.IsNullOrEmpty(at)).ToList()
             : null;
 
-        return new DetectorDetails(name, type, description, category, categories);
+        return new(name, type, description, category, categories);
     }
 
     public async Task<DiagnosisResults> DiagnoseDetectorAsync(
@@ -472,7 +462,7 @@ public class AppServiceService(
         var dataset = JsonSerializer.Deserialize(properties.GetProperty("dataset"), AppServiceJsonContext.Default.IListDiagnosticDataset)!;
         var detector = MapToDetectorDetails(properties.GetProperty("metadata"));
 
-        return new DiagnosisResults(dataset, detector);
+        return new(dataset, detector);
     }
 
     private string GetDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName, string? detectorName = null)
@@ -508,12 +498,12 @@ public class AppServiceService(
 
         var tokenCredential = await _tenantService.GetTokenCredentialAsync(tenant, cancellationToken: cancellationToken);
         var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("bearer", accessToken.Token);
+        httpRequest.Headers.Authorization = new("bearer", accessToken.Token);
         httpRequest.Headers.Add("User-Agent", UserAgent);
         httpRequest.Headers.Add("x-ms-client-request-id", clientRequestId);
         httpRequest.Headers.Add("x-ms-app", "AzureMCP");
         httpRequest.Headers.Add("x-ms-client-version", "AppService.Client.Light");
-        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Accept.Add(new("application/json"));
 
         using var httpResponse = await TenantService.GetClient().SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
         if (!httpResponse.IsSuccessStatusCode)

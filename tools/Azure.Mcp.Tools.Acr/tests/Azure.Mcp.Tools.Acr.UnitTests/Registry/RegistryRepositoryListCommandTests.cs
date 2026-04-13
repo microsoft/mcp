@@ -4,13 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
 public class RegistryRepositoryListCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IAcrService _service;
     private readonly ILogger<RegistryRepositoryListCommand> _logger;
     private readonly RegistryRepositoryListCommand _command;
@@ -30,10 +29,8 @@ public class RegistryRepositoryListCommandTests
         _service = Substitute.For<IAcrService>();
         _logger = Substitute.For<ILogger<RegistryRepositoryListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _service);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 

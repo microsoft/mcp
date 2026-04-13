@@ -4,12 +4,12 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 
@@ -74,8 +74,9 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var tools = visibleCommands
+            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
-            .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -145,23 +146,52 @@ public sealed class CommandFactoryToolLoader(
             };
         }
         activity?.SetTag(TagName.ToolId, command.Id);
+
+        // Enforce read-only mode at execution time
+        if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+            };
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
+        // Enforce HTTP mode restrictions at execution time
+        if (_options.Value.IsHttpMode && command.Metadata.LocalRequired)
+        {
+            var content = new TextContentBlock
+            {
+                Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+            };
+
+            return new CallToolResult
+            {
+                Content = [content],
+                IsError = true,
+            };
+        }
+
         var commandContext = new CommandContext(_serviceProvider, activity);
 
-        // Check if this tool requires elicitation for sensitive data
+        // Check if this tool requires elicitation for sensitive or destructive operations
         var metadata = command.Metadata;
-        if (metadata.Secret)
-        {
-            var elicitationResult = await HandleSecretElicitationAsync(
-                request,
-                toolName,
-                _options.Value.DangerouslyDisableElicitation,
-                _logger,
-                cancellationToken);
+        var elicitationResult = await HandleElicitationAsync(
+            request,
+            toolName,
+            metadata,
+            _options.Value.DangerouslyDisableElicitation,
+            _logger,
+            cancellationToken);
 
-            if (elicitationResult != null)
-            {
-                return elicitationResult;
-            }
+        if (elicitationResult != null)
+        {
+            return elicitationResult;
         }
 
         var realCommand = command.GetCommand();
@@ -238,14 +268,20 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
+        JsonObject? meta = null;
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            tool.Meta = new JsonObject
-            {
-                ["SecretHint"] = metadata.Secret
-            };
+            meta ??= new();
+            meta["SecretHint"] = metadata.Secret;
         }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta ??= new();
+            meta["LocalRequiredHint"] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
 
         var options = command.GetCommand().Options;
 

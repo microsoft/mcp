@@ -4,13 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -30,9 +30,9 @@ public class ClusterGetCommandTests
         _aksService = Substitute.For<IAksService>();
         _logger = Substitute.For<ILogger<ClusterGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_aksService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _aksService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

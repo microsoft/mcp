@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -79,8 +77,7 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
                 cancellationToken);
 
             context.Response.Message = "Server unregistered successfully";
-            var results = new RegisteredServerUnregisterCommandResult("Server unregistered successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.RegisteredServerUnregisterCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Server unregistered successfully"), StorageSyncJsonContext.Default.RegisteredServerUnregisterCommandResult);
         }
         catch (Exception ex)
         {

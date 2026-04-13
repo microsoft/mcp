@@ -205,6 +205,7 @@ Choose the appropriate base class for your service based on the operations neede
        public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
@@ -214,6 +215,7 @@ Choose the appropriate base class for your service based on the operations neede
                subscription,
                retryPolicy,
                ConvertToMyResourceModel,
+               tenant: tenant,
                cancellationToken: cancellationToken);
        }
 
@@ -221,6 +223,7 @@ Choose the appropriate base class for your service based on the operations neede
            string resourceName,
            string resourceGroup,
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
@@ -231,6 +234,7 @@ Choose the appropriate base class for your service based on the operations neede
                retryPolicy,
                ConvertToMyResourceModel,
                additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
+               tenant: tenant,
                cancellationToken: cancellationToken);
        }
 
@@ -258,10 +262,11 @@ Choose the appropriate base class for your service based on the operations neede
 
        public async Task<MyResource> CreateResourceAsync(
            string subscription,
+           string? tenant = null,
            RetryPolicyOptions? retryPolicy,
            CancellationToken cancellationToken)
        {
-           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+           var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
            // Use subscriptionResource for Azure Resource write operations
        }
    }
@@ -315,6 +320,7 @@ var resources = await ExecuteResourceQueryAsync(
     retryPolicy,
     ConvertToSqlDatabaseModel,
     additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+    tenant: tenant,
     cancellationToken: cancellationToken);
 
 // Direct ARM client pattern - CRITICAL: Use GetResourceGroupAsync with await
@@ -369,7 +375,112 @@ var vms = await vmssResource.Value.GetVirtualMachineScaleSetVms().GetAllAsync(ca
 // Pattern: Get{ResourceType}() returns collection, then .GetAsync(ResourceName, CancellationToken) or .GetAllAsync(CancellationToken)
 ```
 
-### 2. Options Class
+### 2. Sovereign Cloud Support
+
+All services **must** support sovereign clouds by default. Never hardcode cloud-specific endpoints.
+
+#### Preferred: ARM-Managed Endpoints
+
+When using `BaseAzureResourceService` or `CreateArmClientWithApiVersionAsync`, endpoints are configured automatically via `CloudConfiguration.ArmEnvironment`. No additional work is required:
+
+```csharp
+// Resource Graph queries and ARM write operations use the correct cloud endpoint automatically.
+// Inheriting from BaseAzureResourceService is sufficient — no endpoint configuration needed.
+public class MyService(ISubscriptionService subscriptionService, ITenantService tenantService)
+    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+{
+    public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
+    {
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.MyService/resources",
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToModel,
+            cancellationToken: cancellationToken);
+    }
+}
+```
+
+#### When Service-Specific Data Plane Endpoints Are Required
+
+Some Azure services use data plane SDKs that require an explicit endpoint URL (e.g., Blob Storage, Table Storage, Cosmos DB, Azure Search). In these cases, **never hardcode the endpoint**. Instead, resolve it from `ITenantService.CloudConfiguration.CloudType` using a switch expression:
+
+1. Ensure `ITenantService` is available in the service (it is already a dependency when inheriting from `BaseAzureResourceService`).
+2. Store it as `private readonly ITenantService _tenantService`.
+3. Add a private method that switches on `CloudType` and returns the cloud-correct URL.
+
+```csharp
+public class MyService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService)
+    : BaseAzureResourceService(subscriptionService, tenantService), IMyService
+{
+    private readonly ITenantService _tenantService = tenantService
+        ?? throw new ArgumentNullException(nameof(tenantService));
+
+    private async Task<MyDataPlaneClient> CreateDataPlaneClientAsync(
+        string resourceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var endpoint = GetResourceEndpoint(resourceName);
+        var options = ConfigureRetryPolicy(AddDefaultPolicies(new MyClientOptions()), retryPolicy);
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        return new MyDataPlaneClient(
+            new Uri(endpoint),
+            await GetCredential(tenant, cancellationToken),
+            options);
+    }
+
+    private string GetResourceEndpoint(string resourceName)
+    {
+        return _tenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
+                $"https://{resourceName}.service.core.windows.net",
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
+                $"https://{resourceName}.service.core.chinacloudapi.cn",
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
+                $"https://{resourceName}.service.core.usgovcloudapi.net",
+            _ => $"https://{resourceName}.service.core.windows.net"
+        };
+    }
+}
+```
+
+#### Rules Summary
+
+| Scenario | Requirement |
+|----------|-------------|
+| Resource Graph or ARM operations (via `BaseAzureResourceService`) | ✅ Cloud-aware automatically — no extra steps |
+| ARM write operations (via `CreateArmClientWithApiVersionAsync`) | ✅ Cloud-aware automatically — no extra steps |
+| Data plane SDK requiring an explicit URL | ✅ Use `_tenantService.CloudConfiguration.CloudType` switch |
+| Any hardcoded `*.windows.net`, `*.azure.com`, `*.chinacloudapi.cn`, etc. | ❌ **Not allowed** — always use the switch pattern |
+
+**Reference implementations**: `StorageService` (blob and table endpoints), `CosmosService`, `SearchService`, and `ConfidentialLedgerService`.
+
+#### Anti-Patterns to Avoid
+
+```csharp
+// ❌ Hardcoded public-cloud endpoint
+var client = new BlobServiceClient(
+    new Uri($"https://{account}.blob.core.windows.net"), credential, options);
+
+// ❌ Hardcoded connection string
+var connectionString = $"AccountEndpoint=https://{server}.documents.azure.com:443/;...";
+
+// ✅ Cloud-aware endpoint via switch expression
+var endpoint = GetBlobEndpoint(account);  // private helper using CloudType switch
+var client = new BlobServiceClient(new Uri(endpoint), credential, options);
+```
+
+### 3. Options Class
 
 ```csharp
 public class {Resource}{Operation}Options : Base{Toolset}Options
@@ -470,8 +581,8 @@ protected override void RegisterOptions(Command command)
     command.Validators.Add(commandResult =>
     {
         // Retrieve values once and infer presence from non-empty values
-        commandResult.TryGetValue(ServiceOptionDefinitions.EitherThis, out string? eitherThis);
-        commandResult.TryGetValue(ServiceOptionDefinitions.OrThat, out string? orThat);
+        var eitherThis = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.EitherThis.Name);
+        var orThat = commandResult.GetOrDefaultValue<string>(ServiceOptionDefinitions.OrThat.Name);
 
         var hasEitherThis = !string.IsNullOrWhiteSpace(eitherThis);
         var hasOrThat = !string.IsNullOrWhiteSpace(orThat);
@@ -601,20 +712,20 @@ protected override MyCommandOptions BindOptions(ParseResult parseResult)
 - **Clear Dependencies**: All option usage visible in `RegisterOptions` method
 - **No Shared State**: Extension methods create new option instances per command
 
-### 3. Command Class
+### 4. Command Class
 
 **CRITICAL: Using Statements**
 Ensure all necessary using statements are included, especially for option definitions:
 
 ```csharp
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.{Toolset}.Models;
 using Azure.Mcp.Tools.{Toolset}.Options;  // REQUIRED: For {Toolset}OptionDefinitions
 using Azure.Mcp.Tools.{Toolset}.Options.{Resource};  // For resource-specific options
 using Azure.Mcp.Tools.{Toolset}.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
@@ -842,7 +953,7 @@ Guidelines:
 - Fully declare `ToolMetadata` properties even if they are using the default value.
 - Only override `GetErrorMessage` and `GetStatusCode` if the logic differs from the base class definition.
 
-### 4. Service Interface and Implementation
+### 5. Service Interface and Implementation
 
 Each toolset has its own service interface that defines the methods that commands will call. The interface will have an implementation that contains the actual logic.
 
@@ -903,6 +1014,7 @@ public interface IMyService
         string resourceName,
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }
@@ -959,7 +1071,7 @@ var result = await _service.GetResourceAsync(
     TestContext.Current.CancellationToken);
 ```
 
-### 5. Base Service Command Classes
+### 6. Base Service Command Classes
 
 Each toolset has its own hierarchy of base command classes that inherit from `GlobalCommand` or `SubscriptionCommand`. Service classes that work with Azure resources should inject `ISubscriptionService` for subscription resolution. For example:
 
@@ -969,10 +1081,10 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
 
@@ -1035,11 +1147,12 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
         string subscription,
         string resourceGroup,
         string resourceName,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         // Always use subscription service for resolution
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
         var resourceGroupResource = await subscriptionResource
             .GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -1048,7 +1161,7 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 }
 ```
 
-### 6. Unit Tests
+### 7. Unit Tests
 
 Unit tests follow a standardized pattern that tests initialization, validation, and execution:
 
@@ -1205,7 +1318,7 @@ Guidelines:
     [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
     ```
 
-### 7. Integration Tests
+### 8. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
 
@@ -1267,23 +1380,19 @@ Guidelines:
 - When validating JSON for an expected property use `JsonElement.AssertProperty`.
 - When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause.
 
-### 8. Command Registration
+### 9. Command Registration
 
 ```csharp
-private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
 {
-    var service = new CommandGroup(
-        "{Toolset}",
-        "{Toolset} operations");
-    rootGroup.AddSubGroup(service);
+    var service = new CommandGroup("{Toolset}", "{Toolset} operations description");
 
-    var resource = new CommandGroup(
-        "{resource}",
-        "{Resource} operations");
+    var resource = new CommandGroup("{resource}", "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand("{operation}", new {Resource}{Operation}Command(
-        loggerFactory.CreateLogger<{Resource}{Operation}Command>()));
+    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+
+    return service;
 }
 ```
 
@@ -1291,7 +1400,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
-### 9. Toolset Registration
+### 10. Toolset Registration
 ```csharp
 private static IToolsetSetup[] RegisterAreas()
 {
@@ -1309,7 +1418,7 @@ private static IToolsetSetup[] RegisterAreas()
 
 The area/toolset list in `RegisterAreas()` must remain alphabetically sorted (excluding the fixed conditional AOT exclusion block guarded by `#if !BUILD_NATIVE`).
 
-### 10. JSON Serialization Context
+### 11. JSON Serialization Context
 
 All models and command result record types returned in `Response.Results` must be registered in a source-generated JSON context for AOT safety and performance.
 
@@ -1927,7 +2036,7 @@ Task<List<ResourceModel>> GetResources(
 - **Pattern**:
 ```csharp
 // Correct pattern
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 ```
 
 ### Command Option Patterns
@@ -2175,10 +2284,10 @@ catch (Exception ex)
 - **Pattern**:
 ```csharp
 // Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
 // Wrong - manual creation
-var armClient = await CreateArmClientAsync(null, retryPolicy);
+var armClient = await CreateArmClientAsync(tenant, retryPolicy);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
 ```
 
@@ -2471,11 +2580,12 @@ public class StorageService : BaseAzureService, IStorageService
     public async Task<List<StorageAccount>> GetStorageAccountsAsync(
         string subscription,
         string? resourceGroup,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
         // ✅ Use base class methods that handle authentication and ARM client creation
-        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
         // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf

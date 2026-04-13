@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.Mcp.Tools.Compute.Utilities;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -18,7 +15,7 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
 public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
-    : BaseComputeCommand<VmCreateOptions>()
+    : BaseComputeCommand<VmCreateOptions>(true)
 {
     private const string CommandTitle = "Create Virtual Machine";
     private readonly ILogger<VmCreateCommand> _logger = logger;
@@ -83,10 +80,34 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         // Resource group is required for create
         command.Validators.Add(commandResult =>
         {
-            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrEmpty(resourceGroup))
+            var adminPassword = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
+            // Determine OS type from image
+            var osType = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
+            var image = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
+            var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
+
+            // Custom validation: For Windows VMs, password is required
+            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(adminPassword))
             {
-                commandResult.AddError($"Missing Required option: {OptionDefinitions.Common.ResourceGroup.Name}");
+                commandResult.AddError("The --admin-password option is required for Windows VMs.");
+            }
+
+            // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
+            if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
+                && commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name)?.Length > 15)
+            {
+                commandResult.AddError(VmRequirements.WindowsComputerName);
+            }
+
+            // Custom validation: For Linux VMs, either SSH key or password must be provided
+            if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name)) &&
+                string.IsNullOrEmpty(adminPassword))
+            {
+                commandResult.AddError(
+                    "Linux VMs require authentication. Please provide either --ssh-public-key or --admin-password. " +
+                    "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
+                    "and pass the full key content to --ssh-public-key.");
             }
         });
     }
@@ -123,37 +144,6 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        // Determine OS type from image
-        var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
-
-        // Custom validation: For Windows VMs, password is required
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(options.AdminPassword))
-        {
-            throw new CommandValidationException(
-                "The --admin-password option is required for Windows VMs.",
-                HttpStatusCode.BadRequest);
-        }
-
-        // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
-        if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && options.VmName!.Length > 15)
-        {
-            throw new CommandValidationException(
-                VmRequirements.WindowsComputerName,
-                HttpStatusCode.BadRequest);
-        }
-
-        // Custom validation: For Linux VMs, either SSH key or password must be provided
-        if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-            string.IsNullOrEmpty(options.SshPublicKey) &&
-            string.IsNullOrEmpty(options.AdminPassword))
-        {
-            throw new CommandValidationException(
-                "Linux VMs require authentication. Please provide either --ssh-public-key or --admin-password. " +
-                "To use SSH, first read the user's public key file (e.g., ~/.ssh/id_rsa.pub or ~/.ssh/id_ed25519.pub) " +
-                "and pass the full key content to --ssh-public-key.",
-                HttpStatusCode.BadRequest);
-        }
-
         var computeService = context.GetService<IComputeService>();
 
         try
@@ -184,9 +174,7 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new VmCreateCommandResult(result),
-                ComputeJsonContext.Default.VmCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmCreateCommandResult);
         }
         catch (Exception ex)
         {

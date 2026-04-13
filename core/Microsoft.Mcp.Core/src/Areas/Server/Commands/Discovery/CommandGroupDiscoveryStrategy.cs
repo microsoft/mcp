@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
@@ -37,6 +37,7 @@ public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory
             .Select(group => new CommandGroupServerProvider(group)
             {
                 ReadOnly = _options.Value.ReadOnly ?? false,
+                Transport = _options.Value.Transport ?? TransportTypes.StdIo,
                 EntryPoint = EntryPoint,
             })
             .Cast<IMcpServerProvider>();

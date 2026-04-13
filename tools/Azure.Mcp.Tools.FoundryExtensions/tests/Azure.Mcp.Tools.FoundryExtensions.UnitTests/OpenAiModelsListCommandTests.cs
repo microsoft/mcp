@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -26,7 +26,6 @@ public class OpenAiModelsListCommandTests
         _foundryService = Substitute.For<IFoundryExtensionsService>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -78,7 +77,7 @@ public class OpenAiModelsListCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -134,7 +133,7 @@ public class OpenAiModelsListCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -174,7 +173,7 @@ public class OpenAiModelsListCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -193,7 +192,7 @@ public class OpenAiModelsListCommandTests
     public void Command_HasCorrectName()
     {
         // Arrange & Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
 
         // Assert
         Assert.Equal("models-list", command.Name);
@@ -203,7 +202,7 @@ public class OpenAiModelsListCommandTests
     public void Command_HasCorrectMetadata()
     {
         // Arrange & Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
 
         // Assert
         Assert.False(command.Metadata.Destructive);
@@ -219,7 +218,7 @@ public class OpenAiModelsListCommandTests
     public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
     {
         // Arrange
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var context = new CommandContext(_serviceProvider);
 
         var expectedResult = new OpenAiModelsListResult(new List<OpenAiModelDeployment>(), "myresource");
@@ -272,7 +271,7 @@ public class OpenAiModelsListCommandTests
                 Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -313,7 +312,7 @@ public class OpenAiModelsListCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var command = new OpenAiModelsListCommand();
+        var command = new OpenAiModelsListCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,

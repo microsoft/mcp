@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
+public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiEmbeddingsCreateOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Create OpenAI Embeddings";
 
     public override string Id => "f6a7b8c9-6789-abcd-f012-345678901234";
@@ -78,7 +79,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
             var result = await foundryService.CreateEmbeddingsAsync(
                 options.ResourceName!,
                 options.DeploymentName!,
@@ -93,8 +94,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiEmbeddingsCreateCommandResult>(
-                new OpenAiEmbeddingsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!, options.DeploymentName!, options.InputText!),
                 FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult);
         }
         catch (Exception ex)

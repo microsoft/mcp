@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -26,8 +24,9 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
 
     public override string Description =>
         """
-        Gets the details of Azure AI Search indexes, including fields, description, and more. If a specific index name
-        is not provided, the command will return details for all indexes within the specified service.
+        List/get/show Azure AI Search indexes in a Search service. Returns index properties such as fields,
+        description, and more. If a specific index name is not provided, the command will return details for all
+        indexes.
         """;
 
     public override string Title => CommandTitle;
@@ -87,5 +86,5 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
         return context.Response;
     }
 
-    internal sealed record IndexGetCommandResult([property: JsonPropertyName("indexes")] List<IndexInfo> Indexes);
+    internal sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
 }

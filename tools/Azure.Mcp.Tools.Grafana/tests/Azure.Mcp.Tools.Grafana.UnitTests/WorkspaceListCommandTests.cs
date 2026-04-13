@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.Grafana.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +39,7 @@ public sealed class WorkspaceListCommandTests
     public void Constructor_Should_Initialize_Command_Properly()
     {
         // Arrange & Act
-        var command = new WorkspaceListCommand(_logger);
+        var command = new WorkspaceListCommand(_grafana, _logger);
 
         // Assert
         Assert.NotNull(command);
@@ -87,7 +87,7 @@ public sealed class WorkspaceListCommandTests
         _grafana.ListWorkspacesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
-        var command = new WorkspaceListCommand(_logger);
+        var command = new WorkspaceListCommand(_grafana, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -111,7 +111,7 @@ public sealed class WorkspaceListCommandTests
         _grafana.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
 
-        var command = new WorkspaceListCommand(_logger);
+        var command = new WorkspaceListCommand(_grafana, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -154,7 +154,7 @@ public sealed class WorkspaceListCommandTests
         _grafana.ListWorkspacesAsync("sub123", "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
-        var command = new WorkspaceListCommand(_logger);
+        var command = new WorkspaceListCommand(_grafana, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--tenant", "tenant456"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -176,7 +176,7 @@ public sealed class WorkspaceListCommandTests
         _grafana.ListWorkspacesAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new WorkspaceListCommand(_logger);
+        var command = new WorkspaceListCommand(_grafana, _logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 

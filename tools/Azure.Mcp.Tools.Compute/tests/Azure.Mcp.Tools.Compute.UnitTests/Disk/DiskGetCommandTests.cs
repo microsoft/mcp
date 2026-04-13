@@ -4,15 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
-using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -47,7 +45,7 @@ public class DiskGetCommandTests
         var collection = new ServiceCollection().AddSingleton(_computeService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _computeService);
+        _command = new(_logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -201,7 +199,7 @@ public class DiskGetCommandTests
             Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(mockDisk);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskName, "--resource-group", resourceGroup]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName, "--resource-group", resourceGroup]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -250,7 +248,7 @@ public class DiskGetCommandTests
             Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(mockDisk);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskName, "--resource-group", resourceGroup]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName, "--resource-group", resourceGroup]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -317,7 +315,7 @@ public class DiskGetCommandTests
             Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(mockDisks);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskPattern]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskPattern]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -385,7 +383,7 @@ public class DiskGetCommandTests
             Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(mockDisks);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskPattern, "--resource-group", resourceGroup]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskPattern, "--resource-group", resourceGroup]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -443,7 +441,7 @@ public class DiskGetCommandTests
             Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(mockDisks);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk", diskName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);

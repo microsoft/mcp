@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated ModelContextProtocol and ModelContextProtocol.AspNetCore dependencies to version 1.1.0."
+    subsection: "Dependency Updates"

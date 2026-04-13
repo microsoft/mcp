@@ -7,20 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
-public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvider
+public class HttpOnBehalfOfTokenCredentialProvider(
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<HttpOnBehalfOfTokenCredentialProvider> logger) : IAzureTokenCredentialProvider
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ILogger<HttpOnBehalfOfTokenCredentialProvider> _logger;
-
-    public HttpOnBehalfOfTokenCredentialProvider(
-        IHttpContextAccessor httpContextAccessor,
-        ILogger<HttpOnBehalfOfTokenCredentialProvider> logger)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _logger = logger;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly ILogger<HttpOnBehalfOfTokenCredentialProvider> _logger = logger;
 
     /// <inheritdoc/>
     public Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken)

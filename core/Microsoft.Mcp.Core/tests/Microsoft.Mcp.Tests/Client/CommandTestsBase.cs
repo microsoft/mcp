@@ -12,7 +12,8 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture) : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
+public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
+    : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -65,7 +66,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
-    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
     {
         try
         {
@@ -90,16 +91,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
 
-        if (proxy != null && proxy.Proxy != null)
-        {
-            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
-
-            if (TestMode is TestMode.Playback)
-            {
-                envVarDictionary.Add("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
-            }
-        }
-
         // Add any custom environment variables from settings
         if (Settings?.EnvironmentVariables != null)
         {
@@ -109,20 +100,32 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             }
         }
 
+        if (proxy != null && proxy.Proxy != null)
+        {
+            envVarDictionary["TEST_PROXY_URL"] = proxy.Proxy.BaseUri;
+
+            if (TestMode is TestMode.Playback)
+            {
+                // AZURE_TOKEN_CREDENTIALS=PlaybackTokenCredential tells the server to use a special credential that
+                // returns fake tokens in playback mode, which prevents any accidental live calls if a test is misconfigured
+                envVarDictionary["AZURE_TOKEN_CREDENTIALS"] = "PlaybackTokenCredential";
+                envVarDictionary["TEST_MODE"] = "Playback";
+            }
+        }
+
         return envVarDictionary;
     }
 
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
         await LoadSettingsAsync();
-        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug"]
-            : ["server", "start", "--mode", "all"];
+            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
+            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
@@ -134,20 +137,54 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         Client = LiveServerFixture.GetMcpClient();
     }
 
-    protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
-    {
-        return CallToolAsync(command, parameters, Client);
-    }
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
+    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+        => await CallToolAsync(command, parameters, Client);
 
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and returns the "results" property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <param name="mcpClient">The MCP client to use for the call.</param>
+    /// <returns>The "results" JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, McpClient mcpClient)
+        => await CallToolAsync(command, parameters, mcpClient, elem => elem.TryGetProperty("results", out var property) ? property : null);
+
+    /// <summary>
+    /// Calls <see cref="McpClient.CallToolAsync(string, IReadOnlyDictionary{string, object?}?, IProgress{ModelContextProtocol.ProgressNotificationValue}?, ModelContextProtocol.RequestOptions?, CancellationToken)"/>
+    /// executing the command against the MCP server and extracts the JSON property from <see cref="CommandResponse"/>, if it exists.
+    /// Logs the request and response for debugging purposes.
+    /// </summary>
+    /// <param name="command">The MCP server command to execute.</param>
+    /// <param name="parameters">The MCP server command parameters.</param>
+    /// <param name="mcpClient">The MCP client to use for the call. If null the default Client will be used.</param>
+    /// <param name="resultProcessor">A function to extract the desired result from the JSON response. If null the "results" property will be retrieved, if it exists.</param>
+    /// <returns>The extracted JSON property from <see cref="CommandResponse"/>, if it exists.</returns>
+    protected async Task<JsonElement?> CallToolAsync(
+        string command,
+        Dictionary<string, object?> parameters,
+        McpClient? mcpClient = null,
+        Func<JsonElement, JsonElement?>? resultProcessor = null)
     {
         // Use the same debug logic as MCP server initialization
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
+        mcpClient ??= Client;
+        resultProcessor ??= (elem => elem.TryGetProperty("results", out var property) ? property : null);
 
         // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case
         Action<string> writeOutput = enableDebug
-            ? s => Output.WriteLine(s)
+            ? Output.WriteLine
             : s => FailureOutput.AppendLine(s);
 
         writeOutput($"request: {JsonSerializer.Serialize(new { command, parameters })}");
@@ -192,7 +229,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             throw new Exception("Failed to deserialize JSON response.", ex);
         }
 
-        return root.TryGetProperty("results", out var property) ? property : null;
+        return resultProcessor.Invoke(root);
     }
 
     public void Dispose()
@@ -229,8 +266,5 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
-    protected virtual ValueTask DisposeAsyncCore()
-    {
-        return ValueTask.CompletedTask;
-    }
+    protected virtual ValueTask DisposeAsyncCore() => ValueTask.CompletedTask;
 }

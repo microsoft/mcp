@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -33,7 +33,7 @@ public class SubscriptionCommandTests
         var collection = new ServiceCollection().AddSingleton(_storageService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _storageService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

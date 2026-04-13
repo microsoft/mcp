@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : GlobalCommand<SubscriptionListOptions>
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, IEventGridService eventGridService, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
+    private readonly IEventGridService _eventGridService = eventGridService;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     public override string Id => "716a33e5-755c-4168-87ed-8a4651476c6e";
 
     public override string Name => "list";
@@ -94,19 +94,16 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         try
         {
-            var eventGridService = context.GetService<IEventGridService>();
-
             if (crossSubscriptionSearch)
             {
                 // Iterate all subscriptions and aggregate
-                var subscriptionService = context.GetService<ISubscriptionService>();
-                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy, cancellationToken);
+                var allSubs = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {
                     try
                     {
-                        var found = await eventGridService.GetSubscriptionsAsync(
+                        var found = await _eventGridService.GetSubscriptionsAsync(
                             sub.SubscriptionId,
                             options.ResourceGroup,
                             options.TopicName, // bare name
@@ -129,7 +126,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             }
             else
             {
-                var subscriptions = await eventGridService.GetSubscriptionsAsync(
+                var subscriptions = await _eventGridService.GetSubscriptionsAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.TopicName,
@@ -144,8 +141,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Location: {Location}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.TopicName, options.Location, options);
+                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Location: {Location}.",
+                options.Subscription, options.ResourceGroup, options.TopicName, options.Location);
             HandleException(context, ex);
         }
 

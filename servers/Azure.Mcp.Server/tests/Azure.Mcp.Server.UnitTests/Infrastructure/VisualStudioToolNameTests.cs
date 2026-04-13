@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -42,7 +44,11 @@ public sealed class VisualStudioToolNameTests
             .AddSingleton<ITelemetryService, NoOpTelemetryService>()
             .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>())
             .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>());
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<IDateTimeProvider>())
+            .AddSingleton(Substitute.For<IExternalProcessService>())
+            .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
+            .AddSingleton(Substitute.For<IAzureCloudConfiguration>());
 
         foreach (var area in areaSetups)
         {

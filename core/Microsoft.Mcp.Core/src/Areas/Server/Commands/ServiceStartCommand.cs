@@ -4,11 +4,6 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Logging;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,7 +22,12 @@ using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -98,7 +98,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Options.Add(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir);
+        command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableRetryLimits);
         command.Options.Add(ServiceOptionDefinitions.Cloud);
+        command.Options.Add(ServiceOptionDefinitions.DisableCaching);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -176,7 +178,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             DangerouslyDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableElicitation.Name),
             OutgoingAuthStrategy = outgoingAuthStrategy,
             SupportLoggingFolder = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.DangerouslyWriteSupportLogsToDir.Name),
-            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name)
+            DangerouslyDisableRetryLimits = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableRetryLimits.Name),
+            Cloud = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Cloud.Name),
+            DisableCaching = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DisableCaching.Name)
         };
         return options;
     }
@@ -383,6 +387,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for the MCP server.</returns>
     private IHost CreateHost(ServiceStartOptions serverOptions)
     {
+        // Inform the credential chain which transport is active so that interactive credentials
+        // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
+        CustomChainedCredential.ActiveTransport = serverOptions.Transport;
+
 #if ENABLE_HTTP
         if (serverOptions.Transport == TransportTypes.Http)
         {
@@ -443,6 +451,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 // Configure the outgoing authentication strategy.
                 services.AddSingleIdentityTokenCredentialProvider();
 
+                // Configure Single User CLI Cache for stdio transport here, before ConfigureServices is called.
+                // ConfigureServices will also add in Single User CLI Cache tentatively, but this spot knows about
+                // server configurations and will take precedent.
+                services.AddSingleUserCliCacheService(serverOptions.DisableCaching);
+
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
             })
@@ -484,30 +497,41 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .AddMicrosoftIdentityWebApiAot(
                 options => azureAdSection.Bind(options),
                 JwtBearerDefaults.AuthenticationScheme,
-                null);
-
-        // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
-        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.Events = new JwtBearerEvents
-            {
-                OnChallenge = context =>
+                jwtOptions =>
                 {
-                    // Add resource_metadata parameter to WWW-Authenticate header
-                    if (!context.Response.HasStarted)
-                    {
-                        HttpRequest request = context.Request;
-                        string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                        string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                    // Only disable HTTPS metadata requirement in development environments.
+                    // Production environments should enforce HTTPS for metadata endpoints.
+                    // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
+                    jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
 
-                        // Modify the WWW-Authenticate header to include resource_metadata
-                        context.Response.Headers.WWWAuthenticate =
-                            $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
-                    }
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                    // Configure JWT Bearer events for OAuth protected resource metadata
+                    jwtOptions.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = context =>
+                        {
+                            // Add resource_metadata parameter to WWW-Authenticate header
+                            if (!context.Response.HasStarted)
+                            {
+                                HttpRequest request = context.Request;
+                                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
+                                string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                                context.Response.StatusCode = 401;
+
+                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                                if (!string.IsNullOrEmpty(context.Error))
+                                    header += $", error=\"{context.Error}\"";
+                                if (!string.IsNullOrEmpty(context.ErrorDescription))
+                                    header += $", error_description=\"{context.ErrorDescription}\"";
+
+                                // Modify the WWW-Authenticate header to include resource_metadata
+                                context.Response.Headers.WWWAuthenticate = header;
+                            }
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
 
         // Configure authorization policy for MCP access.
         services.AddAuthorizationBuilder()
@@ -538,8 +562,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
-        services.AddHttpServiceCacheService();
-
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -667,7 +690,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // because we don't yet know what security model we want for this "insecure" mode.
         // As a positive, it gives some isolation locally, but that's not a
         // design strategy we've fully vetted or endorsed.
-        services.AddHttpServiceCacheService();
+        services.AddHttpServiceCacheService(serverOptions.DisableCaching);
 
         WebApplication app = builder.Build();
 

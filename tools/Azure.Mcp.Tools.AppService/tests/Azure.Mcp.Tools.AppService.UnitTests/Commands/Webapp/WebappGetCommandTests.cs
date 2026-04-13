@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Models;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,7 +22,6 @@ namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp;
 public class WebappGetCommandTests
 {
     private readonly IAppServiceService _appServiceService;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<WebappGetCommand> _logger;
     private readonly WebappGetCommand _command;
     private readonly CommandContext _context;
@@ -33,11 +32,8 @@ public class WebappGetCommandTests
         _appServiceService = Substitute.For<IAppServiceService>();
         _logger = Substitute.For<ILogger<WebappGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_appServiceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _appServiceService);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 

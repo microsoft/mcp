@@ -1,26 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel;
 using System.ClientModel.Primitives;
-using System.Reflection;
+using System.Security;
 using System.Text.Json.Nodes;
-using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
-using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options.Thread;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
-using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
@@ -28,106 +24,91 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 public class FoundryExtensionsService(
     IHttpClientFactory httpClientFactory,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService)
+    ITenantService tenantService,
+    ILogger<FoundryExtensionsService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IFoundryExtensionsService
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ILogger<FoundryExtensionsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    private ArmEnvironment GetArmEnvironment() =>
+        TenantService.CloudConfiguration.ArmEnvironment;
 
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
-    private static void ValidateProjectEndpoint(string endpoint)
+    internal void ValidateProjectEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
-            {
-                throw new ArgumentException("Invalid Uri");
-            }
-
-            // Example: https://{foundry-resource-name}.services.ai.azure.com/api/projects/{project-name}
-            if (parsedUri.Scheme != Uri.UriSchemeHttps)
-            {
-                throw new ArgumentException("Scheme must be https");
-            }
-
-            const string knownSuffix = ".services.ai.azure.com";
-            var host = parsedUri.Host;
-            if (!host.EndsWith(knownSuffix, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Host must end with Foundry service suffix");
-            }
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", GetArmEnvironment());
         }
-        catch (Exception ex)
+        catch (SecurityException ex)
         {
-            throw new ArgumentException(
-            $"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
-            nameof(endpoint), ex);
+            throw new ArgumentException($"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
         }
     }
 
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
     /// </summary>
-    private static void ValidateAzureOpenAiEndpoint(string endpoint)
+    internal void ValidateAzureOpenAiEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedUri))
-            {
-                throw new ArgumentException("Invalid Uri");
-            }
+            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai", GetArmEnvironment());
 
-            // Example: https://{Azure-OpenAI-resource-name}.openai.azure.com/
-            // Example: https://{Azure-OpenAI-resource-name}.cognitiveservices.azure.com/
-            if (parsedUri.Scheme != Uri.UriSchemeHttps)
-            {
-                throw new ArgumentException("Scheme must be https");
-            }
+            // Azure OpenAI-specific structural checks beyond domain validation
+            var parsedUri = new Uri(endpoint);
 
-            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com"];
-            var host = parsedUri.Host;
-            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-            if (matchedSuffix == null)
-            {
-                throw new ArgumentException("Host must end with Azure OpenAI service suffix");
-            }
-
-            var azureOpenAIResourceName = host.Substring(0, host.Length - matchedSuffix.Length);
-
-            // Validate Azure OpenAI resource name: 2-64 characters, alphanumeric and hyphens only, cannot start or end with hyphen
-            if (azureOpenAIResourceName.Length < 2 || azureOpenAIResourceName.Length > 64)
-            {
-                throw new ArgumentException("Azure OpenAI resource name must be between 2 and 64 characters");
-            }
-
-            if (azureOpenAIResourceName.StartsWith('-') || azureOpenAIResourceName.EndsWith('-'))
-            {
-                throw new ArgumentException("Azure OpenAI resource name cannot start or end with a hyphen");
-            }
-
-            if (!azureOpenAIResourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
-            {
-                throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
-            }
-
-            // Validate path: should be empty or just "/" (root path)
+            // Azure OpenAI endpoints should not contain path segments
             var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (paths.Length != 0)
             {
                 throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
             }
+
+            // Validate the resource name portion of the host
+            string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com",
+                ".openai.azure.cn", ".cognitiveservices.azure.cn",
+                ".openai.azure.us", ".cognitiveservices.azure.us",
+                ".openai.azure.de", ".cognitiveservices.azure.de"];
+            var host = parsedUri.Host;
+            var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (matchedSuffix != null)
+            {
+                var resourceName = host[..^matchedSuffix.Length];
+                if (resourceName.Length < 2 || resourceName.Length > 64)
+                {
+                    throw new ArgumentException("Azure OpenAI resource name must be between 2 and 64 characters");
+                }
+
+                if (resourceName.StartsWith('-') || resourceName.EndsWith('-'))
+                {
+                    throw new ArgumentException("Azure OpenAI resource name cannot start or end with a hyphen");
+                }
+
+                if (!resourceName.All(c => char.IsLetterOrDigit(c) || c == '-'))
+                {
+                    throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
+                }
+            }
         }
-        catch (Exception ex)
+        catch (SecurityException ex)
         {
-            throw new ArgumentException(
-            $"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
-            nameof(endpoint), ex);
+            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
+        }
+        catch (ArgumentException ex) when (!ex.Message.StartsWith("Invalid Azure OpenAI endpoint", StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
         }
     }
 
@@ -146,42 +127,33 @@ public class FoundryExtensionsService(
         ValidateRequiredParameters((nameof(endpoint), endpoint));
         ValidateProjectEndpoint(endpoint);
 
-        try
-        {
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var indexesClient = projectClient.GetIndexesClient();
+        var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+        var indexesClient = projectClient.GetIndexesClient();
 
-            var indexes = new List<KnowledgeIndexInformation>();
-            await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        var indexes = new List<KnowledgeIndexInformation>();
+        await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        {
+            // Determine the type based on the actual type of the index
+            string indexType = index switch
             {
-                // Determine the type based on the actual type of the index
-                string indexType = index switch
-                {
-                    AzureAISearchIndex => "AzureAISearchIndex",
-                    ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                    CosmosDBIndex => "CosmosDBIndex",
-                    _ => index.GetType().Name
-                };
+                AzureAISearchIndex => "AzureAISearchIndex",
+                ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+                CosmosDBIndex => "CosmosDBIndex",
+                _ => index.GetType().Name
+            };
 
-                var knowledgeIndex = new KnowledgeIndexInformation
-                {
-                    Type = indexType,
-                    Id = index.Id,
-                    Name = index.Name,
-                    Version = index.Version,
-                    Description = index.Description,
-                    Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value) ?? null
-                };
-
-                indexes.Add(knowledgeIndex);
-            }
-
-            return indexes;
+            indexes.Add(new()
+            {
+                Type = indexType,
+                Id = index.Id,
+                Name = index.Name,
+                Version = index.Version,
+                Description = index.Description,
+                Tags = index.Tags?.ToDictionary()
+            });
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to list knowledge indexes: {ex.Message}", ex);
-        }
+
+        return indexes;
     }
 
     public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
@@ -196,44 +168,37 @@ public class FoundryExtensionsService(
             (nameof(indexName), indexName));
         ValidateProjectEndpoint(endpoint);
 
-        try
+        var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
+        var indexesClient = projectClient.GetIndexesClient();
+
+        // Find the index by name using async enumerable
+        var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
+            .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+
+        if (index == null)
         {
-            var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-            var indexesClient = projectClient.GetIndexesClient();
-
-            // Find the index by name using async enumerable
-            var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
-                .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
-            if (index == null)
-            {
-                throw new Exception($"Knowledge index '{indexName}' not found.");
-            }
-
-            // Map the SDK index to our AOT-safe schema type
-            string indexType = index switch
-            {
-                AzureAISearchIndex => "AzureAISearchIndex",
-                ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                CosmosDBIndex => "CosmosDBIndex",
-                _ => index.GetType().Name
-            };
-
-            return new KnowledgeIndexSchema
-            {
-                Type = indexType,
-                Id = index.Id,
-                Name = index.Name,
-                Version = index.Version,
-                Description = index.Description,
-                Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value)
-            };
+            throw new Exception($"Knowledge index '{indexName}' not found.");
         }
-        catch (Exception ex)
+
+        // Map the SDK index to our AOT-safe schema type
+        string indexType = index switch
         {
-            throw new Exception($"Failed to get knowledge index schema: {ex.Message}", ex);
-        }
+            AzureAISearchIndex => "AzureAISearchIndex",
+            ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+            CosmosDBIndex => "CosmosDBIndex",
+            _ => index.GetType().Name
+        };
+
+        return new()
+        {
+            Type = indexType,
+            Id = index.Id,
+            Name = index.Name,
+            Version = index.Version,
+            Description = index.Description,
+            Tags = index.Tags?.ToDictionary()
+        };
     }
 
     public async Task<CompletionResult> CreateCompletionAsync(
@@ -308,7 +273,7 @@ public class FoundryExtensionsService(
             result.Usage.OutputTokenCount,
             result.Usage.TotalTokenCount);
 
-        return new CompletionResult(completionText, usageInfo);
+        return new(completionText, usageInfo);
     }
 
     public async Task<EmbeddingResult> CreateEmbeddingsAsync(
@@ -330,8 +295,7 @@ public class FoundryExtensionsService(
             (nameof(deploymentName), deploymentName),
             (nameof(inputText), inputText),
             (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup)
-            );
+            (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
@@ -360,10 +324,7 @@ public class FoundryExtensionsService(
 
         var embeddingData = new List<EmbeddingData>
         {
-            new EmbeddingData(
-                "embedding",
-                0,
-                result.ToFloats().ToArray())
+            new("embedding", 0, result.ToFloats().ToArray())
         };
 
         // Note: Usage information might not be available in the current SDK version
@@ -373,11 +334,7 @@ public class FoundryExtensionsService(
             splitInput.Length, // Approximate token count
             splitInput.Length);
 
-        return new EmbeddingResult(
-            "list",
-            embeddingData,
-            deploymentName,
-            usageInfo);
+        return new("list", embeddingData, deploymentName, usageInfo);
     }
 
     public async Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
@@ -425,14 +382,14 @@ public class FoundryExtensionsService(
             allDeployments.Add(modelDeployment);
         }
 
-        return new OpenAiModelsListResult(allDeployments, resourceName);
+        return new(allDeployments, resourceName);
     }
 
     private static OpenAiModelCapabilities DetermineModelCapabilities(string? modelName)
     {
         if (string.IsNullOrEmpty(modelName))
         {
-            return new OpenAiModelCapabilities(false, false, false, false);
+            return new(false, false, false, false);
         }
 
         var modelNameLower = modelName.ToLowerInvariant();
@@ -443,12 +400,11 @@ public class FoundryExtensionsService(
         var isChatModel = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-4") || modelNameLower.Contains("gpt-35");
         var supportsFineTuning = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-35") || modelNameLower.Contains("davinci");
 
-        return new OpenAiModelCapabilities(
+        return new(
             Completions: isCompletionModel,
             Embeddings: isEmbeddingModel,
             ChatCompletions: isChatModel,
-            FineTuning: supportsFineTuning
-        );
+            FineTuning: supportsFineTuning);
     }
 
     public async Task<ChatCompletionResult> CreateChatCompletionsAsync(
@@ -475,8 +431,7 @@ public class FoundryExtensionsService(
             (nameof(resourceName), resourceName),
             (nameof(deploymentName), deploymentName),
             (nameof(subscription), subscription),
-            (nameof(resourceGroup), resourceGroup)
-            );
+            (nameof(resourceGroup), resourceGroup));
 
         if (messages == null || messages.Count == 0)
         {
@@ -582,14 +537,11 @@ public class FoundryExtensionsService(
                 ToolCalls: null
             );
 
-            var choice = new ChatCompletionChoice(
+            choices.Add(new(
                 Index: i,
                 Message: chatCompletionMessage,
                 FinishReason: result.FinishReason.ToString(),
-                LogProbs: null
-            );
-
-            choices.Add(choice);
+                LogProbs: null));
         }
 
         // Create usage information
@@ -599,7 +551,7 @@ public class FoundryExtensionsService(
             TotalTokens: result.Usage?.TotalTokenCount ?? 0
         );
 
-        return new ChatCompletionResult(
+        return new(
             Id: result.Id ?? Guid.NewGuid().ToString(),
             Object: "chat.completion",
             Created: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -618,8 +570,6 @@ public class FoundryExtensionsService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        AzureOpenAIClient client;
-
         // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
         var httpClient = _httpClientFactory.CreateClient();
         var clientOptions = new AzureOpenAIClientOptions
@@ -639,16 +589,13 @@ public class FoundryExtensionsService(
                     throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
                 }
 
-                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key), clientOptions);
-                break;
+                return new(new(endpoint), new AzureKeyCredential(key), clientOptions);
 
             case AuthMethod.Credential:
             default:
-                var credential = await GetCredential(cancellationToken);
-                client = new AzureOpenAIClient(new Uri(endpoint), credential, clientOptions);
-                break;
+                var credential = await GetCredential(tenant, cancellationToken);
+                return new(new(endpoint), credential, clientOptions);
         }
-        return client;
     }
 
     private async Task<AIProjectClient> CreateAIProjectClientWithAuth(
@@ -664,41 +611,10 @@ public class FoundryExtensionsService(
             Transport = transport
         };
 
-        return new AIProjectClient(new Uri(endpoint), credential, clientOptions);
+        return new(new(endpoint), credential, clientOptions);
     }
 
-    private async Task<(AIProjectClient ProjectClient, PersistentAgentsClient AgentsClient)> CreateAIProjectAndPersistentAgentsClientsAsync(
-        string endpoint,
-        string? tenant = null,
-        CancellationToken cancellationToken = default)
-    {
-        var credential = await GetCredential(tenant, cancellationToken);
-        var transport = CreateTransport();
-
-        var projectClientOptions = new AIProjectClientOptions
-        {
-            Transport = transport
-        };
-
-        var projectClient = new AIProjectClient(new Uri(endpoint), credential, projectClientOptions);
-
-        var agentsClientOptions = new PersistentAgentsAdministrationClientOptions
-        {
-            Transport = transport
-        };
-
-        var agentsClient = new PersistentAgentsClient(endpoint, credential, agentsClientOptions);
-
-        return (projectClient, agentsClient);
-    }
-
-    private HttpClientTransport CreateTransport()
-    {
-        var httpClient = _httpClientFactory.CreateClient();
-        var transport = new HttpClientTransport(httpClient);
-
-        return transport;
-    }
+    private HttpClientTransport CreateTransport() => new(_httpClientFactory.CreateClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,
@@ -709,45 +625,38 @@ public class FoundryExtensionsService(
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        try
+        ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+
+        var resources = new List<AiResourceInformation>();
+
+        // Get Cognitive Services accounts
+        if (string.IsNullOrEmpty(resourceGroup))
         {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            var resources = new List<AiResourceInformation>();
-
-            // Get Cognitive Services accounts
-            if (string.IsNullOrEmpty(resourceGroup))
+            // List all AI resources in the subscription
+            await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
             {
-                // List all AI resources in the subscription
-                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
+                var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                resources.Add(resourceInfo);
+            }
+        }
+        else
+        {
+            // List AI resources in specific resource group - use resource group scope for better performance
+            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
+            await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                resources.Add(resourceInfo);
+                if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                    resources.Add(resourceInfo);
+                    var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
+                    resources.Add(retrieved);
                 }
             }
-            else
-            {
-                // List AI resources in specific resource group - use resource group scope for better performance
-                var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken: cancellationToken);
-                await foreach (var account in resourceGroupResource.Value.GetCognitiveServicesAccounts().GetAllAsync(cancellationToken: cancellationToken))
-                {
-                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                    resources.Add(resourceInfo);
-                    if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        var retrieved = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName, cancellationToken);
-                        resources.Add(retrieved);
-                    }
-                }
-            }
+        }
 
-            return resources;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to list AI resources: {ex.Message}", ex);
-        }
+        return resources;
     }
 
     public async Task<AiResourceInformation> GetAiResourceAsync(
@@ -763,161 +672,22 @@ public class FoundryExtensionsService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        try
-        {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
-            if (rgResource?.Value == null)
-            {
-                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
-            }
-
-            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
-            if (account?.Value == null)
-            {
-                throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
-            }
-
-            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
-        }
-        catch (Exception ex)
+        if (rgResource?.Value == null)
         {
-            throw new Exception($"Failed to get AI resource: {ex.Message}", ex);
-        }
-    }
-
-    public async Task<ThreadListResult> ListThreads(
-        string projectEndpoint,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
-        List<ThreadItem> threads = [];
-        try
-        {
-            await foreach (var thread in threadsIterator.WithCancellation(cancellationToken))
-            {
-                threads.Add(new()
-                {
-                    ThreadId = thread.Id
-                });
-            }
-
-            return new ThreadListResult()
-            {
-                Threads = [.. threads]
-            };
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unable to list threads. Get threads request failed with: {ex.Message}", ex);
-        }
-    }
-
-    public async Task<ThreadCreateResult> CreateThread(
-        string projectEndpoint,
-        string userMessage,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint),
-            (nameof(userMessage), userMessage));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        try
-        {
-            PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
-                [new ThreadMessageOptions(MessageRole.User, userMessage)],
-                cancellationToken: cancellationToken);
-
-            return new ThreadCreateResult()
-            {
-                ThreadId = thread.Id,
-                ProjectEndpoint = projectEndpoint
-            };
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unable to create thread. Create thread request failed with: {ex.Message}", ex);
-        }
-    }
-
-    public async Task<ThreadGetMessagesResult> GetMessages(
-        string projectEndpoint,
-        string threadId,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ValidateRequiredParameters(
-            (nameof(projectEndpoint), projectEndpoint),
-            (nameof(threadId), threadId));
-        ValidateProjectEndpoint(projectEndpoint);
-
-        var (_, agentsClient) = await CreateAIProjectAndPersistentAgentsClientsAsync(projectEndpoint, tenantId, cancellationToken);
-        try
-        {
-            List<PersistentThreadMessage> messages = [];
-            var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
-            await foreach (var message in messagesIterator.WithCancellation(cancellationToken))
-            {
-                messages.Add(message);
-            }
-            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = ConvertMessages(messages).ToList();
-            return new ThreadGetMessagesResult()
-            {
-                ThreadId = threadId,
-                Messages = convertedMessages
-            };
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unable to get messages. Get messages request failed with: {ex.Message}", ex);
-        }
-    }
-
-    public AgentsGetSdkCodeSampleResult GetSdkCodeSample(string programmingLanguage)
-    {
-        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
-        string resourceFileName;
-        if (programmingLanguageLowerCase == "csharp")
-        {
-            resourceFileName = "csharp.md";
-        }
-        else if (programmingLanguageLowerCase == "typescript")
-        {
-            resourceFileName = "typescript.md";
-        }
-        else if (programmingLanguageLowerCase == "python")
-        {
-            resourceFileName = "python.md";
-        }
-        else
-        {
-            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
+            throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
 
-        Assembly assembly = typeof(FoundryExtensionsService).Assembly;
-
-        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
-        string codeSampleText = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
-
-        return new AgentsGetSdkCodeSampleResult()
+        var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
+        if (account?.Value == null)
         {
-            CodeSampleText = codeSampleText
-        };
+            throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
+        }
+
+        return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
     }
 
     private async Task<AiResourceInformation> BuildResourceInformation(
@@ -942,7 +712,7 @@ public class FoundryExtensionsService(
         {
             await foreach (var deployment in account.GetCognitiveServicesAccountDeployments().WithCancellation(cancellationToken))
             {
-                var deploymentInfo = new DeploymentInformation
+                resourceInfo.Deployments.Add(new()
                 {
                     DeploymentName = deployment.Data.Name,
                     ModelName = deployment.Data.Properties?.Model?.Name,
@@ -952,8 +722,7 @@ public class FoundryExtensionsService(
                     SkuCapacity = deployment.Data.Sku?.Capacity,
                     ScaleType = deployment.Data.Properties?.ScaleSettings?.ScaleType.ToString(),
                     ProvisioningState = deployment.Data.Properties?.ProvisioningState.ToString()
-                };
-                resourceInfo.Deployments?.Add(deploymentInfo);
+                });
             }
         }
         catch
@@ -963,32 +732,5 @@ public class FoundryExtensionsService(
         }
 
         return resourceInfo;
-    }
-
-    private static IEnumerable<Microsoft.Extensions.AI.ChatMessage> ConvertMessages(IEnumerable<PersistentThreadMessage> messages)
-    {
-        foreach (PersistentThreadMessage message in messages)
-        {
-            Microsoft.Extensions.AI.ChatMessage result = new()
-            {
-                AuthorName = message.AssistantId,
-                MessageId = message.Id,
-                RawRepresentation = message,
-                Role = message.Role == MessageRole.Agent ? ChatRole.Assistant : ChatRole.User,
-            };
-
-            foreach (var messageContent in message.ContentItems)
-            {
-                AIContent content = messageContent switch
-                {
-                    MessageTextContent mtc => new TextContent(mtc.Text),
-                    _ => new AIContent(),
-                };
-                content.RawRepresentation = messageContent;
-                result.Contents.Add(content);
-            }
-
-            yield return result;
-        }
     }
 }

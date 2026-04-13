@@ -231,6 +231,7 @@ The `azmcp server start` command supports the following options:
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -1039,6 +1040,42 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
 | `--user-data` | No | Base64-encoded user data |
 
+```bash
+# Delete a Virtual Machine
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--force-deletion]
+
+# Examples:
+
+# Delete a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm"
+
+# Force delete a VM even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine to delete |
+| `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -1212,6 +1249,42 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
 | `--tags` | No | Tags in key=value,key2=value2 format |
 
+```bash
+# Delete a Virtual Machine Scale Set
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--force-deletion]
+
+# Examples:
+
+# Delete a VMSS
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss"
+
+# Force delete a VMSS even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VMSS and all its VM instances. This operation is irreversible.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS to delete |
+| `--force-deletion` | No | Force delete the VMSS even if running or failed (Azure API forceDeletion) |
+
 #### Disks
 
 ```bash
@@ -1228,13 +1301,222 @@ azmcp compute disk get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk get --subscription <subscription> \
                        --resource-group <resource-group> \
-                       --disk <disk-name>
+                       --disk-name <disk-name>
 ```
 
 **Options:**
--   `--disk`: The name of the managed disk (optional - if not provided, lists all disks)
+-   `--disk-name`: The name of the managed disk (optional - if not provided, lists all disks)
 -   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
 -   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
+
+```bash
+# Create an empty managed disk (location defaults to resource group's location)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --size-gb <size>
+
+# Create a managed disk from a snapshot or another disk (by resource ID)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --source <snapshot-or-disk-resource-id>
+
+# Create a managed disk from a VHD blob URI
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --source <blob-uri>
+
+# Create a managed disk from a Shared Image Gallery image version (OS disk)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --gallery-image-reference <image-version-resource-id>
+
+# Create a managed disk from a specific data disk LUN in a gallery image version
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --gallery-image-reference <image-version-resource-id> \
+                          --gallery-image-reference-lun <lun>
+
+# Create a managed disk ready for upload
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --upload-type Upload \
+                          --upload-size-bytes <size-in-bytes>
+
+# Create a managed disk ready for upload with security data (Trusted Launch)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --upload-type UploadWithSecurityData \
+                          --upload-size-bytes <size-in-bytes> \
+                          --security-type TrustedLaunch \
+                          --hyper-v-generation V2
+
+# Create a managed disk with a specific location, SKU, and all options
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --size-gb <size> \
+                          --location <location> \
+                          --sku <sku> \
+                          --os-type <os-type> \
+                          --zone <zone> \
+                          --hyper-v-generation <generation> \
+                          --tags <space-separated-tags> \
+                          --disk-encryption-set <encryption-set-resource-id> \
+                          --encryption-type <encryption-type> \
+                          --disk-access <disk-access-resource-id> \
+                          --tier <performance-tier> \
+                          --max-shares <count> \
+                          --network-access-policy <policy> \
+                          --enable-bursting <true|false> \
+                          --disk-iops-read-write <iops> \
+                          --disk-mbps-read-write <mbps> \
+                          --upload-type <upload-type> \
+                          --upload-size-bytes <size-in-bytes> \
+                          --security-type <security-type> \
+                          --gallery-image-reference <image-version-resource-id> \
+                          --gallery-image-reference-lun <lun>
+```
+
+**Command Behavior:**
+- Creates a new Azure managed disk in the specified resource group.
+- Either `--size-gb`, `--source`, `--gallery-image-reference`, or `--upload-type` must be specified.
+- When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
+- When `--gallery-image-reference` is specified, the disk is created from a Shared Image Gallery image version. Use `--gallery-image-reference-lun` to select a specific data disk from the image; if omitted, the OS disk is used.
+- When `--upload-type` is specified with `--upload-size-bytes`, creates a disk in a ready-to-upload state. Use `UploadWithSecurityData` with `--security-type` and `--hyper-v-generation V2` for Trusted Launch or Confidential VM scenarios.
+- If `--location` is not specified, defaults to the resource group's location.
+- Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, on-demand bursting, IOPS and throughput limits (UltraSSD only), upload type, and security type.
+
+**Returns:**
+- Disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--disk-name` | Yes | Name of the managed disk to create |
+| `--source` | Conditional | Source to create the disk from: a resource ID of a snapshot or managed disk, or a blob URI of a VHD. Required if `--size-gb`, `--gallery-image-reference`, and `--upload-type` are not specified. |
+| `--size-gb` | Conditional | Size of the disk in GB. Required if `--source`, `--gallery-image-reference`, and `--upload-type` are not specified. When used with `--source`, overrides the source size. |
+| `--location` | No | Azure region (defaults to the resource group's location if not specified) |
+| `--sku` | No | Storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |
+| `--os-type` | No | OS type for the disk (Windows or Linux) |
+| `--zone` | No | Availability zone for the disk |
+| `--hyper-v-generation` | No | Hypervisor generation (V1 or V2) |
+| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
+| `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
+| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
+| `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
+| `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
+| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
+| `--enable-bursting` | No | Enable on-demand bursting (true or false) |
+| `--disk-iops-read-write` | No | IOPS limit for the disk (UltraSSD only) |
+| `--disk-mbps-read-write` | No | Throughput limit in MBps for the disk (UltraSSD only) |
+| `--gallery-image-reference` | Conditional | Resource ID of a Shared Image Gallery image version to create the disk from. Required if `--size-gb`, `--source`, and `--upload-type` are not specified. |
+| `--gallery-image-reference-lun` | No | LUN of the data disk in the gallery image version (if omitted, creates from the OS disk) |
+| `--upload-type` | Conditional | Upload type for the disk (Upload or UploadWithSecurityData). Required if `--size-gb`, `--source`, and `--gallery-image-reference` are not specified. When specified, `--upload-size-bytes` is required. |
+| `--upload-size-bytes` | Conditional | Size in bytes for upload disks, including the VHD footer (required when `--upload-type` is specified) |
+| `--security-type` | Conditional | Security type for the disk. Accepted values: ConfidentialVM_DiskEncryptedWithCustomerKey, ConfidentialVM_DiskEncryptedWithPlatformKey, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey, Standard, TrustedLaunch. Required when `--upload-type` is UploadWithSecurityData. |
+
+```bash
+# Delete a managed disk
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute disk delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name>
+```
+
+**Command Behavior:**
+- Deletes an Azure managed disk from the specified resource group.
+- This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
+- The disk must not be attached to a virtual machine. Detach it first before deleting.
+
+**Returns:**
+- `Deleted`: Boolean indicating whether the disk was deleted.
+- `DiskName`: Name of the disk that was targeted for deletion.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--disk-name` | Yes | Name of the managed disk to delete |
+
+```bash
+# Update a managed disk's size
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --size-gb <size>
+
+# Update a managed disk without specifying resource group (resolved by searching subscription)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --disk-name <disk-name> \
+                          --sku <sku>
+
+# Update multiple properties of a managed disk
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute disk update --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name> \
+                          --size-gb <size> \
+                          --sku <sku> \
+                          --disk-iops-read-write <iops> \
+                          --disk-mbps-read-write <mbps> \
+                          --max-shares <count> \
+                          --network-access-policy <policy> \
+                          --enable-bursting <true|false> \
+                          --tags <space-separated-tags> \
+                          --disk-encryption-set <encryption-set-resource-id> \
+                          --encryption-type <encryption-type> \
+                          --disk-access <disk-access-resource-id> \
+                          --tier <performance-tier>
+```
+
+**Command Behavior:**
+- Updates properties of an existing Azure managed disk. Only specified properties are modified; unspecified properties remain unchanged.
+- If `--resource-group` is not specified, the disk is located by name within the subscription.
+- Disk size can only be increased, not decreased.
+- IOPS and throughput limits (`--disk-iops-read-write`, `--disk-mbps-read-write`) apply to UltraSSD disks only.
+
+**Returns:**
+- Updated disk information including name, location, resource group, disk size, SKU, provisioning state, OS type, zones, and tags.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--disk-name` | Yes | Name of the managed disk to update |
+| `--resource-group`, `-g` | No | Resource group name (if not provided, disk is located by searching the subscription) |
+| `--size-gb` | No | New size of the disk in GB (can only increase) |
+| `--sku` | No | New storage SKU (e.g., Premium_LRS, Standard_LRS, StandardSSD_LRS, UltraSSD_LRS) |
+| `--disk-iops-read-write` | No | IOPS limit for the disk (UltraSSD only) |
+| `--disk-mbps-read-write` | No | Throughput limit in MBps (UltraSSD only) |
+| `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
+| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
+| `--enable-bursting` | No | Enable on-demand bursting (true or false) |
+| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
+| `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
+| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
+| `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 
 ### Azure Confidential Ledger Operations
 
@@ -1257,6 +1539,19 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 -   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
+
+### Azure Container Apps Operations
+
+```bash
+# List Azure Container Apps in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription>
+
+# List Azure Container Apps in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription> \
+                         [--resource-group <resource-group>]
+```
 
 ### Azure Container Registry (ACR) Operations
 
@@ -1483,10 +1778,9 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy pipeline guidance get [--use-azd-pipeline-config <use-azd-pipeline-config>] \
-                                   [--organization-name <organization-name>] \
-                                   [--repository-name <repository-name>] \
-                                   [--github-environment-name <github-environment-name>]
+azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
+                                   [--pipeline-platform <pipeline-platform>] \
+                                   [--deploy-option <deploy-option>]
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1494,7 +1788,20 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       --project-name <project-name> \
                       --target-app-service <target-app-service> \
                       --provisioning-tool <provisioning-tool> \
-                      [--azd-iac-options <azd-iac-options>]
+                      --source-type <source-type> \
+                      [--iac-options <iac-options>] \
+                      [--deploy-option <deploy-option>] \
+                      [--resource-group <resource-group>] \
+                      [--subscription <subscription>]
+```
+
+### Azure Device Registry Operations
+
+```bash
+# List Azure Device Registry namespaces in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceregistry namespace list --subscription <subscription> \
+                                    [--resource-group <resource-group>]
 ```
 
 ### Azure Event Grid Operations
@@ -1688,6 +1995,24 @@ azmcp fileshares fileshare snapshot delete --subscription <subscription> \
 ```
 
 ```bash
+# Get a specific private endpoint connection or list all private endpoint connections for a file share
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --file-share-name <file-share-name> \
+                                            [--connection-name <connection-name>]
+
+# Update the state of a private endpoint connection for a file share
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare peconnection update --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --file-share-name <file-share-name> \
+                                               --connection-name <connection-name> \
+                                               --status <Approved|Rejected> \
+                                               [--description <description>]
+```
+
+```bash
 # Get File Shares limits and quotas for a region
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares limits --subscription <subscription> \
@@ -1708,11 +2033,6 @@ azmcp fileshares usage --subscription <subscription> \
 ### Microsoft Foundry Extensions Operations
 
 ```bash
-# Get code samples to interact with a Foundry Agent using the Microsoft Foundry SDK
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions agents get-sdk-sample \
-    [--programming-language <language>]
-
 # List knowledge indexes in a Microsoft Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions knowledge index list \
@@ -1764,23 +2084,6 @@ azmcp foundryextensions resource get \
     --subscription <subscription> \
     [--resource-group <resource-group>] \
     [--resource-name <resource-name>]
-
-# Create a thread in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads create \
-    --endpoint <project-endpoint> \
-    --user-message <initial-message>
-
-# Get messages from a Microsoft Foundry thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads get-messages \
-    --endpoint <project-endpoint> \
-    --thread-id <thread-id>
-
-# List threads in a Microsoft Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundryextensions threads list \
-    --endpoint <project-endpoint>
 ```
 
 ### Azure Function App Operations
@@ -1791,6 +2094,24 @@ azmcp foundryextensions threads list \
 azmcp functionapp get --subscription <subscription> \
                       [--resource-group <resource-group>] \
                       [--function-app <function-app-name>]
+```
+
+### Azure Functions Operations
+
+```bash
+# List supported programming languages for Azure Functions with runtime versions, prerequisites, and development tools
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functions language list
+
+# Get project initialization files for a new Azure Functions app including host.json, local.settings.json, and language-specific files
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functions project get --language <language>
+
+# List all available function templates for a language or get the complete source code for a specific template
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functions template get --language <language> \
+                             [--template <template-name>] \
+                             [--runtime-version <runtime-version>]
 ```
 
 ### Azure Key Vault Operations
@@ -1898,49 +2219,44 @@ azmcp aks nodepool get --subscription <subscription> \
 # Create load test
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test create --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
                               --test-id <test-id> \
-                              --display-name <display-name> \
-                              --description <description> \
-                              --endpoint <endpoint> \
-                              --virtual-users <virtual-users> \
-                              --duration <duration> \
-                              --ramp-up-time <ramp-up-time>
+                              --test-resource-name <test-resource-name> \
+                              [--resource-group <resource-group>] \
+                              [--display-name <display-name>] \
+                              [--description <description>] \
+                              [--endpoint <endpoint>] \
+                              [--virtual-users <virtual-users>] \
+                              [--duration <duration>] \
+                              [--ramp-up-time <ramp-up-time>]
 
 # Get load test
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test get --subscription <subscription> \
-                           --resource-group <resource-group> \
+                           --test-id <test-id> \
                            --test-resource-name <test-resource-name> \
-                           --test-id <test-id>
+                           [--resource-group <resource-group>]
 
 # Create load test resources
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource create --subscription <subscription> \
                                       --resource-group <resource-group> \
-                                      --test-resource-name <test-resource-name>
+                                      [--test-resource-name <test-resource-name>]
 
 # List load test resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource list --subscription <subscription> \
-                                    --resource-group <resource-group> \
-                                    --test-resource-name <test-resource-name>
+                                    [--resource-group <resource-group>] \
+                                    [--test-resource-name <test-resource-name>]
 
 # Get load test run (single run or list all runs for a test)
 # Get a single test run by ID:
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
-                              --testrun-id <testrun-id>
-
-# List all test runs for a specific test:
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp loadtesting testrun get --subscription <subscription> \
-                              --resource-group <resource-group> \
-                              --test-resource-name <test-resource-name> \
-                              --test-id <test-id>
+                              [--resource-group <resource-group>] \
+                              [--testrun-id <testrun-id>] \
+                              [--test-id <test-id>]
+# Note: Either --testrun-id or --test-id must be provided, but not both.
 
 # Create or update load test run
 # Note: Create operations are NOT idempotent (each creates new execution with unique timestamps).
@@ -1948,31 +2264,32 @@ azmcp loadtesting testrun get --subscription <subscription> \
 # Create a new test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <display-name> \
-                                         --description <description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <display-name>] \
+                                         [--description <description>] \
+                                         [--old-testrun-id <old-testrun-id>]
 
 # Rerun an existing test run:
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <new-testrun-id> \
-                                         --old-testrun-id <existing-testrun-id>
+                                         [--resource-group <resource-group>] \
+                                         [--old-testrun-id <existing-testrun-id>]
 
 # Update test run metadata (idempotent):
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun createorupdate --subscription <subscription> \
-                                         --resource-group <resource-group> \
-                                         --test-resource-name <test-resource-name> \
                                          --test-id <test-id> \
+                                         --test-resource-name <test-resource-name> \
                                          --testrun-id <testrun-id> \
-                                         --display-name <updated-display-name> \
-                                         --description <updated-description>
+                                         [--resource-group <resource-group>] \
+                                         [--display-name <updated-display-name>] \
+                                         [--description <updated-description>]
 ```
 
 ### Azure Managed Grafana Operations
@@ -2258,8 +2575,49 @@ azmcp monitor webtests update --subscription <subscription> \
                               [--ssl-check <true|false>] \
                               [--ssl-lifetime-check <days>] \
                               [--timeout <seconds>]
-ubscription> \
-                            --resource-group <resource-group>
+
+```
+
+### Azure Monitor Instrumentation Operations
+
+```bash
+
+# Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
+
+# Start deterministic instrumentation orchestration for a local workspace
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
+
+# Continue orchestration after completing the previous action
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
+                                                --completion-note <what-was-completed>
+
+# Send brownfield analysis findings JSON to continue migration flow
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
+                                                       --findings-json <json>
+
+# Submit enhancement selection when orchestrator-start returns enhancement_available
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-enhancement-select --session-id <session-id> \
+                                                      --enhancement-keys <comma-separated-keys>
+```
+
+**Notes:**
+- `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
+- `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
+
+### Azure Managed Lustre Operations
+
+```bash
+# List Azure Managed Lustre file systems in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs list --subscription <subscription> \
+                            [--resource-group <resource-group>]
 
 # Create an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2656,6 +3014,10 @@ azmcp redis list --subscription <subscription>
 # List resource groups in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp group list --subscription <subscription>
+
+# List all resources in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp group resource list --subscription <subscription> --resource-group <resource-group>
 ```
 
 ### Azure Resource Health Operations
@@ -2814,10 +3176,10 @@ azmcp sql server create --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name> \
                         --location <location> \
-                        --admin-user <admin-username> \
-                        --admin-password <admin-password> \
+                        --administrator-login <admin-username> \
+                        --administrator-password <admin-password> \
                         [--version <server-version>] \
-                        [--public-network-access <enabled|disabled>]
+                        [--public-network-access <Enabled|Disabled>]  # Defaults to 'Disabled'
 
 # List Microsoft Entra ID administrators for a SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3090,7 +3452,9 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 ### Azure Subscription Management
 
 ```bash
-# List available Azure subscriptions
+# List available Azure subscriptions with default subscription indicator
+# Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
+# The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp subscription list [--tenant-id <tenant-id>]
 ```
@@ -3163,6 +3527,15 @@ azmcp virtualdesktop hostpool host list --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
+```
+
+### Azure Well-Architected Framework Operations
+
+```bash
+# Get Azure Well-Architected Framework guidance for a specific Azure service or list all supported services.
+# If --service is provided, returns guidance for that specific service; otherwise, lists all supported services.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp wellarchitectedframework serviceguide get [--service <service-name>]
 ```
 
 ### Azure Workbooks Operations

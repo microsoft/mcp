@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
@@ -147,6 +147,25 @@ public interface IComputeService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    // Delete operations
+    Task<bool> DeleteVmAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        bool? forceDeletion = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteVmssAsync(
+        string vmssName,
+        string resourceGroup,
+        string subscription,
+        bool? forceDeletion = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     // Disk operations
     Task<DiskInfo> GetDiskAsync(
         string diskName,
@@ -159,6 +178,64 @@ public interface IComputeService
     Task<List<DiskInfo>> ListDisksAsync(
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DiskInfo> CreateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        string? source = null,
+        string? location = null,
+        int? sizeGb = null,
+        string? sku = null,
+        string? osType = null,
+        string? zone = null,
+        string? hyperVGeneration = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
+        string? galleryImageReference = null,
+        int? galleryImageReferenceLun = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        string? uploadType = null,
+        long? uploadSizeBytes = null,
+        string? securityType = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<DiskInfo> UpdateDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
+        int? sizeGb = null,
+        string? sku = null,
+        long? diskIopsReadWrite = null,
+        long? diskMbpsReadWrite = null,
+        int? maxShares = null,
+        string? networkAccessPolicy = null,
+        string? enableBursting = null,
+        string? tags = null,
+        string? diskEncryptionSet = null,
+        string? encryptionType = null,
+        string? diskAccessId = null,
+        string? tier = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteDiskAsync(
+        string diskName,
+        string resourceGroup,
+        string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

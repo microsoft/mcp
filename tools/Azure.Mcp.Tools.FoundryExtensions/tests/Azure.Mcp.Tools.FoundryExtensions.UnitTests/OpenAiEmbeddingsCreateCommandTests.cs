@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -26,7 +26,6 @@ public class OpenAiEmbeddingsCreateCommandTests
         _foundryService = Substitute.For<IFoundryExtensionsService>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -65,7 +64,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -133,7 +132,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -193,7 +192,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -214,7 +213,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     public void Command_HasCorrectName()
     {
         // Arrange & Act
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
 
         // Assert
         Assert.Equal("embeddings-create", command.Name);
@@ -224,7 +223,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     public void Command_HasCorrectMetadata()
     {
         // Arrange & Act
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
 
         // Assert
         Assert.False(command.Metadata.Destructive);
@@ -243,7 +242,7 @@ public class OpenAiEmbeddingsCreateCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceGroup = "test-resource-group";
 
-        var command = new OpenAiEmbeddingsCreateCommand();
+        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
         var parseArgs = new List<string>
         {
             "--subscription", subscriptionId,
