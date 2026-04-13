@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked."
