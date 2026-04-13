@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 
-public class SubscriptionCommandTests
+public class SubscriptionCommandTests : IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IStorageService _storageService;
@@ -38,6 +38,11 @@ public class SubscriptionCommandTests
         _commandDefinition = _command.GetCommand();
     }
 
+    public void Dispose()
+    {
+        EnvironmentHelpers.ClearAzureSubscriptionId();
+    }
+
     [Fact]
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
@@ -55,7 +60,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expectedSubscription = CommandHelper.GetDefaultSubscription();
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
         [
@@ -65,7 +71,7 @@ public class SubscriptionCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            Arg.Is(subscription),
+            Arg.Is(expectedSubscription!),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -79,10 +85,10 @@ public class SubscriptionCommandTests
         // Assert
         Assert.NotNull(response);
 
-        // Verify the service was called with the environment variable subscription
+        // Verify the service was called with the resolved default subscription
         _ = _storageService.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            subscription,
+            expectedSubscription!,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -92,7 +98,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        var ignoredSubscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var defaultSubscription = CommandHelper.GetDefaultSubscription();
         var expectedSubscription = "option-subs";
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
@@ -117,7 +124,7 @@ public class SubscriptionCommandTests
         // Assert
         Assert.NotNull(response);
 
-        // Verify the service was called with the option subscription, not the environment variable
+        // Verify the service was called with the option subscription, not the default
         _ = _storageService.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             expectedSubscription,
@@ -126,7 +133,7 @@ public class SubscriptionCommandTests
             Arg.Any<CancellationToken>());
         _ = _storageService.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-            ignoredSubscription,
+            defaultSubscription!,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());

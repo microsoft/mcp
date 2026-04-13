@@ -7,34 +7,41 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Helpers;
 
-public class CommandHelperTests
+public class CommandHelperTests : IDisposable
 {
+    public void Dispose()
+    {
+        EnvironmentHelpers.ClearAzureSubscriptionId();
+    }
+
     [Fact]
     public void GetSubscription_EmptySubscriptionParameter_ReturnsEnvironmentValue()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expected = CommandHelper.GetDefaultSubscription();
         var parseResult = GetParseResult(["--subscription", ""]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal(subscription, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public void GetSubscription_MissingSubscriptionParameter_ReturnsEnvironmentValue()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expected = CommandHelper.GetDefaultSubscription();
         var parseResult = GetParseResult([]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal(subscription, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
@@ -55,28 +62,30 @@ public class CommandHelperTests
     public void GetSubscription_ParameterValueContainingSubscription_ReturnsEnvironmentValue()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expected = CommandHelper.GetDefaultSubscription();
         var parseResult = GetParseResult(["--subscription", "Azure subscription 1"]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal(subscription, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public void GetSubscription_ParameterValueContainingDefault_ReturnsEnvironmentValue()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        var expected = CommandHelper.GetDefaultSubscription();
         var parseResult = GetParseResult(["--subscription", "Some default name"]);
 
         // Act
         var actual = CommandHelper.GetSubscription(parseResult);
 
         // Assert
-        Assert.Equal(subscription, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]

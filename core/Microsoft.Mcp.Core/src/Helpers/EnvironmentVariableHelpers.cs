@@ -25,22 +25,12 @@ public static class EnvironmentHelpers
         => Environment.GetEnvironmentVariable(AzureSubscriptionIdEnvironmentVariable);
 
     /// <summary>
-    /// Sets the AZURE_SUBSCRIPTION_ID environment variable. 
+    /// Sets the AZURE_SUBSCRIPTION_ID environment variable.
     /// This method is primarily intended for testing scenarios.
     /// </summary>
     /// <param name="subscriptionId">The subscription ID to set, or null to clear the variable.</param>
-    /// <returns>Either the AZURE_SUBSCRIPTION_ID environment variable value that was set or the logged into Azure CLI subscription.</returns>
-    public static string SetAzureSubscriptionId(string subscriptionId)
-    {
-        var currentSubscription = CommandHelper.GetProfileSubscription();
-        if (!string.IsNullOrEmpty(currentSubscription))
-        {
-            return currentSubscription;
-        }
-
-        Environment.SetEnvironmentVariable(AzureSubscriptionIdEnvironmentVariable, subscriptionId);
-        return subscriptionId;
-    }
+    public static void SetAzureSubscriptionId(string? subscriptionId)
+        => Environment.SetEnvironmentVariable(AzureSubscriptionIdEnvironmentVariable, subscriptionId);
 
     /// <summary>
     /// Clears the AZURE_SUBSCRIPTION_ID environment variable.

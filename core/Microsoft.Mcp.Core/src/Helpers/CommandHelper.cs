@@ -30,18 +30,8 @@ public static class CommandHelper
 
     public static string? GetSubscription(ParseResult parseResult)
     {
-        // Get subscription from command line option or fallback to default subscription
         var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
-
-        if (!string.IsNullOrEmpty(subscriptionValue) && !IsPlaceholder(subscriptionValue))
-        {
-            return subscriptionValue;
-        }
-
-        var defaultSubscription = GetDefaultSubscription();
-        return !string.IsNullOrEmpty(defaultSubscription)
-            ? defaultSubscription
-            : subscriptionValue;
+        return ResolveSubscription(subscriptionValue, GetDefaultSubscription());
     }
 
     /// <summary>
@@ -50,19 +40,32 @@ public static class CommandHelper
     /// The CLI profile read is cached for the lifetime of the process to avoid redundant file I/O.
     /// </summary>
     public static string? GetDefaultSubscription()
-    {
-        // Primary: Azure CLI profile (set via 'az account set') - cached to avoid repeated file I/O
-        var profileDefault = GetProfileSubscription();
-        if (!string.IsNullOrEmpty(profileDefault))
-        {
-            return profileDefault;
-        }
-
-        // Fallback: AZURE_SUBSCRIPTION_ID environment variable (cheap, not cached)
-        return EnvironmentHelpers.GetAzureSubscriptionId();
-    }
+        => ResolveDefaultSubscription(GetProfileSubscription(), EnvironmentHelpers.GetAzureSubscriptionId());
 
     internal static string? GetProfileSubscription() => s_profileDefault.Value;
+
+    /// <summary>
+    /// Pure resolution logic: returns the first non-empty subscription source.
+    /// Priority: Azure CLI profile > AZURE_SUBSCRIPTION_ID environment variable.
+    /// </summary>
+    internal static string? ResolveDefaultSubscription(string? profileSubscription, string? envSubscription)
+        => !string.IsNullOrEmpty(profileSubscription) ? profileSubscription : envSubscription;
+
+    /// <summary>
+    /// Pure resolution logic: returns the explicit option value if valid, otherwise the default.
+    /// Placeholder values (containing "subscription" or "default") are treated as absent.
+    /// </summary>
+    internal static string? ResolveSubscription(string? optionValue, string? defaultSubscription)
+    {
+        if (!string.IsNullOrEmpty(optionValue) && !IsPlaceholder(optionValue))
+        {
+            return optionValue;
+        }
+
+        return !string.IsNullOrEmpty(defaultSubscription)
+            ? defaultSubscription
+            : optionValue;
+    }
 
     private static bool IsPlaceholder(string value) => value.Contains("subscription") || value.Contains("default");
 }
