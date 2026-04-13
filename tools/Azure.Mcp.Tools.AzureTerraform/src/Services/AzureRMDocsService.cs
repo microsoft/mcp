@@ -447,7 +447,8 @@ public sealed partial class AzureRMDocsService(IHttpClientFactory httpClientFact
                                 || codeText.Contains(resourceName, StringComparison.Ordinal)))
                         {
                             examples.Add(codeText);
-                            if (examples.Count >= 3) break;
+                            if (examples.Count >= 3)
+                                break;
                         }
                     }
 
@@ -518,7 +519,8 @@ public sealed partial class AzureRMDocsService(IHttpClientFactory httpClientFact
                 if (currentNote.Count > 0)
                 {
                     string noteText = string.Join(' ', currentNote).Trim();
-                    if (noteText.Length > 0) notes.Add(noteText);
+                    if (noteText.Length > 0)
+                        notes.Add(noteText);
                 }
 
                 currentNote = noteContent.Length > 0 ? [noteContent] : [];
@@ -532,14 +534,16 @@ public sealed partial class AzureRMDocsService(IHttpClientFactory httpClientFact
                 {
                     string cleanLine = line;
                     cleanLine = LeadingBlockquote().Replace(cleanLine, "").Trim();
-                    if (cleanLine.Length > 0) currentNote.Add(cleanLine);
+                    if (cleanLine.Length > 0)
+                        currentNote.Add(cleanLine);
                 }
                 else
                 {
                     if (currentNote.Count > 0)
                     {
                         string noteText = string.Join(' ', currentNote).Trim();
-                        if (noteText.Length > 0) notes.Add(noteText);
+                        if (noteText.Length > 0)
+                            notes.Add(noteText);
                         currentNote.Clear();
                     }
                     inNoteBlock = false;
@@ -550,7 +554,8 @@ public sealed partial class AzureRMDocsService(IHttpClientFactory httpClientFact
         if (currentNote.Count > 0)
         {
             string noteText = string.Join(' ', currentNote).Trim();
-            if (noteText.Length > 0) notes.Add(noteText);
+            if (noteText.Length > 0)
+                notes.Add(noteText);
         }
 
         // Deduplicate and clean
@@ -577,16 +582,20 @@ public sealed partial class AzureRMDocsService(IHttpClientFactory httpClientFact
     private static string? TryMatchNote(string line)
     {
         var match = NotePattern1().Match(line);
-        if (match.Success) return match.Groups[1].Value.Trim();
+        if (match.Success)
+            return match.Groups[1].Value.Trim();
 
         match = NotePattern2().Match(line);
-        if (match.Success) return match.Groups[1].Value.Trim();
+        if (match.Success)
+            return match.Groups[1].Value.Trim();
 
         match = NotePattern3().Match(line);
-        if (match.Success) return match.Groups[1].Value.Trim();
+        if (match.Success)
+            return match.Groups[1].Value.Trim();
 
         match = NotePattern4().Match(line);
-        if (match.Success) return match.Groups[1].Value.Trim();
+        if (match.Success)
+            return match.Groups[1].Value.Trim();
 
         return null;
     }

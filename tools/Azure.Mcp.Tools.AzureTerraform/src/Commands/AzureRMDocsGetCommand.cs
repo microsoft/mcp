@@ -18,7 +18,7 @@ public sealed class AzureRMDocsGetCommand(
     private readonly ILogger<AzureRMDocsGetCommand> _logger = logger;
     private readonly IAzureRMDocsService _docsService = docsService;
 
-    public override string Id => "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    public override string Id => "d4e5f6a7-b8c9-0123-abcd-567890123def";
 
     public override string Name => "get";
 

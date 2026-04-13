@@ -20,7 +20,7 @@ public sealed class AzApiDocsGetCommand(
     private readonly IAzApiDocsService _docsService = docsService;
     private readonly IAzApiExamplesService _examplesService = examplesService;
 
-    public override string Id => "b2c3d4e5-f6a7-8901-bcde-f12345678901";
+    public override string Id => "f6a7b8c9-d0e1-2345-bcde-678901234ef0";
 
     public override string Name => "get";
 
