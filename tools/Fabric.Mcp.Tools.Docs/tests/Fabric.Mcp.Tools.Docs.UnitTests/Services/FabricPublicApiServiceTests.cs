@@ -260,6 +260,8 @@ public class FabricPublicApiServiceTests
     [InlineData("digitalTwinBuilder")]
     [InlineData("graphQLApi")]
     [InlineData("semanticModel")]
+    [InlineData("sparkjobdefinition")]
+    [InlineData("mirroredAzureDatabricksCatalog")]
     public void GetFabricWorkloadItemDefinition_WithCamelCaseWorkload_ReturnsDefinition(string workloadType)
     {
         // Act
@@ -270,10 +272,12 @@ public class FabricPublicApiServiceTests
     }
 
     [Theory]
-    [InlineData("notebook", "item-definitions/notebook-definition\\.md")]
-    [InlineData("kqlDatabase", "item-definitions/kql-?database-definition\\.md")]
-    [InlineData("cosmosDbDatabase", "item-definitions/cosmos-?db-?database-definition\\.md")]
-    [InlineData("graphQLApi", "item-definitions/graph-?q-?l-?api-definition\\.md")]
+    [InlineData("notebook", "item-definitions/n-?o-?t-?e-?b-?o-?o-?k-definition\\.md")]
+    [InlineData("kqlDatabase", "item-definitions/k-?q-?l[-a-z]*?d-?a-?t-?a-?b-?a-?s-?e-definition\\.md")]
+    [InlineData("cosmosDbDatabase", "item-definitions/c-?o-?s-?m-?o-?s[-a-z]*?d-?b[-a-z]*?d-?a-?t-?a-?b-?a-?s-?e-definition\\.md")]
+    [InlineData("graphQLApi", "item-definitions/g-?r-?a-?p-?h[-a-z]*?q[-a-z]*?l[-a-z]*?a-?p-?i-definition\\.md")]
+    [InlineData("sparkjobdefinition", "item-definitions/s-?p-?a-?r-?k-?j-?o-?b-definition\\.md")]
+    [InlineData("mirroredAzureDatabricksCatalog", "item-definitions/m-?i-?r-?r-?o-?r-?e-?d[-a-z]*?a-?z-?u-?r-?e[-a-z]*?d-?a-?t-?a-?b-?r-?i-?c-?k-?s[-a-z]*?c-?a-?t-?a-?l-?o-?g-definition\\.md")]
     public void BuildItemDefinitionPattern_ConvertsCorrectly(string workloadType, string expectedPattern)
     {
         // Act
