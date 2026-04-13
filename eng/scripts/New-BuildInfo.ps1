@@ -430,12 +430,23 @@ function Get-ServerDetails {
                             Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                         }
                         else {
-                            # No matching versions found - this is an illegal state for non-beta releases
-                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
-                            $script:exitCode = 1
-                            continue
+                            # No matching versions found on the marketplace.
+                            # If the .csproj carries a stable (non-prerelease) version this is the very first GA
+                            # release — no prior published version exists to increment from, so use the csproj
+                            # version directly (e.g. 1.0.0 on first publish).
+                            if ([string]::IsNullOrEmpty($version.PrereleaseLabel) -and
+                                $version.Major -eq 1 -and $version.Minor -eq 0 -and $version.Patch -eq 0) {
+                                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
+                                $vsixIsPrerelease = $false
+                                Write-Host "No marketplace versions found for $($version.Major).0.X. Using .csproj version for first GA VSIX (1.0.0): $vsixVersion" -ForegroundColor Green
+                            }
+                            else {
+                                LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
+                                LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
+                                LogError "If this is the first GA release, ensure the .csproj version is a stable value (e.g., $($version.Major).0.0) before publishing."
+                                $script:exitCode = 1
+                                continue
+                            }
                         }
                     }
                     else {
