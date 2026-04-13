@@ -82,16 +82,40 @@ public class FabricPublicApiService(
     /// Builds a regex pattern for matching item definition resources.
     /// Workload names from directory listings are camelCase (e.g., "kqlDatabase"),
     /// while item definition files use kebab-case (e.g., "kql-database-definition.md").
-    /// This inserts an optional hyphen at each camelCase boundary to match either form.
+    /// This method handles three kinds of naming mismatches:
+    /// 1. camelCase boundaries → optional hyphens plus extra kebab-case segments
+    ///    (e.g., "mirroredAzureDatabricksCatalog" matches "mirrored-azuredatabricks-unitycatalog")
+    /// 2. All-lowercase workload names → optional hyphens between every character
+    ///    (e.g., "sparkjob" matches "spark-job")
+    /// 3. Trailing "definition" in workload names is stripped since the file suffix
+    ///    already includes "-definition.md" (e.g., "sparkjobdefinition" → "sparkjob")
     /// </summary>
     internal static string BuildItemDefinitionPattern(string workloadType)
     {
+        // Strip trailing "definition" since the file naming convention already includes "-definition.md"
+        if (workloadType.EndsWith("definition", StringComparison.OrdinalIgnoreCase))
+        {
+            workloadType = workloadType[..^10];
+        }
+
         var sb = new StringBuilder("item-definitions/");
         for (int i = 0; i < workloadType.Length; i++)
         {
-            if (i > 0 && char.IsUpper(workloadType[i]))
+            if (i > 0)
             {
-                sb.Append("-?");
+                if (char.IsUpper(workloadType[i]))
+                {
+                    // At camelCase boundaries, allow extra lowercase chars and hyphens
+                    // to handle naming inconsistencies (e.g., "AzureDatabricksCatalog"
+                    // matching "azuredatabricks-unitycatalog")
+                    sb.Append("[-a-z]*?");
+                }
+                else
+                {
+                    // Between consecutive lowercase chars, allow optional hyphen
+                    // to handle kebab-case variants (e.g., "sparkjob" matching "spark-job")
+                    sb.Append("-?");
+                }
             }
 
             sb.Append(char.ToLowerInvariant(workloadType[i]));
