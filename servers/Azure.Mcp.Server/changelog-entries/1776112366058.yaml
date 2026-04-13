@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Restored non-sensitive diagnostic context (Subscription, ResourceGroup, Server, Database) to error logging in MySqlListCommand and PostgresListCommand"

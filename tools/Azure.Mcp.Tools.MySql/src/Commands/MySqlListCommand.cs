@@ -48,15 +48,15 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            var options = BindOptions(parseResult);
-
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
 
             // Route based on provided parameters
@@ -105,7 +105,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}.", Name);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options.Subscription, options.ResourceGroup, options.Server, options.Database);
             HandleException(context, ex);
         }
 
