@@ -49,6 +49,7 @@ static class Program
               --model <name>      Model to use (default: claude-opus-4.6)
               --parallel <n>      Number of prompts to test concurrently (default: 4)
               --prompts-file <path>  Custom prompts file (markdown format)
+              --list-namespaces     List all namespaces in prompts file
             """);
         return 0;
     }
@@ -57,12 +58,15 @@ static class Program
     {
         string? namespaceFilter = null, tool = null, outputDir = CopilotTestConstants.OutputDirectory, model = CopilotTestConstants.ModelName, promptsFile = null;
         int max = CopilotTestConstants.MaxPrompts, retries = CopilotTestConstants.MaxRetryAttempts, parallel = CopilotTestConstants.Parallel;
-        bool onePerTool = false;
+        bool onePerTool = false, listNamespaces = false;
 
         for (int i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
+                case "--list-namespaces":
+                    listNamespaces = true;
+                    break;
                 case "--namespace" when i + 1 < args.Length:
                     namespaceFilter = args[++i];
                     break;
@@ -120,6 +124,24 @@ static class Program
         } else if (parallel > CopilotTestConstants.MaxParallelAllowed) {
             Console.WriteLine($"Warning: --parallel must be <= {CopilotTestConstants.MaxParallelAllowed}. Using {CopilotTestConstants.MaxParallelAllowed}.");
             parallel = CopilotTestConstants.MaxParallelAllowed;
+        }
+
+        if (listNamespaces)
+        {
+            var (_, defaultPromptsPath) = LoadFiles();
+            var promptsPath = promptsFile ?? defaultPromptsPath;
+            if (promptsPath is null || !File.Exists(promptsPath))
+            {
+                Console.Error.WriteLine($"ERROR: Prompts file not found: {promptsPath ?? "e2eTestPrompts.md"}");
+                return 1;
+            }
+            var namespaces = PromptParser.ParseNamespaces(promptsPath);
+            Console.WriteLine($"Available namespaces ({namespaces.Count}):");
+            foreach (var ns in namespaces)
+            {
+                Console.WriteLine($"  - {ns}");
+            }
+            return 0;
         }
 
         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
@@ -218,7 +240,7 @@ static class Program
 
         if (allPrompts.Count == 0)
         {
-            Console.WriteLine("No prompts matched the filter criteria.");
+            Console.WriteLine("No prompts matched the filter criteria. Run with --list-namespaces to see available namespaces, or adjust your filters.");
             return 0;
         }
 
@@ -260,6 +282,20 @@ static class Program
                 var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
                 AppendResultToMarkdown(reportFile, result);
                 return result;
+            }
+            catch (Exception ex)
+            {
+                WriteLineLock($"ERROR: Task for tool '{prompt.Tool}' failed to initialize: {ex.Message}");
+                var errorResult = new TestResult
+                {
+                    Tool = prompt.Tool,
+                    Prompt = prompt.Prompt,
+                    Duration = 0,
+                    Status = TestStatus.ERROR,
+                    Error = $"Task infrastructure error: {ex.Message}"
+                };
+                AppendResultToMarkdown(reportFile, errorResult);
+                return errorResult;
             }
             finally
             {
@@ -562,6 +598,8 @@ static class Program
             ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+        
+        var stderrTask = process.StandardError.ReadToEndAsync();
 
         try
         {
@@ -577,9 +615,10 @@ static class Program
                 $"'dotnet build' timed out after 15 minutes. The build process has been terminated.");
         }
 
+        var stderr = await stderrTask;
+
         if (process.ExitCode != 0)
         {
-            var stderr = await process.StandardError.ReadToEndAsync();
             throw new InvalidOperationException(
                 $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
         }

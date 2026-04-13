@@ -104,6 +104,7 @@ Options:
   --model <name>          LLM model to use (default: claude-opus-4.6)
   --parallel <n>          Number of prompts to test concurrently (default: 4)
   --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
+  --list-namespaces       List all available namespace values from the prompts file and exit
 ```
 
 ### Examples
@@ -132,6 +133,9 @@ dotnet run -- run --namespace keyvault --model gpt-4o
 
 # Use a custom prompts file
 dotnet run -- run --prompts-file ./my-prompts.md
+
+# List all available namespaces (useful for finding valid --namespace values)
+dotnet run -- run --list-namespaces
 ```
 
 ## Test Context Configuration

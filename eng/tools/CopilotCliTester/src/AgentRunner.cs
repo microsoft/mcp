@@ -119,6 +119,14 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                                 return;
                             }
 
+                            if (mapped.Type == "session.error")
+                            {
+                                metadata.Events.Add(mapped);
+                                isComplete = true;
+                                idleTcs.TrySetResult();
+                                return;
+                            }
+
                             metadata.Events.Add(mapped);
 
                             if (config.ShouldEarlyTerminate is not null && config.ShouldEarlyTerminate(metadata))

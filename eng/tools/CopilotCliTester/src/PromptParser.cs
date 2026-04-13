@@ -17,6 +17,20 @@ internal static partial class PromptParser
     [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+)\s*\|$", RegexOptions.IgnoreCase)]
     private static partial Regex TableRowRegex();
 
+    public static List<string> ParseNamespaces(string filePath)
+    {
+        var namespaces = new List<string>();
+        foreach (var line in File.ReadLines(filePath))
+        {
+            var match = SectionHeaderRegex().Match(line);
+            if (match.Success)
+            {
+                namespaces.Add(match.Groups[1].Value);
+            }
+        }
+        return namespaces;
+    }
+
     public static List<TestPrompt> ParseFile(string filePath)
     {
         var lines = File.ReadAllLines(filePath);
