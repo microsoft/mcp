@@ -303,15 +303,26 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // Registering a few common sanitizers for values that we know will be universally present and cleaned up
         if (EnableDefaultSanitizerAdditions)
         {
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
             }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.SubscriptionId,
                 Value = EmptyGuid,
+            }));
+            // Sanitize Resource Group name from the URI. This is needed as there is another default GeneralRegexSanitizer for
+            // Settings.ResourceBaseName. But there are two issues we hit with that:
+            // 1. Resource group names often have other characters added to it, like prepending or appending for uniqueness.
+            // 2. In playback, Settings.ResourceBaseName and Settings.ResourceGroupName are both configured to be 'Sanitized',
+            //    so it won't find the right string.
+            UriRegexSanitizers.Add(new(new()
+            {
+                Value = "Sanitized",
+                Regex = "/resource[gG]roups/(?<rgname>[\\w\\-.()]{1,90})(?=/|\\?|$)",
+                GroupForReplace = "rgname"
             }));
         }
     }
