@@ -17,7 +17,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AzureBackup;
 
-public class AzureBackupSetup : IAreaSetup
+public sealed class AzureBackupSetup : IAreaSetup
 {
     public string Name => "azurebackup";
 

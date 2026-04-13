@@ -152,6 +152,36 @@ public class DrEnableCrrCommandTests
     }
 
     [Theory]
+    [InlineData("invalid")]
+    [InlineData("RSV-type")]
+    [InlineData("backup")]
+    [InlineData("recovery")]
+    public async Task ExecuteAsync_RejectsInvalidVaultType(string vaultType)
+    {
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--vault-type", vaultType]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--vault-type must be", response.Message);
+    }
+
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    [InlineData("RSV")]
+    [InlineData("DPP")]
+    public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
+    {
+        _backupService.ConfigureCrossRegionRestoreAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg", "--vault-type", vaultType]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
     [InlineData("--subscription sub --vault v --resource-group rg", true)]
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)

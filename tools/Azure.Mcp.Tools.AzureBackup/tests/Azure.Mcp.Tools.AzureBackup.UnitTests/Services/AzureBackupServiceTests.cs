@@ -257,35 +257,26 @@ public class AzureBackupServiceTests
 
     #endregion
 
-    #region CreatePolicy - Unsupported option warnings
+    #region CreatePolicy - Unsupported option validation
 
     [Fact]
-    public async Task CreatePolicyAsync_UnsupportedOptions_AppendsWarnings()
+    public async Task CreatePolicyAsync_UnsupportedOptions_ThrowsNotSupportedException()
     {
-        var baseResult = new OperationResult("Succeeded", null, "Policy 'p' created in vault 'v'.");
-        _rsvOps.GetVaultAsync("v", "rg", "sub", null, null, Arg.Any<CancellationToken>())
-            .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null));
-        _rsvOps.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM",
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(baseResult);
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _service.CreatePolicyAsync(
+                "v", "rg", "sub", "p", "VM", null,
+                "Hourly", null, null, "4", "6", "1",
+                null, null, CancellationToken.None));
 
-        var result = await _service.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM", null,
-            "Hourly", null, null, "4", "6", "1",
-            null, null, CancellationToken.None);
-
-        Assert.Equal("Succeeded", result.Status);
-        Assert.Contains("--schedule-frequency", result.Message);
-        Assert.Contains("--weekly-retention-weeks", result.Message);
-        Assert.Contains("--monthly-retention-months", result.Message);
-        Assert.Contains("--yearly-retention-years", result.Message);
+        Assert.Contains("--schedule-frequency", ex.Message);
+        Assert.Contains("--weekly-retention-weeks", ex.Message);
+        Assert.Contains("--monthly-retention-months", ex.Message);
+        Assert.Contains("--yearly-retention-years", ex.Message);
+        Assert.Contains("not yet supported", ex.Message);
     }
 
     [Fact]
-    public async Task CreatePolicyAsync_NoUnsupportedOptions_NoWarnings()
+    public async Task CreatePolicyAsync_NoUnsupportedOptions_Succeeds()
     {
         var baseResult = new OperationResult("Succeeded", null, "Policy 'p' created in vault 'v'.");
         _rsvOps.GetVaultAsync("v", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -303,7 +294,23 @@ public class AzureBackupServiceTests
             null, null, CancellationToken.None);
 
         Assert.Equal("Succeeded", result.Status);
-        Assert.DoesNotContain("Warning", result.Message!);
+    }
+
+    [Theory]
+    [InlineData("Weekly", null, null, null)]
+    [InlineData(null, "4", null, null)]
+    [InlineData(null, null, "6", null)]
+    [InlineData(null, null, null, "1")]
+    public async Task CreatePolicyAsync_SingleUnsupportedOption_ThrowsNotSupportedException(
+        string? scheduleFrequency, string? weeklyRetention, string? monthlyRetention, string? yearlyRetention)
+    {
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _service.CreatePolicyAsync(
+                "v", "rg", "sub", "p", "VM", null,
+                scheduleFrequency, null, null, weeklyRetention, monthlyRetention, yearlyRetention,
+                null, null, CancellationToken.None));
+
+        Assert.Contains("not yet supported", ex.Message);
     }
 
     #endregion

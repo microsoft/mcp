@@ -50,6 +50,31 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 commandResult.AddError(
                     "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, or --tags.");
             }
+
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name))
+            {
+                var retentionValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
+                if (!string.IsNullOrEmpty(retentionValue))
+                {
+                    if (!int.TryParse(retentionValue, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+                    {
+                        commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
+                    }
+                }
+            }
+
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.IdentityType.Name))
+            {
+                var identityValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.IdentityType.Name);
+                if (!string.IsNullOrEmpty(identityValue) &&
+                    !identityValue.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
+                    !identityValue.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase) &&
+                    !identityValue.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                    !identityValue.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--identity-type must be 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.");
+                }
+            }
         });
     }
 

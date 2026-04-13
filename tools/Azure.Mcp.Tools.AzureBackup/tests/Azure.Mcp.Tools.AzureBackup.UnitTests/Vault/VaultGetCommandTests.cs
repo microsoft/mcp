@@ -208,6 +208,35 @@ public class VaultGetCommandTests
     }
 
     [Theory]
+    [InlineData("invalid")]
+    [InlineData("RSV-type")]
+    [InlineData("backup")]
+    [InlineData("recovery")]
+    public async Task ExecuteAsync_RejectsInvalidVaultType(string vaultType)
+    {
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--vault-type", vaultType]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--vault-type must be", response.Message);
+    }
+
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    [InlineData("RSV")]
+    [InlineData("DPP")]
+    public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
+    {
+        _backupService.ListVaultsAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new List<BackupVaultInfo>()));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--vault-type", vaultType]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --vault myVault --resource-group myRg", true)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)

@@ -184,4 +184,89 @@ public class GovernanceSoftDeleteCommandTests
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
+
+    [Theory]
+    [InlineData("Invalid")]
+    [InlineData("Enable")]
+    [InlineData("Disable")]
+    [InlineData("always")]
+    public async Task ExecuteAsync_RejectsInvalidSoftDeleteState(string softDeleteState)
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", softDeleteState]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--soft-delete must be", response.Message);
+    }
+
+    [Theory]
+    [InlineData("0")]   // below 14
+    [InlineData("13")]  // below 14
+    [InlineData("181")] // above 180
+    [InlineData("abc")] // non-numeric
+    public async Task ExecuteAsync_RejectsInvalidRetentionDays(string retentionDays)
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On", "--soft-delete-retention-days", retentionDays]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--soft-delete-retention-days", response.Message);
+    }
+
+    [Theory]
+    [InlineData("14")]
+    [InlineData("90")]
+    [InlineData("180")]
+    public async Task ExecuteAsync_AcceptsValidRetentionDays(string retentionDays)
+    {
+        // Arrange
+        _backupService.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On", "--soft-delete-retention-days", retentionDays]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        var expected = new OperationResult("Succeeded", null, "Soft delete set to 'On'");
+
+        _backupService.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expected));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete", "On", "--soft-delete-retention-days", "30"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult);
+        Assert.NotNull(result);
+        Assert.Equal("Succeeded", result.Result.Status);
+    }
 }

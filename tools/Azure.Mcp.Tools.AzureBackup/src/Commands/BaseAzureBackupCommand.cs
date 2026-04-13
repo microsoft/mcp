@@ -21,6 +21,19 @@ public abstract class BaseAzureBackupCommand<
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Vault.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.VaultType);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+                }
+            }
+        });
     }
 
     protected override T BindOptions(ParseResult parseResult)

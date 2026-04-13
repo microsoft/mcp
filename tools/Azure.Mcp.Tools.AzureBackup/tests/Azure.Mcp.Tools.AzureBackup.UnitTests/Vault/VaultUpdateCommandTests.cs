@@ -163,4 +163,89 @@ public class VaultUpdateCommandTests
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
+
+    [Theory]
+    [InlineData("SystemManaged")] // common typo
+    [InlineData("Managed")]
+    [InlineData("system")]
+    [InlineData("invalid")]
+    public async Task ExecuteAsync_RejectsInvalidIdentityType(string identityType)
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--identity-type", identityType]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--identity-type", response.Message);
+    }
+
+    [Theory]
+    [InlineData("SystemAssigned")]
+    [InlineData("UserAssigned")]
+    [InlineData("None")]
+    [InlineData("SystemAssigned,UserAssigned")]
+    public async Task ExecuteAsync_AcceptsValidIdentityType(string identityType)
+    {
+        // Arrange
+        _backupService.UpdateVaultAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--identity-type", identityType]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("0")]   // below 14
+    [InlineData("13")]  // below 14
+    [InlineData("181")] // above 180
+    [InlineData("abc")] // non-numeric
+    public async Task ExecuteAsync_RejectsInvalidSoftDeleteRetentionDays(string retentionDays)
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete-retention-days", retentionDays]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--soft-delete-retention-days", response.Message);
+    }
+
+    [Theory]
+    [InlineData("14")]
+    [InlineData("90")]
+    [InlineData("180")]
+    public async Task ExecuteAsync_AcceptsValidSoftDeleteRetentionDays(string retentionDays)
+    {
+        // Arrange
+        _backupService.UpdateVaultAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--soft-delete-retention-days", retentionDays]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
 }

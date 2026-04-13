@@ -16,7 +16,7 @@ using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Model
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ILogger<AzureBackupService> logger)
+public sealed class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ILogger<AzureBackupService> logger)
     : BaseAzureService(tenantService), IAzureBackupService
 {
     /// <summary>
@@ -256,20 +256,12 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         string? monthlyRetentionMonths, string? yearlyRetentionYears,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var warnings = CollectUnsupportedPolicyOptionWarnings(scheduleFrequency, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears);
+        ValidateUnsupportedPolicyOptions(scheduleFrequency, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears);
 
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
-        var result = VaultTypeResolver.IsRsv(resolved)
+        return VaultTypeResolver.IsRsv(resolved)
             ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken)
             : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken);
-
-        if (warnings.Count > 0)
-        {
-            var warningText = string.Join(" ", warnings);
-            result = result with { Message = $"{result.Message} Warning: {warningText}" };
-        }
-
-        return result;
     }
 
     public Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
@@ -359,8 +351,23 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
 
         var rsvTasks = rsvVaults
             .Where(v => v.Name is not null && v.ResourceGroup is not null)
-            .Select(v => rsvOps.ListProtectedItemsAsync(
-                v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+            .Select(async v =>
+            {
+                try
+                {
+                    return await rsvOps.ListProtectedItemsAsync(
+                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to list protected items for RSV vault '{VaultName}' in resource group '{ResourceGroup}'. Skipping vault.", v.Name, v.ResourceGroup);
+                    return new List<ProtectedItemInfo>();
+                }
+            });
 
         var rsvResults = await Task.WhenAll(rsvTasks);
         foreach (var items in rsvResults)
@@ -376,8 +383,23 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
 
         var dppTasks = dppVaults
             .Where(v => v.Name is not null && v.ResourceGroup is not null)
-            .Select(v => dppOps.ListProtectedItemsAsync(
-                v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken));
+            .Select(async v =>
+            {
+                try
+                {
+                    return await dppOps.ListProtectedItemsAsync(
+                        v.Name!, v.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to list protected items for DPP vault '{VaultName}' in resource group '{ResourceGroup}'. Skipping vault.", v.Name, v.ResourceGroup);
+                    return new List<ProtectedItemInfo>();
+                }
+            });
 
         var dppResults = await Task.WhenAll(dppTasks);
         foreach (var items in dppResults)
@@ -397,7 +419,7 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         var subResource = armClient.GetSubscriptionResource(subId);
 
         var targetTypes = !string.IsNullOrEmpty(resourceTypeFilter)
-            ? resourceTypeFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ? ValidateAndParseResourceTypeFilter(resourceTypeFilter)
             : s_protectableResourceTypes;
 
         var unprotected = new List<UnprotectedResourceInfo>();
@@ -542,32 +564,57 @@ public class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperation
         }
     }
 
-    private static List<string> CollectUnsupportedPolicyOptionWarnings(
+    private static void ValidateUnsupportedPolicyOptions(
         string? scheduleFrequency, string? weeklyRetentionWeeks,
         string? monthlyRetentionMonths, string? yearlyRetentionYears)
     {
-        var warnings = new List<string>();
+        var unsupported = new List<string>();
 
         if (!string.IsNullOrEmpty(scheduleFrequency))
         {
-            warnings.Add("--schedule-frequency was provided but is not yet applied; a daily schedule is always used.");
+            unsupported.Add("--schedule-frequency");
         }
 
         if (!string.IsNullOrEmpty(weeklyRetentionWeeks))
         {
-            warnings.Add("--weekly-retention-weeks was provided but is not yet applied to the policy.");
+            unsupported.Add("--weekly-retention-weeks");
         }
 
         if (!string.IsNullOrEmpty(monthlyRetentionMonths))
         {
-            warnings.Add("--monthly-retention-months was provided but is not yet applied to the policy.");
+            unsupported.Add("--monthly-retention-months");
         }
 
         if (!string.IsNullOrEmpty(yearlyRetentionYears))
         {
-            warnings.Add("--yearly-retention-years was provided but is not yet applied to the policy.");
+            unsupported.Add("--yearly-retention-years");
         }
 
-        return warnings;
+        if (unsupported.Count > 0)
+        {
+            throw new NotSupportedException(
+                $"The following options are not yet supported and cannot be applied: {string.Join(", ", unsupported)}. " +
+                "A daily schedule with the specified --daily-retention-days (or default) will be used. " +
+                "Multi-tier retention support is planned for a future release.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that each resource type in the filter matches the expected ARM resource type format
+    /// (e.g., "Microsoft.Compute/virtualMachines") to prevent OData injection.
+    /// </summary>
+    private static string[] ValidateAndParseResourceTypeFilter(string resourceTypeFilter)
+    {
+        var types = resourceTypeFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var type in types)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(type, @"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$"))
+            {
+                throw new ArgumentException(
+                    $"Invalid resource type format '{type}'. Expected format: 'Microsoft.Provider/resourceType' (e.g., 'Microsoft.Compute/virtualMachines').");
+            }
+        }
+
+        return types;
     }
 }

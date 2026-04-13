@@ -15,7 +15,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public class RsvBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IRsvBackupOperations
+public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IRsvBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
@@ -473,15 +473,36 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         if (!string.IsNullOrEmpty(identityType))
         {
             patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                identityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase)
-                    ? Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned
-                    : Azure.ResourceManager.Models.ManagedServiceIdentityType.None);
+                ParseIdentityType(identityType));
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(tags);
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    patchData.Tags[prop.Name] = prop.Value.GetString() ?? string.Empty;
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                throw new ArgumentException($"Invalid JSON format for --tags. Expected a JSON object like '{{\"key\":\"value\"}}'. Details: {ex.Message}", ex);
+            }
         }
 
         await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
+        // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
+        // not the vault patch endpoint.
+        if (!string.IsNullOrEmpty(redundancy))
+        {
+            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, redundancy, cancellationToken);
+        }
+
         // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
-        // since RSV vault patch only supports identity updates.
+        // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
             await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken);
@@ -493,6 +514,23 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
+    }
+
+    private static async Task ConfigureStorageRedundancyAsync(
+        ArmClient armClient, string vaultName, string resourceGroup,
+        string subscription, string redundancy, CancellationToken cancellationToken)
+    {
+        var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
+        var currentConfig = await configResource.GetAsync(cancellationToken);
+
+        var data = currentConfig.Value.Data;
+        data.Properties.StorageModelType = new BackupStorageType(redundancy);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetBackupResourceConfigs();
+        await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
@@ -717,6 +755,18 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
 
+    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
+        identityType.ToUpperInvariant() switch
+        {
+            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
+            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
+            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
+                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
+            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            _ => throw new ArgumentException(
+                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+        };
+
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
     {
         return new BackupVaultInfo(
@@ -924,16 +974,30 @@ public class RsvBackupOperations(ITenantService tenantService) : BaseAzureServic
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users
     /// commonly pass "SAPHana" (which is what the API returns in workloadType fields).
+    /// Validates input against known workload types to prevent OData injection.
     /// </summary>
-    private static string NormalizeWorkloadTypeForFilter(string workloadType) => workloadType.ToUpperInvariant() switch
+    private static string NormalizeWorkloadTypeForFilter(string workloadType)
     {
-        "SAPHANA" => "SAPHanaDatabase",
-        "SAPHANASYSTEM" => "SAPHanaSystem",
-        "SAPHANADBINSTANCE" or "SAPHANADBI" => "SAPHanaDBInstance",
-        "SQL" => "SQLDataBase",
-        "SQLINSTANCE" => "SQLInstance",
-        _ => workloadType, // Pass through if already in correct format (e.g., "SAPHanaDatabase", "SQLDataBase")
-    };
+        var normalized = workloadType.ToUpperInvariant() switch
+        {
+            "SAPHANA" => "SAPHanaDatabase",
+            "SAPHANASYSTEM" => "SAPHanaSystem",
+            "SAPHANADBINSTANCE" or "SAPHANADBI" => "SAPHanaDBInstance",
+            "SQL" => "SQLDataBase",
+            "SQLINSTANCE" => "SQLInstance",
+            "SAPHANADATABASE" => "SAPHanaDatabase",
+            "SQLDATABASE" => "SQLDataBase",
+            _ => (string?)null
+        };
+
+        if (normalized is null)
+        {
+            throw new ArgumentException(
+                $"Unknown workload type '{workloadType}'. Supported values: SQL, SQLInstance, SAPHana, SAPHanaSystem, SAPHanaDBInstance, SQLDataBase, SAPHanaDatabase.");
+        }
+
+        return normalized;
+    }
 
     private static ProtectableItemInfo MapToProtectableItemInfo(WorkloadProtectableItemResource data)
     {

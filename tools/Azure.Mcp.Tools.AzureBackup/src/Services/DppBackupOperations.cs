@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public class DppBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IDppBackupOperations
+public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IDppBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Dpp;
 
@@ -402,6 +402,13 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
+        if (!string.IsNullOrEmpty(redundancy))
+        {
+            throw new ArgumentException(
+                "Storage redundancy cannot be changed after a Data Protection (DPP) vault is created. " +
+                "Set --storage-type during vault creation instead.");
+        }
+
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
@@ -412,9 +419,7 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
         if (!string.IsNullOrEmpty(identityType))
         {
             patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                identityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase)
-                    ? Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned
-                    : Azure.ResourceManager.Models.ManagedServiceIdentityType.None);
+                ParseIdentityType(identityType));
         }
 
         var securitySettings = new BackupVaultSecuritySettings();
@@ -580,6 +585,18 @@ public class DppBackupOperations(ITenantService tenantService) : BaseAzureServic
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
+
+    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
+        identityType.ToUpperInvariant() switch
+        {
+            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
+            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
+            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
+                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
+            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            _ => throw new ArgumentException(
+                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+        };
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,

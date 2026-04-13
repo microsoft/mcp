@@ -56,6 +56,18 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
                     commandResult.AddError("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
                 }
             }
+
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name))
+            {
+                var retentionValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
+                if (!string.IsNullOrEmpty(retentionValue))
+                {
+                    if (!int.TryParse(retentionValue, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+                    {
+                        commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
+                    }
+                }
+            }
         });
     }
 
