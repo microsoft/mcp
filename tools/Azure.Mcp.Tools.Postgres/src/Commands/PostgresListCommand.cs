@@ -62,15 +62,17 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
+        BasePostgresOptions? options = null;
 
         try
         {
+            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            {
+                return context.Response;
+            }
+
+            options = BindOptions(parseResult);
+
             IPostgresService postgresService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
 
             // Route based on provided parameters
@@ -122,7 +124,7 @@ public sealed class PostgresListCommand(ILogger<PostgresListCommand> logger) : B
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options.Subscription, options.ResourceGroup, options.Server, options.Database);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options?.Subscription, options?.ResourceGroup, options?.Server, options?.Database);
             HandleException(context, ex);
         }
 
