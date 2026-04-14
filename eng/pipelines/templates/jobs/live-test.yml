@@ -14,6 +14,9 @@ jobs:
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
+  variables:
+    Environment: ${{ iif(parameters.GovTest, 'AzureUSGovernment', 'AzureCloud') }}
+    SubscriptionConfiguration: '{"Environment": "$(Environment)"}'
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
@@ -62,6 +65,7 @@ jobs:
       ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
 
   - task: AzurePowershell@5
     displayName: "Run tests (stdio) - az pwsh"
@@ -75,6 +79,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
@@ -87,6 +92,7 @@ jobs:
       ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
       AdditionalParameters: "@{ UseHttpTransport = true }"
 
   - task: AzurePowershell@5
@@ -101,6 +107,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
+          -Environment $(Environment) `
           -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
@@ -122,3 +129,4 @@ jobs:
       ServiceConnection: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       EnvVars:
         Pool: $(Pool)
+      SubscriptionConfiguration: $(SubscriptionConfiguration)
