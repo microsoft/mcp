@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Update HttpRequestException to attempt to return a more specific status code for better troubleshooting"
