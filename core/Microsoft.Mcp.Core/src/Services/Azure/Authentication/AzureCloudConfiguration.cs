@@ -37,11 +37,12 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         // Try to get cloud configuration from various sources in priority order:
         // 1. ServiceStartOptions (--cloud command line argument)
         // 2. Configuration (appsettings.json or environment variables)
+        //    - Keys are case-insensitive
+        //    - Usually IConfiguration is created using EnvironmentVariablesConfigurationProvider which 
+        //      includes environment variables, but we check both to be safe
         var cloudValue = serviceStartOptions?.Value?.Cloud
             ?? configuration["AZURE_CLOUD"]
-            ?? configuration["azure_cloud"]
-            ?? configuration["cloud"]
-            ?? configuration["Cloud"]
+            ?? configuration["CLOUD"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
         (AuthorityHost, ArmEnvironment, CloudType) = ParseCloudValue(cloudValue);

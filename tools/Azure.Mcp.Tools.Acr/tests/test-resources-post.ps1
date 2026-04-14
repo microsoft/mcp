@@ -3,6 +3,7 @@ param(
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
     [string] $BaseName,
+    [string] $Environment,
     [hashtable] $DeploymentOutputs,
     [hashtable] $AdditionalParameters
 )
