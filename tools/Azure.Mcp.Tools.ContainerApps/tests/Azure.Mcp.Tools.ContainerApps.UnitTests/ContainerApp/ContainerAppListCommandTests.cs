@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -53,11 +54,11 @@ public class ContainerAppListCommandTests
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        var originalSubscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var originalSubscriptionId = EnvironmentHelpers.GetAzureSubscriptionId();
         try
         {
             // Ensure environment variable fallback does not interfere with validation tests
-            EnvironmentHelpers.SetAzureSubscriptionId(null);
+            TestEnvironment.ClearAzureSubscriptionId();
             // Arrange
             if (shouldSucceed)
             {
@@ -87,7 +88,10 @@ public class ContainerAppListCommandTests
         }
         finally
         {
-            EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionId);
+            if (originalSubscriptionId != null)
+            {
+                TestEnvironment.SetAzureSubscriptionId(originalSubscriptionId);
+            }
         }
     }
 
