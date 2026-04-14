@@ -16,7 +16,7 @@ namespace CopilotCliTester;
 internal sealed partial class AgentRunner(CopilotClient client, string serverExecutablePath, string? outputDir = null, string? workspacePath = null) : IAsyncDisposable
 {
     private static readonly string TimeStamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
-    private readonly object eventLock = new();
+    private readonly Lock eventLock = new();
     private readonly string _outputDirectory = outputDir ?? Path.Combine(AppContext.BaseDirectory, "reports");
 
     [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")]

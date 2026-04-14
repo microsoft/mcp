@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CopilotCliTester.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="GitHub.Copilot.SDK" />
   </ItemGroup>
 
