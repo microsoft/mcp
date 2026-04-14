@@ -2,18 +2,30 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.2 (Unreleased)
+## 3.0.0-beta.2 (2026-04-14)
 
 ### Features Added
 
 - Added `azmcp functionapp create` to create an Azure Function App on an App Service plan (Consumption, Flex Consumption, Premium, App Service) with automatic provisioning of the storage account, App Service plan, and resource group when missing. Defaults to managed-identity storage auth across all plans (system-assigned identity on the site, `AzureWebJobsStorage__accountName` set, and Flex Consumption deployment storage uses SystemAssignedIdentity authentication). Pass `--storage-auth-mode connection-string` to use an access key instead. The user grants the site's identity Storage Blob Data Owner on the storage account after creation. [[#1327](https://github.com/microsoft/mcp/pull/1327)]
 - Added `azmcp functionapp containerapp create` to host an Azure Function App in Azure Container Apps, auto-provisioning the managed environment and storage when not supplied. Defaults to managed-identity storage auth (system-assigned identity on the container app, `AzureWebJobsStorage__accountName` + `AzureWebJobsStorage__credential=managedidentity` env vars); pass `--storage-auth-mode connection-string` to use an access key instead. [[#1327](https://github.com/microsoft/mcp/pull/1327)]
+- Added --output option to functions template get command with New (default) and Add values for controlling template file output. [[#2178](https://github.com/microsoft/mcp/pull/2178)]
+- Added --disable-caching to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
+- Added endpoint validation for Service Bus namespace parameter to ensure it resolves to a valid Azure Service Bus domain. [[#2347](https://github.com/microsoft/mcp/pull/2347)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
+- Fixed endpoint validation on non-Public cloud environments. [[#2320](https://github.com/microsoft/mcp/pull/2320)]
+- Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands. [[#2334](https://github.com/microsoft/mcp/pull/2334)]
+- Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints. [[#2335](https://github.com/microsoft/mcp/pull/2335)]
+- Added input validation for Azure Storage account names in StorageService. [[#2348](https://github.com/microsoft/mcp/pull/2348)]
+- Allowed KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2385](https://github.com/microsoft/mcp/pull/2385)]
+
 ### Other Changes
+
+- Enhanced the description for the main Azure Monitor command group to provide a more comprehensive overview of its capabilities and usage. [[#2325](https://github.com/microsoft/mcp/pull/2325)]
+- Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in Microsoft.Mcp.Core. [[#2355](https://github.com/microsoft/mcp/pull/2355)]
 
 ## 3.0.0-beta.1 (2026-04-01)
 
