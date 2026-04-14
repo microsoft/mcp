@@ -6,8 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added --output option to functions template get command with New (default) and Add values for controlling template file output. [[#2178](https://github.com/microsoft/mcp/pull/2178)]
-- Added --disable-caching to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
+- Added `--output` option to functions template get command with New (default) and Add values for controlling template file output. [[#2178](https://github.com/microsoft/mcp/pull/2178)]
+- Added `--disable-caching` to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
 - Added endpoint validation for Service Bus namespace parameter to ensure it resolves to a valid Azure Service Bus domain. [[#2347](https://github.com/microsoft/mcp/pull/2347)]
 
 ### Bugs Fixed
