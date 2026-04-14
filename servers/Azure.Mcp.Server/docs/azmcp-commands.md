@@ -766,7 +766,8 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--soft-delete-retention-days <soft-delete-retention-days>] \
                                [--immutability-state <immutability-state>] \
                                [--identity-type <identity-type>] \
-                               [--tags <tags>]
+                               [--tags <tags>] \
+                               [--redundancy <redundancy>]
 ```
 
 #### Policy
