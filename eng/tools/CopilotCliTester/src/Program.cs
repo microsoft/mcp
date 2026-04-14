@@ -48,8 +48,10 @@ static class Program
               --output <dir>      Output directory for reports (default: results)
               --model <name>      Model to use (default: claude-opus-4.6)
               --parallel <n>      Number of prompts to test concurrently (default: 4)
+              --threshold <n>       Pass threshold percentage (default: 95)
               --prompts-file <path>  Custom prompts file (markdown format)
               --list-namespaces     List all namespaces in prompts file
+              --fail-on-empty-result   Consider tests that return no tool calls as failures (default: false)
             """);
         return 0;
     }
@@ -58,7 +60,8 @@ static class Program
     {
         string? namespaceFilter = null, tool = null, outputDir = CopilotTestConstants.OutputDirectory, model = CopilotTestConstants.ModelName, promptsFile = null;
         int max = CopilotTestConstants.MaxPrompts, retries = CopilotTestConstants.MaxRetryAttempts, parallel = CopilotTestConstants.Parallel;
-        bool onePerTool = false, listNamespaces = false;
+        bool onePerTool = false, listNamespaces = false, failOnEmptyResult = false;
+        double threshold = CopilotTestConstants.PassThreshold;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -112,8 +115,21 @@ static class Program
                         parallel = parsedParallel;
                     }
                     break;
+                case "--threshold" when i+1 <args.Length:
+                    if (!double.TryParse(args[++i], out var parsedThreshold))
+                    {
+                        Console.WriteLine("Invalid value for --threshold. Using default: " + CopilotTestConstants.PassThreshold);
+                    }
+                    else
+                    {
+                        threshold = parsedThreshold;
+                    }
+                    break;
                 case "--prompts-file" when i + 1 < args.Length: 
                     promptsFile = args[++i];
+                    break;
+                case "--fail-on-empty-result":
+                    failOnEmptyResult = true;
                     break;
             }
         }
@@ -124,6 +140,14 @@ static class Program
         } else if (parallel > CopilotTestConstants.MaxParallelAllowed) {
             Console.WriteLine($"Warning: --parallel must be <= {CopilotTestConstants.MaxParallelAllowed}. Using {CopilotTestConstants.MaxParallelAllowed}.");
             parallel = CopilotTestConstants.MaxParallelAllowed;
+        }
+
+        if (threshold < 0) {
+            Console.WriteLine("Warning: --threshold must be >= 0. Using default: " + CopilotTestConstants.PassThreshold);
+            threshold = CopilotTestConstants.PassThreshold;
+        } else if (threshold > 100) {
+            Console.WriteLine("Warning: --threshold must be <= 100. Using default: " + CopilotTestConstants.PassThreshold);
+            threshold = CopilotTestConstants.PassThreshold;
         }
 
         if (listNamespaces)
@@ -144,7 +168,7 @@ static class Program
             return 0;
         }
 
-        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, promptsFile);
+        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, threshold, failOnEmptyResult, promptsFile);
     }
 
     static void CleanStaleWorkspaces()
@@ -178,7 +202,7 @@ static class Program
         }
     }
 
-    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, string? promptsFile = null)
+    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, double threshold, bool failOnEmptyResult, string? promptsFile = null)
     {
         CleanStaleWorkspaces();
 
@@ -240,15 +264,23 @@ static class Program
 
         if (allPrompts.Count == 0)
         {
-            Console.WriteLine("No prompts matched the filter criteria. Run with --list-namespaces to see available namespaces, or adjust your filters.");
-            return 0;
+            if (failOnEmptyResult)
+            {
+                Console.WriteLine("No prompts matched the filter criteria. Considered as failure due to --fail-on-empty-result.");
+                return 1;
+            }
+            else
+            {
+                Console.WriteLine("No prompts matched the filter criteria. Run with --list-namespaces to see available namespaces, or adjust your filters.");
+                return 0;
+            }
         }
 
         var namespaceCount = allPrompts.Select(p => p.Namespace).Distinct().Count();
 
         Console.WriteLine();
         Console.WriteLine($"Testing {allPrompts.Count} prompts across {namespaceCount} namespaces");
-        Console.WriteLine($"Retries: {retries}, Model: {model}");
+        Console.WriteLine($"Retries: {retries}, Model: {model}, Pass Threshold: {threshold}%");
         Console.WriteLine("--------------------------------------------------------------------------------");
         Console.WriteLine();
 
@@ -332,7 +364,7 @@ static class Program
         AppendMarkdownSummary(reportFile, results, totalStopwatch.Elapsed);
         Console.WriteLine($" Report finalized: {reportFile}");
 
-        return passRate >= CopilotTestConstants.PassThreshold ? 0 : 1;
+        return passRate >= threshold ? 0 : 1;
     }
 
     /// <summary>

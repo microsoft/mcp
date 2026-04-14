@@ -103,7 +103,9 @@ Options:
   --output <dir>          Output directory for reports (default: reports)
   --model <name>          LLM model to use (default: claude-opus-4.6)
   --parallel <n>          Number of prompts to test concurrently (default: 4)
+  --threshold <n>         Pass threshold percentage; exit code 1 if pass rate is below this value (default: 95)
   --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
+  --fail-on-empty-result  Treat zero matching prompts as a failure (exit code 1) instead of silently passing
   --list-namespaces       List all available namespace values from the prompts file and exit
 ```
 
@@ -136,6 +138,12 @@ dotnet run -- run --prompts-file ./my-prompts.md
 
 # List all available namespaces (useful for finding valid --namespace values)
 dotnet run -- run --list-namespaces
+
+# Set a custom pass threshold (fail if pass rate < 80%)
+dotnet run -- run --namespace storage --threshold 80
+
+# Fail if no prompts match the filter (useful in CI to catch typos)
+dotnet run -- run --namespace storage --fail-on-empty-result
 ```
 
 ## Test Context Configuration

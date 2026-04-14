@@ -45,6 +45,10 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
     public static (CopilotClient Client, string WorkspacePath) CreateSharedClient(string runId, bool debug = false, string? outputDir = null)
     {
         var workspace = CreateTempWorkspace($"mcp-test-{runId}-");
+        // Test automation runs non-interactively, so we must bypass CLI safety prompts that would otherwise block execution waiting for user input:
+        //   --yolo              Auto-approve all tool executions without confirmation dialogs.
+        //   --allow-all-tools   Permit every tool (including MCP tools) without an allowlist.
+        //   --allow-all-paths   Remove file-system path restrictions so tools can read/write anywhere.
         var cliArgs = new List<string> { "--yolo", "--allow-all-tools", "--allow-all-paths" };
         if (debug)
         {
