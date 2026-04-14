@@ -108,7 +108,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 30
+    capacity: 20
   }
   properties: {
     model: {
@@ -118,13 +118,15 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   }
 }
 
+// For isGov, the current available capacity 20, the current quota usage is 60, the quota limit is 80 
+// for quota Tokens Per Minute (thousands).
 resource gpt4oMiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   parent: aiServicesAccount
   dependsOn: [modelDeployment]
   name: 'gpt-4o-mini'
   sku: {
     name: isGov ? 'Standard' : 'GlobalStandard'
-    capacity: 30
+    capacity: 5
   }
   properties: {
     model: {
@@ -140,7 +142,7 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: 'embedding-model'
   sku: {
     name: isGov ? 'Standard' : 'GlobalStandard'
-    capacity: 30
+    capacity: isGov ? 5 : 20
   }
   properties: {
     model: {
