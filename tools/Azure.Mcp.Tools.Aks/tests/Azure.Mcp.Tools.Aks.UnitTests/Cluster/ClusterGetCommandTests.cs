@@ -1,42 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.UnitTests.Cluster;
 
-public class ClusterGetCommandTests
+public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IAksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAksService _aksService;
-    private readonly ILogger<ClusterGetCommand> _logger;
-    private readonly ClusterGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ClusterGetCommandTests()
-    {
-        _aksService = Substitute.For<IAksService>();
-        _logger = Substitute.For<ILogger<ClusterGetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _aksService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -56,7 +35,7 @@ public class ClusterGetCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _aksService.GetClusters(
+            _service.GetClusters(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
@@ -95,7 +74,7 @@ public class ClusterGetCommandTests
             new() { Name = "cluster2", Location = "westus", KubernetesVersion = "1.29.0" },
             new() { Name = "cluster3", Location = "centralus", KubernetesVersion = "1.28.5" }
         };
-        _aksService.GetClusters(
+        _service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -115,7 +94,7 @@ public class ClusterGetCommandTests
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _aksService.Received(1).GetClusters(
+        await _service.Received(1).GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -209,7 +188,7 @@ public class ClusterGetCommandTests
             Tags = new Dictionary<string, string> { ["gc_skip"] = "true" }
         };
 
-        _aksService.GetClusters(
+        _service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -248,7 +227,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoClusters()
     {
         // Arrange
-        _aksService.GetClusters(
+        _service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -278,7 +257,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.GetClusters(
+        _service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -322,7 +301,7 @@ public class ClusterGetCommandTests
             AgentPoolProfiles = [new() { Name = "systempool", Count = 3 }]
         };
 
-        _aksService.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([expectedCluster]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
@@ -341,7 +320,7 @@ public class ClusterGetCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "AKS cluster not found");
-        _aksService.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<Models.Cluster>>(notFoundException));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
@@ -359,7 +338,7 @@ public class ClusterGetCommandTests
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _aksService.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<Models.Cluster>>(forbiddenException));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
