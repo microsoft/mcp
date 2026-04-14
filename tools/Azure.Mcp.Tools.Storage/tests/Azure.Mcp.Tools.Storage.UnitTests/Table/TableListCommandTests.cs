@@ -11,33 +11,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Table;
 
-public class TableListCommandTests
+public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<TableListCommand> _logger;
-    private readonly TableListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownStorageAccount = "storage123";
     private readonly string _knownSubscription = "sub123";
-
-    public TableListCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<TableListCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsStorageTables()
@@ -45,7 +29,7 @@ public class TableListCommandTests
         // Arrange
         var expectedTables = new List<string> { "table1", "table2" };
 
-        _storageService.ListTables(
+        _service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -76,7 +60,7 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoStorageTables()
     {
         // Arrange
-        _storageService.ListTables(
+        _service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -125,7 +109,7 @@ public class TableListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _storageService.ListTables(
+        _service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),

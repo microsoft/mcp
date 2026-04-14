@@ -1,43 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Account;
 
-public class AccountCreateCommandTests
+public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<AccountCreateCommand> _logger;
-    private readonly AccountCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AccountCreateCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<AccountCreateCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -79,7 +58,7 @@ public class AccountCreateCommandTests
                 Kind: "StorageV2",
                 Properties: properties);
 
-            _storageService.CreateStorageAccount(
+            _service.CreateStorageAccount(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -123,7 +102,7 @@ public class AccountCreateCommandTests
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Storage account name already exists");
 
-        _storageService.CreateStorageAccount(
+        _service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -152,7 +131,7 @@ public class AccountCreateCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found");
 
-        _storageService.CreateStorageAccount(
+        _service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -181,7 +160,7 @@ public class AccountCreateCommandTests
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
-        _storageService.CreateStorageAccount(
+        _service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -208,7 +187,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _storageService.CreateStorageAccount(
+        _service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -255,7 +234,7 @@ public class AccountCreateCommandTests
             Kind: "StorageV2",
             Properties: properties);
 
-        _storageService.CreateStorageAccount(
+        _service.CreateStorageAccount(
             "testaccount",
             "testrg",
             "eastus",
@@ -283,7 +262,7 @@ public class AccountCreateCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _storageService.Received(1).CreateStorageAccount(
+        await _service.Received(1).CreateStorageAccount(
             "testaccount",
             "testrg",
             "eastus",
