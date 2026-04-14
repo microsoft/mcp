@@ -105,7 +105,7 @@ Options:
   --parallel <n>          Number of prompts to test concurrently (default: 4)
   --threshold <n>         Pass threshold percentage; exit code 1 if pass rate is below this value (default: 95)
   --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
-  --fail-on-empty-result  Treat zero matching prompts as a failure (exit code 1) instead of silently passing
+  --fail-on-no-match      Treat zero matching prompts as a failure (exit code 1) instead of silently passing
   --list-namespaces       List all available namespace values from the prompts file and exit
 ```
 
@@ -143,7 +143,7 @@ dotnet run -- run --list-namespaces
 dotnet run -- run --namespace storage --threshold 80
 
 # Fail if no prompts match the filter (useful in CI to catch typos)
-dotnet run -- run --namespace storage --fail-on-empty-result
+dotnet run -- run --namespace storage --fail-on-no-match
 ```
 
 ## Test Context Configuration

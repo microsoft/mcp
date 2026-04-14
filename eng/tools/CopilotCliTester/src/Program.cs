@@ -51,7 +51,7 @@ static class Program
               --threshold <n>       Pass threshold percentage (default: 95)
               --prompts-file <path>  Custom prompts file (markdown format)
               --list-namespaces     List all namespaces in prompts file
-              --fail-on-empty-result   Consider tests that return no tool calls as failures (default: false)
+              --fail-on-no-match   Consider runs with zero prompt matches as failures (default: false)
             """);
         return 0;
     }
@@ -60,7 +60,7 @@ static class Program
     {
         string? namespaceFilter = null, tool = null, outputDir = CopilotTestConstants.OutputDirectory, model = CopilotTestConstants.ModelName, promptsFile = null;
         int max = CopilotTestConstants.MaxPrompts, retries = CopilotTestConstants.MaxRetryAttempts, parallel = CopilotTestConstants.Parallel;
-        bool onePerTool = false, listNamespaces = false, failOnEmptyResult = false;
+        bool onePerTool = false, listNamespaces = false, failOnNoMatch = false;
         double threshold = CopilotTestConstants.PassThreshold;
 
         for (int i = 0; i < args.Length; i++)
@@ -128,8 +128,8 @@ static class Program
                 case "--prompts-file" when i + 1 < args.Length: 
                     promptsFile = args[++i];
                     break;
-                case "--fail-on-empty-result":
-                    failOnEmptyResult = true;
+                case "--fail-on-no-match":
+                    failOnNoMatch = true;
                     break;
             }
         }
@@ -168,7 +168,7 @@ static class Program
             return 0;
         }
 
-        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, threshold, failOnEmptyResult, promptsFile);
+        return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, threshold, failOnNoMatch, promptsFile);
     }
 
     static void CleanStaleWorkspaces()
@@ -202,7 +202,7 @@ static class Program
         }
     }
 
-    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, double threshold, bool failOnEmptyResult, string? promptsFile = null)
+    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, double threshold, bool failOnNoMatch, string? promptsFile = null)
     {
         CleanStaleWorkspaces();
 
@@ -264,9 +264,9 @@ static class Program
 
         if (allPrompts.Count == 0)
         {
-            if (failOnEmptyResult)
+            if (failOnNoMatch)
             {
-                Console.WriteLine("No prompts matched the filter criteria. Considered as failure due to --fail-on-empty-result.");
+                Console.WriteLine("No prompts matched the filter criteria. Considered as failure due to --fail-on-no-match.");
                 return 1;
             }
             else
@@ -451,8 +451,8 @@ static class Program
         }
 
         // All retries exhausted without invoking the expected tool
-        var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray();
-        WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
+        var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray(); 
+                        WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
         return new TestResult
         {
             Tool = prompt.Tool,

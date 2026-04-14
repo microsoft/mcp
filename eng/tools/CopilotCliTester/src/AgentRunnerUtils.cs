@@ -44,10 +44,14 @@ internal static class AgentRunnerUtils
             if (string.Equals(resolved, expectedTool, StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            // Namespace-prefixed matches (e.g., resolved="azure-storage_account_list" matches expectedTool="storage_account_list")
-            if (resolved.EndsWith($"_{expectedTool}", StringComparison.OrdinalIgnoreCase) ||
-                resolved.EndsWith($"-{expectedTool}", StringComparison.OrdinalIgnoreCase))
-                return true;
+            // Strip known single-segment namespace-proxy prefix instead of open-ended suffix match to avoid false positives (e.g., "subscription_list" matching "eventgrid_subscription_list")
+            var prefixes = new[] { "azure-", "azure_" };
+            foreach (var prefix in prefixes)
+            {
+                if (resolved.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(resolved[prefix.Length..], expectedTool, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
 
             return false;
         });
