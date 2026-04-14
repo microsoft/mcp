@@ -66,6 +66,7 @@ public sealed class TemplateGetCommandTests
         var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
         var templateOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.TemplateName}");
         var runtimeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.RuntimeVersionName}");
+        var outputOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.OutputName}");
 
         Assert.NotNull(languageOption);
         Assert.True(languageOption.Required);
@@ -73,6 +74,8 @@ public sealed class TemplateGetCommandTests
         Assert.False(templateOption.Required); // registered with AsOptional
         Assert.NotNull(runtimeOption);
         Assert.False(runtimeOption.Required);
+        Assert.NotNull(outputOption);
+        Assert.False(outputOption.Required);
     }
 
     [Fact]
@@ -140,7 +143,73 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_GetMode_ReturnsFunctionTemplate()
     {
-        // Arrange
+        // Arrange - default mode is New which returns all files in 'Files' plus separated FunctionFiles/ProjectFiles/MergeInstructions for backward compat
+        var expectedResult = new FunctionTemplateResult
+        {
+            Language = "python",
+            TemplateName = "HttpTrigger",
+            DisplayName = "HTTP Trigger",
+            Description = "A function triggered by HTTP requests",
+            BindingType = "trigger",
+            Resource = null,
+            Files =
+            [
+                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" },
+                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+            ],
+            FunctionFiles =
+            [
+                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" }
+            ],
+            ProjectFiles =
+            [
+                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+            ],
+            MergeInstructions = "## Merging Template Files"
+        };
+
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedResult));
+
+        // Act - with --template means get mode, default mode is New
+        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
+            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Null(result.TemplateList);
+        Assert.NotNull(result.FunctionTemplate);
+        Assert.Equal("python", result.FunctionTemplate.Language);
+        Assert.Equal("HttpTrigger", result.FunctionTemplate.TemplateName);
+        Assert.Equal("HTTP Trigger", result.FunctionTemplate.DisplayName);
+        Assert.Equal("trigger", result.FunctionTemplate.BindingType);
+        Assert.NotNull(result.FunctionTemplate.Files);
+        Assert.Equal(5, result.FunctionTemplate.Files.Count);
+        Assert.NotNull(result.FunctionTemplate.FunctionFiles);
+        Assert.Equal(2, result.FunctionTemplate.FunctionFiles.Count);
+        Assert.NotNull(result.FunctionTemplate.ProjectFiles);
+        Assert.Equal(3, result.FunctionTemplate.ProjectFiles.Count);
+        Assert.NotNull(result.FunctionTemplate.MergeInstructions);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_GetOutput_AddOutput_ReturnsSeparatedFiles()
+    {
+        // Arrange - Add output returns separated FunctionFiles and ProjectFiles
         var expectedResult = new FunctionTemplateResult
         {
             Language = "python",
@@ -163,11 +232,11 @@ public sealed class TemplateGetCommandTests
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
-        // Act - with --template means get mode
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger"]);
+        // Act - with --output Add
+        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger", "--output", "Add"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
@@ -184,11 +253,12 @@ public sealed class TemplateGetCommandTests
         Assert.NotNull(result.FunctionTemplate);
         Assert.Equal("python", result.FunctionTemplate.Language);
         Assert.Equal("HttpTrigger", result.FunctionTemplate.TemplateName);
-        Assert.Equal("HTTP Trigger", result.FunctionTemplate.DisplayName);
-        Assert.Equal("trigger", result.FunctionTemplate.BindingType);
+        Assert.Null(result.FunctionTemplate.Files);
+        Assert.NotNull(result.FunctionTemplate.FunctionFiles);
+        Assert.NotNull(result.FunctionTemplate.ProjectFiles);
         Assert.Equal(2, result.FunctionTemplate.FunctionFiles.Count);
         Assert.Equal(3, result.FunctionTemplate.ProjectFiles.Count);
-        Assert.NotEmpty(result.FunctionTemplate.MergeInstructions);
+        Assert.NotEmpty(result.FunctionTemplate.MergeInstructions!);
     }
 
     [Fact]
@@ -201,18 +271,14 @@ public sealed class TemplateGetCommandTests
             TemplateName = "HttpTrigger",
             DisplayName = "HTTP Trigger",
             BindingType = "trigger",
-            FunctionFiles =
+            Files =
             [
-                new ProjectTemplateFile { FileName = "src/functions/httpTrigger.ts", Content = "import { app } from '@azure/functions';" }
-            ],
-            ProjectFiles =
-            [
+                new ProjectTemplateFile { FileName = "src/functions/httpTrigger.ts", Content = "import { app } from '@azure/functions';" },
                 new ProjectTemplateFile { FileName = "package.json", Content = "{ \"devDependencies\": { \"@types/node\": \"22.x\" } }" }
-            ],
-            MergeInstructions = "instructions"
+            ]
         };
 
-        _service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         // Act
@@ -228,8 +294,9 @@ public sealed class TemplateGetCommandTests
 
         Assert.NotNull(result?.FunctionTemplate);
         Assert.Equal("typescript", result.FunctionTemplate.Language);
-        Assert.Single(result.FunctionTemplate.FunctionFiles);
-        Assert.Contains("@azure/functions", result.FunctionTemplate.FunctionFiles[0].Content);
+        Assert.NotNull(result.FunctionTemplate.Files);
+        Assert.Equal(2, result.FunctionTemplate.Files.Count);
+        Assert.Contains("@azure/functions", result.FunctionTemplate.Files[0].Content);
     }
 
     [Fact]
@@ -250,7 +317,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidTemplate()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "NonExistent", null, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new ArgumentException(
                 "Template \"NonExistent\" not found for language \"python\"."));
 
@@ -267,7 +334,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidRuntimeVersion()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new ArgumentException("Invalid runtime version \"99\" for java."));
 
         // Act
@@ -299,7 +366,7 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
             .Returns<FunctionTemplateResult>(_ => throw new InvalidOperationException("Could not fetch template"));
 
         // Act
@@ -390,7 +457,7 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation_GetMode()
     {
-        // Arrange
+        // Arrange - using Add output mode to test separated files
         var expectedResult = new FunctionTemplateResult
         {
             Language = "java",
@@ -415,11 +482,11 @@ public sealed class TemplateGetCommandTests
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", null, Arg.Any<CancellationToken>())
+        _service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger"]);
+        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--output", "Add"]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
@@ -436,11 +503,13 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("trigger", result.FunctionTemplate.BindingType);
 
         // Verify function files
+        Assert.NotNull(result.FunctionTemplate.FunctionFiles);
         var functionFile = result.FunctionTemplate.FunctionFiles[0];
         Assert.Equal("src/main/java/com/function/Function.java", functionFile.FileName);
         Assert.Contains("package com.function", functionFile.Content);
 
         // Verify project files
+        Assert.NotNull(result.FunctionTemplate.ProjectFiles);
         Assert.Equal(2, result.FunctionTemplate.ProjectFiles.Count);
         Assert.Equal("host.json", result.FunctionTemplate.ProjectFiles[0].FileName);
     }
@@ -489,7 +558,7 @@ public sealed class TemplateGetCommandTests
     public void BindOptions_BindsAllOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21"]);
+        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--output", "Add"]);
 
         var method = typeof(TemplateGetCommand).GetMethod(
             "BindOptions",
@@ -501,6 +570,7 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("java", options.Language);
         Assert.Equal("HttpTrigger", options.Template);
         Assert.Equal("21", options.RuntimeVersion);
+        Assert.Equal(TemplateOutput.Add, options.Output);
     }
 
     [Fact]
@@ -519,5 +589,6 @@ public sealed class TemplateGetCommandTests
         Assert.Equal("python", options.Language);
         Assert.Null(options.Template);
         Assert.Null(options.RuntimeVersion);
+        Assert.Equal(TemplateOutput.New, options.Output); // default output
     }
 }

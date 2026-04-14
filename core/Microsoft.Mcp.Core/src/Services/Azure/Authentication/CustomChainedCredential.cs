@@ -5,10 +5,10 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// A custom token credential that chains multiple Azure credentials with a broker-enabled instance of
@@ -130,9 +130,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
 
 #if DEBUG
-        bool isPlaybackMode = string.Equals(tokenCredentials, "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
         // Short-circuit for playback to avoid any real auth & interactive prompts.
-        if (isPlaybackMode)
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
             logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
             return new PlaybackTokenCredential();

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Informational;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -71,7 +71,7 @@ public sealed class FileShareGetUsageDataCommand(ILogger<FileShareGetUsageDataCo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting file share usage data. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting file share usage data. Subscription: {Subscription}, Location: {Location}.", options.Subscription, options.Location);
             HandleException(context, ex);
         }
 

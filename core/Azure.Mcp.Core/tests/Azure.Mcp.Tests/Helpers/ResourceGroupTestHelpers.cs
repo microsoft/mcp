@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.ResourceGroup;
+using Microsoft.Mcp.Core.Models.ResourceGroup;
 
 namespace Azure.Mcp.Tests.Helpers;
 

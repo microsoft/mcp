@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.Docs.Options;
 using Fabric.Mcp.Tools.Docs.Options.BestPractices;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
@@ -21,7 +20,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
 
     public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
 
-    public override string Name => "best_practices";
+    public override string Name => "best-practices";
 
     public override string Description =>
         "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.";

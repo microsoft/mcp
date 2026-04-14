@@ -4,12 +4,13 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
@@ -69,22 +70,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     ];
 
     // Pre-compiled regex patterns for word-boundary keyword matching
-    private static readonly Regex DangerousKeywordsPattern = new(
+    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
         @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        TimeSpan.FromSeconds(3));
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private static readonly Regex ObfuscationFunctionsPattern = new(
+    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
         @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        TimeSpan.FromSeconds(3));
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
         var tokenCredential = await GetCredential(cancellationToken);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
@@ -103,6 +100,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         };
     }
 
+    private static readonly string[] AllowedMySqlSuffixes =
+    [
+        ".mysql.database.azure.com",
+        ".mysql.database.usgovcloudapi.net",
+        ".mysql.database.chinacloudapi.cn",
+    ];
+
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
@@ -119,13 +123,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
                     server + ".mysql.database.azure.com"
             };
         }
+
+        if (!Array.Exists(AllowedMySqlSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for MySQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedMySqlSuffixes)}.");
+        }
+
         return server;
     }
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         var host = NormalizeServerName(server);
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }
 
@@ -159,7 +171,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         // false positives (e.g., 'C#Developer' or 'foo--bar' are not comments).
         // The pattern handles both SQL-standard doubled quotes ('') and
         // MySQL's default backslash escaping (\') inside string literals.
-        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, TimeSpan.FromSeconds(3));
+        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
         // Reject queries containing SQL comments to prevent bypass attacks
         // (e.g., MySQL version-specific comments /*!50000 ... */ that are executed as code)
@@ -178,7 +190,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
 
         // Regex pattern to detect multiple SQL statements (semicolon not at end)
-        var multipleStatementsPattern = new Regex(
+        var multipleStatementsPattern = RegexHelper.CreateRegex(
             @";\s*\w",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
         );
@@ -217,6 +229,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
     }
 
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
+
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, "mysql", cancellationToken);
@@ -250,10 +265,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         ValidateQuerySafety(query);
 
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
+
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
-        await using var command = new MySqlCommand(query, resource.Connection);
+        await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var rows = new List<string>();
@@ -389,7 +412,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         var configData = configuration.Value.Data;
         configData.Value = value;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

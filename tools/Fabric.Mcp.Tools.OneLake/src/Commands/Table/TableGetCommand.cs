@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -101,7 +99,7 @@ public sealed class TableGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving table. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving table. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}, Table: {Table}.", options.WorkspaceId, options.ItemId, options.Table);
             HandleException(context, ex);
         }
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
@@ -119,7 +118,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Endpoint: {Endpoint}.", Name, options.Endpoint);
             HandleException(context, ex);
         }
 

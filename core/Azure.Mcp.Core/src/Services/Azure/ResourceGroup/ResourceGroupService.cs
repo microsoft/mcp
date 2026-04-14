@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.ResourceGroup;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Models.Resource;
+using Microsoft.Mcp.Core.Models.ResourceGroup;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 
@@ -30,7 +31,7 @@ public class ResourceGroupService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
-        var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
+        var cacheKey = CacheKeyBuilder.Build(CacheKey, subscriptionId, tenant ?? "default");
         var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
@@ -60,7 +61,7 @@ public class ResourceGroupService(
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
-        var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
+        var cacheKey = CacheKeyBuilder.Build(CacheKey, subscriptionId, tenant ?? "default");
         var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
@@ -86,5 +87,22 @@ public class ResourceGroupService(
             .ConfigureAwait(false);
 
         return resourceGroupResponse?.Value;
+    }
+
+    public async IAsyncEnumerable<GenericResourceInfo> GetGenericResources(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
+
+        var resourceGroupResource = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken)
+            ?? throw new Exception($"Resource group '{resourceGroupName}' not found");
+
+        await foreach (var r in resourceGroupResource.GetGenericResourcesAsync(cancellationToken: cancellationToken))
+        {
+            yield return new GenericResourceInfo(
+                r.Data.Name,
+                r.Data.Id.ToString(),
+                r.Data.ResourceType.ToString(),
+                r.Data.Location.ToString());
+        }
     }
 }

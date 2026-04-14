@@ -35,15 +35,41 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
 
         services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, NodeJsLanguageDetector>();
+        services.AddSingleton<ILanguageDetector, PythonLanguageDetector>();
         services.AddSingleton<IAppTypeDetector, DotNetAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, NodeJsAppTypeDetector>();
+        services.AddSingleton<IAppTypeDetector, PythonAppTypeDetector>();
         services.AddSingleton<IInstrumentationDetector, DotNetInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, NodeJsInstrumentationDetector>();
+        services.AddSingleton<IInstrumentationDetector, PythonInstrumentationDetector>();
 
         services.AddSingleton<IGenerator, AspNetCoreGreenfieldGenerator>();
         services.AddSingleton<IGenerator, AspNetCoreBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, AspNetClassicBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WorkerServiceBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleBrownfieldGenerator>();
+        services.AddSingleton<IGenerator, DotNetEnhancementGenerator>();
+        services.AddSingleton<IGenerator, ExpressGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, FastifyGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NestJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, NextJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, LangchainJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PostgresNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MongoDBNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, RedisNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, MySQLNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, WinstonNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, BunyanNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, ConsoleNodeJsGreenfieldGenerator>();
+        services.AddSingleton<IGenerator, PythonGreenfieldGenerator>();
 
         services.AddSingleton<WorkspaceAnalyzer>();
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
+        services.AddSingleton<SendEnhancementSelectTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
@@ -63,17 +89,26 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
 
-        services.AddSingleton<ListLearningResourcesCommand>();
         services.AddSingleton<GetLearningResourceCommand>();
         services.AddSingleton<OrchestratorStartCommand>();
         services.AddSingleton<OrchestratorNextCommand>();
         services.AddSingleton<SendBrownfieldAnalysisCommand>();
+        services.AddSingleton<SendEnhancementSelectCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
-        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.", Title);
+        var monitor = new CommandGroup(Name,
+            """
+            Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and metrics, listing
+            tables and table types, working with health models and entities, web tests, and orchestrating instrumentation
+            workflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace
+            and resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity
+            logs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor
+            observability workflows. Set learn=true to discover sub-commands.
+            """,
+            Title);
 
         // Create Monitor subgroups
         var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");
@@ -145,8 +180,6 @@ public class MonitorSetup : IAreaSetup
         var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
         monitor.AddSubGroup(instrumentation);
 
-        var listLearningResources = serviceProvider.GetRequiredService<ListLearningResourcesCommand>();
-        instrumentation.AddCommand(listLearningResources.Name, listLearningResources);
         var getLearningResource = serviceProvider.GetRequiredService<GetLearningResourceCommand>();
         instrumentation.AddCommand(getLearningResource.Name, getLearningResource);
         var orchestratorStart = serviceProvider.GetRequiredService<OrchestratorStartCommand>();
@@ -155,6 +188,8 @@ public class MonitorSetup : IAreaSetup
         instrumentation.AddCommand(orchestratorNext.Name, orchestratorNext);
         var sendBrownfieldAnalysis = serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>();
         instrumentation.AddCommand(sendBrownfieldAnalysis.Name, sendBrownfieldAnalysis);
+        var sendEnhancementSelect = serviceProvider.GetRequiredService<SendEnhancementSelectCommand>();
+        instrumentation.AddCommand(sendEnhancementSelect.Name, sendEnhancementSelect);
 
         return monitor;
     }

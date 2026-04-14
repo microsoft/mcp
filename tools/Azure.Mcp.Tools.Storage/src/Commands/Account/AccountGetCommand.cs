@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -80,12 +80,12 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
         {
             if (options.Account is null)
             {
-                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}, Options: {@Options}", options.Subscription, options);
+                _logger.LogError(ex, "Error listing account details. Subscription: {Subscription}.", options.Subscription);
             }
             else
             {
-                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}, Options: {@Options}",
-                    options.Account, options.Subscription, options);
+                _logger.LogError(ex, "Error getting storage account details. Account: {Account}, Subscription: {Subscription}.",
+                    options.Account, options.Subscription);
             }
             HandleException(context, ex);
         }

@@ -4,13 +4,13 @@
 using System.ClientModel.Primitives;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -74,7 +74,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="tenant">Optional tenant to use for the query</param>
@@ -93,6 +93,13 @@ public abstract class BaseAzureResourceService(
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
+
+        if (!string.IsNullOrEmpty(additionalFilter) && additionalFilter.Contains('|'))
+        {
+            throw new ArgumentException(
+                "additionalFilter must not contain the pipe operator '|' to prevent KQL injection.",
+                nameof(additionalFilter));
+        }
 
         var results = new List<T>();
 
@@ -145,7 +152,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
-    /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
@@ -189,10 +196,9 @@ public abstract class BaseAzureResourceService(
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
-    protected async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
+    protected static async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
     {
-        if (armClient == null)
-            throw new ArgumentNullException(nameof(armClient));
+        ArgumentNullException.ThrowIfNull(armClient);
 
         var genericResources = armClient.GetGenericResources();
         var response = await genericResources.GetAsync(resourceIdentifier, cancellationToken).ConfigureAwait(false);
@@ -217,10 +223,15 @@ public abstract class BaseAzureResourceService(
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>
-    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
+    protected static async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(
+        ArmClient armClient,
+        ResourceIdentifier resourceIdentifier,
+        AzureLocation azureLocation,
+        T content,
+        JsonTypeInfo<T> jsonTypeInfo,
+        CancellationToken cancellationToken)
     {
-        if (armClient == null)
-            throw new ArgumentNullException(nameof(armClient));
+        ArgumentNullException.ThrowIfNull(armClient);
 
         // Convert from T to GenericResourceData
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(content, jsonTypeInfo);
@@ -229,7 +240,8 @@ public abstract class BaseAzureResourceService(
         GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
             ?? throw new InvalidOperationException("Failed to create deployment data");
         // Create the resource
-        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data, cancellationToken);
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Started, resourceIdentifier, data, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
         return result.Value;
     }
 }

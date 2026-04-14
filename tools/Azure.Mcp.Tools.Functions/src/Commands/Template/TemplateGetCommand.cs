@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
@@ -25,12 +24,12 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
     public override string Name => "get";
 
     public override string Description =>
-        "Generate Azure Functions code from templates including triggers, bindings, AI agents, Durable Functions, and MCP servers or list available templates. " +
-        "Use for code generation for serverless functions with triggers and bindings. " +
-        "Without --template, lists available templates. " +
-        "With --template, generates function code with the specified trigger and optional input/output bindings. " +
-        "Select one trigger (required) and zero or more bindings. " +
-        "Use after functions language list and functions project get.";
+        "List available Azure Functions templates or generate function code. " +
+        "Shows triggers (HTTP, Timer, Blob, EventHub, Durable, MCP triggers, and more), bindings, and serverless function options. " +
+        "Create durable functions, orchestrations, activity functions, or MCP server functions. " +
+        "Supports azd infrastructure with Bicep, Terraform, ARM templates. " +
+        "Without --template, lists all templates. With --template, generates code files. " +
+        "Select one trigger (required) and zero or more bindings.";
 
     public override string Title => "Get Function Template";
 
@@ -50,6 +49,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         command.Options.Add(FunctionsOptionDefinitions.Language);
         command.Options.Add(FunctionsOptionDefinitions.Template.AsOptional());
         command.Options.Add(FunctionsOptionDefinitions.RuntimeVersion);
+        command.Options.Add(FunctionsOptionDefinitions.Output);
 
         command.Validators.Add(commandResult =>
         {
@@ -71,7 +71,8 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
         {
             Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name),
             Template = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Template.Name),
-            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name)
+            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name),
+            Output = parseResult.GetValueOrDefault<TemplateOutput>(FunctionsOptionDefinitions.Output.Name)
         };
     }
 
@@ -106,7 +107,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
             {
                 // Get mode: fetch specific template files
                 var functionTemplate = await service.GetFunctionTemplateAsync(
-                    options.Language!, options.Template, options.RuntimeVersion, cancellationToken);
+                    options.Language!, options.Template, options.RuntimeVersion, options.Output, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(
