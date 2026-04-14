@@ -1,5 +1,12 @@
 # Release History
 
+
+## 2.0.1 (2026-04-14)
+
+### Fixed
+
+- Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
+
 ## 2.0.0 (2026-04-09)
 
 **🚀 New Major Release — Azure MCP Server 2.0**
