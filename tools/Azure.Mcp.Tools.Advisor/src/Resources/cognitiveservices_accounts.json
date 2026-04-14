@@ -17,6 +17,20 @@
         "type": "resourceAction",
         "action": "retire",
         "details": "Azure AI Health Insights is retiring. Remove the resource from the ARM template and migrate workloads to alternative Azure AI services."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cognitive_account",
+        "allOf": [
+          {
+            "attribute": "kind",
+            "equals": "HealthInsights"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "retire",
+        "details": "Azure AI Health Insights is retiring. Remove the azurerm_cognitive_account resource with kind = \"HealthInsights\" from the Terraform configuration and migrate workloads to alternative Azure AI services."
       }
     },
     {
@@ -37,6 +51,21 @@
         "action": "migrate",
         "targetService": "Microsoft.CognitiveServices/accounts",
         "details": "Replace the LUIS Cognitive Services resource (kind: LUIS) with an Azure AI Language account (kind: TextAnalytics) and migrate knowledge bases to Conversational Language Understanding."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cognitive_account",
+        "allOf": [
+          {
+            "attribute": "kind",
+            "contains": "LUIS"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetResource": "azurerm_cognitive_account",
+        "details": "Replace the azurerm_cognitive_account resource (kind = \"LUIS\") with an Azure AI Language account (kind = \"TextAnalytics\") and migrate knowledge bases to Conversational Language Understanding."
       }
     },
     {
@@ -56,6 +85,20 @@
         "type": "resourceAction",
         "action": "retire",
         "details": "QnA Maker is retired. Remove the resource from the ARM template and migrate knowledge bases to Azure AI Language custom question answering (kind: TextAnalytics)."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cognitive_account",
+        "allOf": [
+          {
+            "attribute": "kind",
+            "equals": "QnAMaker"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "retire",
+        "details": "QnA Maker is retired. Remove the azurerm_cognitive_account resource with kind = \"QnAMaker\" from the Terraform configuration and migrate knowledge bases to Azure AI Language custom question answering (kind = \"TextAnalytics\")."
       }
     }
   ]

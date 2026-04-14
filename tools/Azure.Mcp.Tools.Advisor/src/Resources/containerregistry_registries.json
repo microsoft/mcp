@@ -21,6 +21,24 @@
             "value": "Premium"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_container_registry",
+        "allOf": [
+          {
+            "attribute": "sku",
+            "notEquals": "Premium"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "sku",
+            "value": "Premium"
+          }
+        ]
       }
     }
   ]

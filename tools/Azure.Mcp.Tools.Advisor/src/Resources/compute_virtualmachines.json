@@ -18,6 +18,22 @@
         "action": "createAndLink",
         "targetService": "Microsoft.Compute/capacityReservationGroups",
         "details": "Add a Microsoft.Compute/capacityReservationGroups resource and a nested Microsoft.Compute/capacityReservationGroups/capacityReservations child resource to the template, then set properties.capacityReservation.capacityReservationGroup.id on the VM to reference the group."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "allOf": [
+          {
+            "attribute": "capacity_reservation_group_id",
+            "exists": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "createAndLink",
+        "targetResource": "azurerm_capacity_reservation_group",
+        "details": "Add an azurerm_capacity_reservation_group resource and an azurerm_capacity_reservation child resource to the Terraform configuration, then set capacity_reservation_group_id on the VM resource to reference the group's id."
       }
     },
     {
@@ -41,6 +57,25 @@
         "type": "resourceAction",
         "action": "resize",
         "details": "Deallocate the VM, then update properties.hardwareProfile.vmSize to a D-series or better SKU (e.g., Standard_D4s_v5). Verify image and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "anyOf": [
+          {
+            "attribute": "size",
+            "startsWith": "Standard_B"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_A"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM, then update the size attribute to a D-series or better SKU (e.g., Standard_D4s_v5). Verify image and extension compatibility before redeployment."
       }
     },
     {
@@ -88,6 +123,49 @@
         "type": "resourceAction",
         "action": "resize",
         "details": "Deallocate the VM and update properties.hardwareProfile.vmSize to an equivalent current-generation SKU. Recommended replacements by series: F/Fs/Fsv2 (compute-optimized) → Fasv6 or Famsv6; G/GS (memory-heavy) → Msv3 or Mv2; Lsv2 (storage-optimized) → Lsv3 or Lasv3; B (burstable) → Bsv2; Av2 (general-purpose) → Dsv5 or Dpsv5. Verify image and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "anyOf": [
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Lsv2"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_GS"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_G"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Fsv2"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Fs"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_F"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_B"
+          },
+          {
+            "attribute": "size",
+            "startsWith": "Standard_Av2"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update the size attribute to an equivalent current-generation SKU. Recommended replacements by series: F/Fs/Fsv2 (compute-optimized) → Fasv6 or Famsv6; G/GS (memory-heavy) → Msv3 or Mv2; Lsv2 (storage-optimized) → Lsv3 or Lasv3; B (burstable) → Bsv2; Av2 (general-purpose) → Dsv5 or Dpsv5. Verify image and extension compatibility before redeployment."
       }
     },
     {
@@ -107,6 +185,21 @@
         "type": "resourceAction",
         "action": "resize",
         "details": "Deallocate the VM and update properties.hardwareProfile.vmSize to a current NC-series equivalent. For general GPU workloads use Standard_NC24ads_A100_v4 (NCads A100 v4 series). For MPI or RDMA-dependent workloads (original 'r' suffix SKUs), use Standard_ND96asr_v4 (NDv4) or Standard_ND96isr_H100_v5 (ND H100 v5) instead, as NC24ads_A100_v4 does not support RDMA. Verify GPU drivers and extension compatibility before redeployment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine",
+        "note": "Also applies to azurerm_windows_virtual_machine",
+        "allOf": [
+          {
+            "attribute": "size",
+            "equals": "Standard_NC24s_v3"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "resize",
+        "details": "Deallocate the VM and update the size attribute to a current NC-series equivalent. For general GPU workloads use Standard_NC24ads_A100_v4. For MPI or RDMA-dependent workloads, use Standard_ND96asr_v4 or Standard_ND96isr_H100_v5. Verify GPU drivers and extension compatibility before redeployment."
       }
     }
   ]

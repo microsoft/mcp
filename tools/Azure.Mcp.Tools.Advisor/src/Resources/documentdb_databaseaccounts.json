@@ -28,6 +28,31 @@
             "value": "Tls12"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cosmosdb_account",
+        "anyOf": [
+          {
+            "attribute": "minimal_tls_version",
+            "exists": false
+          },
+          {
+            "attribute": "minimal_tls_version",
+            "in": [
+              "Tls",
+              "Tls11"
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "minimal_tls_version",
+            "value": "Tls12"
+          }
+        ]
       }
     }
   ]

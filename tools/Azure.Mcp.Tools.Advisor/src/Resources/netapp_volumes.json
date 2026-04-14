@@ -26,6 +26,25 @@
         "action": "createAndLink",
         "targetService": "Microsoft.NetApp/netAppAccounts/snapshotPolicies",
         "details": "Add a Microsoft.NetApp/netAppAccounts/snapshotPolicies resource to the ARM template with the desired schedule, then set properties.dataProtection.snapshot.snapshotPolicyId on the volume to the policy resource ID."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_netapp_volume",
+        "allOf": [
+          {
+            "attribute": "data_protection_snapshot_policy.snapshot_policy_id",
+            "exists": false
+          },
+          {
+            "attribute": "create_from_snapshot_resource_id",
+            "exists": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "createAndLink",
+        "targetResource": "azurerm_netapp_snapshot_policy",
+        "details": "Add an azurerm_netapp_snapshot_policy resource with the desired schedule to the Terraform configuration, then set data_protection_snapshot_policy.snapshot_policy_id on the azurerm_netapp_volume resource to reference the policy resource ID."
       }
     },
     {
@@ -50,6 +69,24 @@
         "operations": [
           {
             "field": "properties.networkFeatures",
+            "value": "Standard"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_netapp_volume",
+        "allOf": [
+          {
+            "attribute": "network_features",
+            "contains": "Basic"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "network_features",
             "value": "Standard"
           }
         ]

@@ -47,6 +47,50 @@
         "type": "resourceAction",
         "action": "configure",
         "details": "In properties.managedRules.managedRuleSets, replace OWASP CRS entries with a Microsoft_DefaultRuleSet entry using ruleSetVersion '2.1'. Remove legacy ruleSetType 'OWASP' entries and add: { 'ruleSetType': 'Microsoft_DefaultRuleSet', 'ruleSetVersion': '2.1' }."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_web_application_firewall_policy",
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "attribute": "managed_rules.managed_rule_set[0].type",
+                "equals": "OWASP"
+              },
+              {
+                "attribute": "managed_rules.managed_rule_set[0].version",
+                "in": [
+                  "2.2.9",
+                  "3.0",
+                  "3.1",
+                  "3.2"
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "attribute": "managed_rules.managed_rule_set[1].type",
+                "equals": "OWASP"
+              },
+              {
+                "attribute": "managed_rules.managed_rule_set[1].version",
+                "in": [
+                  "2.2.9",
+                  "3.0",
+                  "3.1",
+                  "3.2"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "details": "In the managed_rules block, replace OWASP managed_rule_set entries with a Microsoft_DefaultRuleSet entry using version '2.1'. Remove legacy type 'OWASP' rule sets and add: managed_rule_set { type = \"Microsoft_DefaultRuleSet\" version = \"2.1\" }."
       }
     }
   ]

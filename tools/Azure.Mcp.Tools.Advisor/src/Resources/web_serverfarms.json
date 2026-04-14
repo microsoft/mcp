@@ -33,6 +33,46 @@
             "value": "S1"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_service_plan",
+        "allOf": [
+          {
+            "attribute": "sku_name",
+            "notIn": [
+              "S1",
+              "S2",
+              "S3",
+              "P0v3",
+              "P1v2",
+              "P1v3",
+              "P2v2",
+              "P2v3",
+              "P3v2",
+              "P3v3",
+              "P4mv3",
+              "P5mv3",
+              "I1",
+              "I2",
+              "I3",
+              "I1v2",
+              "I2v2",
+              "I3v2",
+              "I4v2",
+              "I5v2",
+              "I6v2"
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "sku_name",
+            "value": "S1"
+          }
+        ]
       }
     },
     {
@@ -53,6 +93,28 @@
         "operations": [
           {
             "field": "sku.capacity",
+            "value": 2
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_service_plan",
+        "anyOf": [
+          {
+            "attribute": "worker_count",
+            "exists": false
+          },
+          {
+            "attribute": "worker_count",
+            "less": 2
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "worker_count",
             "value": 2
           }
         ]

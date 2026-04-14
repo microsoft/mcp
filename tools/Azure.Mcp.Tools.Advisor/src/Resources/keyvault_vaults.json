@@ -25,6 +25,28 @@
             "value": true
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_key_vault",
+        "anyOf": [
+          {
+            "attribute": "soft_delete_retention_days",
+            "exists": false
+          },
+          {
+            "attribute": "soft_delete_retention_days",
+            "less": 7
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "soft_delete_retention_days",
+            "value": 7
+          }
+        ]
       }
     }
   ]

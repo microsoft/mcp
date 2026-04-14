@@ -53,6 +53,56 @@
         "type": "resourceAction",
         "action": "configure",
         "details": "In properties.managedRules.managedRuleSets, update the Microsoft_DefaultRuleSet entry's ruleSetVersion from '1.0', '1.1', or '2.0' to '2.1'. Retain any bot-manager rule set entries unchanged."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_cdn_frontdoor_firewall_policy",
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "attribute": "sku_name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "attribute": "managed_rule_set[0].type",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "attribute": "managed_rule_set[0].version",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "attribute": "sku_name",
+                "notEquals": "Classic_AzureFrontDoor"
+              },
+              {
+                "attribute": "managed_rule_set[1].type",
+                "equals": "Microsoft_DefaultRuleSet"
+              },
+              {
+                "attribute": "managed_rule_set[1].version",
+                "in": [
+                  "1.0",
+                  "1.1",
+                  "2.0"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "configure",
+        "details": "In the managed_rule_set blocks, update the Microsoft_DefaultRuleSet entry's version from '1.0', '1.1', or '2.0' to '2.1'. Retain any bot_manager_rule_set blocks unchanged."
       }
     }
   ]

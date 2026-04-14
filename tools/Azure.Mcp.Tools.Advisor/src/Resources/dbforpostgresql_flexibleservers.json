@@ -33,6 +33,32 @@
             "value": 0
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_postgresql_flexible_server",
+        "allOf": [
+          {
+            "attribute": "maintenance_window",
+            "exists": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "maintenance_window.day_of_week",
+            "value": 0
+          },
+          {
+            "attribute": "maintenance_window.start_hour",
+            "value": 2
+          },
+          {
+            "attribute": "maintenance_window.start_minute",
+            "value": 0
+          }
+        ]
       }
     }
   ]

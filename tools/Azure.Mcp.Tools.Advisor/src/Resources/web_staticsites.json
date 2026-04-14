@@ -25,6 +25,28 @@
             "value": "Standard"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_static_web_app",
+        "allOf": [
+          {
+            "attribute": "sku_tier",
+            "equals": "Dedicated"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "sku_tier",
+            "value": "Standard"
+          },
+          {
+            "attribute": "sku_size",
+            "value": "Standard"
+          }
+        ]
       }
     }
   ]

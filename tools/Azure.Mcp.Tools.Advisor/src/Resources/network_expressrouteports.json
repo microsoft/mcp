@@ -29,6 +29,32 @@
             "value": "Enabled"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_express_route_port",
+        "anyOf": [
+          {
+            "attribute": "link1.admin_enabled",
+            "notEquals": true
+          },
+          {
+            "attribute": "link2.admin_enabled",
+            "notEquals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "link1.admin_enabled",
+            "value": true
+          },
+          {
+            "attribute": "link2.admin_enabled",
+            "value": true
+          }
+        ]
       }
     }
   ]

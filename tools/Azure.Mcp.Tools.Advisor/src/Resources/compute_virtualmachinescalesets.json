@@ -25,6 +25,25 @@
             "value": false
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine_scale_set",
+        "note": "Also applies to azurerm_windows_virtual_machine_scale_set. The zone_balance attribute exists only on Uniform-orchestration resources (azurerm_linux/windows_virtual_machine_scale_set), not on azurerm_orchestrated_virtual_machine_scale_set.",
+        "allOf": [
+          {
+            "attribute": "zone_balance",
+            "equals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "zone_balance",
+            "value": false
+          }
+        ]
       }
     },
     {
@@ -61,6 +80,33 @@
           },
           {
             "field": "properties.automaticRepairsPolicy.gracePeriod",
+            "value": "PT30M"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_linux_virtual_machine_scale_set",
+        "note": "Also applies to azurerm_windows_virtual_machine_scale_set.",
+        "anyOf": [
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "exists": false
+          },
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "equals": false
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "automatic_instance_repair.enabled",
+            "value": true
+          },
+          {
+            "attribute": "automatic_instance_repair.grace_period",
             "value": "PT30M"
           }
         ]

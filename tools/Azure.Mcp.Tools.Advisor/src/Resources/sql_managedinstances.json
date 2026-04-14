@@ -17,6 +17,20 @@
         "type": "resourceAction",
         "action": "migrate",
         "details": "Remove the Azure Monitor SCOM Managed Instance monitoring configuration associated with this SQL Managed Instance. For on-premises or hybrid environments, reconfigure monitoring using System Center Operations Manager (self-hosted). For cloud-native environments, replace with Azure Monitor and Log Analytics Workspace integration on the SQL Managed Instance."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_mssql_managed_instance",
+        "allOf": [
+          {
+            "attribute": "id",
+            "exists": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "details": "Remove the Azure Monitor SCOM Managed Instance monitoring configuration associated with this SQL Managed Instance. For on-premises or hybrid environments, reconfigure monitoring using System Center Operations Manager (self-hosted). For cloud-native environments, configure Azure Monitor and Log Analytics Workspace integration by adding the appropriate diagnostic settings resources in Terraform."
       }
     }
   ]

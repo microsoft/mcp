@@ -21,6 +21,24 @@
             "value": "Disabled"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_active_directory_domain_service",
+        "allOf": [
+          {
+            "attribute": "security.tls_v1_enabled",
+            "equals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "security.tls_v1_enabled",
+            "value": false
+          }
+        ]
       }
     },
     {
@@ -41,6 +59,24 @@
         "operations": [
           {
             "field": "properties.sku",
+            "value": "Enterprise"
+          }
+        ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_active_directory_domain_service",
+        "allOf": [
+          {
+            "attribute": "sku",
+            "equals": "Standard"
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "sku",
             "value": "Enterprise"
           }
         ]

@@ -37,6 +37,40 @@
             "value": true
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_kubernetes_cluster",
+        "anyOf": [
+          {
+            "attribute": "storage_profile.disk_driver_enabled",
+            "notEquals": true
+          },
+          {
+            "attribute": "storage_profile.file_driver_enabled",
+            "notEquals": true
+          },
+          {
+            "attribute": "storage_profile.blob_driver_enabled",
+            "notEquals": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "storage_profile.disk_driver_enabled",
+            "value": true
+          },
+          {
+            "attribute": "storage_profile.file_driver_enabled",
+            "value": true
+          },
+          {
+            "attribute": "storage_profile.blob_driver_enabled",
+            "value": true
+          }
+        ]
       }
     }
   ]

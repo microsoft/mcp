@@ -28,6 +28,31 @@
             "value": "TLS1_2"
           }
         ]
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_storage_account",
+        "anyOf": [
+          {
+            "attribute": "min_tls_version",
+            "exists": false
+          },
+          {
+            "attribute": "min_tls_version",
+            "in": [
+              "TLS1_0",
+              "TLS1_1"
+            ]
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "attributeUpdate",
+        "operations": [
+          {
+            "attribute": "min_tls_version",
+            "value": "TLS1_2"
+          }
+        ]
       }
     }
   ]

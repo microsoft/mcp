@@ -18,6 +18,21 @@
         "action": "migrate",
         "targetService": "Microsoft.App/containerApps",
         "details": "Remove the Application Services extension resource from the ARM template. Redeploy hosted applications as Microsoft.App/containerApps resources targeting an Azure Container Apps environment."
+      },
+      "TF_Query": {
+        "resource_type": "azurerm_arc_kubernetes_extension",
+        "allOf": [
+          {
+            "attribute": "id",
+            "exists": true
+          }
+        ]
+      },
+      "TF_Fix": {
+        "type": "resourceAction",
+        "action": "migrate",
+        "targetResource": "azurerm_container_app",
+        "details": "Remove the azurerm_arc_kubernetes_extension resource for Application Services from the Terraform configuration. Redeploy hosted applications as azurerm_container_app resources targeting an Azure Container Apps environment."
       }
     }
   ]
