@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -42,7 +43,7 @@ public class SubscriptionCommandTests
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
         // Arrange
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        TestEnvironment.SetAzureSubscriptionId("env-subs");
 
         // Act
         var parseResult = _commandDefinition.Parse([]);
@@ -55,7 +56,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        var subscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        TestEnvironment.SetAzureSubscriptionId("env-subs");
+        var subscription = CommandHelper.GetDefaultSubscription()!;
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
         [
@@ -92,7 +94,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        var ignoredSubscription = EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        TestEnvironment.SetAzureSubscriptionId("env-subs");
+        var ignoredSubscription = CommandHelper.GetDefaultSubscription()!;
         var expectedSubscription = "option-subs";
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
