@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Governance;
@@ -114,19 +113,6 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => argEx.Message,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Vault not found. Verify the vault name and resource group.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "Soft delete state cannot be changed. The vault may have immutability locked.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed configuring soft delete. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
 
     internal record GovernanceSoftDeleteCommandResult(OperationResult Result);
 }

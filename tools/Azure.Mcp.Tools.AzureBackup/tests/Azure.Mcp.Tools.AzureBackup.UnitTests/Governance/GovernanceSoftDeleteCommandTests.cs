@@ -142,7 +142,7 @@ public class GovernanceSoftDeleteCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("Vault not found", response.Message);
+        Assert.Contains("Not found", response.Message);
     }
 
     [Fact]
@@ -162,7 +162,7 @@ public class GovernanceSoftDeleteCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("Soft delete state cannot be changed", response.Message);
+        Assert.Contains("Cannot change", response.Message);
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public class GovernanceSoftDeleteCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
-        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("Forbidden", response.Message);
     }
 
     [Theory]
