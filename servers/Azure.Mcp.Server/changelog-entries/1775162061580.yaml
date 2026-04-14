@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Add --disable-caching to server start options to disable caching"

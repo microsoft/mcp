@@ -15,6 +15,7 @@ public class KqlQueryValidatorTests
     [InlineData("testtable | summarize count() by Name")]
     [InlineData("testtable | where Name == 'Alice' and City == 'Seattle'")]
     [InlineData("testtable | project Name, Age | order by Age desc")]
+    [InlineData(".show version | project Version")]
     public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
     {
         KqlQueryValidator.ValidateQuerySafety(query);
