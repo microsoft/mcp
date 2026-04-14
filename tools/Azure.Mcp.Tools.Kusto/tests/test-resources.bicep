@@ -20,9 +20,9 @@ resource kustoCluster 'Microsoft.Kusto/clusters@2024-04-13' = {
   name: baseName
   location: location
   sku: {
-    name: isGovCloud ? 'Standard_L4s' : 'Standard_E2ads_v5'
+    name: isGovCloud ? 'Standard_E2a_v4' : 'Standard_E2ads_v5'
     tier: 'Standard'
-    capacity: 2
+    capacity: 1
   }
   identity: {
     type: 'SystemAssigned'
