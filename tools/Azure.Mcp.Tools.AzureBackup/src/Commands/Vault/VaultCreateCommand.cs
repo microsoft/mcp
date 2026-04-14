@@ -61,6 +61,21 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 }
             }
         });
+
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.StorageType.Name))
+            {
+                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.StorageType.Name);
+                if (!string.IsNullOrEmpty(value) &&
+                    !value.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
+                    !value.Equals("ZoneRedundant", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("--storage-type must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.");
+                }
+            }
+        });
     }
 
     protected override VaultCreateOptions BindOptions(ParseResult parseResult)

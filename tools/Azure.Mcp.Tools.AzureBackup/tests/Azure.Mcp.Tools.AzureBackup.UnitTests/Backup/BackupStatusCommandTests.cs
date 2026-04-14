@@ -52,8 +52,9 @@ public class BackupStatusCommandTests
     public async Task ExecuteAsync_ReturnsProtectedStatus_WhenResourceIsProtected()
     {
         // Arrange
+        var expectedDatasourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1";
         var expected = new BackupStatusResult(
-            "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1",
+            expectedDatasourceId,
             "Protected",
             "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.RecoveryServices/vaults/vault1",
             "DefaultPolicy",
@@ -62,11 +63,11 @@ public class BackupStatusCommandTests
             null);
 
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(expectedDatasourceId), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1", "--location", "eastus"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", expectedDatasourceId, "--location", "eastus"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -88,8 +89,9 @@ public class BackupStatusCommandTests
     public async Task ExecuteAsync_ReturnsNotProtectedStatus_WhenResourceIsNotProtected()
     {
         // Arrange
+        var expectedDatasourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm2";
         var expected = new BackupStatusResult(
-            "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm2",
+            expectedDatasourceId,
             "NotProtected",
             null,
             null,
@@ -98,11 +100,11 @@ public class BackupStatusCommandTests
             null);
 
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(expectedDatasourceId), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm2", "--location", "eastus"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", expectedDatasourceId, "--location", "eastus"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -125,7 +127,7 @@ public class BackupStatusCommandTests
     {
         // Arrange
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("ds1"), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -144,7 +146,7 @@ public class BackupStatusCommandTests
     {
         // Arrange
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("ds1"), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -163,7 +165,7 @@ public class BackupStatusCommandTests
     {
         // Arrange
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("ds1"), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
@@ -187,7 +189,7 @@ public class BackupStatusCommandTests
         if (shouldSucceed)
         {
             _backupService.GetBackupStatusAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Is("ds1"), Arg.Is("sub1"), Arg.Is("eastus"),
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new BackupStatusResult("ds1", "Protected", "v1", "pol", null, null, null)));
         }
@@ -212,8 +214,9 @@ public class BackupStatusCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
+        var expectedDatasourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1";
         var expected = new BackupStatusResult(
-            "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1",
+            expectedDatasourceId,
             "Protected",
             "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.RecoveryServices/vaults/vault1",
             "DefaultPolicy",
@@ -222,11 +225,11 @@ public class BackupStatusCommandTests
             "Healthy");
 
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(expectedDatasourceId), Arg.Is("sub1"), Arg.Is("eastus"),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1", "--location", "eastus"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub1", "--datasource-id", expectedDatasourceId, "--location", "eastus"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -271,7 +274,7 @@ public class BackupStatusCommandTests
         var expectedLocation = "eastus";
 
         _backupService.GetBackupStatusAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(expectedDatasourceId), Arg.Is(expectedSubscription), Arg.Is(expectedLocation),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new BackupStatusResult(expectedDatasourceId, "Protected", null, null, null, null, null)));
 

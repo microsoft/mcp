@@ -9,6 +9,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 
@@ -16,7 +17,7 @@ using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Model
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ILogger<AzureBackupService> logger)
+public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOperations dppOps, ITenantService tenantService, ILogger<AzureBackupService> logger)
     : BaseAzureService(tenantService), IAzureBackupService
 {
     /// <summary>
@@ -608,7 +609,7 @@ public sealed class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOp
         var types = resourceTypeFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         foreach (var type in types)
         {
-            if (!System.Text.RegularExpressions.Regex.IsMatch(type, @"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$"))
+            if (!ArmResourceTypeRegex().IsMatch(type))
             {
                 throw new ArgumentException(
                     $"Invalid resource type format '{type}'. Expected format: 'Microsoft.Provider/resourceType' (e.g., 'Microsoft.Compute/virtualMachines').");
@@ -617,4 +618,7 @@ public sealed class AzureBackupService(IRsvBackupOperations rsvOps, IDppBackupOp
 
         return types;
     }
+
+    [GeneratedRegex(@"^[A-Za-z0-9]+\.[A-Za-z0-9]+/[A-Za-z0-9]+$")]
+    private static partial Regex ArmResourceTypeRegex();
 }

@@ -54,7 +54,7 @@ public class GovernanceSoftDeleteCommandTests
         var expected = new OperationResult("Succeeded", null, "Soft delete configured");
 
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("AlwaysOn"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
@@ -80,7 +80,7 @@ public class GovernanceSoftDeleteCommandTests
     {
         // Arrange
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -104,7 +104,7 @@ public class GovernanceSoftDeleteCommandTests
         if (shouldSucceed)
         {
             _backupService.ConfigureSoftDeleteAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
         }
@@ -130,7 +130,7 @@ public class GovernanceSoftDeleteCommandTests
     {
         // Arrange
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -150,7 +150,7 @@ public class GovernanceSoftDeleteCommandTests
     {
         // Arrange
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Cannot change"));
 
@@ -170,7 +170,7 @@ public class GovernanceSoftDeleteCommandTests
     {
         // Arrange
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
@@ -231,7 +231,7 @@ public class GovernanceSoftDeleteCommandTests
     {
         // Arrange
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
 
@@ -252,7 +252,7 @@ public class GovernanceSoftDeleteCommandTests
         var expected = new OperationResult("Succeeded", null, "Soft delete set to 'On'");
 
         _backupService.ConfigureSoftDeleteAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 

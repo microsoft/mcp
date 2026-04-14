@@ -55,7 +55,7 @@ public class DrEnableCrrCommandTests
         var expected = new OperationResult("Succeeded", null, "Cross-region restore enabled");
 
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
@@ -80,7 +80,7 @@ public class DrEnableCrrCommandTests
     {
         // Arrange
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -99,7 +99,7 @@ public class DrEnableCrrCommandTests
     {
         // Arrange
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -118,7 +118,7 @@ public class DrEnableCrrCommandTests
     {
         // Arrange
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "CRR not supported"));
 
@@ -137,7 +137,7 @@ public class DrEnableCrrCommandTests
     {
         // Arrange
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already enabled"));
 
@@ -172,7 +172,7 @@ public class DrEnableCrrCommandTests
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
         _backupService.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(vaultType),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
 
@@ -189,7 +189,7 @@ public class DrEnableCrrCommandTests
         if (shouldSucceed)
         {
             _backupService.ConfigureCrossRegionRestoreAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
         }

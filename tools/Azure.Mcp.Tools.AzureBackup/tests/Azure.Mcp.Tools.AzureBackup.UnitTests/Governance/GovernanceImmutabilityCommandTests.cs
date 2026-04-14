@@ -55,7 +55,7 @@ public class GovernanceImmutabilityCommandTests
         var expected = new OperationResult("Succeeded", null, "Immutability configured");
 
         _backupService.ConfigureImmutabilityAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
@@ -81,7 +81,7 @@ public class GovernanceImmutabilityCommandTests
     {
         // Arrange
         _backupService.ConfigureImmutabilityAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -105,7 +105,7 @@ public class GovernanceImmutabilityCommandTests
         if (shouldSucceed)
         {
             _backupService.ConfigureImmutabilityAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
         }

@@ -31,12 +31,8 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.WorkloadType.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.ScheduleFrequency);
         command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
         command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
-        command.Options.Add(AzureBackupOptionDefinitions.WeeklyRetentionWeeks);
-        command.Options.Add(AzureBackupOptionDefinitions.MonthlyRetentionMonths);
-        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionYears);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -44,12 +40,8 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         var options = base.BindOptions(parseResult);
         options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
         options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.ScheduleFrequency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleFrequency.Name);
         options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
         options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
-        options.WeeklyRetentionWeeks = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WeeklyRetentionWeeks.Name);
-        options.MonthlyRetentionMonths = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionMonths.Name);
-        options.YearlyRetentionYears = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionYears.Name);
         return options;
     }
 

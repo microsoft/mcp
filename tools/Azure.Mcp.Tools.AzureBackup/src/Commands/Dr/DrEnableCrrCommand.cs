@@ -70,6 +70,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
             "Cross-Region Restore is already enabled on this vault.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed enabling Cross-Region Restore. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 

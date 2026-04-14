@@ -59,7 +59,7 @@ public class GovernanceFindUnprotectedCommandTests
         };
 
         _backupService.FindUnprotectedResourcesAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResources));
 
@@ -85,7 +85,7 @@ public class GovernanceFindUnprotectedCommandTests
     {
         // Arrange
         _backupService.FindUnprotectedResourcesAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<UnprotectedResourceInfo>()));
 
@@ -109,7 +109,7 @@ public class GovernanceFindUnprotectedCommandTests
     {
         // Arrange
         _backupService.FindUnprotectedResourcesAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -130,7 +130,7 @@ public class GovernanceFindUnprotectedCommandTests
         if (shouldSucceed)
         {
             _backupService.FindUnprotectedResourcesAsync(
-                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new List<UnprotectedResourceInfo>()));
         }

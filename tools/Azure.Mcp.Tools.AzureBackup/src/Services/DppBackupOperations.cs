@@ -58,7 +58,8 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                 {
                     "locallyredundant" => StorageSettingType.LocallyRedundant,
                     "zoneredundant" => StorageSettingType.ZoneRedundant,
-                    _ => StorageSettingType.GeoRedundant
+                    "georedundant" or null => StorageSettingType.GeoRedundant,
+                    _ => throw new ArgumentException($"Invalid storage type: '{storageType}'.")
                 }
             }
         };
