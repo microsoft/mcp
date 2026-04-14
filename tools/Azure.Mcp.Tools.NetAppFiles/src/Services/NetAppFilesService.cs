@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
