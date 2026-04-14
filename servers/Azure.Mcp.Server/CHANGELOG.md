@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.1-beta.1 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.1 (2026-04-14)
 
 ### Bugs Fixed
 
-### Other Changes
+- Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
 
 ## 2.0.0 (2026-04-09)
 
