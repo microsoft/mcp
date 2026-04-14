@@ -5,7 +5,7 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.0.0 (2026-04-12)
+## 1.0.0 (2026-04-14)
 
 **First Stable Release**
 
@@ -47,11 +47,13 @@ For a complete history of pre-release changes, see versions [0.0.0-beta.10](#000
 
 ### Features Added
 
-- Add --disable-caching to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
+- Add `--disable-caching` to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
 
-### Other Changes
+### Bugs Fixed
 
 - Update HttpRequestException to attempt to return a more specific status code for better troubleshooting. [[#2172](https://github.com/microsoft/mcp/pull/2172)]
+
+### Other Changes
 
 #### Dependency Updates
 
