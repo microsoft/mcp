@@ -44,9 +44,7 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
         try
         {
             context.Response.Results = ResponseResult.Create(
-                new ServiceInfoCommandResult(
-                    _serverOptions.Value.Name,
-                    _serverOptions.Value.Version),
+                new(_serverOptions.Value.Name, _serverOptions.Value.Version),
                 ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
         }
         catch (Exception ex)
@@ -58,10 +56,7 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
         return Task.FromResult(context.Response);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult)
-    {
-        return EmptyOptions;
-    }
+    protected override EmptyOptions BindOptions(ParseResult parseResult) => EmptyOptions;
 
     internal record ServiceInfoCommandResult(string Name, string Version);
 }

@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -52,34 +51,29 @@ internal class Program
             PluginTelemetryCommand.ConfigureServices = ConfigureServices;
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
-
-            ConfigureServices(services, [.. Areas.Where(a => a is ServerSetup)]);
-
-            services.AddLogging(builder =>
-            {
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Information);
-            });
-
-            var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
+            var serviceProvider = SetupBasicInitializer();
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
+            var command = parseResult.CommandResult.Command;
             int status = 0;
 
-            if (parseResult.Errors.Count > 0)
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
             {
                 // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
                 // to run the command.
                 var builder = Host.CreateApplicationBuilder();
                 builder.Logging.ClearProviders();
                 builder.Logging.AddEventSourceLogger();
-                builder.Services.AddSingleIdentityTokenCredentialProvider();
                 ConfigureServices(builder.Services);
-                builder.Services.AddAzureMcpServer(new ServiceStartOptions()
+                builder.Services.AddAzureMcpServer(new()
                 {
                     Transport = TransportTypes.StdIo
                 });
@@ -97,10 +91,6 @@ internal class Program
 
                 await host.StopAsync();
                 await host.WaitForShutdownAsync();
-            }
-            else
-            {
-                status = await parseResult.InvokeAsync();
             }
 
             if (status == 0)
@@ -197,9 +187,7 @@ internal class Program
     }
 
     private static void WriteResponse(CommandResponse response)
-    {
-        Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
-    }
+        => Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
 
     /// <summary>
     /// <para>
@@ -252,60 +240,7 @@ internal class Program
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services) => ConfigureServices(services, Areas);
-
-    /// <summary>
-    /// <para>
-    /// Configures services for dependency injection.
-    /// </para>
-    /// <para>
-    /// WARNING: This method is being used for TWO DEPENDENCY INJECTION CONTAINERS:
-    /// </para>
-    /// <list type="number">
-    /// <item>
-    /// <see cref="Main"/>'s command picking: The container used to populate instances of
-    /// <see cref="IBaseCommand"/> and selected by <see cref="CommandFactory"/>
-    /// based on the command line input. This container is a local variable in
-    /// <see cref="Main"/>, and it is not tied to
-    /// <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) nor any
-    /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
-    /// </item>
-    /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
-    /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
-    /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
-    /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
-    /// container is built and this <see cref="ConfigureServices"/> method is called sometime
-    /// during that method execution.
-    /// </item>
-    /// </list>
-    /// <para>
-    /// DUE TO THIS DUAL USAGE, PLEASE BE VERY CAREFUL WHEN MODIFYING THIS METHOD. This
-    /// method may have some expectations, but it and all methods it calls must be safe for
-    /// both the stdio and http transport modes.
-    /// </para>
-    /// <para>
-    /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
-    /// transport-specific implementations. This method can add the stdio-specific
-    /// implementation to allow the first container (used for command picking) to work,
-    /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
-    /// transport-specific implementation based on command line arguments.
-    /// </para>
-    /// <para>
-    /// This large doc comment is copy/pasta in each Program.cs file of this repo, so if
-    /// you're reading this, please keep them in sync and/or add specific warnings per
-    /// project if needed. Below is the list of known differences:
-    /// </para>
-    /// <list type="bullet">
-    /// <item>No differences. This is also copy/pasta as a placeholder for this project.</item>
-    /// </list>
-    /// </summary>
-    /// <param name="services">A service collection.</param>
-    private static void ConfigureServices(IServiceCollection services, IAreaSetup[] areas)
+    internal static void ConfigureServices(IServiceCollection services)
     {
         var thisAssembly = typeof(Program).Assembly;
 
@@ -327,7 +262,7 @@ internal class Program
         services.AddAzureTenantService();
         services.AddSingleUserCliCacheService(disabled: true);
 
-        foreach (var area in areas)
+        foreach (var area in Areas)
         {
             services.AddSingleton(area);
             area.ConfigureServices(services);
@@ -348,6 +283,42 @@ internal class Program
             ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
     }
 
+    /// <summary>
+    /// Creates a very small service provider that allows for 'server start' and 'plugin telemetry' commands to be
+    /// executed without initializing the full service, which reduces startup time for these commands significantly.
+    /// <para>
+    /// This is a tightly bound service provider that manually configures only what is necessary for those two
+    /// commands. Any changes to the dependencies of those commands may require changes here.
+    /// </para>
+    /// </summary>
+    /// <returns>The basic initializer serivce provider.</returns>
+    private static ServiceProvider SetupBasicInitializer()
+    {
+        var thisAssembly = typeof(Program).Assembly;
+        var services = new ServiceCollection();
+
+        services.InitializeConfigurationAndOptions();
+        services.AddSingleton<ITelemetryService, NoopTelemetryService>();
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
+        services.AddSingleton<ICommandFactory, CommandFactory>();
+
+        foreach (IAreaSetup area in Areas.Where(area => area is ServerSetup))
+        {
+            services.AddSingleton(area);
+            area.ConfigureServices(services);
+        }
+
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
+
+        return services.BuildServiceProvider();
+    }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {

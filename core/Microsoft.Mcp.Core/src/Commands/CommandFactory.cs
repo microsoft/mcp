@@ -344,16 +344,15 @@ public class CommandFactory : ICommandFactory
 
         var commandResult = parseResult.CommandResult;
         var fullCommandName = commandResult.Command.Name;
-        while (commandResult.Parent is not null
-            && commandResult?.Parent is CommandResult
-            && (commandResult.Parent as CommandResult)?.Command.Name != RootCommand.Name)
+        while (commandResult.Parent is CommandResult parent
+            && parent.Command.Name != RootCommand.Name)
         {
-            commandResult = (commandResult.Parent as CommandResult)!;
-            fullCommandName = commandResult.Command.Name + "_" + fullCommandName;
+            fullCommandName = parent.Command.Name + Separator + fullCommandName;
+            commandResult = parent;
         }
 
         var index = fullCommandName.IndexOf('_');
-        activity.SetTag(TagName.ToolArea, index == -1 ? fullCommandName : fullCommandName.Substring(0, index))
+        activity.SetTag(TagName.ToolArea, index == -1 ? fullCommandName : fullCommandName[..index])
             .SetTag(TagName.ToolName, fullCommandName);
     }
 
