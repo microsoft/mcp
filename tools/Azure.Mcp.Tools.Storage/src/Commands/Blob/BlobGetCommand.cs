@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -24,8 +25,16 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     public override string Name => "get";
 
     public override string Description =>
-        $"""
-        List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or get details for a specific blob. Shows blob properties including metadata, size, last modification time, and content properties. If no blob specified, lists all blobs present in the container. Required: account, container <container>, subscription <subscription>. Optional: blob <blob>, tenant <tenant>. Returns: blob name, size, lastModified, contentType, contentMD5, metadata, and blob properties. Do not use this tool to list containers in the storage account.
+        """
+        List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
+        get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
+        filtering on a prefix. The prefix is ignored if a blob is specified.
+
+        Required: --account, --container, --subscription
+        Optional: --blob, --tenant, --prefix
+        
+        Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
+        Do not use this tool to list containers in the storage account.
         """;
 
     public override string Title => CommandTitle;
@@ -44,12 +53,14 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     {
         base.RegisterOptions(command);
         command.Options.Add(StorageOptionDefinitions.Blob.AsOptional());
+        command.Options.Add(StorageOptionDefinitions.BlobPrefix.AsOptional());
     }
 
     protected override BlobGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Blob = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Blob.Name);
+        options.Prefix = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.BlobPrefix.Name);
         return options;
     }
 
@@ -69,6 +80,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 options.Container!,
                 options.Blob,
                 options.Subscription!,
+                options.Prefix,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken
