@@ -1,7 +1,7 @@
 ## What does this PR do?
 `[Provide a clear, concise description of the changes]`
 
-`[Any additional context, screenshots, or information that helps reviewers]`
+`[Add additional context, screenshots, or information that helps reviewers]`
 
 ## GitHub issue number?
 `[Link to the GitHub issue this PR addresses]`
@@ -12,19 +12,19 @@
     - [ ] PR title clearly describes the change
     - [ ] Commit history is clean with descriptive messages ([cleanup guide](https://github.com/Azure/azure-powershell/blob/master/documentation/development-docs/cleaning-up-commits.md))
     - [ ] Added comprehensive tests for new/modified functionality
-    - [ ] Updated `servers/Azure.Mcp.Server/CHANGELOG.md` and/or `servers/Fabric.Mcp.Server/CHANGELOG.md` for product changes (`features, bug fixes, UI/UX, updated dependencies`)
+    - [ ] Created a changelog entry if the change falls among the following: new feature, bug fix, UI/UX update, breaking change, or updated dependencies. Follow [the changelog entry guide](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md)
 - [ ] For MCP tool changes:
     - [ ] **One tool per PR**: This PR adds or modifies only one MCP tool for faster review cycles
     - [ ] Updated `servers/Azure.Mcp.Server/README.md` and/or `servers/Fabric.Mcp.Server/README.md` documentation
-    - [ ] Validate README.md changes using script at `eng/scripts/Process-PackageReadMe.ps1`. See [Package README](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#package-readme)
-    - [ ] Updated command list in `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and/or `/docs/fabric-commands.md`
-    - [ ] Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
+    - [ ] Validate `README.md` changes running the script `./eng/scripts/Process-PackageReadMe.ps1`. See [Package README](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#package-readme)
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
-    - [ ] For tools with new names, including new tools or renamed tools, update [`consolidated-tools.json`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json)
+    - [ ] For tools with new names, including new tools or renamed tools, update [`consolidated-tools.json`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json)
     - [ ] For **renamed** tools, follow the [Tool Rename Checklist](https://github.com/microsoft/mcp/blob/main/docs/tool-rename-checklist.md) and tag the PR with the `breaking-change` label
     - [ ] For new tools associated with Azure services or publicly available tools/APIs/products, add URL to documentation in the PR description
 - [ ] Extra steps for **Azure MCP Server** tool changes:
-    - [ ] Updated test prompts in `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+    - [ ] Updated command list in [`servers/Azure.Mcp.Server/docs/azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+    - [ ] Ran `./eng/scripts/Update-AzCommandsMetadata.ps1` to update tool metadata in [`azmcp-commands.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md) (required for CI)
+    - [ ] Updated test prompts in [`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
     - [ ] 👉 For Community (non-Microsoft team member) PRs:
         - [ ] **Security review**: Reviewed code for security vulnerabilities, malicious code, or suspicious activities before running tests (`crypto mining, spam, data exfiltration, etc.`)
         - [ ] **Manual tests run**: added comment `/azp run mcp - pullrequest - live` to run *Live Test Pipeline*

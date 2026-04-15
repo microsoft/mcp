@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -9,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger) : BaseContainerCommand<ContainerCreateOptions>()
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService) : BaseContainerCommand<ContainerCreateOptions>()
 {
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "f5088334-e630-4df0-a5be-ac87787acad0";
 
@@ -20,7 +22,13 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Description =>
         """
-        Create/provision a new Azure Storage blob container in a storage account. Required: --account <account>, --container <container>, --subscription <subscription>. Optional: --public-access-level, --tenant <tenant>. Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold. Creates a logical container for organizing blobs within a storage account.
+        Create/provision a new Azure Storage blob container in a storage account.
+        
+        Required: --account, --container, --subscription
+        Optional: --tenant
+        
+        Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
+        Creates a logical container for organizing blobs within a storage account.
         """;
 
     public override string Title => CommandTitle;
@@ -46,8 +54,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containerInfo = await storageService.CreateContainer(
+            var containerInfo = await _storageService.CreateContainer(
                 options.Account!,
                 options.Container!,
                 options.Subscription!,

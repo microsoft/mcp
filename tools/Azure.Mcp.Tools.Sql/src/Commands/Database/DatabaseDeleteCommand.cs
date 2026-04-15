@@ -62,8 +62,8 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.ResourceGroup, options);
+                "Error deleting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -317,8 +318,8 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: true, logger, CancellationToken.None);
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: true, logger, CancellationToken.None);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -345,8 +346,8 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -377,8 +378,8 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -410,8 +411,8 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -420,7 +421,7 @@ public class BaseToolLoaderTests
     }
 
     [Fact]
-    public async Task HandleSecretElicitation_UsesEmptySchemaWithNoProperties()
+    public async Task HandleSecretElicitation_UsesDecisionEnumSchema()
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
@@ -449,19 +450,30 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
-        // Assert - verify the schema has no properties (empty dictionary)
+        // Assert - verify the schema has a decision single-select enum property with approve/reject
         Assert.NotNull(capturedRequest);
         Assert.NotNull(capturedRequest.Params);
         var elicitParams = JsonSerializer.Deserialize<ElicitRequestParams>(capturedRequest.Params.ToJsonString());
         Assert.NotNull(elicitParams);
         Assert.NotNull(elicitParams.RequestedSchema);
         Assert.NotNull(elicitParams.RequestedSchema.Properties);
-        Assert.Empty(elicitParams.RequestedSchema.Properties); // Key assertion: no form fields
+        Assert.Single(elicitParams.RequestedSchema.Properties);
+        Assert.True(elicitParams.RequestedSchema.Properties.ContainsKey("decision"));
+        var decisionSchema = Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(elicitParams.RequestedSchema.Properties["decision"]);
+        Assert.Equal("Decision", decisionSchema.Title);
+        Assert.Equal("Approve or reject this sensitive operation.", decisionSchema.Description);
+        Assert.NotNull(decisionSchema.OneOf);
+        Assert.Equal(2, decisionSchema.OneOf.Count);
+        Assert.Equal("Approve", decisionSchema.OneOf[0].Title);
+        Assert.Equal("accept", decisionSchema.OneOf[0].Const);
+        Assert.Equal("Reject", decisionSchema.OneOf[1].Title);
+        Assert.Equal("reject", decisionSchema.OneOf[1].Const);
         Assert.NotNull(elicitParams.RequestedSchema.Required);
-        Assert.Empty(elicitParams.RequestedSchema.Required);
+        Assert.Single(elicitParams.RequestedSchema.Required);
+        Assert.Contains("decision", elicitParams.RequestedSchema.Required);
     }
 
     [Fact]
@@ -482,8 +494,8 @@ public class BaseToolLoaderTests
         var logger = Substitute.For<ILogger>();
 
         // Act
-        var result = await TestableBaseToolLoader.HandleSecretElicitationAsyncPublic(
-            request, "test-tool", dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
+            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -503,14 +515,15 @@ public class BaseToolLoaderTests
             return CreateClientOptions(server);
         }
 
-        public static Task<CallToolResult?> HandleSecretElicitationAsyncPublic(
+        public static Task<CallToolResult?> HandleElicitationAsyncPublic(
             RequestContext<CallToolRequestParams> request,
             string toolName,
+            ToolMetadata metadata,
             bool dangerouslyDisableElicitation,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            return HandleSecretElicitationAsync(request, toolName, dangerouslyDisableElicitation, logger, cancellationToken);
+            return HandleElicitationAsync(request, toolName, metadata, dangerouslyDisableElicitation, logger, cancellationToken);
         }
 
         public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)

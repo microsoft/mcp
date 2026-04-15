@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
@@ -180,7 +181,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify server options are configured
         Assert.NotNull(mcpServerOptions);
-        Assert.Equal("2024-11-05", mcpServerOptions.ProtocolVersion);
+        Assert.Null(mcpServerOptions.ProtocolVersion);
         Assert.NotNull(mcpServerOptions.ServerInfo);
         Assert.NotNull(mcpServerOptions.Handlers);
         Assert.NotNull(mcpServerOptions.Handlers.ListToolsHandler);

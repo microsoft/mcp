@@ -49,7 +49,7 @@ public class DiagramGenerateCommandTests
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid JSON format", response.Message);
+        Assert.Contains("invalid JSON literal", response.Message);
     }
 
     [Fact]

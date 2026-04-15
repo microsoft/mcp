@@ -335,6 +335,15 @@ public static class ComputeOptionDefinitions
         Required = false
     };
 
+    // Delete options
+    public const string ForceDeletionName = "force-deletion";
+
+    public static readonly Option<bool> ForceDeletion = new($"--{ForceDeletionName}")
+    {
+        Description = "Force delete the resource even if it is in a running or failed state (passes forceDeletion=true to the Azure API)",
+        Required = false
+    };
+
     // VM update options
     public const string LicenseTypeName = "license-type";
     public const string BootDiagnosticsName = "boot-diagnostics";

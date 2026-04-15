@@ -1,12 +1,12 @@
 using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 

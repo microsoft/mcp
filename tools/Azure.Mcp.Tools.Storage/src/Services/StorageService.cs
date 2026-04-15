@@ -5,9 +5,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Data.Tables;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Storage.Commands;
@@ -17,6 +15,8 @@ using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
@@ -28,6 +28,15 @@ public class StorageService(
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
+        "Standard_GZRS", "Standard_RAGZRS", "StandardV2_LRS", "StandardV2_GRS", "StandardV2_ZRS", "StandardV2_GZRS",
+        "PremiumV2_LRS", "PremiumV2_ZRS"
+    };
+
+    private static readonly HashSet<string> s_validTiers = new(StringComparer.OrdinalIgnoreCase) { "hot", "cool", "premium", "cold" };
 
     public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
@@ -49,6 +58,7 @@ public class StorageService(
                 subscription,
                 retryPolicy,
                 ConvertToAccountInfoModel,
+                tenant: tenant,
                 cancellationToken: cancellationToken);
         }
         else
@@ -60,12 +70,8 @@ public class StorageService(
                 retryPolicy: retryPolicy,
                 converter: ConvertToAccountInfoModel,
                 additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
-                cancellationToken: cancellationToken);
-
-            if (storageAccount == null)
-            {
-                throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
-            }
+                tenant: tenant,
+                cancellationToken: cancellationToken) ?? throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
 
             return new([storageAccount], false);
         }
@@ -90,7 +96,7 @@ public class StorageService(
             (nameof(subscription), subscription));
 
         // Create ArmClient for deployments
-        ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", null, retryPolicy, cancellationToken);
+        ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", tenant, retryPolicy, cancellationToken);
 
         // Prepare data
         ResourceIdentifier accountId = new($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
@@ -148,11 +154,12 @@ public class StorageService(
         }
     }
 
-    public async Task<List<BlobInfo>> GetBlobDetails(
+    public async Task<List<Storage.Models.BlobInfo>> GetBlobDetails(
         string account,
         string container,
         string? blob,
         string subscription,
+        string? prefix = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -165,10 +172,10 @@ public class StorageService(
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
-        var blobInfos = new List<BlobInfo>();
+        var blobInfos = new List<Storage.Models.BlobInfo>();
         if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blobItem in containerClient.GetBlobsAsync(cancellationToken: cancellationToken))
+            await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
             {
                 blobInfos.Add(new(
                     blobItem.Name,
@@ -229,6 +236,7 @@ public class StorageService(
         string account,
         string? container,
         string subscription,
+        string? prefix = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -240,7 +248,7 @@ public class StorageService(
 
         if (string.IsNullOrEmpty(container))
         {
-            await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync(cancellationToken: cancellationToken))
+            await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync(prefix: prefix, cancellationToken: cancellationToken))
             {
                 var properties = containerItem.Properties;
                 containers.Add(new(
@@ -338,17 +346,9 @@ public class StorageService(
             throw new ArgumentException("Storage SKU cannot be null or empty.");
         }
 
-        var validSkus = new[]
+        if (!s_validSkus.Contains(sku))
         {
-            "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS",
-            "Premium_LRS", "Premium_ZRS", "Standard_GZRS", "Standard_RAGZRS",
-            "StandardV2_LRS", "StandardV2_GRS", "StandardV2_ZRS", "StandardV2_GZRS",
-            "PremiumV2_LRS", "PremiumV2_ZRS"
-        };
-
-        if (!validSkus.Contains(sku, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException($"Invalid storage SKU '{sku}'. Valid values are: {string.Join(", ", validSkus)}.");
+            throw new ArgumentException($"Invalid storage SKU '{sku}'. Valid values are: {string.Join(", ", s_validSkus)}.");
         }
 
         return sku;
@@ -356,10 +356,9 @@ public class StorageService(
 
     private static string ParseAccessTier(string accessTier)
     {
-        var validTiers = new[] { "hot", "cool", "premium", "cold" };
-        if (!validTiers.Contains(accessTier.ToLowerInvariant()))
+        if (!s_validTiers.Contains(accessTier))
         {
-            throw new ArgumentException($"Invalid access tier '{accessTier}'. Valid values are: {string.Join(", ", validTiers)}.");
+            throw new ArgumentException($"Invalid access tier '{accessTier}'. Valid values are: {string.Join(", ", s_validTiers)}.");
         }
 
         return accessTier;
@@ -462,8 +461,33 @@ public class StorageService(
         return tables;
     }
 
+    internal static void ValidateStorageAccountName(string account)
+    {
+        if (string.IsNullOrWhiteSpace(account))
+        {
+            throw new ArgumentException("Storage account name cannot be null or empty.", nameof(account));
+        }
+
+        if (account.Length < 3 || account.Length > 24)
+        {
+            throw new ArgumentException(
+                $"Storage account name must be between 3 and 24 characters. Got: {account.Length}.", nameof(account));
+        }
+
+        foreach (var c in account)
+        {
+            if (!char.IsAsciiLetter(c) && !char.IsAsciiDigit(c) || char.IsAsciiLetterUpper(c))
+            {
+                throw new ArgumentException(
+                    $"Storage account name contains invalid character '{c}'. Only lowercase ASCII letters and numbers are allowed.", nameof(account));
+            }
+        }
+    }
+
     private string GetBlobEndpoint(string account)
     {
+        account = account.ToLowerInvariant();
+        ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
@@ -475,6 +499,8 @@ public class StorageService(
 
     private string GetTableEndpoint(string? account)
     {
+        account = account!.ToLowerInvariant();
+        ValidateStorageAccountName(account);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",

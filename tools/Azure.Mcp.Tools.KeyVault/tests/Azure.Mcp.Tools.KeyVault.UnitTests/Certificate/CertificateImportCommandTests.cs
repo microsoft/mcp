@@ -3,12 +3,12 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,10 +35,8 @@ public class CertificateImportCommandTests
         _keyVaultService = Substitute.For<IKeyVaultService>();
         _logger = Substitute.For<ILogger<CertificateImportCommand>>();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(_keyVaultService);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _keyVaultService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

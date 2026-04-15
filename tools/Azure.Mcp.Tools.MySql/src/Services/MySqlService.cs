@@ -4,12 +4,13 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
@@ -28,6 +29,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     [
         // Data manipulation that could be harmful
         "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
+        // Set operations that can be used for data exfiltration
+        "UNION", "INTERSECT", "EXCEPT",
         // Administrative operations
         "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
         // Information disclosure
@@ -58,20 +61,27 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private static readonly string[] ObfuscationFunctions =
     [
-        "CHAR(", "CHR(", "ASCII(", "ORD(", "HEX(", "UNHEX(", "CONV(",
-        "CONVERT(", "CAST(", "BINARY(", "CONCAT_WS(", "MAKE_SET(",
-        "ELT(", "FIELD(", "FIND_IN_SET(", "EXPORT_SET(", "LOAD_FILE(",
-        "FROM_BASE64(", "TO_BASE64(", "COMPRESS(", "UNCOMPRESS(",
-        "AES_ENCRYPT(", "AES_DECRYPT(", "DES_ENCRYPT(", "DES_DECRYPT(",
-        "ENCODE(", "DECODE(", "PASSWORD(", "OLD_PASSWORD("
+        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
+        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
+        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
+        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
+        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
+        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
     ];
+
+    // Pre-compiled regex patterns for word-boundary keyword matching
+    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
+        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
+        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
         var tokenCredential = await GetCredential(cancellationToken);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
@@ -90,6 +100,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         };
     }
 
+    private static readonly string[] AllowedMySqlSuffixes =
+    [
+        ".mysql.database.azure.com",
+        ".mysql.database.usgovcloudapi.net",
+        ".mysql.database.chinacloudapi.cn",
+    ];
+
     private string NormalizeServerName(string server)
     {
         if (!server.Contains('.'))
@@ -106,13 +123,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
                     server + ".mysql.database.azure.com"
             };
         }
+
+        if (!Array.Exists(AllowedMySqlSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                $"The server name '{server}' is not a valid Azure Database for MySQL hostname. " +
+                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedMySqlSuffixes)}.");
+        }
+
         return server;
     }
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         var host = NormalizeServerName(server);
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }
 
@@ -142,23 +167,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxResultLimit:N0} characters to prevent potential DoS attacks.");
         }
 
-        // Clean the query: remove comments, normalize whitespace, and trim
-        var cleanedQuery = query;
+        // Strip string literals before checking for comment markers to avoid
+        // false positives (e.g., 'C#Developer' or 'foo--bar' are not comments).
+        // The pattern handles both SQL-standard doubled quotes ('') and
+        // MySQL's default backslash escaping (\') inside string literals.
+        var queryWithoutStrings = Regex.Replace(query, "'([^'\\\\]|\\\\.|'')*'", "'str'", RegexOptions.None, RegexHelper.DefaultRegexTimeout);
 
-        // Remove line comments (-- comment)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+        // Reject queries containing SQL comments to prevent bypass attacks
+        // (e.g., MySQL version-specific comments /*!50000 ... */ that are executed as code)
+        if (queryWithoutStrings.Contains("--", StringComparison.Ordinal) || queryWithoutStrings.Contains("/*", StringComparison.Ordinal) || queryWithoutStrings.Contains("#", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("SQL comments are not allowed for security reasons.");
+        }
 
-        // Remove hash comments (# comment)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"#.*?$", "", RegexOptions.Multiline);
-
-        // Remove block comments (/* comment */)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
-
-        // Normalize whitespace: replace multiple whitespace characters with single space
-        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
-
-        // Trim the result
-        cleanedQuery = cleanedQuery.Trim();
+        // Normalize whitespace and trim for validation
+        var cleanedQuery = Regex.Replace(query, @"\s+", " ", RegexOptions.Multiline).Trim();
 
         // Ensure the cleaned query is not empty
         if (string.IsNullOrWhiteSpace(cleanedQuery))
@@ -167,7 +190,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
 
         // Regex pattern to detect multiple SQL statements (semicolon not at end)
-        var multipleStatementsPattern = new Regex(
+        var multipleStatementsPattern = RegexHelper.CreateRegex(
             @";\s*\w",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
         );
@@ -177,40 +200,37 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
         }
 
-        // List of dangerous SQL keywords that should be blocked
-        var queryUpper = cleanedQuery.ToUpperInvariant();
-
-        foreach (var keyword in DangerousKeywords)
+        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
+        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
+        if (keywordMatch.Success)
         {
-            if (queryUpper.Contains(keyword))
-            {
-                throw new InvalidOperationException($"Query contains dangerous keyword '{keyword}' which is not allowed for security reasons.");
-            }
+            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
         }
 
         // Check for character conversion functions that may be used for obfuscation
-        foreach (var func in ObfuscationFunctions)
+        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
+        if (funcMatch.Success)
         {
-            if (queryUpper.Contains(func))
-            {
-                throw new InvalidOperationException($"Character conversion and obfuscation functions like '{func.TrimEnd('(')}' are not allowed for security reasons.");
-            }
+            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
         }
 
         // Additional validation: Only allow SELECT statements
-        var trimmedQuery = queryUpper.Trim();
+        var trimmedQuery = cleanedQuery.Trim();
         var allowedStartPatterns = new[]
         {
             "SELECT"
         };
 
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern));
+        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
 
         if (!isAllowed)
         {
             throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
         }
     }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
 
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
@@ -245,10 +265,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         ValidateQuerySafety(query);
 
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
+
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
-        await using var command = new MySqlCommand(query, resource.Connection);
+        await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var rows = new List<string>();
@@ -384,7 +412,8 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         var configData = configuration.Value.Data;
         configData.Value = value;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

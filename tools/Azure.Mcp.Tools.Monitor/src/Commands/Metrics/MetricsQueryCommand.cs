@@ -27,7 +27,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     public override string Name => "query";
 
     public override string Description =>
-        $"""
+        """
         Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
         """;
 
@@ -167,8 +167,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         catch (Exception ex)
         {            // Log error with all relevant context
             _logger.LogError(ex,
-                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}, Options: {@Options}",
-                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames, options);
+                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}.",
+                options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames);
             HandleException(context, ex);
         }
 

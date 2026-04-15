@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -28,8 +28,6 @@ public class ResourceGetCommandTests
         _logger = Substitute.For<ILogger<ResourceGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
-        collection.AddSingleton(_logger);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -37,7 +35,7 @@ public class ResourceGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
 
         Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
@@ -84,7 +82,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -126,7 +124,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse(["--subscription", "test-sub", "--resource-group", "test-rg"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -179,7 +177,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResource);
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
@@ -213,7 +211,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -241,7 +239,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -265,7 +263,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
@@ -302,7 +300,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new AiResourceInformation());
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var parsedArgs = command.GetCommand().Parse(args);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, parsedArgs, TestContext.Current.CancellationToken);
@@ -358,7 +356,7 @@ public class ResourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(resourceWithDeployments);
 
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
@@ -407,7 +405,7 @@ public class ResourceGetCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var command = new ResourceGetCommand(_logger);
+        var command = new ResourceGetCommand(_logger, _foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",

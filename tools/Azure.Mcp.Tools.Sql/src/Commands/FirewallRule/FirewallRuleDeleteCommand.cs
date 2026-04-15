@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
@@ -80,8 +80,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options.FirewallRuleName, options);
+                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}.",
+                options.Server, options.ResourceGroup, options.FirewallRuleName);
             HandleException(context, ex);
         }
 

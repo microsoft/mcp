@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Options;
 using Azure.Mcp.Tools.Policy.Options.Assignment;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -84,8 +84,8 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'. Options: {@Options}",
-                options.Subscription, options.Scope ?? "all", options);
+                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'.",
+                options.Subscription, options.Scope ?? "all");
             HandleException(context, ex);
         }
 

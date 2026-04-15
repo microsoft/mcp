@@ -3,13 +3,13 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -212,6 +212,89 @@ public class ServerCreateCommandTests
             "Disabled",
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutPublicNetworkAccess_PassesNullToService()
+    {
+        // Arrange
+        // The service layer defaults publicNetworkAccess to Disabled when null is passed
+        var expectedServer = new SqlServer(
+            Name: "testserver",
+            FullyQualifiedDomainName: "testserver.database.windows.net",
+            Location: "East US",
+            ResourceGroup: "rg",
+            Subscription: "sub",
+            AdministratorLogin: "admin",
+            Version: "12.0",
+            State: "Ready",
+            PublicNetworkAccess: "Disabled",
+            Tags: []
+        );
+
+        _service.CreateServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedServer);
+
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+        Assert.NotNull(response.Results);
+
+        await _service.Received(1).CreateServerAsync(
+            "testserver",
+            "rg",
+            "sub",
+            "eastus",
+            "admin",
+            "Password123!",
+            Arg.Is<string?>(v => v == null), // version not specified
+            Arg.Is<string?>(p => p == null), // publicNetworkAccess not specified; service defaults to Disabled
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidPublicNetworkAccess_ReturnsBadRequest()
+    {
+        // Arrange
+        _service.CreateServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid value 'Enabeld' for public-network-access. Allowed values are 'Enabled' or 'Disabled'.", "publicNetworkAccess")));
+
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --public-network-access Enabeld");
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid parameter", response.Message);
     }
 
     [Fact]

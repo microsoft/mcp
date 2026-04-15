@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,7 +11,7 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
@@ -459,7 +458,8 @@ public sealed class ManagedLustreService(
         }
 
         var collection = rg.GetAmlFileSystems();
-        var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken);
+        var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Started, name, data, cancellationToken);
+        await WaitForLroCompletionAsync(createOperationResult, cancellationToken);
         var fileSystemResource = createOperationResult.Value;
         return Map(fileSystemResource);
     }
@@ -505,7 +505,8 @@ public sealed class ManagedLustreService(
             patch.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
         }
 
-        var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return Map(updateOperation.Value);
     }
 
@@ -603,10 +604,11 @@ public sealed class ManagedLustreService(
 
         // Create the auto export job
         var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             jobName,
             autoExportJobData,
             cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
@@ -644,10 +646,11 @@ public sealed class ManagedLustreService(
             var patchData = new AutoExportJobPatch();
             patchData.AdminStatus = AutoExportJobAdminStatus.Disable;
 
-            await job.Value.UpdateAsync(
-                WaitUntil.Completed,
+            var updateOperation = await job.Value.UpdateAsync(
+                WaitUntil.Started,
                 patchData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -755,9 +758,10 @@ public sealed class ManagedLustreService(
             }
 
             // Delete the auto export job
-            await fs.Value.GetAutoExportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
-                WaitUntil.Completed,
+            var deleteOperation = await fs.Value.GetAutoExportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Started,
                 cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -847,10 +851,11 @@ public sealed class ManagedLustreService(
 
         // Create the auto import job
         var createOperation = await fs.Value.GetAutoImportJobs().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             actualJobName,
             autoImportJobData,
             cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
@@ -885,13 +890,16 @@ public sealed class ManagedLustreService(
             var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
 
             // Create patch data to update admin status to Disable
-            var patchData = new AutoImportJobPatch();
-            patchData.AdminStatus = AutoImportJobUpdatePropertiesAdminStatus.Disable;
+            var patchData = new AutoImportJobPatch
+            {
+                AdminStatus = AutoImportJobUpdatePropertiesAdminStatus.Disable
+            };
 
-            await job.Value.UpdateAsync(
-                WaitUntil.Completed,
+            var updateOperation = await job.Value.UpdateAsync(
+                WaitUntil.Started,
                 patchData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -999,9 +1007,10 @@ public sealed class ManagedLustreService(
             }
 
             // Delete the auto import job
-            await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
-                WaitUntil.Completed,
+            var deleteOperation = await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Started,
                 cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -1070,10 +1079,11 @@ public sealed class ManagedLustreService(
         }
 
         var createOperation = await fs.Value.GetStorageCacheImportJobs().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             actualJobName,
             importJobData,
             cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
@@ -1105,9 +1115,10 @@ public sealed class ManagedLustreService(
             }
 
             // Delete the import job
-            await fs.Value.GetStorageCacheImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
-                WaitUntil.Completed,
+            var deleteOperation = await fs.Value.GetStorageCacheImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Started,
                 cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
         }
         catch (RequestFailedException rfe) when (rfe.Status == 404)
         {
@@ -1213,13 +1224,16 @@ public sealed class ManagedLustreService(
             var job = await fs.Value.GetStorageCacheImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
 
             // Create patch data to cancel the import job
-            var patchData = new StorageCacheImportJobPatch();
-            patchData.AdminStatus = ImportJobAdminStatus.Cancel;
+            var patchData = new StorageCacheImportJobPatch
+            {
+                AdminStatus = ImportJobAdminStatus.Cancel
+            };
 
-            await job.Value.UpdateAsync(
-                WaitUntil.Completed,
+            var updateOperation = await job.Value.UpdateAsync(
+                WaitUntil.Started,
                 patchData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
 
             // Get the updated job to return the actual status
             var updatedJob = await job.Value.GetAsync(cancellationToken: cancellationToken);

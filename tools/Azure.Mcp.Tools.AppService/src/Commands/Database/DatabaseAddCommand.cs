@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AppService.Options.Database;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Database;

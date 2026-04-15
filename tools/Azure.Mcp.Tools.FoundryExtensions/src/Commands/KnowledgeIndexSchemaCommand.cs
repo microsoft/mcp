@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSchemaOptions>
+public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexSchemaOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Get Knowledge Index Schema in Microsoft Foundry";
 
     public override string Id => "c3d4e5f6-3456-789a-cdef-012345678901";
@@ -49,6 +52,16 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
         base.RegisterOptions(command);
         command.Options.Add(FoundryExtensionsOptionDefinitions.EndpointOption);
         command.Options.Add(FoundryExtensionsOptionDefinitions.IndexNameOption);
+        command.Validators.Add(commandResult =>
+        {
+            var endpointValue = commandResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
+            if (string.IsNullOrWhiteSpace(endpointValue))
+            {
+                return;
+            }
+
+            ValidateFoundryEndpoint(endpointValue, commandResult);
+        });
     }
 
     protected override KnowledgeIndexSchemaOptions BindOptions(ParseResult parseResult)
@@ -70,8 +83,7 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
 
         try
         {
-            var service = context.GetService<IFoundryExtensionsService>();
-            var indexSchema = await service.GetKnowledgeIndexSchema(
+            var indexSchema = await _foundryExtensionsService.GetKnowledgeIndexSchema(
                 options.Endpoint!,
                 options.IndexName!,
                 options.Tenant,
@@ -91,6 +103,27 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
         }
 
         return context.Response;
+    }
+
+    private static void ValidateFoundryEndpoint(string endpoint, System.CommandLine.Parsing.CommandResult commandResult)
+    {
+        ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
+        string? lastError = null;
+
+        foreach (var cloud in clouds)
+        {
+            try
+            {
+                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+            }
+        }
+
+        commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
     }
 
     internal record KnowledgeIndexSchemaCommandResult(KnowledgeIndexSchema Schema);

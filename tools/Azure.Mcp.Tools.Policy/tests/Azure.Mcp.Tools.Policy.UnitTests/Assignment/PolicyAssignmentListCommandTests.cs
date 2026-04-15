@@ -2,18 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Policy.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute.ExceptionExtensions;
-using Xunit;
 
 namespace Azure.Mcp.Tools.Policy.UnitTests.Assignment;
 

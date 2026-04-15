@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -11,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 
@@ -130,7 +130,7 @@ public sealed class McpRuntime : IMcpRuntime
             {
                 Content = [new TextContentBlock
                 {
-                    Text = ex.Message,
+                    Text = !string.IsNullOrWhiteSpace(ex.Message) ? ex.Message : "An unknown error occurred while trying to call the tool.",
                 }],
                 IsError = true,
             };
