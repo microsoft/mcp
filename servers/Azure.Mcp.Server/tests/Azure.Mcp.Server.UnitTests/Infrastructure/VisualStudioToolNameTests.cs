@@ -11,7 +11,6 @@ using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Core.Services.Time;
-using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
 
@@ -35,15 +34,15 @@ public sealed class VisualStudioToolNameTests
     private static Task<List<string>> GetAllModeToolNamesAsync()
     {
         IAreaSetup[] areaSetups = [
-            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
-            new Azure.Mcp.Tools.Extension.ExtensionSetup(),
+            new Tools.AzureBestPractices.AzureBestPracticesSetup(),
+            new Tools.Extension.ExtensionSetup(),
         ];
 
         var serviceCollection = new ServiceCollection()
             .AddLogging()
-            .AddSingleton<ITelemetryService, NoOpTelemetryService>()
-            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>())
-            .AddSingleton(Substitute.For<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>())
+            .AddSingleton<ITelemetryService, NoopTelemetryService>()
+            .AddSingleton(Substitute.For<Core.Services.Azure.Subscription.ISubscriptionService>())
+            .AddSingleton(Substitute.For<Core.Services.Azure.Tenant.ITenantService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
             .AddSingleton(Substitute.For<IDateTimeProvider>())
             .AddSingleton(Substitute.For<IExternalProcessService>())
@@ -89,13 +88,5 @@ public sealed class VisualStudioToolNameTests
         // Reference: https://devdiv.visualstudio.com/DevDiv/_git/VisualStudio.Conversations/pullrequest/705038
         Assert.Contains(AzureBestPracticesToolName, toolNames);
         Assert.Contains(ExtensionCliGenerateToolName, toolNames);
-    }
-
-    private sealed class NoOpTelemetryService : ITelemetryService
-    {
-        public System.Diagnostics.Activity? StartActivity(string activityName) => null;
-        public System.Diagnostics.Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
-        public Task InitializeAsync() => Task.CompletedTask;
-        public void Dispose() { }
     }
 }
