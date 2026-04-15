@@ -3,7 +3,7 @@
 
 using Azure.ResourceManager;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Provides configuration for Azure cloud environments.

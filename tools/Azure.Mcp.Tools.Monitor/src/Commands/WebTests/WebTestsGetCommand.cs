@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;

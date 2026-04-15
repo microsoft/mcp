@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -26,7 +26,6 @@ public sealed class TableSchemaCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<TableSchemaCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -58,7 +57,7 @@ public sealed class TableSchemaCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
-        var command = new TableSchemaCommand(_logger);
+        var command = new TableSchemaCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -97,7 +96,7 @@ public sealed class TableSchemaCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
-        var command = new TableSchemaCommand(_logger);
+        var command = new TableSchemaCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -131,7 +130,7 @@ public sealed class TableSchemaCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<string>(new Exception("Test error")));
         }
-        var command = new TableSchemaCommand(_logger);
+        var command = new TableSchemaCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -145,7 +144,7 @@ public sealed class TableSchemaCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new TableSchemaCommand(_logger);
+        var command = new TableSchemaCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);

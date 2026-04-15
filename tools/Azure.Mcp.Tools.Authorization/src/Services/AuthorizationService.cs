@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
@@ -36,6 +36,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             ConvertToRoleAssignmentModel,
             "authorizationresources",
             additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+            tenant: tenantId,
             cancellationToken: cancellationToken);
     }
 

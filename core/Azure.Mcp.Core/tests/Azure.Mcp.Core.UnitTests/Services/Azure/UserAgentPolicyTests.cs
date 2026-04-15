@@ -3,7 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure;
+using Microsoft.Mcp.Core.Services.Azure;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Services.Azure;

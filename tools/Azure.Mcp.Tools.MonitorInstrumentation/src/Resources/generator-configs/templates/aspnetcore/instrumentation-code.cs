@@ -1,1 +1,0 @@
-builder.Services.AddOpenTelemetry().UseAzureMonitor();

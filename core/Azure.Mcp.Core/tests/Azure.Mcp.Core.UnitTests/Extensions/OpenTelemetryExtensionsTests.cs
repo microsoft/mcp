@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Xunit;
 

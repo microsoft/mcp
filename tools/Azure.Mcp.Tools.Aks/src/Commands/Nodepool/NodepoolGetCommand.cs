@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -80,8 +79,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS node pool. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Nodepool: {Nodepool}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodepoolName, options);
+                "Error getting AKS node pool. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Nodepool: {Nodepool}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName, options.NodepoolName);
             HandleException(context, ex);
         }
 

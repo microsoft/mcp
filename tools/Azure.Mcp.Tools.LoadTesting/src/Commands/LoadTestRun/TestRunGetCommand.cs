@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
+public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestRunGetOptions>
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
     public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
     public override string Name => "get";
     public override string Description =>
@@ -84,13 +83,10 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
 
         try
         {
-            // Get the appropriate service from DI
-            var service = context.GetService<ILoadTestingService>();
-
             // If TestRunId is provided, get a single test run
             if (!string.IsNullOrEmpty(options.TestRunId))
             {
-                var result = await service.GetLoadTestRunAsync(
+                var result = await _loadTestingService.GetLoadTestRunAsync(
                     options.Subscription!,
                     options.TestResourceName!,
                     options.TestRunId!,
@@ -106,7 +102,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
             // Otherwise if TestId is provided, list all test runs for that test
             else if (!string.IsNullOrEmpty(options.TestId))
             {
-                var results = await service.GetLoadTestRunsFromTestIdAsync(
+                var results = await _loadTestingService.GetLoadTestRunsFromTestIdAsync(
                     options.Subscription!,
                     options.TestResourceName!,
                     options.TestId!,

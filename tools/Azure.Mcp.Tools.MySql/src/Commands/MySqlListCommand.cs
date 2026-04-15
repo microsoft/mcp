@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
@@ -31,6 +28,15 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
         base.RegisterOptions(command);
         command.Options.Add(MySqlOptionDefinitions.ServerOptional);
         command.Options.Add(MySqlOptionDefinitions.DatabaseOptional);
+        command.Validators.Add(result =>
+        {
+            // Validate that --server is provided when --database is specified
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.DatabaseOptional.Name)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault<string?>(MySqlOptionDefinitions.ServerOptional.Name)))
+            {
+                result.AddError("The --server parameter is required when --database is specified.");
+            }
+        });
     }
 
     protected override MySqlDatabaseOptions BindOptions(ParseResult parseResult)
@@ -43,21 +49,16 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        MySqlDatabaseOptions? options = null;
+
         try
         {
-            var options = BindOptions(parseResult);
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
 
-            // Validate that --server is provided when --database is specified
-            if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
-            {
-                context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-                context.Response.Message = "The --server parameter is required when --database is specified.";
-                return context.Response;
-            }
+            options = BindOptions(parseResult);
 
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
@@ -72,7 +73,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new MySqlListCommandResult(null, null, tables ?? []),
+                    new(null, null, tables ?? []),
                     MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else if (!string.IsNullOrEmpty(options.Server))
@@ -86,7 +87,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new MySqlListCommandResult(null, databases ?? [], null),
+                    new(null, databases ?? [], null),
                     MySqlJsonContext.Default.MySqlListCommandResult);
             }
             else
@@ -99,13 +100,13 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new MySqlListCommandResult(servers ?? [], null, null),
+                    new(servers ?? [], null, null),
                     MySqlJsonContext.Default.MySqlListCommandResult);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, BindOptions(parseResult));
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options?.Subscription, options?.ResourceGroup, options?.Server, options?.Database);
             HandleException(context, ex);
         }
 

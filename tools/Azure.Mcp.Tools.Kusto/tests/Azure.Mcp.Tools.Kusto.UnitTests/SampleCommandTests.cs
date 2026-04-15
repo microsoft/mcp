@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -26,7 +26,6 @@ public sealed class SampleCommandTests
         _kusto = Substitute.For<IKustoService>();
         _logger = Substitute.For<ILogger<SampleCommand>>();
         var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
         _serviceProvider = collection.BuildServiceProvider();
     }
 
@@ -58,7 +57,7 @@ public sealed class SampleCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
-        var command = new SampleCommand(_logger);
+        var command = new SampleCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -99,7 +98,7 @@ public sealed class SampleCommandTests
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new SampleCommand(_logger);
+        var command = new SampleCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
@@ -135,7 +134,7 @@ public sealed class SampleCommandTests
     //             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
     //             .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
     //     }
-    //     var command = new SampleCommand(_logger);
+    //     var command = new SampleCommand(_logger, _kusto);
 
     //     var args = command.GetCommand().Parse(cliArgs);
     //     var context = new CommandContext(_serviceProvider);
@@ -149,7 +148,7 @@ public sealed class SampleCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new SampleCommand(_logger);
+        var command = new SampleCommand(_logger, _kusto);
 
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);

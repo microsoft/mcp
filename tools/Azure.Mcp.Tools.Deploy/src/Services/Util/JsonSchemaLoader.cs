@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 

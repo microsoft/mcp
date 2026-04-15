@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Core.Logging;
+namespace Microsoft.Mcp.Core.Logging;
 
 /// <summary>
 /// A simple file logger that writes logs to a file for support and troubleshooting purposes.

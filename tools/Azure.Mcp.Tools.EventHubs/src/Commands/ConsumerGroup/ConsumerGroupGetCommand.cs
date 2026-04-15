@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -111,7 +110,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting consumer group(s). Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting consumer group(s). ConsumerGroup: {ConsumerGroup}, EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}.", options.ConsumerGroup, options.EventHub, options.Namespace, options.ResourceGroup);
             HandleException(context, ex);
         }
 

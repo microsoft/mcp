@@ -12,6 +12,12 @@ public class LiveTestSettings
 {
     public const string TestSettingsFileName = ".testsettings.json";
 
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     public string PrincipalName { get; set; } = string.Empty;
     public bool IsServicePrincipal { get; set; }
     public string TenantId { get; set; } = string.Empty;
@@ -53,11 +59,7 @@ public class LiveTestSettings
         {
             var json = File.ReadAllText(path);
 
-            settings = JsonSerializer.Deserialize<LiveTestSettings>(json, new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            });
+            settings = JsonSerializer.Deserialize<LiveTestSettings>(json, s_jsonOptions);
 
             if (settings != null)
             {
