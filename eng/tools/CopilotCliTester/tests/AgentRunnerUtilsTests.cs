@@ -109,8 +109,9 @@ public sealed class AgentRunnerUtilsTests : IDisposable
     [Theory]
     [InlineData("storage_account_list", "storage_account_list", true)]
     [InlineData("Storage_Account_List", "storage_account_list", true)]
-    [InlineData("azure-storage_account_list", "account_list", true)]
-    [InlineData("azure-storage-account_list", "account_list", true)]
+    [InlineData("azure-storage_account_list", "storage_account_list", true)]
+    [InlineData("azure-storage-account_list", "storage-account_list", true)]
+    [InlineData("azure-storage-account_list", "account_list", false)]
     [InlineData("keyvault_secret_get", "storage_account_list", false)]
     public void WasToolInvoked_VariousMatches(string invokedToolName, string queryToolName, bool expected)
     {
@@ -327,7 +328,7 @@ public sealed class AgentRunnerUtilsTests : IDisposable
         var evt = ToolEvent("proxy", new() { ["arguments"] = argsDict });
         var metadata = CreateMetadata(evt);
 
-        Assert.True(AgentRunnerUtils.WasToolInvoked(metadata, "account_list"));
+        Assert.True(AgentRunnerUtils.WasToolInvoked(metadata, "storage_account_list"));
     }
 
     #endregion

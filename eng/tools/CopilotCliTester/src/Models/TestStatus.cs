@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 namespace CopilotCliTester.Models;
-internal enum TestStatus {
-    FAIL,
-    PASS,
-    ERROR
+
+internal enum TestStatus 
+{
+    Fail,
+    Pass,
+    Error
 }

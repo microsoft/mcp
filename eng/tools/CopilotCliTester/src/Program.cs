@@ -323,7 +323,7 @@ static class Program
                     Tool = prompt.Tool,
                     Prompt = prompt.Prompt,
                     Duration = 0,
-                    Status = TestStatus.ERROR,
+                    Status = TestStatus.Error,
                     Error = $"Task infrastructure error: {ex.Message}"
                 };
                 AppendResultToMarkdown(reportFile, errorResult);
@@ -340,9 +340,9 @@ static class Program
 
         totalStopwatch.Stop();
 
-        var passed = results.Count(r => r.Status == TestStatus.PASS);
-        var failed = results.Count(r => r.Status == TestStatus.FAIL);
-        var skipped = results.Count(r => r.Status == TestStatus.ERROR);
+        var passed = results.Count(r => r.Status == TestStatus.Pass);
+        var failed = results.Count(r => r.Status == TestStatus.Fail);
+        var skipped = results.Count(r => r.Status == TestStatus.Error);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         Console.WriteLine(new string('═', 64));
@@ -420,7 +420,7 @@ static class Program
                     Prompt = prompt.Prompt,
                     Duration = stopwatch.Elapsed.TotalSeconds,
                     Attempts = attempt,
-                    Status = TestStatus.ERROR,
+                    Status = TestStatus.Error,
                     Error = e.Message
                 };
             }
@@ -440,7 +440,7 @@ static class Program
                     Duration = stopwatch.Elapsed.TotalSeconds,
                     ToolsCalled = toolsCalled,
                     Attempts = attempts,
-                    Status = TestStatus.PASS
+                    Status = TestStatus.Pass
                 };
             }
 
@@ -452,7 +452,7 @@ static class Program
 
         // All retries exhausted without invoking the expected tool
         var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray(); 
-                        WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
+        WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
         return new TestResult
         {
             Tool = prompt.Tool,
@@ -460,7 +460,7 @@ static class Program
             Duration = stopwatch.Elapsed.TotalSeconds,
             ToolsCalled = allToolsCalled,
             Attempts = attempts,
-            Status = TestStatus.FAIL,
+            Status = TestStatus.Fail,
             Error = $"Expected tool not invoked. Called: [{string.Join(", ", allToolsCalled)}]"
         };
     }
@@ -492,9 +492,9 @@ static class Program
             {
                 var status = result.Status switch 
                 {
-                    TestStatus.PASS => "✓",
-                    TestStatus.FAIL => "X",
-                    TestStatus.ERROR => "--",
+                    TestStatus.Pass => "✓",
+                    TestStatus.Fail => "X",
+                    TestStatus.Error => "--",
                     _ => "--"
                 };
                 var promptShort = result.Prompt.Length > 40 ? result.Prompt[..40] + "..." : result.Prompt;
@@ -513,9 +513,9 @@ static class Program
     /// </summary>
     static void AppendMarkdownSummary(string filePath, List<TestResult> results, TimeSpan duration)
     {
-        var passed = results.Count(r => r.Status == TestStatus.PASS);
-        var failed = results.Count(r => r.Status == TestStatus.FAIL);
-        var skipped = results.Count(r => r.Status == TestStatus.ERROR);
+        var passed = results.Count(r => r.Status == TestStatus.Pass);
+        var failed = results.Count(r => r.Status == TestStatus.Fail);
+        var skipped = results.Count(r => r.Status == TestStatus.Error);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         using var writer = new StreamWriter(filePath, append: true);
@@ -538,7 +538,7 @@ static class Program
             writer.WriteLine();
             writer.WriteLine("| Tool | Prompt | Tools Called |");
             writer.WriteLine("|------|--------|--------------|");
-            foreach (var result in results.Where(r => r.Status == TestStatus.FAIL))
+            foreach (var result in results.Where(r => r.Status == TestStatus.Fail))
             {
                 var toolsCalled = result.ToolsCalled is not null ? string.Join(", ", result.ToolsCalled) : "";
                 var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
@@ -552,7 +552,7 @@ static class Program
             writer.WriteLine();
             writer.WriteLine("| Tool | Prompt | Error |");
             writer.WriteLine("|------|--------|-------|");
-            foreach (var result in results.Where(r => r.Status == TestStatus.ERROR))
+            foreach (var result in results.Where(r => r.Status == TestStatus.Error))
             {
                 var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
                 var error = result.Error ?? "";

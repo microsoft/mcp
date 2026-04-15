@@ -25,7 +25,9 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
     [GeneratedRegex(@"Bearer\s+[A-Za-z0-9_\-.~+/]{20,}", RegexOptions.IgnoreCase)]
     private static partial Regex BearerPattern();
 
-    [GeneratedRegex(@"(?:password|secret|token|api[_-]?key)\s*[:=]\s*[""']?[^\s""',]{6,}", RegexOptions.IgnoreCase)]
+    // Matches secret key/value pairs such as password=..., token: ...,or api_key="...". Supports quoted values with spaces and unquoted values that extend
+    // to end-of-line to prevent partial redaction leaks (e.g.,"password: my secret value"). Requires at least 6 characters for unquoted values to reduce false positives and runs case-insensitively
+    [GeneratedRegex(@"(?:password|secret|token|api[_-]?key)\s*[:=]\s*(?:""[^""]*""|'[^']*'|[^\r\n]{6,})", RegexOptions.IgnoreCase)]
     private static partial Regex SecretKeyValuePattern();
 
     public async ValueTask DisposeAsync()
@@ -319,7 +321,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
         return string.Join("\n", lines);
     }
 
-    private static string RedactSecrets(string text)
+    internal static string RedactSecrets(string text)
     {
         var result = text;
         result = JwtPattern().Replace(result, "[REDACTED]");

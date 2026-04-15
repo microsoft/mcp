@@ -6,7 +6,8 @@ namespace CopilotCliTester.Models;
 /// <summary>
 /// Result of running a single test through Copilot SDK.
 /// </summary>
-internal sealed record TestResult {
+internal sealed record TestResult 
+{
     public required string Tool { get; init; }
     public required string Prompt { get; init; }
     public required double Duration { get; init; }
