@@ -28,17 +28,17 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             ResourceGroupTestHelpers.CreateResourceGroupInfo("rg2", subscriptionId, "West US")
         };
 
-        _service.GetResourceGroups(
+        Service.GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
+        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -60,7 +60,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg2", second.Id);
         Assert.Equal("West US", second.Location);
 
-        await _service.Received(1).GetResourceGroups(
+        await Service.Received(1).GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -78,22 +78,22 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             ResourceGroupTestHelpers.CreateResourceGroupInfo("rg1", subscriptionId, "East US")
         };
 
-        _service.GetResourceGroups(
+        Service.GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Is(tenantId),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
+        var args = CommandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        await _service.Received(1).GetResourceGroups(
+        await Service.Received(1).GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Is(tenantId),
             Arg.Any<RetryPolicyOptions>(),
@@ -105,17 +105,17 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
     {
         // Arrange
         var subscriptionId = "test-subs-id";
-        _service.GetResourceGroups(
+        Service.GetResourceGroups(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
+        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -133,17 +133,17 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         // Arrange
         var subscriptionId = "test-subs-id";
         var expectedError = "Test error message";
-        _service.GetResourceGroups(
+        Service.GetResourceGroups(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
+        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

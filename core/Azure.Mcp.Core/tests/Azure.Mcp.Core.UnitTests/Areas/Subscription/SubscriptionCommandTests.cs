@@ -23,7 +23,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
         TestEnvironment.SetAzureSubscriptionId("env-subs");
 
         // Act
-        var parseResult = _commandDefinition.Parse([]);
+        var parseResult = CommandDefinition.Parse([]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -42,7 +42,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             new("account2", null, null, null, null, null, null, null, null, null)
         ], false);
 
-        _service.GetAccountDetails(
+        Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string>(),
@@ -50,16 +50,14 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
-        var parseResult = _commandDefinition.Parse([]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
         Assert.NotNull(response);
 
         // Verify the service was called with the environment variable subscription
-        await _service.Received(1).GetAccountDetails(
+        await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             subscription,
             Arg.Any<string>(),
@@ -81,7 +79,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             new("account2", null, null, null, null, null, null, null, null, null)
         ], false);
 
-        _service.GetAccountDetails(
+        Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(expectedSubscription),
             Arg.Any<string>(),
@@ -89,22 +87,20 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", expectedSubscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", expectedSubscription);
 
         // Assert
         Assert.NotNull(response);
 
         // Verify the service was called with the option subscription, not the environment variable
-        await _service.Received(1).GetAccountDetails(
+        await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             expectedSubscription,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
-        await _service.DidNotReceive().GetAccountDetails(
+        await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
             Arg.Any<string>(),

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
@@ -26,7 +25,7 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListRegistryRepositories(
+            Service.ListRegistryRepositories(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -39,10 +38,8 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
                 });
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -60,7 +57,7 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListRegistryRepositories(
+        Service.ListRegistryRepositories(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -69,10 +66,8 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -84,7 +79,7 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
     public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
-        _service.ListRegistryRepositories(
+        Service.ListRegistryRepositories(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -93,17 +88,14 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
+        var result = ConvertResponse(response, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.RepositoriesByRegistry);

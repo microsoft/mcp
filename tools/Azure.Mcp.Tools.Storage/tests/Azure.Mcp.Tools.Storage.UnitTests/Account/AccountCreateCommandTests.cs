@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
@@ -20,7 +19,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -58,7 +57,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
                 Kind: "StorageV2",
                 Properties: properties);
 
-            _service.CreateStorageAccount(
+            Service.CreateStorageAccount(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -68,14 +67,12 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+                Arg.Any<CancellationToken>())
                 .Returns(expectedAccount);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -84,8 +81,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
 
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountCreateCommandResult);
+            var result = ConvertResponse(response, StorageJsonContext.Default.AccountCreateCommandResult);
             Assert.NotNull(result);
             Assert.NotNull(result!.Account);
             Assert.Equal("testaccount", result.Account.Name);
@@ -102,7 +98,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Storage account name already exists");
 
-        _service.CreateStorageAccount(
+        Service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -115,10 +111,12 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "existingaccount",
+            "--resource-group", "testrg",
+            "--location", "eastus",
+            "--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -131,7 +129,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found");
 
-        _service.CreateStorageAccount(
+        Service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -144,10 +142,12 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--resource-group", "nonexistentrg",
+            "--location", "eastus",
+            "--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -160,7 +160,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
-        _service.CreateStorageAccount(
+        Service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -173,10 +173,12 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--resource-group", "testrg",
+            "--location", "eastus",
+            "--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -187,7 +189,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.CreateStorageAccount(
+        Service.CreateStorageAccount(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -200,10 +202,12 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--resource-group", "testrg",
+            "--location", "eastus",
+            "--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -234,7 +238,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Kind: "StorageV2",
             Properties: properties);
 
-        _service.CreateStorageAccount(
+        Service.CreateStorageAccount(
             "testaccount",
             "testrg",
             "eastus",
@@ -247,22 +251,19 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", "testaccount",
             "--resource-group", "testrg",
             "--location", "eastus",
             "--subscription", "sub123",
             "--sku", "Standard_GRS",
             "--access-tier", "Cool",
-            "--enable-hierarchical-namespace", "true"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--enable-hierarchical-namespace", "true");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).CreateStorageAccount(
+        await Service.Received(1).CreateStorageAccount(
             "testaccount",
             "testrg",
             "eastus",

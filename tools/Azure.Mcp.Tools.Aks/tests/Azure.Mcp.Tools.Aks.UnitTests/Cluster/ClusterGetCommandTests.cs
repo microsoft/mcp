@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.UnitTests.Cluster;
@@ -19,7 +18,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -35,7 +34,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         // Arrange
         if (shouldSucceed)
         {
-            _service.GetClusters(
+            Service.GetClusters(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
@@ -45,11 +44,8 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
                 .Returns([]);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -74,7 +70,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             new() { Name = "cluster2", Location = "westus", KubernetesVersion = "1.29.0" },
             new() { Name = "cluster3", Location = "centralus", KubernetesVersion = "1.28.5" }
         };
-        _service.GetClusters(
+        Service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -83,18 +79,15 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _service.Received(1).GetClusters(
+        await Service.Received(1).GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -102,8 +95,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedClusters.Count, result.Clusters.Count);
@@ -188,7 +180,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Tags = new Dictionary<string, string> { ["gc_skip"] = "true" }
         };
 
-        _service.GetClusters(
+        Service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -197,18 +189,14 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<CancellationToken>())
             .Returns([enriched]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         var c = result.Clusters[0];
@@ -227,7 +215,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     public async Task ExecuteAsync_ReturnsEmptyWhenNoClusters()
     {
         // Arrange
-        _service.GetClusters(
+        Service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
@@ -236,18 +224,14 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Clusters);
@@ -257,20 +241,17 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetClusters(
+        Service.GetClusters(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.Cluster>>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -301,13 +282,14 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             AgentPoolProfiles = [new() { Name = "systempool", Count = 3 }]
         };
 
-        _service.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetClusters("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([expectedCluster]);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--cluster", "test-cluster");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -320,13 +302,20 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "AKS cluster not found");
-        _service.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.Cluster>>(notFoundException));
-
-        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        Service.GetClusters(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(notFoundException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--cluster", "test-cluster");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -338,13 +327,20 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _service.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<Models.Cluster>>(forbiddenException));
-
-        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        Service.GetClusters(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(forbiddenException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--cluster", "test-cluster");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

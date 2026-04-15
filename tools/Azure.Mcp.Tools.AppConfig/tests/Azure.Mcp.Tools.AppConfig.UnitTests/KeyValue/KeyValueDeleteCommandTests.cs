@@ -1,59 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
-public class KeyValueDeleteCommandTests
+public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCommand, IAppConfigService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAppConfigService _appConfigService;
-    private readonly ILogger<KeyValueDeleteCommand> _logger;
-    private readonly KeyValueDeleteCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public KeyValueDeleteCommandTests()
-    {
-        _appConfigService = Substitute.For<IAppConfigService>();
-        _logger = Substitute.For<ILogger<KeyValueDeleteCommand>>();
-
-        _command = new(_logger, _appConfigService);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
-            "--key", "my-key"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--key", "my-key");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _appConfigService.Received(1).DeleteKeyValue(
+        await Service.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
             "sub123",
@@ -62,8 +35,7 @@ public class KeyValueDeleteCommandTests
             null,
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -72,20 +44,16 @@ public class KeyValueDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_DeletesKeyValueWithLabel_WhenLabelProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
-            "--label", "prod"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--label", "prod");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _appConfigService.Received(1).DeleteKeyValue(
+        await Service.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
             "sub123", null,
@@ -93,8 +61,7 @@ public class KeyValueDeleteCommandTests
             "prod",
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -105,7 +72,7 @@ public class KeyValueDeleteCommandTests
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        _appConfigService.DeleteKeyValue(
+        Service.DeleteKeyValue(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -115,14 +82,11 @@ public class KeyValueDeleteCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to delete key-value"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
-            "--key", "my-key"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--key", "my-key");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -135,11 +99,8 @@ public class KeyValueDeleteCommandTests
     [InlineData("--subscription", "sub123", "--account", "account1")] // Missing key
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

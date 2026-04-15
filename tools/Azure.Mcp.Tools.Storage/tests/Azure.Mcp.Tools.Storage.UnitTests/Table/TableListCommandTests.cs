@@ -1,15 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Mcp.Tools.Storage.Table.Commands;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -29,7 +24,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         // Arrange
         var expectedTables = new List<string> { "table1", "table2" };
 
-        _service.ListTables(
+        Service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -37,20 +32,16 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
             Arg.Any<CancellationToken>())
             .Returns(expectedTables);
 
-        var args = _commandDefinition.Parse([
-            "--account", _knownStorageAccount,
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", _knownStorageAccount,
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
+        var result = ConvertResponse(response, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
@@ -60,7 +51,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoStorageTables()
     {
         // Arrange
-        _service.ListTables(
+        Service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -68,20 +59,16 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
-            "--account", _knownStorageAccount,
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", _knownStorageAccount,
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
+        var result = ConvertResponse(response, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tables);
@@ -93,11 +80,8 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
     [InlineData("")] // No arguments
     public async Task ExecuteAsync_ValidatesMissingSubscriptionCorrectly(string args)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -109,7 +93,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         // Arrange
         var expectedError = "Test error";
 
-        _service.ListTables(
+        Service.ListTables(
             Arg.Is(_knownStorageAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -117,13 +101,10 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _command.GetCommand().Parse([
-            "--account", _knownStorageAccount,
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", _knownStorageAccount,
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.NotNull(response);

@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
@@ -19,12 +22,12 @@ public abstract class CommandUnitTestsBase<ToolCommand, ToolService>
     where ToolCommand : class, IBaseCommand
     where ToolService : class
 {
-    protected readonly ToolService _service;
-    protected readonly ToolCommand _command;
-    protected readonly ILogger<ToolCommand> _logger;
-    protected readonly CommandContext _context;
-    protected readonly Command _commandDefinition;
-    protected readonly ServiceProvider _serviceProvider;
+    protected ToolService Service { get; init; }
+    protected ToolCommand Command { get; init; }
+    protected ILogger<ToolCommand> Logger { get; init; }
+    protected CommandContext Context { get; init; }
+    protected Command CommandDefinition { get; init; }
+    protected ServiceProvider ServiceProvider { get; init; }
 
     /// <summary>
     /// Initializes the command unit test base by setting up common dependency injection points with mocks.
@@ -32,16 +35,25 @@ public abstract class CommandUnitTestsBase<ToolCommand, ToolService>
     /// <param name="extensions">Optional additional service registrations for the test.</param>
     public CommandUnitTestsBase(Action<IServiceCollection>? extensions = null)
     {
-        _service = Substitute.For<ToolService>();
-        _logger = Substitute.For<ILogger<ToolCommand>>();
+        Service = Substitute.For<ToolService>();
+        Logger = Substitute.For<ILogger<ToolCommand>>();
         var serviceCollection = new ServiceCollection()
-            .AddSingleton(_logger)
-            .AddSingleton(_service)
+            .AddSingleton(Logger)
+            .AddSingleton(Service)
             .AddSingleton<ToolCommand>();
         extensions?.Invoke(serviceCollection);
-        _serviceProvider = serviceCollection.BuildServiceProvider();
-        _command = _serviceProvider.GetRequiredService<ToolCommand>();
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
+        ServiceProvider = serviceCollection.BuildServiceProvider();
+        Command = ServiceProvider.GetRequiredService<ToolCommand>();
+        Context = new(ServiceProvider);
+        CommandDefinition = Command.GetCommand();
     }
+
+    protected Task<CommandResponse> ExecuteCommandAsync(params string[] args)
+        => Command.ExecuteAsync(Context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
+
+    protected Task<CommandResponse> ExecuteCommandAsync(string args)
+        => Command.ExecuteAsync(Context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
+
+    protected T? ConvertResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+        => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
 }

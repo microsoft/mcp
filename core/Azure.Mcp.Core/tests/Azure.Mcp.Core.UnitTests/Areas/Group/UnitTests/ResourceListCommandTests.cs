@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Microsoft.Mcp.Core.Models.Resource;
@@ -28,7 +27,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             new("vm1", "/subscriptions/test-subs-id/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/vm1", "Microsoft.Compute/virtualMachines", "West US")
         };
 
-        _service.GetGenericResources(
+        Service.GetGenericResources(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string>(),
@@ -36,17 +35,15 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             Arg.Any<CancellationToken>())
             .Returns(expectedResources.ToAsyncEnumerable());
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --resource-group {resourceGroup}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var listResult = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.ResourceListCommandResult);
+        var listResult = ConvertResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.NotNull(listResult);
         Assert.Equal(2, listResult.Resources.Count);
 
@@ -58,7 +55,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         Assert.Equal("Microsoft.Compute/virtualMachines", listResult.Resources[1].Type);
         Assert.Equal("West US", listResult.Resources[1].Location);
 
-        _service.Received(1).GetGenericResources(
+        Service.Received(1).GetGenericResources(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string>(),
@@ -78,7 +75,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             new("resource1", "/subscriptions/test-subs-id/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/resource1", "Microsoft.Storage/storageAccounts", "East US")
         };
 
-        _service.GetGenericResources(
+        Service.GetGenericResources(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(tenantId),
@@ -86,15 +83,16 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             Arg.Any<CancellationToken>())
             .Returns(expectedResources.ToAsyncEnumerable());
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --resource-group {resourceGroup} --tenant {tenantId}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--tenant", tenantId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        _service.Received(1).GetGenericResources(
+        Service.Received(1).GetGenericResources(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(tenantId),
@@ -108,7 +106,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         // Arrange
         var subscriptionId = "test-subs-id";
         var resourceGroup = "test-rg";
-        _service.GetGenericResources(
+        Service.GetGenericResources(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -116,16 +114,14 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             Arg.Any<CancellationToken>())
             .Returns(AsyncEnumerable.Empty<GenericResourceInfo>());
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --resource-group {resourceGroup}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        var listResult = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.ResourceListCommandResult);
+        var listResult = ConvertResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.NotNull(listResult);
         Assert.Empty(listResult.Resources);
     }
@@ -137,7 +133,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var subscriptionId = "test-subs-id";
         var resourceGroup = "test-rg";
         var expectedError = "Test error message";
-        _service.GetGenericResources(
+        Service.GetGenericResources(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -145,10 +141,8 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             Arg.Any<CancellationToken>())
             .Throws(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --resource-group {resourceGroup}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
         // Assert
         Assert.NotNull(result);
@@ -161,10 +155,9 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     {
         // Arrange
         var subscriptionId = "test-subs-id";
-        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(result);
