@@ -10,29 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.UnitTests.Nodepool;
 
-public sealed class NodepoolGetCommandTests
+public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCommand, IAksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAksService _aksService;
-    private readonly ILogger<NodepoolGetCommand> _logger;
-    private readonly NodepoolGetCommand _command;
-
-    public NodepoolGetCommandTests()
-    {
-        _aksService = Substitute.For<IAksService>();
-        _logger = Substitute.For<ILogger<NodepoolGetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _aksService);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -54,7 +39,7 @@ public sealed class NodepoolGetCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _aksService.GetNodePools(
+            _service.GetNodePools(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -162,7 +147,7 @@ public sealed class NodepoolGetCommandTests
                 NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
             }
         };
-        _aksService.GetNodePools(
+        _service.GetNodePools(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -183,7 +168,7 @@ public sealed class NodepoolGetCommandTests
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _aksService.Received(1).GetNodePools(
+        await _service.Received(1).GetNodePools(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -237,7 +222,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools()
     {
         // Arrange
-        _aksService.GetNodePools(
+        _service.GetNodePools(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -268,7 +253,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.GetNodePools(
+        _service.GetNodePools(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -337,7 +322,7 @@ public sealed class NodepoolGetCommandTests
             PodSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet",
             VnetSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet"
         };
-        _aksService.GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([expectedNodePool]);
 
         var context = new CommandContext(_serviceProvider);
@@ -350,7 +335,7 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _aksService.Received(1).GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await _service.Received(1).GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolGetCommandResult);

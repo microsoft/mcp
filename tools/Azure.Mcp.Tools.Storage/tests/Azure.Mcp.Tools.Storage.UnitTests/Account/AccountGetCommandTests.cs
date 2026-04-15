@@ -35,7 +35,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedAccounts));
+            .Returns(expectedAccounts);
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
@@ -134,8 +134,12 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
                 false);
 
             _service.GetAccountDetails(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(expectedAccount));
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+                .Returns(expectedAccount);
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -167,8 +171,12 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
             false);
 
         _service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedAccount));
+            Arg.Is(account),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedAccount);
 
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 

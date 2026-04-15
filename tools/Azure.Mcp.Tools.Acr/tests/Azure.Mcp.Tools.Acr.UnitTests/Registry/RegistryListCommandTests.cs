@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
@@ -9,35 +8,17 @@ using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
-public class RegistryListCommandTests
+public class RegistryListCommandTests : CommandUnitTestsBase<RegistryListCommand, IAcrService>
 {
-    private readonly IAcrService _service;
-    private readonly ILogger<RegistryListCommand> _logger;
-    private readonly RegistryListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RegistryListCommandTests()
-    {
-        _service = Substitute.For<IAcrService>();
-        _logger = Substitute.For<ILogger<RegistryListCommand>>();
-
-        _command = new(_logger, _service);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -54,11 +35,16 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Ensure environment variable fallback does not interfere with validation tests
-        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        TestEnvironment.ClearAzureSubscriptionId();
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            _service.ListRegistries(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<AcrRegistryInfo>(
                 [
                     new("registry1", "eastus", "registry1.azurecr.io", "Basic", "Basic"),
@@ -87,7 +73,12 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.ListRegistries(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);

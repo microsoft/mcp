@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -107,7 +108,7 @@ public class AdminSettingsGetCommandTests
         if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
         {
             // Provide subscription via environment variable
-            EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
+            TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
         }
         else if (!args.Contains("--subscription"))
         {

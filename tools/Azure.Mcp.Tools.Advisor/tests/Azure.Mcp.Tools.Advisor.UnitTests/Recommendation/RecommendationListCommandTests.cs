@@ -1,40 +1,23 @@
-﻿using System.CommandLine;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.UnitTests.Recommendation;
 
-public class RecommendationListCommandTests
+public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAdvisorService _advisorService;
-    private readonly ILogger<RecommendationListCommand> _logger;
-    private readonly RecommendationListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RecommendationListCommandTests()
-    {
-        _advisorService = Substitute.For<IAdvisorService>();
-        _logger = Substitute.For<ILogger<RecommendationListCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _advisorService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -53,7 +36,7 @@ public class RecommendationListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _advisorService.ListRecommendationsAsync(
+            _service.ListRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
@@ -90,7 +73,7 @@ public class RecommendationListCommandTests
             new(ResourceId: "recId2", RecommendationText: "Recommendation 2", Category: "Cost"),
             new(ResourceId: "recId3", RecommendationText: "Recommendation 3", Category: "Performance")
         };
-        _advisorService.ListRecommendationsAsync(
+        _service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -108,7 +91,7 @@ public class RecommendationListCommandTests
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _advisorService.Received(1).ListRecommendationsAsync(
+        await _service.Received(1).ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -128,7 +111,7 @@ public class RecommendationListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoRecommendations()
     {
         // Arrange
-        _advisorService.ListRecommendationsAsync(
+        _service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -156,7 +139,7 @@ public class RecommendationListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _advisorService.ListRecommendationsAsync(
+        _service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
@@ -180,7 +163,7 @@ public class RecommendationListCommandTests
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _advisorService.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg"]);

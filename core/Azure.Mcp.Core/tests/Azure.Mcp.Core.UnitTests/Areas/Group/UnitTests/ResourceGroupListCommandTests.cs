@@ -1,48 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Tests.Helpers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
 using Microsoft.Mcp.Core.Options;
-using ModelContextProtocol.Server;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Group.UnitTests;
 
-public class GroupListCommandTests
+public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListCommand, IResourceGroupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly McpServer _mcpServer;
-    private readonly ILogger<GroupListCommand> _logger;
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly GroupListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public GroupListCommandTests()
-    {
-        _mcpServer = Substitute.For<McpServer>();
-        _resourceGroupService = Substitute.For<IResourceGroupService>();
-        _logger = Substitute.For<ILogger<GroupListCommand>>();
-        var collection = new ServiceCollection()
-            .AddSingleton(_mcpServer)
-            .AddSingleton(_resourceGroupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_WithValidSubscription_ReturnsResourceGroups()
     {
@@ -54,8 +28,11 @@ public class GroupListCommandTests
             ResourceGroupTestHelpers.CreateResourceGroupInfo("rg2", subscriptionId, "West US")
         };
 
-        _resourceGroupService
-            .GetResourceGroups(Arg.Is<string>(x => x == subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetResourceGroups(
+            Arg.Is(subscriptionId),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
@@ -83,8 +60,8 @@ public class GroupListCommandTests
         Assert.Equal("/subscriptions/test-subs-id/resourceGroups/rg2", second.Id);
         Assert.Equal("West US", second.Location);
 
-        await _resourceGroupService.Received(1).GetResourceGroups(
-            Arg.Is<string>(x => x == subscriptionId),
+        await _service.Received(1).GetResourceGroups(
+            Arg.Is(subscriptionId),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -101,12 +78,11 @@ public class GroupListCommandTests
             ResourceGroupTestHelpers.CreateResourceGroupInfo("rg1", subscriptionId, "East US")
         };
 
-        _resourceGroupService
-            .GetResourceGroups(
-                Arg.Is<string>(x => x == subscriptionId),
-                Arg.Is<string>(x => x == tenantId),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        _service.GetResourceGroups(
+            Arg.Is(subscriptionId),
+            Arg.Is(tenantId),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
@@ -117,9 +93,9 @@ public class GroupListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        await _resourceGroupService.Received(1).GetResourceGroups(
-            Arg.Is<string>(x => x == subscriptionId),
-            Arg.Is<string>(x => x == tenantId),
+        await _service.Received(1).GetResourceGroups(
+            Arg.Is(subscriptionId),
+            Arg.Is(tenantId),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
@@ -129,8 +105,11 @@ public class GroupListCommandTests
     {
         // Arrange
         var subscriptionId = "test-subs-id";
-        _resourceGroupService
-            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _service.GetResourceGroups(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
@@ -154,9 +133,12 @@ public class GroupListCommandTests
         // Arrange
         var subscriptionId = "test-subs-id";
         var expectedError = "Test error message";
-        _resourceGroupService
-            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<ResourceGroupInfo>>(new Exception(expectedError)));
+        _service.GetResourceGroups(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
