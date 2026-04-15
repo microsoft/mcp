@@ -50,7 +50,7 @@ public class ComputeSetup : IAreaSetup
             Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.
             This tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.
             Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.
-            Defaults to Standard_DS1_v2 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.
+            Defaults to Standard_D2s_v5 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.
             This tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields
             inside the "parameters" object. To invoke a command, set "command" and wrap its arguments in "parameters".
             Set "learn=true" to discover available sub-commands for different Azure Compute operations.

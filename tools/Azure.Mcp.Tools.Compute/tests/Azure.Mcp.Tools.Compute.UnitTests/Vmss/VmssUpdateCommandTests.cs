@@ -54,6 +54,7 @@ public class VmssUpdateCommandTests
 
     [Theory]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --upgrade-policy Automatic", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --capacity 5", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --tags env=test", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --scale-in-policy OldestVM", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123", false)] // No update property

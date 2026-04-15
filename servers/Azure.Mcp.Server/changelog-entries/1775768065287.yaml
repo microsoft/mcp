@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Changed default VM size for `vm create` and `vmss create` commands from `Standard_DS1_v2` (deprecated) to `Standard_D2s_v5` (2 vCPU, 8 GB RAM, D-series v5)"

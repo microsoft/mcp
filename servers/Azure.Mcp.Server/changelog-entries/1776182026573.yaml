@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `vmss update` command not accepting `--capacity`, `--overprovision`, or `--enable-auto-os-upgrade` options due to option type mismatch"

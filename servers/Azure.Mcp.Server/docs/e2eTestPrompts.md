@@ -188,7 +188,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
-| compute_vm_create | Create a virtual machine with Standard_DS1_v2 size in <resource-group-name> |
+| compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> |
 | compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
 | compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication |
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> |

@@ -929,7 +929,7 @@ azmcp compute vm create --subscription <subscription> \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to the Azure CLI baseline of Standard_DS1_v2 size and the Ubuntu2404 image when not specified. When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+Defaults to the Azure CLI baseline of Standard_D2s_v5 size and the Ubuntu2404 image when not specified. When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
 
 # Examples:
 
@@ -978,7 +978,7 @@ azmcp compute vm create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
-| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
+| `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--image` | No | Image alias or URN (default: Ubuntu2404) |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
@@ -1149,7 +1149,7 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
 
-Defaults to two Standard_DS1_v2 instances running Ubuntu2404 when size or image are not provided.
+Defaults to two Standard_D2s_v5 instances running Ubuntu2404 when size or image are not provided.
 
 # Examples:
 
@@ -1185,7 +1185,7 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--admin-password` | Conditional | Admin password (required for Windows) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
-| `--vm-size` | No | VM size (default: Standard_DS1_v2) |
+| `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--image` | No | Image alias or URN (default: Ubuntu2404) |
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |

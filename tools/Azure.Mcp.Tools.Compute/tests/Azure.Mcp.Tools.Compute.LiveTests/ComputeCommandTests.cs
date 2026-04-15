@@ -261,7 +261,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
+        Assert.Equal("Standard_D2s_v5", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("linux", osType.GetString());
@@ -298,7 +298,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_DS1_v2", vmSize.GetString());
+        Assert.Equal("Standard_D2s_v5", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("windows", osType.GetString());
