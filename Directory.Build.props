@@ -16,11 +16,10 @@
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
     <IsServerProject Condition="'$(IsServerProject)' == '' and $(_RelativeProjectDir.StartsWith('servers')) and $(_RelativeProjectDir.EndsWith('src'))">true</IsServerProject>
     <!--
-      Security warnings are now produced for nuget packages in dotnet restore. We want to keep all but critical (NU1904) as warnings and not turn them to errors.
-      For T1 we want to keep them all as warnings as we cannot easily fix them all currently and plan to remove the libraries in the future.
-      See: https://learn.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu1901-nu1904
+      Security warnings are now produced for nuget packages in dotnet restore. We want to keep all but high (NU1903) and critical (NU1904) as warnings and not turn them to errors.
+      See: https://learn.microsoft.com/nuget/reference/errors-and-warnings/nu1901-nu1904
     -->
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903</WarningsNotAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
