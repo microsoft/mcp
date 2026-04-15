@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Http;
+using System.Net.Http.Headers;
+using Microsoft.Mcp.Core.Helpers;
+
+namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
 /// DelegatingHandler that rewrites outgoing requests to a recording/replace proxy specified by TEST_PROXY_URL.
@@ -10,26 +13,23 @@ namespace Azure.Mcp.Core.Services.Http;
 /// This handler is intended to be injected as the LAST delegating handler (closest to the transport) so
 /// that it rewrites the final outgoing wire request.
 /// </summary>
-internal sealed class RecordingRedirectHandler : DelegatingHandler
+/// <param name="proxyUri">The URI of the recording/replace proxy to redirect requests to.</param>
+internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler
 {
     private const string CosmosSerializationHeader = "x-ms-cosmos-supported-serialization-formats";
-    private readonly Uri _proxyUri;
-
-    public RecordingRedirectHandler(Uri proxyUri)
-    {
-        _proxyUri = proxyUri ?? throw new ArgumentNullException(nameof(proxyUri));
-    }
+    private readonly Uri _proxyUri = proxyUri ?? throw new ArgumentNullException(nameof(proxyUri));
+    private readonly bool _playbackTesting = EnvironmentHelpers.IsPlaybackTesting();
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         Redirect(request);
-        return base.Send(request, cancellationToken)!;
+        return StripRetryAfter(base.Send(request, cancellationToken));
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         Redirect(request);
-        return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        return StripRetryAfter(await base.SendAsync(request, cancellationToken).ConfigureAwait(false));
     }
 
     private void Redirect(HttpRequestMessage message)
@@ -59,5 +59,25 @@ internal sealed class RecordingRedirectHandler : DelegatingHandler
         };
 
         message.RequestUri = builder.Uri;
+    }
+
+    private HttpResponseMessage StripRetryAfter(HttpResponseMessage response)
+    {
+        if (_playbackTesting)
+        {
+            if (response.Headers.Remove("Retry-After"))
+            {
+                response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
+            }
+            if (response.Headers.Remove("x-ms-retry-after-ms"))
+            {
+                response.Headers.Add("x-ms-retry-after-ms", "0");
+            }
+            if (response.Headers.Remove("retry-after-ms"))
+            {
+                response.Headers.Add("retry-after-ms", "0");
+            }
+        }
+        return response;
     }
 }

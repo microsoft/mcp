@@ -28,14 +28,17 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<VmGetCommand>();
         services.AddSingleton<VmCreateCommand>();
         services.AddSingleton<VmUpdateCommand>();
+        services.AddSingleton<VmDeleteCommand>();
 
         // VMSS commands
         services.AddSingleton<VmssGetCommand>();
         services.AddSingleton<VmssCreateCommand>();
         services.AddSingleton<VmssUpdateCommand>();
+        services.AddSingleton<VmssDeleteCommand>();
 
         // Disk commands
         services.AddSingleton<DiskCreateCommand>();
+        services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
         services.AddSingleton<DiskUpdateCommand>();
     }
@@ -60,28 +63,20 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(vm);
 
         // Register VM commands
-        var vmGet = serviceProvider.GetRequiredService<VmGetCommand>();
-        vm.AddCommand(vmGet.Name, vmGet);
-
-        var vmCreate = serviceProvider.GetRequiredService<VmCreateCommand>();
-        vm.AddCommand(vmCreate.Name, vmCreate);
-
-        var vmUpdate = serviceProvider.GetRequiredService<VmUpdateCommand>();
-        vm.AddCommand(vmUpdate.Name, vmUpdate);
+        vm.AddCommand(serviceProvider.GetRequiredService<VmGetCommand>());
+        vm.AddCommand(serviceProvider.GetRequiredService<VmCreateCommand>());
+        vm.AddCommand(serviceProvider.GetRequiredService<VmUpdateCommand>());
+        vm.AddCommand(serviceProvider.GetRequiredService<VmDeleteCommand>());
 
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
 
         // Register VMSS commands
-        var vmssGet = serviceProvider.GetRequiredService<VmssGetCommand>();
-        vmss.AddCommand(vmssGet.Name, vmssGet);
-
-        var vmssCreate = serviceProvider.GetRequiredService<VmssCreateCommand>();
-        vmss.AddCommand(vmssCreate.Name, vmssCreate);
-
-        var vmssUpdate = serviceProvider.GetRequiredService<VmssUpdateCommand>();
-        vmss.AddCommand(vmssUpdate.Name, vmssUpdate);
+        vmss.AddCommand(serviceProvider.GetRequiredService<VmssGetCommand>());
+        vmss.AddCommand(serviceProvider.GetRequiredService<VmssCreateCommand>());
+        vmss.AddCommand(serviceProvider.GetRequiredService<VmssUpdateCommand>());
+        vmss.AddCommand(serviceProvider.GetRequiredService<VmssDeleteCommand>());
 
         // Create Disk subgroup
         var disk = new CommandGroup(
@@ -90,14 +85,10 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(disk);
 
         // Register Disk commands
-        var diskCreate = serviceProvider.GetRequiredService<DiskCreateCommand>();
-        disk.AddCommand(diskCreate.Name, diskCreate);
-
-        var diskGet = serviceProvider.GetRequiredService<DiskGetCommand>();
-        disk.AddCommand(diskGet.Name, diskGet);
-
-        var diskUpdate = serviceProvider.GetRequiredService<DiskUpdateCommand>();
-        disk.AddCommand(diskUpdate.Name, diskUpdate);
+        disk.AddCommand(serviceProvider.GetRequiredService<DiskCreateCommand>());
+        disk.AddCommand(serviceProvider.GetRequiredService<DiskDeleteCommand>());
+        disk.AddCommand(serviceProvider.GetRequiredService<DiskGetCommand>());
+        disk.AddCommand(serviceProvider.GetRequiredService<DiskUpdateCommand>());
 
         return compute;
     }

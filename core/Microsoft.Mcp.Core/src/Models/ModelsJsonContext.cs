@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Areas.Tools.Commands;
+using Microsoft.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Core.Models;
+namespace Microsoft.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(CommandResponse))]

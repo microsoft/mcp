@@ -1,29 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
+
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : BaseStorageCommand<ContainerGetOptions>()
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
 {
     private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
 
     public override string Name => "get";
 
     public override string Description =>
-        $"""
-        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.
+        """
+        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
+        show details for a specific Storage container. If no container specified, shows all containers in the storage
+        account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
+        
+        Required: --account, --subscription
+        Optional: --container, --tenant, --prefix
+
+        Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
+        Do not use this tool to list blobs in a container.
         """;
 
     public override string Title => CommandTitle;
@@ -42,12 +53,14 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
     {
         base.RegisterOptions(command);
         command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
+        command.Options.Add(StorageOptionDefinitions.ContainerPrefix.AsOptional());
     }
 
     protected override ContainerGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
+        options.Prefix = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.ContainerPrefix.Name);
         return options;
     }
 
@@ -62,11 +75,11 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
 
         try
         {
-            var storageService = context.GetService<IStorageService>();
-            var containers = await storageService.GetContainerDetails(
+            var containers = await _storageService.GetContainerDetails(
                 options.Account!,
                 options.Container,
                 options.Subscription!,
+                options.Prefix,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken

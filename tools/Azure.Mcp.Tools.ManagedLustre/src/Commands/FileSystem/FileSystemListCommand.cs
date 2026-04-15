@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
+public sealed class FileSystemListCommand(IManagedLustreService service, ILogger<FileSystemListCommand> logger)
     : BaseManagedLustreCommand<FileSystemListOptions>(logger)
 {
+    private readonly IManagedLustreService _service = service;
     private const string CommandTitle = "List Azure Managed Lustre File Systems";
 
     public override string Id => "723d9b34-9022-486e-83a7-f72d83bdafd2";
@@ -63,8 +63,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
-            var fileSystems = await svc.ListFileSystemsAsync(
+            var fileSystems = await _service.ListFileSystemsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
@@ -76,8 +75,8 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup} Options: {@Options}",
-                options.ResourceGroup, options);
+                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup}.",
+                options.ResourceGroup);
             HandleException(context, ex);
         }
 

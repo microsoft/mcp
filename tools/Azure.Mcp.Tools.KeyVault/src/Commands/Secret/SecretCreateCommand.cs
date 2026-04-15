@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : SubscriptionCommand<SecretCreateOptions>
+public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretCreateOptions>
 {
     private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "fb1322cd-05b0-4264-9e96-6a9b3d9291a0";
 
@@ -64,8 +65,7 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-            var secret = await keyVaultService.CreateSecret(
+            var secret = await _keyVaultService.CreateSecret(
                 options.VaultName!,
                 options.SecretName!,
                 options.SecretValue!,

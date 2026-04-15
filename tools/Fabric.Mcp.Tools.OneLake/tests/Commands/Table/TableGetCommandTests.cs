@@ -23,7 +23,7 @@ public class TableGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new TableGetCommand(NullLogger<TableGetCommand>.Instance, service);
 
-        Assert.Equal("get", command.Name);
+        Assert.Equal("get_table", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -38,7 +38,7 @@ public class TableGetCommandTests
         var systemCommand = command.GetCommand();
 
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("get_table", systemCommand.Name);
         Assert.NotEmpty(systemCommand.Options);
     }
 
@@ -78,7 +78,7 @@ public class TableGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AllowsSchemaAlias()
+    public async Task ExecuteAsync_AcceptsWorkspaceAndItemByName()
     {
         var service = Substitute.For<IOneLakeService>();
         var command = new TableGetCommand(NullLogger<TableGetCommand>.Instance, service);
@@ -91,7 +91,7 @@ public class TableGetCommandTests
         service.GetTableAsync(workspace, item, namespaceName, tableName, Arg.Any<CancellationToken>())
             .Returns(new TableGetResult(workspace, item, namespaceName, tableName, sampleDocument.RootElement.Clone(), "{}"));
 
-        var parseResult = command.GetCommand().Parse($"--workspace \"{workspace}\" --item \"{item}\" --schema {namespaceName} --table {tableName}");
+        var parseResult = command.GetCommand().Parse($"--workspace \"{workspace}\" --item \"{item}\" --namespace {namespaceName} --table {tableName}");
         var context = CreateContext();
 
         _ = await command.ExecuteAsync(context, parseResult, CancellationToken.None);

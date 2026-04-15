@@ -2,21 +2,22 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger) : SubscriptionCommand<CertificateGetOptions>
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions>
 {
     private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
 
@@ -63,12 +64,10 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
             if (string.IsNullOrEmpty(options.CertificateName))
             {
                 // List all certificates
-                var certificates = await keyVaultService.ListCertificates(
+                var certificates = await _keyVaultService.ListCertificates(
                     options.VaultName!,
                     options.Subscription!,
                     options.Tenant,
@@ -80,7 +79,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
             else
             {
                 // Get specific certificate
-                var certificate = await keyVaultService.GetCertificate(
+                var certificate = await _keyVaultService.GetCertificate(
                     options.VaultName!,
                     options.CertificateName,
                     options.Subscription!,

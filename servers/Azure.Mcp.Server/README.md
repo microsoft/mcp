@@ -33,9 +33,11 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [PyPI](#pypi)
         - [Docker](#docker)
+        - [MCPB](#mcpb)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
+    - [Sovereign Cloud Support](#sovereign-cloud-support)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
     - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
 - [Support and Reference](#support-and-reference)
@@ -401,6 +403,36 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 </details>
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
+
+### MCPB
+
+MCP Bundles (`.mcpb`) are portable versions of MCP servers that can be installed directly into clients like [Claude Desktop](https://claude.com/download). We produce an `.mcpb` file for each supported platform (Windows, macOS, Linux) and architecture (x64, ARM64). The `.mcpb` file contains the server binary and all dependencies, so it can be installed without Node.js or .NET.
+
+<details>
+<summary>MCPB installation instructions</summary>
+
+#### Download
+
+Download the `.mcpb` file for your platform/architecture from **Assets** section of the latest release in our [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page:
+
+|           | Windows | macOS | Linux |
+|-----------|---------|-------|-------|
+| **x64**   | `Azure.Mcp.Server-win-x64.mcpb` | `Azure.Mcp.Server-osx-x64.mcpb` | `Azure.Mcp.Server-linux-x64.mcpb` |
+| **ARM64** | `Azure.Mcp.Server-win-arm64.mcpb` | `Azure.Mcp.Server-osx-arm64.mcpb` | `Azure.Mcp.Server-linux-arm64.mcpb` |
+
+#### Install
+
+##### Claude Desktop
+
+- **Option 1 (Recommended):** Drag the downloaded `.mcpb` file into the Claude Desktop app window to install it. **This is the easiest method ✅.**
+- **Option 2:**
+    1. Open the hamburger menu on the top left of the Claude Desktop app.
+    2. Go to **File** > **Settings** > **Extensions** > **Advanced Settings** > **Install Extension**
+    3. Select the downloaded `.mcpb` file and click **Preview**.
+    4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.
+- **Option 3:** Set Claude Desktop to be the default application for `.mcpb` files on your computer. Then, double-click on the downloaded `.mcpb` file and Claude Desktop will automatically install the bundle.
+
+</details>
 
 ### GitHub Copilot CLI Configuration
 
@@ -828,6 +860,42 @@ Check out the remote hosting [azd templates](https://github.com/microsoft/mcp/bl
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
+## Sovereign Cloud Support
+
+Azure MCP Server supports connecting to Azure sovereign clouds. By default, it authenticates against the Azure Public Cloud.
+
+| Cloud | Aliases |
+|-------|---------|
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
+| Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
+
+*_The aliases are case insensitive._
+
+Use the `--cloud` option when starting the server, or set the `AZURE_CLOUD` environment variable:
+
+```bash
+# Command line
+azmcp server start --cloud AzureChinaCloud
+
+# Environment variable (PowerShell)
+$env:AZURE_CLOUD = "AzureUSGovernment"
+azmcp server start
+```
+
+Before connecting, authenticate your local tools against the target cloud:
+
+```bash
+# Azure CLI
+az cloud set --name AzureChinaCloud
+az login
+
+# Azure PowerShell
+Connect-AzAccount -Environment AzureChinaCloud
+```
+
+For full configuration options, see the [Sovereign Clouds documentation](https://github.com/microsoft/mcp/blob/main/docs/sovereign-clouds.md).
+
 ## What can you do with the Azure MCP Server?
 
 ✨ The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
@@ -917,6 +985,7 @@ Example prompts that generate Azure CLI commands:
 * "Create a 128 GB Premium_LRS managed disk named 'my-disk' in resource group 'my-resource-group'"
 * "Create a managed disk from snapshot in resource group 'my-resource-group'"
 * "Create a disk 'my-disk' in resource group 'my-resource-group' with tags env=prod team=infra"
+* "Delete managed disk 'my-disk' in resource group 'my-resource-group'"
 * "Update disk 'my-disk' in resource group 'my-resource-group' to 256 GB"
 * "Change the SKU of disk 'my-disk' to Premium_LRS"
 * "Set the IOPS limit on ultra disk 'my-disk' in resource group 'my-resource-group' to 10000"
@@ -932,6 +1001,10 @@ Example prompts that generate Azure CLI commands:
 * "Update VM 'my-vm' tags to environment=production"
 * "Create a VMSS named 'my-vmss' with 3 instances for web workloads"
 * "Update VMSS 'my-vmss' capacity to 5 instances"
+* "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
+* "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
+* "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
 ### �📦 Azure Container Apps
 
@@ -1019,7 +1092,7 @@ Example prompts that generate Azure CLI commands:
 
 * "Query my Log Analytics workspace"
 
-### 🧭 Azure Monitor Instrumentation
+### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
 * "List available Azure Monitor onboarding learning resources"
 * "Get the learning resource at 'concepts/dotnet/opentelemetry-pipeline.md'"
@@ -1103,8 +1176,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, and health monitoring
-- 🧭 **Azure Monitor Instrumentation** - Deterministic onboarding and migration workflow for instrumenting local applications
+- 📈 **Azure Monitor** - Logging, metrics, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning

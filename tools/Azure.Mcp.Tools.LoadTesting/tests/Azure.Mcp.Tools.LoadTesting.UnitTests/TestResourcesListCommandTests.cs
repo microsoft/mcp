@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -28,11 +28,9 @@ public class TestResourceListCommandTests
         _service = Substitute.For<ILoadTestingService>();
         _logger = Substitute.For<ILogger<TestResourceListCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -57,7 +55,7 @@ public class TestResourceListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceListCommand(_logger);
+        var command = new TestResourceListCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -92,7 +90,7 @@ public class TestResourceListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceListCommand(_logger);
+        var command = new TestResourceListCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
@@ -125,7 +123,7 @@ public class TestResourceListCommandTests
             Arg.Any<CancellationToken>())
              .Returns([]);
 
-        var command = new TestResourceListCommand(_logger);
+        var command = new TestResourceListCommand(_logger, _service);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",

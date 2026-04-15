@@ -3,23 +3,23 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) : SubscriptionCommand<AccountCreateOptions>()
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions>()
 {
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
 
@@ -78,11 +78,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
         try
         {
-            // Get the storage service from DI
-            var storageService = context.GetService<IStorageService>();
-
             // Call service to create storage account
-            var account = await storageService.CreateStorageAccount(
+            var account = await _storageService.CreateStorageAccount(
                 options.Account!,
                 options.ResourceGroup!,
                 options.Location!,
@@ -101,8 +98,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}, Options: {@Options}",
-                options.Account, options.ResourceGroup, options.Location, options);
+                "Error creating storage account. Account: {Account}, ResourceGroup: {ResourceGroup}, Location: {Location}.",
+                options.Account, options.ResourceGroup, options.Location);
             HandleException(context, ex);
         }
 
