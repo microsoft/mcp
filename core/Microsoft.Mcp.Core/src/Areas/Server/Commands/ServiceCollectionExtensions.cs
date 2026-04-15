@@ -275,7 +275,7 @@ public static class ServiceCollectionExtensions
 
                 // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
                 // the assembly that will run the tool calls.
-                var entryAssembly = Assembly.GetEntryAssembly() 
+                var entryAssembly = Assembly.GetEntryAssembly()
                     ?? throw new InvalidOperationException("Entry assembly must be a managed assembly.");
 
                 options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
