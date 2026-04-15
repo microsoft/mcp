@@ -57,8 +57,8 @@ public class PolicyGetCommandTests
         var resourceGroup = "myRg";
         var expectedPolicies = new List<BackupPolicyInfo>
         {
-            new("id1", "DefaultPolicy", "rsv", ["AzureIaasVM"], 5),
-            new("id2", "CustomPolicy", "rsv", ["SQLDataBase"], 3)
+            new("id1", "DefaultPolicy", "rsv", ["AzureIaasVM"], 5, null, null, null),
+            new("id2", "CustomPolicy", "rsv", ["SQLDataBase"], 3, null, null, null)
         };
 
         _backupService.ListPoliciesAsync(
@@ -97,7 +97,7 @@ public class PolicyGetCommandTests
         var vault = "myVault";
         var resourceGroup = "myRg";
         var policyName = "DefaultPolicy";
-        var expectedPolicy = new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5);
+        var expectedPolicy = new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5, null, null, null);
 
         _backupService.GetPolicyAsync(
             Arg.Is(vault),
@@ -219,7 +219,7 @@ public class PolicyGetCommandTests
 
             _backupService.GetPolicyAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1)));
+                .Returns(Task.FromResult(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1, null, null, null)));
         }
 
         var parseResult = _commandDefinition.Parse(args);

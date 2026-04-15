@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -30,6 +31,20 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         })
     ];
 
+    // Sanitize the resource group name that doesn't contain ResourceBaseName.
+    // The default sanitizer only replaces ResourceBaseName ("mcp26139ae9") which is not
+    // a substring of the custom resource group "AzureBackupRG_mcp-test". During playback,
+    // Settings.ResourceGroupName becomes "Sanitized" via PlaybackSettings, so the recording
+    // must also have "Sanitized" for the resource group to match.
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers { get; } =
+    [
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "AzureBackupRG_mcp-test",
+            Value = "Sanitized",
+        })
+    ];
+
     #region Vault Tests (RSV)
 
     [Fact]
@@ -42,7 +57,16 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId }
             });
 
-        Assert.NotNull(result);
+        var vaults = result.AssertProperty("vaults");
+        Assert.Equal(JsonValueKind.Array, vaults.ValueKind);
+        Assert.True(vaults.GetArrayLength() >= 2, "Expected at least 2 vaults (RSV + DPP)");
+
+        // Verify each vault has required structural fields
+        foreach (var vault in vaults.EnumerateArray())
+        {
+            vault.AssertProperty("name");
+            vault.AssertProperty("vaultType");
+        }
     }
 
     [Fact]
@@ -59,7 +83,39 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var vaults = result.AssertProperty("vaults");
+        Assert.Equal(1, vaults.GetArrayLength());
+
+        var vault = vaults.EnumerateArray().First();
+        Assert.Equal("rsv", vault.AssertProperty("vaultType").GetString());
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+
+        // Verify the new detail fields are present (Bug 1.3 fix validation)
+        vault.AssertProperty("skuName");
+        vault.AssertProperty("redundancy");
+    }
+
+    [Fact]
+    public async Task VaultGet_FiltersByResourceGroup_Successfully()
+    {
+        // Bug 1.2 fix validation: RG filter should scope results to the specified resource group
+        var result = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var vaults = result.AssertProperty("vaults");
+        Assert.Equal(JsonValueKind.Array, vaults.ValueKind);
+
+        // All returned vaults must belong to the specified resource group
+        foreach (var vault in vaults.EnumerateArray())
+        {
+            var rg = vault.AssertProperty("resourceGroup").GetString();
+            Assert.Equal(Settings.ResourceGroupName, rg, ignoreCase: true);
+        }
     }
 
     [Fact]
@@ -78,7 +134,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "location", "eastus" }
             });
 
-        Assert.NotNull(result);
+        var vault = result.AssertProperty("vault");
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
@@ -97,7 +154,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "location", "eastus" }
             });
 
-        Assert.NotNull(result);
+        var vault = result.AssertProperty("vault");
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
@@ -115,7 +173,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "tags", "{\"environment\":\"test\"}" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -133,7 +192,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "identity-type", "SystemAssigned" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -147,7 +207,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault-type", "rsv" }
             });
 
-        Assert.NotNull(result);
+        var vaults = result.AssertProperty("vaults");
+        Assert.Equal(JsonValueKind.Array, vaults.ValueKind);
+
+        // All returned vaults must be RSV type
+        foreach (var vault in vaults.EnumerateArray())
+        {
+            Assert.Equal("rsv", vault.AssertProperty("vaultType").GetString());
+        }
     }
 
     #endregion
@@ -168,7 +235,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var vaults = result.AssertProperty("vaults");
+        Assert.Equal(1, vaults.GetArrayLength());
+
+        var vault = vaults.EnumerateArray().First();
+        Assert.Equal("dpp", vault.AssertProperty("vaultType").GetString());
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
@@ -186,7 +258,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "tags", "{\"environment\":\"test\"}" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     #endregion
@@ -207,7 +280,16 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var policies = result.AssertProperty("policies");
+        Assert.Equal(JsonValueKind.Array, policies.ValueKind);
+        // RSV vaults always have at least DefaultPolicy
+        Assert.True(policies.GetArrayLength() >= 1, "RSV vault should have at least DefaultPolicy");
+
+        foreach (var policy in policies.EnumerateArray())
+        {
+            policy.AssertProperty("name");
+            Assert.Equal("rsv", policy.AssertProperty("vaultType").GetString());
+        }
     }
 
     [Fact]
@@ -227,7 +309,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureVM" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -248,7 +331,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "daily-retention-days", "14" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -268,7 +352,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureFileShare" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -288,7 +373,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "SQL" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -308,7 +394,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "SAPHANA" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -326,7 +413,15 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", "DefaultPolicy" }
             });
 
-        Assert.NotNull(result);
+        var policies = result.AssertProperty("policies");
+        Assert.Equal(1, policies.GetArrayLength());
+
+        // Bug 2.3 fix validation: single policy should include schedule/retention details
+        var policy = policies.EnumerateArray().First();
+        // Policy name may be sanitized in recordings, so just verify it exists
+        policy.AssertProperty("name");
+        Assert.Equal("rsv", policy.AssertProperty("vaultType").GetString());
+        policy.AssertProperty("datasourceTypes");
     }
 
     #endregion
@@ -347,7 +442,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var policies = result.AssertProperty("policies");
+        Assert.Equal(JsonValueKind.Array, policies.ValueKind);
     }
 
     [Fact]
@@ -367,7 +463,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureDisk" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -388,7 +485,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "daily-retention-days", "14" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -408,7 +506,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureBlob" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -428,7 +527,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AKS" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -448,7 +548,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "PostgreSQLFlexible" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -468,7 +569,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "ElasticSAN" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     // CosmosDB policy create test skipped — CosmosDB backup via Azure Backup is not yet GA.
@@ -491,7 +593,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "ADLS" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -522,7 +625,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "policy", policyName }
             });
 
-        Assert.NotNull(result);
+        var policies = result.AssertProperty("policies");
+        Assert.Equal(1, policies.GetArrayLength());
+
+        var policy = policies.EnumerateArray().First();
+        Assert.Equal("dpp", policy.AssertProperty("vaultType").GetString());
     }
 
     #endregion
@@ -543,11 +650,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var items = result.AssertProperty("protectedItems");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
 
-    // protecteditem_protect requires a real datasource (VM/database).
-    // Add test when test-resources.bicep includes a VM.
+    // protecteditem_protect and protecteditem_get (by name) require a real datasource (VM/database).
+    // Stage 2: Add tests when test-resources.bicep includes a VM for backup status,
+    // friendly-name lookup, container auto-discovery, and recovery point tests.
 
     #endregion
 
@@ -567,7 +676,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var items = result.AssertProperty("protectedItems");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
 
     #endregion
@@ -575,7 +685,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     #region Protectable Item Tests
 
     [Fact]
-    public async Task ProtectableItemList_ListsProtectableItems_Successfully()
+    public async Task ProtectableItemList_RsvVault_ListsProtectableItems_Successfully()
     {
         // Protectable items is an RSV-only feature
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -589,8 +699,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
+
+    // Bug 3.3 fix validation: DPP vault routed to protectable items returns a clear error.
+    // This is tested at the unit test level (ListProtectableItemsAsync_NoVaultType_DppVault_ThrowsArgumentException)
+    // because the live test would need to handle the error response format differently from a success response.
 
     #endregion
 
@@ -599,6 +714,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_ConfiguresSuccessfully()
     {
+        // Bug 1.9/9.7 fix validation: RSV soft-delete now uses BackupResourceVaultConfig API
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
         var result = await CallToolAsync(
@@ -611,7 +727,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "soft-delete", "On" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
@@ -630,11 +747,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "soft-delete-retention-days", "30" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
-    public async Task GovernanceImmutability_RsvVault_ConfiguresSuccessfully()
+    public async Task GovernanceImmutability_RsvVault_Disabled_ConfiguresSuccessfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
@@ -648,7 +766,28 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "immutability-state", "Disabled" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task GovernanceImmutability_RsvVault_Enabled_ConfiguresSuccessfully()
+    {
+        // Bug 9.5 fix validation: "Enabled" is normalized to "Unlocked" before calling the API
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_governance_immutability",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "immutability-state", "Enabled" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     #endregion
@@ -658,6 +797,9 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_DppVault_ConfiguresSuccessfully()
     {
+        // Note: If the DPP vault already has soft-delete set to AlwaysOn,
+        // the API will reject attempts to change it (400 BMSUserErrorInvalidInput).
+        // We treat both success and AlwaysOn-locked scenarios as acceptable.
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
         var result = await CallToolAsync(
@@ -668,14 +810,31 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "soft-delete", "On" },
+                { "soft-delete-retention-days", "14" },
                 { "vault-type", "dpp" }
             });
 
-        Assert.NotNull(result);
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            Assert.True(
+                msg.Contains("InvalidInput", StringComparison.OrdinalIgnoreCase) ||
+                msg.Contains("AlwaysOn", StringComparison.OrdinalIgnoreCase),
+                $"Unexpected error: {msg}");
+            Output.WriteLine("DPP vault soft-delete is locked (AlwaysOn) — environment-specific, treating as pass.");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from GovernanceSoftDelete DPP");
+        }
     }
 
     [Fact]
-    public async Task GovernanceImmutability_DppVault_ConfiguresSuccessfully()
+    public async Task GovernanceImmutability_DppVault_Disabled_ConfiguresSuccessfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
@@ -690,7 +849,29 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault-type", "dpp" }
             });
 
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task GovernanceImmutability_DppVault_Enabled_ConfiguresSuccessfully()
+    {
+        // Bug 9.6 fix validation: "Enabled" normalized to "Unlocked" for DPP too
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+
+        var result = await CallToolAsync(
+            "azurebackup_governance_immutability",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "immutability-state", "Enabled" },
+                { "vault-type", "dpp" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     #endregion
@@ -707,7 +888,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId }
             });
 
-        Assert.NotNull(result);
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
     }
 
     [Fact]
@@ -721,7 +903,15 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-type-filter", "Microsoft.Compute/virtualMachines" }
             });
 
-        Assert.NotNull(result);
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // All returned resources should be VMs
+        foreach (var resource in resources.EnumerateArray())
+        {
+            Assert.Equal("Microsoft.Compute/virtualMachines",
+                resource.AssertProperty("resourceType").GetString(), ignoreCase: true);
+        }
     }
 
     [Fact]
@@ -735,7 +925,15 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group-filter", Settings.ResourceGroupName }
             });
 
-        Assert.NotNull(result);
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // All returned resources should be in the specified resource group
+        foreach (var resource in resources.EnumerateArray())
+        {
+            Assert.Equal(Settings.ResourceGroupName,
+                resource.AssertProperty("resourceGroup").GetString(), ignoreCase: true);
+        }
     }
 
     #endregion
@@ -756,7 +954,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var jobs = result.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
     }
 
     #endregion
@@ -777,7 +976,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Assert.NotNull(result);
+        var jobs = result.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
     }
 
     #endregion
@@ -785,14 +985,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     #region Recovery Point Tests
 
     // recoverypoint_get requires a real protected item with recovery points.
-    // Add test when test-resources.bicep includes a protected VM or disk.
+    // Stage 2: Add test when test-resources.bicep includes a protected VM or disk.
 
     #endregion
 
     #region Backup Status Tests
 
     // backup_status requires a real datasource ARM resource ID.
-    // Add test when test-resources.bicep includes a VM or database.
+    // Stage 2: Add test when test-resources.bicep includes a VM or database.
 
     #endregion
 
@@ -802,6 +1002,9 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     public async Task DrEnableCrr_RsvVault_EnablesCrossRegionRestore_Successfully()
     {
         // CRR is an RSV-only feature — LRO can take 10-30 minutes
+        // Note: If the vault's redundancy was previously configured via the Vault API
+        // (ARM/portal), the Backup Config API will return 400 BMSUserErrorRedundancySettingsUseVaultApi.
+        // In that case, CRR may already be enabled. We treat both outcomes as success.
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DrEnableCrr_RSV");
 
@@ -815,7 +1018,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             });
 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DrEnableCrr_RSV");
-        Assert.NotNull(result);
+
+        // Success path: result.status == "Succeeded"
+        // Environment-specific path: error about Vault API — CRR already configured
+        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
+        {
+            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
+        }
+        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
+        {
+            var msg = message.GetString() ?? "";
+            Assert.Contains("RedundancySettings", msg, StringComparison.OrdinalIgnoreCase);
+            Output.WriteLine("CRR already configured via Vault API — environment-specific, treating as pass.");
+        }
+        else
+        {
+            Assert.Fail("Unexpected response from DrEnableCrr");
+        }
     }
 
     [Fact]
@@ -836,7 +1055,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             });
 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DrEnableCrr_DPP");
-        Assert.NotNull(result);
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     #endregion

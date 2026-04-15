@@ -11,7 +11,7 @@ public interface IAzureBackupService
     // Vault operations
     Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string vaultType, string location, string? sku = null, string? storageType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
-    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? resourceGroup = null, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UpdateVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? redundancy = null, string? softDelete = null, string? softDeleteRetentionDays = null, string? immutabilityState = null, string? identityType = null, string? tags = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     // Policy operations

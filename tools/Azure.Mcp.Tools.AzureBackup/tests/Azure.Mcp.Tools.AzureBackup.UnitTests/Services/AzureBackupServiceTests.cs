@@ -34,7 +34,7 @@ public class AzureBackupServiceTests
     public async Task GetVaultAsync_RsvNotFound_FallsThroughToDpp()
     {
         // RSV returns 404 → should try DPP
-        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -51,7 +51,7 @@ public class AzureBackupServiceTests
     public async Task GetVaultAsync_RsvForbidden_FallsThroughToDpp()
     {
         // RSV returns 403 → should try DPP (not propagate immediately)
-        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -66,7 +66,7 @@ public class AzureBackupServiceTests
     public async Task GetVaultAsync_RsvUnauthorized_FallsThroughToDpp()
     {
         // RSV returns 401 → should try DPP
-        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(401, "Unauthorized"));
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
@@ -96,7 +96,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_RsvSucceeds_DoesNotCallDpp()
     {
-        var expectedVault = new BackupVaultInfo(null, "myVault", "RSV", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
@@ -109,7 +109,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_ExplicitRsvVaultType_CallsOnlyRsv()
     {
-        var expectedVault = new BackupVaultInfo(null, "myVault", "RSV", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
@@ -122,7 +122,7 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task GetVaultAsync_ExplicitDppVaultType_CallsOnlyDpp()
     {
-        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null);
+        var expectedVault = new BackupVaultInfo(null, "myVault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null);
         _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
@@ -141,16 +141,16 @@ public class AzureBackupServiceTests
     {
         var rsvVaults = new List<BackupVaultInfo>
         {
-            new(null, "rsvVault1", "RSV", "eastus", "rg", null, null, null, null)
+            new(null, "rsvVault1", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null)
         };
         var dppVaults = new List<BackupVaultInfo>
         {
-            new(null, "dppVault1", "DPP", "eastus", "rg", null, null, null, null)
+            new(null, "dppVault1", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null)
         };
         _rsvOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(rsvVaults);
         _dppOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(dppVaults);
 
-        var result = await _service.ListVaultsAsync("sub", null, null, null, CancellationToken.None);
+        var result = await _service.ListVaultsAsync("sub", null, null, null, null, CancellationToken.None);
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, v => v.Name == "rsvVault1");
@@ -164,11 +164,11 @@ public class AzureBackupServiceTests
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
         var dppVaults = new List<BackupVaultInfo>
         {
-            new(null, "dppVault1", "DPP", "eastus", "rg", null, null, null, null)
+            new(null, "dppVault1", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null)
         };
         _dppOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(dppVaults);
 
-        var result = await _service.ListVaultsAsync("sub", null, null, null, CancellationToken.None);
+        var result = await _service.ListVaultsAsync("sub", null, null, null, null, CancellationToken.None);
 
         Assert.Single(result);
         Assert.Equal("dppVault1", result[0].Name);
@@ -179,13 +179,13 @@ public class AzureBackupServiceTests
     {
         var rsvVaults = new List<BackupVaultInfo>
         {
-            new(null, "rsvVault1", "RSV", "eastus", "rg", null, null, null, null)
+            new(null, "rsvVault1", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null)
         };
         _rsvOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(rsvVaults);
         _dppOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(500, "Internal error"));
 
-        var result = await _service.ListVaultsAsync("sub", null, null, null, CancellationToken.None);
+        var result = await _service.ListVaultsAsync("sub", null, null, null, null, CancellationToken.None);
 
         Assert.Single(result);
         Assert.Equal("rsvVault1", result[0].Name);
@@ -200,7 +200,7 @@ public class AzureBackupServiceTests
             .ThrowsAsync(new RequestFailedException(500, "DPP error"));
 
         await Assert.ThrowsAsync<AggregateException>(() =>
-            _service.ListVaultsAsync("sub", null, null, null, CancellationToken.None));
+            _service.ListVaultsAsync("sub", null, null, null, null, CancellationToken.None));
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public class AzureBackupServiceTests
             .ThrowsAsync(new OperationCanceledException(cts.Token));
 
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _service.ListVaultsAsync("sub", null, null, null, cts.Token));
+            _service.ListVaultsAsync("sub", null, null, null, null, cts.Token));
     }
 
     #endregion
@@ -246,6 +246,10 @@ public class AzureBackupServiceTests
     [Fact]
     public async Task ListProtectableItemsAsync_NoVaultType_DelegatesToRsv()
     {
+        // When no vault type specified, service auto-detects by probing RSV first
+        _rsvOps.GetVaultAsync("vault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupVaultInfo(null, "vault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
+
         var expected = new List<ProtectableItemInfo> { new("item1", "SQL", null, null, null, null, null, null, null) };
         _rsvOps.ListProtectableItemsAsync("vault", "rg", "sub", null, null, null, null, Arg.Any<CancellationToken>())
             .Returns(expected);
@@ -253,6 +257,22 @@ public class AzureBackupServiceTests
         var result = await _service.ListProtectableItemsAsync("vault", "rg", "sub", null, null, null, null, null, CancellationToken.None);
 
         Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task ListProtectableItemsAsync_NoVaultType_DppVault_ThrowsArgumentException()
+    {
+        // When no vault type specified and vault is DPP, service should throw helpful error
+        _rsvOps.GetVaultAsync("vault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "Not found"));
+        _dppOps.GetVaultAsync("vault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupVaultInfo(null, "vault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ListProtectableItemsAsync("vault", "rg", "sub", null, null, null, null, null, CancellationToken.None));
+
+        Assert.Contains("DPP", ex.Message);
+        Assert.Contains("Protectable item discovery is only supported", ex.Message);
     }
 
     #endregion
@@ -280,7 +300,7 @@ public class AzureBackupServiceTests
     {
         var baseResult = new OperationResult("Succeeded", null, "Policy 'p' created in vault 'v'.");
         _rsvOps.GetVaultAsync("v", "rg", "sub", null, null, Arg.Any<CancellationToken>())
-            .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null));
+            .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
         _rsvOps.CreatePolicyAsync(
             "v", "rg", "sub", "p", "VM",
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -347,6 +367,72 @@ public class AzureBackupServiceTests
     public void VaultTypeResolver_IsDpp_ReturnsExpected(string vaultType, bool expected)
     {
         Assert.Equal(expected, VaultTypeResolver.IsDpp(vaultType));
+    }
+
+    #endregion
+
+    #region ConfigureImmutability - State normalization
+
+    [Theory]
+    [InlineData("Enabled", "Unlocked")]
+    [InlineData("enabled", "Unlocked")]
+    [InlineData("ENABLED", "Unlocked")]
+    [InlineData("Unlocked", "Unlocked")]
+    [InlineData("Disabled", "Disabled")]
+    [InlineData("Locked", "Locked")]
+    public async Task ConfigureImmutabilityAsync_NormalizesState(string inputState, string expectedNormalized)
+    {
+        // RSV vault probe succeeds
+        _rsvOps.GetVaultAsync("vault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupVaultInfo(null, "vault", "RSV", null, "rg", null, null, null, null, null, null, null, null, null));
+        _rsvOps.ConfigureImmutabilityAsync("vault", "rg", "sub", expectedNormalized, null, null, Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, "Done"));
+
+        var result = await _service.ConfigureImmutabilityAsync("vault", "rg", "sub", inputState, null, null, null, CancellationToken.None);
+
+        Assert.Equal("Succeeded", result.Status);
+        await _rsvOps.Received(1).ConfigureImmutabilityAsync("vault", "rg", "sub", expectedNormalized, null, null, Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region ListVaults - Resource group filtering
+
+    [Fact]
+    public async Task ListVaultsAsync_WithResourceGroup_FiltersResults()
+    {
+        var rsvVaults = new List<BackupVaultInfo>
+        {
+            new(null, "vault1", "RSV", "eastus", "rg1", null, null, null, null, null, null, null, null, null),
+            new(null, "vault2", "RSV", "eastus", "rg2", null, null, null, null, null, null, null, null, null)
+        };
+        var dppVaults = new List<BackupVaultInfo>
+        {
+            new(null, "vault3", "DPP", "eastus", "rg1", null, null, null, null, null, null, null, null, null)
+        };
+        _rsvOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(rsvVaults);
+        _dppOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(dppVaults);
+
+        var result = await _service.ListVaultsAsync("sub", "rg1", null, null, null, CancellationToken.None);
+
+        Assert.Equal(2, result.Count);
+        Assert.All(result, v => Assert.Equal("rg1", v.ResourceGroup, ignoreCase: true));
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_WithResourceGroup_CaseInsensitive()
+    {
+        var rsvVaults = new List<BackupVaultInfo>
+        {
+            new(null, "vault1", "RSV", "eastus", "MyRG", null, null, null, null, null, null, null, null, null)
+        };
+        _rsvOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(rsvVaults);
+        _dppOps.ListVaultsAsync("sub", null, null, Arg.Any<CancellationToken>()).Returns(new List<BackupVaultInfo>());
+
+        var result = await _service.ListVaultsAsync("sub", "myrg", null, null, null, CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.Equal("vault1", result[0].Name);
     }
 
     #endregion

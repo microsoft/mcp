@@ -8,4 +8,7 @@ public sealed record BackupPolicyInfo(
     string Name,
     string VaultType,
     IReadOnlyList<string>? DatasourceTypes,
-    int? ProtectedItemsCount);
+    int? ProtectedItemsCount,
+    string? ScheduleFrequency,
+    string? ScheduleTime,
+    int? DailyRetentionDays);

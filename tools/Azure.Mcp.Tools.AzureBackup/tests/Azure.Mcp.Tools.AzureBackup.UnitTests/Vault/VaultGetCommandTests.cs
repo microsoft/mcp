@@ -55,12 +55,13 @@ public class VaultGetCommandTests
         var subscription = "sub123";
         var expectedVaults = new List<BackupVaultInfo>
         {
-            new("id1", "vault1", "rsv", "eastus", "rg1", "Succeeded", "Standard", "GeoRedundant", null),
-            new("id2", "vault2", "dpp", "westus", "rg2", "Succeeded", "Standard", "LocallyRedundant", null)
+            new("id1", "vault1", "rsv", "eastus", "rg1", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null),
+            new("id2", "vault2", "dpp", "westus", "rg2", "Succeeded", "Standard", "LocallyRedundant", null, null, null, null, null, null)
         };
 
         _backupService.ListVaultsAsync(
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -93,7 +94,7 @@ public class VaultGetCommandTests
         var subscription = "sub123";
         var vaultName = "myVault";
         var resourceGroup = "myRg";
-        var expectedVault = new BackupVaultInfo("id1", vaultName, "rsv", "eastus", resourceGroup, "Succeeded", "Standard", "GeoRedundant", null);
+        var expectedVault = new BackupVaultInfo("id1", vaultName, "rsv", "eastus", resourceGroup, "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null);
 
         _backupService.GetVaultAsync(
             Arg.Is(vaultName),
@@ -134,6 +135,7 @@ public class VaultGetCommandTests
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<BackupVaultInfo>()));
@@ -162,6 +164,7 @@ public class VaultGetCommandTests
 
         _backupService.ListVaultsAsync(
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
@@ -228,7 +231,7 @@ public class VaultGetCommandTests
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
         _backupService.ListVaultsAsync(
-            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<BackupVaultInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--vault-type", vaultType]);
@@ -244,12 +247,12 @@ public class VaultGetCommandTests
         if (shouldSucceed)
         {
             _backupService.ListVaultsAsync(
-                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new List<BackupVaultInfo>()));
 
             _backupService.GetVaultAsync(
                 Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null)));
+                .Returns(Task.FromResult(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null)));
         }
 
         var parseResult = _commandDefinition.Parse(args);

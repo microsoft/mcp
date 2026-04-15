@@ -112,6 +112,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
             {
                 var vaults = await _azureBackupService.ListVaultsAsync(
                     options.Subscription!,
+                    options.ResourceGroup,
                     options.VaultType,
                     options.Tenant,
                     options.RetryPolicy,

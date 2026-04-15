@@ -12,4 +12,9 @@ public sealed record BackupVaultInfo(
     string? ProvisioningState,
     string? SkuName,
     string? StorageType,
+    string? Redundancy,
+    string? SoftDeleteState,
+    int? SoftDeleteRetentionDays,
+    string? ImmutabilityState,
+    string? IdentityType,
     IDictionary<string, string>? Tags);

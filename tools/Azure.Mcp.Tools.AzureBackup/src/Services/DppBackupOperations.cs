@@ -220,11 +220,47 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(protectedItemName), protectedItemName));
 
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-        var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
-        var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
-        var instance = await instanceResource.GetAsync(cancellationToken);
 
-        return MapToProtectedItemInfo(instance.Value.Data);
+        // First try direct lookup by exact instance name
+        try
+        {
+            var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
+            var instance = await instanceResource.GetAsync(cancellationToken);
+            return MapToProtectedItemInfo(instance.Value.Data);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Direct lookup failed — search by friendly/datasource name
+        }
+
+        // Fall back to listing all items and searching by friendly name
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        var found = items.FirstOrDefault(i =>
+            i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase) ||
+            MatchesDppFriendlyName(i, protectedItemName));
+        return found ?? throw new KeyNotFoundException(
+            $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
+            "Use the full backup instance name from 'azurebackup protecteditem get' list output.");
+    }
+
+    /// <summary>
+    /// Checks whether a DPP backup instance matches a user-provided friendly name.
+    /// DPP instance names follow patterns like: rg-diskname-guid or parent-child-guid.
+    /// This checks the datasource resource name from the datasource ID.
+    /// </summary>
+    private static bool MatchesDppFriendlyName(ProtectedItemInfo item, string friendlyName)
+    {
+        if (!string.IsNullOrEmpty(item.DatasourceId))
+        {
+            var datasourceResourceName = item.DatasourceId.Split('/').LastOrDefault();
+            if (string.Equals(datasourceResourceName, friendlyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
@@ -670,6 +706,10 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
     private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
     {
+        var securitySettings = data.Properties?.SecuritySettings;
+        var softDeleteSettings = securitySettings?.SoftDeleteSettings;
+        var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+
         return new BackupVaultInfo(
             data.Id?.ToString(),
             data.Name,
@@ -679,6 +719,11 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             data.Properties?.ProvisioningState?.ToString(),
             null,
             data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            softDeleteSettings?.State?.ToString(),
+            softDeleteSettings?.RetentionDurationInDays.HasValue == true ? (int)softDeleteSettings.RetentionDurationInDays.Value : null,
+            securitySettings?.ImmutabilityState?.ToString(),
+            identityType,
             data.Tags?.ToDictionary(t => t.Key, t => t.Value));
     }
 
@@ -702,12 +747,53 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             ? props.DataSourceTypes?.ToList() as IReadOnlyList<string>
             : null;
 
+        string? scheduleFrequency = null;
+        string? scheduleTime = null;
+        int? dailyRetentionDays = null;
+
+        if (data.Properties is RuleBasedBackupPolicy ruleBasedPolicy)
+        {
+            foreach (var rule in ruleBasedPolicy.PolicyRules)
+            {
+                if (rule is DataProtectionBackupRule backupRule &&
+                    backupRule.Trigger is ScheduleBasedBackupTriggerContext scheduleTrigger)
+                {
+                    var repeatingInterval = scheduleTrigger.Schedule?.RepeatingTimeIntervals?.FirstOrDefault();
+                    if (repeatingInterval != null)
+                    {
+                        // Parse repeating interval format: R/{startTime}/{interval}
+                        var parts = repeatingInterval.Split('/');
+                        if (parts.Length >= 3)
+                        {
+                            if (DateTimeOffset.TryParse(parts[1], out var startTime))
+                            {
+                                scheduleTime = startTime.ToString("HH:mm");
+                            }
+
+                            scheduleFrequency = parts[2]; // e.g. "PT4H", "P1D", "P1W"
+                        }
+                    }
+                }
+                else if (rule is DataProtectionRetentionRule retentionRule && retentionRule.IsDefault == true)
+                {
+                    var lifecycle = retentionRule.Lifecycles?.FirstOrDefault();
+                    if (lifecycle?.DeleteAfter is DataProtectionBackupAbsoluteDeleteSetting deleteSetting)
+                    {
+                        dailyRetentionDays = (int)deleteSetting.Duration.TotalDays;
+                    }
+                }
+            }
+        }
+
         return new BackupPolicyInfo(
             data.Id?.ToString(),
             data.Name,
             VaultType,
             datasourceTypes,
-            null);
+            null,
+            scheduleFrequency,
+            scheduleTime,
+            dailyRetentionDays);
     }
 
     private static BackupJobInfo MapToJobInfo(DataProtectionBackupJobData data)

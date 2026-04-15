@@ -68,17 +68,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
-        string subscription, string? vaultType, string? tenant,
+        string subscription, string? resourceGroup, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
+            string.IsNullOrEmpty(resourceGroup)
+                ? vaults
+                : vaults.Where(v => string.Equals(v.ResourceGroup, resourceGroup, StringComparison.OrdinalIgnoreCase)).ToList();
+
         if (VaultTypeResolver.IsRsv(vaultType))
         {
-            return await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
         }
 
         if (VaultTypeResolver.IsDpp(vaultType))
         {
-            return await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken));
         }
 
         var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
@@ -122,7 +127,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             throw new AggregateException("Both RSV and DPP vault listing failed.", rsvTask.Exception!, dppTask.Exception!);
         }
 
-        return merged;
+        return FilterByResourceGroup(merged);
     }
 
     public async Task<ProtectResult> ProtectItemAsync(
@@ -265,7 +270,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken);
     }
 
-    public Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
+    public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? workloadType, string? containerName, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
@@ -275,34 +280,111 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             throw new ArgumentException("Protectable item discovery is only supported for Recovery Services (RSV) vaults. DPP datasources are protected by their ARM resource ID directly.");
         }
 
-        return rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
+        // Auto-detect vault type when not explicitly specified to avoid routing DPP vaults to RSV
+        if (!VaultTypeResolver.IsVaultTypeSpecified(vaultType))
+        {
+            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+            if (VaultTypeResolver.IsDpp(resolved))
+            {
+                throw new ArgumentException(
+                    $"Vault '{vaultName}' is a Data Protection (DPP) vault. Protectable item discovery is only supported for Recovery Services (RSV) vaults. " +
+                    "DPP datasources (disks, blobs, AKS, etc.) are protected by their ARM resource ID directly using 'azurebackup protecteditem protect'.");
+            }
+        }
+
+        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
         string datasourceId, string subscription, string location,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-        var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
-        var subResource = armClient.GetSubscriptionResource(subId);
+        var resourceId = new ResourceIdentifier(datasourceId);
+        var armResourceType = resourceId.ResourceType.ToString().ToLowerInvariant();
+        var datasourceType = MapArmResourceTypeToBackupDataSourceType(armResourceType);
 
-        var content = new BackupStatusContent
+        if (datasourceType != null)
         {
-            ResourceId = new ResourceIdentifier(datasourceId)
-        };
+            // RSV-supported resource types use the BackupStatus API
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+            var subResource = armClient.GetSubscriptionResource(subId);
 
-        Response<SdkBackupStatusResult> response = await subResource.GetBackupStatusAsync(new AzureLocation(location), content, cancellationToken);
-        SdkBackupStatusResult status = response.Value;
+            var content = new BackupStatusContent
+            {
+                ResourceId = resourceId,
+                ResourceType = datasourceType
+            };
 
-        return new Models.BackupStatusResult(
-            datasourceId,
-            status.ProtectionStatus?.ToString(),
-            status.VaultId?.ToString(),
-            status.PolicyName,
-            null,
-            null,
-            null);
+            Response<SdkBackupStatusResult> response = await subResource.GetBackupStatusAsync(new AzureLocation(location), content, cancellationToken);
+            SdkBackupStatusResult status = response.Value;
+
+            return new Models.BackupStatusResult(
+                datasourceId,
+                status.ProtectionStatus?.ToString(),
+                status.VaultId?.ToString(),
+                status.PolicyName,
+                null,
+                null,
+                null);
+        }
+
+        // DPP-only resource types (disks, blobs, AKS, etc.) - search across DPP vaults
+        return await GetDppBackupStatusAsync(datasourceId, subscription, tenant, retryPolicy, cancellationToken);
     }
+
+    /// <summary>
+    /// For DPP-managed resources (disks, blobs, AKS, etc.), searches across all DPP vaults
+    /// to find the backup instance matching the datasource ID.
+    /// </summary>
+    private async Task<Models.BackupStatusResult> GetDppBackupStatusAsync(
+        string datasourceId, string subscription, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var dppVaults = await dppOps.ListVaultsAsync(subscription, tenant, retryPolicy, cancellationToken);
+
+        foreach (var vault in dppVaults.Where(v => v.Name is not null && v.ResourceGroup is not null))
+        {
+            try
+            {
+                var items = await dppOps.ListProtectedItemsAsync(vault.Name!, vault.ResourceGroup!, subscription, tenant, retryPolicy, cancellationToken);
+                var match = items.FirstOrDefault(i =>
+                    string.Equals(i.DatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    return new Models.BackupStatusResult(
+                        datasourceId,
+                        match.ProtectionStatus ?? "Protected",
+                        vault.Id,
+                        match.PolicyName,
+                        match.LastBackupTime,
+                        null,
+                        null);
+                }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to check backup status in DPP vault '{VaultName}'. Skipping.", vault.Name);
+            }
+        }
+
+        return new Models.BackupStatusResult(datasourceId, "NotProtected", null, null, null, null, null);
+    }
+
+    /// <summary>
+    /// Maps ARM resource type strings to the BackupDataSourceType expected by the RSV
+    /// Backup Status API. Returns null for DPP-only resource types (disks, blobs, etc.)
+    /// that are not supported by the RSV BackupStatus API.
+    /// </summary>
+    private static BackupDataSourceType? MapArmResourceTypeToBackupDataSourceType(string armResourceType) =>
+        armResourceType switch
+        {
+            "microsoft.compute/virtualmachines" => BackupDataSourceType.Vm,
+            "microsoft.storage/storageaccounts" => BackupDataSourceType.AzureFileShare,
+            "microsoft.sql/servers/databases" => BackupDataSourceType.SqlDatabase,
+            _ => null // DPP-only types handled via DPP vault lookup
+        };
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
         string subscription, string? resourceTypeFilter, string? resourceGroupFilter,
@@ -483,11 +565,27 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string immutabilityState, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        var normalizedState = NormalizeImmutabilityState(immutabilityState);
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, retryPolicy, cancellationToken)
-            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, retryPolicy, cancellationToken)
+            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, retryPolicy, cancellationToken);
     }
+
+    /// <summary>
+    /// Normalizes user-friendly immutability state values to the API-expected values.
+    /// Both RSV and DPP APIs expect 'Unlocked' (not 'Enabled') for the active-but-unlocked state.
+    /// Valid API values are: Disabled, Unlocked, Locked.
+    /// </summary>
+    private static string NormalizeImmutabilityState(string immutabilityState) =>
+        immutabilityState.ToUpperInvariant() switch
+        {
+            "ENABLED" => "Unlocked",
+            "UNLOCKED" => "Unlocked",
+            "DISABLED" => "Disabled",
+            "LOCKED" => "Locked",
+            _ => immutabilityState
+        };
 
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
