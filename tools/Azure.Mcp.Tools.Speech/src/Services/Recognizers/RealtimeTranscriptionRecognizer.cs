@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
@@ -41,6 +41,9 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             language = "en-US"; // Default to en-US if not specified or unsupported
             _logger.LogWarning("Language not specified or unsupported for Realtime Transcription. Defaulting to 'en-US'.");
         }
+
+        // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+        filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
 
         if (!File.Exists(filePath))
         {

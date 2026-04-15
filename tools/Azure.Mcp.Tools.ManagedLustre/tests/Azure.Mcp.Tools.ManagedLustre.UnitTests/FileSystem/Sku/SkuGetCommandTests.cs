@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
@@ -12,6 +11,7 @@ using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.Sku;
@@ -34,7 +34,7 @@ public class SkuGetCommandTests
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_amlfsService, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

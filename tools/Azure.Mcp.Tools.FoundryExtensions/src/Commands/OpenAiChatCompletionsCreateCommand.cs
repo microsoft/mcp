@@ -3,20 +3,21 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<OpenAiChatCompletionsCreateOptions>
+public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiChatCompletionsCreateOptions>
 {
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
+
     private const string CommandTitle = "Create OpenAI Chat Completions";
 
     public override string Id => "d4e5f6a7-4567-89ab-def0-123456789012";
@@ -92,7 +93,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
 
             // Parse the message array
             var messages = new List<object>();

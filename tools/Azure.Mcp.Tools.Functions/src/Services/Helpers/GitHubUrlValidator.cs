@@ -13,9 +13,9 @@ internal static class GitHubUrlValidator
 {
     /// <summary>
     /// Allowed GitHub organizations for SSRF prevention.
-    /// Only Azure and Azure-Samples are permitted.
+    /// Only Azure, Azure-Samples, and Microsoft are permitted.
     /// </summary>
-    private static readonly string[] s_allowedGitHubOrgs = ["azure", "azure-samples"];
+    private static readonly string[] s_allowedGitHubOrgs = ["azure", "azure-samples", "microsoft"];
 
     /// <summary>
     /// Validates that a URL points to an allowed GitHub domain and organization.

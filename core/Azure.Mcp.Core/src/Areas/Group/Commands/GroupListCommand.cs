@@ -3,12 +3,12 @@
 
 using Azure.Mcp.Core.Areas.Group.Options;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.ResourceGroup;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
@@ -58,9 +58,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = groups?.Count > 0 ?
-                ResponseResult.Create(new Result(groups), GroupJsonContext.Default.Result) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(groups ?? []), GroupJsonContext.Default.Result);
         }
         catch (Exception ex)
         {

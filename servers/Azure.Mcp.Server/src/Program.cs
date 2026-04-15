@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,11 +13,18 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Server;
 
@@ -95,7 +97,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
@@ -117,6 +119,7 @@ internal class Program
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.Compute.ComputeSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
+            new Azure.Mcp.Tools.ContainerApps.ContainerAppsSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),
@@ -129,7 +132,6 @@ internal class Program
             new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
             new Azure.Mcp.Tools.Quota.QuotaSetup(),
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
-            new Azure.Mcp.Tools.MonitorInstrumentation.MonitorInstrumentationSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
@@ -235,7 +237,7 @@ internal class Program
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
-        services.AddSingleUserCliCacheService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
@@ -253,6 +255,9 @@ internal class Program
 
         services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
@@ -264,6 +269,11 @@ internal class Program
             // Update the UserAgentPolicy for all Azure service calls to include the transport type.
             var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
             BaseAzureService.InitializeUserAgentPolicy(transport);
+
+            if (options.DangerouslyDisableRetryLimits)
+            {
+                BaseAzureService.DisableRetryLimits();
+            }
         }
 
         // Perform any initialization before starting the service.

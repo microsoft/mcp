@@ -163,4 +163,32 @@ public class FileDeleteCommandTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await oneLakeService.DidNotReceive().DeleteFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
+
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
+        var oneLakeService = Substitute.For<IOneLakeService>();
+        var command = new FileDeleteCommand(logger, oneLakeService);
+
+        oneLakeService
+            .DeleteFileAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "filePath"));
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var systemCommand = command.GetCommand();
+        var parseResult = systemCommand.Parse($"--workspace-id workspace --item-id item --file-path {traversalPath}");
+        var context = new CommandContext(serviceProvider);
+
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
 }

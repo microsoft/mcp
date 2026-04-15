@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Speech.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 

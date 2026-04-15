@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
 
-namespace Azure.Mcp.Core.Services.Azure.Authentication;
+namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
 /// Extension methods for configuring Azure authentication services.

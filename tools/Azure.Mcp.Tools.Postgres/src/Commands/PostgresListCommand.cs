@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.Logging;
@@ -65,6 +63,8 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        BasePostgresOptions? options = null;
+
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -72,7 +72,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
                 return context.Response;
             }
 
-            var options = BindOptions(parseResult);
+            options = BindOptions(parseResult);
 
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
@@ -123,7 +123,7 @@ public sealed class PostgresListCommand(IPostgresService postgresService, ILogge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, BindOptions(parseResult));
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options?.Subscription, options?.ResourceGroup, options?.Server, options?.Database);
             HandleException(context, ex);
         }
 

@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_subscriptions_and_resource_groups",
-      "description": "Get information about Azure subscriptions and resource groups that the user has access to.",
+      "description": "Get information about Azure subscriptions, resource groups, and resources within resource groups that the user has access to.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -31,6 +31,7 @@
       },
       "mappedToolList": [
         "group_list",
+        "group_resource_list",
         "subscription_list"
       ]
     },
@@ -68,8 +69,8 @@
       ]
     },
     {
-      "name": "get_azure_functions_template_info",
-      "description": "Get Azure Functions project templates, supported languages, and template source code for bootstrapping new Azure Functions projects.",
+      "name": "get_azure_functions_info",
+      "description": "Get Azure Functions project samples and templates, supported languages, and source code for bootstrapping new Azure Functions projects.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -81,7 +82,7 @@
         },
         "openWorld": {
           "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions templates."
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Functions samples and templates."
         },
         "readOnly": {
           "value": true,
@@ -1495,7 +1496,7 @@
       ]
     },
     {
-      "name": "create_azure_compute_vms",
+      "name": "create_azure_compute_vm_and_vmss",
       "description": "Create Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Automatically provisions required networking (VNet, subnet, NSG, NIC, optional public IP) when not supplied. Supports Linux and Windows with SSH key or password authentication. Create VMSS for scalable workloads with configurable instance count and upgrade policies.",
       "toolMetadata": {
         "destructive": {
@@ -1562,8 +1563,8 @@
       ]
     },
     {
-      "name": "update_azure_compute_resources",
-      "description": "Update Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Modify disk size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "name": "update_azure_compute_vm_and_vmss",
+      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1591,9 +1592,74 @@
         }
       },
       "mappedToolList": [
-        "compute_disk_update",
         "compute_vm_update",
         "compute_vmss_update"
+      ]
+    },
+    {
+      "name": "update_azure_managed_disk",
+      "description": "Update Azure managed disk properties including size, storage SKU, IOPS and throughput limits, maximum shared attachments, network access policy, on-demand bursting, tags, encryption settings, disk access, and performance tier. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_update"
+      ]
+    },
+    {
+      "name": "delete_azure_managed_disk",
+      "description": "Delete an Azure managed disk from a resource group. This is an idempotent operation that returns whether the disk was successfully removed. The disk must not be attached to a virtual machine; detach it first before deleting.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool deletes Azure managed disks."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool deletes Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive operations requiring extra confirmation."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_disk_delete"
       ]
     },
     {
@@ -2363,7 +2429,7 @@
     },
     {
       "name": "get_azure_container_details",
-      "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, cluster configurations, and individual nodepool details.",
+      "description": "Get details about Azure container services including Azure Container Registry (ACR), Azure Kubernetes Service (AKS), and Azure Container Apps. View registries, repositories, nodepools, clusters, cluster configurations, individual nodepool details, and container apps.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2394,7 +2460,42 @@
         "acr_registry_list",
         "acr_registry_repository_list",
         "aks_cluster_get",
-        "aks_nodepool_get"
+        "aks_nodepool_get",
+        "containerapps_list"
+      ]
+    },
+    {
+      "name": "delete_azure_compute_vm_and_vmss",
+      "description": "Delete Azure compute resources including Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Permanently remove a VM or VMSS that is no longer needed. Use --force-deletion to force delete even if the resource is in a running or failed state. This operation is irreversible. Associated resources like disks, NICs, and public IPs are NOT automatically deleted for VMs.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool permanently deletes resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool permanently deletes Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool triggers elicitation for destructive confirmation."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_vm_delete",
+        "compute_vmss_delete"
       ]
     },
     {
@@ -3460,20 +3561,20 @@
       ]
     },
     {
-      "name": "guide_azure_monitor_instrumentation",
-      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. List and read onboarding resources, start orchestration, continue step-by-step actions, and send brownfield analysis findings.",
+      "name": "get_azure_monitor_instrumentation_learning_resource",
+      "description": "List and read Azure Monitor instrumentation onboarding learning resources. Returns all available resource paths or retrieves the full content of a specific resource by path.",
       "toolMetadata": {
         "destructive": {
           "value": false,
           "description": "This tool performs only additive updates without deleting or modifying existing resources."
         },
         "idempotent": {
-          "value": false,
-          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
-          "value": true,
-          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
         },
         "readOnly": {
           "value": true,
@@ -3489,11 +3590,43 @@
         }
       },
       "mappedToolList": [
-        "monitorinstrumentation_list_learning_resources",
-        "monitorinstrumentation_get_learning_resource",
-        "monitorinstrumentation_orchestrator_start",
-        "monitorinstrumentation_orchestrator_next",
-        "monitorinstrumentation_send_brownfield_analysis"
+        "monitor_instrumentation_get-learning-resource"
+      ]
+    },
+    {
+      "name": "guide_azure_monitor_instrumentation",
+      "description": "Guide Azure Monitor instrumentation workflows for local application workspaces. Start orchestration, continue step-by-step actions, and send brownfield analysis findings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available in local server mode and cannot be used remotely."
+        }
+      },
+      "mappedToolList": [
+        "monitor_instrumentation_orchestrator-start",
+        "monitor_instrumentation_orchestrator-next",
+        "monitor_instrumentation_send-brownfield-analysis",
+        "monitor_instrumentation_send-enhancement-select"
       ]
     }
     ,

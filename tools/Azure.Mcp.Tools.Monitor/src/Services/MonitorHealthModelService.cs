@@ -3,10 +3,11 @@
 
 using System.Text.Json.Nodes;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 

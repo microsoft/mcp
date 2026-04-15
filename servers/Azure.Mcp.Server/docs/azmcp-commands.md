@@ -231,6 +231,7 @@ The `azmcp server start` command supports the following options:
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 
 > **⚠️ Security Warning for `--dangerously-disable-elicitation`:**
 >
@@ -1039,6 +1040,42 @@ azmcp compute vm update --subscription "my-subscription" \
 | `--boot-diagnostics` | No | Enable or disable boot diagnostics: 'true' or 'false' |
 | `--user-data` | No | Base64-encoded user data |
 
+```bash
+# Delete a Virtual Machine
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --vm-name <vm-name> \
+                        [--force-deletion]
+
+# Examples:
+
+# Delete a VM
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm"
+
+# Force delete a VM even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vm delete --subscription "my-subscription" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vm-name` | Yes | Name of the virtual machine to delete |
+| `--force-deletion` | No | Force delete the VM even if running or failed (Azure API forceDeletion) |
+
 #### Virtual Machine Scale Sets
 
 ```bash
@@ -1212,6 +1249,42 @@ azmcp compute vmss update --subscription "my-subscription" \
 | `--scale-in-policy` | No | Scale-in policy: 'Default', 'OldestVM', 'NewestVM' |
 | `--tags` | No | Tags in key=value,key2=value2 format |
 
+```bash
+# Delete a Virtual Machine Scale Set
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --vmss-name <vmss-name> \
+                          [--force-deletion]
+
+# Examples:
+
+# Delete a VMSS
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss"
+
+# Force delete a VMSS even if it is in a running or failed state
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute vmss delete --subscription "my-subscription" \
+                          --resource-group "my-rg" \
+                          --vmss-name "my-vmss" \
+                          --force-deletion
+```
+
+**Command Behavior:**
+- Deletes the VMSS and all its VM instances. This operation is irreversible.
+- **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--vmss-name` | Yes | Name of the VMSS to delete |
+| `--force-deletion` | No | Force delete the VMSS even if running or failed (Azure API forceDeletion) |
+
 #### Disks
 
 ```bash
@@ -1361,6 +1434,30 @@ azmcp compute disk create --subscription <subscription> \
 | `--security-type` | Conditional | Security type for the disk. Accepted values: ConfidentialVM_DiskEncryptedWithCustomerKey, ConfidentialVM_DiskEncryptedWithPlatformKey, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey, Standard, TrustedLaunch. Required when `--upload-type` is UploadWithSecurityData. |
 
 ```bash
+# Delete a managed disk
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute disk delete --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --disk-name <disk-name>
+```
+
+**Command Behavior:**
+- Deletes an Azure managed disk from the specified resource group.
+- This is an idempotent operation: returns `Deleted = true` if the disk was successfully removed, or `Deleted = false` if the disk was not found.
+- The disk must not be attached to a virtual machine. Detach it first before deleting.
+
+**Returns:**
+- `Deleted`: Boolean indicating whether the disk was deleted.
+- `DiskName`: Name of the disk that was targeted for deletion.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--disk-name` | Yes | Name of the managed disk to delete |
+
+```bash
 # Update a managed disk's size
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp compute disk update --subscription <subscription> \
@@ -1442,6 +1539,19 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 -   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
+
+### Azure Container Apps Operations
+
+```bash
+# List Azure Container Apps in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription>
+
+# List Azure Container Apps in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp containerapps list --subscription <subscription> \
+                         [--resource-group <resource-group>]
+```
 
 ### Azure Container Registry (ACR) Operations
 
@@ -1670,7 +1780,7 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy pipeline guidance get [--is-azd-project <is-azd-project>] \
                                    [--pipeline-platform <pipeline-platform>] \
-                                   [--deploy-option <deploy-option>] 
+                                   [--deploy-option <deploy-option>]
 
 # Get a deployment plan for a specific project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2471,27 +2581,35 @@ azmcp monitor webtests update --subscription <subscription> \
 ### Azure Monitor Instrumentation Operations
 
 ```bash
-# List available Azure Monitor onboarding learning resources
-azmcp monitorinstrumentation list_learning_resources
 
-# Get a specific learning resource by path
-azmcp monitorinstrumentation get_learning_resource --path <resource-path>
+# Get a specific learning resource by path or list all available Azure Monitor onboarding learning resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation get-learning-resource [--path <resource-path>]
 
 # Start deterministic instrumentation orchestration for a local workspace
-azmcp monitorinstrumentation orchestrator_start --workspace-path <absolute-workspace-path>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-workspace-path>
 
 # Continue orchestration after completing the previous action
-azmcp monitorinstrumentation orchestrator_next --session-id <session-id> \
-                                               --completion-note <what-was-completed>
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
+                                                --completion-note <what-was-completed>
 
-# Submit brownfield analysis findings JSON to continue migration flow
-azmcp monitorinstrumentation send_brownfield_analysis --session-id <session-id> \
-                                                      --findings-json <json>
+# Send brownfield analysis findings JSON to continue migration flow
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-brownfield-analysis --session-id <session-id> \
+                                                       --findings-json <json>
+
+# Submit enhancement selection when orchestrator-start returns enhancement_available
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp monitor instrumentation send-enhancement-select --session-id <session-id> \
+                                                      --enhancement-keys <comma-separated-keys>
 ```
 
 **Notes:**
-- `orchestrator_start` and `orchestrator_next` mirror the orchestration flow used by Azure Monitor onboarding.
-- `send_brownfield_analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator_start` when status is `analysis_needed`.
+- `orchestrator-start` and `orchestrator-next` mirror the orchestration flow used by Azure Monitor onboarding.
+- `send-brownfield-analysis` expects a JSON payload matching the `analysisTemplate` returned by `orchestrator-start` when status is `analysis_needed`.
+- `send-enhancement-select` expects one or more enhancement keys from `enhancementOptions` returned by `orchestrator-start` when status is `enhancement_available`.
 
 ### Azure Managed Lustre Operations
 
@@ -2896,6 +3014,10 @@ azmcp redis list --subscription <subscription>
 # List resource groups in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp group list --subscription <subscription>
+
+# List all resources in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp group resource list --subscription <subscription> --resource-group <resource-group>
 ```
 
 ### Azure Resource Health Operations
@@ -3054,10 +3176,10 @@ azmcp sql server create --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name> \
                         --location <location> \
-                        --admin-user <admin-username> \
-                        --admin-password <admin-password> \
+                        --administrator-login <admin-username> \
+                        --administrator-password <admin-password> \
                         [--version <server-version>] \
-                        [--public-network-access <enabled|disabled>]
+                        [--public-network-access <Enabled|Disabled>]  # Defaults to 'Disabled'
 
 # List Microsoft Entra ID administrators for a SQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3118,8 +3240,8 @@ azmcp storage account create --subscription <subscription> \
 # Get detailed properties of Storage accounts
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \
-                              [--account <account>] \
-                              [--tenant <tenant>]
+                          [--account <account>] \
+                          [--tenant <tenant>]
 ```
 
 #### Blob Storage
@@ -3134,15 +3256,17 @@ azmcp storage blob container create --subscription <subscription> \
 # Get detailed properties of Storage containers
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --subscription <subscription> \
-                                     --account <account> \
-                                     [--container <container>]
+                                 --account <account> \
+                                 [--container <container>] \
+                                 [--prefix <prefix>]
 
 # Get detailed properties of Storage blobs
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
-                           [--blob <blob>]
+                           [--blob <blob>] \
+                           [--prefix <prefix>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -3330,7 +3454,9 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 ### Azure Subscription Management
 
 ```bash
-# List available Azure subscriptions
+# List available Azure subscriptions with default subscription indicator
+# Returns subscriptionId, displayName, state, tenantId, and isDefault for each subscription
+# The isDefault field is true for the default subscription set via 'az account set' or AZURE_SUBSCRIPTION_ID env var
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp subscription list [--tenant-id <tenant-id>]
 ```

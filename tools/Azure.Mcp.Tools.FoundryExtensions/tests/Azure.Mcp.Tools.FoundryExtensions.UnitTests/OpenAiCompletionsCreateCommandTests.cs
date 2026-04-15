@@ -3,13 +3,13 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -26,7 +26,6 @@ public class OpenAiCompletionsCreateCommandTests
         _foundryService = Substitute.For<IFoundryExtensionsService>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -59,7 +58,7 @@ public class OpenAiCompletionsCreateCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand();
+        var command = new OpenAiCompletionsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -113,7 +112,7 @@ public class OpenAiCompletionsCreateCommandTests
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand();
+        var command = new OpenAiCompletionsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -171,7 +170,7 @@ public class OpenAiCompletionsCreateCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand();
+        var command = new OpenAiCompletionsCreateCommand(_foundryService);
         var args = command.GetCommand().Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
@@ -192,7 +191,7 @@ public class OpenAiCompletionsCreateCommandTests
     public void Command_HasCorrectName()
     {
         // Arrange & Act
-        var command = new OpenAiCompletionsCreateCommand();
+        var command = new OpenAiCompletionsCreateCommand(_foundryService);
 
         // Assert
         Assert.Equal("create-completion", command.Name);
@@ -202,7 +201,7 @@ public class OpenAiCompletionsCreateCommandTests
     public void Command_HasCorrectMetadata()
     {
         // Arrange & Act
-        var command = new OpenAiCompletionsCreateCommand();
+        var command = new OpenAiCompletionsCreateCommand(_foundryService);
 
         // Assert
         Assert.False(command.Metadata.Destructive);
