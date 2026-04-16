@@ -94,6 +94,37 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
+    public async Task GetVaultAsync_BothStacksForbidden_ThrowsUnauthorizedAccessException()
+    {
+        // Both RSV and DPP return 403 → should throw UnauthorizedAccessException (not KeyNotFoundException)
+        _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+        _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.GetVaultAsync("myVault", "rg", "sub", null, null, null, CancellationToken.None));
+
+        Assert.Contains("Authorization failed", ex.Message);
+        Assert.Contains("RBAC permissions", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetVaultAsync_BothStacksUnauthorized_ThrowsUnauthorizedAccessException()
+    {
+        // Both RSV and DPP return 401 → should throw UnauthorizedAccessException
+        _rsvOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(401, "Unauthorized"));
+        _dppOps.GetVaultAsync("myVault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(401, "Unauthorized"));
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.GetVaultAsync("myVault", "rg", "sub", null, null, null, CancellationToken.None));
+
+        Assert.Contains("Authorization failed", ex.Message);
+    }
+
+    [Fact]
     public async Task GetVaultAsync_RsvSucceeds_DoesNotCallDpp()
     {
         var expectedVault = new BackupVaultInfo(null, "myVault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null);
@@ -392,6 +423,22 @@ public class AzureBackupServiceTests
 
         Assert.Equal("Succeeded", result.Status);
         await _rsvOps.Received(1).ConfigureImmutabilityAsync("vault", "rg", "sub", expectedNormalized, null, null, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("Invalid")]
+    [InlineData("Enable")]
+    [InlineData("")]
+    public async Task ConfigureImmutabilityAsync_InvalidState_ThrowsArgumentException(string inputState)
+    {
+        // RSV vault probe succeeds
+        _rsvOps.GetVaultAsync("vault", "rg", "sub", null, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupVaultInfo(null, "vault", "RSV", null, "rg", null, null, null, null, null, null, null, null, null));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ConfigureImmutabilityAsync("vault", "rg", "sub", inputState, null, null, null, CancellationToken.None));
+
+        Assert.Contains("Invalid immutability state", ex.Message);
     }
 
     #endregion

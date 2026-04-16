@@ -248,4 +248,24 @@ public class VaultUpdateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        // Assert
+        Assert.Contains(options, o => o.Name == "--subscription");
+        Assert.Contains(options, o => o.Name == "--resource-group");
+        Assert.Contains(options, o => o.Name == "--vault");
+        Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.Contains(options, o => o.Name == "--redundancy");
+        Assert.Contains(options, o => o.Name == "--soft-delete");
+        Assert.Contains(options, o => o.Name == "--soft-delete-retention-days");
+        Assert.Contains(options, o => o.Name == "--immutability-state");
+        Assert.Contains(options, o => o.Name == "--identity-type");
+        Assert.Contains(options, o => o.Name == "--tags");
+    }
 }

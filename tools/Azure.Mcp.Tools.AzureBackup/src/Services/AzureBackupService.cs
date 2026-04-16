@@ -584,7 +584,9 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             "UNLOCKED" => "Unlocked",
             "DISABLED" => "Disabled",
             "LOCKED" => "Locked",
-            _ => immutabilityState
+            _ => throw new ArgumentException(
+                $"Invalid immutability state '{immutabilityState}'. Valid values are: Enabled, Disabled, Unlocked, Locked.",
+                nameof(immutabilityState))
         };
 
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
@@ -626,9 +628,13 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return VaultTypeResolver.Rsv;
         }
-        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
+        catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
             logger.LogDebug(ex, "RSV probe for vault '{VaultName}' returned {Status}. Trying DPP.", vaultName, ex.Status);
+        }
+        catch (RequestFailedException ex) when (ex.Status is 404)
+        {
+            logger.LogDebug(ex, "RSV probe for vault '{VaultName}' returned 404. Trying DPP.", vaultName);
         }
 
         try
@@ -636,7 +642,11 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
             return VaultTypeResolver.Dpp;
         }
-        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
+        catch (RequestFailedException ex) when (ex.Status is 401 or 403)
+        {
+            throw new UnauthorizedAccessException($"Authorization failed for vault '{vaultName}'. Verify your RBAC permissions on the vault, or specify --vault-type to skip auto-detection. Details: {ex.Message}", ex);
+        }
+        catch (RequestFailedException ex) when (ex.Status is 404)
         {
             throw new KeyNotFoundException($"Vault '{vaultName}' not found in resource group '{resourceGroup}'. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.");
         }
@@ -649,15 +659,24 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         {
             return await rsvAction();
         }
-        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
+        catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
+            // RSV auth failure — try DPP before giving up
+        }
+        catch (RequestFailedException ex) when (ex.Status is 404)
+        {
+            // RSV not found — try DPP
         }
 
         try
         {
             return await dppAction();
         }
-        catch (RequestFailedException ex) when (ex.Status is 404 or 401 or 403)
+        catch (RequestFailedException ex) when (ex.Status is 401 or 403)
+        {
+            throw new UnauthorizedAccessException($"Authorization failed for vault '{vaultName}'. Verify your RBAC permissions on the vault, or specify --vault-type to skip auto-detection. Details: {ex.Message}", ex);
+        }
+        catch (RequestFailedException ex) when (ex.Status is 404)
         {
             throw new KeyNotFoundException($"Vault '{vaultName}' not found as either RSV or DPP vault. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.");
         }

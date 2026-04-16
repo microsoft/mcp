@@ -223,4 +223,21 @@ public class RecoveryPointGetCommandTests
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        // Assert
+        Assert.Contains(options, o => o.Name == "--subscription");
+        Assert.Contains(options, o => o.Name == "--resource-group");
+        Assert.Contains(options, o => o.Name == "--vault");
+        Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.Contains(options, o => o.Name == "--protected-item");
+        Assert.Contains(options, o => o.Name == "--container");
+        Assert.Contains(options, o => o.Name == "--recovery-point");
+    }
 }

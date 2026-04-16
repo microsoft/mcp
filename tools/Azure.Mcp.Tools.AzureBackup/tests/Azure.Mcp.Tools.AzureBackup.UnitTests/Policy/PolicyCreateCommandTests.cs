@@ -127,4 +127,22 @@ public class PolicyCreateCommandTests
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        // Assert
+        Assert.Contains(options, o => o.Name == "--subscription");
+        Assert.Contains(options, o => o.Name == "--resource-group");
+        Assert.Contains(options, o => o.Name == "--vault");
+        Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.Contains(options, o => o.Name == "--policy");
+        Assert.Contains(options, o => o.Name == "--workload-type");
+        Assert.Contains(options, o => o.Name == "--schedule-time");
+        Assert.Contains(options, o => o.Name == "--daily-retention-days");
+    }
 }
