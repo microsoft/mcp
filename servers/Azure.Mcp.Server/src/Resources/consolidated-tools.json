@@ -1564,7 +1564,7 @@
     },
     {
       "name": "update_azure_compute_vm_and_vmss",
-      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
+      "description": "Update Azure Virtual Machines (VMs) and Virtual Machine Scale Sets (VMSS). Modify VM properties like size, tags, license type, boot diagnostics, and user data. Update VMSS capacity, upgrade policy, overprovision settings, auto OS upgrade, and scale-in policies. Change VM power state (start, stop, deallocate, restart). Uses PATCH semantics - only specified properties are updated; unspecified properties remain unchanged.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1593,6 +1593,7 @@
       },
       "mappedToolList": [
         "compute_vm_update",
+        "compute_vm_power-state",
         "compute_vmss_update"
       ]
     },

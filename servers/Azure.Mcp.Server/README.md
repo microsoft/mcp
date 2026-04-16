@@ -866,7 +866,7 @@ Azure MCP Server supports connecting to Azure sovereign clouds. By default, it a
 
 | Cloud | Aliases |
 |-------|---------|
-| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` | 
+| Azure Public Cloud | `AzureCloud`, `AzurePublicCloud`, `Public`, `AzurePublic` |
 | Azure China Cloud | `AzureChinaCloud`, `China`, `AzureChina` |
 | Azure US Government | `AzureUSGovernment`, `USGov`, `AzureUSGovernmentCloud`, `USGovernment` |
 
@@ -1003,6 +1003,10 @@ Example prompts that generate Azure CLI commands:
 * "Update VMSS 'my-vmss' capacity to 5 instances"
 * "Delete virtual machine 'my-vm' in resource group 'my-resource-group'"
 * "Force delete VM 'my-vm' in resource group 'my-rg' using force-deletion"
+* "Start VM 'my-vm' in resource group 'my-rg'"
+* "Stop VM 'my-vm' in resource group 'my-rg'"
+* "Deallocate VM 'my-vm' in resource group 'my-rg' to stop billing"
+* "Restart VM 'my-vm' in resource group 'my-rg'"
 * "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
 * "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 

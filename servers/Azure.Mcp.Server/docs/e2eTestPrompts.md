@@ -215,6 +215,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> |
 | compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> |
 | compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion |
+| compute_vm_power-state | Start VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop virtual machine <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Restart VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown |
+| compute_vm_power-state | Start VM <vm-name> in resource group <resource-group-name> without waiting for completion |
+| compute_vm_power-state | Power off VM <vm-name> in resource group <resource-group-name> |
+| compute_vm_power-state | Deallocate VM <vm-name> to stop billing for compute resources |
 | compute_vmss_create | Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name> |
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> |
 | compute_vmss_create | Deploy a scale set with Rolling upgrade policy and 5 instances |
