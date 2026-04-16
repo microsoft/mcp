@@ -16,15 +16,15 @@ namespace Microsoft.Mcp.Tests.Client;
 /// <summary>
 /// Base class for command unit tests, providing common setup for testing command execution and validation logic.
 /// </summary>
-/// <typeparam name="ToolCommand">The tool command.</typeparam>
-/// <typeparam name="ToolService">The tool service.</typeparam>
-public abstract class CommandUnitTestsBase<ToolCommand, ToolService>
-    where ToolCommand : class, IBaseCommand
-    where ToolService : class
+/// <typeparam name="TCommand">The tool command.</typeparam>
+/// <typeparam name="TService">The tool service.</typeparam>
+public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
+    where TCommand : class, IBaseCommand
+    where TService : class
 {
-    protected ToolService Service { get; init; }
-    protected ToolCommand Command { get; init; }
-    protected ILogger<ToolCommand> Logger { get; init; }
+    protected TService Service { get; init; }
+    protected TCommand Command { get; init; }
+    protected ILogger<TCommand> Logger { get; init; }
     protected CommandContext Context { get; init; }
     protected Command CommandDefinition { get; init; }
     protected ServiceProvider ServiceProvider { get; init; }
@@ -35,15 +35,15 @@ public abstract class CommandUnitTestsBase<ToolCommand, ToolService>
     /// <param name="extensions">Optional additional service registrations for the test.</param>
     public CommandUnitTestsBase(Action<IServiceCollection>? extensions = null)
     {
-        Service = Substitute.For<ToolService>();
-        Logger = Substitute.For<ILogger<ToolCommand>>();
+        Service = Substitute.For<TService>();
+        Logger = Substitute.For<ILogger<TCommand>>();
         var serviceCollection = new ServiceCollection()
             .AddSingleton(Logger)
             .AddSingleton(Service)
-            .AddSingleton<ToolCommand>();
+            .AddSingleton<TCommand>();
         extensions?.Invoke(serviceCollection);
         ServiceProvider = serviceCollection.BuildServiceProvider();
-        Command = ServiceProvider.GetRequiredService<ToolCommand>();
+        Command = ServiceProvider.GetRequiredService<TCommand>();
         Context = new(ServiceProvider);
         CommandDefinition = Command.GetCommand();
     }
@@ -56,4 +56,10 @@ public abstract class CommandUnitTestsBase<ToolCommand, ToolService>
 
     protected T? ConvertResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
         => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        ServiceProvider.Dispose();
+    }
 }

@@ -202,7 +202,7 @@ To scope the test run to path substring matches, use:
 Requirements:
 
 - Each command should have unit tests
-  - The command unit tests should extend `CommandUnitTestsBase`
+  - The command unit tests should extend `CommandUnitTestsBase<TCommand, TService>`
 - Tests should cover success and error scenarios
 - Mock external service calls
 - Test argument validation

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Tests.Helpers;
@@ -35,17 +34,15 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
-        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
-
         // Act
-        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var resultGroups = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.Result);
+        var resultGroups = ConvertResponse(result, GroupJsonContext.Default.Result);
         Assert.NotNull(resultGroups);
         Assert.Equal(2, resultGroups.Groups.Count);
 
@@ -85,10 +82,8 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
-        var args = CommandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
-
         // Act
-        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--tenant", tenantId);
 
         // Assert
         Assert.NotNull(result);
@@ -112,17 +107,15 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
-
         // Act
-        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var resultGroups = JsonSerializer.Deserialize(JsonSerializer.Serialize(result.Results), GroupJsonContext.Default.Result);
+        var resultGroups = ConvertResponse(result, GroupJsonContext.Default.Result);
         Assert.NotNull(resultGroups);
         Assert.Empty(resultGroups.Groups);
     }
@@ -140,10 +133,8 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = CommandDefinition.Parse($"--subscription {subscriptionId}");
-
         // Act
-        var result = await Command.ExecuteAsync(Context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(result);
