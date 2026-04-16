@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Elicitation;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -67,10 +68,7 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(secretValue)
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, secretValue)];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -116,10 +114,7 @@ public class McpServerElicitationExtensionsTests
         var server = CreateMockServer();
         server.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(true)
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, true)];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -156,10 +151,7 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create("not_a_boolean")
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, "not_a_boolean")];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -280,11 +272,11 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(true),
-            ["DestructiveHint"] = JsonValue.Create(true)
-        };
+        JsonObject metadata =
+        [
+            new(McpHelper.SecretHintMetaKey, true),
+            new("DestructiveHint", JsonValue.Create(true))
+        ];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -301,11 +293,11 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(false),
-            ["DestructiveHint"] = JsonValue.Create(true)
-        };
+        JsonObject metadata =
+        [
+            new(McpHelper.SecretHintMetaKey, false),
+            new("DestructiveHint", JsonValue.Create(true))
+        ];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -322,11 +314,11 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(false),
-            ["DestructiveHint"] = JsonValue.Create(false)
-        };
+        JsonObject metadata =
+        [
+            new(McpHelper.SecretHintMetaKey, false),
+            new("DestructiveHint", JsonValue.Create(false))
+        ];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -395,10 +387,7 @@ public class McpServerElicitationExtensionsTests
         };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(secretValue)
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, secretValue)];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -472,10 +461,7 @@ public class McpServerElicitationExtensionsTests
         };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(true)
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, true)];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -498,10 +484,7 @@ public class McpServerElicitationExtensionsTests
         };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var metadata = new JsonObject
-        {
-            ["SecretHint"] = JsonValue.Create(false)
-        };
+        JsonObject metadata = [new(McpHelper.SecretHintMetaKey, false)];
 
         // Act
         var result = server.ShouldTriggerElicitation("tool1", metadata);
@@ -526,10 +509,7 @@ public class McpServerElicitationExtensionsTests
 
         var metadata = new JsonObject
         {
-            ["Nested"] = new JsonObject
-            {
-                ["SecretHint"] = JsonValue.Create(true)
-            }
+            ["Nested"] = new JsonObject([new(McpHelper.SecretHintMetaKey, true)])
         };
 
         // Act

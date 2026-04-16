@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -116,12 +117,8 @@ public class CommandFactoryToolLoaderTests
         // This may result in fewer tools or potentially no tools if all are marked as local required
         foreach (var tool in result.Tools)
         {
-            var meta = tool.Meta;
-            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
-            {
-                Assert.False(localRequiredHint?.GetValue<bool>(),
-                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
-            }
+            Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
+                $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         }
     }
 
@@ -586,8 +583,7 @@ public class CommandFactoryToolLoaderTests
 
         // Check that the secret tool has SecretHint in its Meta
         Assert.NotNull(secretTool.Meta);
-        Assert.True(secretTool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
-        Assert.True(secretHintNode?.GetValue<bool>());
+        Assert.True(McpHelper.HasHint(secretTool, McpHelper.SecretHintMetaKey));
     }
 
     #region Elicitation Tests

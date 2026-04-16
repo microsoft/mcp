@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -240,17 +241,8 @@ public sealed class SingleProxyToolLoader(
         var allTools = await GetAllToolsAsync(request, tool, cancellationToken);
         return allTools
             .Where(t => !_options.Value.ReadOnly || (t.ProtocolTool.Annotations?.ReadOnlyHint == true))
-            .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.ProtocolTool))
+            .Where(t => !_options.Value.IsHttpMode || !McpHelper.HasHint(t.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
             .ToArray();
-    }
-
-    private static bool HasLocalRequiredHint(Tool tool)
-    {
-        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
-        {
-            return localRequired?.GetValueKind() == JsonValueKind.True;
-        }
-        return false;
     }
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
@@ -357,7 +349,7 @@ public sealed class SingleProxyToolLoader(
             {
                 if (_options.Value.ReadOnly && resolvedTool.ProtocolTool.Annotations?.ReadOnlyHint != true)
                 {
-                    return new CallToolResult
+                    return McpHelper.InjectToolIdMetadata(new CallToolResult
                     {
                         Content =
                         [
@@ -367,12 +359,12 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    };
+                    }, resolvedTool.ProtocolTool.Meta);
                 }
 
-                if (_options.Value.IsHttpMode && HasLocalRequiredHint(resolvedTool.ProtocolTool))
+                if (_options.Value.IsHttpMode && McpHelper.HasHint(resolvedTool.ProtocolTool, McpHelper.LocalRequiredHintMetaKey))
                 {
-                    return new CallToolResult
+                    return McpHelper.InjectToolIdMetadata(new CallToolResult
                     {
                         Content =
                         [
@@ -382,7 +374,7 @@ public sealed class SingleProxyToolLoader(
                             }
                         ],
                         IsError = true,
-                    };
+                    }, resolvedTool.ProtocolTool.Meta);
                 }
             }
         }

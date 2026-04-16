@@ -155,11 +155,11 @@ public sealed class CommandFactoryToolLoader(
                 Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
             };
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            };
+            }, command.Id);
         }
 
         // Enforce HTTP mode restrictions at execution time
@@ -170,11 +170,11 @@ public sealed class CommandFactoryToolLoader(
                 Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            };
+            }, command.Id);
         }
 
         var commandContext = new CommandContext(_serviceProvider, activity);
@@ -221,7 +221,7 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [
                     new TextContentBlock {
@@ -229,7 +229,7 @@ public sealed class CommandFactoryToolLoader(
                     }
                 ],
                 IsError = isError
-            };
+            }, command.Id);
         }
         catch (Exception ex)
         {
@@ -268,18 +268,16 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
-        JsonObject? meta = null;
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            meta ??= new();
-            meta["SecretHint"] = metadata.Secret;
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
         }
         // Add LocalRequired metadata to tool.Meta if the property exists
         if (metadata.LocalRequired)
         {
-            meta ??= new();
-            meta["LocalRequiredHint"] = metadata.LocalRequired;
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
         }
         tool.Meta = meta;
 
@@ -291,7 +289,7 @@ public sealed class CommandFactoryToolLoader(
         {
             if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
+                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? [];
                 tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
                 return tool;
             }

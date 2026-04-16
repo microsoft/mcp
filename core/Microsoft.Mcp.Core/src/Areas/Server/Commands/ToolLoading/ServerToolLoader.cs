@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -267,7 +268,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
             if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -277,12 +278,12 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                };
+                }, resolvedTool.Meta);
             }
 
-            if ((options?.Value?.IsHttpMode ?? false) && HasLocalRequiredHint(resolvedTool))
+            if ((options?.Value?.IsHttpMode ?? false) && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
             {
-                return new CallToolResult
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content =
                     [
@@ -292,7 +293,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         }
                     ],
                     IsError = true,
-                };
+                }, resolvedTool.Meta);
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
@@ -345,7 +346,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                         finalResponse.Content.Add(contentBlock);
                     }
 
-                    return finalResponse;
+                    return McpHelper.InjectToolIdMetadata(finalResponse, resolvedTool.Meta);
                 }
             }
 
@@ -445,17 +446,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
         return allTools
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
-            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !HasLocalRequiredHint(t))
+            .Where(t => !(options?.Value?.IsHttpMode ?? false) || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
             .ToList();
-    }
-
-    private static bool HasLocalRequiredHint(Tool tool)
-    {
-        if (tool.Meta != null && tool.Meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
-        {
-            return localRequired?.GetValueKind() == JsonValueKind.True;
-        }
-        return false;
     }
 
     private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)

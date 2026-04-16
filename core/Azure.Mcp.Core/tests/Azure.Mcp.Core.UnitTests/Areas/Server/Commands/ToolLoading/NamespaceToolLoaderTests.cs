@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
@@ -872,12 +873,8 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         Assert.NotNull(tools);
         Assert.All(tools, tool =>
         {
-            var meta = tool.Meta;
-            if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequiredHint))
-            {
-                Assert.False(localRequiredHint?.GetValue<bool>(),
-                    $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
-            }
+            Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
+                $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         });
     }
 

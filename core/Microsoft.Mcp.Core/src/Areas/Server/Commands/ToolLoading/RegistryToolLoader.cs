@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -57,7 +57,7 @@ public sealed class RegistryToolLoader(
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
                 .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                .Where(t => !_options.Value.IsHttpMode || !HasLocalRequiredHint(t.Meta));
+                .Where(t => !_options.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
 
             // Filter by specific tools if provided
             if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
@@ -144,26 +144,26 @@ public sealed class RegistryToolLoader(
                 Text = $"Tool '{request.Params.Name}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
             };
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            };
+            }, kvp.Tool.Meta);
         }
 
         // Enforce HTTP mode restrictions at execution time
-        if (_options.Value.IsHttpMode && HasLocalRequiredHint(kvp.Tool.Meta))
+        if (_options.Value.IsHttpMode && McpHelper.HasHint(kvp.Tool, McpHelper.LocalRequiredHintMetaKey))
         {
             var content = new TextContentBlock
             {
                 Text = $"Tool '{request.Params.Name}' is not available. This server is running in HTTP mode and this tool requires local execution.",
             };
 
-            return new CallToolResult
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [content],
                 IsError = true,
-            };
+            }, kvp.Tool.Meta);
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
@@ -326,15 +326,6 @@ public sealed class RegistryToolLoader(
         {
             _initializationSemaphore.Release();
         }
-    }
-
-    private static bool HasLocalRequiredHint(JsonObject? meta)
-    {
-        if (meta != null && meta.TryGetPropertyValue("LocalRequiredHint", out var localRequired))
-        {
-            return localRequired?.GetValueKind() == JsonValueKind.True;
-        }
-        return false;
     }
 
     /// <summary>
