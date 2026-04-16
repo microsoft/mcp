@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Azure.ResourceManager.AppService.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -20,28 +16,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Diagnostic;
 
 [Trait("Command", "DetectorDiagnose")]
-public class DetectorDiagnoseCommandTests
+public class DetectorDiagnoseCommandTests : CommandUnitTestsBase<DetectorDiagnoseCommand, IAppServiceService>
 {
-    private readonly IAppServiceService _appServiceService;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DetectorDiagnoseCommand> _logger;
-    private readonly DetectorDiagnoseCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DetectorDiagnoseCommandTests()
-    {
-        _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<DetectorDiagnoseCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_appServiceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Theory]
     [InlineData(null, null, null)]
     [InlineData(null, null, "PT1H")]
@@ -63,7 +39,7 @@ public class DetectorDiagnoseCommandTests
 
         // Arrange
         // Set up the mock to return success for any arguments
-        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
+        Service.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
             interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
@@ -85,22 +61,20 @@ public class DetectorDiagnoseCommandTests
         {
             unparsedArgs.AddRange(["--interval", interval]);
         }
-        var args = _commandDefinition.Parse(unparsedArgs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
+        await Service.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.DetectorDiagnoseResult);
+        var result = ConvertResponse(response, AppServiceJsonContext.Default.DetectorDiagnoseResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Diagnoses.Datasets);
@@ -130,17 +104,14 @@ public class DetectorDiagnoseCommandTests
     [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-name", "detector-name")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
-        // Arrange
-        var args = _commandDefinition.Parse(commandArgs);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(commandArgs);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().DiagnoseDetectorAsync(
+        await Service.DidNotReceive().DiagnoseDetectorAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -167,7 +138,7 @@ public class DetectorDiagnoseCommandTests
 
         // Arrange
         // Set up the mock to return success for any arguments
-        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
+        Service.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
             interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -189,16 +160,15 @@ public class DetectorDiagnoseCommandTests
         {
             unparsedArgs.AddRange(["--interval", interval]);
         }
-        var args = _commandDefinition.Parse(unparsedArgs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
+        await Service.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }

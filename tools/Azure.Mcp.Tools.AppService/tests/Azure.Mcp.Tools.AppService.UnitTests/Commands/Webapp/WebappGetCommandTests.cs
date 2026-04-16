@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -19,24 +16,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp;
 
 [Trait("Command", "WebappGet")]
-public class WebappGetCommandTests
+public class WebappGetCommandTests : CommandUnitTestsBase<WebappGetCommand, IAppServiceService>
 {
-    private readonly IAppServiceService _appServiceService;
-    private readonly ILogger<WebappGetCommand> _logger;
-    private readonly WebappGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public WebappGetCommandTests()
-    {
-        _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<WebappGetCommand>>();
-
-        _command = new(_logger, _appServiceService);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Theory]
     [InlineData("sub123", null, null)]
     [InlineData("sub123", "rg1", null)]
@@ -49,7 +30,7 @@ public class WebappGetCommandTests
         ];
 
         // Set up the mock to return success for any arguments
-        _appServiceService.GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
+        Service.GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedWebappDetails);
 
@@ -63,21 +44,18 @@ public class WebappGetCommandTests
             unparsedArgs.AddRange(["--app", appName]);
         }
 
-        var args = _commandDefinition.Parse(unparsedArgs);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
+        await Service.Received(1).GetWebAppsAsync(subscription, resourceGroup, appName, Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.WebappGetResult);
+        var result = ConvertResponse(response, AppServiceJsonContext.Default.WebappGetResult);
 
         Assert.NotNull(result);
         Assert.Equal(JsonSerializer.Serialize(expectedWebappDetails), JsonSerializer.Serialize(result.Webapps));
@@ -88,17 +66,14 @@ public class WebappGetCommandTests
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
-        // Arrange
-        var args = _commandDefinition.Parse(commandArgs);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(commandArgs);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().GetWebAppsAsync(
+        await Service.DidNotReceive().GetWebAppsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -111,21 +86,18 @@ public class WebappGetCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-
-        _appServiceService.GetWebAppsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+        Service.GetWebAppsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).GetWebAppsAsync("sub123", "rg1", "test-app",
+        await Service.Received(1).GetWebAppsAsync("sub123", "rg1", "test-app",
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

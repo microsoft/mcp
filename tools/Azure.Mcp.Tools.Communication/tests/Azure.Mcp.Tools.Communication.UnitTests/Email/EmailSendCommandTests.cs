@@ -1,43 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Email;
 
-public class EmailSendCommandTests
+public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICommunicationService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ICommunicationService _mockCommunicationService;
-    private readonly ILogger<EmailSendCommand> _logger;
-    private readonly EmailSendCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public EmailSendCommandTests()
-    {
-        _mockCommunicationService = Substitute.For<ICommunicationService>();
-        _logger = Substitute.For<ILogger<EmailSendCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_logger, _mockCommunicationService);
-        _context = new CommandContext(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Theory]
     [InlineData(null, "sender@example.com", "recipient@example.com", "Subject", "Message", false, "Missing endpoint")]
     [InlineData("", "sender@example.com", "recipient@example.com", "Subject", "Message", false, "Empty endpoint")]
@@ -66,8 +44,6 @@ public class EmailSendCommandTests
         if (message != null)
         { args.AddRange(["--message", message]); }
 
-        var parseResult = _commandDefinition.Parse(args.ToArray());
-
         if (shouldSucceed)
         {
             // Setup mock for success case
@@ -77,61 +53,41 @@ public class EmailSendCommandTests
                 Status = "Queued"
             };
 
-            _mockCommunicationService
-                .SendEmailAsync(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string[]>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<bool>(),
-                    Arg.Any<string[]>(),
-                    Arg.Any<string[]>(),
-                    Arg.Any<string[]>(),
-                    Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>(),
-                    Arg.Any<CancellationToken>())
+            Service.SendEmailAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<bool>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
+        }
 
-            // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Act
+        var response = await ExecuteCommandAsync(args.ToArray());
 
-            // Assert
+        // Assert
+        if (shouldSucceed)
+        {
             Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         else
         {
-            // Act & Assert
-            if (parseResult.Errors.Count > 0)
+            if (response.Status == HttpStatusCode.BadRequest)
             {
-                // Parse-time validation errors (missing required options)
-                Assert.True(parseResult.Errors.Count > 0, $"Expected parse errors for scenario: {scenario}");
+                // This is expected for validation failures
+                Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             }
             else
             {
-                // Runtime validation errors (empty values or command validation)
-                try
-                {
-                    var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-                    // If we reach here without exception, check if it's a validation error response
-                    if (response.Status == HttpStatusCode.BadRequest)
-                    {
-                        // This is expected for validation failures
-                        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-                    }
-                    else
-                    {
-                        Assert.Fail($"Expected validation failure for scenario: {scenario}, but got status: {response.Status}");
-                    }
-                }
-                catch (ArgumentException ex)
-                {
-                    // This is expected for service-level validation failures
-                    Assert.NotNull(ex.Message);
-                    Assert.NotEmpty(ex.Message);
-                }
+                Assert.Fail($"Expected validation failure for scenario: {scenario}, but got status: {response.Status}");
             }
         }
     }
@@ -148,41 +104,36 @@ public class EmailSendCommandTests
             "--message", "Test Message"
         ];
 
-        var parseResult = _commandDefinition.Parse(args);
-
         var expectedResult = new EmailSendResult
         {
             MessageId = "test-message-id",
             Status = "Queued"
         };
 
-        _mockCommunicationService
-            .SendEmailAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.SendEmailAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
 
         // Verify service was called with correct parameters
-        await _mockCommunicationService.Received(1).SendEmailAsync(
+        await Service.Received(1).SendEmailAsync(
             "https://example.communication.azure.com",
             "sender@example.com",
             null,
@@ -195,18 +146,18 @@ public class EmailSendCommandTests
             null,
             null,
             null,
-            Arg.Any<CancellationToken>()
-        );
+            Arg.Any<CancellationToken>());
 
         // Verify the response contains the expected result
-        Assert.NotNull(_context.Response.Results);
-        var responseJson = JsonSerializer.Serialize(_context.Response.Results);
-        Assert.Contains(expectedResult.MessageId, responseJson);
-        Assert.Contains(expectedResult.Status, responseJson);
+        Assert.NotNull(response.Results);
+        var result = ConvertResponse(response, CommunicationJsonContext.Default.EmailSendCommandResult);
 
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result);
+        
         // Verify the JSON can be properly deserialized (contains expected values)
-        Assert.Contains("test-message-id", responseJson);
-        Assert.Contains("Queued", responseJson);
+        Assert.Contains("test-message-id", result.Result.MessageId);
+        Assert.Contains("Queued", result.Result.Status);
     }
 
     [Fact]
@@ -221,10 +172,8 @@ public class EmailSendCommandTests
             "--message", "Test Message"
         ];
 
-        var parseResult = _commandDefinition.Parse(args);
-
         var expectedException = new RequestFailedException("Test error message");
-        _mockCommunicationService.SendEmailAsync(
+        Service.SendEmailAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -241,13 +190,12 @@ public class EmailSendCommandTests
             .ThrowsAsync(expectedException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(_context.Response.Results);
-        var responseJson = JsonSerializer.Serialize(_context.Response.Results);
+        Assert.NotNull(response.Results);
+        var responseJson = JsonSerializer.Serialize(response.Results);
         Assert.Contains("Test error message", responseJson);
     }
 }

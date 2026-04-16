@@ -1,21 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Security;
-using System.Text.Json;
-using Azure.Mcp.Tests;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.ResourceManager;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -25,41 +20,21 @@ namespace Azure.Mcp.Tools.Compute.UnitTests.Disk;
 /// <summary>
 /// Unit tests for the DiskCreateCommand.
 /// </summary>
-public class DiskCreateCommandTests
+public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<DiskCreateCommand> _logger;
-    private readonly DiskCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DiskCreateCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<DiskCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.NotNull(_command);
-        Assert.Equal("create", _command.Name);
-        Assert.Contains("managed disk", _command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.NotEqual(Guid.Empty.ToString(), _command.Id);
+        Assert.NotNull(Command);
+        Assert.Equal("create", Command.Name);
+        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
-        var metadata = _command.Metadata;
+        var metadata = Command.Metadata;
 
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.Destructive);
@@ -91,7 +66,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -122,24 +97,20 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--location", location,
-            "--size-gb", sizeGb.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", sizeGb.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -176,7 +147,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -207,7 +178,8 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
@@ -216,19 +188,14 @@ public class DiskCreateCommandTests
             "--sku", sku,
             "--os-type", osType,
             "--zone", zone,
-            "--hyper-v-generation", hyperVGeneration
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--hyper-v-generation", hyperVGeneration);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -259,7 +226,7 @@ public class DiskCreateCommandTests
             TimeCreated = DateTimeOffset.UtcNow
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -290,23 +257,19 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--location", location,
-            "--size-gb", "64"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "64");
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -337,7 +300,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -368,23 +331,19 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--size-gb", "128"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "128");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -394,16 +353,12 @@ public class DiskCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingResourceGroup_ReturnsBadRequest()
     {
-        // Arrange - no resource-group specified
-        var args = _commandDefinition.Parse([
+        // Arrange & Act - no resource-group specified
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--disk-name", "testdisk",
             "--location", "eastus",
-            "--size-gb", "128"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "128");
 
         // Assert
         Assert.NotNull(response);
@@ -414,7 +369,7 @@ public class DiskCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -445,16 +400,13 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
             "--location", "eastus",
-            "--size-gb", "128"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "128");
 
         // Assert
         Assert.NotNull(response);
@@ -465,7 +417,7 @@ public class DiskCreateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
@@ -518,7 +470,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -549,23 +501,19 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--source", source
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--source", source);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -593,7 +541,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -624,23 +572,19 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--source", source
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--source", source);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -674,7 +618,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -705,7 +649,8 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
@@ -715,26 +660,21 @@ public class DiskCreateCommandTests
             "--disk-encryption-set", diskEncryptionSet,
             "--encryption-type", encryptionType,
             "--disk-access", diskAccess,
-            "--tier", tier
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--tier", tier);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(sizeGb, result.Disk.DiskSizeGB);
 
-        await _computeService.Received(1).CreateDiskAsync(
+        await Service.Received(1).CreateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -788,7 +728,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -819,7 +759,8 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
@@ -828,19 +769,14 @@ public class DiskCreateCommandTests
             "--sku", sku,
             "--max-shares", "3",
             "--network-access-policy", "AllowPrivate",
-            "--enable-bursting", "true"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--enable-bursting", "true");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -851,15 +787,11 @@ public class DiskCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingSourceAndSizeGbAndGalleryRefAndUpload_ReturnsBadRequest()
     {
-        // Arrange - neither --source, --size-gb, --gallery-image-reference, nor --upload-type specified
-        var args = _commandDefinition.Parse([
+        // Arrange & Act - neither --source, --size-gb, --gallery-image-reference, nor --upload-type specified
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk-name", "testdisk"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--disk-name", "testdisk");
 
         // Assert
         Assert.NotNull(response);
@@ -887,7 +819,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -918,24 +850,20 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--upload-type", "Upload",
-            "--upload-size-bytes", uploadSizeBytes.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--upload-size-bytes", uploadSizeBytes.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -946,16 +874,12 @@ public class DiskCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_UploadTypeMissingUploadSizeBytes_ReturnsBadRequest()
     {
-        // Arrange - --upload-type specified but --upload-size-bytes missing
-        var args = _commandDefinition.Parse([
+        // Arrange & Act - --upload-type specified but --upload-size-bytes missing
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--upload-type", "Upload"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--upload-type", "Upload");
 
         // Assert
         Assert.NotNull(response);
@@ -983,7 +907,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -1014,26 +938,22 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--upload-type", "UploadWithSecurityData",
             "--upload-size-bytes", uploadSizeBytes.ToString(),
             "--security-type", "TrustedLaunch",
-            "--hyper-v-generation", "V2"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--hyper-v-generation", "V2");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -1062,7 +982,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -1093,23 +1013,19 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--gallery-image-reference", galleryImageRef
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--gallery-image-reference", galleryImageRef);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
@@ -1138,7 +1054,7 @@ public class DiskCreateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -1169,30 +1085,26 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--gallery-image-reference", galleryImageRef,
-            "--gallery-image-reference-lun", lun.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--gallery-image-reference-lun", lun.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskCreateCommandResult);
+        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
 
-        await _computeService.Received(1).CreateDiskAsync(
+        await Service.Received(1).CreateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -1300,7 +1212,7 @@ public class DiskCreateCommandTests
         // Arrange - service throws ArgumentException for HTTP source
         var source = "http://mystorageaccount.blob.core.windows.net/vhds/mydisk.vhd";
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -1331,15 +1243,12 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint must use HTTPS protocol. Got: http"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--source", source
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--source", source);
 
         // Assert
         Assert.NotNull(response);
@@ -1353,7 +1262,7 @@ public class DiskCreateCommandTests
         // Arrange - service throws ArgumentException for non-Azure blob URI
         var source = "https://evil-server.com/vhds/mydisk.vhd";
 
-        _computeService.CreateDiskAsync(
+        Service.CreateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -1384,15 +1293,12 @@ public class DiskCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint host 'evil-server.com' is not a valid storage-blob domain for Azure Public Cloud."));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--source", source
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--source", source);
 
         // Assert
         Assert.NotNull(response);

@@ -5,10 +5,8 @@ using System.Net;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,21 +14,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 
 [Trait("Command", "DatabaseAdd")]
-public class DatabaseAddCommandTests
+public class DatabaseAddCommandTests : CommandUnitTestsBase<DatabaseAddCommand, IAppServiceService>
 {
-    private readonly IAppServiceService _appServiceService;
-    private readonly ILogger<DatabaseAddCommand> _logger;
-    private readonly DatabaseAddCommand _command;
-    private readonly CommandContext _context;
-
-    public DatabaseAddCommandTests()
-    {
-        _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<DatabaseAddCommand>>();
-        _command = new(_logger, _appServiceService);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-    }
-
     [Theory]
     [InlineData("SqlServer", "test-server.database.windows.net", "test-db", null, null)]
     [InlineData("MySQL", "mysql-server.mysql.database.azure.com", "mysql-db", "Server=custom-server;Database=custom-db;", null)]
@@ -60,22 +45,21 @@ public class DatabaseAddCommandTests
         };
 
         // Set up the mock to return success for any arguments
-        _appServiceService
-            .AddDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.AddDatabaseAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedConnection);
 
         // Test the service directly
-        var connectionInfo = await _appServiceService.AddDatabaseAsync(
+        var connectionInfo = await Service.AddDatabaseAsync(
             appName,
             resourceGroup,
             databaseType,
@@ -94,14 +78,14 @@ public class DatabaseAddCommandTests
         Assert.Equal(databaseName, connectionInfo.DatabaseName);
 
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).AddDatabaseAsync(
-            Arg.Is<string>(x => x == appName),
-            Arg.Is<string>(x => x == resourceGroup),
-            Arg.Is<string>(x => x == databaseType),
-            Arg.Is<string>(x => x == databaseServer),
-            Arg.Is<string>(x => x == databaseName),
+        await Service.Received(1).AddDatabaseAsync(
+            Arg.Is(appName),
+            Arg.Is(resourceGroup),
+            Arg.Is(databaseType),
+            Arg.Is(databaseServer),
+            Arg.Is(databaseName),
             Arg.Any<string>(),
-            Arg.Is<string>(x => x == subscription),
+            Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -115,17 +99,14 @@ public class DatabaseAddCommandTests
     [InlineData("--resource-group", "rg1", "--app", "test-app", "--database-type", "SqlServer", "--database-server", "test-server", "--database", "test-db")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
-        // Arrange
-        var args = _command.GetCommand().Parse(commandArgs);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(commandArgs);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().AddDatabaseAsync(
+        await Service.DidNotReceive().AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -176,8 +157,7 @@ public class DatabaseAddCommandTests
 
         // Execute the command directly in unit tests rather than via the tool runner helper
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
-        var parseResult = _command.GetCommand().Parse(argList);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(argList);
 
         // Test actual command execution and proper error handling
         Assert.NotNull(response);
@@ -222,7 +202,7 @@ public class DatabaseAddCommandTests
         var databaseServer = "test-server.database.windows.net";
         var databaseName = "test-db";
 
-        _appServiceService.AddDatabaseAsync(
+        Service.AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -235,17 +215,15 @@ public class DatabaseAddCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--app", appName,
             "--database-type", databaseType,
             "--database-server", databaseServer,
-            "--database", databaseName
-        ]);
+            "--database", databaseName);
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

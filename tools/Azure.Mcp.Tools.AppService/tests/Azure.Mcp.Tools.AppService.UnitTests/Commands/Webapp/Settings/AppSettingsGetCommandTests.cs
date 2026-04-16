@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -18,24 +15,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Settings;
 
 [Trait("Command", "AppSettingsGet")]
-public class AppSettingsGetCommandTests
+public class AppSettingsGetCommandTests : CommandUnitTestsBase<AppSettingsGetCommand, IAppServiceService>
 {
-    private readonly IAppServiceService _appServiceService;
-    private readonly ILogger<AppSettingsGetCommand> _logger;
-    private readonly AppSettingsGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AppSettingsGetCommandTests()
-    {
-        _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<AppSettingsGetCommand>>();
-
-        _command = new(_logger, _appServiceService);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
     {
@@ -47,25 +28,22 @@ public class AppSettingsGetCommandTests
         };
 
         // Set up the mock to return success for any arguments
-        _appServiceService.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+        Service.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedSettings);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app");
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+        await Service.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.AppSettingsGetResult);
+        var result = ConvertResponse(response, AppServiceJsonContext.Default.AppSettingsGetResult);
 
         Assert.NotNull(result);
         Assert.Equal(JsonSerializer.Serialize(expectedSettings), JsonSerializer.Serialize(result.AppSettings));
@@ -81,17 +59,14 @@ public class AppSettingsGetCommandTests
     [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
-        // Arrange
-        var args = _commandDefinition.Parse(commandArgs);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(commandArgs);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().GetAppSettingsAsync(
+        await Service.DidNotReceive().GetAppSettingsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -104,20 +79,18 @@ public class AppSettingsGetCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _appServiceService.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+        Service.GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
+        await Service.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

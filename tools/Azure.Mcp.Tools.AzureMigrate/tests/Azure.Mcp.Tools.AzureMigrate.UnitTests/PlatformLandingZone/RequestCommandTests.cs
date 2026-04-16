@@ -1,53 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
-using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
-public class RequestCommandTests
+public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatformLandingZoneService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IPlatformLandingZoneService _platformLandingZoneService;
-    private readonly ILogger<RequestCommand> _logger;
-    private readonly RequestCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RequestCommandTests()
+    public RequestCommandTests() : base(serviceCollection =>
     {
-        _platformLandingZoneService = Substitute.For<IPlatformLandingZoneService>();
-        _logger = Substitute.For<ILogger<RequestCommand>>();
-
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        var tenantService = Substitute.For<ITenantService>();
-        var azureMigrateProjectHelper = new AzureMigrateProjectHelper(subscriptionService, tenantService);
-
-        var collection = new ServiceCollection().AddSingleton(_platformLandingZoneService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _platformLandingZoneService, azureMigrateProjectHelper);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
+        serviceCollection.AddSingleton(Substitute.For<ISubscriptionService>());
+        serviceCollection.AddSingleton(Substitute.For<ITenantService>());
+    })
+    {
     }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("request", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -85,7 +66,7 @@ public class RequestCommandTests
                 CachedAt = DateTime.UtcNow
             };
 
-            _platformLandingZoneService.UpdateParametersAsync(
+            Service.UpdateParametersAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -98,30 +79,28 @@ public class RequestCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(parameters));
+                .Returns(parameters);
 
-            _platformLandingZoneService.DownloadAsync(
+            Service.DownloadAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult("/path/to/downloaded/file.zip"));
+                .Returns("/path/to/downloaded/file.zip");
 
-            _platformLandingZoneService.GenerateAsync(
+            Service.GenerateAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult<string?>("https://download.url/file.zip"));
+                .Returns("https://download.url/file.zip");
 
-            _platformLandingZoneService.GetParameterStatus(Arg.Any<PlatformLandingZoneContext>())
+            Service.GetParameterStatus(Arg.Any<PlatformLandingZoneContext>())
                 .Returns("Status message");
 
-            _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
                 .Returns(new List<string>());
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -161,7 +140,7 @@ public class RequestCommandTests
             CachedAt = DateTime.UtcNow
         };
 
-        _platformLandingZoneService.UpdateParametersAsync(
+        Service.UpdateParametersAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
@@ -177,30 +156,26 @@ public class RequestCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(updatedParameters));
+            .Returns(updatedParameters);
 
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "update",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--migrate-project-name", projectName,
             "--region-type", regionType,
-            "--firewall-type", fireWallType
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--firewall-type", fireWallType);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Parameters updated successfully", result.Message);
@@ -216,24 +191,21 @@ public class RequestCommandTests
         var projectName = "project1";
         var downloadedPath = "/path/to/downloaded/file.zip";
 
-        _platformLandingZoneService.DownloadAsync(
+        Service.DownloadAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
                 ctx.MigrateProjectName == projectName),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(downloadedPath));
+            .Returns(downloadedPath);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "download",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
@@ -257,34 +229,30 @@ public class RequestCommandTests
         var downloadUrl = "https://download.url/landingzone.zip";
 
         // Mock that all parameters are provided
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        _platformLandingZoneService.GenerateAsync(
+        Service.GenerateAsync(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
                 ctx.MigrateProjectName == projectName),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>(downloadUrl));
+            .Returns(downloadUrl);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "generate",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Platform Landing zone generated successfully", result.Message);
@@ -300,37 +268,33 @@ public class RequestCommandTests
         var projectName = "project1";
 
         // Mock that defaults are applied (no missing parameters)
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        _platformLandingZoneService.GenerateAsync(
+        Service.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>("https://download.url/landingzone.zip"));
+            .Returns("https://download.url/landingzone.zip");
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "generate",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Platform Landing zone generated successfully", result.Message);
 
         // Verify GenerateAsync was called
-        await _platformLandingZoneService.Received(1).GenerateAsync(
+        await Service.Received(1).GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>());
     }
@@ -344,30 +308,26 @@ public class RequestCommandTests
         var projectName = "project1";
 
         // Mock that all parameters are provided
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        _platformLandingZoneService.GenerateAsync(
+        Service.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<string?>(null));
+            .Returns((string?)null);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "generate",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -382,29 +342,25 @@ public class RequestCommandTests
         var projectName = "project1";
         var statusMessage = "Parameters for sub123:rg1:project1:\n  Cached at: 2025-12-10\n  Complete: True";
 
-        _platformLandingZoneService.GetParameterStatus(
+        Service.GetParameterStatus(
             Arg.Is<PlatformLandingZoneContext>(ctx =>
                 ctx.SubscriptionId == subscription &&
                 ctx.ResourceGroupName == resourceGroup &&
                 ctx.MigrateProjectName == projectName))
             .Returns(statusMessage);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "status",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(statusMessage, result.Message);
@@ -418,15 +374,12 @@ public class RequestCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "invalid-action",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.NotNull(response);
@@ -442,21 +395,18 @@ public class RequestCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        _platformLandingZoneService.DownloadAsync(
+        Service.DownloadAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "download",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -471,23 +421,20 @@ public class RequestCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        _platformLandingZoneService.GenerateAsync(
+        Service.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("HTTP request failed"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "generate",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.True(response.Status == HttpStatusCode.BadGateway || response.Status == HttpStatusCode.ServiceUnavailable);
@@ -502,23 +449,20 @@ public class RequestCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        _platformLandingZoneService.GenerateAsync(
+        Service.GenerateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Missing required parameters"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "generate",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--migrate-project-name", projectName);
 
         // Assert
         Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
@@ -533,7 +477,7 @@ public class RequestCommandTests
         var resourceGroup = "rg1";
         var projectName = "project1";
 
-        _platformLandingZoneService.UpdateParametersAsync(
+        Service.UpdateParametersAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -548,16 +492,13 @@ public class RequestCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("regionType must be 'single' or 'multi'"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "update",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--migrate-project-name", projectName,
-            "--region-type", "invalid"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--region-type", "invalid");
 
         // Assert
         Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
@@ -587,7 +528,7 @@ public class RequestCommandTests
             CachedAt = DateTime.UtcNow
         };
 
-        _platformLandingZoneService.UpdateParametersAsync(
+        Service.UpdateParametersAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -600,12 +541,13 @@ public class RequestCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(completeParameters));
+            .Returns(completeParameters);
 
-        _platformLandingZoneService.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns(new List<string>());
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
+            .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--action", "update",
             "--subscription", subscription,
             "--resource-group", resourceGroup,
@@ -619,18 +561,13 @@ public class RequestCommandTests
             "--regions", "eastus,westus",
             "--environment-name", "prod",
             "--version-control-system", "github",
-            "--organization-name", "myorg"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--organization-name", "myorg");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureMigrateJsonContext.Default.RequestCommandResult);
+        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Complete: True", result.Message);
@@ -640,7 +577,7 @@ public class RequestCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--action", "update",
             "--subscription", "sub123",
             "--resource-group", "rg1",
