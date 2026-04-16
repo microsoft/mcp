@@ -1,5 +1,16 @@
 # Release History
 
+
+## 3.0.0-beta.3 (2026-04-16) (pre-release)
+
+### Added
+
+- Add prefix support to `storage_blob_get` and `storage_blob_container_get`. [[#2378](https://github.com/microsoft/mcp/pull/2378)]
+
+### Fixed
+
+- Restored non-sensitive diagnostic context (Subscription, ResourceGroup, Server, Database) to error logging in `MySqlListCommand` and `PostgresListCommand`, replacing the previous `{@Options}` pattern that could leak credentials such as the PostgreSQL Password field. [[#2393](https://github.com/microsoft/mcp/pull/2393)]
+
 ## 3.0.2 (2026-04-14) (pre-release)
 
 ### Added
