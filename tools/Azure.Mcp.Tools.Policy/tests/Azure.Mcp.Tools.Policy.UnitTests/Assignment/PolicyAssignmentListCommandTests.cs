@@ -24,7 +24,6 @@ public class PolicyAssignmentListCommandTests
         _logger = Substitute.For<ILogger<PolicyAssignmentListCommand>>();
 
         var services = new ServiceCollection();
-        services.AddSingleton(_service);
         _serviceProvider = services.BuildServiceProvider();
     }
 
@@ -32,7 +31,7 @@ public class PolicyAssignmentListCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange & Act
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         // Assert
         Assert.NotNull(command);
@@ -58,7 +57,7 @@ public class PolicyAssignmentListCommandTests
         string? expectedErrorContext)
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
         var args = new List<string>();
 
         if (!string.IsNullOrEmpty(subscription))
@@ -102,7 +101,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         var assignments = new List<PolicyAssignment>
         {
@@ -146,7 +145,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         _service.ListPolicyAssignmentsAsync(
             Arg.Any<string>(),
@@ -171,7 +170,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_WithScope_PassesScopeToService()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         var assignments = new List<PolicyAssignment>();
         _service.ListPolicyAssignmentsAsync(
@@ -202,7 +201,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_WithoutScope_PassesNullScope()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         var assignments = new List<PolicyAssignment>();
         _service.ListPolicyAssignmentsAsync(
@@ -232,7 +231,7 @@ public class PolicyAssignmentListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoAssignments()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         var assignments = new List<PolicyAssignment>();
         _service.ListPolicyAssignmentsAsync(
@@ -264,7 +263,7 @@ public class PolicyAssignmentListCommandTests
     public void GetCommand_ReturnsValidCommand()
     {
         // Arrange
-        var command = new PolicyAssignmentListCommand(_logger);
+        var command = new PolicyAssignmentListCommand(_logger, _service);
 
         // Act
         var systemCommand = command.GetCommand();
