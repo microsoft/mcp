@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.2 (Unreleased)
+## 3.0.0-beta.4 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,212 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.3 (2026-04-16)
+
+### Features Added
+
+- Added prefix support to `storage_blob_get` and `storage_blob_container_get`. [[#2378](https://github.com/microsoft/mcp/pull/2378)]
+
+### Bugs Fixed
+
+- Restored non-sensitive diagnostic context (Subscription, ResourceGroup, Server, Database) to error logging in `MySqlListCommand` and `PostgresListCommand`, replacing the previous `{@Options}` pattern that could leak credentials such as the PostgreSQL Password field. [[#2393](https://github.com/microsoft/mcp/pull/2393)]
+
+## 3.0.0-beta.2 (2026-04-14)
+
+### Features Added
+
+- Added `--output` option to functions template get command with New (default) and Add values for controlling template file output. [[#2178](https://github.com/microsoft/mcp/pull/2178)]
+- Added `--disable-caching` to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
+- Added endpoint validation for Service Bus namespace parameter to ensure it resolves to a valid Azure Service Bus domain. [[#2347](https://github.com/microsoft/mcp/pull/2347)]
+
+### Bugs Fixed
+
+- Fixed endpoint validation on non-Public cloud environments. [[#2320](https://github.com/microsoft/mcp/pull/2320)]
+- Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands. [[#2334](https://github.com/microsoft/mcp/pull/2334)]
+- Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints. [[#2335](https://github.com/microsoft/mcp/pull/2335)]
+- Added input validation for Azure Storage account names in StorageService. [[#2348](https://github.com/microsoft/mcp/pull/2348)]
+- Allowed KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2385](https://github.com/microsoft/mcp/pull/2385)]
+
+### Other Changes
+
+- Enhanced the description for the main Azure Monitor command group to provide a more comprehensive overview of its capabilities and usage. [[#2325](https://github.com/microsoft/mcp/pull/2325)]
+- Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in Microsoft.Mcp.Core. [[#2355](https://github.com/microsoft/mcp/pull/2355)]
+
+## 2.0.0 (2026-04-09)
+
+**🚀 New Major Release — Azure MCP Server 2.0**
+
+We're thrilled to announce the second major release of the Azure MCP Server! Version 2.0 represents a significant evolution from the 1.0 release, bringing remote HTTP deployment, dramatically expanded Azure service coverage, comprehensive security hardening, and major performance improvements. This release spans 40 beta iterations and hundreds of contributions.
+
+### Key Features & Improvements
+
+- **Deploy as a Remote MCP Server**: Deploy the Azure MCP Server as a shared, multi-user HTTP service with Entra ID authentication and On-Behalf-Of (OBO) authorization
+- **Use with Sovereign Clouds**: Full support for Azure Government and Azure operated by 21Vianet Cloud (Azure in China) clouds across multiple services
+- **More Docker Options**: AMD64 and ARM64 images are now available. Trimmed binaries cut image size by ~60% compared to initial Docker builds
+- **New Installation Methods**: Added two new distribution formats:
+  - **PyPI**: With UVX support for Python/uv-based workflows
+  - **MCP Bundles (`.mcpb`)**: A portable format compatible with Claude Desktop
+- **Security Hardening**: Comprehensive input validation, SSRF protection, SQL/KQL injection prevention, query parameterization, and endpoint validation across all services
+- **User Confirmation Prompts**: Added user confirmation prompts for sensitive and destructive operations via MCP elicitation
+- **Foundry Integration**: Added integration with the external Microsoft Foundry MCP server (`https://mcp.ai.azure.com`) providing agent lifecycle, batch evaluation, prompt optimization, and project connection management tools
+- **More Tools**: Increased tool coverage from 170+ to 260+ across 50+ services, including the following new namespaces:
+  - Azure Advisor – `advisor`
+  - Azure Compute – `compute`
+  - Azure Container Apps – `containerapps`
+  - Azure Device Registry – `deviceregistry`
+  - Azure File Shares – `fileshares`
+  - Azure Functions – `functions`
+  - Azure Migrate – `azuremigrate`
+  - Azure Policy – `policy`
+  - Azure Pricing – `pricing`
+  - Azure Service Fabric – `servicefabric`
+  - Azure Storage Sync – `storagesync`
+  - Azure Well-Architected Framework – `wellarchitectedframework`
+- **Improved Performance**: Server startup reduced from ~20s to ~1-2s when proxied MCP servers are enabled (Microsoft Documentation, Azure Developer CLI, Microsoft Foundry)
+
+### Getting Started
+
+Install the Azure MCP Server from your preferred platform:
+
+- **VS Code**: Install the [Azure MCP Server extension in VS Code](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
+- **VS Code Insiders**: Install the [Azure MCP Server extension in VS Code Insiders](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server)
+- **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
+- **Visual Studio 2026**: Install the [Azure and AI Development workload](https://learn.microsoft.com/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026#install-github-copilot-for-azure)
+- **Claude and GitHub Copilot CLI**: Install the [Azure Skills Plugin](https://github.com/microsoft/azure-skills?tab=readme-ov-file#install-in-60-seconds)
+- **IntelliJ IDEA**: Install the [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
+- **Eclipse IDE**: Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+- **NuGet**: Run `dotnet tool install -g Azure.Mcp --version 2.0.0`
+- **npm**: Run `npx @azure/mcp@2.0.0`
+- **Docker**: Run `docker pull mcr.microsoft.com/azure-mcp:2.0.0`
+- **PyPI**: Run `pip install msmcp-azure==2.0.0`
+- **MCP Bundles**: Download the `.mcpb` file for your platform/architecture and open it with your client, like Claude Desktop:
+  - Linux: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-linux-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-linux-arm64.mcpb)
+  - macOS: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-osx-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-osx-arm64.mcpb)
+  - Windows: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-win-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-2.0.0/Azure.Mcp.Server-win-arm64.mcpb)
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication](https://github.com/microsoft/mcp/blob/release/azure/2.x/docs/Authentication.md)
+- [Remote Server Deployment](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/README.md#remote-mcp-server-preview)
+- [Connecting to Sovereign Clouds](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/2.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/2.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 2.0!
+
+For a complete history of changes included in this release, see entries for versions [2.0.0-beta.1](#200-beta1-2025-10-29) through [2.0.0-beta.40](#200-beta40-2026-04-07).
+
+---
+
+### Other Changes since 1.0.0
+
+#### Breaking Changes
+
+**Tool Consolidation:** Numerous related tools were consolidated for a more streamlined tool surface:
+
+- **Cosmos DB/MySQL/PostgreSQL**: Consolidated **list** commands:
+    - Removed `cosmos account list`, `cosmos database list`, and `cosmos database container list` – use `cosmos list` with the appropriate parameters to route hierarchically
+    - Removed `postgres server list`, `postgres database list`, `postgres table list` – use `postgres list` with the appropriate parameters to route hierarchically
+    - Removed `mysql server list`, `mysql database list`, `mysql table list` – use `mysql list` with the appropriate parameters to route hierarchically
+- **Key Vault**: Merged **get**/**list** tools:
+    - Removed `keyvault key list` – use `keyvault key get` without providing a key name to list keys in a key vault
+    - Removed `keyvault secret list` – use `keyvault secret get` without providing a secret name to list secrets in a key vault
+    - Removed `keyvault certificate list` – use `keyvault certificate get` without providing a certificate name to list certificates in a key vault
+- **Monitor WebTest**: Merged **get**/**list** and **create**/**update** tools:
+    - Removed `monitor webtests list` – use `monitor webtests get` without providing a WebTest name to list WebTests in a resource group
+    - Removed `monitor webtests update` – use `monitor webtests createorupdate` for both create and update scenarios
+- **SQL**: Merged **show**/**list** tools:
+    - Removed `sql db show` and `sql db list` – use `sql db get` without providing a database name to list databases in a server
+    - Removed `sql server show` and `sql server list` – use `sql server get` without providing a server name to list servers in a subscription
+- **Load Testing**: Merged **list**/**get** and **create**/**update** tools:
+    - Removed `loadtesting testrun list` – use `loadtesting testrun get` without providing a TestRun name to list test runs in a resource group
+    - Removed `loadtesting testrun update` – use `loadtesting testrun createorupdate` for both create and update scenarios
+- **Resource Health**: Merged **get**/**list** tools:
+    - Removed `resourcehealth availability-status list` – use `resourcehealth availability-status get` without providing a resource ID to list availability status for multiple resources
+
+**Namespace, Tool, and Option Renames**:
+
+- **Foundry**: Split the `foundry` namespace into `foundryextensions` for in-process tools and `foundry` for tools proxied from the external Microsoft Foundry MCP server.
+  - The following tools were migrated to the external server under new names:
+    - `foundry agents list` → `foundry agent get`
+    - `foundry agents create` → `foundry agent update`
+    - `foundry agents connect` → `foundry agent invoke`
+    - `foundry models list` → `foundry model catalog list`
+    - `foundry models deploy` → `foundry model deploy`
+    - `foundry models deployments list` → `foundry model deployment get`
+    - `foundry agents query-and-evaluate` → `foundry evaluation agent batch eval create`
+    - `foundry agents evaluate` → `foundry evaluator catalog get`
+- **Best Practices**: Renamed the following tools:
+  - `get bestpractices get` → `get azure bestpractices get`
+  - `get bestpractices ai app` → `get azure bestpractices ai app`
+- **Options**: Renamed the following options:
+  - Server-wide: `--insecure-disable-elicitation` → `--dangerously-disable-elicitation`
+  - Tool listing with `tools list`: `--namespaces` → `--namespace-mode`
+  - Getting pipeline deployment guidance with `deploy pipeline guidance get`:
+    - `--use-azd-pipeline-config` → `--is-azd-project`,
+    - `--azd-iac-options` → `--iac-options`
+
+**Database Security**:
+
+- PostgreSQL tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `man-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details.
+
+**Miscellaneous**:
+
+- Removed support for custom URL-based authority hosts in `--cloud`. The option now accepts only well-known cloud names
+- Narrowed subscription list response to include only `subscriptionId`, `displayName`, `state`, `tenantId`, and `isDefault`
+- Removed the following options for the `deploy pipeline guidance get` tool:
+  - `--organization-name`
+  - `--repository-name`
+  - `--github-environment-name`
+
+#### Bugs Fixed
+
+- Fixed SignalR caching where runtime results were not stored
+- Fixed retained-buffer leaks across services and tool loaders
+- Fixed Linux stdio watcher regression where using CWD as content root could exhaust `inotify` watchers
+- Added regex timeouts and cancellation propagation to prevent hangs
+
+#### Other Changes
+
+- Removed JSON pretty printing from serialization to reduce token usage
+- Extensive tool description improvements across all namespaces for better LLM selection accuracy
+
+## 2.0.0-beta.40 (2026-04-07)
+
+### Other Changes
+
+- Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in `Microsoft.Mcp.Core`. [[#2362](https://github.com/microsoft/mcp/pull/2362)]
+
+## 2.0.0-beta.39 (2026-04-06)
+
+### Features Added
+
+- Added endpoint validation for the namespace parameter in `servicebus` tools to ensure it resolves to a valid Azure Service Bus domain. [[#2349](https://github.com/microsoft/mcp/pull/2349)]
+
+### Bugs Fixed
+
+- Added input validation for Azure Storage account names in `StorageService`. [[#2350](https://github.com/microsoft/mcp/pull/2350)]
+
+## 2.0.0-beta.38 (2026-04-03)
+
+### Bugs Fixed
+
+- Replaced structured logging of entire options objects with explicit non-sensitive identifiers in error log statements across all commands. [[#2336](https://github.com/microsoft/mcp/pull/2336)]
+- Added URI validation for disk creation source parameter to enforce HTTPS and Azure Blob Storage endpoints. [[#2339](https://github.com/microsoft/mcp/pull/2339)]
+
+## 2.0.0-beta.37 (2026-04-02)
+
+### Bugs Fixed
+
+- Fix endpoint validation on non-Public cloud environments. [[#2322](https://github.com/microsoft/mcp/pull/2322)]
+
+### Other Changes
+
+- Added a `ClientName` option and `ToolArea` model property to the `plugin-telemetry` tool. `ClientType` will be deprecated once usage data decreases. [[#2324](https://github.com/microsoft/mcp/pull/2324)]
 
 ## 3.0.0-beta.1 (2026-04-01)
 

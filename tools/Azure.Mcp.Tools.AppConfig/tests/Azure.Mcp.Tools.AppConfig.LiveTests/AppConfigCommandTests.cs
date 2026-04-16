@@ -49,14 +49,14 @@ public class AppConfigCommandTests : RecordedCommandTestsBase
         _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientFactory);
     }
 
-    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
-    {
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
           Regex = "\"domains\"\\s*:\\s*\\[(?s)(?<domains>.*?)\\]",
           GroupForReplace = "domains",
           Value = "\"contoso.com\""
         })
-    };
+    ];
 
     public override async ValueTask DisposeAsync()
     {
