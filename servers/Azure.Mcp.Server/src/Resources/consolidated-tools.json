@@ -401,7 +401,7 @@
     },
     {
       "name": "deploy_azure_resources_and_applications",
-      "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
+      "description": "Deploy resources and applications to Azure. Generate architecture diagrams, deployment plans, IaC rules for Bicep and Terraform, CI/CD pipeline guidance, and retrieve application logs.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -430,6 +430,7 @@
       },
       "mappedToolList": [
         "deploy_app_logs_get",
+        "deploy_architecture_diagram_generate",
         "deploy_iac_rules_get",
         "deploy_pipeline_guidance_get",
         "deploy_plan_get"

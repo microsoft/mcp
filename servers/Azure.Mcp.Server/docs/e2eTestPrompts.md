@@ -357,10 +357,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | deploy_app_logs_get | Show me the log of the application deployed by azd |
-| deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules and best practices for writing Bicep and Terraform IaC for Azure |
-| deploy_pipeline_guidance_get | How do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure? |
-| deploy_plan_get | How do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC? |
+| deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application |
+| deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep |
+| deploy_pipeline_guidance_get | Set up a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices |
+| deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates |
 
 ## Azure Device Registry
 

@@ -24,7 +24,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 
     public override string Description =>
         """
-        Generates an Azure service architecture diagram showing the recommended Azure services and their connections for an application. Use this tool when the user asks to generate, create, or visualize an Azure architecture diagram for their application, or wants to see which Azure services to use. Renders the diagram from an application topology (AppTopology) provided as input; scan the workspace first to build this topology by detecting services, frameworks, and environment variables for connection strings, and for .NET Aspire applications, check aspireManifest.json. Do not use this tool when the user needs a detailed network topology or security design.
+        Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include ContainerApps, AppService, AKS, FunctionApp, SpringApps, StaticWebApp. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, EventHubs, KeyVault, and others.
         """;
 
     public override string Title => CommandTitle;

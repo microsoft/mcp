@@ -67,7 +67,7 @@ public static class DeployOptionDefinitions
         {
             Description = "Whether to use azd tool in the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
             DefaultValueFactory = _ => false,
-            Required = true
+            Required = false
         };
 
         public static readonly Option<string> PipelinePlatform = new(
@@ -76,7 +76,7 @@ public static class DeployOptionDefinitions
         {
             Description = "The platform for the deployment pipeline. Valid values: github-actions, azure-devops.",
             DefaultValueFactory = _ => "github-actions",
-            Required = true,
+            Required = false,
         };
 
         public static readonly Option<string> DeployOption = new(
@@ -85,7 +85,7 @@ public static class DeployOptionDefinitions
         {
             Description = "Valid values: deploy-only, provision-and-deploy. Default to deploy-only. Set to 'provision-and-deploy' ONLY WHEN user explicitly wants infra provisioning pipeline using local provisioning scripts.",
             DefaultValueFactory = _ => "deploy-only",
-            Required = true
+            Required = false
         };
     }
 
@@ -119,8 +119,9 @@ public static class DeployOptionDefinitions
             $"--{TargetAppServiceName}"
         )
         {
-            Description = "The Azure service to deploy the application. Valid values: ContainerApp, WebApp, FunctionApp, AKS. Recommend one based on user application.",
-            Required = true
+            Description = "The Azure service to deploy the application. Valid values: ContainerApp, WebApp, FunctionApp, AKS. If not specified, defaults to ContainerApp. Recommend one based on the user application when possible.",
+            DefaultValueFactory = _ => "ContainerApp",
+            Required = false
         };
 
         public static readonly Option<string> ProvisioningTool = new(
@@ -128,7 +129,7 @@ public static class DeployOptionDefinitions
         )
         {
             Description = "The tool to use for provisioning Azure resources. Valid values: AzCli, AZD.",
-            Required = true,
+            Required = false,
             DefaultValueFactory = _ => "AzCli"
         };
 
@@ -146,7 +147,7 @@ public static class DeployOptionDefinitions
         {
             Description = "The source of the plan to generate from. Valid values: 'from-project', 'from-azure', 'from-context'. If user doesn't have existing resources, set 'from-project' and generating deploy plan based on the project files in the workspace. If user mentions Azure resources exist, set 'from-azure' and ask for existing Azure resources details to generate plan. If the user have no existing resource but declare the expected Azure resources, use 'from-context' and the deploy plan should be based on the user's input.",
             DefaultValueFactory = _ => "from-project",
-            Required = true
+            Required = false
         };
 
         public static readonly Option<string> DeployOption = new(
@@ -155,7 +156,7 @@ public static class DeployOptionDefinitions
         {
             Description = "Set the value based on project and user's input. Valid values: 'provision-and-deploy', 'deploy-only', 'provision-only'. Use 'deploy-only' if user mentions they want to deploy to existing Azure resources or Iac files already exist in project, get Azure resource group from project files or from user. Use 'provision-only' if user only wants to provision Azure resource. Use 'provision-and-deploy' if user wants to deploy application and doesn't have existing infrastructure resources, or are starting from an empty resource group.",
             DefaultValueFactory = _ => "provision-and-deploy",
-            Required = true
+            Required = false
         };
     }
 
