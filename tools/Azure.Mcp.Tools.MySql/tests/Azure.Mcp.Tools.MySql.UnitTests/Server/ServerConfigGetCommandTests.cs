@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Server;
 
 public class ServerConfigGetCommandTests
 {
-    
+
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<ServerConfigGetCommand> _logger;
 
@@ -27,7 +27,7 @@ public class ServerConfigGetCommandTests
         _logger = Substitute.For<ILogger<ServerConfigGetCommand>>();
 
 
-        
+
     }
 
     [Fact]

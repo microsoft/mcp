@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Table;
 
 public class TableSchemaGetCommandTests
 {
-    
+
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<TableSchemaGetCommand> _logger;
 
@@ -27,7 +27,7 @@ public class TableSchemaGetCommandTests
         _logger = Substitute.For<ILogger<TableSchemaGetCommand>>();
 
 
-        
+
     }
 
     [Fact]

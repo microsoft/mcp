@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Database;
 
 public class DatabaseQueryCommandTests
 {
-    
+
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<DatabaseQueryCommand> _logger;
 
@@ -25,7 +25,7 @@ public class DatabaseQueryCommandTests
     {
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<DatabaseQueryCommand>>();
-        
+
     }
 
     [Fact]
