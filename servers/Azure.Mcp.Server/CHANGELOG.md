@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.3 (Unreleased)
+## 3.0.0-beta.3 (2026-04-16)
 
 ### Features Added
 
-### Breaking Changes
+- Added prefix support to `storage_blob_get` and `storage_blob_container_get`. [[#2378](https://github.com/microsoft/mcp/pull/2378)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Restored non-sensitive diagnostic context (Subscription, ResourceGroup, Server, Database) to error logging in `MySqlListCommand` and `PostgresListCommand`, replacing the previous `{@Options}` pattern that could leak credentials such as the PostgreSQL Password field. [[#2393](https://github.com/microsoft/mcp/pull/2393)]
 
 ## 3.0.0-beta.2 (2026-04-14)
 
