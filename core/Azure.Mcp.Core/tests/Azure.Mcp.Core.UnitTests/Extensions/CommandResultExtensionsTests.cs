@@ -180,16 +180,16 @@ public class CommandResultExtensionsTests
     [InlineData(new string[0], true, false)]
     [InlineData(new[] { "--name", "value" }, false, true)]
     [InlineData(new[] { "--name", "value" }, true, true)]
-    public void HasOptionResult_TypeOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
+    public void HasOptionResult_TypedOptionWithVariousStringScenarios_ReturnsExpectedResult(string[] args, bool changedRequiredness, bool expected)
     {
         // Arrange
         var option = new Option<string?>("--name");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act
         var hasResult = parseResult.CommandResult.HasOptionResult(option);
@@ -209,12 +209,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<bool?>("--flag");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act
         var hasResult = parseResult.CommandResult.HasOptionResult(option);
@@ -232,13 +232,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<string?>("--name");
-
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act
         var hasResult = parseResult.CommandResult.HasOptionResult((Option)option);
@@ -258,12 +257,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<bool?>("--flag");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act
         var hasResult = parseResult.CommandResult.HasOptionResult((Option)option);
@@ -283,12 +282,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<bool?>("--flag");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.TryGetValue(option, out var value));
@@ -307,13 +306,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<string?>("--name");
-
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.TryGetValue(option, out var value));
@@ -334,12 +332,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<bool?>("--flag");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.GetValueOrDefault(option));
@@ -354,13 +352,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<string?>("--name");
-
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.GetValueOrDefault(option));
@@ -377,12 +374,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<bool?>("--flag");
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.GetValueWithoutDefault(option));
@@ -397,13 +394,12 @@ public class CommandResultExtensionsTests
     {
         // Arrange
         var option = new Option<string?>("--name");
-
+        var command = new Command("test") { option };
+        var parseResult = command.Parse(args);
         if (changedRequiredness)
         {
             option = option.AsRequired();
         }
-        var command = new Command("test") { option };
-        var parseResult = command.Parse(args);
 
         // Act and Assert
         Assert.Equal(expected, parseResult.CommandResult.GetValueWithoutDefault(option));

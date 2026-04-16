@@ -105,7 +105,11 @@ public static class CommandResultExtensions
     }
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
-        => GetValueOrDefault<T>(commandResult, option.Name);
+    {
+        ArgumentNullException.ThrowIfNull(commandResult);
+        ArgumentNullException.ThrowIfNull(option);
+        return GetValueOrDefault<T>(commandResult, option.Name);
+    }
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
     {
@@ -154,7 +158,11 @@ public static class CommandResultExtensions
     }
 
     public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, Option<T> option)
-        => GetValueWithoutDefault<T>(commandResult, option.Name);
+    {
+        ArgumentNullException.ThrowIfNull(commandResult);
+        ArgumentNullException.ThrowIfNull(option);
+        return GetValueWithoutDefault<T>(commandResult, option.Name);
+    }
 
     public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, string optionName)
     {
