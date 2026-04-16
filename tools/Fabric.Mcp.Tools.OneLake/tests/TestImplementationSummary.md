@@ -9,15 +9,16 @@ Production-ready test suite for Microsoft Fabric OneLake MCP Tools providing com
 All OneLake commands have comprehensive test coverage with ExecuteAsync testing patterns:
 
 #### Enhanced Command Tests
-- **FileReadCommand**: Complete ExecuteAsync testing with service mocks
-- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks
-- **FileDeleteCommand**: Complete ExecuteAsync testing with service mocks
-- **DirectoryCreateCommand**: Complete ExecuteAsync testing with service mocks
-- **DirectoryDeleteCommand**: Complete ExecuteAsync testing with service mocks
+- **FileReadCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **FileWriteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **FileDeleteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **DirectoryCreateCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
+- **DirectoryDeleteCommand**: Complete ExecuteAsync testing with service mocks, including traversal rejection
 - **ItemCreateCommand**: Complete ExecuteAsync testing with service mocks
 - **TableNamespaceListCommand**: Namespace enumeration with schema alias handling
 - **TableNamespaceGetCommand**: Namespace metadata retrieval scenarios
 - **TableListCommand**: Cross-namespace table discovery and paging
+- **BlobGetCommand/BlobPutCommand**: Retrieval and upload scenarios including traversal rejection
 - **TableGetCommand**: Detailed table metadata and column schema retrieval
 - **TableConfigGetCommand**: Table configuration export validation
 - **All 19 commands**: Constructor validation, interface implementation, parameter binding, error handling
@@ -29,8 +30,8 @@ All OneLake commands have comprehensive test coverage with ExecuteAsync testing 
 - **Error handling**: Comprehensive exception scenarios
 - **ExecuteAsync testing**: Service interaction validation with mocks
 
-### 🏗️ Service Tests - Testable Architecture Patterns (6/6 passing)
-Service tests demonstrate testable architecture patterns following Fabric.PublicApi model:
+### 🏗️ Service Tests - Testable Architecture Patterns & Security (7/7 passing)
+Service tests demonstrate testable architecture patterns and validate security guards:
 
 #### Architecture Demonstration
 - **TestableOneLakeService**: Shows dependency injection pattern with IOneLakeApiClient abstraction
@@ -38,14 +39,25 @@ Service tests demonstrate testable architecture patterns following Fabric.Public
 - **Parameter Validation**: Tests validation before API calls (not requiring authentication)
 - **Mocking Capabilities**: Demonstrates how dependencies can be mocked for unit testing
 
+### 🔒 Security Tests - Path Traversal Guards (OneLakePathTraversalTests)
+Comprehensive security test suite validating that `ValidatePathForTraversal` blocks all traversal variants before any HTTP request is made:
+
+- **13 service methods covered**: All file/blob/directory methods that accept caller-supplied paths
+- **Literal traversal**: `../`, `../../`, embedded `..` segments
+- **URL-encoded traversal**: `%2e%2e` (lowercase) and `%2E%2E` (uppercase) percent-encoded variants
+- **Backslash normalisation**: Windows-style `..\` separators
+- **Valid path passthrough**: Confirms legitimate paths are not incorrectly blocked
+- **No HTTP leakage**: Uses a guard `HttpMessageHandler` that fails the test if any HTTP call is attempted before the `ArgumentException` is thrown
+
 ## Test Statistics
 
 ### Final Test Count
-- **Total Tests**: 132 tests (100% passing) ✅
+- **Total Tests**: 231 tests (100% passing) ✅
 - **Command Coverage**: 100% with comprehensive ExecuteAsync testing ✅
 - **Service Architecture Tests**: Testable pattern demonstrations (6 tests) ✅
+- **Security Tests**: Path traversal guard validation (93 tests across service + command layers) ✅
 - **Build Status**: Clean build with no test failures ✅
-- **Test Duration**: ~10 seconds (fast execution) ⚡
+- **Test Duration**: ~350 ms (fast execution) ⚡
 
 ## Technical Implementation
 
@@ -79,7 +91,8 @@ tests/
 │   ├── Table/         # Table API command coverage
 │   └── Workspace/     # Workspace operation commands
 ├── Services/          # Service layer tests
-│   └── OneLakeServiceTests.cs  # Testable architecture patterns
+│   ├── OneLakeServiceTests.cs          # Testable architecture patterns
+│   └── OneLakePathTraversalTests.cs    # Security: traversal guard validation
 └── FabricOneLakeSetupTests.cs  # Setup and registration tests
 ```
 
@@ -104,6 +117,12 @@ tests/
   - Special character URL encoding
 - **Architecture documentation** - Test demonstrating pattern differences
 
+#### Security Tests (93 tests — OneLakePathTraversalTests + command-level traversal tests)
+- **Service-level guard** — `ValidatePathForTraversal` decodes percent-encoding with `Uri.UnescapeDataString`, then splits on `/` and `\` and rejects any segment equal to `.` or `..`
+- **13 service methods covered** — each with literal `..`, `%2e%2e`, `%2E%2E`, and multi-segment variants
+- **7 command-level tests** — `FileRead`, `FileWrite`, `FileDelete`, `BlobGet`, `BlobPut`, `DirectoryCreate`, `DirectoryDelete` confirm `ArgumentException` propagates through the command handler
+- **Error message** — neutral `"Path cannot contain directory traversal sequences."` with the correct `paramName` (`filePath`, `blobPath`, or `directoryPath`)
+
 ### Key Features Tested
 - ✅ **OneLake Workspace Listing** (`onelake workspace list`)
 - ✅ **Path Listing** (`onelake file list`) - File system browsing
@@ -121,7 +140,7 @@ tests/
 - ✅ **Table Listing** (`onelake table list`) - Table discovery across namespaces
 - ✅ **Table Retrieval** (`onelake table get`) - Detailed table metadata and schema inspection
 - ✅ **Table Configuration** (`onelake table config get`) - Configuration export validation
-- ✅ **Testable Service Architecture** - Dependency injection patterns with comprehensive testing
+- ✅ **Path Traversal Security** — All file/blob/directory operations reject `..`, `%2e%2e`, and `%2E%2E` traversal sequences before any HTTP request is made
 
 ## Technical Implementation
 
@@ -141,8 +160,8 @@ tests/
 ## Final Test Results ✅
 
 ```
-Test summary: total: 132, failed: 0, succeeded: 132, skipped: 0, duration: 10.3s
-Build succeeded in 17.6s
+Test summary: total: 231, failed: 0, succeeded: 231, skipped: 0, duration: 0.3s
+Build succeeded
 ```
 
 ## Architecture Insights Discovered

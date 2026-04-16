@@ -1,0 +1,50 @@
+{
+  "generatorType": "aspnetcore-greenfield",
+  "language": "dotnet",
+  "appType": "aspnetcore",
+  "decision": {
+    "intent": "onboard",
+    "solution": "appinsights-3x",
+    "rationale": "ASP.NET Core greenfield application. AddApplicationInsightsTelemetry() provides automatic instrumentation for requests, dependencies, exceptions, logs, and metrics."
+  },
+  "actions": [
+    {
+      "id": "review-education",
+      "type": "review-education",
+      "title": "Review educational materials before implementation",
+      "resources": [
+        "learn://concepts/dotnet/opentelemetry-pipeline.md",
+        "learn://concepts/dotnet/appinsights-aspnetcore.md",
+        "learn://api-reference/dotnet/AddApplicationInsightsTelemetry.md",
+        "learn://examples/dotnet/aspnetcore-setup.md"
+      ]
+    },
+    {
+      "id": "add-appinsights-package",
+      "type": "add-package",
+      "title": "Add Application Insights ASP.NET Core package",
+      "dependsOn": "review-education",
+      "packageManager": "nuget",
+      "packageName": "Microsoft.ApplicationInsights.AspNetCore",
+      "version": "latest-stable"
+    },
+    {
+      "id": "configure-appinsights",
+      "type": "modify-code",
+      "title": "Add Application Insights telemetry to service configuration",
+      "dependsOn": "add-appinsights-package",
+      "codeTemplate": "templates/aspnetcore/instrumentation-code.cs",
+      "insertionHint": "WebApplication.CreateBuilder",
+      "requiredImport": "Microsoft.Extensions.DependencyInjection"
+    },
+    {
+      "id": "add-connection-string",
+      "type": "add-config",
+      "title": "Configure Application Insights connection string",
+      "targetFile": "appsettings.json",
+      "configKey": "ApplicationInsights:ConnectionString",
+      "configValue": "<your-connection-string>",
+      "validationKey": "APPLICATIONINSIGHTS_CONNECTION_STRING"
+    }
+  ]
+}

@@ -5,7 +5,6 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
@@ -13,6 +12,7 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,12 +37,11 @@ public class VmssGetCommandTests
         _computeService = Substitute.For<IComputeService>();
         _logger = Substitute.For<ILogger<VmssGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _computeService);
         _commandDefinition = _command.GetCommand();
+        _serviceProvider = new ServiceCollection()
+            .BuildServiceProvider();
+        _context = new(_serviceProvider);
     }
 
     [Fact]

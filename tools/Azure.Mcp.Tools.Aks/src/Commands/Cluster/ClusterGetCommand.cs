@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -10,13 +8,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseAksCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksService aksService) : BaseAksCommand<ClusterGetOptions>
 {
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
+    private readonly IAksService _aksService = aksService;
 
     public override string Id => "34e0d3d3-cbc5-4df8-8244-1439b97f3de5";
 
@@ -45,13 +45,10 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         command.Validators.Add(commandResults =>
         {
             var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
-            if (!string.IsNullOrEmpty(clusterName))
+            var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+            if (!string.IsNullOrEmpty(clusterName) && string.IsNullOrEmpty(resourceGroup))
             {
-                var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-                if (string.IsNullOrEmpty(resourceGroup))
-                {
-                    commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
-                }
+                commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
             }
         });
     }
@@ -75,8 +72,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
         try
         {
-            var aksService = context.GetService<IAksService>();
-            var clusters = await aksService.GetClusters(
+            var clusters = await _aksService.GetClusters(
                 options.Subscription!,
                 options.ClusterName,
                 options.ResourceGroup,
@@ -89,8 +85,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options);
+                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName);
             HandleException(context, ex);
         }
 

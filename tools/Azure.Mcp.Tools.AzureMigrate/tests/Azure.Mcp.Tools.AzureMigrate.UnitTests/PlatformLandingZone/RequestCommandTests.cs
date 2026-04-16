@@ -4,18 +4,17 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
@@ -33,10 +32,14 @@ public class RequestCommandTests
         _platformLandingZoneService = Substitute.For<IPlatformLandingZoneService>();
         _logger = Substitute.For<ILogger<RequestCommand>>();
 
+        var subscriptionService = Substitute.For<ISubscriptionService>();
+        var tenantService = Substitute.For<ITenantService>();
+        var azureMigrateProjectHelper = new AzureMigrateProjectHelper(subscriptionService, tenantService);
+
         var collection = new ServiceCollection().AddSingleton(_platformLandingZoneService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _platformLandingZoneService, azureMigrateProjectHelper);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

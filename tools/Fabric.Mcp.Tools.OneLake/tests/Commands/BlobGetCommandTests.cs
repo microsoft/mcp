@@ -1,22 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine.Parsing;
-using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
-using Xunit;
+using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
@@ -28,7 +23,7 @@ public class BlobGetCommandTests
         var service = Substitute.For<IOneLakeService>();
         var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
 
-        Assert.Equal("file", command.Name);
+        Assert.Equal("download_file", command.Name);
         Assert.True(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.Destructive);
@@ -263,6 +258,32 @@ public class BlobGetCommandTests
         await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        var service = Substitute.For<IOneLakeService>();
+        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
+
+        service
+            .GetBlobAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+                Arg.Any<BlobDownloadOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "blobPath"));
+
+        var parseResult = command.GetCommand().Parse($"--workspace-id workspace --item-id item --file-path {traversalPath}");
+        var context = CreateContext();
+
+        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
     private static string SerializeResult(ResponseResult? result)
     {
         if (result is null)
@@ -291,3 +312,4 @@ public class BlobGetCommandTests
         return new CommandContext(serviceProvider);
     }
 }
+

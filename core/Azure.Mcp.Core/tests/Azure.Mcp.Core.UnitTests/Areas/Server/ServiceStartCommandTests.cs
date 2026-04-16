@@ -4,33 +4,28 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
-using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
-using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
 public class ServiceStartCommandTests
 {
-    private readonly ServiceStartCommand _command;
-
-    public ServiceStartCommandTests()
-    {
-        _command = new();
-    }
+    private readonly ServiceStartCommand _command = new();
+    private static readonly object CurrentDirectoryLock = new();
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-
         // Assert
         Assert.Equal("start", _command.GetCommand().Name);
         Assert.Equal("Starts Azure MCP Server.", _command.GetCommand().Description!);
@@ -55,31 +50,38 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DangerouslyDisableElicitationOption_ParsesCorrectly(bool expectedValue)
+    [MemberData(nameof(BoolOptionTestData))]
+    public void BoolOption_ParsesCorrectly(string optionName, bool expectedValue, bool implicitBool)
     {
         // Arrange
-        var parseResult = CreateParseResultWithDangerouslyDisableElicitation(expectedValue);
+        var parseResult = CreateBoolOptionParseResult(optionName, expectedValue, implicitBool);
 
         // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyDisableElicitation);
+        var actualValue = parseResult.GetValue<bool>(optionName);
 
         // Assert
         Assert.Equal(expectedValue, actualValue);
     }
 
-    [Fact]
-    public void DangerouslyDisableElicitationOption_DefaultsToFalse()
+    public static TheoryData<string, bool, bool> BoolOptionTestData()
     {
-        // Arrange
-        var parseResult = CreateParseResult(null);
-
-        // Act
-        var actualValue = parseResult.GetValue(ServiceOptionDefinitions.DangerouslyDisableElicitation);
-
-        // Assert
-        Assert.False(actualValue);
+        var options = new[] {
+            ServiceOptionDefinitions.ReadOnly.Name,
+            ServiceOptionDefinitions.Debug.Name,
+            ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name,
+            ServiceOptionDefinitions.DangerouslyDisableElicitation.Name,
+            ServiceOptionDefinitions.DangerouslyDisableRetryLimits.Name,
+            ServiceOptionDefinitions.DisableCaching.Name
+        };
+        var theoryData = new TheoryData<string, bool, bool>();
+        foreach (var option in options)
+        {
+            theoryData.Add(option, true, true); // explicitly set to true
+            theoryData.Add(option, true, false); // implicitly set to true
+            theoryData.Add(option, false, true); // explicitly set to false
+            theoryData.Add(option, false, false); // implicitly set to false by omitting the option
+        }
+        return theoryData;
     }
 
     [Fact]
@@ -109,11 +111,12 @@ public class ServiceStartCommandTests
     [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
+    [InlineData("azmcp_storage_account_get", "azmcp_keyvault_secret_get")]
     [InlineData(null)]
-    public void ToolOption_ParsesCorrectly(string? expectedTool)
+    public void ToolOption_ParsesCorrectly(params string[]? expectedTool)
     {
         // Arrange
-        var parseResult = CreateParseResultWithTool(expectedTool != null ? [expectedTool] : null);
+        var parseResult = CreateParseResultWithTool(expectedTool ?? null);
 
         // Act
         var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
@@ -126,25 +129,12 @@ public class ServiceStartCommandTests
         else
         {
             Assert.NotNull(actualTools);
-            Assert.Single(actualTools);
-            Assert.Equal(expectedTool, actualTools[0]);
+            Assert.Equal(expectedTool.Length, actualTools.Length);
+            foreach (var tool in expectedTool)
+            {
+                Assert.Contains(tool, actualTools);
+            }
         }
-    }
-
-    [Fact]
-    public void ToolOption_ParsesMultipleToolsCorrectly()
-    {
-        // Arrange
-        var expectedTools = new[] { "azmcp_storage_account_get", "azmcp_keyvault_secret_get" };
-        var parseResult = CreateParseResultWithTool(expectedTools);
-
-        // Act
-        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
-
-        // Assert
-        Assert.NotNull(actualTools);
-        Assert.Equal(expectedTools.Length, actualTools.Length);
-        Assert.Equal(expectedTools, actualTools);
     }
 
     [Theory]
@@ -226,6 +216,7 @@ public class ServiceStartCommandTests
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.DangerouslyDisableElicitation);
+        Assert.True(options.DisableCaching);
     }
 
     [Fact]
@@ -267,7 +258,7 @@ public class ServiceStartCommandTests
     public void BindOptions_WithDefaults_ReturnsDefaultValues()
     {
         // Arrange
-        var parseResult = CreateParseResultWithMinimalOptions();
+        var parseResult = _command.GetCommand().Parse([]);
 
         // Act
         var options = GetBoundOptions(parseResult);
@@ -281,6 +272,7 @@ public class ServiceStartCommandTests
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.DangerouslyDisableElicitation);
         Assert.Null(options.SupportLoggingFolder);
+        Assert.False(options.DisableCaching);
     }
 
     [Theory]
@@ -531,43 +523,20 @@ public class ServiceStartCommandTests
         Assert.Contains("mutually exclusive", message);
     }
 
-    [Fact]
-    public void GetStatusCode_WithArgumentException_Returns400()
+    [Theory]
+    [InlineData(typeof(ArgumentException), HttpStatusCode.BadRequest)]
+    [InlineData(typeof(InvalidOperationException), HttpStatusCode.UnprocessableEntity)]
+    [InlineData(typeof(Exception), HttpStatusCode.InternalServerError)]
+    public void GetStatusCode_ReturnsExpectedStatusCode(Type exceptionType, HttpStatusCode expectedStatusCode)
     {
         // Arrange
-        var exception = new ArgumentException("Invalid argument");
+        var exception = (Exception)Activator.CreateInstance(exceptionType, "Test exception message")!;
 
         // Act
         var statusCode = GetStatusCode(exception);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, statusCode);
-    }
-
-    [Fact]
-    public void GetStatusCode_WithInvalidOperationException_Returns422()
-    {
-        // Arrange
-        var exception = new InvalidOperationException("Invalid operation");
-
-        // Act
-        var statusCode = GetStatusCode(exception);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, statusCode);
-    }
-
-    [Fact]
-    public void GetStatusCode_WithGenericException_Returns500()
-    {
-        // Arrange
-        var exception = new Exception("Generic error");
-
-        // Act
-        var statusCode = GetStatusCode(exception);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, statusCode);
+        Assert.Equal(expectedStatusCode, statusCode);
     }
 
     [Fact]
@@ -598,7 +567,7 @@ public class ServiceStartCommandTests
     public async Task ExecuteAsync_OmittedTransport_UsesDefaultAndDoesNotThrow()
     {
         // Arrange
-        var parseResult = CreateParseResultWithoutTransport();
+        var parseResult = _command.GetCommand().Parse(["--mode", "all", "--read-only"]);
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         var context = new CommandContext(serviceProvider);
 
@@ -677,7 +646,7 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
+            Transport = TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,
@@ -688,11 +657,8 @@ public class ServiceStartCommandTests
         var mockTelemetry = Substitute.For<ITelemetryService>();
         mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
 
-
         // Act
         ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
-
-
 
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
@@ -719,27 +685,81 @@ public class ServiceStartCommandTests
         Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
     }
 
-    private static ParseResult CreateParseResult(string? serviceValue)
+    [Fact]
+    public void CreateStdioHost_UsesApplicationBaseAsContentRoot()
     {
-        var root = new RootCommand
+        // Arrange
+        var options = new ServiceStartOptions
         {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport
+            Transport = TransportTypes.StdIo,
+            Mode = "namespace"
         };
-        var args = new List<string>();
+        var originalCurrentDirectory = Environment.CurrentDirectory;
+        var temporaryDirectory = Path.Combine(Path.GetTempPath(), $"mcp-content-root-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectory);
+
+        lock (CurrentDirectoryLock)
+        {
+            try
+            {
+                Environment.CurrentDirectory = temporaryDirectory;
+
+                // Act
+                var method = typeof(ServiceStartCommand).GetMethod(
+                    "CreateStdioHost",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                using var host = (IHost)method!.Invoke(_command, [options])!;
+                var hostEnvironment = host.Services.GetRequiredService<IHostEnvironment>();
+
+                // Assert
+                Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(hostEnvironment.ContentRootPath));
+            }
+            finally
+            {
+                Environment.CurrentDirectory = originalCurrentDirectory;
+                Directory.Delete(temporaryDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void HttpContentRootOptions_UseApplicationBaseAsContentRoot()
+    {
+        // Act
+        var field = typeof(ServiceStartCommand).GetField(
+            "HttpWebApplicationOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var options = Assert.IsType<WebApplicationOptions>(field!.GetValue(null));
+
+        // Assert
+        Assert.Equal(Path.GetFullPath(AppContext.BaseDirectory), Path.GetFullPath(options.ContentRootPath!));
+    }
+
+    private ParseResult CreateParseResult(string? serviceValue)
+    {
+        // Add required transport default for test
+        var args = new List<string>() { "--transport", "stdio" };
         if (!string.IsNullOrEmpty(serviceValue))
         {
             args.Add("--namespace");
             args.Add(serviceValue);
         }
-        // Add required transport default for test
-        args.Add("--transport");
-        args.Add("stdio");
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private ParseResult CreateParseResultWithDangerouslyDisableElicitation(bool dangerouslyDisableElicitation)
+    /// <summary>
+    /// Creates a ParseResult for a bool option with the following combinations:
+    /// value = true, implicitBool = true  => --optionName true
+    /// value = true, implicitBool = false => --optionName
+    /// value = false, implicitBool = true  => --optionName false
+    /// value = false, implicitBool = false => (no option) [default value will be used]
+    /// </summary>
+    /// <param name="optionName">The bool option name.</param>
+    /// <param name="value">The bool value.</param>
+    /// <param name="implicitBool">Whether to use implicit handling.</param>
+    /// <returns>The parse result.</returns>
+    private ParseResult CreateBoolOptionParseResult(string optionName, bool value, bool implicitBool)
     {
         var args = new List<string>
         {
@@ -747,9 +767,18 @@ public class ServiceStartCommandTests
             "stdio"
         };
 
-        if (dangerouslyDisableElicitation)
+        if (value)
         {
-            args.Add("--dangerously-disable-elicitation");
+            args.Add(optionName);
+            if (implicitBool)
+            {
+                args.Add("true");
+            }
+        }
+        else if (implicitBool)
+        {
+            args.Add(optionName);
+            args.Add("false");
         }
 
         return _command.GetCommand().Parse([.. args]);
@@ -761,18 +790,6 @@ public class ServiceStartCommandTests
         {
             "--transport",
             transport,
-            "--mode",
-            "all",
-            "--read-only"
-        };
-
-        return _command.GetCommand().Parse([.. args]);
-    }
-
-    private ParseResult CreateParseResultWithoutTransport()
-    {
-        var args = new List<string>
-        {
             "--mode",
             "all",
             "--read-only"
@@ -808,7 +825,8 @@ public class ServiceStartCommandTests
             "--mode", "all",
             "--read-only",
             "--debug",
-            "--dangerously-disable-elicitation"
+            "--dangerously-disable-elicitation",
+            "--disable-caching"
         };
 
         return _command.GetCommand().Parse([.. args]);
@@ -831,11 +849,6 @@ public class ServiceStartCommandTests
         }
 
         return _command.GetCommand().Parse([.. args]);
-    }
-
-    private ParseResult CreateParseResultWithMinimalOptions()
-    {
-        return _command.GetCommand().Parse([]);
     }
 
     private ParseResult CreateParseResultWithSupportLogging(string? folderPath)

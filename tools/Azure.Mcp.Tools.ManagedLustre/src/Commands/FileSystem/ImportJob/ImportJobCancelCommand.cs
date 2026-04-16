@@ -1,24 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
-public sealed class ImportJobCancelCommand(ILogger<ImportJobCancelCommand> logger)
+public sealed class ImportJobCancelCommand(IManagedLustreService service, ILogger<ImportJobCancelCommand> logger)
     : BaseManagedLustreCommand<ImportJobCancelOptions>(logger)
 {
     private const string CommandTitle = "Cancel Azure Managed Lustre Import Job";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<ImportJobCancelCommand> _logger = logger;
 
     public override string Id => "d3h5e7g9-1f4a-6d8e-0g2c-4f6a8d0f2e4g";
@@ -73,9 +72,8 @@ public sealed class ImportJobCancelCommand(ILogger<ImportJobCancelCommand> logge
 
         try
         {
-            var svc = context.GetService<IManagedLustreService>();
 
-            var cancelledJob = await svc.CancelImportJobAsync(
+            var cancelledJob = await _service.CancelImportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
@@ -88,8 +86,8 @@ public sealed class ImportJobCancelCommand(ILogger<ImportJobCancelCommand> logge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error cancelling import job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
-                options.JobName, options.FileSystemName, options);
+            _logger.LogError(ex, "Error cancelling import job {JobName} for AMLFS filesystem {FileSystem}.",
+                options.JobName, options.FileSystemName);
             HandleException(context, ex);
         }
 

@@ -4,8 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
@@ -13,7 +11,10 @@ using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,7 +23,6 @@ namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
 public class RegistryListCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IAcrService _service;
     private readonly ILogger<RegistryListCommand> _logger;
     private readonly RegistryListCommand _command;
@@ -34,10 +34,8 @@ public class RegistryListCommandTests
         _service = Substitute.For<IAcrService>();
         _logger = Substitute.For<ILogger<RegistryListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _service);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 
@@ -57,7 +55,7 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Ensure environment variable fallback does not interfere with validation tests
-        EnvironmentHelpers.SetAzureSubscriptionId(null);
+        TestEnvironment.ClearAzureSubscriptionId();
         // Arrange
         if (shouldSucceed)
         {

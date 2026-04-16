@@ -12,4 +12,5 @@ namespace Microsoft.ModelContextProtocol.HttpServer.Distributed.Abstractions;
 /// </summary>
 [OptionsValidator]
 internal sealed partial class SessionAffinityOptionsValidator
-    : IValidateOptions<SessionAffinityOptions> { }
+    : IValidateOptions<SessionAffinityOptions>
+{ }

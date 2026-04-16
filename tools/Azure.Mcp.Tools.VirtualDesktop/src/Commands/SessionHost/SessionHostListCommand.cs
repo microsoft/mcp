@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
@@ -22,7 +22,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
     public override string Description =>
         $"""
 		List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available
-		in the specified {OptionDefinitions.Common.Subscription} and hostpool. Results include SessionHost details and are
+		in the specified {OptionDefinitions.Common.Subscription.Name} and hostpool. Results include SessionHost details and are
 		returned as a JSON array.
 		""";
 

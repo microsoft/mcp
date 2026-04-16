@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.AzureMigrate.Constants;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
@@ -24,7 +23,7 @@ public sealed class AzureHttpHelper(IHttpClientFactory httpClientFactory, ITenan
         var client = httpClientFactory.CreateClient();
         var credential = await tenantService.GetTokenCredentialAsync(null, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([PlatformLandingZoneConstants.ManagementScope]), cancellationToken);
+            new TokenRequestContext([tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         return client;
     }

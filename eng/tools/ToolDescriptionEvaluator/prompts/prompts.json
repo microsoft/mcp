@@ -15,9 +15,6 @@
   "foundry_agents_evaluate": [
     "Evaluate the full query and response I got from my agent for task_adherence"
   ],
-  "foundry_agents_get-sdk-sample": [
-    "Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK"
-  ],
   "foundry_agents_list": [
     "List all agents in my Microsoft Foundry resource",
     "Show me the available agents in my Microsoft Foundry resource"
@@ -25,11 +22,11 @@
   "foundry_agents_query-and-evaluate": [
     "Query and evaluate an agent in my Microsoft Foundry resource for task_adherence"
   ],
-  "foundry_knowledge_index_list": [
+  "foundryextensions_knowledge_index_list": [
     "List all knowledge indexes in my Microsoft Foundry project",
     "Show me the knowledge indexes in my Microsoft Foundry project"
   ],
-  "foundry_knowledge_index_schema": [
+  "foundryextensions_knowledge_index_schema": [
     "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
     "Get the schema configuration for knowledge index <index-name>"
   ],
@@ -44,33 +41,24 @@
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
   ],
-  "foundry_openai_chat-completions-create": [
+  "foundryextensions_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],
-  "foundry_openai_create-completion": [
+  "foundryextensions_openai_create-completion": [
     "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource"
   ],
-  "foundry_openai_embeddings-create": [
+  "foundryextensions_openai_embeddings-create": [
     "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource",
     "Create vector embeddings for my text using my Microsoft Foundry resource"
   ],
-  "foundry_openai_models-list": [
+  "foundryextensions_openai_models-list": [
     "List all available OpenAI models in my Microsoft Foundry resource",
     "Show me the OpenAI model deployments in my Microsoft Foundry resource"
   ],
-  "foundry_resource_get": [
+  "foundryextensions_resource_get": [
     "List all Microsoft Foundry resources in my subscription",
     "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
     "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "foundry_threads_create": [
-    "Create a Microsoft Foundry thread to hold the conversation"
-  ],
-  "foundry_threads_get-messages": [
-    "Show me the messages in the Microsoft Foundry thread with id <thread_id>"
-  ],
-  "foundry_threads_list": [
-    "List my Microsoft Foundry threads"
   ],
   "search_knowledge_base_get": [
     "List all knowledge bases in the Azure AI Search service <service-name>",
@@ -233,21 +221,17 @@
     "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
     "Get transaction <transaction_id> from ledger <ledger_name>"
   ],
-  "cosmos_account_list": [
+  "cosmos_list": [
     "List all cosmosdb accounts in my subscription",
     "Show me my cosmosdb accounts",
-    "Show me the cosmosdb accounts in my subscription"
-  ],
-  "cosmos_database_container_item_query": [
-    "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
-  ],
-  "cosmos_database_container_list": [
+    "Show me the cosmosdb accounts in my subscription",
+    "List all the databases in the cosmosdb account <account_name>",
+    "Show me the databases in the cosmosdb account <account_name>",
     "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the containers in the database <database_name> for the cosmosdb account <account_name>"
   ],
-  "cosmos_database_list": [
-    "List all the databases in the cosmosdb account <account_name>",
-    "Show me the databases in the cosmosdb account <account_name>"
+  "cosmos_database_container_item_query": [
+    "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
   ],
   "kusto_cluster_get": [
     "Show me the details of the Data Explorer cluster <cluster_name>"
@@ -274,9 +258,14 @@
   "kusto_table_schema": [
     "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
-  "mysql_database_list": [
+  "mysql_list": [
+    "List all MySQL servers in my subscription",
+    "Show me my MySQL servers",
+    "Show me the MySQL servers in my subscription",
     "List all MySQL databases in server <server>",
-    "Show me the MySQL databases in server <server>"
+    "Show me the MySQL databases in server <server>",
+    "List all tables in the MySQL database <database> in server <server>",
+    "Show me the tables in the MySQL database <database> in server <server>"
   ],
   "mysql_database_query": [
     "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
@@ -284,27 +273,23 @@
   "mysql_server_config_get": [
     "Show me the configuration of MySQL server <server>"
   ],
-  "mysql_server_list": [
-    "List all MySQL servers in my subscription",
-    "Show me my MySQL servers",
-    "Show me the MySQL servers in my subscription"
-  ],
   "mysql_server_param_get": [
     "Show me the value of connection timeout in seconds in my MySQL server <server>"
   ],
   "mysql_server_param_set": [
     "Set connection timeout to 20 seconds for my MySQL server <server>"
   ],
-  "mysql_table_list": [
-    "List all tables in the MySQL database <database> in server <server>",
-    "Show me the tables in the MySQL database <database> in server <server>"
-  ],
   "mysql_table_schema_get": [
     "Show me the schema of table <table> in the MySQL database <database> in server <server>"
   ],
-  "postgres_database_list": [
+  "postgres_list": [
+    "List all PostgreSQL servers in my subscription",
+    "Show me my PostgreSQL servers",
+    "Show me the PostgreSQL servers in my subscription",
     "List all PostgreSQL databases in server <server>",
-    "Show me the PostgreSQL databases in server <server>"
+    "Show me the PostgreSQL databases in server <server>",
+    "List all tables in the PostgreSQL database <database> in server <server>",
+    "Show me the tables in the PostgreSQL database <database> in server <server>"
   ],
   "postgres_database_query": [
     "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
@@ -312,20 +297,11 @@
   "postgres_server_config_get": [
     "Show me the configuration of PostgreSQL server <server>"
   ],
-  "postgres_server_list": [
-    "List all PostgreSQL servers in my subscription",
-    "Show me my PostgreSQL servers",
-    "Show me the PostgreSQL servers in my subscription"
-  ],
   "postgres_server_param_get": [
     "Show me if the parameter my PostgreSQL server <server> has replication enabled"
   ],
   "postgres_server_param_set": [
     "Enable replication for my PostgreSQL server <server>"
-  ],
-  "postgres_table_list": [
-    "List all tables in the PostgreSQL database <database> in server <server>",
-    "Show me the tables in the PostgreSQL database <database> in server <server>"
   ],
   "postgres_table_schema_get": [
     "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
@@ -429,7 +405,13 @@
     "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
     "Get the certificate <certificate_name> from vault <key_vault_account_name>",
     "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
-    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>"
+    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>",
+    "List all certificates in the key vault <key_vault_account_name>",
+    "Show me the certificates in the key vault <key_vault_account_name>",
+    "What certificates are in the key vault <key_vault_account_name>?",
+    "List certificate names in vault <key_vault_account_name>",
+    "Enumerate certificates in key vault <key_vault_account_name>",
+    "Show certificate names in the key vault <key_vault_account_name>"
   ],
   "keyvault_certificate_import": [
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>",
@@ -438,14 +420,7 @@
     "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
     "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>"
   ],
-  "keyvault_certificate_list": [
-    "List all certificates in the key vault <key_vault_account_name>",
-    "Show me the certificates in the key vault <key_vault_account_name>",
-    "What certificates are in the key vault <key_vault_account_name>?",
-    "List certificate names in vault <key_vault_account_name>",
-    "Enumerate certificates in key vault <key_vault_account_name>",
-    "Show certificate names in the key vault <key_vault_account_name>"
-  ],
+
   "keyvault_key_create": [
     "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
     "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
@@ -458,9 +433,7 @@
     "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
     "Get the key <key_name> from vault <key_vault_account_name>",
     "Display the key details for <key_name> in vault <key_vault_account_name>",
-    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>"
-  ],
-  "keyvault_key_list": [
+    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>",
     "List all keys in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
     "What keys are in the key vault <key_vault_account_name>?",
@@ -480,9 +453,7 @@
     "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
     "Get the secret <secret_name> from vault <key_vault_account_name>",
     "Display the secret details for <secret_name> in vault <key_vault_account_name>",
-    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>"
-  ],
-  "keyvault_secret_list": [
+    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>",
     "List all secrets in the key vault <key_vault_account_name>",
     "Show me the secrets in the key vault <key_vault_account_name>",
     "What secrets are in the key vault <key_vault_account_name>?",
@@ -519,17 +490,13 @@
   "loadtesting_testresource_list": [
     "List all load testing resources in the resource group <resource-group> in my subscription"
   ],
-  "loadtesting_testrun_create": [
-    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>"
-  ],
   "loadtesting_testrun_get": [
-    "Get the load test run with id <testrun-id> in the load test resource <test-resource> in resource group <resource-group>"
-  ],
-  "loadtesting_testrun_list": [
+    "Get the load test run with id <testrun-id> in the load test resource <test-resource> in resource group <resource-group>",
     "Get all the load test runs for the test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>"
   ],
-  "loadtesting_testrun_update": [
-    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
+  "loadtesting_testrun_createorupdate": [
+    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
+    "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>"
   ],
   "grafana_list": [
     "List all Azure Managed Grafana in one subscription"
@@ -608,18 +575,18 @@
     "List all available table types in the Log Analytics workspace <workspace_name>",
     "Show me the available table types in the Log Analytics workspace <workspace_name>"
   ],
-  "monitor_webtests_create": [
-    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
-  ],
   "monitor_webtests_get": [
-    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>"
-  ],
-  "monitor_webtests_list": [
+    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
     "List all Web Test resources in my subscription",
-    "List all Web Test resources in my subscription in <resource_group>"
+    "List all Web Test resources in my subscription in <resource_group>",
+    "Show me all web tests in my subscription",
+    "Show me web tests in resource group <resource_group>"
   ],
-  "monitor_webtests_update": [
-    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  "monitor_webtests_createorupdate": [
+    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
+    "Create or update web test <webtest_resource_name> in resource group <resource_group>",
+    "Set up a web test named <webtest_resource_name> in <resource_group> for application insights <appinsights_component>"
   ],
   "monitor_workspace_list": [
     "List all Log Analytics workspaces in my subscription",
@@ -669,9 +636,7 @@
   "resourcehealth_availability-status_get": [
     "Get the availability status for resource <resource_name>",
     "Show me the health status of the storage account <storage_account_name>",
-    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?"
-  ],
-  "resourcehealth_availability-status_list": [
+    "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
     "List availability status for all resources in my subscription",
     "Show me the health status of all my Azure resources",
     "What resources in resource group <resource_group_name> have health issues?"
@@ -710,17 +675,15 @@
     "Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name>",
     "Delete the database called <database_name> on server <server_name>"
   ],
-  "sql_db_list": [
+  "sql_db_get": [
+    "List all Azure SQL databases in server <server_name>",
     "List all databases in the Azure SQL server <server_name>",
-    "Show me all the databases configuration details in the Azure SQL server <server_name>"
+    "Show me the Azure SQL database <database_name> details in server <server_name>",
+    "Show me the Azure SQL database <database_name> in server <server_name>"
   ],
   "sql_db_rename": [
     "Rename the SQL database <database_name> on server <server_name> to <new_database_name>",
     "Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name>"
-  ],
-  "sql_db_show": [
-    "Get the configuration details for the SQL database <database_name> on server <server_name>",
-    "Show me the details of SQL database <database_name> in server <server_name>"
   ],
   "sql_db_update": [
     "Update the performance tier of SQL database <database_name> on server <server_name>",
@@ -761,14 +724,12 @@
     "Show me the firewall rules for SQL server <server_name>",
     "What firewall rules are configured for my SQL server <server_name>?"
   ],
-  "sql_server_list": [
+  "sql_server_get": [
     "List all Azure SQL servers in resource group <resource_group_name>",
-    "Show me every SQL server available in resource group <resource_group_name>"
-  ],
-  "sql_server_show": [
-    "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
-    "Get the configuration details for SQL server <server_name>",
-    "Display the properties of SQL server <server_name>"
+    "Show me every Azure SQL server in resource group <resource_group_name>",
+    "Show me the Azure SQL server <server_name> details",
+    "Get Azure SQL server <server_name> info",
+    "Display the properties of Azure SQL server <server_name>"
   ],
   "storage_account_create": [
     "Create a new storage account called testaccount123 in East US region",
@@ -799,7 +760,9 @@
     "Show me the blobs in the blob container <container> in the storage account <account>"
   ],
   "storage_blob_upload": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
+    "Upload a local file to my Azure blob storage container",
+    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
   ],
   "subscription_list": [
     "List all subscriptions for my account",
@@ -807,7 +770,7 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "azmcp_tables_list": [
+  "storage_table_list": [
     "List all tables in the storage account <storage-account>",
     "Show me the tables in the storage account <storage-account>"
   ],
@@ -859,9 +822,6 @@
   "foundry_agents_evaluate": [
     "Evaluate the full query and response I got from my agent for task_adherence"
   ],
-  "foundry_agents_get-sdk-sample": [
-    "Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK"
-  ],
   "foundry_agents_list": [
     "List all agents in my Microsoft Foundry resource",
     "Show me the available agents in my Microsoft Foundry resource"
@@ -869,11 +829,11 @@
   "foundry_agents_query-and-evaluate": [
     "Query and evaluate an agent in my Microsoft Foundry resource for task_adherence"
   ],
-  "foundry_knowledge_index_list": [
+  "foundryextensions_knowledge_index_list": [
     "List all knowledge indexes in my Microsoft Foundry project",
     "Show me the knowledge indexes in my Microsoft Foundry project"
   ],
-  "foundry_knowledge_index_schema": [
+  "foundryextensions_knowledge_index_schema": [
     "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
     "Get the schema configuration for knowledge index <index-name>"
   ],
@@ -888,33 +848,24 @@
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
   ],  
-  "foundry_openai_chat-completions-create": [
+  "foundryextensions_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],
-  "foundry_openai_create-completion": [
+  "foundryextensions_openai_create-completion": [
     "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource"
   ],
-  "foundry_openai_embeddings-create": [
+  "foundryextensions_openai_embeddings-create": [
     "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource",
     "Create vector embeddings for my text using my Microsoft Foundry resource"
   ],
-  "foundry_openai_models-list": [
+  "foundryextensions_openai_models-list": [
     "List all available OpenAI models in my Microsoft Foundry resource",
     "Show me the OpenAI model deployments in my Microsoft Foundry resource"
   ],
-  "foundry_resource_get": [
+  "foundryextensions_resource_get": [
     "List all Microsoft Foundry resources in my subscription",
     "Show me the Microsoft Foundry resources in resource group <resource_group_name>",
     "Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "foundry_threads_create": [
-    "Create a Microsoft Foundry thread to hold the conversation"
-  ],
-  "foundry_threads_get-messages": [
-    "Show me the messages in the Microsoft Foundry thread with id <thread_id>"
-  ],
-  "foundry_threads_list": [
-    "List my Microsoft Foundry threads"
   ],
   "advisor_recommendations_list": [
     "List all recommendations in my subscription",

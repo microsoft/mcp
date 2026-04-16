@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
@@ -24,8 +23,8 @@ public abstract class BaseHostPoolCommand<
         command.Validators.Add(commandResult =>
         {
             // Retrieve values once and infer presence from non-empty values
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPool, out string? hostPoolName);
-            commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption, out string? hostPoolResourceId);
+            var hostPoolName = commandResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPool.Name);
+            var hostPoolResourceId = commandResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption.Name);
 
             var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
             var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);

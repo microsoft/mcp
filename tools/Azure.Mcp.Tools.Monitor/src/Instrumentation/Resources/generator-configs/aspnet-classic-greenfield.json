@@ -1,0 +1,49 @@
+{
+  "generatorType": "aspnet-classic-greenfield",
+  "language": "dotnet",
+  "appType": "aspnetclassic",
+  "decision": {
+    "intent": "onboard",
+    "solution": "applicationinsights-web",
+    "rationale": "Classic ASP.NET greenfield application (.NET Framework). Requires Visual Studio — the NuGet Package Manager Console runs Install-Package which auto-configures ApplicationInsights.config, Web.config HTTP modules, and assembly references."
+  },
+  "actions": [
+    {
+      "id": "review-education",
+      "type": "review-education",
+      "title": "Review educational materials before implementation",
+      "resources": [
+        "learn://concepts/dotnet/aspnet-classic-appinsights.md",
+        "learn://api-reference/dotnet/ApplicationInsightsWeb.md",
+        "learn://examples/dotnet/aspnet-classic-setup.md"
+      ]
+    },
+    {
+      "id": "add-appinsights-package",
+      "type": "add-package",
+      "title": "Install Application Insights Web SDK via Package Manager Console",
+      "dependsOn": "review-education",
+      "packageManager": "nuget-vs",
+      "packageName": "Microsoft.ApplicationInsights.Web",
+      "version": "latest-stable"
+    },
+    {
+      "id": "verify-install",
+      "type": "manual-step",
+      "title": "Verify ApplicationInsights.config and Web.config were configured",
+      "dependsOn": "add-appinsights-package",
+      "instructions": "After Install-Package completes, verify:\n1. ApplicationInsights.config was created in the project root\n2. Web.config contains ApplicationInsightsWebTracking and TelemetryHttpModule in <system.webServer><modules>\n3. Project references were added for Microsoft.ApplicationInsights and Microsoft.AI.Web assemblies"
+    },
+    {
+      "id": "add-connection-string",
+      "type": "add-config",
+      "title": "Set Application Insights connection string",
+      "dependsOn": "verify-install",
+      "targetFile": "ApplicationInsights.config",
+      "configKey": "ConnectionString",
+      "configValue": "YOUR_CONNECTION_STRING_HERE",
+      "configFormat": "xml",
+      "validationKey": "APPLICATIONINSIGHTS_CONNECTION_STRING"
+    }
+  ]
+}

@@ -55,8 +55,6 @@ function Get-PurgeableGroupResources {
         AzsdkName         = $r.name
         Name              = $r.name
         Id                = $r.id
-        Location          = $r.location
-        ResourceGroup     = $ResourceGroupName
       }
     }
   }
@@ -131,19 +129,11 @@ function Get-PurgeableResources {
 
     $deletedCognitiveServices = @()
     foreach ($r in $content.value) {
-      # Extract resource group from the deletedAccounts id path
-      # Format: /subscriptions/{sub}/providers/Microsoft.CognitiveServices/locations/{loc}/resourceGroups/{rg}/deletedAccounts/{name}
-      $resourceGroup = $null
-      if ($r.id -match '/resourceGroups/([^/]+)/') {
-        $resourceGroup = $Matches[1]
-      }
       $deletedCognitiveServices += [pscustomobject] @{
         AzsdkResourceType = "Cognitive Services ($($r.kind))"
         AzsdkName         = $r.name
         Name              = $r.name
         Id                = $r.id
-        Location          = $r.properties.location
-        ResourceGroup     = $resourceGroup
       }
     }
 
@@ -221,22 +211,8 @@ filter Remove-PurgeableResources {
       { $_.StartsWith('Cognitive Services') }
       {
         Log "Attempting to purge $($r.AzsdkResourceType) '$($r.AzsdkName)'"
-        
-        # Construct the correct purge path for deleted Cognitive Services accounts
-        # The purge API requires: /subscriptions/{sub}/providers/Microsoft.CognitiveServices/locations/{loc}/resourceGroups/{rg}/deletedAccounts/{name}
-        $purgePath = if ($r.Id -match '/deletedAccounts/') {
-          # Already a deletedAccounts path from Get-PurgeableResources
-          $r.Id
-        } elseif ($r.Location -and $r.ResourceGroup) {
-          # Convert active account path to deletedAccounts purge path
-          "/subscriptions/$subscriptionId/providers/Microsoft.CognitiveServices/locations/$($r.Location)/resourceGroups/$($r.ResourceGroup)/deletedAccounts/$($r.Name)"
-        } else {
-          # Fallback to original ID (may fail but logged for debugging)
-          $r.Id
-        }
-        
         # Use `GetNewClosure()` on the `-Action` ScriptBlock to make sure variables are captured.
-        Invoke-AzRestMethod -Method DELETE -Path "$($purgePath)?api-version=2024-10-01" -ErrorAction Ignore -AsJob `
+        Invoke-AzRestMethod -Method DELETE -Path "$($r.id)?api-version=2024-10-01" -ErrorAction Ignore -AsJob `
         | Wait-PurgeableResourceJob -Resource $r -Timeout $Timeout -PassThru:$PassThru -Action {
           param ( $response )
 
@@ -329,6 +305,54 @@ function Remove-WormStorageAccounts() {
 
     foreach ($account in $accounts) {
       RemoveStorageAccount -Account $account
+    }
+  }
+}
+
+# Helper function for removing Storage Sync Services that block resource group deletion.
+# Sync groups and their endpoints must be removed before the sync service can be deleted.
+function Remove-StorageSyncServices() {
+  [CmdletBinding(SupportsShouldProcess = $True)]
+  param(
+    [string]$GroupPrefix,
+    [switch]$CI
+  )
+
+  $ErrorActionPreference = 'Stop'
+
+  if (!$groupPrefix -or ($CI -and (!$GroupPrefix.StartsWith('rg-') -and !$GroupPrefix.StartsWith('SSS3PT_rg-')))) {
+    throw "The -GroupPrefix parameter must not be empty, or must start with 'rg-' or 'SSS3PT_rg-' in CI contexts"
+  }
+
+  $groups = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName.StartsWith($GroupPrefix) } | Where-Object { $_.ProvisioningState -ne 'Deleting' }
+
+  foreach ($group in $groups) {
+    $syncServices = Get-AzResource -ResourceGroupName $group.ResourceGroupName -ResourceType 'Microsoft.StorageSync/storageSyncServices' -ErrorAction SilentlyContinue
+    if (!$syncServices) { continue }
+
+    foreach ($syncService in $syncServices) {
+      Write-Host "Removing Storage Sync Service '$($syncService.Name)' from resource group '$($group.ResourceGroupName)'"
+
+      $syncGroups = Get-AzStorageSyncGroup -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -ErrorAction SilentlyContinue
+      foreach ($syncGroup in $syncGroups) {
+        Write-Host "  Removing sync group '$($syncGroup.SyncGroupName)'"
+
+        $cloudEndpoints = Get-AzStorageSyncCloudEndpoint -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -SyncGroupName $syncGroup.SyncGroupName -ErrorAction SilentlyContinue
+        foreach ($ce in $cloudEndpoints) {
+          Write-Host "    Removing cloud endpoint '$($ce.CloudEndpointName)'"
+          Remove-AzStorageSyncCloudEndpoint -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -SyncGroupName $syncGroup.SyncGroupName -Name $ce.CloudEndpointName -Force
+        }
+
+        $serverEndpoints = Get-AzStorageSyncServerEndpoint -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -SyncGroupName $syncGroup.SyncGroupName -ErrorAction SilentlyContinue
+        foreach ($se in $serverEndpoints) {
+          Write-Host "    Removing server endpoint '$($se.ServerEndpointName)'"
+          Remove-AzStorageSyncServerEndpoint -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -SyncGroupName $syncGroup.SyncGroupName -Name $se.ServerEndpointName -Force
+        }
+
+        Remove-AzStorageSyncGroup -ResourceGroupName $group.ResourceGroupName -StorageSyncServiceName $syncService.Name -Name $syncGroup.SyncGroupName -Force
+      }
+
+      Remove-AzStorageSyncService -ResourceGroupName $group.ResourceGroupName -Name $syncService.Name -Force
     }
   }
 }

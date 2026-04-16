@@ -1,0 +1,20 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Microsoft.Mcp.Core.Areas.Server.Options;
+
+/// <summary>
+/// Defines the supported transport mechanisms for the MCP server.
+/// </summary>
+public static class TransportTypes
+{
+    /// <summary>
+    /// Standard Input/Output transport mechanism.
+    /// </summary>
+    public const string StdIo = "stdio";
+
+    /// <summary>
+    /// MCP's bespoke transport called Streamable HTTP.
+    /// </summary>
+    public const string Http = "http";
+}

@@ -5,12 +5,12 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
 using Xunit;
 
@@ -45,7 +45,7 @@ public sealed class AzqrCommandTests
         var fixedDateTime = new DateTime(2024, 1, 15, 10, 30, 45, DateTimeKind.Utc);
         _dateTimeProvider.UtcNow.Returns(fixedDateTime);
 
-        var command = new AzqrCommand(_logger);
+        var command = new AzqrCommand(_logger, _subscriptionService, _dateTimeProvider, _processService);
 
         var mockSubscriptionId = "12345678-1234-1234-1234-123456789012";
         var args = command.GetCommand().Parse($"--subscription {mockSubscriptionId}");
@@ -116,7 +116,7 @@ public sealed class AzqrCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument()
     {
         // Arrange
-        var command = new AzqrCommand(_logger);
+        var command = new AzqrCommand(_logger, _subscriptionService, _dateTimeProvider, _processService);
 
         var args = command.GetCommand().Parse(""); // No subscription specified
         var context = new CommandContext(_serviceProvider);

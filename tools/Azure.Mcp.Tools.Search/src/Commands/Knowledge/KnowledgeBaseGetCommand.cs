@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -84,5 +82,5 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return context.Response;
     }
 
-    internal sealed record KnowledgeBaseGetCommandResult([property: JsonPropertyName("knowledgeBases")] List<Models.KnowledgeBaseInfo> KnowledgeBases);
+    internal sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

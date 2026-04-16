@@ -3,21 +3,22 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
-public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : SubscriptionCommand<ProductListOptions>
+public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductListOptions>
 {
     private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
+    private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
     public override string Id => "0485e8f9-61bf-4baf-b914-7fa5530a6f78";
 
@@ -81,11 +82,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
             }
 
 
-            // Get the marketplace service from DI
-            var marketplaceService = context.GetService<IMarketplaceService>();
-
             // Call service operation with required parameters
-            var results = await marketplaceService.ListProducts(
+            var results = await _marketplaceService.ListProducts(
                 options.Subscription!,
                 options.Language,
                 options.Search,
@@ -105,8 +103,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         {
             // Log error with all relevant context
             _logger.LogError(ex,
-                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}, Options: {@Options}",
-                options.Subscription, options.Search, options);
+                "Error listing marketplace products. Subscription: {Subscription}, Search: {Search}.",
+                options.Subscription, options.Search);
             HandleException(context, ex);
         }
 

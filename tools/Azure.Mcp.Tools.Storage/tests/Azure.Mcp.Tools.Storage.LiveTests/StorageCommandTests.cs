@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
 {
-    public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+    public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
     {
         public override List<BodyKeySanitizer> BodyKeySanitizers =>
         [
@@ -68,7 +69,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind.GetString());
 
             var skuName = account.GetProperty("skuName");
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName.GetString());
 
             var hnsEnabled = account.GetProperty("hnsEnabled");
             Assert.True(hnsEnabled.GetBoolean());
@@ -209,6 +210,25 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
 
         [Fact]
+        public async Task Should_list_blobs_in_container_with_prefix()
+        {
+            var result = await CallToolAsync(
+                "storage_blob_get",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "REA" }
+                });
+
+            var actual = result.AssertProperty("blobs");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
+
+        [Fact]
         public async Task Should_get_blob_details()
         {
             var result = await CallToolAsync(
@@ -307,6 +327,25 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
 
         [Fact]
+        public async Task Should_list_containers_with_prefix()
+        {
+            var result = await CallToolAsync(
+                "storage_blob_container_get",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "prefix", "ba" },
+                { "retry-max-retries", 0 }
+                });
+
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
+
+        [Fact]
         public async Task Should_get_container_details()
         {
             var result = await CallToolAsync(
@@ -393,7 +432,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // Check account properties
             var name = account.GetProperty("name").GetString();
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : uniqueAccountName, name);
 
             var location = account.GetProperty("location").GetString();
             Assert.Equal("eastus", location);
@@ -402,7 +441,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal("StorageV2", kind);
 
             var skuName = account.GetProperty("skuName").GetString();
-            Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
+            Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
         }
 
         [Theory]

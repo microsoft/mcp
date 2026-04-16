@@ -15,16 +15,24 @@
     <!-- Identify Server Projects -->
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
     <IsServerProject Condition="'$(IsServerProject)' == '' and $(_RelativeProjectDir.StartsWith('servers')) and $(_RelativeProjectDir.EndsWith('src'))">true</IsServerProject>
+    <!--
+      Security warnings are now produced for nuget packages in dotnet restore. We want to keep all but high (NU1903) and critical (NU1904) as warnings and not turn them to errors.
+      See: https://learn.microsoft.com/nuget/reference/errors-and-warnings/nu1901-nu1904
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
 
-    <!-- HTTP transport is unsupported for native and trimmed variants. ENABLE_HTTP is not set for these build variants.
-       See https://github.com/AzureAD/microsoft-identity-web/issues/3576 -->
-
-  <PropertyGroup Condition="'$(PublishTrimmed)' != 'true' and '$(BuildNative)' != 'true'">
+    <!-- We're using a prerelease version of IdWeb with trimmer support, which enables HTTP support for
+      trimmed azmcp builds across all distributions. The ENABLE_HTTP flag provides a rollback mechanism:
+      if we need to revert to an IdWeb version without trimmer support, we can disable HTTP accordingly.
+      Eventually, ENABLE_HTTP directives will be removed from the code as IdWeb's trimmer support moves
+      closer to GA.
+      See https://github.com/microsoft/mcp/issues/1764 -->
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);ENABLE_HTTP</DefineConstants>
   </PropertyGroup>
 

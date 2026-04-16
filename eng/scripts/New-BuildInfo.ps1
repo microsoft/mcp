@@ -32,14 +32,20 @@ $excludedPlatforms = @(
 # Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
-    # Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
-    # are untrimmed versions of certain identity-compatible platforms available to the docker packaging step
+    # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
+    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
+    # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
+    # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
+    # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
+    # Once Microsoft.Identity.Web with AOT support reaches GA, additionalPlatforms should be removed
+    # and Docker builds should use the standard platform definitions.
+    # https://github.com/microsoft/mcp/issues/1764
     @{
         name = 'linux-musl-x64-docker'
         operatingSystem = 'linux'
         architecture = 'musl-x64'
         native = $false
-        trimmed = $false
+        trimmed = $true
         specialPurpose = 'docker'
     }
     @{
@@ -47,7 +53,7 @@ $additionalPlatforms = @(
         operatingSystem = 'linux'
         architecture = 'musl-arm64'
         native = $false
-        trimmed = $false
+        trimmed = $true
         specialPurpose = 'docker'
     }
 )
@@ -166,12 +172,12 @@ function CheckVariable($name) {
 
 $windowsPool = CheckVariable 'WINDOWSPOOL'
 $linuxPool = CheckVariable 'LINUXPOOL'
-$linuxArmPool = CheckVariable 'LINUXARMPOOL'
+$linuxArm64Pool = CheckVariable 'LINUXARM64POOL'
 $macPool = CheckVariable 'MACPOOL'
 
 $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
 $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
-$linuxArmVmImage = CheckVariable 'LINUXARMVMIMAGE'
+$linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
@@ -424,12 +430,26 @@ function Get-ServerDetails {
                             Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                         }
                         else {
-                            # No matching versions found - this is an illegal state for non-beta releases
-                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
-                            $script:exitCode = 1
-                            continue
+                            # No matching versions found on the marketplace for the Major.0.X series.
+                            # Special case: if the .csproj version is exactly 1.0.0 (stable, no prerelease label),
+                            # this is the very first GA publish — use the csproj version directly since there is
+                            # no prior marketplace version to increment from.
+                            # This exception is intentionally limited to 1.0.0; any other version with no
+                            # marketplace history (e.g. 1.0.1, 2.0.0) is an error because it implies a potential gap
+                            # in the published version history that must be investigated.
+                            if ([string]::IsNullOrEmpty($version.PrereleaseLabel) -and
+                                $version.Major -eq 1 -and $version.Minor -eq 0 -and $version.Patch -eq 0) {
+                                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
+                                $vsixIsPrerelease = $false
+                                Write-Host "No marketplace versions found for $($version.Major).0.X. Using .csproj version for first GA VSIX (1.0.0): $vsixVersion" -ForegroundColor Green
+                            }
+                            else {
+                                LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
+                                LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
+                                LogError "The 1.0.0 first-GA exception does not apply here. Ensure the extension has been published at least once before running a subsequent GA build."
+                                $script:exitCode = 1
+                                continue
+                            }
                         }
                     }
                     else {
@@ -525,6 +545,7 @@ function Get-ServerDetails {
             pypiPackageKeywords = @($props.PypiPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
+            mcpbPlatforms = @($props.McpbPlatforms -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
         }
     }
@@ -539,7 +560,7 @@ function Get-BuildMatrices {
     $matrices = [ordered]@{}
 
     foreach ($os in $operatingSystems.name) {
-        $buildMatrix = [ordered]@{}
+        $buildMatricesByArch = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
 
         $supportedPlatforms = $servers.platforms
@@ -557,40 +578,67 @@ function Get-BuildMatrices {
                 continue
             }
 
+            # Only linux-arm64 (non-special-purpose) needs actual ARM64 hardware.
+            # All other arm64 targets (windows-arm64, macos-arm64, linux-musl-arm64-docker) cross-compile on x64.
+            $needsArm64Hardware = $os -eq 'linux' -and $arch -like '*arm64*' -and !$platform.specialPurpose
+
             $pool = switch($os) {
                 'windows' { $windowsPool }
-                'linux' { $linuxPool }
+                'linux' { if ($needsArm64Hardware) { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
             $vmImage = switch($os) {
                 'windows' { $windowsVmImage }
-                'linux' { $linuxVmImage }
+                'linux' { if ($needsArm64Hardware) { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
             }
 
-            $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
+            # we do not currently have a method to get an arm64 mac or windows agent at this time, so we will have to skip $runUnitTests for those platforms
+            # if a set of unit tests exists, we should run them
+            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests })
 
+            # except for certain platforms
+            if ($platform.native -or $platform.specialPurpose -or ($arch -like '*arm64*' -and $os -ne 'linux')) {
+                $runUnitTests = $false
+            }
             $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+            $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
-            $buildMatrix[$legName] = [ordered]@{
+            $hostArchitecture = if ($needsArm64Hardware) { 'Arm64' } else { '' }
+
+            $architectureKey = if ($needsArm64Hardware) { 'arm64' } else { 'x64' }
+            if (-not $buildMatricesByArch.Contains($architectureKey)) {
+                $buildMatricesByArch[$architectureKey] = [ordered]@{}
+            }
+
+            $buildMatricesByArch[$architectureKey][$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
                 Pool = $pool
                 OSVmImage = $vmImage
+                HostArchitecture = $hostArchitecture
                 RunUnitTests = $runUnitTests
                 RunRecordedTests = $runRecordedTests
+                PublishCoverage = $publishCoverage
             }
 
             if($runUnitTests) {
                 $smokeTestMatrix[$legName] = [ordered]@{
                     Pool = $pool
                     OSVmImage = $vmImage
+                    HostArchitecture = $hostArchitecture
                     Architecture = $arch
                 }
             }
         }
 
-        $matrices["${os}BuildMatrix"] = $buildMatrix
+        foreach ($requiredArch in @('x64', 'arm64')) {
+            if (-not $buildMatricesByArch.Contains($requiredArch)) {
+                $buildMatricesByArch[$requiredArch] = [ordered]@{}
+            }
+        }
+
+        $matrices["${os}BuildMatrices"] = $buildMatricesByArch
         $matrices["${os}SmokeTestMatrix"] = $smokeTestMatrix
     }
 
@@ -617,8 +665,8 @@ function Get-ServerMatrix {
         @{
             Architecture = 'arm64'
             PlatformName = 'linux-musl-arm64-docker'
-            Pool = $linuxArmPool
-            VMImage = $linuxArmVmImage
+            Pool = $linuxArm64Pool
+            VMImage = $linuxArm64VmImage
         }
     )
 
@@ -667,10 +715,26 @@ try {
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
             if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
-                $matrices[$key] = @{}
+                if ($key -match 'BuildMatrices$') {
+                    $emptyByArch = [ordered]@{}
+                    foreach($archKey in @('x64', 'arm64')) {
+                        $emptyByArch[$archKey] = @{}
+                    }
+                    $matrices[$key] = $emptyByArch
+                } else {
+                    $matrices[$key] = @{}
+                }
             }
 
-            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
+            $value = $matrices[$key]
+            if ($key -match 'BuildMatrices$' -and $value -is [System.Collections.IDictionary]) {
+                foreach($subKey in $value.Keys) {
+                    $subJson = $value[$subKey] | ConvertTo-Json -Compress
+                    Write-Host "##vso[task.setvariable variable=${key}.${subKey};isOutput=true]$subJson"
+                }
+            }
+
+            $matrixJson = $value | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
     }

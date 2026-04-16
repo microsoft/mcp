@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.LiveTests;
 
-public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
 {
     [Fact]
     public async Task Should_append_entry_successfully()

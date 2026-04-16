@@ -1,5 +1,5 @@
 # Build the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine AS runtime
 
 # Add build argument for publish directory
 ARG PUBLISH_DIR
@@ -33,5 +33,10 @@ RUN if [ ! -f $EXECUTABLE_NAME ]; then \
 # Copy the server binary to a known location and make it executable
 COPY ${PUBLISH_DIR}/${EXECUTABLE_NAME} server-binary
 RUN chmod +x server-binary && test -x server-binary
+
+# Run as non-root user for security hardening
+RUN adduser -D -s /sbin/nologin mcp && \
+    chown -R mcp:mcp /mcp-server
+USER mcp
 
 ENTRYPOINT ["./server-binary", "server", "start"]

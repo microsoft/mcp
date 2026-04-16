@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseBlobCommand<BlobUploadOptions>
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
 {
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "aafb82ac-e35a-4800-b362-c642a3ac1e17";
 
@@ -62,9 +63,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
 
         try
         {
-            var storageService = context.GetService<IStorageService>();
-
-            var result = await storageService.UploadBlob(
+            var result = await _storageService.UploadBlob(
                 options.Account!,
                 options.Container!,
                 options.Blob!,

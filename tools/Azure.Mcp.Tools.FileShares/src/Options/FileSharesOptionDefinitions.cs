@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-
 namespace Azure.Mcp.Tools.FileShares.Options;
 
 /// <summary>
@@ -164,6 +162,41 @@ public static class FileSharesOptionDefinitions
         public static readonly Option<string> Metadata = new($"--{MetadataName}")
         {
             Description = "Custom metadata for the snapshot as a JSON object (e.g., {\"key1\":\"value1\",\"key2\":\"value2\"})",
+            Required = false
+        };
+    }
+
+    /// <summary>
+    /// Private Endpoint Connection options.
+    /// </summary>
+    public static class PrivateEndpointConnection
+    {
+        private const string FileShareNameName = "file-share-name";
+        private const string ConnectionNameName = "connection-name";
+        private const string StatusName = "status";
+        private const string DescriptionName = "description";
+
+        public static readonly Option<string> FileShareName = new($"--{FileShareNameName}")
+        {
+            Description = "The name of the file share",
+            Required = true
+        };
+
+        public static readonly Option<string> ConnectionName = new($"--{ConnectionNameName}")
+        {
+            Description = "The name of the private endpoint connection",
+            Required = true
+        };
+
+        public static readonly Option<string> Status = new($"--{StatusName}")
+        {
+            Description = "The connection status (Approved, Rejected, or Pending)",
+            Required = false
+        };
+
+        public static readonly Option<string> Description = new($"--{DescriptionName}")
+        {
+            Description = "Description for the connection state change",
             Required = false
         };
     }

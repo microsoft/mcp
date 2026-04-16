@@ -10,16 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Table.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseStorageCommand<BaseStorageOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService) : BaseStorageCommand<BaseStorageOptions>()
 {
     private const string CommandTitle = "List Tables in Azure Storage";
     private readonly ILogger<TableListCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     public override string Id => "1236ad1d-baf1-4b95-8c1d-420637ce08da";
 
     public override string Name => "list";
 
-    public override string Description => "List all tables in an Azure Storage account.";
+    public override string Description => "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account, subscription. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.";
 
     public override string Title => CommandTitle;
 
@@ -44,8 +45,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
 
         try
         {
-            var tablesService = context.GetService<IStorageService>();
-            var tables = await tablesService.ListTables(
+            var tables = await _storageService.ListTables(
                 options.Account!,
                 options.Subscription!,
                 options.Tenant,

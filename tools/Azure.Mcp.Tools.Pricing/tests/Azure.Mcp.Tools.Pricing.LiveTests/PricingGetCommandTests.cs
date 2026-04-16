@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Pricing.LiveTests;
@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Pricing.LiveTests;
 /// These tests call the real Azure Retail Prices API (https://prices.azure.com).
 /// The API is public and does not require authentication.
 /// </summary>
-public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public sealed class PricingGetCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string PricesKey = "prices";
     public override bool EnableDefaultSanitizerAdditions => false;

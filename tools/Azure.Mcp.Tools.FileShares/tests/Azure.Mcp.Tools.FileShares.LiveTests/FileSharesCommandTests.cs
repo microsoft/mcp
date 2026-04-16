@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Xunit;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 
 namespace Azure.Mcp.Tools.FileShares.LiveTests;
 
@@ -15,7 +10,7 @@ namespace Azure.Mcp.Tools.FileShares.LiveTests;
 /// Live tests for FileShares commands.
 /// These tests exercise the actual Azure FileShares resource provider with real resources.
 /// </summary>
-public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private string FileShare1Name => $"{Settings.ResourceBaseName}-fileshare-01";
     private string FileShare2Name => $"{Settings.ResourceBaseName}-fileshare-02";
@@ -29,11 +24,24 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = Sanitized,
             GroupForReplace = "1"
+        }),
+        // Sanitize private endpoint connection names in URIs (format: privateEndpointConnections/{name})
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "privateEndpointConnections\\/([^?\\/]+)",
+            Value = Sanitized,
+            GroupForReplace = "1"
         })
     }.ToList();
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
     {
+        // Sanitize private endpoint connection names BEFORE resource base name (format: {resourceBaseName}-fs-pe.{guid})
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = $"{Settings.ResourceBaseName}-fs-pe\\.[a-f0-9]{{8}}-[a-f0-9]{{4}}-[a-f0-9]{{4}}-[a-f0-9]{{4}}-[a-f0-9]{{12}}",
+            Value = Sanitized,
+        }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
             Regex = Settings.ResourceGroupName,
@@ -472,6 +480,133 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
 
             var deleteResult = result.AssertProperty("message");
             Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+        }
+    }
+
+    [Fact]
+    public async Task Should_list_private_endpoint_connections()
+    {
+        var result = await CallToolAsync(
+            "fileshares_fileshare_peconnection_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "file-share-name", FileShare1Name }
+            });
+
+        var connections = result.AssertProperty("connections");
+        Assert.Equal(JsonValueKind.Array, connections.ValueKind);
+
+        // Should have at least one connection from test infrastructure
+        var connectionArray = connections.EnumerateArray().ToList();
+        Assert.True(connectionArray.Count > 0, "At least one private endpoint connection should exist from test infrastructure");
+    }
+
+    [Fact]
+    public async Task Should_get_specific_private_endpoint_connection()
+    {
+        // First list to get the connection name
+        string? connectionName = null;
+        {
+            var listResult = await CallToolAsync(
+                "fileshares_fileshare_peconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name }
+                });
+
+            var connections = listResult.AssertProperty("connections");
+            var connectionArray = connections.EnumerateArray().ToList();
+
+            if (connectionArray.Count > 0)
+            {
+                var firstConnection = connectionArray[0];
+                if (firstConnection.TryGetProperty("name", out var nameElement))
+                {
+                    connectionName = nameElement.GetString();
+                }
+            }
+        }
+
+        Assert.NotNull(connectionName);
+
+        // Get specific connection
+        {
+            var result = await CallToolAsync(
+                "fileshares_fileshare_peconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name },
+                    { "connection-name", connectionName }
+                });
+
+            var connections = result.AssertProperty("connections");
+            Assert.Equal(JsonValueKind.Array, connections.ValueKind);
+
+            var connectionArray = connections.EnumerateArray().ToList();
+            Assert.Single(connectionArray);
+
+            var connection = connectionArray[0];
+            var name = connection.GetProperty("name");
+            Assert.Equal(connectionName, name.GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Should_update_private_endpoint_connection_status()
+    {
+        // First list to get the connection name
+        string? connectionName = null;
+        {
+            var listResult = await CallToolAsync(
+                "fileshares_fileshare_peconnection_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name }
+                });
+
+            var connections = listResult.AssertProperty("connections");
+            var connectionArray = connections.EnumerateArray().ToList();
+
+            if (connectionArray.Count > 0)
+            {
+                var firstConnection = connectionArray[0];
+                if (firstConnection.TryGetProperty("name", out var nameElement))
+                {
+                    connectionName = nameElement.GetString();
+                }
+            }
+        }
+
+        Assert.NotNull(connectionName);
+
+        // Update connection status to Approved with description
+        {
+            var result = await CallToolAsync(
+                "fileshares_fileshare_peconnection_update",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-share-name", FileShare1Name },
+                    { "connection-name", connectionName },
+                    { "status", "Approved" },
+                    { "description", "Connection approved by live test" }
+                });
+
+            var connection = result.AssertProperty("connection");
+            Assert.NotEqual(JsonValueKind.Null, connection.ValueKind);
+
+            // Verify status was updated
+            var connectionState = connection.GetProperty("connectionState");
+            Assert.Equal("Approved", connectionState.GetString());
         }
     }
 

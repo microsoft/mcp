@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? endpointRecorded;
@@ -21,7 +22,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     public override async ValueTask InitializeAsync()
     {
         await LoadSettingsAsync();
-        if (TestMode == Tests.Helpers.TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             endpointRecorded = "https://sanitized.communication.azure.com";
             fromSms = "12345678900";
@@ -31,9 +32,9 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         {
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out endpointRecorded);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var tempFromSms);
-            fromSms = tempFromSms!.Substring(1); // Remove '+' for regex matching
+            fromSms = tempFromSms?.Substring(1); // Remove '+' for regex matching
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var tempToSms);
-            toSms = tempToSms!.Substring(1); // Remove '+' for regex matching
+            toSms = tempToSms?.Substring(1); // Remove '+' for regex matching
         }
 
         await base.InitializeAsync();
@@ -93,7 +94,7 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     public async Task Should_SendSms_WithValidParameters()
     {
 
-        if (TestMode != Tests.Helpers.TestMode.Playback)
+        if (TestMode != TestMode.Playback)
         {
             Assert.SkipWhen(string.IsNullOrEmpty(endpointRecorded), "Communication Services endpoint not configured for live testing");
             Assert.SkipWhen(string.IsNullOrEmpty(fromSms), "From phone number not configured for live testing");

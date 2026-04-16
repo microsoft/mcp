@@ -1,5 +1,17 @@
 {
     "devDependencies": {
         "@vscode/vsce": "~3"
+    },
+    "_overrideComments": {
+        "yauzl": "GHSA-gmq8-994r-jv83: off-by-one error in yauzl < 3.2.1 (via @vscode/vsce)",
+        "undici": "CVE-2026-1527, CVE-2026-1528, and CVE-2026-2229 in undici < 7.24.0 (via @vscode/vsce)",
+        "@azure/msal-browser": "MVS-2026-vmmw-f85q: auth code theft and COOP vulnerability in @azure/msal-browser < 5.2.0 (via @vscode/vsce > @azure/identity)"
+    },
+    "overrides": {
+        "@vscode/vsce": {
+            "yauzl": "^3.2.1",
+            "undici": "^7.24.4"
+        },
+        "@azure/msal-browser": "^5.2.0"
     }
 }

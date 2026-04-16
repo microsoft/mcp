@@ -3,15 +3,23 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using ModelContextProtocol.Client;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class RegistryServerProviderTests
 {
+    private static RegistryServerProvider CreateServerProvider(string id, RegistryServerInfo serverInfo)
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>())
+            .Returns(Substitute.For<HttpClient>());
+        return new RegistryServerProvider(id, serverInfo, httpClientFactory);
+    }
     [Fact]
     public void Constructor_InitializesCorrectly()
     {
@@ -23,7 +31,7 @@ public class RegistryServerProviderTests
         };
 
         // Act
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Assert
         Assert.NotNull(provider);
@@ -39,7 +47,7 @@ public class RegistryServerProviderTests
         {
             Description = "Test Description"
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -61,7 +69,7 @@ public class RegistryServerProviderTests
         {
             Description = null
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -85,7 +93,7 @@ public class RegistryServerProviderTests
             Title = testTitle,
             Description = "Test Description"
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act
         var metadata = provider.CreateMetadata();
@@ -109,7 +117,7 @@ public class RegistryServerProviderTests
     //         Description = "Test SSE Provider",
     //         Url = $"{server.Endpoint}/mcp"
     //     };
-    //     var provider = new RegistryServerProvider(testId, serverInfo);
+    //     var provider = CreateServerProvider(testId, serverInfo);
 
     //     // Act & Assert
     //     var exception = await Assert.ThrowsAsync<HttpRequestException>(
@@ -130,7 +138,7 @@ public class RegistryServerProviderTests
             Command = "echo",
             Args = ["hello world"]
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
@@ -156,7 +164,7 @@ public class RegistryServerProviderTests
                     { "TEST_VAR", "test value" }
                 }
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
@@ -176,7 +184,7 @@ public class RegistryServerProviderTests
             Description = "Invalid Provider - No Transport"
             // No Url or Type specified
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(
@@ -197,7 +205,7 @@ public class RegistryServerProviderTests
             Type = "stdio"
             // No Command specified
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -221,7 +229,7 @@ public class RegistryServerProviderTests
             Args = ["--serve"],
             InstallInstructions = installInstructions
         };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+        var provider = CreateServerProvider(testId, serverInfo);
 
         // Act & Assert - Should throw InvalidOperationException with install instructions
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -232,6 +240,172 @@ public class RegistryServerProviderTests
         Assert.Contains("This tool may require dependencies that are not installed.", exception.Message);
         Assert.Contains("Installation Instructions:", exception.Message);
         Assert.Contains(installInstructions, exception.Message);
+    }
+
+    [Theory]
+    [InlineData("azd version 1.20.0 (commit abc123)", "1.20.0")]
+    [InlineData("azd version 2.0.0 (commit def456)", "2.0.0")]
+    [InlineData("1.11.0", "1.11.0")]
+    [InlineData("version: 0.9.3-beta", "0.9.3")]
+    public void ParseVersionFromOutput_ValidVersions_ReturnsExpectedVersion(string output, string expected)
+    {
+        // Act
+        var result = RegistryServerProvider.ParseVersionFromOutput(output);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(Version.Parse(expected), result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("no version here")]
+    [InlineData("abc")]
+    public void ParseVersionFromOutput_InvalidOutput_ReturnsNull(string output)
+    {
+        // Act
+        var result = RegistryServerProvider.ParseVersionFromOutput(output);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ParseVersionFromOutput_CustomPattern_ExtractsVersion()
+    {
+        // Arrange - a tool that outputs "build-2024.1.5"
+        var output = "build-2024.1.5";
+        var pattern = @"build-(\d+\.\d+\.\d+)";
+
+        // Act
+        var result = RegistryServerProvider.ParseVersionFromOutput(output, pattern);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(Version.Parse("2024.1.5"), result);
+    }
+
+    [Fact]
+    public async Task CheckCommandVersionAsync_CommandNotFound_ReturnsNotInstalledMessage()
+    {
+        // Arrange
+        string command = "nonexistent-command-xyz-12345";
+
+        // Act
+        var result = await RegistryServerProvider.CheckCommandVersionAsync(
+            command, ["--version"], "1.0.0", null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Contains($"'{command}' is not installed", result);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithMinVersion_CommandNotFound_ShowsNotInstalledMessage()
+    {
+        // Arrange
+        string testId = "toolWithMinVersion";
+        string installInstructions = "Install from https://example.com";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "Tool with version check",
+            Type = "stdio",
+            Command = "nonexistent-command-xyz-12345",
+            Args = ["serve"],
+            MinVersion = "1.0.0",
+            VersionArgs = ["--version"],
+            InstallInstructions = installInstructions
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains($"Failed to initialize the '{testId}' MCP tool.", exception.Message);
+        Assert.Contains("is not installed", exception.Message);
+        Assert.Contains("Installation Instructions:", exception.Message);
+        Assert.Contains(installInstructions, exception.Message);
+        // Should NOT contain the old generic message
+        Assert.DoesNotContain("dependencies that are not installed", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithMinVersion_NoInstallInstructions_ShowsNotInstalledMessage()
+    {
+        // Arrange
+        string testId = "toolWithMinVersionNoInstructions";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "Tool with version check but no install instructions",
+            Type = "stdio",
+            Command = "nonexistent-command-xyz-12345",
+            Args = ["serve"],
+            MinVersion = "1.0.0",
+            VersionArgs = ["--version"]
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains($"Failed to initialize the '{testId}' MCP tool.", exception.Message);
+        Assert.Contains("is not installed", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithMinVersion_MissingVersionArgs_ThrowsInvalidOperation()
+    {
+        // Arrange
+        string testId = "toolMissingVersionArgs";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "Tool with minVersion but no versionArgs",
+            Type = "stdio",
+            Command = "some-tool",
+            Args = ["serve"],
+            MinVersion = "1.0.0"
+            // VersionArgs intentionally omitted
+        };
+        var provider = CreateServerProvider(testId, serverInfo);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("missing 'versionArgs'", exception.Message);
+    }
+
+    [Fact]
+    public async Task CheckCommandVersionAsync_VersionTooOld_ReturnsUpgradeMessage()
+    {
+        // Arrange - use dotnet which is always available in the test environment
+        string command = "dotnet";
+
+        // Act - require an impossibly high version so the installed version is always "too old"
+        var result = await RegistryServerProvider.CheckCommandVersionAsync(
+            command, ["--version"], "999.0.0", null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Contains($"'{command}' version", result);
+        Assert.Contains("is installed, but version", result);
+        Assert.Contains("or later is required", result);
+    }
+
+    [Fact]
+    public async Task CheckCommandVersionAsync_VersionSufficient_ReturnsNull()
+    {
+        // Arrange - use dotnet which is always available in the test environment
+        string command = "dotnet";
+
+        // Act - require a very low version so the installed version always passes
+        var result = await RegistryServerProvider.CheckCommandVersionAsync(
+            command, ["--version"], "1.0.0", null, CancellationToken.None);
+
+        // Assert - null means check passed
+        Assert.Null(result);
     }
 }
 

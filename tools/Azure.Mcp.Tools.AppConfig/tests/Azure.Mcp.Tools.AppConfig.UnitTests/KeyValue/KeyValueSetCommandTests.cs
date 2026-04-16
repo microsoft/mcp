@@ -4,13 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,10 +31,9 @@ public class KeyValueSetCommandTests
         _appConfigService = Substitute.For<IAppConfigService>();
         _logger = Substitute.For<ILogger<KeyValueSetCommand>>();
 
-        _command = new(_logger);
+        _command = new(_logger, _appConfigService);
         _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
-            .AddSingleton(_appConfigService)
             .BuildServiceProvider();
         _context = new(_serviceProvider);
     }

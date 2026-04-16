@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
@@ -45,6 +45,14 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName);
         command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion);
         command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName);
+        command.Validators.Add(result =>
+        {
+            var resourceTypes = result.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name);
+            if (string.IsNullOrWhiteSpace(resourceTypes) || !resourceTypes.Split(',').Any(rt => !string.IsNullOrWhiteSpace(rt)))
+            {
+                result.AddError("Resource types cannot be empty.");
+            }
+        });
     }
 
     protected override AvailabilityListOptions BindOptions(ParseResult parseResult)
@@ -74,11 +82,6 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToArray();
-
-            if (resourceTypes.Length == 0)
-            {
-                throw new ArgumentException("Resource types cannot be empty.", nameof(options.ResourceTypes));
-            }
 
             var quotaService = context.GetService<IQuotaService>();
             List<string> toolResult = await quotaService.GetAvailableRegionsForResourceTypesAsync(

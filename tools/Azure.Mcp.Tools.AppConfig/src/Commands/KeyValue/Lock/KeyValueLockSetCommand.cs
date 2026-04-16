@@ -1,20 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 
-public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger) : BaseKeyValueCommand<KeyValueLockSetOptions>()
+public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService)
+    : BaseKeyValueCommand<KeyValueLockSetOptions>()
 {
     private const string CommandTitle = "Sets the lock state of an App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override string Id => "b48fd781-d74a-4dfd-a29c-421ded9a6ce9";
 
@@ -65,8 +67,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
 
         try
         {
-            var appConfigService = context.GetService<IAppConfigService>();
-            await appConfigService.SetKeyValueLockState(
+            await _appConfigService.SetKeyValueLockState(
                 options.Account!,
                 options.Key!,
                 options.Lock,

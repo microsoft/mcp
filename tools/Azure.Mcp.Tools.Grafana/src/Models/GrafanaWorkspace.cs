@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Models.Identity;
 
 namespace Azure.Mcp.Tools.Grafana.Models;
 

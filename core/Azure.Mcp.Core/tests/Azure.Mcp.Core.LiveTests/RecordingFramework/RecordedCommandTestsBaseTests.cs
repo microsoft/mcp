@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Azure.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 using Xunit.v3;
@@ -131,6 +130,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     private string TestDisplayName = string.Empty;
     private readonly TemporaryAssetsPathResolver Resolver = new();
     private readonly TestProxyFixture Fixture;
+    private readonly LiveServerFixture LiveServerFixture;
     private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
     private RecordedCommandTestHarness? DefaultHarness;
 
@@ -138,6 +138,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     {
         Fixture = new TestProxyFixture();
         Fixture.ConfigurePathResolver(Resolver);
+        LiveServerFixture = new LiveServerFixture();
     }
 
     [Fact]
@@ -169,7 +170,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.True(activeMatcher!.CompareBodies);
         Assert.True(activeMatcher.IgnoreQueryOrdering);
 
-        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Record,
             EnableDefaultSanitizerAdditions = false,
@@ -180,7 +181,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         DefaultHarness.RegisterVariable("attrKey", "attrValue");
         await DefaultHarness.DisposeAsync();
 
-        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Playback,
             EnableDefaultSanitizerAdditions = false,
@@ -219,14 +220,14 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 
     private static CustomMatcherAttribute? GetActiveMatcher()
     {
-        var method = typeof(CustomMatcherAttribute).GetMethod("GetActive", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = typeof(CustomMatcherAttribute).GetMethod("GetActive", BindingFlags.NonPublic | BindingFlags.Static, Type.EmptyTypes);
         return (CustomMatcherAttribute?)method?.Invoke(null, null);
     }
 
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Record,
             TestMatcher = new CustomDefaultMatcher
@@ -256,7 +257,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         DefaultHarness.RegisterVariable("roundtrip", "value");
         await DefaultHarness.DisposeAsync();
 
-        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Playback,
         };
@@ -270,7 +271,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     {
         TestDisplayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
 
-        var harness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        var harness = new RecordedCommandTestHarness(CollectedOutput, Fixture, LiveServerFixture)
         {
             DesiredMode = TestMode.Record
         };

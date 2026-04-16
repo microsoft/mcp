@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Postgres.Auth;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
@@ -25,15 +26,10 @@ public class PostgresSetup : IAreaSetup
         services.AddSingleton<IDbProvider, DbProvider>();
         services.AddSingleton<IPostgresService, PostgresService>();
 
-        services.AddSingleton<DatabaseListCommand>();
+        services.AddSingleton<PostgresListCommand>();
         services.AddSingleton<DatabaseQueryCommand>();
-
-        services.AddSingleton<TableListCommand>();
         services.AddSingleton<TableSchemaGetCommand>();
-
-        services.AddSingleton<ServerListCommand>();
         services.AddSingleton<ServerConfigGetCommand>();
-
         services.AddSingleton<ServerParamGetCommand>();
         services.AddSingleton<ServerParamSetCommand>();
     }
@@ -42,19 +38,18 @@ public class PostgresSetup : IAreaSetup
     {
         var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
+        // Consolidated hierarchical list command
+        var postgresList = serviceProvider.GetRequiredService<PostgresListCommand>();
+        pg.AddCommand(postgresList.Name, postgresList);
+
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);
 
-        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
-        database.AddCommand(databaseList.Name, databaseList);
         var databaseQuery = serviceProvider.GetRequiredService<DatabaseQueryCommand>();
         database.AddCommand(databaseQuery.Name, databaseQuery);
 
         var table = new CommandGroup("table", "PostgreSQL table operations");
         pg.AddSubGroup(table);
-
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        table.AddCommand(tableList.Name, tableList);
 
         var schema = new CommandGroup("schema", "PostgreSQL table schema operations");
         table.AddSubGroup(schema);
@@ -63,8 +58,6 @@ public class PostgresSetup : IAreaSetup
 
         var server = new CommandGroup("server", "PostgreSQL server operations");
         pg.AddSubGroup(server);
-        var serverList = serviceProvider.GetRequiredService<ServerListCommand>();
-        server.AddCommand(serverList.Name, serverList);
 
         var config = new CommandGroup("config", "PostgreSQL server configuration operations");
         server.AddSubGroup(config);

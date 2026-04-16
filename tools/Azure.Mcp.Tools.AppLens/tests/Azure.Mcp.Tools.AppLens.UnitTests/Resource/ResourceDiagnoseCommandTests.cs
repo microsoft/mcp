@@ -28,15 +28,14 @@ public class ResourceDiagnoseCommandTests
         _appLensService = Substitute.For<IAppLensService>();
         _logger = Substitute.For<ILogger<ResourceDiagnoseCommand>>();
 
-        _command = new(_logger);
+        _command = new(_logger, _appLensService);
         _serviceProvider = new ServiceCollection()
-            .AddSingleton(_appLensService)
             .BuildServiceProvider();
         _context = new(_serviceProvider);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenValidParametersProvided()
+    public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenAllParametersProvided()
     {
         // Arrange
         var expectedResult = new DiagnosticResult(
@@ -89,6 +88,40 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenOnlyRequiredParametersProvided()
+    {
+        // Arrange - only question and resource are required now
+        var expectedResult = new DiagnosticResult(
+            new List<string> { "Insight 1" },
+            new List<string> { "Solution 1" },
+            "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
+            "Microsoft.Web/sites"
+        );
+
+        _appLensService.DiagnoseResourceAsync(
+            "Why is my app slow?",
+            "myapp",
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var args = _command.GetCommand().Parse([
+            "--question", "Why is my app slow?",
+            "--resource", "myapp"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Returns400_WhenQuestionIsMissing()
     {
         // Arrange && Act
@@ -121,51 +154,108 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
+    public async Task ExecuteAsync_SucceedsWithoutSubscription()
     {
-        // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
+        // Arrange - subscription is now optional
+        var expectedResult = new DiagnosticResult(
+            new List<string> { "Insight 1" },
+            new List<string> { "Solution 1" },
+            "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
+            "Microsoft.Web/sites"
+        );
+
+        _appLensService.DiagnoseResourceAsync(
+            "Why is my app slow?",
+            "myapp",
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource", "myapp",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
-        ]), TestContext.Current.CancellationToken);
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceGroupIsMissing()
+    public async Task ExecuteAsync_SucceedsWithoutResourceGroup()
     {
-        // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
+        // Arrange - resource group is now optional
+        var expectedResult = new DiagnosticResult(
+            new List<string> { "Insight 1" },
+            new List<string> { "Solution 1" },
+            "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
+            "Microsoft.Web/sites"
+        );
+
+        _appLensService.DiagnoseResourceAsync(
+            "Why is my app slow?",
+            "myapp",
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-type", "Microsoft.Web/sites"
-        ]), TestContext.Current.CancellationToken);
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceTypeIsMissing()
+    public async Task ExecuteAsync_SucceedsWithoutResourceType()
     {
-        // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
+        // Arrange - resource type is now optional
+        var expectedResult = new DiagnosticResult(
+            new List<string> { "Insight 1" },
+            new List<string> { "Solution 1" },
+            "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Web/sites/myapp",
+            "Microsoft.Web/sites"
+        );
+
+        _appLensService.DiagnoseResourceAsync(
+            "Why is my app slow?",
+            "myapp",
+            "sub123",
+            "rg1",
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1"
-        ]), TestContext.Current.CancellationToken);
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -175,9 +265,9 @@ public class ResourceDiagnoseCommandTests
         _appLensService.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
@@ -205,9 +295,9 @@ public class ResourceDiagnoseCommandTests
         _appLensService.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
@@ -235,9 +325,9 @@ public class ResourceDiagnoseCommandTests
         _appLensService.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
@@ -307,13 +397,9 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Theory]
-    [InlineData("", "myapp", "sub123", "rg1", "Microsoft.Web/sites")]
-    [InlineData("Why is my app slow?", "", "sub123", "rg1", "Microsoft.Web/sites")]
-    [InlineData("Why is my app slow?", "myapp", "", "rg1", "Microsoft.Web/sites")]
-    [InlineData("Why is my app slow?", "myapp", "sub123", "", "Microsoft.Web/sites")]
-    [InlineData("Why is my app slow?", "myapp", "sub123", "rg1", "")]
-    public async Task ExecuteAsync_Returns400_WhenRequiredParameterIsEmpty(
-        string question, string resource, string subscription, string resourceGroup, string resourceType)
+    [InlineData("", "myapp")]
+    [InlineData("Why is my app slow?", "")]
+    public async Task ExecuteAsync_Returns400_WhenRequiredParameterIsEmpty(string question, string resource)
     {
         // Arrange
         var args = new List<string>();
@@ -321,12 +407,6 @@ public class ResourceDiagnoseCommandTests
         { args.AddRange(["--question", question]); }
         if (!string.IsNullOrEmpty(resource))
         { args.AddRange(["--resource", resource]); }
-        if (!string.IsNullOrEmpty(subscription))
-        { args.AddRange(["--subscription", subscription]); }
-        if (!string.IsNullOrEmpty(resourceGroup))
-        { args.AddRange(["--resource-group", resourceGroup]); }
-        if (!string.IsNullOrEmpty(resourceType))
-        { args.AddRange(["--resource-type", resourceType]); }
 
         var parseResult = _command.GetCommand().Parse(args.ToArray());
 
@@ -386,9 +466,9 @@ public class ResourceDiagnoseCommandTests
         _appLensService.DiagnoseResourceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -411,5 +491,42 @@ public class ResourceDiagnoseCommandTests
             Arg.Is<object>(o => o.ToString()!.Contains("Error in diagnose")),
             Arg.Any<Exception>(),
             Arg.Any<Func<object, Exception?, string>>());
+    }
+
+    [Theory]
+    [InlineData("microsoft.web/sites", "app", true)]
+    [InlineData("microsoft.web/sites", "linux", true)]
+    [InlineData("microsoft.web/sites", "functionapp", true)]
+    [InlineData("Microsoft.Web/Sites", "App", true)]
+    [InlineData("MICROSOFT.WEB/SITES", "APP", true)]
+    [InlineData("microsoft.containerservice/managedclusters", "", true)]
+    [InlineData("Microsoft.ContainerService/managedClusters", "", true)]
+    [InlineData("microsoft.apimanagement/service", "", true)]
+    [InlineData("Microsoft.ApiManagement/service", "", true)]
+    [InlineData("microsoft.web/sites", "container", false)]
+    [InlineData("microsoft.web/sites", "", false)]
+    [InlineData("microsoft.compute/virtualmachines", "", false)]
+    [InlineData("microsoft.storage/storageaccounts", "", false)]
+    [InlineData("microsoft.sql/servers", "", false)]
+    public void IsResourceTypeSupported_ReturnsCorrectResult(string resourceType, string resourceKind, bool expected)
+    {
+        // Act
+        var result = AppLensService.IsResourceTypeSupported(resourceType, resourceKind);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void SupportedResourceTypes_ReturnsExpectedTypes()
+    {
+        // Act
+        var types = AppLensService.SupportedResourceTypes().ToList();
+
+        // Assert
+        Assert.Equal(3, types.Count);
+        Assert.Contains("microsoft.web/sites", types);
+        Assert.Contains("microsoft.containerservice/managedclusters", types);
+        Assert.Contains("microsoft.apimanagement/service", types);
     }
 }
