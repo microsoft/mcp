@@ -32,6 +32,12 @@
 - Added input validation for Azure Storage account names in StorageService. [[#2348](https://github.com/microsoft/mcp/pull/2348)]
 - Allowed KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2385](https://github.com/microsoft/mcp/pull/2385)]
 
+## 2.0.1 (2026-04-14)
+
+### Fixed
+
+- Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
+
 ## 2.0.0 (2026-04-09)
 
 **🚀 New Major Release — Azure MCP Server 2.0**
@@ -377,6 +383,13 @@ For a complete history of changes included in this release, see entries for vers
 - Hardened Postgres SQL query validator to block set-operation keywords (UNION, INTERSECT, EXCEPT), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2096](https://github.com/microsoft/mcp/pull/2096)]
 - Hardened SSRF protection in EndpointValidator against IPv6 transition mechanism bypass vectors (IPv4-mapped, 6to4, Teredo, NAT64, NAT64v2, IPv4-compatible), added wildcard DNS blocklist, trailing-dot FQDN normalization, and sanitized error messages to prevent IP address leakage. [[#2066](https://github.com/microsoft/mcp/pull/2066)]
 
+## 1.0.4 (2026-03-18)
+
+### Fixed
+
+- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2108](https://github.com/microsoft/mcp/pull/2108)]
+- Hardened Postgres SQL query validator to block set-operation keywords (`UNION`, `INTERSECT`, `EXCEPT`), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2097](https://github.com/microsoft/mcp/pull/2097)]
+
 ## 2.0.28 (2026-03-17) (pre-release)
 
 ### Added
@@ -436,6 +449,14 @@ For a complete history of changes included in this release, see entries for vers
 - Fixed a connection string injection vulnerability in PostgreSQL and MySQL tools by using parameterized connection string builders instead of string interpolation. [[#2056](https://github.com/microsoft/mcp/pull/2056)]
 - Fixed KQL injection vulnerabilities in Kusto tools where user-controlled table names were directly interpolated into KQL commands without escaping, allowing arbitrary command execution. [[#2070](https://github.com/microsoft/mcp/pull/2070)]
 - Fixed credential chain crash from `InteractiveBrowserCredential` failure. [[#2076](https://github.com/microsoft/mcp/pull/2076)]
+
+## 1.0.3 (2026-03-17)
+
+### Fixed
+
+- Fixed a connection string injection vulnerability in `PostgreSQL` and `MySQL` tools by replacing raw string interpolation with `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder`, preventing parameter override attacks from user-controlled inputs. [[#2057](https://github.com/microsoft/mcp/pull/2057)]
+- Expanded the `PostgreSQL` query validator blocklist to include additional dangerous functions and system catalogs. [[#2074](https://github.com/microsoft/mcp/pull/2074)]
+- Addressed a KQL injection vulnerability in `Kusto` tools caused by directly interpolating user-controlled table names into queries without proper escaping, which could enable arbitrary command execution. [[#2084](https://github.com/microsoft/mcp/pull/2084)]
 
 ## 2.0.27 (2026-03-12) (pre-release)
 
@@ -539,6 +560,20 @@ For a complete history of changes included in this release, see entries for vers
 - Fixed argument parsing to support camelCase parameter names and flat argument structures sent by Codex and other OpenAI models. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
 - Fixed flaky VisualStudioToolNameTests by using in-process CommandFactory instead of external process with timeout. [[#1893](https://github.com/microsoft/mcp/pull/1893)]
 - Fixed Linux stdio watcher regression where using CWD as content root could exhaust inotify watchers (ENOSPC). Host builders now use AppContext.BaseDirectory as content root. [[#1935](https://github.com/microsoft/mcp/pull/1935)]
+
+## 1.0.2 (2026-03-05)
+
+### Changed
+
+- Begin capturing information for the MCP client request's `_meta` store. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Removed ErrorDetails from telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Added processor architecture to captured telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Resolved incorrect/missing setting of `IsServerCommandInvoked` in telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+
+### Fixed
+
+- Improved input validation in ResourceHealth and Kusto tools: ResourceHealth now validates resource IDs using `Azure.Core.ResourceIdentifier.Parse()`, and Kusto validates cluster URIs with domain suffix and hostname allowlist to prevent SSRF attacks. [[#1742](https://github.com/microsoft/mcp/pull/1742)]
+- Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
 
 ## 2.0.24 (2026-03-03) (pre-release)
 
@@ -817,6 +852,17 @@ For a complete history of changes included in this release, see entries for vers
 
 - Added version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration. [[#1050](https://github.com/microsoft/mcp/pull/1050)]
 - Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225)]
+
+## 1.0.1 (2025-11-25)
+
+### Added
+
+- Added support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable. [[#1038](https://github.com/microsoft/mcp/pull/1038)]
+
+### Fixed
+
+- Added version parameter to the Azure MCP Server registration, prompting VS Code to refresh the tools for the latest MCP server registration. [[#1242](https://github.com/microsoft/mcp/pull/1242)]
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1232](https://github.com/microsoft/mcp/pull/1232)]
 
 ## 2.0.6 (2025-11-20) (pre-release)
 

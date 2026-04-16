@@ -43,6 +43,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Enhanced the description for the main Azure Monitor command group to provide a more comprehensive overview of its capabilities and usage. [[#2325](https://github.com/microsoft/mcp/pull/2325)]
 - Added query parameterization for SQL-based tools (MySQL, PostgreSQL, Cosmos DB) and input sanitization for KQL-based tools (Kusto, Monitor, Deploy), with shared helpers in Microsoft.Mcp.Core. [[#2355](https://github.com/microsoft/mcp/pull/2355)]
 
+## 2.0.1 (2026-04-14)
+
+### Bugs Fixed
+
+- Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
+
 ## 2.0.0 (2026-04-09)
 
 **🚀 New Major Release — Azure MCP Server 2.0**
@@ -401,6 +407,13 @@ For a complete history of changes included in this release, see entries for vers
 - Removed hardcoded Model Context Protocol version in favor of using the latest supported by the C# SDK. [[#2101](https://github.com/microsoft/mcp/pull/2101)]
 - Added tenant parameter support to Azure Resource Graph queries in BaseAzureResourceService, enabling queries to run against the intended tenant context. [[#1945](https://github.com/microsoft/mcp/pull/1945)]
 
+## 1.0.4 (2026-03-18)
+
+### Bugs Fixed
+
+- Fixed SQL injection vulnerability in MySQL query validation that allowed bypassing safety checks via version-specific comments and UNION-based attacks. [[#2108](https://github.com/microsoft/mcp/pull/2108)]
+- Hardened Postgres SQL query validator to block set-operation keywords (`UNION`, `INTERSECT`, `EXCEPT`), additional dangerous system catalogs, and fixed false-positive comment detection inside string literals. [[#2097](https://github.com/microsoft/mcp/pull/2097)]
+
 ## 2.0.0-beta.28 (2026-03-17)
 
 ### Features Added
@@ -466,6 +479,14 @@ For a complete history of changes included in this release, see entries for vers
 - Updated .NET SDK from `10.0.103` to `10.0.201`. [[#2072](https://github.com/microsoft/mcp/pull/2072)]
 - Updated `Azure.ResourceManager.FileShares` from `1.0.0-beta.1` to `1.0.0-beta.2`. [[#1823](https://github.com/microsoft/mcp/pull/1823)]
 - Updated `Azure.Bicep.Types` from `0.6.27` to `0.6.50`. [[#1574](https://github.com/microsoft/mcp/pull/1574)]
+
+## 1.0.3 (2026-03-17)
+
+### Bugs Fixed
+
+- Fixed a connection string injection vulnerability in `PostgreSQL` and `MySQL` tools by replacing raw string interpolation with `NpgsqlConnectionStringBuilder` and `MySqlConnectionStringBuilder`, preventing parameter override attacks from user-controlled inputs. [[#2057](https://github.com/microsoft/mcp/pull/2057)]
+- Expanded the `PostgreSQL` query validator blocklist to include additional dangerous functions and system catalogs. [[#2074](https://github.com/microsoft/mcp/pull/2074)]
+- Addressed a KQL injection vulnerability in `Kusto` tools caused by directly interpolating user-controlled table names into queries without proper escaping, which could enable arbitrary command execution. [[#2084](https://github.com/microsoft/mcp/pull/2084)]
 
 ## 2.0.0-beta.27 (2026-03-12)
 
@@ -586,6 +607,20 @@ For a complete history of changes included in this release, see entries for vers
 #### Dependency Updates
 
 - Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure from 4.4.0-preview.1 to 4.4.0. [[#1896](https://github.com/microsoft/mcp/pull/1896)]
+
+## 1.0.2 (2026-03-05)
+
+### Bugs Fixed
+
+- Improved input validation in ResourceHealth and Kusto tools: ResourceHealth now validates resource IDs using `Azure.Core.ResourceIdentifier.Parse()`, and Kusto validates cluster URIs with domain suffix and hostname allowlist to prevent SSRF attacks. [[#1742](https://github.com/microsoft/mcp/pull/1742)]
+- Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+
+### Other Changes
+
+- Begin capturing information for the MCP client request's `_meta` store. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Removed ErrorDetails from telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Added processor architecture to captured telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
+- Resolved incorrect/missing setting of `IsServerCommandInvoked` in telemetry. [[#1743](https://github.com/microsoft/mcp/pull/1743)]
 
 ## 2.0.0-beta.24 (2026-03-03)
 
@@ -929,6 +964,16 @@ For a complete history of changes included in this release, see entries for vers
 
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
 - Updated .NET tooling to stable version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/microsoft/mcp/pull/1243)]
+
+## 1.0.1 (2025-11-25)
+
+### Features Added
+
+- Added support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable. [[#1038](https://github.com/microsoft/mcp/pull/1038)]
+
+### Bugs Fixed
+
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1232](https://github.com/microsoft/mcp/pull/1232)]
 
 ## 2.0.0-beta.6 (2025-11-20)
 
