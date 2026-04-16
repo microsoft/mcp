@@ -1,17 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -21,41 +17,21 @@ namespace Azure.Mcp.Tools.Compute.UnitTests.Disk;
 /// <summary>
 /// Unit tests for the DiskUpdateCommand.
 /// </summary>
-public class DiskUpdateCommandTests
+public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<DiskUpdateCommand> _logger;
-    private readonly DiskUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DiskUpdateCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<DiskUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.NotNull(_command);
-        Assert.Equal("update", _command.Name);
-        Assert.Contains("managed disk", _command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.NotEqual(Guid.Empty.ToString(), _command.Id);
+        Assert.NotNull(Command);
+        Assert.Equal("update", Command.Name);
+        Assert.Contains("managed disk", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEqual(Guid.Empty.ToString(), Command.Id);
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
-        var metadata = _command.Metadata;
+        var metadata = Command.Metadata;
 
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.Destructive);
@@ -86,7 +62,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -107,25 +83,15 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--size-gb", newSizeGb.ToString()
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", newSizeGb.ToString());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(newSizeGb, result.Disk.DiskSizeGB);
@@ -152,7 +118,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -173,25 +139,15 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--sku", newSku
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--sku", newSku);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(newSku, result.Disk.SkuName);
@@ -217,7 +173,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -238,7 +194,8 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
@@ -248,21 +205,10 @@ public class DiskUpdateCommandTests
             "--disk-mbps-read-write", "200",
             "--max-shares", "2",
             "--network-access-policy", "AllowPrivate",
-            "--enable-bursting", "true"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--enable-bursting", "true");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(512, result.Disk.DiskSizeGB);
@@ -287,7 +233,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -308,24 +254,15 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--size-gb", "64"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "64");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(mockDisk.Name, result.Disk.Name);
         Assert.Equal(mockDisk.Location, result.Disk.Location);
@@ -354,7 +291,7 @@ public class DiskUpdateCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -372,7 +309,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -393,24 +330,14 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--disk-name", diskName,
-            "--size-gb", "256"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "256");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(256, result.Disk.DiskSizeGB);
@@ -420,22 +347,19 @@ public class DiskUpdateCommandTests
     public async Task ExecuteAsync_MissingResourceGroupAndDiskNotFound_ReturnsBadRequest()
     {
         // Arrange - no resource-group, disk doesn't exist in subscription
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<DiskInfo>());
-
-        var args = _commandDefinition.Parse([
-            "--subscription", "test-sub",
-            "--disk-name", "nonexistent",
-            "--size-gb", "256"
-        ]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--disk-name", "nonexistent",
+            "--size-gb", "256");
 
         // Assert
         Assert.NotNull(response);
@@ -446,7 +370,7 @@ public class DiskUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -467,15 +391,12 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--size-gb", "256"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "256");
 
         // Assert
         Assert.NotNull(response);
@@ -486,8 +407,8 @@ public class DiskUpdateCommandTests
     public async Task ExecuteAsync_DiskNotFound_Returns404()
     {
         // Arrange
-        var notFoundEx = new Azure.RequestFailedException(404, "Disk not found");
-        _computeService.UpdateDiskAsync(
+        var notFoundEx = new RequestFailedException(404, "Disk not found");
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -508,15 +429,12 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundEx);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "nonexistentdisk",
-            "--size-gb", "256"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--size-gb", "256");
 
         // Assert
         Assert.NotNull(response);
@@ -527,7 +445,7 @@ public class DiskUpdateCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
@@ -571,7 +489,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -592,21 +510,18 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--tags", tags
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--tags", tags);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _computeService.Received(1).UpdateDiskAsync(
+        await Service.Received(1).UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -651,7 +566,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -672,24 +587,21 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--disk-encryption-set", diskEncryptionSet,
             "--encryption-type", encryptionType,
             "--disk-access", diskAccess,
-            "--tier", tier
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--tier", tier);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _computeService.Received(1).UpdateDiskAsync(
+        await Service.Received(1).UpdateDiskAsync(
             diskName,
             resourceGroup,
             subscription,
@@ -730,7 +642,7 @@ public class DiskUpdateCommandTests
             ProvisioningState = "Succeeded"
         };
 
-        _computeService.UpdateDiskAsync(
+        Service.UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -751,7 +663,8 @@ public class DiskUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
@@ -763,21 +676,10 @@ public class DiskUpdateCommandTests
             "--disk-access", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskAccesses/myAccess",
             "--tier", "P40",
             "--network-access-policy", "AllowPrivate",
-            "--enable-bursting", "true"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--enable-bursting", "true");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskUpdateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }
@@ -785,15 +687,11 @@ public class DiskUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_NoUpdatePropertiesProvided_ReturnsValidationError()
     {
-        // Arrange - only required identifiers, no updatable properties
-        var args = _commandDefinition.Parse([
+        // Arrange & Act - only required identifiers, no updatable properties
+        var response = await ExecuteCommandAsync(
             "--subscription", "test-sub",
             "--resource-group", "testrg",
-            "--disk-name", "testdisk"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--disk-name", "testdisk");
 
         // Assert
         Assert.NotNull(response);
@@ -801,7 +699,7 @@ public class DiskUpdateCommandTests
         Assert.Contains("At least one update property must be provided", response.Message);
 
         // Verify the service was never called
-        await _computeService.DidNotReceive().UpdateDiskAsync(
+        await Service.DidNotReceive().UpdateDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

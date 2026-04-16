@@ -1,53 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vmss;
 
-public class VmssGetCommandTests
+public class VmssGetCommandTests : CommandUnitTestsBase<VmssGetCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmssGetCommand> _logger;
-    private readonly VmssGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmssName = "test-vmss";
     private readonly string _knownInstanceId = "0";
 
-    public VmssGetCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmssGetCommand>>();
-
-        _command = new(_logger, _computeService);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -106,7 +83,7 @@ public class VmssGetCommandTests
             Tags: null
         );
 
-        _computeService.ListVmssAsync(
+        Service.ListVmssAsync(
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -114,7 +91,7 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssList);
 
-        _computeService.GetVmssAsync(
+        Service.GetVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -123,7 +100,7 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssInfo);
 
-        _computeService.GetVmssVmAsync(
+        Service.GetVmssVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -133,10 +110,8 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssVmInfo);
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -185,7 +160,7 @@ public class VmssGetCommandTests
             )
         };
 
-        _computeService.ListVmssAsync(
+        Service.ListVmssAsync(
             Arg.Is((string?)null),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -193,22 +168,11 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssList);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetListResult);
         Assert.Equal(2, result.VmssList.Count);
         Assert.Equal("vmss1", result.VmssList[0].Name);
         Assert.Equal("vmss2", result.VmssList[1].Name);
@@ -234,7 +198,7 @@ public class VmssGetCommandTests
             )
         };
 
-        _computeService.ListVmssAsync(
+        Service.ListVmssAsync(
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -242,23 +206,13 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssList);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--resource-group", _knownResourceGroup
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-group", _knownResourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetListResult);
         Assert.Single(result.VmssList);
         Assert.Equal("vmss1", result.VmssList[0].Name);
         Assert.Equal("eastus", result.VmssList[0].Location);
@@ -268,7 +222,7 @@ public class VmssGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoVmss()
     {
         // Arrange
-        _computeService.ListVmssAsync(
+        Service.ListVmssAsync(
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -276,22 +230,11 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new List<VmssInfo>());
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetListResult);
         Assert.Empty(result.VmssList);
     }
 
@@ -312,7 +255,7 @@ public class VmssGetCommandTests
             Tags: new Dictionary<string, string> { { "env", "test" }, { "owner", "team" } }
         );
 
-        _computeService.GetVmssAsync(
+        Service.GetVmssAsync(
             Arg.Is(_knownVmssName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -321,24 +264,14 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssInfo);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetSingleResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetSingleResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("test-vmss", result.Vmss.Name);
         Assert.Equal("eastus", result.Vmss.Location);
@@ -362,7 +295,7 @@ public class VmssGetCommandTests
             Tags: null
         );
 
-        _computeService.GetVmssVmAsync(
+        Service.GetVmssVmAsync(
             Arg.Is(_knownVmssName),
             Arg.Is(_knownInstanceId),
             Arg.Is(_knownResourceGroup),
@@ -372,25 +305,15 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssVmInfo);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--instance-id", _knownInstanceId,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetVmInstanceResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetVmInstanceResult);
         Assert.NotNull(result.VmInstance);
         Assert.Equal("test-vmss_0", result.VmInstance.Name);
         Assert.Equal("0", result.VmInstance.InstanceId);
@@ -414,7 +337,7 @@ public class VmssGetCommandTests
             Tags: null
         );
 
-        _computeService.GetVmssAsync(
+        Service.GetVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -423,22 +346,14 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmssInfo);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        // Verify deserialization works
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssGetSingleResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssGetSingleResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("test-vmss", result.Vmss.Name);
     }
@@ -449,7 +364,7 @@ public class VmssGetCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Virtual machine scale set not found");
 
-        _computeService.GetVmssAsync(
+        Service.GetVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -458,14 +373,11 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", "nonexistent-vmss",
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -478,7 +390,7 @@ public class VmssGetCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Virtual machine instance not found");
 
-        _computeService.GetVmssVmAsync(
+        Service.GetVmssVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -488,15 +400,12 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--instance-id", "999",
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -509,7 +418,7 @@ public class VmssGetCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
-        _computeService.ListVmssAsync(
+        Service.ListVmssAsync(
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -517,12 +426,8 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -535,7 +440,7 @@ public class VmssGetCommandTests
         // Arrange
         var exception = new Exception("Unexpected error");
 
-        _computeService.GetVmssAsync(
+        Service.GetVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -544,14 +449,11 @@ public class VmssGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -566,11 +468,8 @@ public class VmssGetCommandTests
     [InlineData("--instance-id 0 --resource-group test-rg --subscription sub123")] // instance-id without vmss-name
     public async Task ExecuteAsync_CustomValidation_ReturnsError(string args)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

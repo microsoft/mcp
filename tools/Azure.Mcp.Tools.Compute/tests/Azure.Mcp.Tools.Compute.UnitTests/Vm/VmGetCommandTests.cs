@@ -1,51 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vm;
 
-public class VmGetCommandTests
+public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmGetCommand> _logger;
-    private readonly VmGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmName = "test-vm";
 
-    public VmGetCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmGetCommand>>();
-
-        _command = new(_logger, _computeService);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -73,7 +51,7 @@ public class VmGetCommandTests
                 ProvisioningState: "Succeeded",
                 OsType: "Linux",
                 LicenseType: null,
-                Zones: new List<string> { "1" },
+                Zones: ["1"],
                 Tags: new Dictionary<string, string> { { "env", "test" } }
             );
 
@@ -84,15 +62,15 @@ public class VmGetCommandTests
                 PowerState: "running",
                 ProvisioningState: "Succeeded",
                 VmAgent: new VmAgentInfo("2.7.0", null),
-                Disks: new List<DiskInstanceView> { new("Disk0", null) },
-                Extensions: new List<ExtensionInstanceView>(),
+                Disks: [new("Disk0", null)],
+                Extensions: [],
                 Statuses: null
             );
 
             // Setup mocks based on which scenario
             if (args.Contains("--vm-name") && args.Contains("--instance-view"))
             {
-                _computeService.GetVmWithInstanceViewAsync(
+                Service.GetVmWithInstanceViewAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string>(),
@@ -103,7 +81,7 @@ public class VmGetCommandTests
             }
             else if (args.Contains("--vm-name"))
             {
-                _computeService.GetVmAsync(
+                Service.GetVmAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string>(),
@@ -114,7 +92,7 @@ public class VmGetCommandTests
             }
             else
             {
-                _computeService.ListVmsAsync(
+                Service.ListVmsAsync(
                     Arg.Any<string?>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
@@ -124,10 +102,8 @@ public class VmGetCommandTests
             }
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -178,7 +154,7 @@ public class VmGetCommandTests
             )
         };
 
-        _computeService.ListVmsAsync(
+        Service.ListVmsAsync(
             Arg.Is<string?>(x => x == null),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -186,22 +162,11 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedVms);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Equal(2, result.Vms.Count);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("vm2", result.Vms[1].Name);
@@ -221,12 +186,12 @@ public class VmGetCommandTests
                 ProvisioningState: "Succeeded",
                 OsType: "Linux",
                 LicenseType: null,
-                Zones: new List<string> { "1" },
+                Zones: ["1"],
                 Tags: new Dictionary<string, string> { { "env", "prod" } }
             )
         };
 
-        _computeService.ListVmsAsync(
+        Service.ListVmsAsync(
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -234,23 +199,13 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedVms);
 
-        var parseResult = _commandDefinition.Parse([
-            "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--resource-group", _knownResourceGroup,
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Single(result.Vms);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("eastus", result.Vms[0].Location);
@@ -260,30 +215,19 @@ public class VmGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoVms()
     {
         // Arrange
-        _computeService.ListVmsAsync(
+        Service.ListVmsAsync(
             Arg.Any<string?>(),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<VmInfo>());
-
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetListResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Empty(result.Vms);
     }
 
@@ -299,11 +243,11 @@ public class VmGetCommandTests
             ProvisioningState: "Succeeded",
             OsType: "Linux",
             LicenseType: null,
-            Zones: new List<string> { "1", "2" },
+            Zones: ["1", "2"],
             Tags: new Dictionary<string, string> { { "env", "test" }, { "owner", "team" } }
         );
 
-        _computeService.GetVmAsync(
+        Service.GetVmAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -312,24 +256,14 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedVm);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetSingleResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.Null(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -349,7 +283,7 @@ public class VmGetCommandTests
             ProvisioningState: "Succeeded",
             OsType: "Linux",
             LicenseType: null,
-            Zones: new List<string> { "1" },
+            Zones: ["1"],
             Tags: new Dictionary<string, string> { { "env", "test" } }
         );
 
@@ -358,19 +292,19 @@ public class VmGetCommandTests
             PowerState: "running",
             ProvisioningState: "Succeeded",
             VmAgent: new VmAgentInfo("2.7.0", null),
-            Disks: new List<DiskInstanceView>
-            {
+            Disks:
+            [
                 new("Disk0", null),
                 new("Disk1", null)
-            },
-            Extensions: new List<ExtensionInstanceView>
-            {
+            ],
+            Extensions:
+            [
                 new("AzureMonitorLinuxAgent", "Microsoft.Azure.Monitor", "1.0", null)
-            },
+            ],
             Statuses: null
         );
 
-        _computeService.GetVmWithInstanceViewAsync(
+        Service.GetVmWithInstanceViewAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -379,25 +313,15 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns((vmInfo, instanceView));
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--instance-view"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--instance-view");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetSingleResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.NotNull(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -423,7 +347,7 @@ public class VmGetCommandTests
             Tags: null
         );
 
-        _computeService.GetVmAsync(
+        Service.GetVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -432,22 +356,14 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(vmInfo);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        // Verify deserialization works
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmGetSingleResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.Equal("test-vm", result.Vm.Name);
     }
@@ -458,7 +374,7 @@ public class VmGetCommandTests
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Virtual machine not found");
 
-        _computeService.GetVmAsync(
+        Service.GetVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -467,14 +383,11 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", "nonexistent-vm",
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -487,7 +400,7 @@ public class VmGetCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
-        _computeService.ListVmsAsync(
+        Service.ListVmsAsync(
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -495,12 +408,8 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", _knownSubscription
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -513,7 +422,7 @@ public class VmGetCommandTests
         // Arrange
         var exception = new Exception("Unexpected error");
 
-        _computeService.GetVmAsync(
+        Service.GetVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -522,14 +431,11 @@ public class VmGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -543,11 +449,8 @@ public class VmGetCommandTests
     [InlineData("--instance-view --resource-group test-rg --subscription sub123")] // instance-view without vm-name
     public async Task ExecuteAsync_CustomValidation_ReturnsError(string args)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

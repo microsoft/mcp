@@ -2,58 +2,38 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
-public class CosmosListCommandTests
+public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, ICosmosService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ICosmosService _cosmosService;
-    private readonly ILogger<CosmosListCommand> _logger;
-
-    public CosmosListCommandTests()
-    {
-        _cosmosService = Substitute.For<ICosmosService>();
-        _logger = Substitute.For<ILogger<CosmosListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_cosmosService);
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public void Name_IsCorrect()
     {
-        var command = new CosmosListCommand(_logger);
-        Assert.Equal("list", command.Name);
+        Assert.Equal("list", Command.Name);
     }
 
     [Fact]
     public void Description_IsCorrect()
     {
-        var command = new CosmosListCommand(_logger);
-        Assert.Contains("accounts", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("databases", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("containers", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("accounts", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("databases", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("containers", Command.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new CosmosListCommand(_logger);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -61,29 +41,18 @@ public class CosmosListCommandTests
     {
         // Arrange
         var expectedAccounts = new List<string> { "account1", "account2" };
-        _cosmosService.GetCosmosAccounts(
+        Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.NotNull(result.Accounts);
         Assert.Equal(expectedAccounts, result.Accounts);
         Assert.Null(result.Databases);
@@ -95,7 +64,7 @@ public class CosmosListCommandTests
     {
         // Arrange
         var expectedDatabases = new List<string> { "database1", "database2" };
-        _cosmosService.ListDatabases(
+        Service.ListDatabases(
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
@@ -104,25 +73,11 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--account", "account123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--account", "account123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.NotNull(result.Databases);
         Assert.Equal(expectedDatabases, result.Databases);
@@ -134,7 +89,7 @@ public class CosmosListCommandTests
     {
         // Arrange
         var expectedContainers = new List<string> { "container1", "container2" };
-        _cosmosService.ListContainers(
+        Service.ListContainers(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("sub123"),
@@ -144,26 +99,14 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account123",
-            "--database", "database123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--database", "database123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.Null(result.Databases);
         Assert.NotNull(result.Containers);
@@ -174,28 +117,18 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
     {
         // Arrange
-        _cosmosService.GetCosmosAccounts(
+        Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.NotNull(result.Accounts);
         Assert.Empty(result.Accounts);
         Assert.Null(result.Databases);
@@ -206,7 +139,7 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist()
     {
         // Arrange
-        _cosmosService.ListDatabases(
+        Service.ListDatabases(
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
@@ -215,24 +148,11 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--account", "account123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--account", "account123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.NotNull(result.Databases);
         Assert.Empty(result.Databases);
@@ -243,7 +163,7 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainersExist()
     {
         // Arrange
-        _cosmosService.ListContainers(
+        Service.ListContainers(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("sub123"),
@@ -253,25 +173,14 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account123",
-            "--database", "database123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--database", "database123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.CosmosListCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.Null(result.Databases);
         Assert.NotNull(result.Containers);
@@ -281,16 +190,10 @@ public class CosmosListCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenDatabaseSpecifiedWithoutAccount()
     {
-        // Arrange
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
-            "--database", "database123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--database", "database123");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -300,12 +203,8 @@ public class CosmosListCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
-        // Arrange
-        var command = new CosmosListCommand(_logger);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, command.GetCommand().Parse([]), TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync();
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -316,19 +215,15 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenListAccountsThrows()
     {
         // Arrange
-        _cosmosService.GetCosmosAccounts(
+        Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -339,7 +234,7 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenListDatabasesThrows()
     {
         // Arrange
-        _cosmosService.ListDatabases(
+        Service.ListDatabases(
             Arg.Is("account123"),
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
@@ -348,15 +243,10 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--account", "account123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--account", "account123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -367,7 +257,7 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenListContainersThrows()
     {
         // Arrange
-        _cosmosService.ListContainers(
+        Service.ListContainers(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("sub123"),
@@ -377,16 +267,11 @@ public class CosmosListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account123",
-            "--database", "database123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--database", "database123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -397,19 +282,15 @@ public class CosmosListCommandTests
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
-        _cosmosService.GetCosmosAccounts(
+        Service.GetCosmosAccounts(
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
-        var command = new CosmosListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);

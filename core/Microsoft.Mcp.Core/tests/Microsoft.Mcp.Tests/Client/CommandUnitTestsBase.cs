@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
+using NSubstitute.Core;
 using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
@@ -29,6 +31,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected CommandContext Context { get; init; }
     protected Command CommandDefinition { get; init; }
     protected ServiceProvider ServiceProvider { get; init; }
+    private readonly List<ConfiguredCall> _mockValidations = [];
 
     /// <summary>
     /// Initializes the command unit test base by setting up common dependency injection points with mocks.
@@ -57,6 +60,24 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
 
     protected T? DeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
         => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
+
+    /// <summary>
+    /// Validates the CommandResponse is non-null, has a status of OK, and contains a non-null .Results, then converts
+    /// the results to the specified type and validates the conversion is non-null before returning the converted value.
+    /// </summary>
+    /// <typeparam name="T">The type to convert to.</typeparam>
+    /// <param name="response">The CommandResponse to validate and convert.</param>
+    /// <param name="jsonTypeInfo">The JsonTypeInfo used for deserialization.</param>
+    /// <returns>The converted object of type T.</returns>
+    protected T ValidateAndConvertResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    {
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        var converted = JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
+        Assert.NotNull(converted);
+        return converted;
+    }
 
     public void Dispose()
     {

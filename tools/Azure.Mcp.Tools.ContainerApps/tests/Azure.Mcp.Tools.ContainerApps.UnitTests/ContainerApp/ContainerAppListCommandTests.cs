@@ -1,19 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ContainerApps.Commands;
 using Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
 using Azure.Mcp.Tools.ContainerApps.Models;
 using Azure.Mcp.Tools.ContainerApps.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -21,28 +17,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ContainerApps.UnitTests.ContainerApp;
 
-public class ContainerAppListCommandTests
+public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppListCommand, IContainerAppsService>
 {
-    private readonly IContainerAppsService _service;
-    private readonly ILogger<ContainerAppListCommand> _logger;
-    private readonly ContainerAppListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ContainerAppListCommandTests()
-    {
-        _service = Substitute.For<IContainerAppsService>();
-        _logger = Substitute.For<ILogger<ContainerAppListCommand>>();
-
-        _command = new(_logger, _service);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -62,7 +42,7 @@ public class ContainerAppListCommandTests
             // Arrange
             if (shouldSucceed)
             {
-                _service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                     .Returns(new ResourceQueryResults<ContainerAppInfo>(
                     [
                         new("app1", "eastus", "rg1", "/subscriptions/sub/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments/env1", "Succeeded"),
@@ -70,10 +50,8 @@ public class ContainerAppListCommandTests
                     ], false));
             }
 
-            var parseResult = _commandDefinition.Parse(args);
-
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(args);
 
             // Assert
             Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -99,13 +77,11 @@ public class ContainerAppListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -118,40 +94,30 @@ public class ContainerAppListCommandTests
     {
         // Arrange
         var expectedApps = new ResourceQueryResults<ContainerAppInfo>([new("app1", null, null, null, null)], false);
-        _service.ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedApps);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--resource-group", "rg");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _service.Received(1).ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListContainerApps("sub", "rg", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
     {
         // Arrange
-        _service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<ContainerAppInfo>([], false));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
         Assert.Empty(result.ContainerApps);
     }
 
@@ -160,13 +126,11 @@ public class ContainerAppListCommandTests
     {
         // Arrange
         var containerApp = new ContainerAppInfo("myapp", "eastus", "myrg", "/subscriptions/sub/resourceGroups/myrg/providers/Microsoft.App/managedEnvironments/myenv", "Succeeded");
-        _service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListContainerApps("sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<ContainerAppInfo>([containerApp], false));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

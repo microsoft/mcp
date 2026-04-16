@@ -1,31 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vmss;
 
-public class VmssCreateCommandTests
+public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmssCreateCommand> _logger;
-    private readonly VmssCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmssName = "test-vmss";
@@ -34,23 +24,10 @@ public class VmssCreateCommandTests
     private readonly string _knownPassword = "TestPassword123!";
     private readonly string _knownSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC...";
 
-    public VmssCreateCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmssCreateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -82,7 +59,7 @@ public class VmssCreateCommandTests
                 Zones: null,
                 Tags: null);
 
-            _computeService.CreateVmssAsync(
+            Service.CreateVmssAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -106,10 +83,8 @@ public class VmssCreateCommandTests
                 .Returns(createResult);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -140,7 +115,7 @@ public class VmssCreateCommandTests
             Zones: ["1"],
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
-        _computeService.CreateVmssAsync(
+        Service.CreateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -163,28 +138,18 @@ public class VmssCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
             "--ssh-public-key", _knownSshKey,
-            "--instance-count", "3"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--instance-count", "3");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssCreateCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
         Assert.Equal("linux", result.Vmss.OsType);
@@ -194,18 +159,15 @@ public class VmssCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_RequiresPasswordForWindows()
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse([
+        // Arrange & Act & Assert
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
-            "--image", "Win2022Datacenter" // Windows image
-        ]);
+            "--image", "Win2022Datacenter");
 
-        // Act & Assert
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("password", response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Windows", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -217,7 +179,7 @@ public class VmssCreateCommandTests
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "A VMSS with this name already exists");
 
-        _computeService.CreateVmssAsync(
+        Service.CreateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -240,17 +202,14 @@ public class VmssCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
-            "--admin-password", _knownPassword
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--admin-password", _knownPassword);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -273,7 +232,7 @@ public class VmssCreateCommandTests
             Zones: null,
             Tags: null);
 
-        _computeService.CreateVmssAsync(
+        Service.CreateVmssAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -296,24 +255,17 @@ public class VmssCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
-            "--admin-password", _knownPassword
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--admin-password", _knownPassword);
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmssCreateCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
     }

@@ -1,25 +1,18 @@
-using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.UnitTests;
 
-public sealed class LedgerEntryGetCommandTests
+public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntryGetCommand, IConfidentialLedgerService>
 {
     [Fact]
     public async Task Execute_WithTransactionId_Success_ReturnsResult()
     {
-        var service = Substitute.For<IConfidentialLedgerService>();
-        var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
-
-        service.GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>())
+        Service.GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>())
             .Returns(new LedgerEntryGetResult
             {
                 LedgerName = "ledger1",
@@ -27,23 +20,12 @@ public sealed class LedgerEntryGetCommandTests
                 Contents = "{\"hello\":\"world\"}"
             });
 
-        var provider = new ServiceCollection()
-            .AddSingleton(service)
-            .BuildServiceProvider();
+        var response = await ExecuteCommandAsync("--ledger", "ledger1", "--transaction-id", "2.199");
 
-        var command = new LedgerEntryGetCommand(service, logger);
-        var context = new CommandContext(provider);
-        var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199"]);
-
-        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
         Assert.Equal("2.199", result!.TransactionId);
 
-        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>());
+        await Service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -55,9 +37,8 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
+            Service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -73,9 +54,8 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("-startswithhyphen")]
     public async Task GetLedgerEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
+            Service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -85,18 +65,14 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("name#fragment")]
     public async Task AppendEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
-        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
+            Service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
     {
-        var service = Substitute.For<IConfidentialLedgerService>();
-        var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
-
-        service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>())
+        Service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>())
             .Returns(new LedgerEntryGetResult
             {
                 LedgerName = "ledger1",
@@ -104,22 +80,14 @@ public sealed class LedgerEntryGetCommandTests
                 Contents = "{\"hello\":\"world\"}"
             });
 
-        var provider = new ServiceCollection()
-            .AddSingleton(service)
-            .BuildServiceProvider();
+        var response = await ExecuteCommandAsync(
+            "--ledger", "ledger1",
+            "--transaction-id", "2.199",
+            "--collection-id", "my-collection");
 
-        var command = new LedgerEntryGetCommand(service, logger);
-        var context = new CommandContext(provider);
-        var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199", "--collection-id", "my-collection"]);
-
-        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
         Assert.Equal("2.199", result!.TransactionId);
 
-        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>());
     }
 }

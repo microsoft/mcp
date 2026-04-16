@@ -1,43 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
-public class ItemQueryCommandTests
+public class ItemQueryCommandTests : CommandUnitTestsBase<ItemQueryCommand, ICosmosService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ICosmosService _cosmosService;
-    private readonly ILogger<ItemQueryCommand> _logger;
-    private readonly ItemQueryCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ItemQueryCommandTests()
-    {
-        _cosmosService = Substitute.For<ICosmosService>();
-        _logger = Substitute.For<ILogger<ItemQueryCommand>>();
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .AddSingleton(_cosmosService)
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsItems_WhenQueryIsProvided()
     {
@@ -49,7 +27,7 @@ public class ItemQueryCommandTests
             JsonDocument.Parse("{\"id\":\"item2\"}").RootElement.Clone()!
         };
 
-        _cosmosService.QueryItems(
+        Service.QueryItems(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("container123"),
@@ -59,25 +37,18 @@ public class ItemQueryCommandTests
             null,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedItems));
+            .Returns(expectedItems);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
             "--subscription", "sub123",
-            "--query", query
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--query", query);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Equal(2, result.Items.Count);
     }
 
@@ -92,7 +63,7 @@ public class ItemQueryCommandTests
             JsonDocument.Parse("{\"id\":\"item2\"}").RootElement.Clone()!
         };
 
-        _cosmosService.QueryItems(
+        Service.QueryItems(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("container123"),
@@ -102,24 +73,17 @@ public class ItemQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedItems));
+            .Returns(expectedItems);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
-            "--subscription", "sub123"
-            // No --query option
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Equal(2, result.Items.Count);
     }
 
@@ -127,34 +91,27 @@ public class ItemQueryCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoItemsExist()
     {
         // Arrange
-        _cosmosService.QueryItems(
-            Arg.Is<string>(s => s == "account123"),
-            Arg.Is<string>(d => d == "database123"),
-            Arg.Is<string>(c => c == "container123"),
-            Arg.Is<string?>(q => q == null),
-            Arg.Is<string>(s => s == "sub123"),
-            Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
-            Arg.Is<string?>(t => t == null),
+        Service.QueryItems(
+            Arg.Is("account123"),
+            Arg.Is("database123"),
+            Arg.Is("container123"),
+            Arg.Is((string?)null),
+            Arg.Is("sub123"),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Is((string?)null),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Empty(result.Items);
     }
 
@@ -165,7 +122,7 @@ public class ItemQueryCommandTests
         var expectedError = "Test error";
         var query = "SELECT * FROM c";
 
-        _cosmosService.QueryItems(
+        Service.QueryItems(
             Arg.Is("account123"),
             Arg.Is("database123"),
             Arg.Is("container123"),
@@ -177,15 +134,12 @@ public class ItemQueryCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
-            "--subscription", "sub123"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", "sub123");
 
         // Assert
         Assert.NotNull(response);
@@ -201,7 +155,7 @@ public class ItemQueryCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange & Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

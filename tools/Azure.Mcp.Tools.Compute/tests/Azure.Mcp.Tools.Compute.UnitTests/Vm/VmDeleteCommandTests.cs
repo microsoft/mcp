@@ -1,51 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.UnitTests.Vm;
 
-public class VmDeleteCommandTests
+public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<VmDeleteCommand> _logger;
-    private readonly VmDeleteCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
     private readonly string _knownVmName = "test-vm";
 
-    public VmDeleteCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<VmDeleteCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -61,7 +38,7 @@ public class VmDeleteCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _computeService.DeleteVmAsync(
+            Service.DeleteVmAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -72,26 +49,16 @@ public class VmDeleteCommandTests
                 .Returns(true);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act & Assert
+        var response = await ExecuteCommandAsync(args);
         if (shouldSucceed)
         {
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            try
-            {
-                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-                Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-            }
-            catch (Microsoft.Mcp.Core.Commands.CommandValidationException)
-            {
-                // Expected for validation failures
-            }
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
 
@@ -99,7 +66,7 @@ public class VmDeleteCommandTests
     public async Task ExecuteAsync_DeletesVm()
     {
         // Arrange
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -109,24 +76,14 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmDeleteCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
         Assert.True(result.Success);
         Assert.Contains("successfully deleted", result.Message);
         Assert.Contains(_knownVmName, result.Message);
@@ -136,7 +93,7 @@ public class VmDeleteCommandTests
     public async Task ExecuteAsync_WithForceDeletion_PassesForceDeletionToService()
     {
         // Arrange
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
@@ -146,20 +103,17 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--force-deletion"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--force-deletion");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _computeService.Received(1).DeleteVmAsync(
+        await Service.Received(1).DeleteVmAsync(
             _knownVmName,
             _knownResourceGroup,
             _knownSubscription,
@@ -173,7 +127,7 @@ public class VmDeleteCommandTests
     public async Task ExecuteAsync_VmNotFound_ReturnsSuccess()
     {
         // Arrange - service returns false (VM was already gone / 404), but delete is idempotent
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -183,14 +137,11 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert - idempotent: 404 treated as success
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -203,7 +154,7 @@ public class VmDeleteCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Insufficient permissions");
 
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -213,14 +164,11 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -233,7 +181,7 @@ public class VmDeleteCommandTests
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "VM in state that prevents deletion");
 
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -243,14 +191,11 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -261,7 +206,7 @@ public class VmDeleteCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _computeService.DeleteVmAsync(
+        Service.DeleteVmAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -271,21 +216,14 @@ public class VmDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vm-name", _knownVmName,
             "--resource-group", _knownResourceGroup,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscription);
 
         // Assert
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmDeleteCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
         Assert.True(result.Success);
     }
 
@@ -293,7 +231,7 @@ public class VmDeleteCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(
+        var parseResult = CommandDefinition.Parse(
             $"--vm-name {_knownVmName} --resource-group {_knownResourceGroup} --subscription {_knownSubscription} --force-deletion");
 
         // Assert parse was successful
