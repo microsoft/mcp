@@ -416,6 +416,7 @@ public sealed partial class SearchService(
 
     private string GetSearchEndpoint(string serviceName)
     {
+        ValidateServiceName(serviceName);
         return _tenantService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
