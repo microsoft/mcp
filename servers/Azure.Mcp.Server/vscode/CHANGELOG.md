@@ -1,11 +1,10 @@
 # Release History
 
-
 ## 2.0.1 (2026-04-14)
 
 ### Fixed
 
-- Allow KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
+- Allowed KQL comments (//) and let statements (;) in Kusto query validation. Management commands and tautologies remain blocked. [[#2387](https://github.com/microsoft/mcp/pull/2387)]
 
 ## 2.0.0 (2026-04-09)
 
@@ -72,7 +71,7 @@ Install the Azure MCP Server from your preferred platform:
 
 This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 2.0!
 
-For a complete history of changes included in this release, see entries for versions [2.0.0-beta.1](#200-beta1-2025-10-29) through [2.0.0-beta.40](#200-beta40-2026-04-07).
+For a complete history of changes included in this release, see entries for versions [2.0.0-beta.1](#201-2025-10-29-pre-release) through [2.0.0-beta.40](#2040-2026-04-07-pre-release).
 
 ---
 
