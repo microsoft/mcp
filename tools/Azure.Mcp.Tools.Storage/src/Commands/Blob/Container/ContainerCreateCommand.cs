@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,13 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Description =>
         """
-        Create/provision a new Azure Storage blob container in a storage account. Required: --account <account>, --container <container>, --subscription <subscription>. Optional: --tenant <tenant>. Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold. Creates a logical container for organizing blobs within a storage account.
+        Create/provision a new Azure Storage blob container in a storage account.
+        
+        Required: --account, --container, --subscription
+        Optional: --tenant
+        
+        Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
+        Creates a logical container for organizing blobs within a storage account.
         """;
 
     public override string Title => CommandTitle;
