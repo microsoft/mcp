@@ -1,7 +1,7 @@
 # Release History
 
 
-## 3.0.0-beta.3 (2026-04-16) (pre-release)
+## 3.0.3 (2026-04-16) (pre-release)
 
 ### Added
 
