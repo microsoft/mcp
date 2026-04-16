@@ -1149,7 +1149,7 @@ Example prompts that generate Azure CLI commands:
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 
-### �️ Azure Terraform
+### Azure Terraform
 
 * "Get the documentation for azurerm_virtual_network"
 * "Show me the arguments for azurerm_storage_account"
@@ -1163,7 +1163,7 @@ Example prompts that generate Azure CLI commands:
 * "Validate Terraform files in ./my-terraform-folder against Azure security policies"
 * "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies"
 
-### �🏛️ Azure Well-Architected Framework
+### 🏛️ Azure Well-Architected Framework
 
 * "List all services with Well-Architected Framework guidance"
 * "What services have architectural guidance?"

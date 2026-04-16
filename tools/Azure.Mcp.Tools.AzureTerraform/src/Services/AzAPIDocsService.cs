@@ -41,6 +41,9 @@ public sealed class AzApiDocsService : IAzApiDocsService
         };
     }
 
+    private static string EscapeHcl(string value) =>
+        value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
+
     private static string GetParentResourceType(string resourceTypeName)
     {
         string[] parts = resourceTypeName.Split('/');
@@ -80,7 +83,7 @@ public sealed class AzApiDocsService : IAzApiDocsService
         // Get the resource label from the last part of resource type
         string[] resourceParts = resourceTypeName.Split('/');
         string lastPart = resourceParts[^1];
-        string label = lastPart.EndsWith('s') ? lastPart[..^1] : lastPart;
+        string label = lastPart.ToLowerInvariant();
 
         sb.AppendLine("```hcl");
         sb.AppendLine($"resource \"azapi_resource\" \"{label}\" {{");
@@ -186,14 +189,14 @@ public sealed class AzApiDocsService : IAzApiDocsService
             {
                 if (nestedType is ObjectTypeEntity nestedObj)
                 {
-                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {prop.Description}";
+                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {EscapeHcl(prop.Description)}";
                     sb.AppendLine($"{pad}{prop.Name} = {{ {required}{desc}");
                     FormatObjectProperties(sb, nestedObj, typeIndex, indent + 2);
                     sb.AppendLine($"{pad}}}");
                 }
                 else if (nestedType is DiscriminatedObjectTypeEntity discObj)
                 {
-                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {prop.Description}";
+                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {EscapeHcl(prop.Description)}";
                     sb.AppendLine($"{pad}{prop.Name} = \"{required} Discriminated by '{discObj.Discriminator}'.{desc}\"");
                 }
                 else
@@ -207,14 +210,14 @@ public sealed class AzApiDocsService : IAzApiDocsService
                 string elementType = prop.Type[..^2];
                 if (typeIndex.TryGetValue(elementType, out var elementComplexType) && elementComplexType is ObjectTypeEntity elementObj)
                 {
-                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {prop.Description}";
+                    string desc = string.IsNullOrEmpty(prop.Description) ? "" : $" // {EscapeHcl(prop.Description)}";
                     sb.AppendLine($"{pad}{prop.Name} = [ {{ {required} Array.{desc}");
                     FormatObjectProperties(sb, elementObj, typeIndex, indent + 2);
                     sb.AppendLine($"{pad}}} ]");
                 }
                 else
                 {
-                    sb.AppendLine($"{pad}{prop.Name} = \"{required} Array of {elementType}. {prop.Description ?? ""}\"");
+                    sb.AppendLine($"{pad}{prop.Name} = \"{required} Array of {elementType}. {EscapeHcl(prop.Description ?? "")}\"");
                 }
             }
             else
@@ -227,8 +230,8 @@ public sealed class AzApiDocsService : IAzApiDocsService
     private static string FormatPropertyDescriptionWithRequired(string required, PropertyInfo prop)
     {
         string typeDesc = MapTypeToDescription(prop.Type);
-        string desc = prop.Description ?? "";
-        string modifiers = prop.Modifiers != null ? $" [{prop.Modifiers}]" : "";
+        string desc = EscapeHcl(prop.Description ?? "");
+        string modifiers = prop.Modifiers != null ? $" [{EscapeHcl(prop.Modifiers)}]" : "";
         return $"{required} {typeDesc}. {desc}{modifiers}".Trim();
     }
 

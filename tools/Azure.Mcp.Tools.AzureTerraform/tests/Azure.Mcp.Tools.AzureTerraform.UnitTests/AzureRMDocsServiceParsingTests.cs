@@ -49,7 +49,7 @@ public class AzureRMDocsServiceParsingTests
     [Fact]
     public void ExtractSummary_ReturnsSummaryFromMarkdown()
     {
-        string summary = AzureRMDocsService.ExtractSummary(SampleMarkdown, "azurerm_resource_group", false);
+        string summary = AzureRMDocsParser.ExtractSummary(SampleMarkdown, "azurerm_resource_group", false);
 
         Assert.Equal("Manages a Resource Group.", summary);
     }
@@ -57,7 +57,7 @@ public class AzureRMDocsServiceParsingTests
     [Fact]
     public void ExtractArguments_ReturnsArgumentsFromMarkdown()
     {
-        var args = AzureRMDocsService.ExtractArguments(SampleMarkdown, false);
+        var args = AzureRMDocsParser.ExtractArguments(SampleMarkdown, false);
 
         Assert.Equal(3, args.Count);
         Assert.Equal("name", args[0].Name);
@@ -71,7 +71,7 @@ public class AzureRMDocsServiceParsingTests
     [Fact]
     public void ExtractAttributes_ReturnsAttributesFromMarkdown()
     {
-        var attrs = AzureRMDocsService.ExtractAttributes(SampleMarkdown);
+        var attrs = AzureRMDocsParser.ExtractAttributes(SampleMarkdown);
 
         Assert.Contains(attrs, a => a.Name == "id");
     }
@@ -79,7 +79,7 @@ public class AzureRMDocsServiceParsingTests
     [Fact]
     public void ExtractExamples_ReturnsExamplesFromMarkdown()
     {
-        var examples = AzureRMDocsService.ExtractExamples(SampleMarkdown, "resource_group", false);
+        var examples = AzureRMDocsParser.ExtractExamples(SampleMarkdown, "resource_group", false);
 
         Assert.NotEmpty(examples);
         Assert.Contains("azurerm_resource_group", examples[0]);
@@ -88,7 +88,7 @@ public class AzureRMDocsServiceParsingTests
     [Fact]
     public void ExtractNotes_ReturnsNotesFromMarkdown()
     {
-        var notes = AzureRMDocsService.ExtractNotes(SampleMarkdown);
+        var notes = AzureRMDocsParser.ExtractNotes(SampleMarkdown);
 
         Assert.NotEmpty(notes);
         Assert.Contains(notes, n => n.Contains("note about the resource", StringComparison.OrdinalIgnoreCase));
@@ -104,7 +104,7 @@ public class AzureRMDocsServiceParsingTests
             Short line
             """;
 
-        string summary = AzureRMDocsService.ExtractSummary(markdown, "azurerm_resource_group", true);
+        string summary = AzureRMDocsParser.ExtractSummary(markdown, "azurerm_resource_group", true);
 
         Assert.Contains("data source", summary, StringComparison.OrdinalIgnoreCase);
     }
@@ -119,7 +119,7 @@ public class AzureRMDocsServiceParsingTests
             Some resource description that is long enough.
             """;
 
-        var args = AzureRMDocsService.ExtractArguments(markdown, false);
+        var args = AzureRMDocsParser.ExtractArguments(markdown, false);
 
         Assert.NotEmpty(args);
         Assert.Contains(args, a => a.Name == "name");
@@ -142,7 +142,7 @@ public class AzureRMDocsServiceParsingTests
             ## Attributes Reference
             """;
 
-        var blocks = AzureRMDocsService.ExtractBlockDefinitions(markdown);
+        var blocks = AzureRMDocsParser.ExtractBlockDefinitions(markdown);
 
         Assert.True(blocks.ContainsKey("identity"));
         Assert.Equal(2, blocks["identity"].Count);

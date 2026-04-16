@@ -70,8 +70,8 @@ public class AzApiDocsServiceFormatTests
             "ResourceGroup",
             complexTypes);
 
-        // "virtualMachines" => "virtualMachine" (strips trailing 's')
-        Assert.Contains("\"virtualMachine\"", result);
+        // "virtualMachines" => "virtualmachines" (lowercased, no naive singularization)
+        Assert.Contains("\"virtualmachines\"", result);
     }
 
     [Fact]

@@ -41,6 +41,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         ConfigureGitHubHeaders(client);
 
         var response = await client.GetAsync(new Uri(apiUrl), cancellationToken).ConfigureAwait(false);
+        CheckForRateLimit(response);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -246,6 +247,32 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         {
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", githubToken);
+        }
+    }
+
+    private static void CheckForRateLimit(HttpResponseMessage response)
+    {
+        if ((int)response.StatusCode == 403
+            && response.Headers.TryGetValues("X-RateLimit-Remaining", out var values))
+        {
+            var remaining = values.FirstOrDefault();
+            if (remaining == "0")
+            {
+                string resetMessage = "";
+                if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetValues))
+                {
+                    var resetUnix = resetValues.FirstOrDefault();
+                    if (long.TryParse(resetUnix, out var epoch))
+                    {
+                        var resetTime = DateTimeOffset.FromUnixTimeSeconds(epoch);
+                        resetMessage = $" Rate limit resets at {resetTime:u}.";
+                    }
+                }
+
+                throw new InvalidOperationException(
+                    $"GitHub API rate limit exceeded.{resetMessage} " +
+                    "Set a GITHUB_TOKEN environment variable to increase the rate limit.");
+            }
         }
     }
 }

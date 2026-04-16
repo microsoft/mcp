@@ -92,9 +92,11 @@ public sealed class ConftestService : IConftestService
 
     internal static void AddPolicyArgs(List<string> args, string policySet, string? severityFilter, string? customPolicies)
     {
+        policySet = policySet.ToLowerInvariant();
+
         var policyPath = policySet switch
         {
-            "Azure-Proactive-Resiliency-Library-v2" => $"./{PolicyDirectory}/Azure-Proactive-Resiliency-Library-v2",
+            "azure-proactive-resiliency-library-v2" => $"./{PolicyDirectory}/Azure-Proactive-Resiliency-Library-v2",
             "avmsec" => $"./{PolicyDirectory}/avmsec",
             _ => $"./{PolicyDirectory}"
         };

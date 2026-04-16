@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
@@ -122,25 +121,3 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
         }
     }
 }
-
-internal sealed class RemarksJson
-{
-    [JsonPropertyName("TerraformSamples")]
-    public List<TerraformSampleEntry>? TerraformSamples { get; set; }
-}
-
-internal sealed class TerraformSampleEntry
-{
-    [JsonPropertyName("ResourceType")]
-    public string ResourceType { get; set; } = string.Empty;
-
-    [JsonPropertyName("Path")]
-    public string Path { get; set; } = string.Empty;
-
-    [JsonPropertyName("Description")]
-    public string Description { get; set; } = string.Empty;
-}
-
-[JsonSerializable(typeof(RemarksJson))]
-[JsonSerializable(typeof(List<TerraformSampleEntry>))]
-internal sealed partial class AzApiExamplesJsonContext : JsonSerializerContext;

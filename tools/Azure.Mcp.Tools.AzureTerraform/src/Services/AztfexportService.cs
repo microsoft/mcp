@@ -44,6 +44,7 @@ public sealed class AztfexportService : IAztfexportService
         int parallelism = 10,
         bool continueOnError = true)
     {
+        parallelism = Math.Clamp(parallelism, 1, 50);
         var args = new List<string> { "resource", "--non-interactive", "--plain-ui" };
 
         if (string.Equals(provider, "azapi", StringComparison.OrdinalIgnoreCase))
@@ -98,6 +99,7 @@ public sealed class AztfexportService : IAztfexportService
         int parallelism = 10,
         bool continueOnError = true)
     {
+        parallelism = Math.Clamp(parallelism, 1, 50);
         var args = new List<string> { "resource-group", "--non-interactive", "--plain-ui" };
 
         if (string.Equals(provider, "azapi", StringComparison.OrdinalIgnoreCase))
@@ -152,6 +154,7 @@ public sealed class AztfexportService : IAztfexportService
         int parallelism = 10,
         bool continueOnError = true)
     {
+        parallelism = Math.Clamp(parallelism, 1, 50);
         var args = new List<string> { "query", "--non-interactive", "--plain-ui" };
 
         if (string.Equals(provider, "azapi", StringComparison.OrdinalIgnoreCase))
