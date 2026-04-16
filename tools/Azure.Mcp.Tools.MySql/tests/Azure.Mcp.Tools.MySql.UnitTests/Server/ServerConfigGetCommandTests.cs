@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Server;
 
 public class ServerConfigGetCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
+
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<ServerConfigGetCommand> _logger;
 
@@ -26,10 +26,8 @@ public class ServerConfigGetCommandTests
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<ServerConfigGetCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
 
-        _serviceProvider = collection.BuildServiceProvider();
+
     }
 
     [Fact]
@@ -48,14 +46,14 @@ public class ServerConfigGetCommandTests
 
         _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "test-server"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -76,14 +74,14 @@ public class ServerConfigGetCommandTests
         _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "test-server"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -95,7 +93,7 @@ public class ServerConfigGetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_logger, _mysqlService);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);

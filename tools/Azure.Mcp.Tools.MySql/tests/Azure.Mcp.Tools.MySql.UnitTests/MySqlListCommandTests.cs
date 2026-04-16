@@ -16,7 +16,6 @@ namespace Azure.Mcp.Tools.MySql.UnitTests;
 
 public class MySqlListCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<MySqlListCommand> _logger;
 
@@ -24,11 +23,6 @@ public class MySqlListCommandTests
     {
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<MySqlListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
-
-        _serviceProvider = collection.BuildServiceProvider();
     }
 
     [Fact]
@@ -37,13 +31,13 @@ public class MySqlListCommandTests
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2", "mysql-server-3" };
         _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -66,14 +60,14 @@ public class MySqlListCommandTests
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns(expectedDatabases);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -96,7 +90,7 @@ public class MySqlListCommandTests
         var expectedTables = new List<string> { "users", "products", "orders" };
         _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns(expectedTables);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -104,7 +98,7 @@ public class MySqlListCommandTests
             "--server", "server1",
             "--database", "db1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -126,13 +120,13 @@ public class MySqlListCommandTests
     {
         _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -154,14 +148,14 @@ public class MySqlListCommandTests
     {
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -183,7 +177,7 @@ public class MySqlListCommandTests
     {
         _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -191,7 +185,7 @@ public class MySqlListCommandTests
             "--server", "server1",
             "--database", "db1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -214,13 +208,13 @@ public class MySqlListCommandTests
         _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -235,14 +229,14 @@ public class MySqlListCommandTests
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -257,7 +251,7 @@ public class MySqlListCommandTests
         _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -265,7 +259,7 @@ public class MySqlListCommandTests
             "--server", "server1",
             "--database", "db1"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -277,7 +271,7 @@ public class MySqlListCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
@@ -286,14 +280,14 @@ public class MySqlListCommandTests
     [Fact]
     public void Name_IsCorrect()
     {
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         Assert.Equal("list", command.Name);
     }
 
     [Fact]
     public void Description_IsCorrect()
     {
-        var command = new MySqlListCommand(_logger);
+        var command = new MySqlListCommand(_logger, _mysqlService);
         Assert.Contains("List MySQL servers", command.Description);
         Assert.Contains("databases, or tables", command.Description);
     }
