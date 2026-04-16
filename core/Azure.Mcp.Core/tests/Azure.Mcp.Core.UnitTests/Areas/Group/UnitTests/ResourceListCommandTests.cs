@@ -43,7 +43,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var listResult = ConvertResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
+        var listResult = DeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.NotNull(listResult);
         Assert.Equal(2, listResult.Resources.Count);
 
@@ -121,7 +121,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        var listResult = ConvertResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
+        var listResult = DeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.NotNull(listResult);
         Assert.Empty(listResult.Resources);
     }

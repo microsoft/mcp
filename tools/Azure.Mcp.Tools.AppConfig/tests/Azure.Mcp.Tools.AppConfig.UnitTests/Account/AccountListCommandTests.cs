@@ -39,7 +39,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Accounts.Count);
@@ -65,7 +65,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);

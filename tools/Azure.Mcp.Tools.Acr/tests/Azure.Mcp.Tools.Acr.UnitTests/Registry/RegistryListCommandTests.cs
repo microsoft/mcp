@@ -118,7 +118,7 @@ public class RegistryListCommandTests : CommandUnitTestsBase<RegistryListCommand
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AcrJsonContext.Default.RegistryListCommandResult);
+        var result = DeserializeResponse(response, AcrJsonContext.Default.RegistryListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Registries);

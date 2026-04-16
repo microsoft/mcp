@@ -89,7 +89,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
@@ -116,7 +116,7 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Recommendations);

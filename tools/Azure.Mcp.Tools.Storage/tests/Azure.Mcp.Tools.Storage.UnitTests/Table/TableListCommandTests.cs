@@ -41,7 +41,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, StorageJsonContext.Default.TableListCommandResult);
+        var result = DeserializeResponse(response, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
@@ -68,7 +68,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, StorageJsonContext.Default.TableListCommandResult);
+        var result = DeserializeResponse(response, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tables);

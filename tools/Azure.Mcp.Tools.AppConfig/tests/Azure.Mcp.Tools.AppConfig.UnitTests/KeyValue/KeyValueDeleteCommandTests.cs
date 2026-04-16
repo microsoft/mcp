@@ -35,7 +35,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             null,
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -61,7 +61,7 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             "prod",
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);

@@ -43,7 +43,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
@@ -72,7 +72,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);
@@ -175,7 +175,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        var result = ConvertResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Accounts);

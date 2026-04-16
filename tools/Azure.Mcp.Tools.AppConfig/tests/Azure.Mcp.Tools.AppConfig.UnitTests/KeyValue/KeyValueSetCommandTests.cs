@@ -39,7 +39,7 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -71,7 +71,7 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -105,7 +105,7 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);

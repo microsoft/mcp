@@ -81,7 +81,7 @@ public class AccountCreateCommandTests : CommandUnitTestsBase<AccountCreateComma
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
 
-            var result = ConvertResponse(response, StorageJsonContext.Default.AccountCreateCommandResult);
+            var result = DeserializeResponse(response, StorageJsonContext.Default.AccountCreateCommandResult);
             Assert.NotNull(result);
             Assert.NotNull(result!.Account);
             Assert.Equal("testaccount", result.Account.Name);

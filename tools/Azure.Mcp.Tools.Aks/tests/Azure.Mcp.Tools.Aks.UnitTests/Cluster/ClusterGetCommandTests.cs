@@ -95,7 +95,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedClusters.Count, result.Clusters.Count);
@@ -196,7 +196,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         var c = result.Clusters[0];
@@ -231,7 +231,7 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Clusters);

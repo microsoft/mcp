@@ -168,7 +168,7 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedNodePools.Count, result.NodePools.Count);
@@ -229,7 +229,7 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.NodePools);
@@ -317,7 +317,7 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
 
         await Service.Received(1).GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
+        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.NodePools);

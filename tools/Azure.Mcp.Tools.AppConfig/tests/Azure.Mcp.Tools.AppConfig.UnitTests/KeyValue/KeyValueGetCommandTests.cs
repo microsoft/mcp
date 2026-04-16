@@ -44,7 +44,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Settings.Count);
@@ -81,7 +81,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Settings);
@@ -120,7 +120,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Settings);
@@ -164,7 +164,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
         Assert.NotNull(result);
         Assert.Single(result.Settings);
         Assert.Equal("my-key", result.Settings[0].Key);
@@ -206,7 +206,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Settings);

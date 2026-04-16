@@ -22,6 +22,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     where TCommand : class, IBaseCommand
     where TService : class
 {
+    private bool _disposed = false;
     protected TService Service { get; init; }
     protected TCommand Command { get; init; }
     protected ILogger<TCommand> Logger { get; init; }
@@ -54,12 +55,20 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected Task<CommandResponse> ExecuteCommandAsync(string args)
         => Command.ExecuteAsync(Context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
-    protected T? ConvertResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    protected T? DeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
         => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
 
     public void Dispose()
     {
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    public void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
         ServiceProvider.Dispose();
+        _disposed = true;
     }
 }

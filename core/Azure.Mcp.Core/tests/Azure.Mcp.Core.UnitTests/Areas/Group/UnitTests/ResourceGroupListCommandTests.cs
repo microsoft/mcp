@@ -42,7 +42,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var resultGroups = ConvertResponse(result, GroupJsonContext.Default.Result);
+        var resultGroups = DeserializeResponse(result, GroupJsonContext.Default.Result);
         Assert.NotNull(resultGroups);
         Assert.Equal(2, resultGroups.Groups.Count);
 
@@ -115,7 +115,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        var resultGroups = ConvertResponse(result, GroupJsonContext.Default.Result);
+        var resultGroups = DeserializeResponse(result, GroupJsonContext.Default.Result);
         Assert.NotNull(resultGroups);
         Assert.Empty(resultGroups.Groups);
     }
