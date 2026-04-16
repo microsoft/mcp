@@ -943,10 +943,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
 | storage_blob_container_get | List all blob containers in the storage account <account> |
+| storage_blob_container_get | List all blob containers in the storage account <account> with prefix <prefix> |
 | storage_blob_container_get | Show me the containers in the storage account <account> |
 | storage_blob_get | Show me the properties for blob <blob> in container <container> in storage account <account> |
 | storage_blob_get | Get the details about blob <blob> in the container <container> in storage account <account> |
 | storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
+| storage_blob_get | List all blobs in the blob container <container> in the storage account <account> with prefix <prefix> |
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
 | storage_table_list | List all tables in the storage account <account> |

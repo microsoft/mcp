@@ -315,8 +315,8 @@ if ($Subsection) {
     $yamlContent += "    subsection: `"$Subsection`"`n"
 }
 
-# Remove trailing newline
-$yamlContent = $yamlContent.TrimEnd("`n")
+# Trim multiple trailing newlines and ensure file ends with a single newline
+$yamlContent = $yamlContent.TrimEnd("`n") + "`n"
 
 # Write YAML file
 $yamlContent | Set-Content -Path $filepath -Encoding UTF8 -NoNewline

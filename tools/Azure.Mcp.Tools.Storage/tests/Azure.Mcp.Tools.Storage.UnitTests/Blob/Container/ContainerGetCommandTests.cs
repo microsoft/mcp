@@ -4,9 +4,8 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
-using Azure.Mcp.Tools.Storage.Commands.Account;
+using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,21 +16,21 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Storage.UnitTests.Account;
+namespace Azure.Mcp.Tools.Storage.UnitTests.Blob.Container;
 
-public class AccountGetCommandTests
+public class ContainerGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IStorageService _storageService;
-    private readonly ILogger<AccountGetCommand> _logger;
-    private readonly AccountGetCommand _command;
+    private readonly ILogger<ContainerGetCommand> _logger;
+    private readonly ContainerGetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public AccountGetCommandTests()
+    public ContainerGetCommandTests()
     {
         _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<AccountGetCommand>>();
+        _logger = Substitute.For<ILogger<ContainerGetCommand>>();
 
         _serviceProvider = new ServiceCollection().BuildServiceProvider();
         _command = new(_logger, _storageService);
@@ -40,25 +39,28 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    public async Task ExecuteAsync_NoParameters_ReturnsContainers()
     {
         // Arrange
         var subscription = "sub123";
-        var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
+        var account = "testaccount";
+        var expectedContainers = new List<ContainerInfo>(
         [
-            new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true),
-            new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, "Succeeded", DateTimeOffset.UtcNow, false, true)
-        ], false);
+            new("container", DateTimeOffset.UtcNow, null, new Dictionary<string, string>(), null, null, null, null, false, false, null, null, false),
+            new("container2", DateTimeOffset.UtcNow, null, new Dictionary<string, string>(), null, null, null, null, false, false, null, null, false)
+        ]);
 
-        _storageService.GetAccountDetails(
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedAccounts);
+            .Returns(expectedContainers);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -68,29 +70,32 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.NotNull(result.Accounts);
-        Assert.Equal(expectedAccounts.Results.Count, result.Accounts.Count);
-        Assert.Equal(expectedAccounts.Results.Select(a => a.Name), result.Accounts.Select(a => a.Name));
+        Assert.NotNull(result.Containers);
+        Assert.Equal(expectedContainers.Count, result.Containers.Count);
+        Assert.Equal(expectedContainers.Select(a => a.Name), result.Containers.Select(a => a.Name));
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainers()
     {
         // Arrange
         var subscription = "sub123";
+        var account = "testaccount";
 
-        _storageService.GetAccountDetails(
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+            .Returns([]);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -100,10 +105,10 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Empty(result.Accounts);
+        Assert.Empty(result.Containers);
     }
 
     [Fact]
@@ -112,16 +117,19 @@ public class AccountGetCommandTests
         // Arrange
         var expectedError = "Test error";
         var subscription = "sub123";
+        var account = "testaccount";
 
-        _storageService.GetAccountDetails(
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
-            null,
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -144,23 +152,28 @@ public class AccountGetCommandTests
     [Theory]
     [InlineData("--account mystorageaccount --subscription sub123", true)]
     [InlineData("--subscription sub123 --account mystorageaccount", true)]
-    [InlineData("--subscription sub123", true)] // Account is optional
+    [InlineData("--subscription sub123 --account mystorageaccount --container container", true)]
+    [InlineData("--subscription sub123 --account mystorageaccount --container container --prefix prefix", true)]
+    [InlineData("--subscription sub123", false)] // Missing account
     [InlineData("--account mystorageaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
-                [new("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
-                false);
+            var expectedContainers = new List<ContainerInfo>(
+            [
+                new("container", DateTimeOffset.UtcNow, null, new Dictionary<string, string>(), null, null, null, null, false, false, null, null, false)
+            ]);
 
-            _storageService.GetAccountDetails(
+            _storageService.GetContainerDetails(
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(expectedAccount);
+                .Returns(expectedContainers);
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -177,29 +190,31 @@ public class AccountGetCommandTests
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
         }
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAccountDetails_WhenAccountExists()
+    public async Task ExecuteAsync_ReturnsContainerDetails_WhenContainerExists()
     {
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
-        var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
-            [new(account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
-            false);
+        var container = "container123";
+        var expected = new ContainerInfo(container, DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
+            "unlocked", "available", null, "private", false, false, null, null, false);
 
-        _storageService.GetAccountDetails(
+        _storageService.GetContainerDetails(
             Arg.Is(account),
+            Arg.Is(container),
             Arg.Is(subscription),
-            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedAccount);
+            .Returns([expected]);
 
-        var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -210,14 +225,14 @@ public class AccountGetCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Single(result.Accounts);
+        Assert.Single(result.Containers);
 
-        Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
-        Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
-        Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);
+        Assert.Equal(expected.Name, result.Containers[0].Name);
+        Assert.Equal(expected.LastModified, result.Containers[0].LastModified);
+        Assert.Equal(expected.ETag, result.Containers[0].ETag);
     }
 
     [Fact]
@@ -226,12 +241,19 @@ public class AccountGetCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
+        var container = "container123";
 
-        _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
+            Arg.Is(container),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
@@ -246,21 +268,28 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
-        var account = "nonexistentaccount";
+        var account = "mystorageaccount";
         var subscription = "sub123";
+        var container = "notfound";
 
-        _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
+            Arg.Is(container),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Container not found"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("Storage account not found", response.Message);
+        Assert.Contains("Container not found", response.Message);
     }
 
     [Fact]
@@ -269,12 +298,19 @@ public class AccountGetCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
+        var container = "container123";
 
-        _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _storageService.GetContainerDetails(
+            Arg.Is(account),
+            Arg.Is(container),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
