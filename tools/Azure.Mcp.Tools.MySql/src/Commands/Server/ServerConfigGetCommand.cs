@@ -9,9 +9,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
-public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger, IMySqlService mysqlService) : BaseServerCommand<ServerConfigGetOptions>(logger)
 {
     private const string CommandTitle = "Get MySQL Server Configuration";
+    private readonly IMySqlService _mysqlService = mysqlService;
 
     public override string Id => "677cef4f-0eb1-4665-a3a2-89301a75c201";
 
@@ -42,8 +43,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
 
         try
         {
-            var mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            var config = await mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(config) ?
                 ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

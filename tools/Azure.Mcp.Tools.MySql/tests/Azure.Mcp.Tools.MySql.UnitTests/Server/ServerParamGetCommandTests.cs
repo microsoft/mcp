@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Server;
 
 public class ServerParamGetCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
+
     private readonly IMySqlService _mysqlService;
     private readonly ILogger<ServerParamGetCommand> _logger;
 
@@ -26,10 +26,8 @@ public class ServerParamGetCommandTests
         _mysqlService = Substitute.For<IMySqlService>();
         _logger = Substitute.For<ILogger<ServerParamGetCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
 
-        _serviceProvider = collection.BuildServiceProvider();
+
     }
 
     [Fact]
@@ -38,7 +36,7 @@ public class ServerParamGetCommandTests
         var expectedValue = "ON";
         _mysqlService.GetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", Arg.Any<CancellationToken>()).Returns(expectedValue);
 
-        var command = new ServerParamGetCommand(_logger);
+        var command = new ServerParamGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -46,7 +44,7 @@ public class ServerParamGetCommandTests
             "--server", "test-server",
             "--param", "max_connections"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -68,7 +66,7 @@ public class ServerParamGetCommandTests
         _mysqlService.GetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
-        var command = new ServerParamGetCommand(_logger);
+        var command = new ServerParamGetCommand(_logger, _mysqlService);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -76,7 +74,7 @@ public class ServerParamGetCommandTests
             "--server", "test-server",
             "--param", "invalid_param"
         ]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -88,7 +86,7 @@ public class ServerParamGetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new ServerParamGetCommand(_logger);
+        var command = new ServerParamGetCommand(_logger, _mysqlService);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
