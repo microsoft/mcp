@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Restored non-sensitive diagnostic context (Subscription, ResourceGroup, Server, Database) to error logging in MySqlListCommand and PostgresListCommand, replacing the previous `{@Options}` pattern that could leak credentials such as the PostgreSQL Password field"

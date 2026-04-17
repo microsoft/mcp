@@ -38,7 +38,7 @@ public class ServerConfigGetCommandTests
         var expectedConfig = "config123";
         _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -59,7 +59,7 @@ public class ServerConfigGetCommandTests
     {
         _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<CancellationToken>()).Returns("");
 
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -77,7 +77,7 @@ public class ServerConfigGetCommandTests
     [InlineData("--server")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new ServerConfigGetCommand(_logger);
+        var command = new ServerConfigGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),

@@ -301,6 +301,7 @@ popd
 
 ### Unit Testing Requirements
 All commands must include comprehensive unit tests:
+
 ```csharp
 // Required test patterns for every command
 [Fact] public void Constructor_InitializesCommandCorrectly()
@@ -309,6 +310,9 @@ All commands must include comprehensive unit tests:
 [Fact] public async Task ExecuteAsync_HandlesServiceErrors()
 [Fact] public void BindOptions_BindsOptionsCorrectly()
 ```
+
+Command unit tests should extend `CommandUnitTestsBase<TCommand, TService>` where `TCommand` is the command class being
+tested and `TService` is the service that the command uses.
 
 ### Live Test Infrastructure
 Azure service commands require Bicep templates for test resources:

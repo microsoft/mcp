@@ -1,44 +1,25 @@
-﻿using System.CommandLine;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.UnitTests.Recommendation;
 
-public class RecommendationListCommandTests
+public class RecommendationListCommandTests : CommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAdvisorService _advisorService;
-    private readonly ILogger<RecommendationListCommand> _logger;
-    private readonly RecommendationListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RecommendationListCommandTests()
-    {
-        _advisorService = Substitute.For<IAdvisorService>();
-        _logger = Substitute.For<ILogger<RecommendationListCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _advisorService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -53,7 +34,7 @@ public class RecommendationListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _advisorService.ListRecommendationsAsync(
+            Service.ListRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>(),
@@ -61,11 +42,8 @@ public class RecommendationListCommandTests
                 .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -90,32 +68,28 @@ public class RecommendationListCommandTests
             new(ResourceId: "recId2", RecommendationText: "Recommendation 2", Category: "Cost"),
             new(ResourceId: "recId3", RecommendationText: "Recommendation 3", Category: "Performance")
         };
-        _advisorService.ListRecommendationsAsync(
+        Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>(expectedRecommendations, false));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _advisorService.Received(1).ListRecommendationsAsync(
+        await Service.Received(1).ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
@@ -128,25 +102,21 @@ public class RecommendationListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoRecommendations()
     {
         // Arrange
-        _advisorService.ListRecommendationsAsync(
+        Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AdvisorJsonContext.Default.RecommendationListResult);
+        var result = DeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Recommendations);
@@ -156,18 +126,15 @@ public class RecommendationListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _advisorService.ListRecommendationsAsync(
+        Service.ListRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--subscription sub123");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -180,13 +147,11 @@ public class RecommendationListCommandTests
     {
         // Arrange
         var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _advisorService.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListRecommendationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription", "--resource-group", "test-rg");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
