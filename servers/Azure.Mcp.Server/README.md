@@ -953,6 +953,18 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "List the deployments for web app 'my-webapp' in 'my-resource-group'"
 * "Get the deployment 'deployment-id' for web app 'my-webapp' in 'my-resource-group'"
 
+### 🛡️ Azure Backup
+
+* "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
+* "Get details of backup vault 'myvault' in resource group 'myRG'"
+* "Create a backup policy for Azure VMs in vault 'myvault'"
+* "List protectable items in my backup vault"
+* "Check backup status for my Azure resource in eastus"
+* "Get recovery points for a protected item"
+* "Find unprotected resources in my subscription"
+* "Configure soft delete to 'AlwaysOn' and immutability to 'Locked' on my vault"
+* "Enable cross-region restore on my vault"
+
 ### 🖥️ Azure CLI Generate
 
 * Generate Azure CLI commands based on user intent
@@ -1154,6 +1166,7 @@ The Azure MCP Server provides tools for interacting with **43+ Azure service are
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
+- 🛡️ **Azure Backup** - Recovery Services vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
