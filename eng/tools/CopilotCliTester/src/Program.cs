@@ -498,6 +498,7 @@ static class Program
                     _ => "--"
                 };
                 var promptShort = result.Prompt.Length > 40 ? result.Prompt[..40] + "..." : result.Prompt;
+                promptShort = promptShort.Replace("|", "\\|");
                 var line = $"| {status} | `{result.Tool}` | {promptShort} | {result.Duration:F1}s | {result.Attempts} |";
                 File.AppendAllText(filePath, line + Environment.NewLine);
             }

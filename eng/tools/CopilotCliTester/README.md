@@ -95,7 +95,7 @@ Usage:
   CopilotCliTester run [options]
 
 Options:
-  --namespace <name>      Filter by namespace (partial match, e.g., "storage", "keyvault")
+  --namespace <name>      Filter by namespace (partial, case-insensitive match against section headers in e2eTestPrompts.md, e.g., "storage" matches "Azure Storage")
   --tool <name>           Filter by tool name (exact match, e.g., "subscription_list")
   --max <n>               Maximum number of prompts to test (0 = all)
   --retries <n>           Maximum retry attempts per prompt (default: 3)
@@ -237,7 +237,7 @@ SUMMARY
 | File | Purpose |
 |------|---------|
 | `Program.cs` | CLI argument parsing, parallel test orchestration, markdown/JSON report generation |
-| `PromptParser.cs` | Parses `e2eTestPrompts.md` markdown tables into `TestPrompt` records. Extracts namespace from tool name prefix. |
+| `PromptParser.cs` | Parses `e2eTestPrompts.md` markdown tables into `TestPrompt` records. Extracts namespace from `## ` section headers (e.g., `## Azure Storage` → namespace `Azure Storage`). |
 | `AgentRunner.cs` | Creates `CopilotClient` and session, maps SDK events to `AgentSessionEvent`, writes per-test markdown transcripts with secret redaction |
 | `AgentRunnerUtils.cs` | Tool invocation detection: matches by exact name, namespace-prefixed name, `mcpToolName`, or `command` argument |
 
@@ -247,12 +247,13 @@ SUMMARY
 |------|-------------|
 | `TestPrompt` | Parsed prompt: `Section`, `Tool`, `Prompt`, `Namespace` |
 | `TestResult` | Execution result: `Tool`, `Prompt`, `Duration`, `ToolsCalled`, `Attempts`, `Status`, `Error` |
-| `TestStatus` | Enum: `PASS`, `FAIL`, `ERROR` |
+| `TestStatus` | Enum: `Fail`, `Pass`, `Error`. Decorated with `JsonStringEnumConverter<TestStatus>` for JSON string serialization |
 | `AgentRunConfig` | Session config: `Prompt`, `ToolName`, `Namespace`, `ShouldEarlyTerminate`, `SystemPrompt`, `Debug`, `Model` |
 | `AgentMetadata` | Collected `AgentSessionEvent` list from a session |
 | `AgentSessionEvent` | Normalized event with `Type` and `Data` dictionary. Types: `session.idle`, `session.error`, `tool.execution_start`, `tool.execution_complete`, `assistant.message`, `assistant.message_delta`, `assistant.reasoning`, `assistant.reasoning_delta` |
-| `SystemPromptConfig` | System prompt with `Mode` (`Append`/`Replace`) and `Content` |
-| `JsonContext` | AOT-compatible `JsonSerializerContext` for `TestPrompt`, `TestResult`, and supporting types |
+| `SystemPromptMode` | Enum: `Append`, `Replace` |
+| `SystemPromptConfig` | System prompt with `Mode` (`SystemPromptMode`) and `Content` |
+| `JsonContext` | AOT-compatible `JsonSerializerContext` for `TestPrompt`, `TestPrompt[]`, `TestResult`, `TestResult[]`, `Dictionary<string, object?>`, `JsonElement`, and `object` |
 
 ### Tool Matching
 
@@ -279,18 +280,22 @@ The `--parallel` flag controls concurrent test execution using a `SemaphoreSlim`
 
 ## Namespace Examples
 
-The `--namespace` option filters prompts by the namespace derived from tool name prefixes (e.g., `storage_account_list` → `storage`):
+Namespaces are derived from the `## ` section headers in `e2eTestPrompts.md` (e.g., `## Azure Storage` → namespace `Azure Storage`). The `--namespace` option performs a **partial, case-insensitive** match against these section headers, so `--namespace storage` matches `Azure Storage`, and `--namespace sql` matches `Azure SQL Database`, `Azure SQL Elastic Pool Operations`, and `Azure SQL Server Operations`.
 
-| Namespace | Description |
-|-----------|-------------|
-| `storage` | Azure Storage (blobs, queues, tables, file shares) |
-| `keyvault` | Key Vault (secrets, keys, certificates) |
-| `redis` | Azure Cache for Redis |
-| `sql` | Azure SQL Database |
-| `cosmos` | Cosmos DB |
-| `appservice` | App Service and Function Apps |
-| `monitor` | Azure Monitor (metrics, logs, alerts) |
-| `extension` | Azure CLI extensions |
+Use `--list-namespaces` to see all valid namespace values from the prompts file.
+
+Some example section headers (namespaces) from `e2eTestPrompts.md`:
+
+| Namespace (Section Header) | Description |
+|----------------------------|-------------|
+| `Azure Storage` | Azure Storage (blobs, queues, tables, file shares) |
+| `Azure Key Vault` | Key Vault (secrets, keys, certificates) |
+| `Azure Redis` | Azure Cache for Redis |
+| `Azure SQL Database` | Azure SQL Database |
+| `Azure Cosmos DB` | Cosmos DB |
+| `Azure App Service` | App Service web apps |
+| `Azure Monitor` | Azure Monitor (metrics, logs, alerts) |
+| `Azure CLI` | Azure CLI extensions |
 
 ## Troubleshooting
 
