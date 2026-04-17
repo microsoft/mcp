@@ -29,7 +29,6 @@ public class KnowledgeSourceGetCommandTests
         _logger = Substitute.For<ILogger<KnowledgeSourceGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -50,7 +49,7 @@ public class KnowledgeSourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedSources);
 
-        var command = new KnowledgeSourceGetCommand(_logger);
+        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -78,7 +77,7 @@ public class KnowledgeSourceGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
 
-        var command = new KnowledgeSourceGetCommand(_logger);
+        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123 --knowledge-source source1");
         var context = new CommandContext(_serviceProvider);
@@ -104,7 +103,7 @@ public class KnowledgeSourceGetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new KnowledgeSourceGetCommand(_logger);
+        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -131,7 +130,7 @@ public class KnowledgeSourceGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new KnowledgeSourceGetCommand(_logger);
+        var command = new KnowledgeSourceGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);

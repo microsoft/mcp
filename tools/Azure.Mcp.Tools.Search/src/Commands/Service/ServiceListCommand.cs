@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Service;
 
-public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : SubscriptionCommand<ServiceListOptions>()
+public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISearchService searchService) : SubscriptionCommand<ServiceListOptions>()
 {
     private const string CommandTitle = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services";
     private readonly ILogger<ServiceListCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "b0684f8c-20de-4bc0-bbc3-982575c8441f";
 
@@ -47,9 +48,7 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-
-            var services = await searchService.ListServices(
+            var services = await _searchService.ListServices(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

@@ -29,7 +29,6 @@ public class KnowledgeBaseGetCommandTests
         _logger = Substitute.For<ILogger<KnowledgeBaseGetCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -50,7 +49,7 @@ public class KnowledgeBaseGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedBases);
 
-        var command = new KnowledgeBaseGetCommand(_logger);
+        var command = new KnowledgeBaseGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -84,7 +83,7 @@ public class KnowledgeBaseGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expectedBase]);
 
-        var command = new KnowledgeBaseGetCommand(_logger);
+        var command = new KnowledgeBaseGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123 --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
@@ -111,7 +110,7 @@ public class KnowledgeBaseGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new KnowledgeBaseGetCommand(_logger);
+        var command = new KnowledgeBaseGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -138,7 +137,7 @@ public class KnowledgeBaseGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new KnowledgeBaseGetCommand(_logger);
+        var command = new KnowledgeBaseGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);

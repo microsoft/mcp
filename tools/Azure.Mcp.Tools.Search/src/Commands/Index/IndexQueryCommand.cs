@@ -11,10 +11,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : GlobalCommand<IndexQueryOptions>()
+public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions>()
 {
     private const string CommandTitle = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
     private readonly ILogger<IndexQueryCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
 
@@ -66,9 +67,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-
-            var results = await searchService.QueryIndex(
+            var results = await _searchService.QueryIndex(
                 options.Service!,
                 options.Index!,
                 options.Query!,

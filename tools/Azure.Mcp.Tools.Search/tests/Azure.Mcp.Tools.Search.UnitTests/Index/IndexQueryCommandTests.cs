@@ -27,7 +27,6 @@ public class IndexQueryCommandTests
         _logger = Substitute.For<ILogger<IndexQueryCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -64,7 +63,7 @@ public class IndexQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var command = new IndexQueryCommand(_logger);
+        var command = new IndexQueryCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
         var context = new CommandContext(_serviceProvider);
@@ -99,7 +98,7 @@ public class IndexQueryCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexQueryCommand(_logger);
+        var command = new IndexQueryCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
         var context = new CommandContext(_serviceProvider);
@@ -117,7 +116,7 @@ public class IndexQueryCommandTests
     public async Task ExecuteAsync_ValidatesRequiredOptions()
     {
         // Arrange
-        var command = new IndexQueryCommand(_logger);
+        var command = new IndexQueryCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse(""); // Missing required options
         var context = new CommandContext(_serviceProvider);
@@ -138,7 +137,7 @@ public class IndexQueryCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange & Act
-        var command = new IndexQueryCommand(_logger);
+        var command = new IndexQueryCommand(_logger, _searchService);
 
         // Assert
         var cmd = command.GetCommand();

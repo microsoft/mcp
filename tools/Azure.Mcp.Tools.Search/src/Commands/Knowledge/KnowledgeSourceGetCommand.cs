@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger) : GlobalCommand<KnowledgeSourceGetOptions>()
+public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeSourceGetOptions>()
 {
     private const string CommandTitle = "Get Azure AI Search Knowledge Source Details";
     private readonly ILogger<KnowledgeSourceGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "efc985cd-5381-4547-8ffb-89ffe992ea41";
 
@@ -71,8 +72,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var sources = await searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
+            var sources = await _searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
         }
         catch (Exception ex)
