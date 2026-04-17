@@ -38,10 +38,8 @@ public class TopicDetailsCommandTests
         _serviceBusService = Substitute.For<IServiceBusService>();
         _logger = Substitute.For<ILogger<TopicDetailsCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_serviceBusService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _serviceBusService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

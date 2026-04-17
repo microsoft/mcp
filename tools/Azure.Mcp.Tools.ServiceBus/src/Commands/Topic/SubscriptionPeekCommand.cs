@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger) : SubscriptionCommand<SubscriptionPeekOptions>
+public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     public override string Id => "61d32f07-fad6-4e43-9f1e-f0937ce773b3";
 
@@ -80,8 +81,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         try
         {
 
-            var service = context.GetService<IServiceBusService>();
-            var messages = await service.PeekSubscriptionMessages(
+            var messages = await _serviceBusService.PeekSubscriptionMessages(
                 options.Namespace!,
                 options.TopicName!,
                 options.SubscriptionName!,

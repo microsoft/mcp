@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : SubscriptionCommand<QueuePeekOptions>
+public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<QueuePeekOptions>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Queue";
     private readonly ILogger<QueuePeekCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     public override string Id => "90c32c6c-0732-4079-b657-d5129293c67a";
 
@@ -76,8 +77,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var messages = await service.PeekQueueMessages(
+            var messages = await _serviceBusService.PeekQueueMessages(
                 options.Namespace!,
                 options.Name!,
                 options.MaxMessages ?? 1,
