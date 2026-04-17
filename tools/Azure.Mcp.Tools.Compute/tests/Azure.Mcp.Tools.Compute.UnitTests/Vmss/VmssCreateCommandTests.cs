@@ -149,7 +149,7 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--instance-count", "3");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
         Assert.Equal("linux", result.Vmss.OsType);
@@ -265,7 +265,7 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--admin-password", _knownPassword);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
     }

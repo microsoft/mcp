@@ -83,7 +83,7 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
         Assert.True(result.Success);
         Assert.Contains("successfully deleted", result.Message);
         Assert.Contains(_knownVmName, result.Message);
@@ -223,7 +223,7 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmDeleteCommandResult);
         Assert.True(result.Success);
     }
 

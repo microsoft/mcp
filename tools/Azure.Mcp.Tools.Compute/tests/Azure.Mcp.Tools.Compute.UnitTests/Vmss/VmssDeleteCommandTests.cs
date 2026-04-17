@@ -84,7 +84,7 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssDeleteCommandResult);
         Assert.True(result.Success);
         Assert.Contains("successfully deleted", result.Message);
         Assert.Contains(_knownVmssName, result.Message);
@@ -224,7 +224,7 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssDeleteCommandResult);
         Assert.True(result.Success);
     }
 

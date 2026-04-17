@@ -58,25 +58,35 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected Task<CommandResponse> ExecuteCommandAsync(string args)
         => Command.ExecuteAsync(Context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
+    /// <summary>
+    /// Deserializes the command response results into the specified type using the provided JSON type information.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the command response results into.</typeparam>
+    /// <param name="response">The command response containing the results to deserialize.</param>
+    /// <param name="jsonTypeInfo">The JSON type information.</param>
+    /// <returns>The deserialized command response results.</returns>
     protected T? DeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
         => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
 
     /// <summary>
-    /// Validates the CommandResponse is non-null, has a status of OK, and contains a non-null .Results, then converts
-    /// the results to the specified type and validates the conversion is non-null before returning the converted value.
+    /// Validates that the command response indicates a successful execution and deserializes the results into the specified type.
     /// </summary>
-    /// <typeparam name="T">The type to convert to.</typeparam>
-    /// <param name="response">The CommandResponse to validate and convert.</param>
-    /// <param name="jsonTypeInfo">The JsonTypeInfo used for deserialization.</param>
-    /// <returns>The converted object of type T.</returns>
-    protected T ValidateAndConvertResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    /// <typeparam name="T">The type to deserialize the command response results into.</typeparam>
+    /// <param name="response">The command response containing the results to deserialize.</param>
+    /// <param name="jsonTypeInfo">The JSON type information.</param>
+    /// <param name="expectedStatus">The expected HTTP status code of the command response (default is OK).</param>
+    /// <returns>The deserialized command response results.</returns>
+    protected T ValidateAndDeserializeResponse<T>(
+        CommandResponse response,
+        JsonTypeInfo<T> jsonTypeInfo,
+        HttpStatusCode expectedStatus = HttpStatusCode.OK)
     {
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        var converted = JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
-        Assert.NotNull(converted);
-        return converted;
+        var result = DeserializeResponse(response, jsonTypeInfo);
+        Assert.NotNull(result);
+        return result;
     }
 
     public void Dispose()

@@ -166,7 +166,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Equal(2, result.Vms.Count);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("vm2", result.Vms[1].Name);
@@ -205,7 +205,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Single(result.Vms);
         Assert.Equal("vm1", result.Vms[0].Name);
         Assert.Equal("eastus", result.Vms[0].Location);
@@ -227,7 +227,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
         var response = await ExecuteCommandAsync("--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetListResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetListResult);
         Assert.Empty(result.Vms);
     }
 
@@ -263,7 +263,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.Null(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -321,7 +321,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--instance-view");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.NotNull(result.InstanceView);
         Assert.Equal("test-vm", result.Vm.Name);
@@ -363,7 +363,7 @@ public class VmGetCommandTests : CommandUnitTestsBase<VmGetCommand, IComputeServ
             "--subscription", _knownSubscription);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmGetSingleResult);
         Assert.NotNull(result.Vm);
         Assert.Equal("test-vm", result.Vm.Name);
     }

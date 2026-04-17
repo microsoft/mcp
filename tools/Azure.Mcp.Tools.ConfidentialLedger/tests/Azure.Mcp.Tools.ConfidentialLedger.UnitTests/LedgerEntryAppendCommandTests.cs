@@ -20,7 +20,7 @@ public class LedgerEntryAppendCommandTests : CommandUnitTestsBase<LedgerEntryApp
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--content", "data");
 
-        var result = ValidateAndConvertResponse(response, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
+        var result = ValidateAndDeserializeResponse(response, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
         Assert.Equal("tx1", result.TransactionId);
     }
 }

@@ -91,7 +91,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--size-gb", newSizeGb.ToString());
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(newSizeGb, result.Disk.DiskSizeGB);
@@ -147,7 +147,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--sku", newSku);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(newSku, result.Disk.SkuName);
@@ -208,7 +208,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--enable-bursting", "true");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(512, result.Disk.DiskSizeGB);
@@ -262,7 +262,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--size-gb", "64");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(mockDisk.Name, result.Disk.Name);
         Assert.Equal(mockDisk.Location, result.Disk.Location);
@@ -337,7 +337,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--size-gb", "256");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(256, result.Disk.DiskSizeGB);
@@ -679,7 +679,7 @@ public class DiskUpdateCommandTests : CommandUnitTestsBase<DiskUpdateCommand, IC
             "--enable-bursting", "true");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskUpdateCommandResult);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }

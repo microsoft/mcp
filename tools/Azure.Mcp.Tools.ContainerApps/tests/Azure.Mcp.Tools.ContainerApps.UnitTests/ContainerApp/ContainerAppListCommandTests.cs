@@ -117,7 +117,7 @@ public class ContainerAppListCommandTests : CommandUnitTestsBase<ContainerAppLis
         var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ContainerAppsJsonContext.Default.ContainerAppListCommandResult);
         Assert.Empty(result.ContainerApps);
     }
 

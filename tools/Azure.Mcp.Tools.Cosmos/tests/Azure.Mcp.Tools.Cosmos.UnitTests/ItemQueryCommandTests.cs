@@ -48,7 +48,7 @@ public class ItemQueryCommandTests : CommandUnitTestsBase<ItemQueryCommand, ICos
             "--query", query);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Equal(2, result.Items.Count);
     }
 
@@ -83,7 +83,7 @@ public class ItemQueryCommandTests : CommandUnitTestsBase<ItemQueryCommand, ICos
             "--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Equal(2, result.Items.Count);
     }
 
@@ -111,7 +111,7 @@ public class ItemQueryCommandTests : CommandUnitTestsBase<ItemQueryCommand, ICos
             "--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.Empty(result.Items);
     }
 

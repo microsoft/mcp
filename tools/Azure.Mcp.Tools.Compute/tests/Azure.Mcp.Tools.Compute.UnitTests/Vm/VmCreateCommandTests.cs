@@ -152,7 +152,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--ssh-public-key", _knownSshKey);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmCreateCommandResult);
         Assert.NotNull(result.Vm);
         Assert.Equal(_knownVmName, result.Vm.Name);
         Assert.Equal("linux", result.Vm.OsType);
@@ -317,7 +317,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--admin-password", _knownPassword);
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmCreateCommandResult);
         Assert.NotNull(result.Vm);
         Assert.Equal(_knownVmName, result.Vm.Name);
     }

@@ -22,7 +22,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
 
         var response = await ExecuteCommandAsync("--ledger", "ledger1", "--transaction-id", "2.199");
 
-        var result = ValidateAndConvertResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
+        var result = ValidateAndDeserializeResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
         Assert.Equal("2.199", result!.TransactionId);
 
         await Service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>());
@@ -85,7 +85,7 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
             "--transaction-id", "2.199",
             "--collection-id", "my-collection");
 
-        var result = ValidateAndConvertResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
+        var result = ValidateAndDeserializeResponse(response, ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
         Assert.Equal("2.199", result!.TransactionId);
 
         await Service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>());

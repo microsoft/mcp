@@ -123,7 +123,7 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             "--tags", "env=prod");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
         Assert.NotNull(result.Vmss.Tags);
@@ -169,7 +169,7 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             "--upgrade-policy", "Automatic");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal("Automatic", result.Vmss.UpgradePolicy);
     }
@@ -281,7 +281,7 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             "--tags", "env=test");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssUpdateCommandResult);
         Assert.NotNull(result.Vmss);
         Assert.Equal(_knownVmssName, result.Vmss.Name);
     }

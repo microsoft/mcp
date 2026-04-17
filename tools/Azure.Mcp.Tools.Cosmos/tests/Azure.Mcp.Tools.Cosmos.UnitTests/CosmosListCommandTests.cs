@@ -52,7 +52,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.NotNull(result.Accounts);
         Assert.Equal(expectedAccounts, result.Accounts);
         Assert.Null(result.Databases);
@@ -77,7 +77,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--account", "account123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.NotNull(result.Databases);
         Assert.Equal(expectedDatabases, result.Databases);
@@ -106,7 +106,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             "--database", "database123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.Null(result.Databases);
         Assert.NotNull(result.Containers);
@@ -128,7 +128,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.NotNull(result.Accounts);
         Assert.Empty(result.Accounts);
         Assert.Null(result.Databases);
@@ -152,7 +152,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--account", "account123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.NotNull(result.Databases);
         Assert.Empty(result.Databases);
@@ -180,7 +180,7 @@ public class CosmosListCommandTests : CommandUnitTestsBase<CosmosListCommand, IC
             "--database", "database123");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.CosmosListCommandResult);
         Assert.Null(result.Accounts);
         Assert.Null(result.Databases);
         Assert.NotNull(result.Containers);

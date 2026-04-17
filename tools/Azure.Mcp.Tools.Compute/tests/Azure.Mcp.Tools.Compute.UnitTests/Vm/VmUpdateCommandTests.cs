@@ -122,7 +122,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             "--tags", "env=prod,team=compute");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
         Assert.NotNull(result.Vm);
         Assert.Equal(_knownVmName, result.Vm.Name);
         Assert.NotNull(result.Vm.Tags);
@@ -167,7 +167,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             "--license-type", "Windows_Server");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
         Assert.NotNull(result.Vm);
         Assert.Equal("Windows_Server", result.Vm.LicenseType);
     }
@@ -274,7 +274,7 @@ public class VmUpdateCommandTests : CommandUnitTestsBase<VmUpdateCommand, ICompu
             "--tags", "env=test");
 
         // Assert
-        var result = ValidateAndConvertResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmUpdateCommandResult);
         Assert.NotNull(result.Vm);
         Assert.Equal(_knownVmName, result.Vm.Name);
     }
