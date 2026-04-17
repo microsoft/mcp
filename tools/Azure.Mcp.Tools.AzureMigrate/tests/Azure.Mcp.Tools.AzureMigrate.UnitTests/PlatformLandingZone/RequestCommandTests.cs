@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
     {
         serviceCollection.AddSingleton(Substitute.For<ISubscriptionService>());
         serviceCollection.AddSingleton(Substitute.For<ITenantService>());
+        serviceCollection.AddSingleton<AzureMigrateProjectHelper>();
     })
     {
     }

@@ -72,8 +72,12 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     /// <typeparam name="T">The type to deserialize the command response results into.</typeparam>
     /// <param name="response">The command response containing the results to deserialize.</param>
     /// <param name="jsonTypeInfo">The JSON type information.</param>
+    /// <param name="expectedStatus">The expected HTTP status code of the command response (default is OK).</param>
     /// <returns>The deserialized command response results.</returns>
-    protected T ValidateAndDeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    protected T ValidateAndDeserializeResponse<T>(
+        CommandResponse response,
+        JsonTypeInfo<T> jsonTypeInfo,
+        HttpStatusCode expectedStatus = HttpStatusCode.OK)
     {
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
