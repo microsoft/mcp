@@ -22,18 +22,6 @@
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
   </PropertyGroup>
 
-  <!--
-    Suppress known vulnerability advisories for System.Security.Cryptography.Xml where no patched
-    version is available for net10.0. All 10.x versions are affected. Remove these suppressions
-    once a patched version is released.
-    See: https://github.com/advisories/GHSA-37gx-xxp4-5rgx
-    See: https://github.com/advisories/GHSA-w3x6-4m5h-cxqf
-  -->
-  <ItemGroup>
-    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-37gx-xxp4-5rgx" />
-    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-w3x6-4m5h-cxqf" />
-  </ItemGroup>
-
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
