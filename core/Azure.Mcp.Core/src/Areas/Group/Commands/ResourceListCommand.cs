@@ -52,7 +52,7 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger, IRe
     protected override ResourceListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 

@@ -44,9 +44,7 @@ public sealed class ServiceInfoCommand(IOptions<McpServerConfiguration> serverOp
         try
         {
             context.Response.Results = ResponseResult.Create(
-                new ServiceInfoCommandResult(
-                    _serverOptions.Value.Name,
-                    _serverOptions.Value.Version),
+                new(_serverOptions.Value.Name, _serverOptions.Value.Version),
                 ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
         }
         catch (Exception ex)

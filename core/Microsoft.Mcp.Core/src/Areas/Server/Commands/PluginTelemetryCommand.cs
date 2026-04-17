@@ -197,17 +197,17 @@ public sealed class PluginTelemetryCommand(
     {
         return new PluginTelemetryOptions
         {
-            Timestamp = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.Timestamp.Name),
-            EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
-            SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
-            ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
-            ClientName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientName.Name),
-            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
-            PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
-            SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
-            SkillVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillVersion.Name),
-            ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
-            FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
+            Timestamp = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.Timestamp),
+            EventType = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.EventType),
+            SessionId = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SessionId),
+            ClientType = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ClientType),
+            ClientName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ClientName),
+            PluginName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.PluginName),
+            PluginVersion = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.PluginVersion),
+            SkillName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SkillName),
+            SkillVersion = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SkillVersion),
+            ToolName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ToolName),
+            FileReference = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.FileReference)
         };
     }
 

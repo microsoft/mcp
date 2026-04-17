@@ -48,9 +48,9 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
     protected override NodepoolGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
-        options.NodepoolName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Nodepool.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
+        options.NodepoolName = parseResult.GetValueOrDefault(AksOptionDefinitions.Nodepool);
         return options;
     }
 

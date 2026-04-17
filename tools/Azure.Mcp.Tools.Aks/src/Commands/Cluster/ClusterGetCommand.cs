@@ -56,8 +56,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault(AksOptionDefinitions.Cluster);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 

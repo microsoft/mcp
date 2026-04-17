@@ -48,7 +48,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
     protected override RegistryRepositoryListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Registry ??= parseResult.GetValueOrDefault<string>(AcrOptionDefinitions.Registry.Name);
+        options.Registry ??= parseResult.GetValueOrDefault(AcrOptionDefinitions.Registry);
         return options;
     }
 
