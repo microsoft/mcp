@@ -1,44 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 
-public class SubscriptionCommandTests
+public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<AccountGetCommand> _logger;
-    private readonly AccountGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public SubscriptionCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<AccountGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_storageService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
@@ -46,7 +23,7 @@ public class SubscriptionCommandTests
         TestEnvironment.SetAzureSubscriptionId("env-subs");
 
         // Act
-        var parseResult = _commandDefinition.Parse([]);
+        var parseResult = CommandDefinition.Parse([]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -65,24 +42,22 @@ public class SubscriptionCommandTests
             new("account2", null, null, null, null, null, null, null, null, null)
         ], false);
 
-        _storageService.GetAccountDetails(
+        Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedAccounts));
-
-        var parseResult = _commandDefinition.Parse([]);
+            .Returns(expectedAccounts);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
         Assert.NotNull(response);
 
         // Verify the service was called with the environment variable subscription
-        _ = _storageService.Received(1).GetAccountDetails(
+        await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             subscription,
             Arg.Any<string>(),
@@ -104,30 +79,28 @@ public class SubscriptionCommandTests
             new("account2", null, null, null, null, null, null, null, null, null)
         ], false);
 
-        _storageService.GetAccountDetails(
+        Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(expectedSubscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedAccounts));
-
-        var parseResult = _commandDefinition.Parse(["--subscription", expectedSubscription]);
+            .Returns(expectedAccounts);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", expectedSubscription);
 
         // Assert
         Assert.NotNull(response);
 
         // Verify the service was called with the option subscription, not the environment variable
-        _ = _storageService.Received(1).GetAccountDetails(
+        await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             expectedSubscription,
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
-        _ = _storageService.DidNotReceive().GetAccountDetails(
+        await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
             Arg.Any<string>(),
