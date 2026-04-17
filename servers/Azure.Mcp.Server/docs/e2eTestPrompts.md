@@ -134,8 +134,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? |
-| azurebackup_dr_enablecrr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> |
-| azurebackup_dr_enablecrr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
+| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> |
+| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> |
 | azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> |

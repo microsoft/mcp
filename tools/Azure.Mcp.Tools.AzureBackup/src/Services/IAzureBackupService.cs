@@ -17,7 +17,7 @@ public interface IAzureBackupService
     // Policy operations
     Task<BackupPolicyInfo> GetPolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<List<BackupPolicyInfo>> ListPoliciesAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> CreatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string workloadType, string? vaultType = null, string? scheduleFrequency = null, string? scheduleTime = null, string? dailyRetentionDays = null, string? weeklyRetentionWeeks = null, string? monthlyRetentionMonths = null, string? yearlyRetentionYears = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> CreatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string workloadType, string? vaultType = null, string? scheduleTime = null, string? dailyRetentionDays = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     // Protection operations
     Task<ProtectResult> ProtectItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string policyName, string? vaultType = null, string? containerName = null, string? datasourceType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
@@ -37,7 +37,7 @@ public interface IAzureBackupService
     Task<BackupStatusResult> GetBackupStatusAsync(string datasourceId, string subscription, string location, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 
     // Governance
-    Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(string subscription, string? resourceTypeFilter = null, string? resourceGroupFilter = null, string? tagFilter = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
+    Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(string subscription, string? resourceTypeFilter = null, string? resourceGroup = null, string? tagFilter = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, string immutabilityState, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
     Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, string softDeleteState, string? vaultType = null, string? softDeleteRetentionDays = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 

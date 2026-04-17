@@ -4,7 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
-using Azure.Mcp.Tools.AzureBackup.Commands.Dr;
+using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,21 +15,21 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Dr;
+namespace Azure.Mcp.Tools.AzureBackup.UnitTests.DisasterRecovery;
 
-public class DrEnableCrrCommandTests
+public class DisasterRecoveryEnableCrrCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureBackupService _backupService;
-    private readonly ILogger<DrEnableCrrCommand> _logger;
-    private readonly DrEnableCrrCommand _command;
+    private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger;
+    private readonly DisasterRecoveryEnableCrrCommand _command;
     private readonly CommandContext _context;
     private readonly System.CommandLine.Command _commandDefinition;
 
-    public DrEnableCrrCommandTests()
+    public DisasterRecoveryEnableCrrCommandTests()
     {
         _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<DrEnableCrrCommand>>();
+        _logger = Substitute.For<ILogger<DisasterRecoveryEnableCrrCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_backupService);
 
@@ -43,7 +43,7 @@ public class DrEnableCrrCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("enablecrr", command.Name);
+        Assert.Equal("enable-crr", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -69,7 +69,7 @@ public class DrEnableCrrCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.DrEnableCrrCommandResult);
+        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("Succeeded", result.Result.Status);
@@ -222,5 +222,33 @@ public class DrEnableCrrCommandTests
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        var expected = new OperationResult("Succeeded", null, "Cross-region restore enabled");
+
+        _backupService.ConfigureCrossRegionRestoreAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expected));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("Succeeded", result.Result.Status);
+        Assert.Equal("Cross-region restore enabled", result.Result.Message);
     }
 }

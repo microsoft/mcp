@@ -3771,7 +3771,7 @@
         "azurebackup_vault_update",
         "azurebackup_governance_immutability",
         "azurebackup_governance_soft-delete",
-        "azurebackup_dr_enablecrr"
+        "azurebackup_disasterrecovery_enable-crr"
       ]
     }
   ]

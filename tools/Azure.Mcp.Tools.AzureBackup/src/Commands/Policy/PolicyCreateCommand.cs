@@ -63,12 +63,8 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 options.Policy!,
                 options.WorkloadType!,
                 options.VaultType,
-                options.ScheduleFrequency,
                 options.ScheduleTime,
                 options.DailyRetentionDays,
-                options.WeeklyRetentionWeeks,
-                options.MonthlyRetentionMonths,
-                options.YearlyRetentionYears,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

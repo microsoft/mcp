@@ -915,14 +915,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task GovernanceFindUnprotected_WithResourceGroupFilter_Successfully()
+    public async Task GovernanceFindUnprotected_WithResourceGroup_Successfully()
     {
         var result = await CallToolAsync(
             "azurebackup_governance_find-unprotected",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group-filter", Settings.ResourceGroupName }
+                { "resource-group", Settings.ResourceGroupName }
             });
 
         var resources = result.AssertProperty("resources");
@@ -999,17 +999,17 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     #region DR Tests
 
     [Fact]
-    public async Task DrEnableCrr_RsvVault_EnablesCrossRegionRestore_Successfully()
+    public async Task DisasterRecoveryEnableCrr_RsvVault_EnablesCrossRegionRestore_Successfully()
     {
         // CRR is an RSV-only feature — LRO can take 10-30 minutes
         // Note: If the vault's redundancy was previously configured via the Vault API
         // (ARM/portal), the Backup Config API will return 400 BMSUserErrorRedundancySettingsUseVaultApi.
         // In that case, CRR may already be enabled. We treat both outcomes as success.
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DrEnableCrr_RSV");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DisasterRecoveryEnableCrr_RSV");
 
         var result = await CallToolAsync(
-            "azurebackup_dr_enablecrr",
+            "azurebackup_disasterrecovery_enable-crr",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -1017,7 +1017,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName }
             });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DrEnableCrr_RSV");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DisasterRecoveryEnableCrr_RSV");
 
         // Success path: result.status == "Succeeded"
         // Environment-specific path: error about Vault API — CRR already configured
@@ -1033,19 +1033,19 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from DrEnableCrr");
+            Assert.Fail("Unexpected response from DisasterRecoveryEnableCrr");
         }
     }
 
     [Fact]
-    public async Task DrEnableCrr_DppVault_EnablesCrossRegionRestore_Successfully()
+    public async Task DisasterRecoveryEnableCrr_DppVault_EnablesCrossRegionRestore_Successfully()
     {
         // CRR is supported for DPP Backup vaults via FeatureSettings — LRO can take 10-30 minutes
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DrEnableCrr_DPP");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DisasterRecoveryEnableCrr_DPP");
 
         var result = await CallToolAsync(
-            "azurebackup_dr_enablecrr",
+            "azurebackup_disasterrecovery_enable-crr",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -1054,7 +1054,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault-type", "dpp" }
             });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DrEnableCrr_DPP");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DisasterRecoveryEnableCrr_DPP");
         var opResult = result.AssertProperty("result");
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
