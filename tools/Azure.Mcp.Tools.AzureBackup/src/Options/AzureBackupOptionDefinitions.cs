@@ -24,15 +24,10 @@ public static class AzureBackupOptionDefinitions
     public const string SoftDeleteRetentionDaysName = "soft-delete-retention-days";
     public const string TagsName = "tags";
     public const string WorkloadTypeName = "workload-type";
-    public const string ScheduleFrequencyName = "schedule-frequency";
     public const string ScheduleTimeName = "schedule-time";
     public const string DailyRetentionDaysName = "daily-retention-days";
-    public const string WeeklyRetentionWeeksName = "weekly-retention-weeks";
-    public const string MonthlyRetentionMonthsName = "monthly-retention-months";
-    public const string YearlyRetentionYearsName = "yearly-retention-years";
     public const string VmResourceIdName = "vm-resource-id";
     public const string ResourceTypeFilterName = "resource-type-filter";
-    public const string ResourceGroupFilterName = "resource-group-filter";
     public const string TagFilterName = "tag-filter";
 
     public static readonly Option<string> Vault = new($"--{VaultName}")
@@ -149,12 +144,6 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> ScheduleFrequency = new($"--{ScheduleFrequencyName}")
-    {
-        Description = "Backup schedule frequency: 'Hourly', 'Daily', or 'Weekly'. (Not yet applied — a daily schedule is always used.)",
-        Required = false
-    };
-
     public static readonly Option<string> ScheduleTime = new($"--{ScheduleTimeName}")
     {
         Description = "Backup time in UTC (e.g., '02:00').",
@@ -167,24 +156,6 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
-    {
-        Description = "Weekly recovery point retention in weeks. (Not yet applied — reserved for a future release.)",
-        Required = false
-    };
-
-    public static readonly Option<string> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
-    {
-        Description = "Monthly recovery point retention in months. (Not yet applied — reserved for a future release.)",
-        Required = false
-    };
-
-    public static readonly Option<string> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
-    {
-        Description = "Yearly recovery point retention in years. (Not yet applied — reserved for a future release.)",
-        Required = false
-    };
-
     public static readonly Option<string> VmResourceId = new($"--{VmResourceIdName}")
     {
         Description = "ARM ID of the VM hosting SQL or SAP HANA.",
@@ -194,12 +165,6 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> ResourceTypeFilter = new($"--{ResourceTypeFilterName}")
     {
         Description = "Resource types to filter (comma-separated).",
-        Required = false
-    };
-
-    public static readonly Option<string> ResourceGroupFilter = new($"--{ResourceGroupFilterName}")
-    {
-        Description = "Resource group filter.",
         Required = false
     };
 

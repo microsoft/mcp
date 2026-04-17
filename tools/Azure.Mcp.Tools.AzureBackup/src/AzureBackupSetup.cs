@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
-using Azure.Mcp.Tools.AzureBackup.Commands.Dr;
+using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
@@ -51,7 +51,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<GovernanceImmutabilityCommand>();
         services.AddSingleton<GovernanceSoftDeleteCommand>();
 
-        services.AddSingleton<DrEnableCrrCommand>();
+        services.AddSingleton<DisasterRecoveryEnableCrrCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -103,9 +103,9 @@ public sealed class AzureBackupSetup : IAreaSetup
         RegisterCommand<GovernanceImmutabilityCommand>(serviceProvider, governance);
         RegisterCommand<GovernanceSoftDeleteCommand>(serviceProvider, governance);
 
-        var dr = new CommandGroup("dr", "Disaster recovery operations – Enable Cross-Region Restore on a GRS vault.");
-        azureBackup.AddSubGroup(dr);
-        RegisterCommand<DrEnableCrrCommand>(serviceProvider, dr);
+        var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations – Enable Cross-Region Restore on a GRS vault.");
+        azureBackup.AddSubGroup(disasterrecovery);
+        RegisterCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider, disasterrecovery);
 
         return azureBackup;
     }

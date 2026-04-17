@@ -25,8 +25,8 @@ Azure.Mcp.Tools.AzureBackup/
 │   │   ├── BaseProtectedItemCommand.cs           # Base for protected-item commands
 │   │   ├── Backup/
 │   │   │   └── BackupStatusCommand.cs
-│   │   ├── Dr/
-│   │   │   └── DrEnableCrrCommand.cs
+│   │   ├── DisasterRecovery/
+│   │   │   └── DisasterRecoveryEnableCrrCommand.cs
 │   │   ├── Governance/
 │   │   │   ├── GovernanceFindUnprotectedCommand.cs
 │   │   │   ├── GovernanceImmutabilityCommand.cs
@@ -272,11 +272,11 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 | `immutability` | `azurebackup_governance_immutability` | Configure vault immutability (Disabled / Enabled / Locked) |
 | `soft-delete` | `azurebackup_governance_soft-delete` | Configure vault soft-delete (AlwaysOn / On / Off) |
 
-### Disaster Recovery Operations (`azurebackup dr`)
+### Disaster Recovery Operations (`azurebackup disasterrecovery`)
 
 | Command | MCP Tool Name | Description |
 |---------|--------------|-------------|
-| `enablecrr` | `azurebackup_dr_enablecrr` | Enable Cross-Region Restore on a GRS vault |
+| `enable-crr` | `azurebackup_disasterrecovery_enable-crr` | Enable Cross-Region Restore on a GRS vault |
 
 ---
 
@@ -373,7 +373,7 @@ azurebackup/
 ├── job/            (get)
 ├── recoverypoint/  (get)
 ├── governance/     (find-unprotected, immutability, soft-delete)
-└── dr/             (enablecrr)
+└── disasterrecovery/     (enable-crr)
 ```
 
 ---
