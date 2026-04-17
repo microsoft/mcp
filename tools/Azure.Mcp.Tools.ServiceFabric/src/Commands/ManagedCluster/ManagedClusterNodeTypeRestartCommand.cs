@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
-public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger)
+public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterNodeTypeRestartCommand> logger, IServiceFabricService serviceFabricService)
     : BaseServiceFabricCommand<ManagedClusterNodeTypeRestartOptions>
 {
     private const string CommandTitle = "Restart Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeTypeRestartCommand> _logger = logger;
+    private readonly IServiceFabricService _serviceFabricService = serviceFabricService;
 
     public override string Id => "b4f2c3d5-e6f7-48a9-8b1c-2d3e4f5a6b7c";
 
@@ -70,8 +71,7 @@ public sealed class ManagedClusterNodeTypeRestartCommand(ILogger<ManagedClusterN
 
         try
         {
-            var service = context.GetService<IServiceFabricService>();
-            var response = await service.RestartManagedClusterNodes(
+            var response = await _serviceFabricService.RestartManagedClusterNodes(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.ClusterName!,
