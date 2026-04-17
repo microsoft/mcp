@@ -5,6 +5,19 @@
 
 Push-Location $RepoRoot
 try {
+    Write-Host "Checking if solution files are up to date."
+    & "$PSScriptRoot/Update-Solution.ps1" -All
+    $slnxDiff = git diff --name-only -- "*.slnx"
+    if ($slnxDiff) {
+        Write-Host "❌ Solution files are out of date. The following files need updating:"
+        Write-Host $slnxDiff
+        Write-Host "Please run './eng/scripts/Update-Solution.ps1 -All' and commit the changes."
+        git checkout -- "*.slnx"  # restore originals so other checks aren't affected
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Solution files are up-to-date."
+    }
+
     Write-Host "Running dotnet format to check for formatting issues..."
     $solutionFile = "$RepoRoot/Microsoft.Mcp.slnx"
 
