@@ -12,7 +12,10 @@ public sealed class KustoClient(
     string userAgent,
     IHttpClientFactory httpClientFactory)
 {
-    // Valid Kusto cluster domain suffixes from official Kusto endpoints configuration
+    // Valid Kusto cluster domain suffixes from official Kusto endpoints configuration.
+    // Source (authoritative, MIT-licensed): AllowedKustoSuffixes in
+    //   https://github.com/Azure/azure-kusto-python/blob/master/azure-kusto-data/azure/kusto/data/wellKnownKustoEndpoints.json
+    // Mirror: https://github.com/Azure/azure-kusto-go/blob/master/azkustodata/trusted_endpoints/well_known_kusto_endpoints.json
     private static readonly string[] s_validKustoDomainSuffixes =
     [
         // Public cloud
@@ -23,14 +26,23 @@ public sealed class KustoClient(
         ".kustodev.azuresynapse-dogfood.net",
         ".kustodev.windows.net",
         ".kustomfa.windows.net",
+        ".playfabapi.com",
+        ".playfab.com",
+        ".azureplayfab.com",
         ".kusto.data.microsoft.com",
         ".kusto.fabric.microsoft.com",
+        ".api.securityplatform.microsoft.com",
+        ".securitycenter.windows.com",
+        ".arg-int.core.windows.net",
+        ".arg-df.core.windows.net",
+        ".arg.core.windows.net",
         ".adx.loganalytics.azure.com",
         ".adx.applicationinsights.azure.com",
         ".adx.monitor.azure.com",
         // US Government
         ".kusto.usgovcloudapi.net",
         ".kustomfa.usgovcloudapi.net",
+        ".arg.core.usgovcloudapi.net",
         ".adx.loganalytics.azure.us",
         ".adx.applicationinsights.azure.us",
         ".adx.monitor.azure.us",
@@ -38,15 +50,33 @@ public sealed class KustoClient(
         ".kusto.azuresynapse.azure.cn",
         ".kusto.chinacloudapi.cn",
         ".kustomfa.chinacloudapi.cn",
+        ".playfab.cn",
+        ".arg.core.chinacloudapi.cn",
         ".adx.loganalytics.azure.cn",
         ".adx.applicationinsights.azure.cn",
         ".adx.monitor.azure.cn",
+        // USSec (EagleX)
+        ".kusto.core.eaglex.ic.gov",
+        ".kustomfa.core.eaglex.ic.gov",
+        ".arg.core.eaglex.ic.gov",
+        // USNat (SCloud)
+        ".kusto.core.microsoft.scloud",
+        ".kustomfa.core.microsoft.scloud",
+        ".arg.core.microsoft.scloud",
+        // France
+        ".kusto.sovcloud-api.fr",
+        ".kustomfa.sovcloud-api.fr",
         // Germany
         ".kusto.sovcloud-api.de",
-        ".kustomfa.sovcloud-api.de"
+        ".kustomfa.sovcloud-api.de",
+        // Singapore
+        ".kusto.sovcloud-api.sg",
+        ".kustomfa.sovcloud-api.sg"
     ];
 
-    // Exact hostnames that are valid Kusto endpoints
+    // Exact hostnames that are valid Kusto endpoints.
+    // Source (authoritative, MIT-licensed): AllowedKustoHostnames in
+    //   https://github.com/Azure/azure-kusto-python/blob/master/azure-kusto-data/azure/kusto/data/wellKnownKustoEndpoints.json
     private static readonly HashSet<string> s_validKustoHostnames = new(StringComparer.OrdinalIgnoreCase)
     {
         // Public cloud
@@ -56,8 +86,12 @@ public sealed class KustoClient(
         "ade.loganalytics.io",
         "adx.aimon.applicationinsights.azure.com",
         "adx.applicationinsights.azure.com",
+        "adx.int.applicationinsights.azure.com",
+        "adx.int.loganalytics.azure.com",
+        "adx.int.monitor.azure.com",
         "adx.loganalytics.azure.com",
         "adx.monitor.azure.com",
+        "api.securityplatform.microsoft.com",
         // US Government
         "adx.applicationinsights.azure.us",
         "adx.loganalytics.azure.us",
@@ -66,10 +100,26 @@ public sealed class KustoClient(
         "adx.applicationinsights.azure.cn",
         "adx.loganalytics.azure.cn",
         "adx.monitor.azure.cn",
+        // USSec (EagleX)
+        "adx.applicationinsights.azure.eaglex.ic.gov",
+        "adx.loganalytics.azure.eaglex.ic.gov",
+        "adx.monitor.azure.eaglex.ic.gov",
+        // USNat (SCloud)
+        "adx.applicationinsights.azure.microsoft.scloud",
+        "adx.loganalytics.azure.microsoft.scloud",
+        "adx.monitor.azure.microsoft.scloud",
+        // France
+        "adx.applicationinsights.azure.fr",
+        "adx.loganalytics.azure.fr",
+        "adx.monitor.azure.fr",
         // Germany
         "adx.applicationinsights.azure.de",
         "adx.loganalytics.azure.de",
-        "adx.monitor.azure.de"
+        "adx.monitor.azure.de",
+        // Singapore
+        "adx.applicationinsights.azure.sg",
+        "adx.loganalytics.azure.sg",
+        "adx.monitor.azure.sg"
     };
 
     private readonly string _clusterUri = ValidateAndNormalizeClusterUri(clusterUri);

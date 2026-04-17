@@ -1,0 +1,4 @@
+changes:
+  - section: "Bugs Fixed"
+    description: |
+      Expanded the Kusto cluster hostname allow-list to match the authoritative public SDK endpoint list. Previously, connections to Azure Data Explorer clusters in several documented sovereign clouds (EagleX/USSec, SCloud/USNat, France, Singapore), along with Azure Resource Graph (`*.kusto.aria.microsoft.com`), PlayFab Insights (`*.playfab.com`), and Security Platform (`api.securityplatform.microsoft.com`) endpoints, were rejected with an `ArgumentException` before the request was sent. The allow-list now matches the [`wellKnownKustoEndpoints.json`](https://github.com/Azure/azure-kusto-python/blob/master/azure-kusto-data/azure/kusto/data/wellKnownKustoEndpoints.json) file from the public Azure Kusto Python SDK (MIT).
