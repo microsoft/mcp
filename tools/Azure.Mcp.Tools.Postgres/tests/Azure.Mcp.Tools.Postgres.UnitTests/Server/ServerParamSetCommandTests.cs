@@ -40,7 +40,7 @@ public class ServerParamSetCommandTests
         var expectedMessage = "Parameter 'work_mem' updated successfully to '256MB'.";
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "work_mem", "256MB", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "work_mem", "--value", "256MB"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -63,7 +63,7 @@ public class ServerParamSetCommandTests
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "shared_buffers", "512MB", Arg.Any<CancellationToken>()).Returns("");
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "shared_buffers", "--value", "512MB"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -83,7 +83,7 @@ public class ServerParamSetCommandTests
     [InlineData("--value")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
@@ -107,7 +107,7 @@ public class ServerParamSetCommandTests
         var expectedMessage = "Parameter updated successfully.";
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "max_connections", "--value", "200"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -127,7 +127,7 @@ public class ServerParamSetCommandTests
     [InlineData("row_security")]
     public async Task ExecuteAsync_ReturnsError_WhenSecuritySensitiveParameterIsUsed(string blockedParam)
     {
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", blockedParam, "--value", "off"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -144,7 +144,7 @@ public class ServerParamSetCommandTests
         var expectedMessage = "Parameter 'custom_setting' updated successfully.";
         _postgresService.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
-        var command = new ServerParamSetCommand(_logger);
+        var command = new ServerParamSetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "custom_setting", "--value", "42"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
