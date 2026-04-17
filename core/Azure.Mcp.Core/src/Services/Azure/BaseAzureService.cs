@@ -31,9 +31,7 @@ public abstract class BaseAzureService
     private static readonly string s_framework;
     private static readonly string s_platform;
     private static readonly string s_defaultUserAgent;
-#pragma warning disable CS0649 // Field is never assigned outside of DEBUG builds
-    private static readonly TimeSpan? s_defaultPollInterval;
-#pragma warning restore CS0649
+    private static readonly TimeSpan? s_defaultPollInterval = null;
 
     static BaseAzureService()
     {

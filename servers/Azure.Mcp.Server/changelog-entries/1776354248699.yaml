@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added validation in SearchService.GetSearchEndpoint to prevent URL injection if called without prior ValidateServiceName check"
