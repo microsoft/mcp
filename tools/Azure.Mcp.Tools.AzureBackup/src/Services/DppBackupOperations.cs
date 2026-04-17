@@ -512,9 +512,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<OperationResult> CreatePolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string workloadType,
-        string? scheduleFrequency, string? scheduleTime,
-        string? dailyRetentionDays, string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths, string? yearlyRetentionYears,
+        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -552,18 +550,11 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
         List<DataProtectionBasePolicyRule> rules = [retentionRule];
 
-        // Stage 2 TODO: Multi-tier retention (--weekly-retention-weeks, --monthly-retention-months, --yearly-retention-years)
-        // For each user-specified tier, create:
-        //   1. A DataProtectionRetentionRule with the tier name (e.g., "Weekly", "Monthly", "Yearly")
-        //      and a SourceLifeCycle with the appropriate duration (weeks*7, months*30, years*365 days).
-        //   2. A DataProtectionBackupTaggingCriteria in the backup rule's trigger context with:
-        //      - TagInfo = new DataProtectionBackupRetentionTag(tierName)
-        //      - IsDefault = false
-        //      - Priority: Weekly=20, Monthly=15, Yearly=10
-        //      - Criteria: ScheduleBasedBackupCriteria with AbsoluteCriteria or DaysOfTheWeek
-        //        (per-datasource tagging patterns from DPP manifests).
-        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears params are
-        // accepted but not yet wired up — they will be implemented with profile-driven templates.
+        // Stage 2 TODO: Multi-tier retention
+        // When adding weekly/monthly/yearly retention support, add the parameters
+        // back to this method and create per-tier retention rules and tagging criteria.
+        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears will be
+        // implemented with profile-driven templates.
 
         if (!profile.IsContinuousBackup)
         {

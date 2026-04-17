@@ -257,17 +257,13 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<OperationResult> CreatePolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string workloadType, string? vaultType,
-        string? scheduleFrequency, string? scheduleTime,
-        string? dailyRetentionDays, string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths, string? yearlyRetentionYears,
+        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        ValidateUnsupportedPolicyOptions(scheduleFrequency, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears);
-
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleFrequency, scheduleTime, dailyRetentionDays, weeklyRetentionWeeks, monthlyRetentionMonths, yearlyRetentionYears, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken)
+            : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
@@ -387,7 +383,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         };
 
     public async Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(
-        string subscription, string? resourceTypeFilter, string? resourceGroupFilter,
+        string subscription, string? resourceTypeFilter, string? resourceGroup,
         string? tagFilter, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
@@ -520,8 +516,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 }
 
                 // Apply optional resource group filter
-                if (!string.IsNullOrEmpty(resourceGroupFilter) &&
-                    !string.Equals(resource.Id?.ResourceGroupName, resourceGroupFilter, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(resourceGroup) &&
+                    !string.Equals(resource.Id?.ResourceGroupName, resourceGroup, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -655,6 +651,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     private static async Task<T> AutoDetectAndExecuteAsync<T>(
         Func<Task<T>> rsvAction, Func<Task<T>> dppAction, string vaultName)
     {
+        bool rsvAuthFailed = false;
+
         try
         {
             return await rsvAction();
@@ -662,6 +660,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
             // RSV auth failure — try DPP before giving up
+            rsvAuthFailed = true;
         }
         catch (RequestFailedException ex) when (ex.Status is 404)
         {
@@ -678,42 +677,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
         catch (RequestFailedException ex) when (ex.Status is 404)
         {
-            throw new KeyNotFoundException($"Vault '{vaultName}' not found as either RSV or DPP vault. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.");
-        }
-    }
-
-    private static void ValidateUnsupportedPolicyOptions(
-        string? scheduleFrequency, string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths, string? yearlyRetentionYears)
-    {
-        var unsupported = new List<string>();
-
-        if (!string.IsNullOrEmpty(scheduleFrequency))
-        {
-            unsupported.Add("--schedule-frequency");
-        }
-
-        if (!string.IsNullOrEmpty(weeklyRetentionWeeks))
-        {
-            unsupported.Add("--weekly-retention-weeks");
-        }
-
-        if (!string.IsNullOrEmpty(monthlyRetentionMonths))
-        {
-            unsupported.Add("--monthly-retention-months");
-        }
-
-        if (!string.IsNullOrEmpty(yearlyRetentionYears))
-        {
-            unsupported.Add("--yearly-retention-years");
-        }
-
-        if (unsupported.Count > 0)
-        {
-            throw new NotSupportedException(
-                $"The following options are not yet supported and cannot be applied: {string.Join(", ", unsupported)}. " +
-                "A daily schedule with the specified --daily-retention-days (or default) will be used. " +
-                "Multi-tier retention support is planned for a future release.");
+            var message = rsvAuthFailed
+                ? $"Vault '{vaultName}' not found as DPP vault, and RSV access was denied (authorization failure). Verify your RBAC permissions or specify --vault-type to skip auto-detection."
+                : $"Vault '{vaultName}' not found as either RSV or DPP vault. Verify the vault name and resource group, or specify --vault-type to skip auto-detection.";
+            throw new KeyNotFoundException(message);
         }
     }
 

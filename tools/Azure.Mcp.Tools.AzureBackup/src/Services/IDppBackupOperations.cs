@@ -70,12 +70,8 @@ public interface IDppBackupOperations
         string subscription,
         string policyName,
         string workloadType,
-        string? scheduleFrequency,
         string? scheduleTime,
         string? dailyRetentionDays,
-        string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths,
-        string? yearlyRetentionYears,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);

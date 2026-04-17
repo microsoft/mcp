@@ -210,8 +210,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // The RSV RefreshProtectionContainerAsync API does not return a pollable LRO,
         // so we must manually poll for the container to become visible.
         // Container discovery can take 2-3 minutes for some workloads.
-        // TODO: Consider returning the job ID immediately and letting the caller poll
-        // via 'job get' to reduce blocking time for interactive agent requests.
         const int maxRetries = 36;
         const int delayMs = 5000;
         for (int i = 0; i < maxRetries; i++)
@@ -609,9 +607,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<OperationResult> CreatePolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string workloadType,
-        string? scheduleFrequency, string? scheduleTime,
-        string? dailyRetentionDays, string? weeklyRetentionWeeks,
-        string? monthlyRetentionMonths, string? yearlyRetentionYears,
+        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -633,18 +629,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
 
-        // Stage 2 TODO: Multi-tier retention (--weekly-retention-weeks, --monthly-retention-months, --yearly-retention-years)
-        // Replace the current DailyRetentionSchedule-only approach with a full LongTermRetentionPolicy:
+        // Stage 2 TODO: Multi-tier retention
+        // When adding weekly/monthly/yearly retention support, add the parameters
+        // back to this method and replace the current DailyRetentionSchedule-only approach
+        // with a full LongTermRetentionPolicy:
         //   - DailySchedule: always present, using retentionDays.
-        //   - WeeklySchedule: if weeklyRetentionWeeks > 0, create WeeklyRetentionSchedule
-        //     with DaysOfTheWeek=[Sunday], RetentionDuration={Count=N, DurationType=Weeks}.
-        //   - MonthlySchedule: if monthlyRetentionMonths > 0, create MonthlyRetentionSchedule
-        //     with RetentionScheduleFormatType=Weekly, WeeksOfTheMonth=[First], DaysOfTheWeek=[Sunday].
-        //   - YearlySchedule: if yearlyRetentionYears > 0, create YearlyRetentionSchedule
-        //     with MonthsOfYear=[January], same weekly format as monthly.
+        //   - WeeklySchedule: WeeklyRetentionSchedule with DaysOfTheWeek=[Sunday].
+        //   - MonthlySchedule: MonthlyRetentionSchedule with WeeksOfTheMonth=[First].
+        //   - YearlySchedule: YearlyRetentionSchedule with MonthsOfYear=[January].
         // For VmWorkload: multi-tier retention goes on the Full sub-policy only.
-        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears params are
-        // accepted but not yet wired up.
 
         var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
         var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,

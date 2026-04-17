@@ -11,16 +11,16 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Tools.AzureBackup.Commands.Dr;
+namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 
-public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
+public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
 {
     private const string CommandTitle = "Enable Cross-Region Restore";
-    private readonly ILogger<DrEnableCrrCommand> _logger = logger;
+    private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     public override string Id => "917b66e5-483f-43ac-9620-9403e1689dbe";
-    public override string Name => "enablecrr";
+    public override string Name => "enable-crr";
     public override string Description => "Enables Cross-Region Restore on a GRS-enabled vault.";
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
@@ -47,7 +47,7 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
 
             context.Response.Results = ResponseResult.Create(
                 new(result),
-                AzureBackupJsonContext.Default.DrEnableCrrCommandResult);
+                AzureBackupJsonContext.Default.DisasterRecoveryEnableCrrCommandResult);
         }
         catch (Exception ex)
         {
@@ -74,5 +74,5 @@ public sealed class DrEnableCrrCommand(ILogger<DrEnableCrrCommand> logger, IAzur
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record DrEnableCrrCommandResult(OperationResult Result);
+    internal record DisasterRecoveryEnableCrrCommandResult(OperationResult Result);
 }

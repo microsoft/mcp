@@ -42,7 +42,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     {
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.ResourceTypeFilter);
-        command.Options.Add(AzureBackupOptionDefinitions.ResourceGroupFilter);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(AzureBackupOptionDefinitions.TagFilter);
     }
 
@@ -50,7 +50,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     {
         var options = base.BindOptions(parseResult);
         options.ResourceTypeFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceTypeFilter.Name);
-        options.ResourceGroupFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceGroupFilter.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.TagFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.TagFilter.Name);
         return options;
     }
@@ -69,7 +69,7 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
             var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
                 options.Subscription!,
                 options.ResourceTypeFilter,
-                options.ResourceGroupFilter,
+                options.ResourceGroup,
                 options.TagFilter,
                 options.Tenant,
                 options.RetryPolicy,

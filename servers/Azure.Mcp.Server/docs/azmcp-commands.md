@@ -749,7 +749,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                [--sku <sku>] \
                                [--storage-type <storage-type>]
 
-# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription, optionally filtered by --vault-type ('rsv' or 'dpp').
+# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault get --subscription <subscription> \
                             [--resource-group <resource-group>] \
@@ -781,12 +781,8 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 --policy <policy> \
                                 --workload-type <workload-type> \
                                 [--vault-type <vault-type>] \
-                                [--schedule-frequency <schedule-frequency>] \
                                 [--schedule-time <schedule-time>] \
-                                [--daily-retention-days <daily-retention-days>] \
-                                [--weekly-retention-weeks <weekly-retention-weeks>] \
-                                [--monthly-retention-months <monthly-retention-months>] \
-                                [--yearly-retention-years <yearly-retention-years>]
+                                [--daily-retention-days <daily-retention-days>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -877,7 +873,7 @@ azmcp azurebackup recoverypoint get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup governance find-unprotected --subscription <subscription> \
                                               [--resource-type-filter <resource-type-filter>] \
-                                              [--resource-group-filter <resource-group-filter>] \
+                                              [--resource-group <resource-group>] \
                                               [--tag-filter <tag-filter>]
 
 # Configures the immutability state for a backup vault.
@@ -898,15 +894,15 @@ azmcp azurebackup governance soft-delete --subscription <subscription> \
                                          [--soft-delete-retention-days <soft-delete-retention-days>]
 ```
 
-#### DR
+#### Disaster Recovery
 
 ```bash
 # Enables Cross-Region Restore on a GRS-enabled vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azurebackup dr enablecrr --subscription <subscription> \
-                               --resource-group <resource-group> \
-                               --vault <vault> \
-                               [--vault-type <vault-type>]
+azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --vault <vault> \
+                                              [--vault-type <vault-type>]
 ```
 
 ### Azure CLI Operations
