@@ -83,8 +83,12 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
+
+        Assert.Equal(expectedClusters.Count, result.Clusters.Count);
+        Assert.Equal(expectedClusters[0].Name, result.Clusters[0].Name);
+        Assert.Equal(expectedClusters[0].Location, result.Clusters[0].Location);
+        Assert.Equal(expectedClusters[0].KubernetesVersion, result.Clusters[0].KubernetesVersion);
 
         // Verify the mock was called
         await Service.Received(1).GetClusters(
@@ -94,14 +98,6 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
-
-        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Equal(expectedClusters.Count, result.Clusters.Count);
-        Assert.Equal(expectedClusters[0].Name, result.Clusters[0].Name);
-        Assert.Equal(expectedClusters[0].Location, result.Clusters[0].Location);
-        Assert.Equal(expectedClusters[0].KubernetesVersion, result.Clusters[0].KubernetesVersion);
     }
 
     [Fact]
@@ -193,12 +189,8 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
-        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
-
-        Assert.NotNull(result);
         var c = result.Clusters[0];
         Assert.Equal(enriched.Id, c.Id);
         Assert.Equal(enriched.NetworkProfile?.NetworkPolicy, c.NetworkProfile?.NetworkPolicy);
@@ -228,12 +220,8 @@ public class ClusterGetCommandTests : CommandUnitTestsBase<ClusterGetCommand, IA
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
 
-        var result = DeserializeResponse(response, AksJsonContext.Default.ClusterGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Clusters);
     }
 

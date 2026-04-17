@@ -68,13 +68,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "disk1");
@@ -114,13 +109,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal("disk1", result.Disks[0].Name);
@@ -163,13 +153,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
             "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal(diskName, result.Disks[0].Name);
@@ -210,12 +195,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
             "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal(mockDisk.Name, result.Disks[0].Name);
@@ -274,13 +255,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", subscription, "--disk-name", diskPattern);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "win_OsDisk1");
@@ -342,13 +318,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
             "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "datadisk1");
@@ -397,13 +368,8 @@ public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, ICompute
         var response = await ExecuteCommandAsync("--subscription", subscription, "--disk-name", diskName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal("exactdisk", result.Disks[0].Name);

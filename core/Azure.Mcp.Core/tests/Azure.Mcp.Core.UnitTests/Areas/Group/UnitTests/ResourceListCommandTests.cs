@@ -39,12 +39,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
-        var listResult = DeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
-        Assert.NotNull(listResult);
+        var listResult = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.Equal(2, listResult.Resources.Count);
 
         Assert.Equal("storageAccount1", listResult.Resources[0].Name);
@@ -118,11 +113,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         var result = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-
-        var listResult = DeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
-        Assert.NotNull(listResult);
+        var listResult = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.ResourceListCommandResult);
         Assert.Empty(listResult.Resources);
     }
 

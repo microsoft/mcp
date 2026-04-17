@@ -51,13 +51,8 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             "--disk-name", diskName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
-
-        Assert.NotNull(result);
         Assert.True(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
     }
@@ -86,13 +81,8 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             "--disk-name", diskName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
-
-        Assert.NotNull(result);
         Assert.False(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
     }
@@ -121,12 +111,8 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             "--disk-name", diskName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskDeleteCommandResult);
-
-        Assert.NotNull(result);
         Assert.True(result.Deleted);
         Assert.Equal(diskName, result.DiskName);
     }

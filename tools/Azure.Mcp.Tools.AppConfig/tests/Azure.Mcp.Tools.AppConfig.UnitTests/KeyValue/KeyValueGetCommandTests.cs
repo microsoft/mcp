@@ -41,12 +41,8 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--account", "account1");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Settings.Count);
         Assert.Equal("key1", result.Settings[0].Key);
         Assert.Equal("key2", result.Settings[1].Key);
@@ -77,13 +73,11 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             "--subscription", "sub123",
             "--account", "account1",
             "--key-filter", "key1");
+
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Single(result.Settings);
         Assert.Equal("key1", result.Settings[0].Key);
         Assert.Equal("value1", result.Settings[0].Value);
@@ -117,12 +111,8 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             "--label-filter", "prod");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Settings);
         Assert.Equal("key1", result.Settings[0].Key);
         Assert.Equal("value1", result.Settings[0].Value);
@@ -161,11 +151,8 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             "--label", "prod");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
-        Assert.NotNull(result);
         Assert.Single(result.Settings);
         Assert.Equal("my-key", result.Settings[0].Key);
         Assert.Equal("my-value", result.Settings[0].Value);
@@ -203,12 +190,8 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             "--key", "my-key");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Settings);
         Assert.Equal("my-key", result.Settings[0].Key);
         Assert.Equal("my-value", result.Settings[0].Value);

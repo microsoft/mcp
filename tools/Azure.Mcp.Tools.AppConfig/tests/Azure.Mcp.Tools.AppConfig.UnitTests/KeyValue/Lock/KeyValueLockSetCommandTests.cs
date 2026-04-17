@@ -37,9 +37,7 @@ public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetC
             null,
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         Assert.Equal("my-key", result.Key);
         Assert.True(result.Locked);
     }
@@ -67,9 +65,7 @@ public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetC
             "prod",
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
         Assert.True(result.Locked);
@@ -96,9 +92,7 @@ public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetC
             null,
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         Assert.Equal("my-key", result.Key);
         Assert.False(result.Locked);
     }
@@ -125,9 +119,7 @@ public class KeyValueLockSetCommandTests : CommandUnitTestsBase<KeyValueLockSetC
             "prod",
             Arg.Any<CancellationToken>());
 
-        var result = ConvertResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
-
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
     }

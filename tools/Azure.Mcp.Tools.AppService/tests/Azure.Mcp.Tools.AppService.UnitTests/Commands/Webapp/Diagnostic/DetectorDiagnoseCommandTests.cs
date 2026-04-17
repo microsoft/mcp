@@ -71,10 +71,7 @@ public class DetectorDiagnoseCommandTests : CommandUnitTestsBase<DetectorDiagnos
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var result = ConvertResponse(response, AppServiceJsonContext.Default.DetectorDiagnoseResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorDiagnoseResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Diagnoses.Datasets);

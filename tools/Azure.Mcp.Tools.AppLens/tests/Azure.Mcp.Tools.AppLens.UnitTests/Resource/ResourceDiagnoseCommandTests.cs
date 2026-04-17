@@ -44,13 +44,8 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "--resource-type", "Microsoft.Web/sites");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
 
-        var result = ConvertResponse(response, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Result);
         Assert.Equal(2, result.Result.Insights.Count);
         Assert.Equal(2, result.Result.Solutions.Count);
@@ -323,12 +318,8 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "--resource-type", "Microsoft.Web/sites");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
 
-        var result = ConvertResponse(response, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Result);
         Assert.Empty(result.Result.Insights);
         Assert.Empty(result.Result.Solutions);

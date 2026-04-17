@@ -106,13 +106,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--size-gb", sizeGb.ToString());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(resourceGroup, result.Disk.ResourceGroup);
@@ -191,13 +186,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--hyper-v-generation", hyperVGeneration);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(sku, result.Disk.SkuName);
@@ -266,12 +256,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--size-gb", "64");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(mockDisk.Name, result.Disk.Name);
         Assert.Equal(mockDisk.Location, result.Disk.Location);
@@ -339,13 +325,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--size-gb", "128");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }
@@ -509,13 +490,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--source", source);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }
@@ -580,13 +556,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--source", source);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }
@@ -663,13 +634,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--tier", tier);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(sizeGb, result.Disk.DiskSizeGB);
@@ -772,13 +738,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--enable-bursting", "true");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal(sku, result.Disk.SkuName);
@@ -859,13 +820,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--upload-size-bytes", uploadSizeBytes.ToString());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal("ReadyToUpload", result.Disk.DiskState);
@@ -949,13 +905,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--hyper-v-generation", "V2");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
         Assert.Equal("ReadyToUpload", result.Disk.DiskState);
@@ -1021,13 +972,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--gallery-image-reference", galleryImageRef);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
     }
@@ -1094,13 +1040,8 @@ public class DiskCreateCommandTests : CommandUnitTestsBase<DiskCreateCommand, IC
             "--gallery-image-reference-lun", lun.ToString());
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
 
-        var result = ConvertResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disk);
         Assert.Equal(diskName, result.Disk.Name);
 

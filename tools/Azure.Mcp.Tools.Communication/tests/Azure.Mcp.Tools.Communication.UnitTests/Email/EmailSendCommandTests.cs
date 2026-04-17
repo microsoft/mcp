@@ -149,12 +149,10 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
             Arg.Any<CancellationToken>());
 
         // Verify the response contains the expected result
-        Assert.NotNull(response.Results);
-        var result = ConvertResponse(response, CommunicationJsonContext.Default.EmailSendCommandResult);
+        var result = ValidateAndDeserializeResponse(response, CommunicationJsonContext.Default.EmailSendCommandResult);
 
-        Assert.NotNull(result);
         Assert.NotNull(result.Result);
-        
+
         // Verify the JSON can be properly deserialized (contains expected values)
         Assert.Contains("test-message-id", result.Result.MessageId);
         Assert.Contains("Queued", result.Result.Status);

@@ -47,10 +47,7 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var result = ConvertResponse(response, AppServiceJsonContext.Default.DeploymentGetResult);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DeploymentGetResult);
 
         Assert.NotNull(result);
         Assert.Equal(JsonSerializer.Serialize(expectedDeployments), JsonSerializer.Serialize(result.Deployments));

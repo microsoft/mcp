@@ -26,7 +26,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "--value", "my-value");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -39,9 +38,8 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
     }
@@ -58,7 +56,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "--label", "prod");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -71,9 +68,8 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
         Assert.Equal("prod", result.Label);
@@ -92,7 +88,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "--tags", "environment=prod", "team=backend");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -105,9 +100,8 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
             Arg.Any<CancellationToken>());
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
         Assert.Equal("application/json", result.ContentType);

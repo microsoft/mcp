@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,8 +56,32 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected Task<CommandResponse> ExecuteCommandAsync(string args)
         => Command.ExecuteAsync(Context, CommandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
+    /// <summary>
+    /// Deserializes the command response results into the specified type using the provided JSON type information.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the command response results into.</typeparam>
+    /// <param name="response">The command response containing the results to deserialize.</param>
+    /// <param name="jsonTypeInfo">The JSON type information.</param>
+    /// <returns>The deserialized command response results.</returns>
     protected T? DeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
         => JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), jsonTypeInfo);
+
+    /// <summary>
+    /// Validates that the command response indicates a successful execution and deserializes the results into the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the command response results into.</typeparam>
+    /// <param name="response">The command response containing the results to deserialize.</param>
+    /// <param name="jsonTypeInfo">The JSON type information.</param>
+    /// <returns>The deserialized command response results.</returns>
+    protected T ValidateAndDeserializeResponse<T>(CommandResponse response, JsonTypeInfo<T> jsonTypeInfo)
+    {
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        var result = DeserializeResponse(response, jsonTypeInfo);
+        Assert.NotNull(result);
+        return result;
+    }
 
     public void Dispose()
     {
@@ -68,7 +93,8 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     {
         if (_disposed)
             return;
-        ServiceProvider.Dispose();
+        if (disposing)
+            ServiceProvider.Dispose();
         _disposed = true;
     }
 }

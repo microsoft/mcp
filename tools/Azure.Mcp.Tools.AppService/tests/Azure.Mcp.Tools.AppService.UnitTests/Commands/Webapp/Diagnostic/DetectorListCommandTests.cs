@@ -35,12 +35,8 @@ public class DetectorListCommandTests : CommandUnitTestsBase<DetectorListCommand
         await Service.Received(1).ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorListResult);
 
-        var result = ConvertResponse(response, AppServiceJsonContext.Default.DetectorListResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Detectors);
         Assert.Equal(expectedValue[0].Name, result.Detectors[0].Name);
         Assert.Equal(expectedValue[0].Type, result.Detectors[0].Type);

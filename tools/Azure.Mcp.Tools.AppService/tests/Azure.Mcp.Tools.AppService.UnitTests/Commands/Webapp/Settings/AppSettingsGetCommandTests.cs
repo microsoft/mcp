@@ -40,12 +40,8 @@ public class AppSettingsGetCommandTests : CommandUnitTestsBase<AppSettingsGetCom
         await Service.Received(1).GetAppSettingsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsGetResult);
 
-        var result = ConvertResponse(response, AppServiceJsonContext.Default.AppSettingsGetResult);
-
-        Assert.NotNull(result);
         Assert.Equal(JsonSerializer.Serialize(expectedSettings), JsonSerializer.Serialize(result.AppSettings));
     }
 

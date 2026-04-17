@@ -14,11 +14,9 @@ public class BicepSchemaGetCommandTests : CommandUnitTestsBase<BicepSchemaGetCom
     public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists()
     {
         var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Sql/servers/databases/schemas");
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
 
-        var result = ConvertResponse(response, BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
-        var name = result?.BicepSchemaResult.FirstOrDefault()?.Name;
+        var result = ValidateAndDeserializeResponse(response, BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
+        var name = result.BicepSchemaResult.FirstOrDefault()?.Name;
 
         Assert.Contains("Microsoft.Sql/servers/databases/schemas@2023-08-01", name);
     }

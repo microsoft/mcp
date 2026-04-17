@@ -53,12 +53,8 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
         var response = await ExecuteCommandAsync("--scenario", "bastion");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Bastion guidance", result.Guidance);
     }
 
@@ -73,12 +69,8 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
         var response = await ExecuteCommandAsync("--scenario", "ddos");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotEmpty(result.Guidance);
     }
 
@@ -96,11 +88,8 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
         var response = await ExecuteCommandAsync("--scenario", "policy-enforcement", "--policy-name", "ddos");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Enable-DDoS-VNET", result.Guidance);
         Assert.Contains("corp", result.Guidance);
         Assert.Contains("connectivity", result.Guidance);
@@ -124,11 +113,8 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
         var response = await ExecuteCommandAsync("--scenario", "policy-assignment", "--list-policies", "true");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("All Policies by Archetype", result.Guidance);
         Assert.Contains("Enable-DDoS-VNET", result.Guidance);
         Assert.Contains("Deny-Public-IP", result.Guidance);
@@ -149,11 +135,8 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
         var response = await ExecuteCommandAsync("--scenario", "policy-enforcement", "--policy-name", "nonexistent");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.GetGuidanceCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("No policies matching 'nonexistent' found", result.Guidance);
         Assert.Contains("list-policies", result.Guidance);
     }

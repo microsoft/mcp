@@ -25,7 +25,6 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             "--key", "my-key");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
@@ -35,9 +34,8 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             null,
             Arg.Any<CancellationToken>());
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
     }
 
@@ -52,7 +50,6 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             "--label", "prod");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
@@ -61,9 +58,8 @@ public class KeyValueDeleteCommandTests : CommandUnitTestsBase<KeyValueDeleteCom
             "prod",
             Arg.Any<CancellationToken>());
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("prod", result.Label);
     }

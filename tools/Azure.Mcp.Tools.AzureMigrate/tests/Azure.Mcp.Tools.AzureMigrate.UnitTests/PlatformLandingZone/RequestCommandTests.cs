@@ -171,13 +171,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--firewall-type", fireWallType);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Parameters updated successfully", result.Message);
         Assert.Contains("Complete: True", result.Message);
     }
@@ -248,13 +243,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Platform Landing zone generated successfully", result.Message);
         Assert.Contains(downloadUrl, result.Message);
     }
@@ -284,13 +274,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Platform Landing zone generated successfully", result.Message);
 
         // Verify GenerateAsync was called
@@ -324,12 +309,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -357,12 +338,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--migrate-project-name", projectName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(statusMessage, result.Message);
     }
 
@@ -564,12 +541,8 @@ public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatfor
             "--organization-name", "myorg");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
-        var result = ConvertResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Complete: True", result.Message);
     }
 

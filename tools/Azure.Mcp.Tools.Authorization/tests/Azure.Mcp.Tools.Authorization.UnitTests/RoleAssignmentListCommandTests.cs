@@ -61,12 +61,8 @@ public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmen
         var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
-        var result = ConvertResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedRoleAssignments.Results, result.Assignments);
     }
 
@@ -83,12 +79,8 @@ public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmen
         var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
-        var result = ConvertResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Assignments);
     }
 

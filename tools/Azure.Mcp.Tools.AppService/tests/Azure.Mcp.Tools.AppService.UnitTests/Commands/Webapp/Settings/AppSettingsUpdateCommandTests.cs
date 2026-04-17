@@ -55,12 +55,8 @@ public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpd
             settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
 
-        var result = ConvertResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedValue, result.UpdateStatus);
     }
 

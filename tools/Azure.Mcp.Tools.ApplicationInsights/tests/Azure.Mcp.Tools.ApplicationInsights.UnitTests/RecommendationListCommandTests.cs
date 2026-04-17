@@ -32,10 +32,8 @@ public class RecommendationListCommandTests : CommandUnitTestsBase<Recommendatio
 
         var response = await ExecuteCommandAsync("--subscription", "sub1");
 
-        Assert.NotNull(response.Results);
-
-        var node = ConvertResponse(response, ApplicationInsightsJsonContext.Default.RecommendationListCommandResult);
-        var recs = node?.Recommendations;
+        var node = ValidateAndDeserializeResponse(response, ApplicationInsightsJsonContext.Default.RecommendationListCommandResult);
+        var recs = node.Recommendations;
         Assert.NotNull(recs);
         Assert.Equal(2, recs.Count());
     }

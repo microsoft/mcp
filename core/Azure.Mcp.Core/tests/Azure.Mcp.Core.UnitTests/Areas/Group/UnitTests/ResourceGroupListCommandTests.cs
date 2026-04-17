@@ -38,12 +38,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
-        var resultGroups = DeserializeResponse(result, GroupJsonContext.Default.Result);
-        Assert.NotNull(resultGroups);
+        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.Result);
         Assert.Equal(2, resultGroups.Groups.Count);
 
         var first = resultGroups.Groups[0];
@@ -111,12 +106,7 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         var result = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
-        var resultGroups = DeserializeResponse(result, GroupJsonContext.Default.Result);
-        Assert.NotNull(resultGroups);
+        var resultGroups = ValidateAndDeserializeResponse(result, GroupJsonContext.Default.Result);
         Assert.Empty(resultGroups.Groups);
     }
 

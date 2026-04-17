@@ -35,13 +35,10 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
+
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Accounts.Count);
         Assert.Equal("account1", result.Accounts[0].Name);
         Assert.Equal("account2", result.Accounts[1].Name);
@@ -62,12 +59,8 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
 
-        var result = DeserializeResponse(response, AppConfigJsonContext.Default.AccountListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Accounts);
     }
 
