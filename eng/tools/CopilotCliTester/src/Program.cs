@@ -541,8 +541,8 @@ static class Program
             writer.WriteLine("|------|--------|--------------|");
             foreach (var result in results.Where(r => r.Status == TestStatus.Fail))
             {
-                var toolsCalled = result.ToolsCalled is not null ? string.Join(", ", result.ToolsCalled) : "";
-                var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
+                var toolsCalled = result.ToolsCalled is not null ? string.Join(", ", result.ToolsCalled).Replace("|", "\\|") : "";
+                var promptShort = (result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt).Replace("|", "\\|");
                 writer.WriteLine($"| `{result.Tool}` | {promptShort} | {toolsCalled} |");
             }
         }
@@ -555,8 +555,8 @@ static class Program
             writer.WriteLine("|------|--------|-------|");
             foreach (var result in results.Where(r => r.Status == TestStatus.Error))
             {
-                var promptShort = result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt;
-                var error = result.Error ?? "";
+                var promptShort = (result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt).Replace("|", "\\|");
+                var error = (result.Error ?? "").Replace("|", "\\|");
                 writer.WriteLine($"| `{result.Tool}` | {promptShort} | {error} |");
             }
         }

@@ -18,6 +18,8 @@ internal static class AgentRunnerUtils
         "report_intent"
     };
 
+    private static readonly string[] prefixes = new[] { "azure-", "azure_" };
+
     /// <summary>
     /// Returns tool.execution_start events
     /// </summary>
@@ -45,7 +47,6 @@ internal static class AgentRunnerUtils
                 return true;
 
             // Strip known single-segment namespace-proxy prefix instead of open-ended suffix match to avoid false positives (e.g., "subscription_list" matching "eventgrid_subscription_list")
-            var prefixes = new[] { "azure-", "azure_" };
             foreach (var prefix in prefixes)
             {
                 if (resolved.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
