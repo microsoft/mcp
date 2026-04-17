@@ -180,11 +180,10 @@ public sealed class CommandFactoryToolLoader(
         var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive or destructive operations
-        var metadata = command.Metadata;
         var elicitationResult = await HandleElicitationAsync(
             request,
             toolName,
-            metadata,
+            command,
             _options.Value.DangerouslyDisableElicitation,
             _logger,
             cancellationToken);

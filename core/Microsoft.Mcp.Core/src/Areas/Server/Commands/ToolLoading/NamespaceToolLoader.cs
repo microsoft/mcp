@@ -399,18 +399,17 @@ public sealed class NamespaceToolLoader(
             }
 
             // Check if this tool requires elicitation for sensitive or destructive operations
-            var metadata = cmd.Metadata;
             var elicitationResult = await HandleElicitationAsync(
                 request,
                 $"{namespaceName} {command}",
-                metadata,
+                cmd,
                 _options.Value.DangerouslyDisableElicitation,
                 _logger,
                 cancellationToken);
 
             if (elicitationResult != null)
             {
-                return McpHelper.InjectToolIdMetadata(elicitationResult, cmd.Id);
+                return elicitationResult;
             }
 
             var currentActivity = Activity.Current;
