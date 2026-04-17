@@ -29,11 +29,9 @@ public sealed class AvailabilityListCommandTests
         _quotaService = Substitute.For<IQuotaService>();
         _logger = Substitute.For<ILogger<AvailabilityListCommand>>();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(_quotaService);
-        _serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new AvailabilityListCommand(_logger);
+        _command = new AvailabilityListCommand(_logger, _quotaService);
         _commandDefinition = _command.GetCommand();
     }
 

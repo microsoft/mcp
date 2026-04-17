@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
 
-public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<CheckOptions>()
+public sealed class CheckCommand(ILogger<CheckCommand> logger, IQuotaService quotaService) : SubscriptionCommand<CheckOptions>()
 {
     private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
+    private readonly IQuotaService _quotaService = quotaService;
 
     public override string Id => "81f64603-5a56-4f74-90f8-395da69a99d3";
 
@@ -73,8 +74,7 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToList();
-            var quotaService = context.GetService<IQuotaService>();
-            Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
+            Dictionary<string, List<UsageInfo>> toolResult = await _quotaService.GetAzureQuotaAsync(
                 resourceTypes,
                 options.Subscription!,
                 options.Region,

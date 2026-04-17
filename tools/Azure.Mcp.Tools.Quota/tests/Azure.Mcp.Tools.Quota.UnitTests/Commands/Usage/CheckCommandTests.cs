@@ -30,11 +30,9 @@ public sealed class CheckCommandTests
         _quotaService = Substitute.For<IQuotaService>();
         _logger = Substitute.For<ILogger<CheckCommand>>();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(_quotaService);
-        _serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new CheckCommand(_logger);
+        _command = new CheckCommand(_logger, _quotaService);
         _commandDefinition = _command.GetCommand();
     }
 
