@@ -17,7 +17,6 @@ namespace Azure.Mcp.Tools.ResourceHealth.UnitTests.ServiceHealthEvents;
 
 public class ServiceHealthEventsListCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IResourceHealthService _resourceHealthService;
     private readonly ILogger<ServiceHealthEventsListCommand> _logger;
     private readonly ServiceHealthEventsListCommand _command;
@@ -29,11 +28,8 @@ public class ServiceHealthEventsListCommandTests
         _resourceHealthService = Substitute.For<IResourceHealthService>();
         _logger = Substitute.For<ILogger<ServiceHealthEventsListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_resourceHealthService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
+        _command = new(_logger, _resourceHealthService);
+        _context = new(new ServiceCollection().BuildServiceProvider());
         _commandDefinition = _command.GetCommand();
     }
 

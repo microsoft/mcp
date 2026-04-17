@@ -18,7 +18,6 @@ namespace Azure.Mcp.Tools.ResourceHealth.UnitTests.AvailabilityStatus;
 
 public class AvailabilityStatusGetCommandTests
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IResourceHealthService _resourceHealthService;
     private readonly ILogger<AvailabilityStatusGetCommand> _logger;
 
@@ -26,11 +25,6 @@ public class AvailabilityStatusGetCommandTests
     {
         _resourceHealthService = Substitute.For<IResourceHealthService>();
         _logger = Substitute.For<ILogger<AvailabilityStatusGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_resourceHealthService);
-
-        _serviceProvider = collection.BuildServiceProvider();
     }
 
     #region Get (Single Resource) Tests
@@ -51,9 +45,9 @@ public class AvailabilityStatusGetCommandTests
         _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatus);
 
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
@@ -82,10 +76,10 @@ public class AvailabilityStatusGetCommandTests
         _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
 
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -123,9 +117,9 @@ public class AvailabilityStatusGetCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
@@ -162,9 +156,9 @@ public class AvailabilityStatusGetCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
@@ -190,10 +184,10 @@ public class AvailabilityStatusGetCommandTests
         _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
 
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
@@ -210,7 +204,7 @@ public class AvailabilityStatusGetCommandTests
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var command = new AvailabilityStatusGetCommand(_logger);
+        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var argsList = new List<string>();
         if (missingParameter != "--subscription")
         {
@@ -220,7 +214,7 @@ public class AvailabilityStatusGetCommandTests
 
         var args = command.GetCommand().Parse([.. argsList]);
 
-        var context = new CommandContext(_serviceProvider);
+        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);

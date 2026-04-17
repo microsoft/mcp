@@ -14,11 +14,12 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 /// <summary>
 /// Gets or lists availability status information for Azure resources.
 /// </summary>
-public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger)
+public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
 {
     private const string CommandTitle = "Get/List Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
     public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
 
@@ -64,15 +65,12 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
-
             List<Models.AvailabilityStatus> statuses;
 
             // If resourceId is provided, get single resource status
             if (!string.IsNullOrEmpty(options.ResourceId))
             {
-                var status = await resourceHealthService.GetAvailabilityStatusAsync(
+                var status = await _resourceHealthService.GetAvailabilityStatusAsync(
                     options.ResourceId,
                     options.RetryPolicy,
                     cancellationToken);
@@ -82,7 +80,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             // Otherwise, list all resources
             else
             {
-                statuses = await resourceHealthService.ListAvailabilityStatusesAsync(
+                statuses = await _resourceHealthService.ListAvailabilityStatusesAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,

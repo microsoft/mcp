@@ -13,11 +13,12 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 /// <summary>
 /// Lists Azure service health events for a subscription, providing insights into ongoing or past service issues.
 /// </summary>
-public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger)
+public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsListCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<ServiceHealthEventsListOptions>()
 {
     private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
+    private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
 
     public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
 
@@ -99,10 +100,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
 
         try
         {
-            var resourceHealthService = context.GetService<IResourceHealthService>() ??
-                throw new InvalidOperationException("Resource Health service is not available.");
-
-            var events = await resourceHealthService.ListServiceHealthEventsAsync(
+            var events = await _resourceHealthService.ListServiceHealthEventsAsync(
                 options.Subscription!,
                 options.EventType,
                 options.Status,
