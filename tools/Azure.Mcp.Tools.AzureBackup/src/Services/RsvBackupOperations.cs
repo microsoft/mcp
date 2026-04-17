@@ -210,6 +210,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // The RSV RefreshProtectionContainerAsync API does not return a pollable LRO,
         // so we must manually poll for the container to become visible.
         // Container discovery can take 2-3 minutes for some workloads.
+        // TODO: Consider returning the job ID immediately and letting the caller poll
+        // via 'job get' to reduce blocking time for interactive agent requests.
         const int maxRetries = 36;
         const int delayMs = 5000;
         for (int i = 0; i < maxRetries; i++)

@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Add prefix support to storage_blob_get and storage_blob_container_get"
