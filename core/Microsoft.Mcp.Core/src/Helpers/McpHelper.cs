@@ -51,6 +51,7 @@ public static class McpHelper
     {
         if (meta != null && meta.TryGetPropertyValue(ToolIdMetaKey, out var toolIdNode)
             && toolIdNode is JsonValue toolIdValue
+            && toolIdNode.GetValueKind() == JsonValueKind.String
             && toolIdValue.TryGetValue<string>(out var toolId))
         {
             result.Meta ??= [];

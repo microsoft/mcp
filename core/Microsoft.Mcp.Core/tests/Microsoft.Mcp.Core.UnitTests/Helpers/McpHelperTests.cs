@@ -115,7 +115,6 @@ public class McpHelperTests
         var enrichedResult = McpHelper.InjectToolIdMetadata(result, meta);
 
         Assert.NotNull(enrichedResult.Meta);
-        Assert.True(enrichedResult.Meta.TryGetPropertyValue(McpHelper.ToolIdMetaKey, out var toolIdNode));
-        Assert.Null(toolIdNode);
+        Assert.False(enrichedResult.Meta.TryGetPropertyValue(McpHelper.ToolIdMetaKey, out var _));
     }
 }
