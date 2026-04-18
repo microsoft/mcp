@@ -5,20 +5,23 @@
 
 Push-Location $RepoRoot
 try {
+    $hasErrors = $false
+
     Write-Host "Checking if solution files are up to date."
-    & "$PSScriptRoot/Update-Solution.ps1" -All
-    $slnxDiff = git diff --name-only -- "*.slnx"
-    if ($slnxDiff) {
-        Write-Host "❌ Solution files are out of date. The following files need updating:"
-        Write-Host $slnxDiff
-        Write-Host "Please run './eng/scripts/Update-Solution.ps1 -All' and commit the changes."
-        git checkout -- "*.slnx"  # restore originals so other checks aren't affected
+    try {
+        & "$PSScriptRoot/Update-Solution.ps1" -All -Verify
+    } catch {
+        Write-Host "❌ Solution update failed: $_"
         $hasErrors = $true
-    } else {
-        Write-Host "✅ Solution files are up-to-date."
+    }
+    if ($LASTEXITCODE -ne 0) {
+        $hasErrors = $true
+    } 
+    if (-not $hasErrors) {
+        Write-Host "✅ Solution files are up to date."
     }
 
-    Write-Host "Running dotnet format to check for formatting issues..."
+    # Write-Host "Running dotnet format to check for formatting issues..."
     $solutionFile = "$RepoRoot/Microsoft.Mcp.slnx"
 
     # Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
