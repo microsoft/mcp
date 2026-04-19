@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
+
 namespace Azure.Mcp.Tools.Marketplace.Models;
 // ===============================
 // MAIN PRODUCT CLASSES
@@ -10,7 +12,6 @@ public class ProductDetails : ProductSummary
 {
     public string? Language { get; set; }
     public bool? HasStandardContractAmendments { get; set; }
-    public string? OfferId { get; set; }
     public Guid? StandardContractAmendmentsRevisionId { get; set; }
     public string? UniversalAmendmentUrl { get; set; }
     public bool? IsPrivate { get; set; }
@@ -36,6 +37,8 @@ public class ProductDetails : ProductSummary
     public bool? IsReseller { get; set; }
     public bool? DisableSendEmailOnPurchase { get; set; }
     public string? ProductCustomData { get; set; }
+    public bool? HasAddOns { get; set; }
+    public ExperienceConfig? ExperienceConfig { get; set; }
 }
 
 public class ProductSummary
@@ -46,13 +49,13 @@ public class ProductSummary
     public IReadOnlyList<string>? IndustryIds { get; set; }
     public string? PublisherId { get; set; }
     public AzureBenefit? AzureBenefit { get; set; }
-    public IReadOnlyList<Badge>? Badges { get; set; }
+    public IReadOnlyList<string>? Badges { get; set; }
     public IReadOnlyList<string>? ProductBadges { get; set; }
     public IReadOnlyList<string>? ProductLabels { get; set; }
     public PublisherType? PublisherType { get; set; }
     public PublishingStage? PublishingStage { get; set; }
     public string? UniqueProductId { get; set; }
-    public ProductType? ProductType { get; set; }
+    public string? ProductType { get; set; }
     public IReadOnlyList<string>? OperatingSystems { get; set; }
     public IReadOnlyList<PricingType>? PricingTypes { get; set; }
     public string? PublisherDisplayName { get; set; }
@@ -74,12 +77,19 @@ public class ProductSummary
     public string? ProductOwnershipSellingMotion { get; set; }
     public string? ReservationResourceType { get; set; }
     public bool? IsTestProduct { get; set; }
+    public string? OfferId { get; set; }
+    public string? MixProductId { get; set; }
+    public string? LicenseManagementType { get; set; }
+    public string? OfferingType { get; set; }
+    public LeadGenerationInfo? LeadGeneration { get; set; }
+    [JsonPropertyName("hasRiPlans")]
+    public bool? HasRIPlans { get; set; }
 }
 
 public class ProductsListResponse
 {
-    public List<ProductSummary>? Items { get; set; }
-    public string? NextPageLink { get; set; }
+    public List<ProductSummary>? Value { get; set; }
+    public string? NextLink { get; set; }
 }
 
 // ===============================
@@ -106,6 +116,9 @@ public class PlanDetails : PlanSummary
     public string? CustomerInstruction { get; set; }
     public string? PlanArtifactsVersion { get; set; }
     public IList<TermUpn>? Upns { get; set; }
+    public string? SkuName { get; set; }
+    public string? ManifestTenantId { get; set; }
+    public string? ManifestVersion { get; set; }
 }
 
 public class PlanSummary
@@ -126,10 +139,13 @@ public class PlanSummary
     public string? Summary { get; set; }
     public string? Description { get; set; }
     public string? SkuId { get; set; }
-    public ProductType? Type { get; set; }
+    public string? Type { get; set; }
     public string? DisplayRank { get; set; }
     public bool? IsPrivate { get; set; }
     public IReadOnlyList<string>? PlanLabels { get; set; }
+    public LeadGenerationInfo? LeadGeneration { get; set; }
+    [JsonPropertyName("hasRi")]
+    public bool? HasRI { get; set; }
 }
 
 // ===============================
@@ -141,7 +157,7 @@ public class Availability
     public string? Id { get; set; }
     public IList<string>? Actions { get; set; }
     public Meter? Meter { get; set; }
-    public PricingAudience? PricingAudience { get; set; }
+    public string? PricingAudience { get; set; }
     public IList<Term>? Terms { get; set; }
     public bool? HasFreeTrials { get; set; }
     public string? ConsumptionUnitType { get; set; }
@@ -359,13 +375,6 @@ public enum ArtifactType
     Metadata
 }
 
-public enum Badge
-{
-    PreferredSolution,
-    PowerBICertified,
-    AdditionalPurchaseRequirement
-}
-
 public enum AzureBenefit
 {
     Eligible,
@@ -384,43 +393,14 @@ public enum PublishingStage
     Public
 }
 
-public enum ProductType
-{
-    None = 0,
-    DevService = 1,
-    ManagedApplication = 2,
-    VirtualMachine = 3,
-    AzureApplication = 4,
-    Container = 5,
-    SaaS = 6,
-    SolutionTemplate = 7,
-    IotEdgeModules = 8,
-    ManagedServices = 9,
-    ContainerApps = 10,
-    VisualStudioExtension = 11,
-    DynamicsOps = 12,
-    DynamicsCE = 13,
-    DynamicsBC = 14,
-    PowerBI = 15,
-    ConsultingServices = 16,
-    CosellOnly = 17,
-    CoreVirtualMachine = 18,
-    PowerBIVisuals = 19,
-    Office365 = 20,
-    AADApps = 21,
-    MicrosoftProduct = 22,
-    AzureServices = 23,
-    AppService = 24,
-    LogAnalytics = 25
-}
-
 public enum PricingType
 {
     Free = 0,
     FreeTrial = 1,
     Byol = 2,
     Payg = 3,
-    Ri = 4
+    Ri = 4,
+    ContactPublisher = 5
 }
 
 public enum RatingBucket
@@ -453,24 +433,28 @@ public enum VmSecurityType
     Confidential = 2
 }
 
-public enum PricingAudience
-{
-    None,
-    DirectCommercial,
-    PartnerCommercial,
-    Custom,
-    IndirectCommercial,
-    IndirectGov,
-    DirectChk,
-    DirectBlue,
-    DirectRock,
-    DirectGsamas,
-    DirectGsaascend
-}
-
 public enum StopSellReason
 {
     EndOfSupport,
     SecurityIssue,
     Other
+}
+
+
+public class LeadGenerationInfo
+{
+    public string? LeadGenId { get; set; }
+    public bool? LeadGenEnabled { get; set; }
+}
+
+public class ExperienceConfig
+{
+    public AzurePortalConfig? AzurePortal { get; set; }
+
+    public class AzurePortalConfig
+    {
+        public string? ExtensionName { get; set; }
+        public string? AssetType { get; set; }
+        public string? AssetKind { get; set; }
+    }
 }

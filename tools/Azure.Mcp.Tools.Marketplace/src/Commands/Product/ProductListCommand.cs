@@ -71,17 +71,15 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-
             // Call service operation with required parameters
             var results = await _marketplaceService.ListProducts(
                 options.Subscription!,
@@ -97,7 +95,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
                 cancellationToken);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(results?.Items ?? [], results?.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
         }
         catch (Exception ex)
         {

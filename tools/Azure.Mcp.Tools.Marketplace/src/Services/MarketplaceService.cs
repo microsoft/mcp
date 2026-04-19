@@ -17,7 +17,7 @@ public class MarketplaceService(ITenantService tenantService)
 {
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
-    private const string ApiVersion = "2023-01-01-preview";
+    private const string ApiVersion = "2025-05-01";
 
     /// <summary>
     /// Retrieves a single private product (offer) for a given subscription.
@@ -58,7 +58,7 @@ public class MarketplaceService(ITenantService tenantService)
 
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language, market,
-            lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
+            lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates, pricingAudience);
 
         return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
     }
@@ -150,8 +150,8 @@ public class MarketplaceService(ITenantService tenantService)
 
         return new()
         {
-            Items = productsListResponse?.Items ?? [],
-            NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextPageLink)
+            Items = productsListResponse?.Value ?? [],
+            NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextLink)
         };
     }
 
@@ -166,7 +166,8 @@ public class MarketplaceService(ITenantService tenantService)
         bool? lookupOfferInTenantLevel,
         string? planId,
         string? skuId,
-        bool? includeServiceInstructionTemplates)
+        bool? includeServiceInstructionTemplates,
+        string? pricingAudience = null)
     {
         var queryParams = new List<string>
         {
@@ -193,6 +194,9 @@ public class MarketplaceService(ITenantService tenantService)
 
         if (includeServiceInstructionTemplates.HasValue)
             queryParams.Add($"includeServiceInstructionTemplates={includeServiceInstructionTemplates.Value.ToString().ToLower()}");
+
+        if (!string.IsNullOrEmpty(pricingAudience))
+            queryParams.Add($"pricingAudience={Uri.EscapeDataString(pricingAudience)}");
 
         string queryString = string.Join("&", queryParams);
         return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";

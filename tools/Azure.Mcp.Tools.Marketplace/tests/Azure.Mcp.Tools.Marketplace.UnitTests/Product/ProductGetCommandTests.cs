@@ -8,8 +8,10 @@ using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -90,7 +92,10 @@ public class ProductGetCommandTests
     [Fact]
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
-        // Arrange
+        // Arrange - clear env var; test behavior depends on whether Azure CLI provides a default subscription.
+        // In CI (no Azure credentials), validation fails with BadRequest.
+        // On dev machines with Azure CLI logged in, the subscription is auto-detected and the command succeeds.
+        TestEnvironment.ClearAzureSubscriptionId();
         var args = _commandDefinition.Parse(["--product-id", "test-product"]);
 
         // Act
@@ -98,8 +103,16 @@ public class ProductGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
+        if (string.IsNullOrEmpty(CommandHelper.GetDefaultSubscription()))
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("required", response.Message.ToLower());
+        }
+        else
+        {
+            // Azure CLI provides a subscription; validation passes and no exception is thrown.
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
     }
 
     [Fact]

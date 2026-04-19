@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Updated Marketplace tool to use API version 2025-05-01. Added new response model fields: offerId, mixProductId, offeringType, licenseManagementType, hasRIPlans, leadGeneration, and experienceConfig."
