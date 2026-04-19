@@ -2203,11 +2203,11 @@
       "toolMetadata": {
         "destructive": {
           "value": true,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "description": "This tool creates new Azure resources (Function App, and optionally Storage account, App Service plan, Container App, resource group) that incur cost and cannot be undone by the tool."
         },
         "idempotent": {
           "value": false,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "description": "Running this operation multiple times with the same arguments may fail due to resource name conflicts, or create additional auto-provisioned resources with generated names."
         },
         "openWorld": {
           "value": false,
@@ -2215,7 +2215,7 @@
         },
         "readOnly": {
           "value": false,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "description": "This tool creates new Azure resources and modifies their configuration; it does not limit itself to read operations."
         },
         "secret": {
           "value": false,
@@ -2227,7 +2227,8 @@
         }
       },
       "mappedToolList": [
-        "functionapp_create"
+        "functionapp_create",
+        "functionapp_create_containerapp"
       ]
     }
   ]
