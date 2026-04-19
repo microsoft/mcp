@@ -53,7 +53,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
         * flex / flexconsumption -> FC1 (FlexConsumption, Linux only)
         * premium / functionspremium -> EP1 (Elastic Premium)
         * appservice   -> B1 (Basic) unless overridden by --plan-sku
-    * containerapp -> Creates a Container App instead of an App Service plan/site (no plan created). Container App will reuse the function-app name.
+        * containerapp -> Creates a Container App instead of an App Service plan/site (no plan created). Container App will reuse the function-app name.
     - plan-sku: Explicit App Service plan SKU (e.g. B1, S1, P1v3). Overrides --plan-type SKU selection (ignored for containerapp).
     - runtime: FUNCTIONS_WORKER_RUNTIME (dotnet|dotnet-isolated|node|python|java|powershell). Default: dotnet.
     - runtime-version: Specific runtime version; if omitted a default per runtime is applied (see defaults below).
