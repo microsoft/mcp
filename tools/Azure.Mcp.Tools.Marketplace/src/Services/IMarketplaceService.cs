@@ -18,7 +18,6 @@ public interface IMarketplaceService
         string? planId = null,
         string? skuId = null,
         bool? includeServiceInstructionTemplates = null,
-        string? pricingAudience = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
