@@ -48,7 +48,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         command.Options.Add(MarketplaceOptionDefinitions.ProductId);
         command.Options.Add(MarketplaceOptionDefinitions.IncludeStopSoldPlans);
         command.Options.Add(MarketplaceOptionDefinitions.Language);
-        command.Options.Add(MarketplaceOptionDefinitions.Market);
         command.Options.Add(MarketplaceOptionDefinitions.LookupOfferInTenantLevel);
         command.Options.Add(MarketplaceOptionDefinitions.PlanId);
         command.Options.Add(MarketplaceOptionDefinitions.SkuId);
@@ -61,7 +60,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         options.ProductId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.ProductId.Name);
         options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeStopSoldPlans.Name);
         options.Language = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Language.Name);
-        options.Market = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.Market.Name);
         options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.LookupOfferInTenantLevel.Name);
         options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
         options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
@@ -86,7 +84,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
                 options.Subscription!,
                 options.IncludeStopSoldPlans,
                 options.Language,
-                options.Market,
                 options.LookupOfferInTenantLevel,
                 options.PlanId,
                 options.SkuId,

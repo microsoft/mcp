@@ -8,7 +8,6 @@ public static class MarketplaceOptionDefinitions
     public const string ProductIdName = "product-id";
     public const string IncludeStopSoldPlansName = "include-stop-sold-plans";
     public const string LanguageName = "language";
-    public const string MarketName = "market";
     public const string LookupOfferInTenantLevelName = "lookup-offer-in-tenant-level";
     public const string PlanIdName = "plan-id";
     public const string SkuIdName = "sku-id";
@@ -35,12 +34,6 @@ public static class MarketplaceOptionDefinitions
     public static readonly Option<string> Language = new($"--{LanguageName}")
     {
         Description = "Product language code (e.g., 'en' for English, 'fr' for French).",
-        Required = false
-    };
-
-    public static readonly Option<string> Market = new($"--{MarketName}")
-    {
-        Description = "Product market code (e.g., 'US' for United States, 'UK' for United Kingdom).",
         Required = false
     };
 

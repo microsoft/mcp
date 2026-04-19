@@ -26,7 +26,6 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="subscription">The Azure subscription ID.</param>
     /// <param name="includeStopSoldPlans">Include stop-sold or hidden plans.</param>
     /// <param name="language">Product language (default: en).</param>
-    /// <param name="market">Product market (default: US).</param>
     /// <param name="lookupOfferInTenantLevel">Check against tenantId private audience.</param>
     /// <param name="planId">Filter by plan ID.</param>
     /// <param name="skuId">Filter by SKU ID.</param>
@@ -41,7 +40,6 @@ public class MarketplaceService(ITenantService tenantService)
         string subscription,
         bool? includeStopSoldPlans = null,
         string? language = null,
-        string? market = null,
         bool? lookupOfferInTenantLevel = null,
         string? planId = null,
         string? skuId = null,
@@ -55,7 +53,7 @@ public class MarketplaceService(ITenantService tenantService)
             (nameof(subscription), subscription));
 
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-        string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language, market,
+        string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
         return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
@@ -160,7 +158,6 @@ public class MarketplaceService(ITenantService tenantService)
         string productId,
         bool? includeStopSoldPlans,
         string? language,
-        string? market,
         bool? lookupOfferInTenantLevel,
         string? planId,
         string? skuId,
@@ -176,9 +173,6 @@ public class MarketplaceService(ITenantService tenantService)
 
         if (!string.IsNullOrEmpty(language))
             queryParams.Add($"language={Uri.EscapeDataString(language)}");
-
-        if (!string.IsNullOrEmpty(market))
-            queryParams.Add($"market={Uri.EscapeDataString(market)}");
 
         if (lookupOfferInTenantLevel.HasValue)
             queryParams.Add($"lookupOfferInTenantLevel={lookupOfferInTenantLevel.Value.ToString().ToLower()}");
