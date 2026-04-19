@@ -31,7 +31,6 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="planId">Filter by plan ID.</param>
     /// <param name="skuId">Filter by SKU ID.</param>
     /// <param name="includeServiceInstructionTemplates">Include service instruction templates.</param>
-    /// <param name="pricingAudience">Pricing audience.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A JSON node containing the product information.</returns>
@@ -47,7 +46,6 @@ public class MarketplaceService(ITenantService tenantService)
         string? planId = null,
         string? skuId = null,
         bool? includeServiceInstructionTemplates = null,
-        string? pricingAudience = null,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -58,7 +56,7 @@ public class MarketplaceService(ITenantService tenantService)
 
         var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language, market,
-            lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates, pricingAudience);
+            lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
         return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
     }
@@ -166,8 +164,7 @@ public class MarketplaceService(ITenantService tenantService)
         bool? lookupOfferInTenantLevel,
         string? planId,
         string? skuId,
-        bool? includeServiceInstructionTemplates,
-        string? pricingAudience = null)
+        bool? includeServiceInstructionTemplates)
     {
         var queryParams = new List<string>
         {
@@ -194,9 +191,6 @@ public class MarketplaceService(ITenantService tenantService)
 
         if (includeServiceInstructionTemplates.HasValue)
             queryParams.Add($"includeServiceInstructionTemplates={includeServiceInstructionTemplates.Value.ToString().ToLower()}");
-
-        if (!string.IsNullOrEmpty(pricingAudience))
-            queryParams.Add($"pricingAudience={Uri.EscapeDataString(pricingAudience)}");
 
         string queryString = string.Join("&", queryParams);
         return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";

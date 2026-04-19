@@ -270,10 +270,10 @@
 # ServiceOwners:                       @rebecca-makar @wolfgang-desalvador
 
 # PRLabel: %tools-Marketplace
-/tools/Azure.Mcp.Tools.Marketplace/    @meirloichter @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Marketplace/    @meirloichter @shaharsandak @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Marketplace
-# ServiceOwners:                       @meirloichter
+# ServiceOwners:                       @meirloichter @shaharsandak
 
 # ServiceLabel: %tools-McpRegistry
 # ServiceOwners:                       @conniey @hallipr @microsoft/azure-mcp
