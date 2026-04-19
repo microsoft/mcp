@@ -1959,6 +1959,7 @@ azmcp fileshares fileshare delete --subscription <subscription> \
                                   --name <file-share-name>
 
 # Check File Share name availability
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare check-name-availability --subscription <subscription> \
                                                    --name <file-share-name>
 ```
