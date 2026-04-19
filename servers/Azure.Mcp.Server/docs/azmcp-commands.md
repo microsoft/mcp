@@ -2100,7 +2100,8 @@ azmcp functionapp create --subscription <subscription> \
                           [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
                           [--runtime-version <version>] \
                           [--os <windows|linux>] \
-                          [--storage-account <storage-account-name>]
+                          [--storage-account <storage-account-name>] \
+                          [--storage-auth-mode <connection-string|managed-identity>]
 
 # Create a function app hosted in Azure Container Apps
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

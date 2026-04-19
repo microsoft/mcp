@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added `azmcp functionapp create` to create an Azure Function App on an App Service plan (Consumption, Flex Consumption, Premium, App Service) with automatic provisioning of the storage account, App Service plan, and resource group when missing. [[#1327](https://github.com/microsoft/mcp/pull/1327)]
+- Added `azmcp functionapp create` to create an Azure Function App on an App Service plan (Consumption, Flex Consumption, Premium, App Service) with automatic provisioning of the storage account, App Service plan, and resource group when missing. Supports `--storage-auth-mode managed-identity` to enable system-assigned identity and configure `AzureWebJobsStorage__accountName` instead of a connection string (user grants Storage Blob Data Owner to the identity after creation). [[#1327](https://github.com/microsoft/mcp/pull/1327)]
 - Added `azmcp functionapp create-containerapp` to host an Azure Function App in Azure Container Apps, auto-provisioning the managed environment and storage when not supplied. [[#1327](https://github.com/microsoft/mcp/pull/1327)]
 
 ### Breaking Changes
