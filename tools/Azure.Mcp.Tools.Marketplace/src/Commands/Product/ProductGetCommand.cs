@@ -53,7 +53,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         command.Options.Add(MarketplaceOptionDefinitions.PlanId);
         command.Options.Add(MarketplaceOptionDefinitions.SkuId);
         command.Options.Add(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates);
-        command.Options.Add(MarketplaceOptionDefinitions.PricingAudience);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
@@ -67,7 +66,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
         options.PlanId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PlanId.Name);
         options.SkuId = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.SkuId.Name);
         options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(MarketplaceOptionDefinitions.IncludeServiceInstructionTemplates.Name);
-        options.PricingAudience = parseResult.GetValueOrDefault<string>(MarketplaceOptionDefinitions.PricingAudience.Name);
         return options;
     }
 
@@ -93,7 +91,6 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarket
                 options.PlanId,
                 options.SkuId,
                 options.IncludeServiceInstructionTemplates,
-                options.PricingAudience,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
