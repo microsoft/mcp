@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using CopilotCliTester.Models;
 
@@ -77,7 +78,7 @@ static class Program
                     tool = args[++i];
                     break;
                 case "--max" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], out var parsedMax))
+                    if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMax))
                     {
                         Console.WriteLine("Invalid value for --max. Using default: " + CopilotTestConstants.MaxPrompts);
                     }
@@ -87,7 +88,7 @@ static class Program
                     }
                     break;
                 case "--retries" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], out var parsedRetries))
+                    if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedRetries))
                     {
                         Console.WriteLine("Invalid value for --retries. Using default: " + CopilotTestConstants.MaxRetryAttempts);
                     }
@@ -106,7 +107,7 @@ static class Program
                     model = args[++i];
                     break;
                 case "--parallel" when i + 1 < args.Length:
-                    if (!int.TryParse(args[++i], out var parsedParallel))
+                    if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedParallel))
                     {
                         Console.WriteLine("Invalid value for --parallel. Using default: " + CopilotTestConstants.Parallel);
                     }
@@ -116,7 +117,7 @@ static class Program
                     }
                     break;
                 case "--threshold" when i+1 <args.Length:
-                    if (!double.TryParse(args[++i], out var parsedThreshold))
+                    if (!double.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedThreshold))
                     {
                         Console.WriteLine("Invalid value for --threshold. Using default: " + CopilotTestConstants.PassThreshold);
                     }
@@ -342,7 +343,7 @@ static class Program
 
         var passed = results.Count(r => r.Status == TestStatus.Pass);
         var failed = results.Count(r => r.Status == TestStatus.Fail);
-        var skipped = results.Count(r => r.Status == TestStatus.Error);
+        var errored = results.Count(r => r.Status == TestStatus.Error);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         Console.WriteLine(new string('═', 64));
@@ -351,7 +352,7 @@ static class Program
         Console.WriteLine($"  Total:     {results.Count}");
         Console.WriteLine($"  Passed:    {passed}");
         Console.WriteLine($"  Failed:    {failed}");
-        Console.WriteLine($"  Skipped:   {skipped}");
+        Console.WriteLine($"  Errors:    {errored}");
         Console.WriteLine($"  Pass Rate: {passRate:F1}%");
         Console.WriteLine($"  Duration:  {totalStopwatch.Elapsed.TotalSeconds:F1}s");
         Console.WriteLine(new string('═', 64));
@@ -516,7 +517,7 @@ static class Program
     {
         var passed = results.Count(r => r.Status == TestStatus.Pass);
         var failed = results.Count(r => r.Status == TestStatus.Fail);
-        var skipped = results.Count(r => r.Status == TestStatus.Error);
+        var errored = results.Count(r => r.Status == TestStatus.Error);
         var passRate = results.Count > 0 ? (double)passed / results.Count * 100 : 0;
 
         using var writer = new StreamWriter(filePath, append: true);
@@ -528,7 +529,7 @@ static class Program
         writer.WriteLine($"| Total | {results.Count} |");
         writer.WriteLine($"| Passed | {passed} |");
         writer.WriteLine($"| Failed | {failed} |");
-        writer.WriteLine($"| Skipped | {skipped} |");
+        writer.WriteLine($"| Errors | {errored} |");
         writer.WriteLine($"| Pass Rate | {passRate:F1}% |");
         writer.WriteLine($"| Duration | {duration.TotalSeconds:F1}s |");
         writer.WriteLine();
@@ -547,9 +548,9 @@ static class Program
             }
         }
 
-        if (skipped > 0)
+        if (errored > 0)
         {
-            writer.WriteLine("## Skipped Tests");
+            writer.WriteLine("## Errored Tests");
             writer.WriteLine();
             writer.WriteLine("| Tool | Prompt | Error |");
             writer.WriteLine("|------|--------|-------|");
@@ -658,6 +659,12 @@ static class Program
 
         // After build, the Debug output should exist
         var builtPath = FindBuildExecutable(repoRoot);
+
+        if (builtPath is null)
+        {
+            throw new InvalidOperationException(
+                "Build succeeded but server executable could not be located in any output directory.");
+        }
 
         if (!File.Exists(builtPath))
         {
