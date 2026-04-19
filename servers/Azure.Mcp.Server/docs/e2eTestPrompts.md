@@ -467,7 +467,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | functionapp_create | Create a function app with Python runtime in <resource_group_name> |
 | functionapp_create | Deploy a new function app to <location> region |
 | functionapp_create | Set up a function app with premium hosting plan |
-| functionapp_create | Create function app with container app hosting |
+| functionapp_create_containerapp | Create function app with container app hosting |
+| functionapp_create_containerapp | Deploy a Functions workload on Azure Container Apps in <resource_group_name> |
+| functionapp_create_containerapp | Create a container-hosted Azure Function App named <function_app_name> |
 | functionapp_get | Describe the function app <function_app_name> in resource group <resource_group_name> |
 | functionapp_get | Get configuration for function app <function_app_name> |
 | functionapp_get | Get function app status for <function_app_name> |

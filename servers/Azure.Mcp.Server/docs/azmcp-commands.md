@@ -2088,15 +2088,30 @@ azmcp foundryextensions resource get \
 ### Azure Function App Operations
 
 ```bash
-# Create a function app with automatic provisioning of dependencies
+# Create a function app on an App Service plan (Consumption / Flex / Premium / App Service)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp functionapp create --subscription <subscription> \
                           --resource-group <resource-group> \
                           --function-app <function-app-name> \
                           --location <location> \
-                          [--plan-type <consumption|flex|premium|appservice|containerapp>] \
+                          [--plan-type <consumption|flex|premium|appservice>] \
+                          [--plan-sku <sku>] \
+                          [--app-service-plan <existing-plan>] \
                           [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
-                          [--os <windows|linux>]
+                          [--runtime-version <version>] \
+                          [--os <windows|linux>] \
+                          [--storage-account <storage-account-name>]
+
+# Create a function app hosted in Azure Container Apps
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functionapp create-containerapp --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --function-app <function-app-name> \
+                                       --location <location> \
+                                       [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
+                                       [--runtime-version <version>] \
+                                       [--storage-account <storage-account-name>] \
+                                       [--container-apps-environment <environment-name>]
 
 # Get detailed properties of function apps
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
