@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -99,5 +100,41 @@ public class AvmDocumentationGetCommandTests
         await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         await _avmDocsService.Received(1).GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        _avmDocsService.GetDocumentationAsync("avm-res-storage-storageaccount", "0.4.0", Arg.Any<CancellationToken>())
+            .Returns("# Azure Storage Account Module\n\nThis module creates a storage account.");
+
+        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AvmDocumentationResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("avm-res-storage-storageaccount", result.ModuleName);
+        Assert.Equal("0.4.0", result.ModuleVersion);
+        Assert.Contains("Azure Storage Account Module", result.Documentation);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--module-name");
+        Assert.Contains(options, o => o.Name == "--module-version");
     }
 }

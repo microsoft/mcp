@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -158,5 +159,54 @@ public class AzApiDocsGetCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var expectedResult = new AzApiDocsResult
+        {
+            ResourceType = "Microsoft.Compute/virtualMachines",
+            ApiVersion = "2024-03-01",
+            Schema = "resource \"azapi_resource\" \"virtualMachine\" { ... }",
+            ParentResourceType = "Microsoft.Resources/resourceGroups",
+            WritableScopes = "ResourceGroup",
+            Summary = "AzAPI resource schema for Microsoft.Compute/virtualMachines@2024-03-01"
+        };
+
+        _docsService.GetDocumentation("Microsoft.Compute/virtualMachines", null)
+            .Returns(expectedResult);
+
+        _examplesService.GetExamplesAsync("Microsoft.Compute/virtualMachines", Arg.Any<CancellationToken>())
+            .Returns(new List<AzApiExample>());
+
+        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AzApiDocsResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("Microsoft.Compute/virtualMachines", result.ResourceType);
+        Assert.Equal("2024-03-01", result.ApiVersion);
+        Assert.NotNull(result.Schema);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines", "--api-version", "2024-03-01"]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--resource-type");
+        Assert.Contains(options, o => o.Name == "--api-version");
     }
 }

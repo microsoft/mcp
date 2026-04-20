@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -96,5 +97,57 @@ public class AztfexportResourceGroupCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var expectedResult = new AztfexportCommandResult
+        {
+            AztfexportFound = true,
+            Command = "aztfexport",
+            Args = ["resource-group", "--non-interactive", "--plain-ui", "my-rg"],
+            Description = "Export Azure resource group: my-rg"
+        };
+
+        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        _aztfexportService.GenerateResourceGroupCommand(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<bool>())
+            .Returns(expectedResult);
+
+        var args = _commandDefinition.Parse(["--resource-group", "my-rg"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AztfexportCommandResult);
+
+        Assert.NotNull(result);
+        Assert.True(result.AztfexportFound);
+        Assert.Equal("aztfexport", result.Command);
+        Assert.NotNull(result.Args);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse([
+            "--resource-group", "my-rg",
+            "--output-folder", "./output",
+            "--provider", "azapi"
+        ]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--resource-group");
+        Assert.Contains(options, o => o.Name == "--output-folder");
+        Assert.Contains(options, o => o.Name == "--provider");
     }
 }

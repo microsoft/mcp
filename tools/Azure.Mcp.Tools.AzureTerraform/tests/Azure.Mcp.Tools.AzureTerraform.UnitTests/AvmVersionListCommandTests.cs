@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -84,5 +85,46 @@ public class AvmVersionListCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var expectedVersions = new List<AvmVersion>
+        {
+            new() { TagName = "0.4.0", CreatedAt = "2024-12-01T00:00:00Z", TarballUrl = "https://api.github.com/repos/Azure/terraform-azurerm-avm-res-storage-storageaccount/tarball/v0.4.0" }
+        };
+
+        _avmDocsService.GetVersionsAsync("avm-res-storage-storageaccount", Arg.Any<CancellationToken>())
+            .Returns(expectedVersions);
+
+        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AvmVersionListResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("avm-res-storage-storageaccount", result.ModuleName);
+        Assert.NotNull(result.Versions);
+        Assert.Single(result.Versions);
+        Assert.Equal("0.4.0", result.Versions[0].TagName);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount"]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--module-name");
     }
 }

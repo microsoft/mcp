@@ -155,4 +155,71 @@ public class AzureRMDocsGetCommandTests
             null,
             Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var expectedResult = new AzureRMDocsResult
+        {
+            ResourceType = "azurerm_resource_group",
+            DocumentationUrl = "https://example.com/docs",
+            Summary = "Manages a Resource Group.",
+            Arguments =
+            [
+                new() { Name = "name", Description = "The name.", Required = true, Type = "Single" }
+            ],
+            Attributes =
+            [
+                new() { Name = "id", Description = "The ID." }
+            ],
+            Examples = ["resource \"azurerm_resource_group\" \"example\" {}"],
+            Notes = ["Some note"]
+        };
+
+        _docsService.GetDocumentationAsync(
+            "azurerm_resource_group",
+            "resource",
+            null,
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group"]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AzureRMDocsResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("azurerm_resource_group", result.ResourceType);
+        Assert.Equal("Manages a Resource Group.", result.Summary);
+        Assert.NotNull(result.Arguments);
+        Assert.Single(result.Arguments);
+        Assert.Equal("name", result.Arguments[0].Name);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse([
+            "--resource-type", "azurerm_resource_group",
+            "--doc-type", "data-source",
+            "--argument", "name",
+            "--attribute", "id"
+        ]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--resource-type");
+        Assert.Contains(options, o => o.Name == "--doc-type");
+        Assert.Contains(options, o => o.Name == "--argument");
+        Assert.Contains(options, o => o.Name == "--attribute");
+    }
 }

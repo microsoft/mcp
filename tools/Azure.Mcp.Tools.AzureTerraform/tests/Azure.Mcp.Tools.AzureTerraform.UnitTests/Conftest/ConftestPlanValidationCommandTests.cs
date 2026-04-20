@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -124,5 +125,58 @@ public class ConftestPlanValidationCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var planFolder = "/home/user/terraform-project";
+        var expectedResult = new ConftestCommandResult
+        {
+            ConftestFound = true,
+            Command = "conftest",
+            Args = ["test", "--all-namespaces", "--output", "json", "-p", "./policy", "tfplan.json"],
+            Description = $"Validate Terraform plan in: {planFolder}",
+            PolicySet = "all"
+        };
+
+        _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        _conftestService.GeneratePlanValidationCommand(
+            planFolder, "all", null, null)
+            .Returns(expectedResult);
+
+        var args = _commandDefinition.Parse(["--plan-folder", planFolder]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.ConftestCommandResult);
+
+        Assert.NotNull(result);
+        Assert.True(result.ConftestFound);
+        Assert.Equal("conftest", result.Command);
+        Assert.NotNull(result.Args);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse([
+            "--plan-folder", "/home/user/project",
+            "--policy-set", "avmsec",
+            "--severity-filter", "high"
+        ]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--plan-folder");
+        Assert.Contains(options, o => o.Name == "--policy-set");
+        Assert.Contains(options, o => o.Name == "--severity-filter");
     }
 }

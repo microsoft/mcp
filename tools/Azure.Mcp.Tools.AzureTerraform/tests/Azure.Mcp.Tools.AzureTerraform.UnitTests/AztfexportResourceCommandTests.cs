@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -99,5 +100,58 @@ public class AztfexportResourceCommandTests
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        var resourceId = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/sa";
+        var expectedResult = new AztfexportCommandResult
+        {
+            AztfexportFound = true,
+            Command = "aztfexport",
+            Args = ["resource", "--non-interactive", "--plain-ui", resourceId],
+            Description = $"Export Azure resource: {resourceId}"
+        };
+
+        _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+        _aztfexportService.GenerateResourceCommand(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<bool>())
+            .Returns(expectedResult);
+
+        var args = _commandDefinition.Parse(["--resource-id", resourceId]);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AztfexportCommandResult);
+
+        Assert.NotNull(result);
+        Assert.True(result.AztfexportFound);
+        Assert.Equal("aztfexport", result.Command);
+        Assert.NotNull(result.Args);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        var args = _commandDefinition.Parse([
+            "--resource-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/sa",
+            "--output-folder", "./output",
+            "--provider", "azapi"
+        ]);
+
+        Assert.NotNull(args);
+        Assert.Empty(args.Errors);
+
+        var command = _command.GetCommand();
+        var options = command.Options;
+
+        Assert.Contains(options, o => o.Name == "--resource-id");
+        Assert.Contains(options, o => o.Name == "--output-folder");
+        Assert.Contains(options, o => o.Name == "--provider");
     }
 }
