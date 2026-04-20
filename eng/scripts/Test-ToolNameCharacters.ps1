@@ -114,7 +114,8 @@ function Test-ToolAreaTools {
         $patterns = @()
         if ($file.Name -like '*Command.cs') {
             $patterns += 'public override string Name => "([^"]+)";'
-        } elseif ($file.Name -like '*Setup.cs') {
+        }
+        elseif ($file.Name -like '*Setup.cs') {
             $patterns += 'public string Name => "([^"]+)";'
             # Matches: new CommandGroup("group-name", ...) - only string literals, not variables
             # Matches: AddCommand("command-name", ...) - only string literals, not variables
@@ -146,7 +147,7 @@ function Test-ToolAreaTools {
         }
     }
 
-        return $toolViolationsForArea
+    return $toolViolationsForArea
 }
 
 $ErrorActionPreference = 'Stop'
@@ -179,7 +180,7 @@ LogDebug "=================================================="
 
 $result = [PSCustomObject]@{
     HasViolations = $overallViolations.Count -gt 0
-    Violations     = $overallViolations
+    Violations    = $overallViolations
     ErrorMessage  = "Names can only contain alphanumeric characters or dashes (cannot start or end with a dash)"
 }
 
@@ -187,6 +188,7 @@ $result
 
 if ($overallViolations.Count -gt 0) {
     exit 1
-} else {
+}
+else {
     exit 0
 }
