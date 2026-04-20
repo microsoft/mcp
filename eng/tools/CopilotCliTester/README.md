@@ -131,7 +131,7 @@ dotnet run -- run --one-per-tool --max 20
 dotnet run -- run --namespace storage --parallel 5
 
 # Use a different model
-dotnet run -- run --namespace keyvault --model gpt-4o
+dotnet run -- run --namespace "key vault" --model gpt-4o
 
 # Use a custom prompts file
 dotnet run -- run --prompts-file ./my-prompts.md
