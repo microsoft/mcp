@@ -39,7 +39,7 @@ public sealed class FunctionAppCreateContainerAppCommand(ILogger<FunctionAppCrea
     - runtime: FUNCTIONS_WORKER_RUNTIME (dotnet|dotnet-isolated|node|python|java|powershell). Default: dotnet.
     - runtime-version: Specific runtime version; if omitted a default per runtime is applied.
     - storage-account: Existing or new Storage account name (auto-generated when omitted).
-    - storage-auth-mode: Only 'connection-string' (default) is currently supported for Container Apps hosting; managed-identity storage is not yet implemented on this path.
+    - storage-auth-mode: 'managed-identity' (default; enables system-assigned identity on the Container App and emits `AzureWebJobsStorage__accountName` + `AzureWebJobsStorage__credential=managedidentity` env vars) or 'connection-string' (uses an access key). With managed-identity you must grant the container app's identity the `Storage Blob Data Owner` role on the storage account after creation.
     - container-apps-environment: Existing Container Apps managed environment name. When omitted one is created named '<function-app>-env'.
 
     Automatic resources & defaults:
