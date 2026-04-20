@@ -21,8 +21,10 @@ public class ServiceBusSetup : IAreaSetup
         services.AddSingleton<IServiceBusService, ServiceBusService>();
 
         services.AddSingleton<QueueDetailsCommand>();
+        services.AddSingleton<QueuePeekCommand>();
         services.AddSingleton<TopicDetailsCommand>();
         services.AddSingleton<SubscriptionDetailsCommand>();
+        services.AddSingleton<SubscriptionPeekCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
