@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
+public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseRetrieveOptions>()
 {
     private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
     private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "dcd2952d-02af-4ffc-a7a2-3c6d04251f66";
 
@@ -121,8 +122,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var result = await searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
+            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service!, options.KnowledgeBase!, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)
