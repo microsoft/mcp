@@ -964,6 +964,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Find unprotected resources in my subscription"
 * "Configure soft delete to 'AlwaysOn' and immutability to 'Locked' on my vault"
 * "Enable cross-region restore on my vault"
+* "Restore a soft-deleted backup item in vault 'myvault' for datasource '/subscriptions/.../virtualMachines/myvm'"
 
 ### 🖥️ Azure CLI Generate
 
