@@ -36,7 +36,8 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
 
         if (workspacePath is not null && Directory.Exists(workspacePath))
         {
-            try { Directory.Delete(workspacePath, recursive: true); }
+            try
+            { Directory.Delete(workspacePath, recursive: true); }
             catch { /* best-effort cleanup */ }
         }
     }
@@ -82,8 +83,8 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
             {
                 systemMessage = new SystemMessageConfig
                 {
-                    Mode = config.SystemPrompt.Mode == SystemPromptMode.Append 
-                        ? SystemMessageMode.Append 
+                    Mode = config.SystemPrompt.Mode == SystemPromptMode.Append
+                        ? SystemMessageMode.Append
                         : SystemMessageMode.Replace,
                     Content = config.SystemPrompt.Content
                 };
@@ -109,11 +110,12 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                 {
                     lock (eventLock)
                     {
-                        if (isComplete) return;
+                        if (isComplete)
+                            return;
 
                         if (TryMapEvent(ev, out var mapped))
                         {
-                            if (debug) 
+                            if (debug)
                             {
                                 Console.WriteLine($"--- Session event: {mapped.Type}");
                             }
@@ -209,7 +211,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                     Console.Error.WriteLine($"Warning: Failed to write report: {reportEx.Message}");
                 }
             }
-            
+
             throw;
         }
 
@@ -246,7 +248,8 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
             if (evt.Type == "tool.execution_complete")
             {
                 var toolCallId = evt.Data.TryGetValue("toolCallId", out var idObj) ? idObj?.ToString() : null;
-                if (string.IsNullOrEmpty(toolCallId)) continue;
+                if (string.IsNullOrEmpty(toolCallId))
+                    continue;
 
                 var success = evt.Data.TryGetValue("success", out var isSuccess) && isSuccess is bool b && b;
                 var content = evt.Data.TryGetValue("content", out var contentObj) ? contentObj?.ToString() : null;
@@ -479,7 +482,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                 {
                     ["errorType"] = sessionError.Data.ErrorType,
                     ["message"] = sessionError.Data.Message,
-                    ["statusCode"] = sessionError.Data.StatusCode,                
+                    ["statusCode"] = sessionError.Data.StatusCode,
                 }
             };
             return true;

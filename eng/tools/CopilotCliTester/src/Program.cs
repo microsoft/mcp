@@ -116,7 +116,7 @@ static class Program
                         parallel = parsedParallel;
                     }
                     break;
-                case "--threshold" when i+1 <args.Length:
+                case "--threshold" when i + 1 < args.Length:
                     if (!double.TryParse(args[++i], NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedThreshold))
                     {
                         Console.WriteLine("Invalid value for --threshold. Using default: " + CopilotTestConstants.PassThreshold);
@@ -126,7 +126,7 @@ static class Program
                         threshold = parsedThreshold;
                     }
                     break;
-                case "--prompts-file" when i + 1 < args.Length: 
+                case "--prompts-file" when i + 1 < args.Length:
                     promptsFile = args[++i];
                     break;
                 case "--fail-on-no-match":
@@ -135,18 +135,24 @@ static class Program
             }
         }
 
-        if (parallel < 1) {
+        if (parallel < 1)
+        {
             Console.WriteLine("Warning: --parallel must be >= 1. Using 1.");
             parallel = 1;
-        } else if (parallel > CopilotTestConstants.MaxParallelAllowed) {
+        }
+        else if (parallel > CopilotTestConstants.MaxParallelAllowed)
+        {
             Console.WriteLine($"Warning: --parallel must be <= {CopilotTestConstants.MaxParallelAllowed}. Using {CopilotTestConstants.MaxParallelAllowed}.");
             parallel = CopilotTestConstants.MaxParallelAllowed;
         }
 
-        if (threshold < 0) {
+        if (threshold < 0)
+        {
             Console.WriteLine("Warning: --threshold must be >= 0. Using default: " + CopilotTestConstants.PassThreshold);
             threshold = CopilotTestConstants.PassThreshold;
-        } else if (threshold > 100) {
+        }
+        else if (threshold > 100)
+        {
             Console.WriteLine("Warning: --threshold must be <= 100. Using default: " + CopilotTestConstants.PassThreshold);
             threshold = CopilotTestConstants.PassThreshold;
         }
@@ -220,7 +226,7 @@ static class Program
         {
             Console.WriteLine("SUCCESS: Loaded test context");
         }
-        
+
         var promptsPath = promptsFile ?? defaultPromptsPath;
         if (promptsPath is null || !File.Exists(promptsPath))
         {
@@ -335,7 +341,7 @@ static class Program
                 semaphore.Release();
             }
         }).ToList();
-        
+
         var taskResults = await Task.WhenAll(tasks);
         var results = taskResults.OrderBy(r => r.Tool).ThenBy(r => r.Prompt).ToList();
 
@@ -386,7 +392,7 @@ static class Program
         var toolTag = $"[{prompt.Tool}]";
         WriteLineLock($"  {toolTag} {prompt.Prompt}");
 
-        for (var attempt = 1; attempt <= retries+1; attempt++)
+        for (var attempt = 1; attempt <= retries + 1; attempt++)
         {
             attempts = attempt;
             using var cts = new CancellationTokenSource(PerAttemptTimeout);
@@ -452,7 +458,7 @@ static class Program
         }
 
         // All retries exhausted without invoking the expected tool
-        var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray(); 
+        var allToolsCalled = allAttemptTools.SelectMany(t => t).Distinct().ToArray();
         WriteLineLock($"  {toolTag} ✗ FAIL (tools: {string.Join(", ", allToolsCalled)})");
         return new TestResult
         {
@@ -491,7 +497,7 @@ static class Program
         {
             try
             {
-                var status = result.Status switch 
+                var status = result.Status switch
                 {
                     TestStatus.Pass => "✓",
                     TestStatus.Fail => "X",
@@ -565,7 +571,7 @@ static class Program
 
     static void WriteLineLock(string message)
     {
-        lock(_consoleLock)
+        lock (_consoleLock)
         {
             Console.WriteLine(message);
         }
@@ -574,7 +580,7 @@ static class Program
     static (string? TestContextPath, string? PromptsPath) LoadFiles()
     {
         string? root = null;
-        try 
+        try
         {
             root = AgentRunnerUtils.FindRepoRoot(Directory.GetCurrentDirectory());
         }
@@ -632,7 +638,7 @@ static class Program
             ?? throw new InvalidOperationException("Failed to start 'dotnet build'.");
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(15));
-        
+
         var stderrTask = process.StandardError.ReadToEndAsync();
 
         try
@@ -643,7 +649,7 @@ static class Program
         {
             if (!process.HasExited)
             {
-                process.Kill(entireProcessTree:  true);
+                process.Kill(entireProcessTree: true);
             }
             throw new TimeoutException(
                 $"'dotnet build' timed out after 15 minutes. The build process has been terminated.");

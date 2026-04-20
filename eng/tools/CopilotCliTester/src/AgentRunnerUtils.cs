@@ -131,13 +131,13 @@ internal static class AgentRunnerUtils
 
     internal static string SafeJson(object? value)
     {
-        try 
-        { 
-            return JsonSerializer.Serialize(value, JsonContext.Default.Object); 
-        }
-        catch 
+        try
         {
-            return value?.ToString() ?? "null"; 
+            return JsonSerializer.Serialize(value, JsonContext.Default.Object);
+        }
+        catch
+        {
+            return value?.ToString() ?? "null";
         }
     }
 
@@ -155,6 +155,6 @@ internal static class AgentRunnerUtils
         }
 
         throw new InvalidOperationException(
-            "Could not find repo root (directory containing Microsoft.Mcp.slnx). Make sure you're running from within the repo.");    
+            "Could not find repo root (directory containing Microsoft.Mcp.slnx). Make sure you're running from within the repo.");
     }
 }
