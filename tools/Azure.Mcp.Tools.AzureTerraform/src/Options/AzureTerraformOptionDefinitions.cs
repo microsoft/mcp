@@ -17,7 +17,7 @@ public static class AzureTerraformOptionDefinitions
     public const string AvmModuleVersionOption = "module-version";
 
     public const string ResourceIdOption = "resource-id";
-    public const string ResourceGroupNameOption = "resource-group";
+    public const string ResourceGroupOption = "resource-group";
     public const string AzureResourceGraphQueryOption = "query";
     public const string OutputFolderNameOption = "output-folder";
     public const string TerraformProviderOption = "provider";
@@ -99,8 +99,8 @@ public static class AzureTerraformOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> ResourceGroupName = new(
-        $"--{ResourceGroupNameOption}"
+    public static readonly Option<string> ResourceGroup = new(
+        $"--{ResourceGroupOption}"
     )
     {
         Description = "The name of the Azure resource group to export.",

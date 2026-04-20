@@ -78,7 +78,7 @@ public class AztfexportResourceGroupCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MissingResourceGroupName_ReturnsValidationError()
+    public async Task ExecuteAsync_MissingResourceGroup_ReturnsValidationError()
     {
         var args = _commandDefinition.Parse([]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);

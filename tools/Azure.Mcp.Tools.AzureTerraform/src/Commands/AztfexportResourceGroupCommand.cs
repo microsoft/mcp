@@ -46,7 +46,7 @@ public sealed class AztfexportResourceGroupCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.ResourceGroupName.AsRequired());
+        command.Options.Add(AzureTerraformOptionDefinitions.ResourceGroup.AsRequired());
         command.Options.Add(AzureTerraformOptionDefinitions.OutputFolderName.AsOptional());
         command.Options.Add(AzureTerraformOptionDefinitions.TerraformProvider.AsOptional());
         command.Options.Add(AzureTerraformOptionDefinitions.NamePattern.AsOptional());
@@ -59,7 +59,7 @@ public sealed class AztfexportResourceGroupCommand(
     {
         return new AztfexportResourceGroupOptions
         {
-            ResourceGroupName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ResourceGroupName.Name),
+            ResourceGroup = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ResourceGroup.Name),
             OutputFolderName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.OutputFolderName.Name),
             Provider = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.TerraformProvider.Name),
             NamePattern = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.NamePattern.Name),
@@ -89,12 +89,12 @@ public sealed class AztfexportResourceGroupCommand(
 
             if (!isAvailable)
             {
-                result = AztfexportService.NotFoundResult($"Export Azure resource group: {options.ResourceGroupName}");
+                result = AztfexportService.NotFoundResult($"Export Azure resource group: {options.ResourceGroup}");
             }
             else
             {
                 result = _aztfexportService.GenerateResourceGroupCommand(
-                    options.ResourceGroupName!,
+                    options.ResourceGroup!,
                     options.OutputFolderName,
                     options.Provider ?? "azurerm",
                     options.NamePattern,
@@ -113,7 +113,7 @@ public sealed class AztfexportResourceGroupCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating aztfexport resource group command for {ResourceGroup}", options.ResourceGroupName);
+            _logger.LogError(ex, "Error generating aztfexport resource group command for {ResourceGroup}", options.ResourceGroup);
             HandleException(context, ex);
         }
 

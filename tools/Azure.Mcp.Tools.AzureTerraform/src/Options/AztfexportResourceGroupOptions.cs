@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Options;
 
 public sealed class AztfexportResourceGroupOptions
 {
-    public string? ResourceGroupName { get; set; }
+    public string? ResourceGroup { get; set; }
     public string? OutputFolderName { get; set; }
     public string? Provider { get; set; }
     public string? NamePattern { get; set; }

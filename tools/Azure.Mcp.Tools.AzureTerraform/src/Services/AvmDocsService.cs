@@ -37,7 +37,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var apiUrl = module.RepoUrl
             .Replace("github.com", "api.github.com/repos", StringComparison.OrdinalIgnoreCase) + "/releases";
 
-        var client = httpClientFactory.CreateClient();
+        using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
 
         var response = await client.GetAsync(new Uri(apiUrl), cancellationToken).ConfigureAwait(false);
@@ -74,7 +74,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var repoPath = ExtractRepoPath(module.RepoUrl);
         var readmeUrl = $"https://raw.githubusercontent.com/{repoPath}/v{cleanVersion}/README.md";
 
-        var client = httpClientFactory.CreateClient();
+        using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
 
         var response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
@@ -104,8 +104,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
             }
         }
 
-        var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-Terraform-MCP-Server");
+        using var client = httpClientFactory.CreateClient();
 
         var response = await client.GetAsync(new Uri(AvailableModulesUrl), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -238,7 +237,6 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
     private static void ConfigureGitHubHeaders(HttpClient client)
     {
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Azure-Terraform-MCP-Server");
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3+json");
         client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 
