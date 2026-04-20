@@ -93,7 +93,7 @@ public static class FunctionAppOptionDefinitions
         $"--{StorageAuthModeName}"
     )
     {
-        Description = "How the Function App authenticates to its storage account: 'connection-string' (default, uses an access key) or 'managed-identity' (enables system-assigned identity on the site and configures AzureWebJobsStorage__accountName; you must grant the identity Storage Blob Data Owner on the storage account after creation).",
+        Description = "How the Function App authenticates to its storage account: 'managed-identity' (default; enables system-assigned identity on the site and configures AzureWebJobsStorage__accountName; you must grant the identity Storage Blob Data Owner on the storage account after creation) or 'connection-string' (uses an access key). Applies to all hosting plans including Flex Consumption and Container Apps.",
         Required = false
     };
 
