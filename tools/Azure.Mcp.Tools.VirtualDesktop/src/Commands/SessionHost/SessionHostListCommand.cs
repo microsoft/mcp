@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
-public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger) : BaseHostPoolCommand<SessionHostListOptions>
+public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions>
 {
     private const string CommandTitle = "List SessionHosts";
     private readonly ILogger<SessionHostListCommand> _logger = logger;
+    private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
 
     public override string Name => "list";
 
@@ -51,12 +52,11 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
 
         try
         {
-            var virtualDesktopService = context.GetService<IVirtualDesktopService>();
             IReadOnlyList<Models.SessionHost> sessionHosts;
 
             if (!string.IsNullOrEmpty(options.HostPoolResourceId))
             {
-                sessionHosts = await virtualDesktopService.ListSessionHostsByResourceIdAsync(
+                sessionHosts = await _virtualDesktopService.ListSessionHostsByResourceIdAsync(
                     options.Subscription!,
                     options.HostPoolResourceId,
                     options.Tenant,
@@ -65,7 +65,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
-                sessionHosts = await virtualDesktopService.ListSessionHostsByResourceGroupAsync(
+                sessionHosts = await _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.HostPoolName!,
@@ -75,7 +75,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
             }
             else
             {
-                sessionHosts = await virtualDesktopService.ListSessionHostsAsync(
+                sessionHosts = await _virtualDesktopService.ListSessionHostsAsync(
                     options.Subscription!,
                     options.HostPoolName!,
                     options.Tenant,
