@@ -21,6 +21,10 @@ $exitCode = 0
 
 $architectures = @('x64', 'arm64')
 
+# Supported Azure clouds for where the MCP tools may operate. This is used to determine which clouds to run tests against.
+# The set of valid values in this list should align with the ones in eng\common\TestResources\New-TestResources.ps1 line 66.
+$supportedAzureClouds = @('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')
+
 # Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
 $operatingSystems = Get-OperatingSystems
 
@@ -180,6 +184,20 @@ $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
 $linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
+<# This function takes a semicolon or comma delimited string and splits it into an array,
+  trimming whitespace and removing empty entries.
+
+  For example, the NpmPackageKeywords property may be defined in a csproj as:
+  <NpmPackageKeywords>keyword1; keyword2, keyword3</NpmPackageKeywords>
+
+  This function will split that string into an array: @('keyword1', 'keyword2', 'keyword3')
+#>
+function Split-PropertyGroup {
+    param([string]$propertyGroup)
+
+    return @($propertyGroup -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+}
+
 function Get-PathsToTest {
     Write-Host "Getting paths to test"
 
@@ -303,24 +321,55 @@ function Get-PathsToTest {
         ) #>
     }
 
-    $pathsToTest = @()
-    foreach ($path in $normalizedPaths) {
+    $pathsToTest = $normalizedPaths | ForEach-Object -ThrottleLimit 5 -Parallel {
+        $path = $_
+        $supportedAzureClouds = $using:supportedAzureClouds
+
+        Write-Progress -Activity "Checking for test resources" -Status $path
+
         $testResourcesPath = "$path/tests"
-        $rootedTestResourcesPath = "$RepoRoot/$testResourcesPath"
+        $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasLiveTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
         $hasUnitTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0
 
-        $pathsToTest += @{
-            path = $path
-            hasTestResources = $hasTestResources
-            testResourcesPath = $hasTestResources ? $testResourcesPath : $null
-            hasLiveTests = $hasLiveTests
-            hasUnitTests = $hasUnitTests
-            hasRecordedTests = $hasRecordedTests
+        $sourcePath = Join-Path $using:RepoRoot $path "src"
+
+        $sourceProject = Get-ChildItem $sourcePath -Filter '*.csproj' | Select-Object -First 1
+        if (-not $sourceProject) {
+            Write-Error "No source project found for path $path at expected location $sourcePath. Ensure there is a .csproj file in the src directory for this path."
+            return @{ _error = $true }
+        }
+
+        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName
+
+        $resolvedClouds = $sourceProjectDetails.SupportedAzureClouds `
+            ? @($sourceProjectDetails.SupportedAzureClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            : $supportedAzureClouds
+
+        if ($sourceProjectDetails.SupportedAzureClouds -and ($resolvedClouds | Where-Object { $supportedAzureClouds -notcontains $_ })) {
+            Write-Error "Project $($sourceProject.FullName) specifies supported Azure clouds that are not in the global supported list: $($sourceProjectDetails.SupportedAzureClouds). Supported clouds must be a subset of $($supportedAzureClouds -join ', ')."
+            return @{ _error = $true }
+        }
+
+        return @{
+            _error               = $false
+            path                 = $path
+            hasTestResources     = $hasTestResources
+            testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
+            hasLiveTests         = $hasLiveTests
+            hasUnitTests         = $hasUnitTests
+            hasRecordedTests     = $hasRecordedTests
+            supportedAzureClouds = $resolvedClouds
         }
     }
+
+    if ($pathsToTest | Where-Object { $_._error }) {
+        $script:exitCode = 1
+    }
+
+    $pathsToTest = $pathsToTest | Where-Object { -not $_._error } | ForEach-Object { $_.Remove('_error'); $_ } | Sort-Object { $_.path }
 
     return $pathsToTest
 }
@@ -533,20 +582,20 @@ function Get-ServerDetails {
             packageIcon = $props.PackageIcon | Get-RepoRelativePath -NormalizeSeparators
             npmPackageName = $props.NpmPackageName
             npmDescription = $props.NpmDescription
-            npmPackageKeywords = @($props.NpmPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            npmPackageKeywords = Split-PropertyGroup $props.NpmPackageKeywords
             dockerImageName = $props.DockerImageName
             dockerDescription = $props.DockerDescription
             dnxPackageId = $props.DnxPackageId
             dnxDescription = $props.DnxDescription
             dnxToolCommandName = $props.DnxToolCommandName
-            dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            dnxPackageTags = Split-PropertyGroup $props.DnxPackageTags
             pypiPackageName = $props.PypiPackageName
             pypiDescription = $props.PypiDescription
-            pypiPackageKeywords = @($props.PypiPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            pypiPackageKeywords = Split-PropertyGroup $props.PypiPackageKeywords
             platforms = $platforms
             mcpRepositoryName = $props.McpRepositoryName
-            mcpbPlatforms = @($props.McpbPlatforms -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
+            mcpbPlatforms = Split-PropertyGroup $props.McpbPlatforms
+            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators 
         }
     }
 
