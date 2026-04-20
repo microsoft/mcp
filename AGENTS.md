@@ -17,6 +17,7 @@
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
 - Include post-deployment scripts (`test-resources-post.ps1`)
 - Submit one tool per pull request
+- Record all live tests according to the guidelines in `/docs/recorded-tests.md`
 - Use `BaseAzureResourceService` for Resource Graph queries when possible
 - Register all response models in JSON serialization context for AOT safety
 - Use static OptionDefinitions for command options (never readonly fields)
@@ -164,9 +165,10 @@ dotnet build
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
 - Implementation guide: `/servers/Azure.Mcp.Server/docs/new-command.md` - Step-by-step command creation
-- Test prompts: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
-- Contributing guide: `CONTRIBUTING.md` - Development workflow and standards
-- Code guidelines: `.github/copilot-instructions.md` - Specific coding standards
+- Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
+- Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
+- Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
+- Code guidelines: `/.github/copilot-instructions.md` - Specific coding standards
 
 ## When Stuck
 - Ask clarifying questions about Azure service requirements or command patterns
@@ -179,10 +181,11 @@ dotnet build
 - Format and type check: `dotnet format && dotnet build` - all green
 - Unit tests: Add comprehensive tests following existing patterns
 - Live test infrastructure: Include Bicep template and post-deployment script for Azure services
+- Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
+- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `/docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `/servers/Azure.Mcp.Server/CHANGELOG.md` or `/servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
@@ -334,6 +337,9 @@ az login
 # Test resource deployment with proper RBAC
 ./eng/scripts/Deploy-TestResources.ps1 -Paths Storage -SubscriptionId {subscription-id}
 ```
+
+### Recorded Live Tests
+All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. Live tests that inherit from `CommandTestsBase` must be migrated to `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
 
 ## Code Style and Standards
 

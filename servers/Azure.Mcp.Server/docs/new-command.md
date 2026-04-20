@@ -115,7 +115,7 @@ Every new command (whether purely computational or Azure-resource backed) requir
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
 6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
+7. Integration (live) test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
 9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
@@ -1320,11 +1320,11 @@ Guidelines:
 
 ### 8. Integration Tests
 
-Integration tests inherit from `CommandTestsBase` and use test fixtures:
+Integration tests (also known as live tests) **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](/docs/recorded-tests.md) for the full recording workflow.
 
 ```csharp
-public class {Toolset}CommandTests(ITestOutputHelper output)
-    : CommandTestsBase( output)
+public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedCommandTestsBase(output, fixture)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -1617,6 +1617,8 @@ dotnet test --verbosity normal
 
 ### Integration Tests
 Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Tools.Storage/tests/test-resources-post.ps1` for canonical examples.
+
+All integration tests **must** be recorded for playback using `RecordedCommandTestsBase`. See [`/docs/recorded-tests.md`](/docs/recorded-tests.md) for the full recording workflow, sanitizer configuration, and migration guide.
 
 #### Live Test Resource Infrastructure
 

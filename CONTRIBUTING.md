@@ -29,6 +29,7 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Testing Local Build with Docker](#testing-local-build-with-docker)
     - [Live Tests](#live-tests)
     - [NPX Live Tests](#npx-live-tests)
+    - [Recording Live Tests](#recording-live-tests)
     - [Debugging Live Tests](#debugging-live-tests)
   - [Quality and Standards](#quality-and-standards)
     - [Code Style](#code-style)
@@ -574,6 +575,10 @@ This will produce .tgz files in the `.dist` directory and set the `TestPackage` 
 ```json
 "TestPackage": "file://D:\\repos\\azure-mcp\\.dist\\wrapper\\azure-mcp-0.0.12-alpha.1746488279.tgz"
 ```
+
+### Recording Live Tests
+
+All live tests **must** be recorded for playback. Live tests that only inherit from `CommandTestsBase` without recorded test coverage will not be accepted. Recorded tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 
 ### Debugging Live Tests
 
