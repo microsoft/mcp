@@ -80,20 +80,29 @@ public static class FunctionAppStorageProvisioner
 
     public static FunctionAppStorage? BuildDeploymentStorage(string storageConnectionString)
     {
-        if (string.IsNullOrWhiteSpace(storageConnectionString))
-            return null;
         var accountName = ExtractStorageAccountName(storageConnectionString);
+        return BuildDeploymentStorageForAccount(accountName, useManagedIdentity: false);
+    }
+
+    public static FunctionAppStorage? BuildDeploymentStorageForAccount(string? accountName, bool useManagedIdentity)
+    {
         if (string.IsNullOrWhiteSpace(accountName))
             return null;
+        var authentication = useManagedIdentity
+            ? new FunctionAppStorageAuthentication
+            {
+                AuthenticationType = FunctionAppStorageAccountAuthenticationType.SystemAssignedIdentity
+            }
+            : new FunctionAppStorageAuthentication
+            {
+                AuthenticationType = FunctionAppStorageAccountAuthenticationType.StorageAccountConnectionString,
+                StorageAccountConnectionStringName = "AzureWebJobsStorage"
+            };
         return new FunctionAppStorage
         {
             StorageType = FunctionAppStorageType.BlobContainer,
             Value = new Uri($"https://{accountName}.blob.core.windows.net/azure-webjobs-hosts"),
-            Authentication = new FunctionAppStorageAuthentication
-            {
-                AuthenticationType = FunctionAppStorageAccountAuthenticationType.StorageAccountConnectionString,
-                StorageAccountConnectionStringName = "AzureWebJobsStorage"
-            }
+            Authentication = authentication
         };
     }
 }

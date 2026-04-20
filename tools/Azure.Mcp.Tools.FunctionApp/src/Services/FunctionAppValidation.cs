@@ -132,10 +132,10 @@ public static class FunctionAppValidation
         return new CreateOptions(selectedRuntime, selectedRuntimeVersion, hostingKind, requiresLinux, inputs.PlanSku, normalizedOs, useManagedIdentityStorage);
     }
 
-    public static bool ParseStorageAuthMode(string? mode)
+    public static bool? ParseStorageAuthMode(string? mode)
     {
         if (string.IsNullOrWhiteSpace(mode))
-            return false;
+            return null;
         var normalized = mode.Trim().ToLowerInvariant();
         return normalized switch
         {
