@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.FunctionApp.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Models;
@@ -13,10 +12,12 @@ using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Storage.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
-namespace AzureMcp.FunctionApp.UnitTests.FunctionApp;
+namespace Azure.Mcp.Tools.FunctionApp.UnitTests.FunctionApp;
 
 public sealed class FunctionAppCreateCommandTests
 {
@@ -34,7 +35,7 @@ public sealed class FunctionAppCreateCommandTests
         collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]
@@ -69,8 +70,8 @@ public sealed class FunctionAppCreateCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
-                TestContext.Current.CancellationToken)
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(new FunctionAppInfo(
                     "myapp",
                     "rg",
@@ -94,7 +95,7 @@ public sealed class FunctionAppCreateCommandTests
     public async Task ExecuteAsync_ReturnsCreatedFunctionApp()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus");
@@ -113,7 +114,7 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(Task.FromException<FunctionAppInfo>(new Exception("Create error")));
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(Task.FromException<FunctionAppInfo>(new Exception("Create error")));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus");
@@ -128,7 +129,7 @@ public sealed class FunctionAppCreateCommandTests
     public async Task ExecuteAsync_PassesPlanTypeAndRuntimeVersionToService()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
         var args = "--subscription sub --resource-group rg --function-app myapp --location eastus --plan-type flex --runtime node --runtime-version 22";
@@ -143,7 +144,7 @@ public sealed class FunctionAppCreateCommandTests
     public async Task ExecuteAsync_DefaultsRuntimeToDotnet_WhenNotProvided()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus");
@@ -161,11 +162,10 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("--plan-type appservice", "appservice", null)]
     [InlineData("--plan-sku S1", null, "S1")]
     [InlineData("--plan-type premium --plan-sku EP2", "premium", "EP2")]
-    [InlineData("--plan-type containerapp", "containerapp", null)]
     public async Task ExecuteAsync_PlanSelection_Matrix(string argsSuffix, string? expectedPlanType, string? expectedPlanSku)
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", expectedPlanType ?? "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var baseArgs = "--subscription sub --resource-group rg --function-app myapp --location eastus";
         var fullArgs = string.IsNullOrWhiteSpace(argsSuffix) ? baseArgs : $"{baseArgs} {argsSuffix}";
@@ -175,7 +175,7 @@ public sealed class FunctionAppCreateCommandTests
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Is<string?>(pt => pt == expectedPlanType), Arg.Is<string?>(ps => ps == expectedPlanSku), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken);
+        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Is<string?>(pt => pt == expectedPlanType), Arg.Is<string?>(ps => ps == expectedPlanSku), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
 
@@ -221,48 +221,48 @@ public sealed class FunctionAppCreateCommandTests
     public async Task ExecuteAsync_ExistingPlan_NoPlanTypeOrSku()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "existingPlan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --app-service-plan existingPlan");
         var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Is<string?>(p => p == "existingPlan"), Arg.Is<string?>(pt => pt == null), Arg.Is<string?>(ps => ps == null), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken);
+        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Is<string?>(p => p == "existingPlan"), Arg.Is<string?>(pt => pt == null), Arg.Is<string?>(ps => ps == null), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_SkuPrecedence_OverridesPlanType()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --plan-type flex --plan-sku B1");
         var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Is<string?>(pt => pt == "flex"), Arg.Is<string?>(ps => ps == "B1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken);
+        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Is<string?>(pt => pt == "flex"), Arg.Is<string?>(ps => ps == "B1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_DotnetIsolated_RuntimeAccepted()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --runtime dotnet-isolated");
         var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(r => r == "dotnet-isolated"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken);
+        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(r => r == "dotnet-isolated"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_PassesOperatingSystemOption()
     {
         var expected = new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null);
-        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(os => os == "linux"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken).Returns(expected);
+        _service.CreateFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(os => os == "linux"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --os linux");
         var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(os => os == "linux"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), TestContext.Current.CancellationToken);
+        await _service.Received(1).CreateFunctionApp("sub", "rg", "myapp", "eastus", Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is<string?>(os => os == "linux"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public void CreateStorageAccountOptions_Defaults()
     {
-        var opts = FunctionAppService.CreateStorageAccountOptions("eastus");
+        var opts = FunctionAppStorageProvisioner.CreateStorageAccountOptions("eastus");
         Assert.Equal(StorageSkuName.StandardLrs, opts.Sku.Name);
         Assert.Equal(StorageKind.StorageV2, opts.Kind);
         Assert.Equal(StorageAccountAccessTier.Hot, opts.AccessTier);
@@ -318,8 +318,8 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("dotnet", null, "windows", false, "windows")]
     public void ResolveOs_CorrectlyEvaluates(string runtime, string? planType, string? operatingSystem, bool expectedRequiresLinux, string? expectedNormalizedOs)
     {
-        var hostingKind = FunctionAppService.ParseHostingKind(planType);
-        var (actualRequiresLinux, actualNormalizedOs) = FunctionAppService.ResolveOs(runtime, hostingKind, operatingSystem);
+        var hostingKind = FunctionAppValidation.ParseHostingKind(planType);
+        var (actualRequiresLinux, actualNormalizedOs) = FunctionAppValidation.ResolveOs(runtime, hostingKind, operatingSystem);
         Assert.Equal(expectedRequiresLinux, actualRequiresLinux);
         Assert.Equal(expectedNormalizedOs, actualNormalizedOs);
     }
@@ -327,9 +327,9 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public void ResolveOs_ThrowsWhenPythonWithWindows()
     {
-        var hostingKind = FunctionAppService.ParseHostingKind(null);
+        var hostingKind = FunctionAppValidation.ParseHostingKind(null);
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ResolveOs("python", hostingKind, "windows"));
+            FunctionAppValidation.ResolveOs("python", hostingKind, "windows"));
     }
 
     [Theory]
@@ -349,7 +349,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData(null, null)]
     public void ExtractStorageAccountName_ParsesName(string? connection, string? expected)
     {
-        var actual = FunctionAppService.ExtractStorageAccountName(connection);
+        var actual = FunctionAppStorageProvisioner.ExtractStorageAccountName(connection);
         Assert.Equal(expected, actual);
     }
 
@@ -359,7 +359,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData(null, false)]
     public void BuildDeploymentStorage_CreatesStorageObjectWhenAccountPresent(string? connection, bool expectCreated)
     {
-        var storage = FunctionAppService.BuildDeploymentStorage(connection ?? string.Empty);
+        var storage = FunctionAppStorageProvisioner.BuildDeploymentStorage(connection ?? string.Empty);
         if (expectCreated)
         {
             Assert.NotNull(storage);
@@ -386,14 +386,14 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("unknown", "consumption")]
     public void ParseHostingKind_MapsCorrectly(string? planType, string expected)
     {
-        var result = FunctionAppService.ParseHostingKind(planType);
+        var result = FunctionAppValidation.ParseHostingKind(planType);
         var expectedEnum = expected switch
         {
-            "flexconsumption" => FunctionAppService.HostingKind.FlexConsumption,
-            "premium" => FunctionAppService.HostingKind.Premium,
-            "appservice" => FunctionAppService.HostingKind.AppService,
-            "containerapp" => FunctionAppService.HostingKind.ContainerApp,
-            _ => FunctionAppService.HostingKind.Consumption
+            "flexconsumption" => HostingKind.FlexConsumption,
+            "premium" => HostingKind.Premium,
+            "appservice" => HostingKind.AppService,
+            "containerapp" => HostingKind.ContainerApp,
+            _ => HostingKind.Consumption
         };
         Assert.Equal(expectedEnum, result);
     }
@@ -416,7 +416,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("unknown", "Standard")]
     public void InferTier_CorrectlyInfersTierFromSku(string sku, string expectedTier)
     {
-        var result = FunctionAppService.InferTier(sku);
+        var result = FunctionAppValidation.InferTier(sku);
         Assert.Equal(expectedTier, result);
     }
 
@@ -430,7 +430,7 @@ public sealed class FunctionAppCreateCommandTests
         string subscription, string resourceGroup, string functionAppName, string location)
     {
         Assert.Throws<ArgumentException>(() =>
-            FunctionAppService.ValidateAndNormalizeInputs(
+            FunctionAppValidation.ValidateAndNormalizeInputs(
                 subscription, resourceGroup, functionAppName, location,
                 null, null, null, null, null, null, null));
     }
@@ -438,7 +438,7 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public void ValidateAndNormalizeInputs_NormalizesInputsCorrectly()
     {
-        var result = FunctionAppService.ValidateAndNormalizeInputs(
+        var result = FunctionAppValidation.ValidateAndNormalizeInputs(
             "sub",
             "rg",
             "app",
@@ -463,7 +463,7 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public void ValidateAndNormalizeInputs_DefaultsRuntimeToDotnet()
     {
-        var result = FunctionAppService.ValidateAndNormalizeInputs(
+        var result = FunctionAppValidation.ValidateAndNormalizeInputs(
             "sub", "rg", "app", "eastus", null, null, null, null, null, null, null);
 
         Assert.Equal("dotnet", result.Runtime);
@@ -475,17 +475,17 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("csharp")]
     public void ValidateParameterCombinations_ThrowsForUnsupportedRuntime(string runtime)
     {
-        var inputs = new FunctionAppService.NormalizedInputs(runtime, null, null, null, null, null, null);
+        var inputs = new NormalizedInputs(runtime, null, null, null, null, null, null);
         Assert.Throws<ArgumentException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Fact]
     public void ValidateParameterCombinations_ThrowsForPythonWithWindows()
     {
-        var inputs = new FunctionAppService.NormalizedInputs("python", null, null, null, "windows", null, null);
+        var inputs = new NormalizedInputs("python", null, null, null, "windows", null, null);
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Theory]
@@ -495,44 +495,43 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("storage-123")]
     public void ValidateParameterCombinations_ThrowsForInvalidStorageAccountName(string storageAccountName)
     {
-        var inputs = new FunctionAppService.NormalizedInputs("dotnet", null, null, null, null, storageAccountName, null);
+        var inputs = new NormalizedInputs("dotnet", null, null, null, null, storageAccountName, null);
         Assert.Throws<ArgumentException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Fact]
     public void ValidateParameterCombinations_ThrowsForContainerAppsEnvironmentWithoutContainerApps()
     {
-        var inputs = new FunctionAppService.NormalizedInputs("dotnet", null, "consumption", null, null, null, "env123");
+        var inputs = new NormalizedInputs("dotnet", null, "consumption", null, null, null, "env123");
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Fact]
     public void ValidateParameterCombinations_ThrowsForContainerAppsWithSku()
     {
-        var inputs = new FunctionAppService.NormalizedInputs("dotnet", null, "containerapp", "B1", null, null, null);
+        var inputs = new NormalizedInputs("dotnet", null, "containerapp", "B1", null, null, null);
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Fact]
     public void ValidateParameterCombinations_ThrowsForFlexConsumptionDotnetWithVersion()
     {
-        var inputs = new FunctionAppService.NormalizedInputs("dotnet", "8.0", "flex", null, null, null, null);
+        var inputs = new NormalizedInputs("dotnet", "8.0", "flex", null, null, null, null);
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Theory]
     [InlineData("invalid")]
     [InlineData("mac")]
-    [InlineData("WINDOWS")]
     public void ValidateParameterCombinations_ThrowsForInvalidOperatingSystem(string os)
     {
-        var inputs = new FunctionAppService.NormalizedInputs("dotnet", null, null, null, os, null, null);
+        var inputs = new NormalizedInputs("dotnet", null, null, null, os, null, null);
         Assert.Throws<ArgumentException>(() =>
-            FunctionAppService.ValidateParameterCombinations(inputs));
+            FunctionAppValidation.ValidateParameterCombinations(inputs));
     }
 
     [Theory]
@@ -542,8 +541,8 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("python", null, "appservice", null, "python", "3.12")]
     public void BuildCreateOptions_ConfiguresCorrectly(string runtime, string? runtimeVersion, string? planType, string? os, string expectedRuntime, string expectedRuntimeVersion)
     {
-        var inputs = new FunctionAppService.NormalizedInputs(runtime, runtimeVersion, planType, null, os, null, null);
-        var result = FunctionAppService.BuildCreateOptions(inputs);
+        var inputs = new NormalizedInputs(runtime, runtimeVersion, planType, null, os, null, null);
+        var result = FunctionAppValidation.BuildCreateOptions(inputs);
 
         Assert.Equal(expectedRuntime, result.Runtime);
         Assert.Equal(expectedRuntimeVersion, result.RuntimeVersion);
@@ -558,7 +557,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData(false, "node", "20", null)]
     public void BuildSiteConfig_ConfiguresCorrectly(bool isLinux, string runtime, string? runtimeVersion, string? expectedValue)
     {
-        var options = new FunctionAppService.CreateOptions(runtime, runtimeVersion, FunctionAppService.HostingKind.Consumption, isLinux, null, null);
+        var options = new CreateOptions(runtime, runtimeVersion, HostingKind.Consumption, isLinux, null, null);
         var result = FunctionAppService.BuildSiteConfig(isLinux, options);
 
         if (expectedValue == null)
@@ -593,10 +592,10 @@ public sealed class FunctionAppCreateCommandTests
         var planData = new AppServicePlanData("eastus") { IsReserved = false };
         var plan = Substitute.For<AppServicePlanResource>();
         plan.Data.Returns(planData);
-        var options = new FunctionAppService.CreateOptions("python", "3.12", FunctionAppService.HostingKind.Consumption, true, null, null);
+        var options = new CreateOptions("python", "3.12", HostingKind.Consumption, true, null, null);
 
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateExistingPlan(plan, "test-plan", options));
+            FunctionAppPlanProvisioner.ValidateExistingPlan(plan, "test-plan", options));
     }
 
     [Fact]
@@ -606,10 +605,10 @@ public sealed class FunctionAppCreateCommandTests
         var planData = new AppServicePlanData("eastus") { Sku = sku, IsReserved = true };
         var plan = Substitute.For<AppServicePlanResource>();
         plan.Data.Returns(planData);
-        var options = new FunctionAppService.CreateOptions("dotnet", "8.0", FunctionAppService.HostingKind.FlexConsumption, true, null, null);
+        var options = new CreateOptions("dotnet", "8.0", HostingKind.FlexConsumption, true, null, null);
 
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateExistingPlan(plan, "test-plan", options));
+            FunctionAppPlanProvisioner.ValidateExistingPlan(plan, "test-plan", options));
     }
 
     [Fact]
@@ -619,10 +618,10 @@ public sealed class FunctionAppCreateCommandTests
         var planData = new AppServicePlanData("eastus") { Sku = sku, IsReserved = true };
         var plan = Substitute.For<AppServicePlanResource>();
         plan.Data.Returns(planData);
-        var options = new FunctionAppService.CreateOptions("dotnet", "8.0", FunctionAppService.HostingKind.Premium, true, null, null);
+        var options = new CreateOptions("dotnet", "8.0", HostingKind.Premium, true, null, null);
 
         Assert.Throws<InvalidOperationException>(() =>
-            FunctionAppService.ValidateExistingPlan(plan, "test-plan", options));
+            FunctionAppPlanProvisioner.ValidateExistingPlan(plan, "test-plan", options));
     }
 
     [Theory]
@@ -634,7 +633,7 @@ public sealed class FunctionAppCreateCommandTests
     public void IsFunctionApp_DetectsCorrectly(string? kind, bool expected)
     {
         var siteData = new WebSiteData("eastus") { Kind = kind };
-        var result = FunctionAppService.IsFunctionApp(siteData);
+        var result = FunctionAppValidation.IsFunctionApp(siteData);
         Assert.Equal(expected, result);
     }
 
@@ -645,7 +644,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("very-long-function-app-name", "verylongfunctionap")]
     public void CreateStorageAccountName_GeneratesValidName(string functionAppName, string expectedPrefix)
     {
-        var result = FunctionAppService.CreateStorageAccountName(functionAppName);
+        var result = FunctionAppStorageProvisioner.CreateStorageAccountName(functionAppName);
 
         Assert.True(result.Length >= 9 && result.Length <= 24);
         Assert.StartsWith(expectedPrefix, result);
@@ -655,7 +654,7 @@ public sealed class FunctionAppCreateCommandTests
     [Fact]
     public void BuildConnectionString_FormatsCorrectly()
     {
-        var result = FunctionAppService.BuildConnectionString("storageaccount", "key123");
+        var result = FunctionAppStorageProvisioner.BuildConnectionString("storageaccount", "key123");
         var expected = "DefaultEndpointsProtocol=https;AccountName=storageaccount;AccountKey=key123;EndpointSuffix=core.windows.net";
         Assert.Equal(expected, result);
     }
@@ -670,7 +669,7 @@ public sealed class FunctionAppCreateCommandTests
     {
         var sku = tier != null ? new AppServiceSkuDescription { Tier = tier } : null;
         var planData = new AppServicePlanData("eastus") { Sku = sku };
-        var result = FunctionAppService.IsFlexConsumption(planData);
+        var result = FunctionAppValidation.IsFlexConsumption(planData);
         Assert.Equal(expected, result);
     }
 
@@ -708,7 +707,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("", null)]
     public void ExtractMajorVersion_ExtractsCorrectly(string? version, string? expected)
     {
-        var result = FunctionAppService.ExtractMajorVersion(version);
+        var result = FunctionAppValidation.ExtractMajorVersion(version);
         Assert.Equal(expected, result);
     }
 }

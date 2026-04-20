@@ -2,34 +2,24 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
-public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> logger)
+public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> logger, IFunctionAppService functionAppService)
     : BaseFunctionAppCommand<FunctionAppCreateOptions>
 {
     private const string CommandTitle = "Create Azure Function App";
     private readonly ILogger<FunctionAppCreateCommand> _logger = logger;
-
-    private readonly Option<string> _functionAppNameOption = FunctionAppOptionDefinitions.FunctionApp;
-    private readonly Option<string> _locationOption = FunctionAppOptionDefinitions.Location;
-    private readonly Option<string> _appServicePlanOption = FunctionAppOptionDefinitions.AppServicePlan;
-    private readonly Option<string> _planTypeOption = FunctionAppOptionDefinitions.PlanType;
-    private readonly Option<string> _planSkuOption = FunctionAppOptionDefinitions.PlanSku;
-    private readonly Option<string> _runtimeOption = FunctionAppOptionDefinitions.Runtime;
-    private readonly Option<string> _runtimeVersionOption = FunctionAppOptionDefinitions.RuntimeVersion;
-    private readonly Option<string> _osOption = FunctionAppOptionDefinitions.OperatingSystem;
-    private readonly Option<string> _storageAccountOption = FunctionAppOptionDefinitions.StorageAccount;
-    private readonly Option<string> _containerAppsEnvironmentOption = FunctionAppOptionDefinitions.ContainerAppsEnvironment;
+    private readonly IFunctionAppService _functionAppService = functionAppService;
 
     public override string Id => "a19eaab4-4822-41cb-a6ec-ffdc56405400";
 
@@ -37,8 +27,9 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
 
     public override string Description =>
     """
-    Create a new Azure Function App in the specified resource group and region.
-    Automatically provisions dependencies when omitted (App Service plan OR Container App managed environment + Container App, and a Storage account) and applies sensible runtime & SKU defaults.
+    Create a new Azure Function App hosted on an App Service plan (Consumption, Flex Consumption, Premium, or App Service).
+    Automatically provisions dependencies when omitted (App Service plan and Storage account) and applies sensible runtime & SKU defaults.
+    For Container Apps hosting, use 'functionapp create-containerapp' instead.
 
     Required options:
     - subscription: Target Azure subscription (ID or name)
@@ -47,37 +38,32 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     - location: Azure region (e.g. eastus)
 
     Optional options:
-    - app-service-plan: Use an existing App Service plan; if omitted one is created when hosting on App Service (non-container).
-    - plan-type: Hosting kind to create when a plan is needed (consumption|flex|premium|appservice|containerapp). Default: consumption.
-        * consumption  -> Y1   (Dynamic)
+    - app-service-plan: Use an existing App Service plan; if omitted one is created.
+    - plan-type: Hosting kind to create when a plan is needed (consumption|flex|premium|appservice). Default: consumption.
+        * consumption  -> Y1 (Dynamic)
         * flex / flexconsumption -> FC1 (FlexConsumption, Linux only)
         * premium / functionspremium -> EP1 (Elastic Premium)
-        * appservice   -> B1 (Basic) unless overridden by --plan-sku
-        * containerapp -> Creates a Container App instead of an App Service plan/site (no plan created). Container App will reuse the function-app name.
-    - plan-sku: Explicit App Service plan SKU (e.g. B1, S1, P1v3). Overrides --plan-type SKU selection (ignored for containerapp).
+        * appservice -> B1 (Basic) unless overridden by --plan-sku
+    - plan-sku: Explicit App Service plan SKU (e.g. B1, S1, P1v3). Overrides --plan-type SKU selection.
     - runtime: FUNCTIONS_WORKER_RUNTIME (dotnet|dotnet-isolated|node|python|java|powershell). Default: dotnet.
     - runtime-version: Specific runtime version; if omitted a default per runtime is applied (see defaults below).
-    - os: windows|linux. Default: windows unless runtime/plan requires linux (python, flex consumption, containerapp). Overridden to linux automatically when required. Python & flex consumption do not support Windows.
+    - os: windows|linux. Default: windows unless runtime/plan requires linux (python, flex consumption). Python & flex consumption do not support Windows.
+    - storage-account: Existing or new Storage account name (auto-generated when omitted).
+    - storage-auth-mode: 'connection-string' (default, uses an access key) or 'managed-identity' (enables system-assigned identity on the site and configures `AzureWebJobsStorage__accountName`). With managed-identity you must grant the site's identity the `Storage Blob Data Owner` role on the storage account after creation; the role is not assigned automatically. Not yet supported for Flex Consumption hosting.
 
     Automatic resources & defaults:
-    - Storage account: Always created (Standard_LRS, HTTPS only, blob public access disabled). Name pattern: <sanitized-functionapp>[random6]. Connection string injected as AzureWebJobsStorage.
-    - App Service plan: Auto-created when not provided (name: <function-app>-plan) unless containerapp hosting.
-    - Container App: If containerapp hosting selected, a managed environment and container app are created using the function-app name and an official Azure Functions image for the runtime.
+    - Storage account: Created when not supplied (Standard_LRS, HTTPS only, blob public access disabled). Name pattern: <sanitized-functionapp>[random6]. Connection string injected as AzureWebJobsStorage (or `AzureWebJobsStorage__accountName` when --storage-auth-mode managed-identity).
+    - App Service plan: Auto-created when not provided (name: <function-app>-plan).
     - Linux vs Windows: Linux automatically enforced for python and flex consumption. Other runtimes default to Windows unless plan-type dictates Linux (flex) or runtime is python.
     - Explicit --os overrides default when compatible; incompatible combinations cause validation errors (e.g. --os windows with python or flex consumption).
     - Runtime version defaults (LinuxFxVersion when Linux):
         * python -> 3.12
         * node -> 22
         * dotnet -> 8.0
-        * java -> 21.0
+        * java -> 17.0
         * powershell -> 7.4
     - WEBSITE_NODE_DEFAULT_VERSION: Set to ~<major> for Windows Node apps when a version is supplied.
     - FUNCTIONS_EXTENSION_VERSION: Always ~4.
-
-    Behavior notes:
-    - Providing --plan-sku with --plan-type is allowed; SKU wins.
-    - --container-app path skips App Service plan & site creation and provisions a Container App instead.
-    - Invalid combination examples: specifying app-service-plan with plan-type containerapp.
 
     Returns: functionApp object (name, resourceGroup, location, plan, state, defaultHostName, tags)
     """;
@@ -98,32 +84,32 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(_functionAppNameOption);
-        command.Options.Add(_locationOption);
-        command.Options.Add(_appServicePlanOption);
-        command.Options.Add(_planTypeOption);
-        command.Options.Add(_planSkuOption);
-        command.Options.Add(_runtimeOption);
-        command.Options.Add(_runtimeVersionOption);
-        command.Options.Add(_osOption);
-        command.Options.Add(_storageAccountOption);
-        command.Options.Add(_containerAppsEnvironmentOption);
+        command.Options.Add(FunctionAppOptionDefinitions.FunctionApp.AsRequired());
+        command.Options.Add(FunctionAppOptionDefinitions.Location.AsRequired());
+        command.Options.Add(FunctionAppOptionDefinitions.AppServicePlan);
+        command.Options.Add(FunctionAppOptionDefinitions.PlanType);
+        command.Options.Add(FunctionAppOptionDefinitions.PlanSku);
+        command.Options.Add(FunctionAppOptionDefinitions.Runtime);
+        command.Options.Add(FunctionAppOptionDefinitions.RuntimeVersion);
+        command.Options.Add(FunctionAppOptionDefinitions.OperatingSystem);
+        command.Options.Add(FunctionAppOptionDefinitions.StorageAccount);
+        command.Options.Add(FunctionAppOptionDefinitions.StorageAuthMode);
     }
 
     protected override FunctionAppCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FunctionAppName = parseResult.GetValueOrDefault<string>(_functionAppNameOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(_locationOption.Name);
-        options.AppServicePlan = parseResult.GetValueOrDefault<string>(_appServicePlanOption.Name);
-        options.PlanType = parseResult.GetValueOrDefault<string>(_planTypeOption.Name);
-        options.PlanSku = parseResult.GetValueOrDefault<string>(_planSkuOption.Name);
-        options.Runtime = parseResult.GetValueOrDefault<string>(_runtimeOption.Name) ?? "dotnet";
-        options.RuntimeVersion = parseResult.GetValueOrDefault<string>(_runtimeVersionOption.Name);
-        options.OperatingSystem = parseResult.GetValueOrDefault<string>(_osOption.Name);
-        options.StorageAccount = parseResult.GetValueOrDefault<string>(_storageAccountOption.Name);
-        options.ContainerAppsEnvironment = parseResult.GetValueOrDefault<string>(_containerAppsEnvironmentOption.Name);
+        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.Location.Name);
+        options.AppServicePlan = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.AppServicePlan.Name);
+        options.PlanType = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.PlanType.Name);
+        options.PlanSku = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.PlanSku.Name);
+        options.Runtime = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.Runtime.Name) ?? "dotnet";
+        options.RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.RuntimeVersion.Name);
+        options.OperatingSystem = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.OperatingSystem.Name);
+        options.StorageAccount = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.StorageAccount.Name);
+        options.StorageAuthMode = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.StorageAuthMode.Name);
         return options;
     }
 
@@ -147,15 +133,15 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(options.AppServicePlan) && string.Equals(options.PlanType, "containerapp", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(options.PlanType, "containerapp", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(options.PlanType, "containerapps", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "--app-service-plan cannot be combined with --plan-type containerapp.";
+                context.Response.Message = "Container Apps hosting is not supported by this command. Use 'functionapp create-containerapp' instead.";
                 return context.Response;
             }
 
-            var service = context.GetService<IFunctionAppService>();
-            var result = await service.CreateFunctionApp(
+            var result = await _functionAppService.CreateFunctionApp(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FunctionAppName!,
@@ -167,7 +153,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
                 options.RuntimeVersion,
                 options.OperatingSystem,
                 options.StorageAccount,
-                options.ContainerAppsEnvironment,
+                options.StorageAuthMode,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
