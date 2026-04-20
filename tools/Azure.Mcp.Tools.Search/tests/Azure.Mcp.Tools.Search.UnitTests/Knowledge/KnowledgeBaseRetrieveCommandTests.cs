@@ -26,7 +26,6 @@ public class KnowledgeBaseRetrieveCommandTests
         _logger = Substitute.For<ILogger<KnowledgeBaseRetrieveCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -44,7 +43,7 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Any<CancellationToken>())
             .Returns(json);
 
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
@@ -67,7 +66,7 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Any<CancellationToken>())
             .Returns(json);
 
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
@@ -80,7 +79,7 @@ public class KnowledgeBaseRetrieveCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages()
     {
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
@@ -92,7 +91,7 @@ public class KnowledgeBaseRetrieveCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenHasBothQueryAndMessages()
     {
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
@@ -104,7 +103,7 @@ public class KnowledgeBaseRetrieveCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
     {
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -124,7 +123,7 @@ public class KnowledgeBaseRetrieveCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test failure"));
 
-        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger, _searchService);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
