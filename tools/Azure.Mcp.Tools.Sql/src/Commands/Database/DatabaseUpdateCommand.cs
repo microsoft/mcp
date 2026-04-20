@@ -13,9 +13,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
+public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<DatabaseUpdateCommand> logger)
     : BaseDatabaseCommand<DatabaseUpdateOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Update SQL Database";
 
     public override string Id => "16f02fbf-6760-440a-bacc-925365b6de49";
@@ -80,9 +81,7 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.UpdateDatabaseAsync(
+            var database = await _sqlService.UpdateDatabaseAsync(
                 options.Server!,
                 options.Database!,
                 options.ResourceGroup!,

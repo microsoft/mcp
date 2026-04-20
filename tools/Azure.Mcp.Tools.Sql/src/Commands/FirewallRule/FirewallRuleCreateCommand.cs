@@ -14,9 +14,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand> logger)
+public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<FirewallRuleCreateCommand> logger)
     : BaseSqlCommand<FirewallRuleCreateOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Server Firewall Rule";
 
     public override string Id => "37c43190-c3f5-4cd2-beda-3ecc2e3ec049";
@@ -119,9 +120,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var firewallRule = await sqlService.CreateFirewallRuleAsync(
+            var firewallRule = await _sqlService.CreateFirewallRuleAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
