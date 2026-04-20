@@ -49,10 +49,10 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     - runtime-version: Specific runtime version; if omitted a default per runtime is applied (see defaults below).
     - os: windows|linux. Default: windows unless runtime/plan requires linux (python, flex consumption). Python & flex consumption do not support Windows.
     - storage-account: Existing or new Storage account name (auto-generated when omitted).
-    - storage-auth-mode: 'connection-string' (default, uses an access key) or 'managed-identity' (enables system-assigned identity on the site and configures `AzureWebJobsStorage__accountName`). With managed-identity you must grant the site's identity the `Storage Blob Data Owner` role on the storage account after creation; the role is not assigned automatically. Not yet supported for Flex Consumption hosting.
+    - storage-auth-mode: 'managed-identity' (default; enables system-assigned identity on the site and configures `AzureWebJobsStorage__accountName`, and for Flex Consumption sets `functionAppConfig.deployment.storage.authentication.type` to SystemAssignedIdentity) or 'connection-string' (uses an access key). With managed-identity you must grant the site's identity the `Storage Blob Data Owner` role on the storage account after creation; the role is not assigned automatically.
 
     Automatic resources & defaults:
-    - Storage account: Created when not supplied (Standard_LRS, HTTPS only, blob public access disabled). Name pattern: <sanitized-functionapp>[random6]. Connection string injected as AzureWebJobsStorage (or `AzureWebJobsStorage__accountName` when --storage-auth-mode managed-identity).
+    - Storage account: Created when not supplied (Standard_LRS, HTTPS only, blob public access disabled). Name pattern: <sanitized-functionapp>[random6]. With the default managed-identity auth mode, `AzureWebJobsStorage__accountName` is set; with --storage-auth-mode connection-string, `AzureWebJobsStorage` is set with the account key.
     - App Service plan: Auto-created when not provided (name: <function-app>-plan).
     - Linux vs Windows: Linux automatically enforced for python and flex consumption. Other runtimes default to Windows unless plan-type dictates Linux (flex) or runtime is python.
     - Explicit --os overrides default when compatible; incompatible combinations cause validation errors (e.g. --os windows with python or flex consumption).
