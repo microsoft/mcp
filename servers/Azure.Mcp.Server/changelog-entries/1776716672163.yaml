@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "StorageSync: Improve testability by adding StorageSyncSetup to CommandFactoryHelpers"

@@ -41,6 +41,7 @@ using Azure.Mcp.Tools.Search;
 using Azure.Mcp.Tools.ServiceBus;
 using Azure.Mcp.Tools.Sql;
 using Azure.Mcp.Tools.Storage;
+using Azure.Mcp.Tools.StorageSync;
 using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
@@ -102,6 +103,7 @@ internal class CommandFactoryHelpers
             new ServiceBusSetup(),
             new SqlSetup(),
             new StorageSetup(),
+            new StorageSyncSetup(),
             new VirtualDesktopSetup(),
             new WorkbooksSetup(),
         ];
@@ -168,6 +170,7 @@ internal class CommandFactoryHelpers
             new ServiceBusSetup(),
             new SqlSetup(),
             new StorageSetup(),
+            new StorageSyncSetup(),
             new VirtualDesktopSetup(),
             new WorkbooksSetup(),
         ];
