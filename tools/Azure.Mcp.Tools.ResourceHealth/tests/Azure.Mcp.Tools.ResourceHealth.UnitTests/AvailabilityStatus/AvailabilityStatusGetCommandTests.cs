@@ -20,11 +20,13 @@ public class AvailabilityStatusGetCommandTests
 {
     private readonly IResourceHealthService _resourceHealthService;
     private readonly ILogger<AvailabilityStatusGetCommand> _logger;
+    private readonly CommandContext _context;
 
     public AvailabilityStatusGetCommandTests()
     {
         _resourceHealthService = Substitute.For<IResourceHealthService>();
         _logger = Substitute.For<ILogger<AvailabilityStatusGetCommand>>();
+        _context = new CommandContext(new ServiceCollection().BuildServiceProvider());
     }
 
     #region Get (Single Resource) Tests
@@ -47,8 +49,7 @@ public class AvailabilityStatusGetCommandTests
 
         var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -79,9 +80,8 @@ public class AvailabilityStatusGetCommandTests
         var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
 
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -119,8 +119,7 @@ public class AvailabilityStatusGetCommandTests
 
         var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -158,8 +157,7 @@ public class AvailabilityStatusGetCommandTests
 
         var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -187,9 +185,8 @@ public class AvailabilityStatusGetCommandTests
         var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
 
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -214,8 +211,7 @@ public class AvailabilityStatusGetCommandTests
 
         var args = command.GetCommand().Parse([.. argsList]);
 
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
