@@ -14,6 +14,7 @@ public static class FunctionAppOptionDefinitions
     public const string RuntimeVersionName = "runtime-version";
     public const string OperatingSystemName = "os";
     public const string StorageAccountName = "storage-account";
+    public const string StorageAuthModeName = "storage-auth-mode";
     public const string ContainerAppsEnvironmentName = "container-apps-environment";
 
     public static readonly Option<string> FunctionApp = new(
@@ -44,7 +45,7 @@ public static class FunctionAppOptionDefinitions
         $"--{PlanTypeName}"
     )
     {
-        Description = "The App Service plan type when creating a plan automatically. Values: consumption, flex, premium. Defaults to consumption.",
+        Description = "The App Service plan type when creating a plan automatically. Values: consumption, flex, premium, appservice. Defaults to consumption.",
         Required = false
     };
 
@@ -85,6 +86,14 @@ public static class FunctionAppOptionDefinitions
     )
     {
         Description = "The name of the Storage Account to use or create.",
+        Required = false
+    };
+
+    public static readonly Option<string> StorageAuthMode = new(
+        $"--{StorageAuthModeName}"
+    )
+    {
+        Description = "How the Function App authenticates to its storage account: 'connection-string' (default, uses an access key) or 'managed-identity' (enables system-assigned identity on the site and configures AzureWebJobsStorage__accountName; you must grant the identity Storage Blob Data Owner on the storage account after creation).",
         Required = false
     };
 
