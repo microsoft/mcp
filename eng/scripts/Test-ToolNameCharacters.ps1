@@ -113,15 +113,13 @@ function Test-ToolAreaTools {
 
         $patterns = @()
         if ($file.Name -like '*Command.cs') {
-            $patterns += 'public override string Name => "(.*)";'
+            $patterns += 'public override string Name => "([^"]+)";'
         } elseif ($file.Name -like '*Setup.cs') {
-            $patterns += 'public string Name => "(.*)";'
+            $patterns += 'public string Name => "([^"]+)";'
             # Matches: new CommandGroup("group-name", ...) - only string literals, not variables
             # Matches: AddCommand("command-name", ...) - only string literals, not variables
             $patterns += 'new CommandGroup\("([^"]+)",'
             $patterns += 'AddCommand\("([^"]+)",'
-        } else {
-            throw "Unexpected file name: $($file.Name)"
         }
 
         for ($i = 0; $i -lt $content.Count; $i++) {
@@ -138,7 +136,7 @@ function Test-ToolAreaTools {
                     #   [a-zA-Z0-9]                 - First char must be alphanumeric
                     #   ([a-zA-Z0-9-]*[a-zA-Z0-9])? - Optional: middle chars (alphanumeric or dash) ending with alphanumeric
                     #   $                           - End of string
-                    $isValid = $($ToolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$')
+                    $isValid = $toolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$'
 
                     if (-not $isValid) {
                         $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName, $i + 1)
