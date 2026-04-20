@@ -175,17 +175,18 @@ public sealed class FunctionAppService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var useManagedIdentity = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
+        var requestedAuthMode = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
         var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
             subscription, resourceGroup, functionAppName, location,
             runtime, runtimeVersion, hostingKind, sku, os,
             storageAccountName, containerAppsEnvironmentName: null);
-        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
 
-        if (options.HostingKind == HostingKind.ContainerApp)
+        var resolvedHostingKind = FunctionAppValidation.ParseHostingKind(inputs.PlanType);
+        if (resolvedHostingKind == HostingKind.ContainerApp)
             throw new ArgumentException("Use the 'functionapp create-containerapp' command to host a Function App in Azure Container Apps.");
-        if (useManagedIdentity && options.HostingKind == HostingKind.FlexConsumption)
-            throw new ArgumentException("--storage-auth-mode managed-identity is not yet supported for Flex Consumption hosting. Use 'connection-string' (default) with Flex Consumption.");
+
+        var useManagedIdentity = requestedAuthMode ?? true;
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
@@ -207,15 +208,14 @@ public sealed class FunctionAppService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var useManagedIdentity = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
-        if (useManagedIdentity)
-            throw new ArgumentException("--storage-auth-mode managed-identity is not yet supported for Container Apps hosting. Use 'connection-string' (default) for Container Apps.");
+        var requestedAuthMode = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode);
+        var useManagedIdentity = requestedAuthMode ?? true;
 
         var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
             subscription, resourceGroup, functionAppName, location,
             runtime, runtimeVersion, hostingKind: "containerapp", sku: null, os: null,
             storageAccountName, containerAppsEnvironmentName);
-        var options = FunctionAppValidation.BuildCreateOptions(inputs);
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
@@ -365,7 +365,7 @@ public sealed class FunctionAppService(
                     Name = MapToFunctionAppRuntimeName(options.Runtime),
                     Version = NormalizeRuntimeVersionForConfig(options.Runtime, options.RuntimeVersion)
                 },
-                DeploymentStorage = FunctionAppStorageProvisioner.BuildDeploymentStorage(storage.ConnectionString),
+                DeploymentStorage = FunctionAppStorageProvisioner.BuildDeploymentStorageForAccount(storage.AccountName, options.UseManagedIdentityStorage),
                 ScaleAndConcurrency = new FunctionAppScaleAndConcurrency
                 {
                     InstanceMemoryMB = FlexConsumptionDefaults.InstanceMemoryMB,
@@ -377,7 +377,14 @@ public sealed class FunctionAppService(
         return op.Value;
     }
 
-    private static async Task<ContainerAppResource> EnsureMinimalContainerApp(ResourceGroupResource rg, string name, string location, string runtime, string storageConnectionString, string? containerAppsEnvironmentName = null)
+    private static async Task<ContainerAppResource> EnsureMinimalContainerApp(
+        ResourceGroupResource rg,
+        string name,
+        string location,
+        string runtime,
+        StorageProvisioningResult storage,
+        bool useManagedIdentity,
+        string? containerAppsEnvironmentName = null)
     {
         var envs = rg.GetContainerAppManagedEnvironments();
         var envName = containerAppsEnvironmentName ?? $"{name}-env";
@@ -395,6 +402,31 @@ public sealed class FunctionAppService(
 
         var apps = rg.GetContainerApps();
         var image = GetContainerImage(runtime);
+        var container = new ContainerAppContainer
+        {
+            Name = name,
+            Image = image,
+            Resources = new AppContainerResources
+            {
+                Cpu = ContainerAppsDefaults.CpuCores,
+                Memory = ContainerAppsDefaults.Memory
+            },
+            Env =
+            {
+                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_WORKER_RUNTIME", Value = runtime },
+                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" }
+            }
+        };
+        if (useManagedIdentity)
+        {
+            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__accountName", Value = storage.AccountName });
+            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__credential", Value = "managedidentity" });
+        }
+        else
+        {
+            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage", Value = storage.ConnectionString });
+        }
+
         var data = new ContainerAppData(location)
         {
             ManagedEnvironmentId = env.Id,
@@ -408,27 +440,11 @@ public sealed class FunctionAppService(
             },
             Template = new ContainerAppTemplate
             {
-                Containers =
-                {
-                    new ContainerAppContainer
-                    {
-                        Name = name,
-                        Image = image,
-                        Resources = new AppContainerResources
-                        {
-                            Cpu = ContainerAppsDefaults.CpuCores,
-                            Memory = ContainerAppsDefaults.Memory
-                        },
-                        Env =
-                        {
-                            new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_WORKER_RUNTIME", Value = runtime },
-                            new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
-                            new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage", Value = storageConnectionString }
-                        }
-                    }
-                }
+                Containers = { container }
             }
         };
+        if (useManagedIdentity)
+            data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
 
         return (await apps.CreateOrUpdateAsync(WaitUntil.Completed, name, data)).Value;
     }
@@ -479,7 +495,7 @@ public sealed class FunctionAppService(
             string? containerAppsEnvironmentName = null)
         {
             var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName);
-            var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage.ConnectionString, containerAppsEnvironmentName);
+            var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName);
             var host = containerApp.Data.Configuration?.Ingress?.Fqdn ?? containerApp.Data.LatestRevisionName ?? containerApp.Data.Name;
             return new FunctionAppInfo(
                 containerApp.Data.Name,
