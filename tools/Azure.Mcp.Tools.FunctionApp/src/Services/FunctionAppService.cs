@@ -93,7 +93,9 @@ public sealed class FunctionAppService(
             {
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (!resourceGroupResource.HasValue)
+                {
                     throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                }
 
                 await RetrieveAndAddFunctionApp(resourceGroupResource.Value.GetWebSites().GetAllAsync(cancellationToken: cancellationToken), functionApps, _logger, cancellationToken);
             }
@@ -116,7 +118,9 @@ public sealed class FunctionAppService(
 
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             if (!resourceGroupResource.HasValue)
+            {
                 throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            }
             var site = await resourceGroupResource.Value.GetWebSites().GetAsync(functionAppName, cancellationToken);
 
             TryAddFunctionApp(site.Value, functionApps);
