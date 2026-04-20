@@ -203,9 +203,8 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [InlineData("consumption", null, "python", null, "linux", null)]
     [InlineData("flex", null, "dotnet-isolated", null, "linux", null)]
     [InlineData("premium", null, "powershell", "windows", "windows", null)]
-    [InlineData("containerapp", null, "dotnet-isolated", null, "linux", null)]
     [InlineData("appservice", "B2", "node", "windows", "windows", "22.0.0")]
-    [InlineData("appservice", "P0V3", "java", "linux", "linux", "21.0")]
+    [InlineData("appservice", "P0V3", "java", "linux", "linux", "17.0")]
     public async Task Should_create_function_app(
         string planType,
         string? planSku,
@@ -242,6 +241,35 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         Assert.False(string.IsNullOrWhiteSpace(planProp.GetString()));
         Assert.True(functionApp.TryGetProperty("operatingSystem", out var osProp));
         Assert.Equal(expectedOperatingSystem, osProp.GetString());
+    }
+
+    [Theory]
+    [InlineData("dotnet-isolated", null)]
+    [InlineData("node", "22")]
+    [InlineData("python", "3.12")]
+    public async Task Should_create_containerapp_function_app(string runtime, string? runtimeVersion)
+    {
+        var uniqueName = $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}";
+
+        var result = await CallToolAsync(
+            "azmcp_functionapp_create_containerapp",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "runtime", runtime },
+                { "runtime-version", runtimeVersion }
+            });
+
+        Assert.NotNull(result);
+        var functionAppWrapper = result!.Value;
+        Assert.True(functionAppWrapper.TryGetProperty("functionApp", out var functionApp));
+        Assert.True(functionApp.TryGetProperty("name", out var nameProp));
+        Assert.Equal(uniqueName, nameProp.GetString());
+        Assert.True(functionApp.TryGetProperty("operatingSystem", out var osProp));
+        Assert.Equal("linux", osProp.GetString());
     }
 
     [Theory]
