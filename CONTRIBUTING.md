@@ -184,7 +184,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Testing
 
-Command authors must provide both unit tests and end-to-end test prompts.
+Command authors must provide unit tests and end-to-end test prompts. Commands that interact with Azure resources **must** also include live tests with recorded playback coverage (see [Recording Live Tests](#recording-live-tests)).
 
 ### Unit Tests
 
@@ -499,6 +499,8 @@ To build a local image for testing purposes:
 ### Live Tests
 
 > [!IMPORTANT]
+> Live tests are **required** for all commands that interact with Azure resources.
+>
 > If you are a **Microsoft employee** with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
@@ -578,7 +580,7 @@ This will produce .tgz files in the `.dist` directory and set the `TestPackage` 
 
 ### Recording Live Tests
 
-All live tests **must** be recorded for playback. Live tests that only inherit from `CommandTestsBase` without recorded test coverage will not be accepted. Recorded tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
+All live tests **must** be recorded for playback. Live tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 
 ### Debugging Live Tests
 

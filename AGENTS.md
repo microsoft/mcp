@@ -14,10 +14,11 @@
 - Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
 - Use name-based binding with `parseResult.GetValueOrDefault<T>()`
 - Always call `HandleException(context, ex)` in catch blocks
+- Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
 - Include post-deployment scripts (`test-resources-post.ps1`)
-- Submit one tool per pull request
 - Record all live tests according to the guidelines in `/docs/recorded-tests.md`
+- Submit one tool per pull request
 - Use `BaseAzureResourceService` for Resource Graph queries when possible
 - Register all response models in JSON serialization context for AOT safety
 - Use static OptionDefinitions for command options (never readonly fields)
@@ -36,7 +37,7 @@
 - Use `subscriptionId` parameter name
 - Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
 - Use readonly option fields in commands
-- Skip live test infrastructure for Azure service commands
+- Skip live tests, live test infrastructure, or test recordings for Azure service commands
 - Use `parseResult.GetValue()` without generic type parameter
 - Redefine base class properties in Options classes
 - Skip `base.RegisterOptions()` or `base.Dispose()` calls
@@ -181,6 +182,7 @@ dotnet build
 - Format and type check: `dotnet format && dotnet build` - all green
 - Unit tests: Add comprehensive tests following existing patterns
 - Live test infrastructure: Include Bicep template and post-deployment script for Azure services
+- Live tests: Include live tests for all commands that interact with Azure resources
 - Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
@@ -317,6 +319,9 @@ All commands must include comprehensive unit tests:
 Command unit tests should extend `CommandUnitTestsBase<TCommand, TService>` where `TCommand` is the command class being
 tested and `TService` is the service that the command uses.
 
+### Live Testing Requirements
+Azure service commands require live tests to validate functionality against actual Azure resources. Live tests must be recorded for playback using `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
+
 ### Live Test Infrastructure
 Azure service commands require Bicep templates for test resources:
 ```powershell
@@ -337,9 +342,6 @@ az login
 # Test resource deployment with proper RBAC
 ./eng/scripts/Deploy-TestResources.ps1 -Paths Storage -SubscriptionId {subscription-id}
 ```
-
-### Recorded Live Tests
-All live tests **must** be recorded for playback using `RecordedCommandTestsBase`. Live tests that inherit from `CommandTestsBase` must be migrated to `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
 
 ## Code Style and Standards
 
