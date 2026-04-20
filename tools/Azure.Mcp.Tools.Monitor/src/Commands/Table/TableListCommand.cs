@@ -14,6 +14,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorS
 {
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
 
     public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
 
@@ -61,7 +62,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorS
 
         try
         {
-            var tables = await monitorService.ListTables(
+            var tables = await _monitorService.ListTables(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Workspace!,

@@ -14,6 +14,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
 {
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
 
     public override string Id => "3f513aea-b6fc-4ad0-8f7d-9fbaa1056ac6";
 
@@ -76,7 +77,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
 
         try
         {
-            var results = await monitorService.QueryWorkspaceLogs(
+            var results = await _monitorService.QueryWorkspaceLogs(
                 options.Subscription!,
                 options.Workspace!,
                 options.Query!,

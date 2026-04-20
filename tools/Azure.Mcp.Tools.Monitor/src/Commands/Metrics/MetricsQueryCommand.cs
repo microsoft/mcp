@@ -21,6 +21,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
 {
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
+    private readonly IMonitorMetricsService _metricsService = metricsService;
 
     public override string Id => "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8";
 
@@ -100,9 +101,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
         {
             string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
 
-            // Get the metrics service from DI
-            // Call the metrics service method directly
-            var results = await metricsService.QueryMetricsAsync(
+            var results = await _metricsService.QueryMetricsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,

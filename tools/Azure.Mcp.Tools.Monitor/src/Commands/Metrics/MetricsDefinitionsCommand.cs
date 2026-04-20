@@ -21,6 +21,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 {
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
+    private readonly IMonitorMetricsService _metricsService = metricsService;
 
     public override string Id => "d3bf37ed-5f2e-448d-a16e-73140ef908c2";
 
@@ -72,7 +73,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         try
         {
             // Call service operation with required parameters
-            var allResults = await metricsService.ListMetricDefinitionsAsync(
+            var allResults = await _metricsService.ListMetricDefinitionsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
