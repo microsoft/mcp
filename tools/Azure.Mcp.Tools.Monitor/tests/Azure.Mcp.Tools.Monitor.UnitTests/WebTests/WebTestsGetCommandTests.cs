@@ -31,9 +31,8 @@ public class WebTestsGetCommandTests
         _service = Substitute.For<IMonitorWebTestService>();
         _logger = Substitute.For<ILogger<WebTestsGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _service);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
