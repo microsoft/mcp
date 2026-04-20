@@ -31,6 +31,6 @@ public class FunctionAppCreateOptions : BaseFunctionAppOptions
     [JsonPropertyName(FunctionAppOptionDefinitions.StorageAccountName)]
     public string? StorageAccount { get; set; }
 
-    [JsonPropertyName(FunctionAppOptionDefinitions.ContainerAppsEnvironmentName)]
-    public string? ContainerAppsEnvironment { get; set; }
+    [JsonPropertyName(FunctionAppOptionDefinitions.StorageAuthModeName)]
+    public string? StorageAuthMode { get; set; }
 }
