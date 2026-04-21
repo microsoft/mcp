@@ -2112,6 +2112,7 @@ azmcp functionapp containerapp create --subscription <subscription> \
                                        [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
                                        [--runtime-version <version>] \
                                        [--storage-account <storage-account-name>] \
+                                       [--storage-auth-mode <connection-string|managed-identity>] \
                                        [--container-apps-environment <environment-name>]
 
 # Get detailed properties of function apps
