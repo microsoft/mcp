@@ -160,7 +160,7 @@ Processing MCPB packaging:
         LogInfo "Copying manifest from $manifestPath..."
         $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
         
-        $executableName = $server.cliName + $platform.extension
+        $executableName = "$($server.cliName)$($platform.extension)"
 
         # Update version from build_info.json (source of truth for all packaging)
         $manifest.version = $server.version
@@ -176,6 +176,10 @@ Processing MCPB packaging:
         if ($manifest.server.mcp_config.PSObject.Properties.Name -contains 'platform_overrides') {
             $manifest.server.mcp_config.PSObject.Properties.Remove('platform_overrides')
         }
+
+        # Set compatibility platforms to match the specific platform being bundled
+        # nodeOs maps OS names to MCPB platform identifiers (e.g., win32, darwin, linux)
+        $manifest.compatibility.platforms = @($platform.nodeOs)
         
         $manifest | ConvertTo-Json -Depth 100 | Set-Content "$stagingDir/manifest.json" -NoNewline
 
