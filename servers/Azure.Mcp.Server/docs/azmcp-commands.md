@@ -17,6 +17,24 @@ The following options are available for all commands:
 | `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
 | `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
+| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+
+### Discovery with `--learn`
+
+The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
+
+```bash
+# List all commands available under the 'storage' namespace
+azmcp storage --learn
+
+# List all commands under 'storage account'
+azmcp storage account --learn
+
+# Show the options for a specific command without executing it
+azmcp storage account list --learn
+```
+
+The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
 
 ## Available Commands
 

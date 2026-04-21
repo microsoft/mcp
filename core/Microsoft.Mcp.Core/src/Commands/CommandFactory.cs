@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -28,6 +29,30 @@ public class CommandFactory : ICommandFactory
     private readonly ILogger<CommandFactory> _logger;
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
+
+    /// <summary>
+    /// Name of the <c>--learn</c> option added to every command and command group.
+    /// Exposed as a public constant so <c>Program.cs</c> can detect it in raw arg arrays
+    /// without taking a hard dependency on the option object itself.
+    /// </summary>
+    public const string LearnOptionName = "--learn";
+    private const string LearnOptionDescription =
+        "Discover available sub-commands and their parameters without executing any Azure operation. " +
+        "Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, " +
+        "or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.";
+
+    /// <summary>
+    /// Creates a fresh <see cref="Option{T}"/> for <c>--learn</c> each time it is called.
+    /// A new instance is required per command because System.CommandLine v2 tracks option
+    /// ownership by object identity; sharing a single static instance causes
+    /// <see cref="ParseResult.GetValue{T}"/> to return the default value on every command
+    /// except the last one the option was added to.
+    /// </summary>
+    private static Option<bool> CreateLearnOption() => new(LearnOptionName)
+    {
+        Description = LearnOptionDescription,
+        Required = false
+    };
     private readonly ModelsJsonContext _srcGenWithOptions;
 
     /// <summary>
@@ -164,27 +189,65 @@ public class CommandFactory : ICommandFactory
         }
     }
 
-    private void ConfigureCommands(CommandGroup group)
+    private void ConfigureCommands(CommandGroup group, string parentTokenizedPrefix = "")
     {
+        // Add --learn as a recognized option on this group's command (for autocomplete/help display).
+        // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called.
+        group.Command.Options.Add(CreateLearnOption());
+
         // Configure direct commands in this group
         foreach (var command in group.Commands.Values)
         {
             var cmd = command.GetCommand();
 
-            ConfigureCommandHandler(cmd, command);
+            // Build the full tokenized key for this leaf command (e.g. "storage_account_list").
+            var fullTokenizedKey = GetPrefix(GetPrefix(parentTokenizedPrefix, group.Name), command.Name);
+            ConfigureCommandHandler(cmd, command, fullTokenizedKey);
 
             group.Command.Subcommands.Add(cmd);
         }
 
-        // Recursively configure subgroup commands
+        // Recursively configure subgroup commands, passing the accumulated prefix.
         foreach (var subGroup in group.SubGroup)
         {
-            ConfigureCommands(subGroup);
+            ConfigureCommands(subGroup, GetPrefix(parentTokenizedPrefix, group.Name));
         }
     }
 
-    private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
+    /// <summary>
+    /// Builds a <see cref="CommandInfo"/> suitable for <c>--learn</c> output, converting the
+    /// underscore-separated <paramref name="tokenizedName"/> to a space-separated CLI path.
+    /// </summary>
+    private static CommandInfo BuildLearnCommandInfo(string tokenizedName, IBaseCommand command)
     {
+        var commandDetails = command.GetCommand();
+
+        var optionInfos = commandDetails.Options?
+            .Where(opt => opt is not HelpOption && !string.Equals(opt.Name, LearnOptionName, StringComparison.OrdinalIgnoreCase))
+            .Select(opt => new OptionInfo(
+                name: opt.Name,
+                description: opt.Description ?? string.Empty,
+                required: opt.Required))
+            .ToList();
+
+        return new CommandInfo
+        {
+            Id = command.Id,
+            Name = commandDetails.Name,
+            Description = commandDetails.Description ?? string.Empty,
+            Command = tokenizedName.Replace(Separator, ' '),
+            Options = optionInfos,
+            Metadata = command.Metadata
+        };
+    }
+
+    private void ConfigureCommandHandler(Command command, IBaseCommand implementation, string fullTokenizedKey = "")
+    {
+        // Add --learn as a recognized option on this command (for autocomplete/help display).
+        // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called,
+        // which bypasses System.CommandLine's required-option validation that would otherwise block the action.
+        command.Options.Add(CreateLearnOption());
+
         command.SetAction(async (parseResult, ct) =>
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
@@ -278,6 +341,67 @@ public class CommandFactory : ICommandFactory
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// Handles a <c>--learn</c> request by examining the raw CLI <paramref name="args"/> to determine
+    /// the intended command path and returns a serialized JSON <see cref="CommandResponse"/> describing
+    /// the available commands or the specific command's parameters.
+    /// </summary>
+    /// <remarks>
+    /// This method is intentionally called BEFORE <see cref="ParseResult.InvokeAsync"/> so that
+    /// System.CommandLine's required-option validation cannot block the discovery response.
+    /// </remarks>
+    /// <param name="args">The raw command-line arguments array received by the process.</param>
+    /// <returns>A JSON string ready to write to stdout.</returns>
+    public string GetLearnResponse(string[] args)
+    {
+        // Extract the command path: consume non-option tokens from the start.
+        // Stop at the first token that begins with '-' (an option flag).
+        var commandParts = new List<string>();
+        foreach (var token in args)
+        {
+            if (token.StartsWith("-", StringComparison.Ordinal)) break;
+            commandParts.Add(token);
+        }
+
+        var tokenizedKey = string.Join(Separator, commandParts);
+
+        // Case 1: Exact match in AllCommands → this is a leaf command.
+        if (!string.IsNullOrEmpty(tokenizedKey) && _commandMap.TryGetValue(tokenizedKey, out var leafCommand))
+        {
+            var info = BuildLearnCommandInfo(tokenizedKey, leafCommand);
+            var leafResponse = new CommandResponse
+            {
+                Status = HttpStatusCode.OK,
+                Results = ResponseResult.Create(new List<CommandInfo> { info }, ModelsJsonContext.Default.ListCommandInfo),
+                Duration = 0
+            };
+            return JsonSerializer.Serialize(leafResponse, _srcGenWithOptions.CommandResponse);
+        }
+
+        // Case 2: No exact match → treat as a group prefix and list all commands under it.
+        var prefix = string.IsNullOrEmpty(tokenizedKey) ? "" : tokenizedKey + Separator;
+        var commandsInGroup = _commandMap
+            .Where(kvp => string.IsNullOrEmpty(prefix) || kvp.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var commandInfos = GetVisibleCommands(commandsInGroup)
+            .Select(kvp => BuildLearnCommandInfo(kvp.Key, kvp.Value))
+            .ToList();
+
+        var groupResponse = new CommandResponse
+        {
+            Status = commandInfos.Count > 0 ? HttpStatusCode.OK : HttpStatusCode.NotFound,
+            Results = commandInfos.Count > 0
+                ? ResponseResult.Create(commandInfos, ModelsJsonContext.Default.ListCommandInfo)
+                : null,
+            Message = commandInfos.Count == 0
+                ? $"No commands found for '{string.Join(" ", commandParts)}'. Run 'azmcp --learn' to list all available commands."
+                : string.Empty,
+            Duration = 0
+        };
+        return JsonSerializer.Serialize(groupResponse, _srcGenWithOptions.CommandResponse);
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)

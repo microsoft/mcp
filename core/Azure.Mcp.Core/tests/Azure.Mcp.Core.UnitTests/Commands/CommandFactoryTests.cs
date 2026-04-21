@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -250,6 +252,129 @@ public class CommandFactoryTests
     private static string CallGetPrefix(string currentPrefix, string additional)
     {
         return CommandFactory.GetPrefix(currentPrefix, additional);
+    }
+
+    [Fact]
+    public void LearnOption_ExistsOnGroupCommand_AfterFactoryCreation()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var serviceAreas = new List<IAreaSetup> { area1, area2 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act
+        var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
+        var learnOption = name1Group.Command.Options.FirstOrDefault(o => o.Name == "--learn");
+
+        // Assert
+        Assert.NotNull(learnOption);
+        Assert.IsType<Option<bool>>(learnOption);
+    }
+
+    [Fact]
+    public void LearnOption_ExistsOnLeafCommand_AfterFactoryCreation()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var serviceAreas = new List<IAreaSetup> { area1 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act
+        // Find a leaf command's System.CommandLine Command object via the subgroup structure
+        var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
+        // The leaf command is in the subgroup Commands collection
+        var leafCommand = name1Group.Commands.Values.FirstOrDefault();
+        var leafSystemCommand = leafCommand?.GetCommand();
+        var learnOption = leafSystemCommand?.Options.FirstOrDefault(o => o.Name == "--learn");
+
+        // Assert
+        Assert.NotNull(learnOption);
+        Assert.IsType<Option<bool>>(learnOption);
+    }
+
+    [Fact]
+    public void LearnOption_ExistsOnNestedGroupCommand()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var serviceAreas = new List<IAreaSetup> { area1 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act - verify nested subgroup (subgroup1) also has --learn
+        var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
+        var subgroup1 = name1Group.SubGroup.FirstOrDefault(g => g.Name == "subgroup1");
+        var learnOption = subgroup1?.Command.Options.FirstOrDefault(o => o.Name == "--learn");
+
+        // Assert
+        Assert.NotNull(subgroup1);
+        Assert.NotNull(learnOption);
+        Assert.IsType<Option<bool>>(learnOption);
+    }
+
+    [Fact]
+    public void LearnOption_InvokedOnGroup_OutputsCommandListAsJson()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var serviceAreas = new List<IAreaSetup> { area1 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act - call GetLearnResponse with group-level args (simulates Program.cs intercept)
+        var output = factory.GetLearnResponse(["name1", "--learn"]);
+
+        // Assert - output should be valid JSON matching CommandResponse structure
+        Assert.False(string.IsNullOrEmpty(output));
+
+        using var doc = JsonDocument.Parse(output);
+        var root = doc.RootElement;
+
+        // Should have a 'status' field indicating OK (200)
+        Assert.True(root.TryGetProperty("status", out var status));
+        Assert.Equal(200, status.GetInt32());
+
+        // Should have a 'results' field with a list of commands
+        Assert.True(root.TryGetProperty("results", out var results));
+        Assert.Equal(JsonValueKind.Array, results.ValueKind);
+        Assert.True(results.GetArrayLength() > 0);
+
+        // Each entry should have 'name', 'description', and 'command' fields
+        var firstCommand = results[0];
+        Assert.True(firstCommand.TryGetProperty("name", out _));
+        Assert.True(firstCommand.TryGetProperty("description", out _));
+        Assert.True(firstCommand.TryGetProperty("command", out var commandPath));
+
+        // The command path should start with the group name
+        Assert.StartsWith("name1", commandPath.GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void LearnOption_InvokedOnLeafCommand_OutputsCommandInfoAsJson()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var serviceAreas = new List<IAreaSetup> { area1 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act - call GetLearnResponse with leaf command args (simulates Program.cs intercept)
+        var output = factory.GetLearnResponse(["name1", "directCommand", "--learn"]);
+
+        // Assert - output should be valid JSON
+        Assert.False(string.IsNullOrEmpty(output));
+
+        using var doc = JsonDocument.Parse(output);
+        var root = doc.RootElement;
+
+        Assert.True(root.TryGetProperty("status", out var status));
+        Assert.Equal(200, status.GetInt32());
+
+        Assert.True(root.TryGetProperty("results", out var results));
+        Assert.Equal(JsonValueKind.Array, results.ValueKind);
+        Assert.Equal(1, results.GetArrayLength()); // Single command for leaf
+
+        var commandEntry = results[0];
+        Assert.True(commandEntry.TryGetProperty("name", out var name));
+        Assert.Equal("directCommand", name.GetString());
     }
 
     private static IAreaSetup CreateIAreaSetup(string areaName)

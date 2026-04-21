@@ -14,6 +14,16 @@ public interface ICommandFactory
     IReadOnlyDictionary<string, IBaseCommand> GroupCommands(string[] groupNames);
 
     /// <summary>
+    /// Handles a <c>--learn</c> request by examining the raw CLI <paramref name="args"/> and
+    /// returning a JSON <see cref="CommandResponse"/> that describes the available commands
+    /// or the specific command's parameters.  Must be called BEFORE
+    /// <see cref="ParseResult.InvokeAsync"/> to bypass required-option validation.
+    /// </summary>
+    /// <param name="args">The raw command-line arguments array received by the process.</param>
+    /// <returns>A JSON string ready to write to stdout.</returns>
+    string GetLearnResponse(string[] args);
+
+    /// <summary>
     /// Finds the BaseCommand given its full command name (i.e. storage_account_list).
     /// </summary>
     /// <param name="fullCommandName">Name of the command with prefixes.</param>
