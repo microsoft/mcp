@@ -53,7 +53,7 @@ public static class FunctionAppOptionDefinitions
         $"--{PlanSkuName}"
     )
     {
-        Description = "The explicit App Service plan SKU (e.g., B1, S1, P1v3). Mutually exclusive with --plan-type. If provided and --app-service-plan omitted a dedicated plan using this SKU is created.",
+        Description = "The explicit App Service plan SKU (e.g., B1, S1, P1v3). If both --plan-sku and --plan-type are provided, --plan-sku takes precedence. If provided and --app-service-plan is omitted, a dedicated plan using this SKU is created.",
         Required = false
     };
 
