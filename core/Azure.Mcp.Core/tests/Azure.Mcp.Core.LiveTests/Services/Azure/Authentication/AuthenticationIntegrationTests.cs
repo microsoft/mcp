@@ -6,12 +6,13 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
@@ -33,6 +34,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         services.AddLogging();
         services.AddSingleton(Substitute.For<ICacheService>());
         services.AddSingleton(Substitute.For<ITenantService>());
+        services.AddSingleton(Substitute.For<ILogger<SubscriptionService>>());
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
 
         _serviceProvider = services.BuildServiceProvider();

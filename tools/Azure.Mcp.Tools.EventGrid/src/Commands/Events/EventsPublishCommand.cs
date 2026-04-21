@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Events;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
@@ -102,8 +101,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error publishing events to Event Grid topic. Subscription: {Subscription}, Topic: {TopicName}, Options: {@Options}",
-                options.Subscription, options.TopicName, options);
+                "Error publishing events to Event Grid topic. Subscription: {Subscription}, Topic: {TopicName}.",
+                options.Subscription, options.TopicName);
             HandleException(context, ex);
         }
 

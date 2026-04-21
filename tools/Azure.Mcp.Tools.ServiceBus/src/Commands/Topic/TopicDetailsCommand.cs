@@ -3,7 +3,6 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
@@ -11,14 +10,16 @@ using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : SubscriptionCommand<BaseTopicOptions>
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseTopicOptions>
 {
     private const string CommandTitle = "Get Service Bus Topic Details";
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     public override string Id => "c2487c40-58d0-40f7-98f1-105744865a11";
 
@@ -69,8 +70,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var details = await service.GetTopicDetails(
+            var details = await _serviceBusService.GetTopicDetails(
                 options.Namespace!,
                 options.TopicName!,
                 options.Tenant,

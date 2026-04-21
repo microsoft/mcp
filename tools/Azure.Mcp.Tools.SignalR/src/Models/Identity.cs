@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Models.Identity;
 
 namespace Azure.Mcp.Tools.SignalR.Models;
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Options;

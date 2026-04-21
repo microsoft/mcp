@@ -3,11 +3,11 @@
 
 using System.Net;
 using System.Text.RegularExpressions;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -111,7 +111,7 @@ public sealed class DiskGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting disks. Options: {@Options}", options);
+            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
             HandleException(context, ex);
         }
 

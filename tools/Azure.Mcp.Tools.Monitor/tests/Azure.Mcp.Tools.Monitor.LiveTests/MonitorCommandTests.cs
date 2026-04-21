@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -45,8 +45,8 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
         var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration);
-        var subscriptionService = new SubscriptionService(cacheService, _tenantService);
+        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
+        var subscriptionService = new SubscriptionService(cacheService, _tenantService, NullLogger<SubscriptionService>.Instance);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
         _logger = NullLogger<MonitorService>.Instance;

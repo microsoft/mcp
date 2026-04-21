@@ -4,11 +4,11 @@
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 

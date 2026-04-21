@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ContainerApps.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ContainerApps.Services;
 

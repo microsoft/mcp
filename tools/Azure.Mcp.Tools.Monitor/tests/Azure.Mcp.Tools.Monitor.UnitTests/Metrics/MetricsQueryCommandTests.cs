@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,10 +30,9 @@ public class MetricsQueryCommandTests
         _logger = Substitute.For<ILogger<MetricsQueryCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     #region Constructor and Properties Tests

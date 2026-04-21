@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
@@ -22,7 +22,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
     public override string Description =>
         $"""
 		List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available
-		in the specified {OptionDefinitions.Common.Subscription}. If a resource group is specified, only hostpools in that resource group are returned.
+		in the specified {OptionDefinitions.Common.Subscription.Name}. If a resource group is specified, only hostpools in that resource group are returned.
 		Results include hostpool names and are returned as a JSON array.
 		""";
 
@@ -76,8 +76,8 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing hostpools. Subscription: {Subscription}, Options: {@Options}",
-                options.Subscription, options);
+                "Error listing hostpools. Subscription: {Subscription}.",
+                options.Subscription);
             HandleException(context, ex);
         }
 

@@ -3,13 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
@@ -123,7 +123,7 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Account: {Account}, ResourceGroup: {ResourceGroup}.", Name, options.Account, options.ResourceGroup);
             HandleException(context, ex);
         }
 

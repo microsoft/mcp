@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Resource;
-using Azure.Mcp.Core.Models.ResourceGroup;
-using Azure.Mcp.Core.Options;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Models.Resource;
+using Microsoft.Mcp.Core.Models.ResourceGroup;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 

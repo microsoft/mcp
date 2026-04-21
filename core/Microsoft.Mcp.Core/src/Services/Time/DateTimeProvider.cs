@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Time;
+namespace Microsoft.Mcp.Core.Services.Time;
 
 public sealed class DateTimeProvider : IDateTimeProvider
 {

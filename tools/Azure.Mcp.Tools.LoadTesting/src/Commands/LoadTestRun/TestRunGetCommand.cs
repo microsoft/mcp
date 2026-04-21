@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -51,8 +49,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
 
         command.Validators.Add(commandResult =>
         {
-            var testRunId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-            var testId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.Test.Name);
+            var testRunId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.TestRun);
+            var testId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.Test);
 
             if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
             {

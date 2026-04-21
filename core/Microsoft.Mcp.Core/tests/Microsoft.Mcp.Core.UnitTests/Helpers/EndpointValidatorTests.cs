@@ -22,10 +22,12 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
     [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
 
@@ -40,6 +42,10 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("https://attacker.dssldrf.net", "servicebus", "not a valid servicebus domain")]
+    [InlineData("http://mynamespace.servicebus.windows.net", "servicebus", "must use HTTPS")]
+    [InlineData("https://mynamespace.servicebus.windows.net.evil.com", "servicebus", "not a valid servicebus domain")]
+    [InlineData("https://evil.com/.servicebus.windows.net", "servicebus", "not a valid servicebus domain")]
     public void ValidateAzureServiceEndpoint_InvalidEndpoints_ThrowsSecurityException(
         string endpoint,
         string serviceType,
@@ -47,7 +53,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -60,7 +66,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]
@@ -68,7 +74,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication"));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication", ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]
@@ -79,7 +85,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication"));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication", ArmEnvironment.AzurePublicCloud));
         Assert.Contains("Invalid endpoint format", exception.Message);
     }
 
@@ -92,7 +98,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType, ArmEnvironment.AzurePublicCloud));
         Assert.Contains("Unknown service type", exception.Message);
     }
 
@@ -108,6 +114,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
+    [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -124,6 +131,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
+    [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -213,8 +221,7 @@ public class EndpointValidatorTests
     public void ValidateExternalUrl_NullUrl_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateExternalUrl(null!, new[] { "github.com" }));
+        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidateExternalUrl(null!, ["github.com"]));
     }
 
     #endregion
@@ -403,7 +410,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
         Assert.Null(exception);
     }
 
@@ -417,7 +424,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
     }
 
     [Fact]

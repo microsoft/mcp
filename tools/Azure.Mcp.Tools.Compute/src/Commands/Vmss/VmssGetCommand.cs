@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
@@ -10,6 +9,7 @@ using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
@@ -131,8 +131,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription, options);
+                "Error retrieving VMSS. VmssName: {VmssName}, InstanceId: {InstanceId}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.VmssName, options.InstanceId, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

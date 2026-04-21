@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -11,6 +10,7 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.StorageSync;
 using Azure.ResourceManager.StorageSync.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.StorageSync.Services;
 
@@ -133,10 +133,11 @@ public sealed class StorageSyncService(
         }
 
         var operation = await resourceGroupResource.Value.GetStorageSyncServices().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             storageSyncServiceName,
             content,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully created Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}, Location: {Location}",
@@ -171,7 +172,7 @@ public sealed class StorageSyncService(
         // Update incoming traffic policy
         if (!string.IsNullOrEmpty(incomingTrafficPolicy))
         {
-            patch.IncomingTrafficPolicy = new IncomingTrafficPolicy(incomingTrafficPolicy);
+            patch.IncomingTrafficPolicy = new(incomingTrafficPolicy);
         }
 
         // Update tags
@@ -186,11 +187,11 @@ public sealed class StorageSyncService(
         // Update identity
         if (!string.IsNullOrEmpty(identityType))
         {
-            var identity = new ResourceManager.Models.ManagedServiceIdentity(new(identityType));
-            patch.Identity = identity;
+            patch.Identity = new(new(identityType));
         }
 
-        var operation = await serviceResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var operation = await serviceResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully updated Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
@@ -217,7 +218,8 @@ public sealed class StorageSyncService(
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-        await serviceResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await serviceResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
         _logger.LogInformation(
             "Successfully deleted Storage Sync service. Service: {Service}, ResourceGroup: {ResourceGroup}",
@@ -304,8 +306,8 @@ public sealed class StorageSyncService(
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
 
-        var content = new StorageSyncGroupCreateOrUpdateContent();
-        var operation = await serviceResource.Value.GetStorageSyncGroups().CreateOrUpdateAsync(WaitUntil.Completed, syncGroupName, content, cancellationToken);
+        var operation = await serviceResource.Value.GetStorageSyncGroups().CreateOrUpdateAsync(WaitUntil.Started, syncGroupName, new(), cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully created Sync Group: {SyncGroup}", syncGroupName);
         return SyncGroupDataSchema.FromResource(operation.Value);
@@ -332,7 +334,8 @@ public sealed class StorageSyncService(
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
         var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
 
-        await syncGroupResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await syncGroupResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
         _logger.LogInformation("Successfully deleted Sync Group: {SyncGroup}", syncGroupName);
     }
@@ -452,7 +455,8 @@ public sealed class StorageSyncService(
             StorageAccountTenantId = storageAccountTenantId
         };
         var operation = await syncGroupResource.Value.GetCloudEndpoints().CreateOrUpdateAsync(
-            WaitUntil.Completed, cloudEndpointName, content, cancellationToken);
+            WaitUntil.Started, cloudEndpointName, content, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully created Cloud Endpoint: {Endpoint}", cloudEndpointName);
         return CloudEndpointDataSchema.FromResource(operation.Value);
@@ -482,7 +486,8 @@ public sealed class StorageSyncService(
         var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
         var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
 
-        await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await endpointResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
         _logger.LogInformation("Successfully deleted Cloud Endpoint: {Endpoint}", cloudEndpointName);
     }
@@ -535,7 +540,8 @@ public sealed class StorageSyncService(
             }
         }
 
-        await endpointResource.Value.TriggerChangeDetectionAsync(WaitUntil.Completed, content, cancellationToken);
+        var changeDetectionOperation = await endpointResource.Value.TriggerChangeDetectionAsync(WaitUntil.Started, content, cancellationToken);
+        await WaitForLroCompletionAsync(changeDetectionOperation, cancellationToken);
 
         _logger.LogInformation("Successfully triggered change detection for Cloud Endpoint: {Endpoint}", cloudEndpointName);
     }
@@ -657,11 +663,12 @@ public sealed class StorageSyncService(
         }
         if (!string.IsNullOrEmpty(localCacheMode))
         {
-            content.LocalCacheMode = new LocalCacheMode(localCacheMode);
+            content.LocalCacheMode = new(localCacheMode);
         }
 
         var operation = await syncGroupResource.Value.GetStorageSyncServerEndpoints().CreateOrUpdateAsync(
-            WaitUntil.Completed, serverEndpointName, content, cancellationToken);
+            WaitUntil.Started, serverEndpointName, content, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully created Server Endpoint: {Endpoint}", serverEndpointName);
         return ServerEndpointDataSchema.FromResource(operation.Value);
@@ -713,7 +720,8 @@ public sealed class StorageSyncService(
             patch.LocalCacheMode = new(localCacheMode);
         }
 
-        var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully updated Server Endpoint: {Endpoint}", serverEndpointName);
         return ServerEndpointDataSchema.FromResource(operation.Value);
@@ -743,7 +751,8 @@ public sealed class StorageSyncService(
         var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
         var endpointResource = await syncGroupResource.Value.GetStorageSyncServerEndpoints().GetAsync(serverEndpointName, cancellationToken);
 
-        await endpointResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await endpointResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
         _logger.LogInformation("Successfully deleted Server Endpoint: {Endpoint}", serverEndpointName);
     }
@@ -836,7 +845,8 @@ public sealed class StorageSyncService(
 
         var content = new StorageSyncRegisteredServerCreateOrUpdateContent();
         var operation = await serviceResource.Value.GetStorageSyncRegisteredServers().CreateOrUpdateAsync(
-            WaitUntil.Completed, serverGuid, content, cancellationToken);
+            WaitUntil.Started, serverGuid, content, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully registered Server: {Server}", registeredServerId);
         return RegisteredServerDataSchema.FromResource(operation.Value);
@@ -870,7 +880,8 @@ public sealed class StorageSyncService(
         var patch = new StorageSyncRegisteredServerPatch();
         // Add any patch-specific logic here if needed
 
-        var operation = await serverResource.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
+        var operation = await serverResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully updated Registered Server: {Server}", registeredServerId);
         return RegisteredServerDataSchema.FromResource(operation.Value);
@@ -900,7 +911,8 @@ public sealed class StorageSyncService(
         var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
         var serverResource = await serviceResource.Value.GetStorageSyncRegisteredServers().GetAsync(serverGuid, cancellationToken);
 
-        await serverResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await serverResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
         _logger.LogInformation("Successfully unregistered Server: {Server}", registeredServerId);
     }

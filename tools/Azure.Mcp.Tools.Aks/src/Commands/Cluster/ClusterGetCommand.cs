@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -10,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
@@ -86,8 +85,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger, IAksSer
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.ClusterName, options);
+                "Error getting AKS cluster. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ClusterName: {ClusterName}.",
+                options.Subscription, options.ResourceGroup, options.ClusterName);
             HandleException(context, ex);
         }
 

@@ -60,8 +60,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options);
+                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 

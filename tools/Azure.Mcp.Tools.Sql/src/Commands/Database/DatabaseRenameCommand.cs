@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
@@ -81,8 +81,8 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.Database, options.NewDatabaseName, options.ResourceGroup, options);
+                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.Database, options.NewDatabaseName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

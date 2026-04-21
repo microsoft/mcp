@@ -4,14 +4,9 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Advisor;
 using Azure.Mcp.Tools.Aks;
@@ -51,8 +46,13 @@ using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
 

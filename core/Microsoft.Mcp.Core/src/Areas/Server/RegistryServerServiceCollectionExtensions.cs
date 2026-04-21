@@ -3,10 +3,10 @@
 
 using System.Reflection;
 using Azure.Mcp.Core;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Microsoft.Mcp.Core.Areas.Server;
 

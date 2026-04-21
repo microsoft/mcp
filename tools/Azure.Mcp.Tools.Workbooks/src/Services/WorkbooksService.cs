@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -12,6 +11,7 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
@@ -182,7 +182,8 @@ public class WorkbooksService(
         var workbookName = Guid.NewGuid().ToString();
 
         var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
-        var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData, cancellationToken: cancellationToken);
+        var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Started, workbookName, workbookData, cancellationToken: cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
         var createdWorkbook = createOperation.Value;
 
         _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
@@ -331,7 +332,8 @@ public class WorkbooksService(
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
             ?? throw new InvalidOperationException($"Workbook with ID '{workbookId}' not found");
 
-        await workbookResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await workbookResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
         _logger.LogInformation("Successfully deleted workbook with ID: {WorkbookId}", workbookId);
     }
 

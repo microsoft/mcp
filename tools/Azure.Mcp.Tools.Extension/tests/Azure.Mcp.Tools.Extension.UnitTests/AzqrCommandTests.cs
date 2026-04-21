@@ -5,12 +5,12 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
 using Xunit;
 

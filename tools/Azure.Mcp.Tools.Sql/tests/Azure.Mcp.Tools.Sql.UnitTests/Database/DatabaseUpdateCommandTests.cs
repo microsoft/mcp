@@ -3,14 +3,14 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -432,7 +432,7 @@ public class DatabaseUpdateCommandTests
     public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
     {
         // Arrange - Test minimum scope when subscription comes from environment variable
-        EnvironmentHelpers.SetAzureSubscriptionId("env-sub-id");
+        TestEnvironment.SetAzureSubscriptionId("env-sub-id");
 
         var mockDatabase = new SqlDatabase(
             Name: "testdb",

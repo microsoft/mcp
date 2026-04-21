@@ -64,8 +64,8 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.Server, options.ResourceGroup, options);
+                "Error listing SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}.",
+                options.Server, options.ResourceGroup);
             HandleException(context, ex);
         }
 

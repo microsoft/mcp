@@ -3,8 +3,8 @@
 
 using System.Text;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Extension.Models;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 

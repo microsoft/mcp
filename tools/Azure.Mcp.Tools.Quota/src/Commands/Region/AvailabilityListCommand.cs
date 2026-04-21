@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
@@ -14,10 +13,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Region;
 
-public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger) : SubscriptionCommand<AvailabilityListOptions>()
+public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> logger, IQuotaService quotaService) : SubscriptionCommand<AvailabilityListOptions>()
 {
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
+    private readonly IQuotaService _quotaService = quotaService;
 
     public override string Id => "0b8902f5-3fd4-49d9-b73e-4cea88afdd62";
 
@@ -84,8 +84,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToArray();
 
-            var quotaService = context.GetService<IQuotaService>();
-            List<string> toolResult = await quotaService.GetAvailableRegionsForResourceTypesAsync(
+            List<string> toolResult = await _quotaService.GetAvailableRegionsForResourceTypesAsync(
                 resourceTypes,
                 options.Subscription!,
                 options.CognitiveServiceModelName,

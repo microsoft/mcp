@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
@@ -107,13 +106,13 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
         {
             if (string.IsNullOrEmpty(options.ResourceName))
             {
-                _logger.LogError(ex, "Error listing AI resources. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                    options.Subscription, options.ResourceGroup, options);
+                _logger.LogError(ex, "Error listing AI resources. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
+                    options.Subscription, options.ResourceGroup);
             }
             else
             {
-                _logger.LogError(ex, "Error getting AI resource. ResourceName: {ResourceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.ResourceName, options.ResourceGroup, options.Subscription, options);
+                _logger.LogError(ex, "Error getting AI resource. ResourceName: {ResourceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.ResourceName, options.ResourceGroup, options.Subscription);
             }
             HandleException(context, ex);
         }

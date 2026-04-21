@@ -10,10 +10,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 
-public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
+public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger, IMonitorHealthModelService healthModelService) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
     private const string CommandName = "get";
+    private readonly ILogger<EntityGetHealthCommand> _logger = logger;
+    private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
     public override string Id => "80b23546-a6ac-4f0c-ad70-f51d6dff5543";
 
@@ -42,8 +44,6 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
         Secret = false
     };
 
-    private readonly ILogger<EntityGetHealthCommand> _logger = logger;
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -55,8 +55,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 
         try
         {
-            var service = context.GetService<IMonitorHealthModelService>();
-            var result = await service.GetEntityHealth(
+            var result = await _healthModelService.GetEntityHealth(
                 options.Entity!,
                 options.HealthModelName!,
                 options.ResourceGroup!,

@@ -60,6 +60,36 @@ public sealed class LedgerEntryGetCommandTests
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
 
+    [Theory]
+    [InlineData("attacker.com#")]
+    [InlineData("evil.com/path#")]
+    [InlineData("bad@host")]
+    [InlineData("has space")]
+    [InlineData("has.dot")]
+    [InlineData("name#fragment")]
+    [InlineData("name?query")]
+    [InlineData("host:8080")]
+    [InlineData("1startswithnumber")]
+    [InlineData("-startswithhyphen")]
+    public async Task GetLedgerEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
+    {
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData("attacker.com#")]
+    [InlineData("evil.com/path#")]
+    [InlineData("bad@host")]
+    [InlineData("name#fragment")]
+    public async Task AppendEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
+    {
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
+    }
+
     [Fact]
     public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
     {

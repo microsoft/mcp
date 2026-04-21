@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCommand<IndexGetOptions>()
+public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService) : GlobalCommand<IndexGetOptions>()
 {
     private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
     private readonly ILogger<IndexGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "471292d0-4f6d-49d8-bf29-cbcb7b27dedb";
 
@@ -68,9 +68,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-
-            var indexes = await searchService.GetIndexDetails(
+            var indexes = await _searchService.GetIndexDetails(
                 options.Service!,
                 options.Index,
                 options.RetryPolicy,

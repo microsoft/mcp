@@ -4,7 +4,6 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -13,6 +12,7 @@ using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
@@ -70,12 +70,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             retryPolicy: retryPolicy,
             converter: ConvertToSqlDatabaseModel,
             additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
-            cancellationToken: cancellationToken);
-
-        if (result == null)
-        {
-            throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
-        }
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
 
         return result;
     }
@@ -173,10 +169,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             databaseName,
             databaseData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var database = operation.Value;
 
@@ -277,10 +274,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
 
         var operation = await sqlServerResource.GetSqlDatabases().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             databaseName,
             databaseData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var updatedDatabase = operation.Value;
 
@@ -532,10 +530,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         };
 
         var operation = await sqlServerResource.GetSqlFirewallRules().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             firewallRuleName,
             firewallRuleData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var firewallRule = operation.Value;
 
@@ -578,7 +577,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
 
-            await firewallRuleResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await firewallRuleResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -642,19 +642,19 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             AdministratorLogin = administratorLogin,
             AdministratorLoginPassword = administratorPassword,
             Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
+            // Default to Disabled for secure-by-default behavior
+            PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
+                publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+                    ? ServerNetworkAccessFlag.Enabled
+                    : ServerNetworkAccessFlag.Disabled
         };
 
-        // Default to Disabled for secure-by-default behavior
-        serverData.PublicNetworkAccess = !string.IsNullOrEmpty(publicNetworkAccess) &&
-            publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
-                ? ServerNetworkAccessFlag.Enabled
-                : ServerNetworkAccessFlag.Disabled;
-
         var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             serverName,
             serverData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         var server = operation.Value;
         var tags = server.Data.Tags?.ToDictionary() ?? [];
@@ -773,9 +773,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var serverResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var operation = await serverResource.DeleteAsync(
-                WaitUntil.Completed,
-                cancellationToken);
+            var operation = await serverResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
 
             return true;
         }
@@ -819,7 +818,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
-            await databaseResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await databaseResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",

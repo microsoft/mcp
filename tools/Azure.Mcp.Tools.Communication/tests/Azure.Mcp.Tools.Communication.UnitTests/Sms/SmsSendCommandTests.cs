@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -65,7 +66,7 @@ public class SmsSendCommandTests
             new Models.SmsResult { MessageId = "msg1", To = to.First(), Successful = true, HttpStatusCode = 202 }
         };
         _communicationService.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(results));
 
         var args = new List<string>
@@ -93,7 +94,7 @@ public class SmsSendCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_HandlesError()
     {
         _communicationService.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<Models.SmsResult>>(new InvalidOperationException("fail")));
 
         var args = new[] { "--endpoint", "https://mycomm.communication.azure.com", "--from", "+1", "--to", "+2", "--message", "fail" };

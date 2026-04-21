@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -76,8 +75,8 @@ public sealed class FileSystemListCommand(IManagedLustreService service, ILogger
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup} Options: {@Options}",
-                options.ResourceGroup, options);
+                "Error listing AMLFS file systems. ResourceGroup: {ResourceGroup}.",
+                options.ResourceGroup);
             HandleException(context, ex);
         }
 

@@ -3,21 +3,23 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 
-public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger)
+public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logger, IMonitorService monitorService)
     : SubscriptionCommand<ActivityLogListOptions>
 {
     private const string CommandTitle = "List Activity Logs";
+    private readonly ILogger<ActivityLogListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
     internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 
     public override string Id => "ffc0ed72-0622-4a27-bfd8-6df9b83adce8";
@@ -79,11 +81,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
 
         try
         {
-            // Get the Monitor service from DI
-            var service = context.GetService<IMonitorService>();
-
             // Call service operation with required parameters
-            var results = await service.ListActivityLogs(
+            var results = await _monitorService.ListActivityLogs(
                 options.Subscription!,
                 options.ResourceName!,
                 options.ResourceGroup,
@@ -101,9 +100,9 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         catch (Exception ex)
         {
             // Log error with all relevant context
-            logger.LogError(ex,
-                "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}, Options: {@Options}",
-                options.ResourceName, options.ResourceType, options.Hours, options);
+            _logger.LogError(ex,
+                "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}.",
+                options.ResourceName, options.ResourceType, options.Hours);
             HandleException(context, ex);
         }
 

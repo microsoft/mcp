@@ -4,14 +4,13 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using ModelContextProtocol.Server;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -20,7 +19,6 @@ namespace Azure.Mcp.Tools.Monitor.UnitTests.HealthModels.Entity;
 public class EntityGetHealthCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly McpServer _mcpServer;
     private readonly ILogger<EntityGetHealthCommand> _logger;
     private readonly IMonitorHealthModelService _monitorHealthService;
     private readonly EntityGetHealthCommand _command;
@@ -36,17 +34,11 @@ public class EntityGetHealthCommandTests
 
     public EntityGetHealthCommandTests()
     {
-        _mcpServer = Substitute.For<McpServer>();
         _monitorHealthService = Substitute.For<IMonitorHealthModelService>();
         _logger = Substitute.For<ILogger<EntityGetHealthCommand>>();
 
-        var collection = new ServiceCollection()
-            .AddSingleton(_mcpServer)
-            .AddSingleton(_monitorHealthService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _logger = Substitute.For<ILogger<EntityGetHealthCommand>>();
-        _command = new EntityGetHealthCommand(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new EntityGetHealthCommand(_logger, _monitorHealthService);
         _context = new CommandContext(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -82,7 +81,7 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting snapshot. Options: {@Options}", options);
+            _logger.LogError(ex, "Error deleting snapshot. SnapshotName: {SnapshotName}, FileShareName: {FileShareName}, ResourceGroup: {ResourceGroup}.", options.SnapshotName, options.FileShareName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

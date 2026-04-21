@@ -2,9 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
@@ -13,6 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
@@ -99,8 +97,8 @@ public sealed class ItemCreateCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}. Options: {@Options}",
-                options.ItemName, options.WorkspaceId, options);
+            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}.",
+                options.ItemName, options.WorkspaceId);
             HandleException(context, ex);
         }
 

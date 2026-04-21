@@ -4,15 +4,16 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Administration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -107,7 +108,7 @@ public class AdminSettingsGetCommandTests
         if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
         {
             // Provide subscription via environment variable
-            EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
+            TestEnvironment.SetAzureSubscriptionId(KnownSubscriptionId);
         }
         else if (!args.Contains("--subscription"))
         {

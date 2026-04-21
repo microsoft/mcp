@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.VirtualDesktop.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Services;
-
-using Azure.Mcp.Core.Options;
 
 public interface IVirtualDesktopService
 {

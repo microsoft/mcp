@@ -3,13 +3,13 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -28,7 +28,6 @@ public class ServiceListCommandTests
         _logger = Substitute.For<ILogger<ServiceListCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -45,7 +44,7 @@ public class ServiceListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedServices);
 
-        var command = new ServiceListCommand(_logger);
+        var command = new ServiceListCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--subscription sub123");
         var context = new CommandContext(_serviceProvider);
@@ -75,7 +74,7 @@ public class ServiceListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new ServiceListCommand(_logger);
+        var command = new ServiceListCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--subscription sub123");
         var context = new CommandContext(_serviceProvider);
@@ -108,7 +107,7 @@ public class ServiceListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new ServiceListCommand(_logger);
+        var command = new ServiceListCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--subscription {subscriptionId}");
         var context = new CommandContext(_serviceProvider);

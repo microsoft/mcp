@@ -3,9 +3,6 @@
 
 using System.Net;
 using System.Text;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -15,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
@@ -169,8 +167,8 @@ public sealed class BlobGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}. Options: {@Options}",
-                options.FilePath, options.WorkspaceId, options.ItemId, options);
+            _logger.LogError(ex, "Error retrieving blob {BlobPath} in workspace {WorkspaceId}, item {ItemId}.",
+                options.FilePath, options.WorkspaceId, options.ItemId);
             HandleException(context, ex);
         }
 

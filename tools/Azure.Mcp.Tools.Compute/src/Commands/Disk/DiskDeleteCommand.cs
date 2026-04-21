@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
@@ -92,8 +90,8 @@ public sealed class DiskDeleteCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.DiskName, options.ResourceGroup, options);
+                "Error deleting disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}.",
+                options.DiskName, options.ResourceGroup);
             HandleException(context, ex);
         }
 

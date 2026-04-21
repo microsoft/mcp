@@ -4,7 +4,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 /// <summary>
 /// Extension methods for configuring cache services.
@@ -16,6 +16,7 @@ public static class CachingServiceCollectionExtensions
     /// <see cref="ServiceLifetime.Singleton"/> into the service collection.
     /// </summary>
     /// <param name="services">The service collection.</param>
+    /// <param name="disabled">Whether caching is disabled.</param>
     /// <returns>The service collection.</returns>
     /// <remarks>
     /// <para>
@@ -27,9 +28,16 @@ public static class CachingServiceCollectionExtensions
     /// It can be overridden as needed by specific configurations.
     /// </para>
     /// </remarks>
-    public static IServiceCollection AddSingleUserCliCacheService(this IServiceCollection services)
+    public static IServiceCollection AddSingleUserCliCacheService(this IServiceCollection services, bool disabled)
     {
-        services.TryAddSingleton<ICacheService, SingleUserCliCacheService>();
+        if (disabled)
+        {
+            services.TryAddSingleton<ICacheService, NoopCacheService>();
+        }
+        else
+        {
+            services.TryAddSingleton<ICacheService, SingleUserCliCacheService>();
+        }
         return services;
     }
 
@@ -38,6 +46,7 @@ public static class CachingServiceCollectionExtensions
     /// <see cref="ServiceLifetime.Singleton"/> into the service collection.
     /// </summary>
     /// <param name="services">The service collection.</param>
+    /// <param name="disabled">Whether caching is disabled.</param>
     /// <returns>The service collection.</returns>
     /// <remarks>
     /// <para>
@@ -49,9 +58,16 @@ public static class CachingServiceCollectionExtensions
     /// This is unlike <see cref="AddSingleUserCliCacheService"/>.
     /// </para>
     /// </remarks>
-    public static IServiceCollection AddHttpServiceCacheService(this IServiceCollection services)
+    public static IServiceCollection AddHttpServiceCacheService(this IServiceCollection services, bool disabled)
     {
-        services.AddSingleton<ICacheService, HttpServiceCacheService>();
+        if (disabled)
+        {
+            services.AddSingleton<ICacheService, NoopCacheService>();
+        }
+        else
+        {
+            services.AddSingleton<ICacheService, HttpServiceCacheService>();
+        }
         return services;
     }
 }

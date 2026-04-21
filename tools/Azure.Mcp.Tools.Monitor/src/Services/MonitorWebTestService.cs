@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,6 +10,8 @@ using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -238,11 +238,12 @@ public class MonitorWebTestService(
 
         var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
             .CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 resourceName,
                 webTestData,
                 cancellationToken
             ).ConfigureAwait(false);
+        await WaitForLroCompletionAsync(webTestArmResource, cancellationToken);
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
@@ -339,7 +340,7 @@ public class MonitorWebTestService(
             Description = description ?? currentData.Description,
             Request = new()
             {
-                RequestUri = requestUrl != null ? new Uri(requestUrl) : currentData.Request?.RequestUri,
+                RequestUri = requestUrl != null ? new(requestUrl) : currentData.Request?.RequestUri,
                 HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
                 RequestBody = requestBody ?? currentData.Request?.RequestBody,
                 FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
@@ -405,11 +406,12 @@ public class MonitorWebTestService(
 
         var webTestArmResource = await resourceGroupResource.GetApplicationInsightsWebTests()
             .CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 resourceName,
                 webTestData,
                 cancellationToken
             ).ConfigureAwait(false);
+        await WaitForLroCompletionAsync(webTestArmResource, cancellationToken);
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
@@ -497,5 +499,5 @@ public class MonitorWebTestService(
         return hiddenLinkMatch?.Groups[1].Value;
     }
 
-    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = new("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private readonly Regex AppInsightsComponentHiddenLinkTagRegex = RegexHelper.CreateRegex("^hidden-link:(\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/microsoft\\.insights\\/components\\/[^\\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 }

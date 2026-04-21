@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Models.Identity;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.SignalR;
 using Azure.ResourceManager.SignalR.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
@@ -47,8 +48,13 @@ public sealed class SignalRService(
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {
-            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
-            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch
+            {
+                (true, true) => subscription,
+                (false, true) => CacheKeyBuilder.Build(subscription, resourceGroup),
+                (true, false) => CacheKeyBuilder.Build(subscription, tenant),
+                (false, false) => CacheKeyBuilder.Build(subscription, tenant, resourceGroup)
+            };
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
             {
@@ -76,16 +82,16 @@ public sealed class SignalRService(
                 {
                     runtimes.Add(ConvertToRuntimeModel(runtime));
                 }
-
-                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
             }
+
+            await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
         }
         else
         {
             ValidateRequiredParameters((nameof(signalRName), signalRName), (nameof(resourceGroup), resourceGroup));
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{subscription}_{resourceGroup}_{signalRName}"
-                : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";
+                ? CacheKeyBuilder.Build(subscription, resourceGroup!, signalRName)
+                : CacheKeyBuilder.Build(subscription, tenant, resourceGroup!, signalRName);
 
             var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
@@ -106,7 +112,7 @@ public sealed class SignalRService(
             }
 
             runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
-            await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
+            await _cacheService.SetAsync(CacheGroup, cacheKey, runtimes, s_cacheDuration, cancellationToken);
         }
 
         return runtimes;

@@ -13,7 +13,8 @@ namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 /// </summary>
 /// <param name="output"></param>
 /// <param name="fixture"></param>
-internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     public TestMode DesiredMode { get; set; } = TestMode.Record;
 
@@ -37,13 +38,7 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
         return ValueTask.CompletedTask;
     }
 
-    public void ResetVariables()
-    {
-        TestVariables.Clear();
-    }
+    public void ResetVariables() => TestVariables.Clear();
 
-    public string GetRecordingId()
-    {
-        return RecordingId;
-    }
+    public string GetRecordingId() => RecordingId;
 }

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;

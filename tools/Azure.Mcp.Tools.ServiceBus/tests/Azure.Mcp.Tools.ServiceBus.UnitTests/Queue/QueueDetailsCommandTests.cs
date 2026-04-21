@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ServiceBus.Commands;
 using Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 using Azure.Mcp.Tools.ServiceBus.Models;
@@ -13,6 +12,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,10 +38,8 @@ public class QueueDetailsCommandTests
         _serviceBusService = Substitute.For<IServiceBusService>();
         _logger = Substitute.For<ILogger<QueueDetailsCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_serviceBusService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
+        _command = new(_logger, _serviceBusService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -3,13 +3,12 @@
 
 using System.Net;
 using Azure.Identity;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -103,8 +102,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating or updating event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
+                "Error creating or updating event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription);
             HandleException(context, ex);
         }
 

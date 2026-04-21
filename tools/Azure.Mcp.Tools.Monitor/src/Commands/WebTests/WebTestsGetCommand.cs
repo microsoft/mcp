@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
@@ -15,9 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
+public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
 {
     private const string CommandTitle = "Get or list web tests";
+    private readonly ILogger<WebTestsGetCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
 
@@ -42,8 +43,6 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         Secret = false
     };
 
-    private readonly ILogger<WebTestsGetCommand> _logger = logger;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -52,8 +51,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 
         command.Validators.Add(commandResult =>
         {
-            var webTestName = commandResult.GetValueWithoutDefault<string>(MonitorOptionDefinitions.WebTest.WebTestResourceName.Name);
-            var resourceGroup = commandResult.GetValueWithoutDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var webTestName = commandResult.GetValueWithoutDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName);
+            var resourceGroup = commandResult.GetValueWithoutDefault(OptionDefinitions.Common.ResourceGroup);
 
             if (!string.IsNullOrEmpty(webTestName) && string.IsNullOrEmpty(resourceGroup))
             {
@@ -80,12 +79,10 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // If --webtest-resource is provided, get a specific web test
             if (!string.IsNullOrEmpty(options.WebTestName))
             {
-                var webTest = await monitorWebTestService.GetWebTest(
+                var webTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.WebTestName!,
@@ -107,8 +104,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
             {
                 // Otherwise, list web tests
                 var webTests = options.ResourceGroup == null
-                    ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
-                    : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
+                    ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
+                    : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandListResult);
             }

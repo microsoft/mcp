@@ -4,12 +4,12 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -38,10 +38,9 @@ public sealed class ResourceLogQueryCommandTests
         _logger = Substitute.For<ILogger<ResourceLogQueryCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_monitorService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _monitorService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -3,13 +3,12 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 

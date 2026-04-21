@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
 using Azure.ResourceManager.ContainerService.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
@@ -41,15 +41,13 @@ public sealed class AksService(
         if (string.IsNullOrEmpty(clusterName))
         {
             // Create cache key
-            var cacheKey = $"{AksClustersCacheKey}_{subscription}";
-            if (!string.IsNullOrEmpty(resourceGroup))
+            var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch
             {
-                cacheKey += $"_{resourceGroup}";
-            }
-            if (!string.IsNullOrEmpty(tenant))
-            {
-                cacheKey += $"_{tenant}";
-            }
+                (true, true) => CacheKeyBuilder.Build(AksClustersCacheKey, subscription),
+                (false, true) => CacheKeyBuilder.Build(AksClustersCacheKey, subscription, resourceGroup),
+                (true, false) => CacheKeyBuilder.Build(AksClustersCacheKey, subscription, tenant),
+                (false, false) => CacheKeyBuilder.Build(AksClustersCacheKey, subscription, resourceGroup, tenant)
+            };
 
             // Try to get from cache first
             var cachedClusters = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
@@ -100,8 +98,8 @@ public sealed class AksService(
 
             // Create cache key
             var cacheKey = string.IsNullOrEmpty(tenant)
-            ? $"cluster_{subscription}_{resourceGroup}_{clusterName}"
-            : $"cluster_{subscription}_{resourceGroup}_{clusterName}_{tenant}";
+                ? CacheKeyBuilder.Build("cluster", subscription, resourceGroup!, clusterName)
+                : CacheKeyBuilder.Build("cluster", subscription, resourceGroup!, clusterName, tenant);
 
             // Try to get from cache first
             var cachedCluster = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
@@ -153,8 +151,8 @@ public sealed class AksService(
         {
             // Create cache key
             var cacheKey = string.IsNullOrEmpty(tenant)
-                ? $"{AksNodePoolsCacheKey}_{subscription}_{resourceGroup}_{clusterName}"
-                : $"{AksNodePoolsCacheKey}_{subscription}_{resourceGroup}_{clusterName}_{tenant}";
+                ? CacheKeyBuilder.Build(AksNodePoolsCacheKey, subscription, resourceGroup, clusterName)
+                : CacheKeyBuilder.Build(AksNodePoolsCacheKey, subscription, resourceGroup, clusterName, tenant);
 
             // Try to get from cache first
             var cachedNodePools = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
@@ -200,8 +198,8 @@ public sealed class AksService(
         {
             // Create cache key
             var cacheKey = string.IsNullOrEmpty(tenant)
-            ? $"nodepool_{subscription}_{resourceGroup}_{clusterName}_{nodePoolName}"
-            : $"nodepool_{subscription}_{resourceGroup}_{clusterName}_{nodePoolName}_{tenant}";
+                ? CacheKeyBuilder.Build("nodepool", subscription, resourceGroup, clusterName, nodePoolName)
+                : CacheKeyBuilder.Build("nodepool", subscription, resourceGroup, clusterName, nodePoolName, tenant);
 
             // Try to get from cache first
             var cachedNodePool = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);

@@ -10,6 +10,8 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
@@ -71,13 +73,14 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         if (!string.IsNullOrEmpty(reg.LoginServer))
         {
             var acrEndpointString = $"https://{reg.LoginServer}";
-            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr");
+            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", TenantService.CloudConfiguration.ArmEnvironment);
         }
 
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new ContainerRegistryClientOptions()), retryPolicy);
         options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Audience = GetAcrAudience();
         var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
@@ -144,5 +147,16 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
             containerRegistryData.Properties?.LoginServer,
             containerRegistryData.Sku?.Name,
             containerRegistryData.Sku?.Tier);
+    }
+
+    private ContainerRegistryAudience GetAcrAudience()
+    {
+        return TenantService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => ContainerRegistryAudience.AzureResourceManagerPublicCloud,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => ContainerRegistryAudience.AzureResourceManagerChina,
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => ContainerRegistryAudience.AzureResourceManagerGovernment,
+            _ => ContainerRegistryAudience.AzureResourceManagerPublicCloud
+        };
     }
 }

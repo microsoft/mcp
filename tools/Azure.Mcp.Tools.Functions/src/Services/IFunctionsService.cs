@@ -13,5 +13,5 @@ public interface IFunctionsService
 
     Task<TemplateListResult> GetTemplateListAsync(string language, CancellationToken cancellationToken = default);
 
-    Task<FunctionTemplateResult> GetFunctionTemplateAsync(string language, string template, string? runtimeVersion, CancellationToken cancellationToken = default);
+    Task<FunctionTemplateResult> GetFunctionTemplateAsync(string language, string template, string? runtimeVersion, TemplateOutput output = TemplateOutput.New, CancellationToken cancellationToken = default);
 }

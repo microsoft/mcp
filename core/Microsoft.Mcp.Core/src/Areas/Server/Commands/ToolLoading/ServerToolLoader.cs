@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,7 +16,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrategy, IOptions<ToolLoaderOptions> options, ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -253,6 +254,47 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 parameters = samplingResult.parameters;
             }
 
+            // Verify the resolved command (which may have been updated by sampling)
+            // exists and is permitted under current mode restrictions.
+            var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+
+            if (resolvedTool == null)
+            {
+                // Sampling resolved to a command that doesn't exist at all.
+                return await InvokeToolLearn(request, intent, tool, cancellationToken);
+            }
+
+            if ((options?.Value?.ReadOnly ?? false) && resolvedTool.Annotations?.ReadOnlyHint != true)
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                        }
+                    ],
+                    IsError = true,
+                };
+            }
+
+            if ((options?.Value?.IsHttpMode ?? false) && HasLocalRequiredHint(resolvedTool))
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                        }
+                    ],
+                    IsError = true,
+                };
+            }
+
             // At this point we should always have a valid command (child tool) call to invoke.
             Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
                 .SetTag(TagName.ToolName, command);
@@ -369,20 +411,15 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
         {
             return cachedList;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Params?.Name))
-        {
-            throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
-        }
-
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(request.Params.Name, clientOptions, cancellationToken);
+        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
         if (client == null)
         {
             return [];
@@ -397,12 +434,19 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         var list = listTools
             .Select(t => t.ProtocolTool)
+            .ToList();
+
+        _cachedAllToolLists[tool] = list;
+        return list;
+    }
+
+    internal async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
+    {
+        var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
+        return allTools
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
             .Where(t => !(options?.Value?.IsHttpMode ?? false) || !HasLocalRequiredHint(t))
             .ToList();
-
-        _cachedToolLists[tool] = list;
-        return list;
     }
 
     private static bool HasLocalRequiredHint(Tool tool)
@@ -417,7 +461,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         var listTools = await GetChildToolListAsync(request, tool, cancellationToken);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
+        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IEnumerableTool);
     }
 
     private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
@@ -463,7 +507,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         JsonElement toolParams = GetParametersJsonElement(request);
         var toolParamsJson = toolParams.GetRawText();
-        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.ListTool);
+        var availableToolsJson = JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.IEnumerableTool);
 
         var samplingRequest = new CreateMessageRequestParams
         {
@@ -539,7 +583,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// </summary>
     protected override async ValueTask DisposeAsyncCore()
     {
-        _cachedToolLists.Clear();
+        _cachedAllToolLists.Clear();
         await ValueTask.CompletedTask;
     }
 }

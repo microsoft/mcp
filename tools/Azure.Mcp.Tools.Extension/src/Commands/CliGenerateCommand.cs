@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
@@ -93,7 +92,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. CliType: {CliType}.", Name, options.CliType);
             HandleException(context, ex);
         }
 

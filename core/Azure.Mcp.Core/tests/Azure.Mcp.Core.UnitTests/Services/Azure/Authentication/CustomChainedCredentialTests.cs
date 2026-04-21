@@ -445,8 +445,8 @@ public class CustomChainedCredentialTests
     /// </summary>
     private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
     {
-        var assembly = typeof(global::Azure.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
-        var customChainedCredentialType = assembly.GetType("Azure.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
 
         Assert.NotNull(customChainedCredentialType);
 
@@ -470,8 +470,8 @@ public class CustomChainedCredentialTests
 
     private static Type GetCustomChainedCredentialType()
     {
-        var assembly = typeof(global::Azure.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
-        var type = assembly.GetType("Azure.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
+        var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
+        var type = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
         Assert.NotNull(type);
         return type;
     }

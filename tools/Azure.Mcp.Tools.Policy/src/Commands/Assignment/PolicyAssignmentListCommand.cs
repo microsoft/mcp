@@ -2,23 +2,24 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Options;
 using Azure.Mcp.Tools.Policy.Options.Assignment;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
-public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger)
+public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService)
     : SubscriptionCommand<PolicyAssignmentListOptions>
 {
     private const string CommandTitle = "List Policy Assignments";
     private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
+    private readonly IPolicyService _policyService = policyService;
 
     public override string Id => "b7c4d3e2-0f1a-4b8c-9d6e-5a7b8c9d0e1f";
 
@@ -69,8 +70,7 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
 
         try
         {
-            var policyService = context.GetService<IPolicyService>();
-            var assignments = await policyService.ListPolicyAssignmentsAsync(
+            var assignments = await _policyService.ListPolicyAssignmentsAsync(
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
@@ -84,8 +84,8 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'. Options: {@Options}",
-                options.Subscription, options.Scope ?? "all", options);
+                "Error listing policy assignments in subscription '{Subscription}' with scope '{Scope}'.",
+                options.Subscription, options.Scope ?? "all");
             HandleException(context, ex);
         }
 

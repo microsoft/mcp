@@ -10,11 +10,11 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
@@ -303,15 +303,26 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // Registering a few common sanitizers for values that we know will be universally present and cleaned up
         if (EnableDefaultSanitizerAdditions)
         {
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
             }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.SubscriptionId,
                 Value = EmptyGuid,
+            }));
+            // Sanitize Resource Group name from the URI. This is needed as there is another default GeneralRegexSanitizer for
+            // Settings.ResourceBaseName. But there are two issues we hit with that:
+            // 1. Resource group names often have other characters added to it, like prepending or appending for uniqueness.
+            // 2. In playback, Settings.ResourceBaseName and Settings.ResourceGroupName are both configured to be 'Sanitized',
+            //    so it won't find the right string.
+            UriRegexSanitizers.Add(new(new()
+            {
+                Value = "Sanitized",
+                Regex = "/resource[gG]roups/(?<rgname>[\\w\\-.()]{1,90})(?=/|\\?|$)",
+                GroupForReplace = "rgname"
             }));
         }
     }
@@ -331,13 +342,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task ApplySanitizersAsync()
     {
-        List<SanitizerAddition> sanitizers = new();
-
-        sanitizers.AddRange(GeneralRegexSanitizers);
-        sanitizers.AddRange(BodyRegexSanitizers);
-        sanitizers.AddRange(HeaderRegexSanitizers);
-        sanitizers.AddRange(UriRegexSanitizers);
-        sanitizers.AddRange(BodyKeySanitizers);
+        List<SanitizerAddition> sanitizers =
+        [
+            .. GeneralRegexSanitizers,
+            .. BodyRegexSanitizers,
+            .. HeaderRegexSanitizers,
+            .. UriRegexSanitizers,
+            .. BodyKeySanitizers,
+        ];
 
         if (sanitizers.Count > 0)
         {
@@ -482,4 +494,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
     }
+
+    /// <summary>
+    /// Determines the polling interval to use for long-running operations. During live testing (Live or Record) the
+    /// poll interval will use liveMilliseconds for the interval. During playback testing a static 1 millisecond poll
+    /// interval is used.
+    /// </summary>
+    /// <param name="liveMilliseconds">Polling interval in milliseconds for live tests.</param>
+    /// <returns>The polling interval TimeSpan.</returns>
+    public TimeSpan PollInterval(long liveMilliseconds)
+        => TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(1) : TimeSpan.FromMilliseconds(liveMilliseconds);
 }

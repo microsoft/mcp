@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
@@ -60,7 +60,10 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
         try
         {
             List<JsonElement> results;
-            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {options.Limit}";
+            // Validate limit is within safe bounds to prevent resource abuse
+            var safeLimit = Math.Clamp(options.Limit ?? 10, 1, 10000);
+
+            var query = $"{KustoService.EscapeKqlIdentifier(options.Table!)} | sample {safeLimit}";
 
             if (UseClusterUri(options))
             {

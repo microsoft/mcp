@@ -4,8 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
@@ -16,9 +14,7 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 

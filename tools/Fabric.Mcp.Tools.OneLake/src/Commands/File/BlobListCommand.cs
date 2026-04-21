@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
@@ -138,8 +136,8 @@ public sealed class BlobListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}. Options: {@Options}",
-                options.WorkspaceId, options.ItemId, options.Path, options);
+            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}.",
+                options.WorkspaceId, options.ItemId, options.Path);
             HandleException(context, ex);
         }
 

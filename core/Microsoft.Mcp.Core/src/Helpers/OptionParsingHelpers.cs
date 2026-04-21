@@ -1,4 +1,7 @@
-namespace Azure.Mcp.Core.Helpers;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Microsoft.Mcp.Core.Helpers;
 
 public static class OptionParsingHelpers
 {

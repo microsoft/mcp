@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Identity;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -16,10 +14,16 @@ using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.RedisEnterprise;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Identity;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(ISubscriptionService _subscriptionService, ITenantService _tenantService)
+public class RedisService(
+    ISubscriptionService _subscriptionService,
+    ITenantService _tenantService,
+    ILogger<RedisService> _logger)
     : BaseAzureService(_tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
@@ -38,12 +42,15 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
 
         try
         {
-            resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, cancellationToken));
-            resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, cancellationToken));
+            resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, _logger, cancellationToken));
+            resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, _logger, cancellationToken));
             await Task.WhenAll(resourcesTasks);
         }
-        catch (Exception)
-        { }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Log individual task failures; partial results are still collected in the finally block.
+            _logger.LogWarning(ex, "One or more Redis resource listing tasks failed.");
+        }
         finally
         {
             foreach (var resourceTask in resourcesTasks)
@@ -148,7 +155,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         };
     }
 
-    private static async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, ILogger<RedisService> logger, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -182,7 +189,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                     });
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Access policy assignments may not be available for all cache types; continue with partial data.
+                logger.LogWarning(ex, "Failed to retrieve access policy assignments for {ResourceName}.", acrResource.Data.Name);
+            }
 
             resources.Add(new()
             {
@@ -252,7 +263,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         return resources;
     }
 
-    private static async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, ILogger<RedisService> logger, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
@@ -301,7 +312,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                     });
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Database listing may fail for some enterprise clusters; continue with partial data.
+                logger.LogWarning(ex, "Failed to retrieve databases for {ResourceName}.", resource.Name);
+            }
 
             resources.Add(new()
             {

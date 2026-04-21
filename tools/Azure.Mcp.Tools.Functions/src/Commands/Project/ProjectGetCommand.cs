@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
@@ -45,7 +44,7 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger) : BaseC
 
         command.Validators.Add(commandResult =>
         {
-            var language = commandResult.GetValueWithoutDefault<string>(FunctionsOptionDefinitions.Language.Name);
+            var language = commandResult.GetValueWithoutDefault(FunctionsOptionDefinitions.Language);
             if (string.IsNullOrWhiteSpace(language))
             {
                 commandResult.AddError("The --language parameter is required.");

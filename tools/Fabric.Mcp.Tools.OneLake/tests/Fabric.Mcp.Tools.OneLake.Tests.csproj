@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
-    <Using Include="Azure.Mcp.Core.Commands" />
+    <Using Include="Microsoft.Mcp.Core.Commands" />
   </ItemGroup>
 
 </Project>

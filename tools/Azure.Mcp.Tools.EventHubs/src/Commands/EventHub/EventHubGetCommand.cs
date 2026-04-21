@@ -3,13 +3,12 @@
 
 using System.Net;
 using Azure.Identity;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -110,14 +109,14 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
             if (!string.IsNullOrEmpty(options.EventHub))
             {
                 _logger.LogError(ex,
-                    "Error listing event hubs. Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.Namespace, options.ResourceGroup, options.Subscription, options);
+                    "Error listing event hubs. Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.Namespace, options.ResourceGroup, options.Subscription);
             }
             else
             {
                 _logger.LogError(ex,
-                    "Error getting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
+                    "Error getting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription);
             }
             HandleException(context, ex);
         }

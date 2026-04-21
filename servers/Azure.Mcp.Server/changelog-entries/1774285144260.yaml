@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Added file path validation and canonicalization for Speech STT and TTS commands"

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
@@ -90,7 +89,7 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calculating AMLFS subnet size. Options: {@Options}", options);
+            _logger.LogError(ex, "Error calculating AMLFS subnet size. Subscription: {Subscription}, Sku: {Sku}.", options.Subscription, options.Sku);
             HandleException(context, ex);
         }
         return context.Response;
