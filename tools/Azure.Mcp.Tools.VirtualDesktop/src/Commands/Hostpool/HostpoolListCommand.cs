@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
-public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : BaseVirtualDesktopCommand<HostpoolListOptions>
+public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions>
 {
     private const string CommandTitle = "List hostpools";
     private readonly ILogger<HostpoolListCommand> _logger = logger;
+    private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
 
     public override string Id => "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed";
 
@@ -49,13 +50,11 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
 
         try
         {
-            var virtualDesktopService = context.GetService<IVirtualDesktopService>();
-
             IReadOnlyList<Models.HostPool> hostpools;
 
             if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
-                hostpools = await virtualDesktopService.ListHostpoolsByResourceGroupAsync(
+                hostpools = await _virtualDesktopService.ListHostpoolsByResourceGroupAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
@@ -64,7 +63,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
             }
             else
             {
-                hostpools = await virtualDesktopService.ListHostpoolsAsync(
+                hostpools = await _virtualDesktopService.ListHostpoolsAsync(
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
