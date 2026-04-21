@@ -23,33 +23,35 @@ public static class FunctionAppPlanProvisioner
         string? planName,
         string functionAppName,
         string location,
-        CreateOptions options)
+        CreateOptions options,
+        CancellationToken cancellationToken = default)
     {
         var effectivePlanName = planName ?? $"{functionAppName}-plan";
         var plans = rg.GetAppServicePlans();
 
-        if (await plans.ExistsAsync(effectivePlanName))
+        if (await plans.ExistsAsync(effectivePlanName, cancellationToken))
         {
-            var existing = await plans.GetAsync(effectivePlanName);
+            var existing = await plans.GetAsync(effectivePlanName, cancellationToken);
             ValidateExistingPlan(existing, effectivePlanName, options);
             return existing;
         }
 
-        return await CreatePlan(rg, effectivePlanName, location, options);
+        return await CreatePlan(rg, effectivePlanName, location, options, cancellationToken);
     }
 
     public static async Task<AppServicePlanResource> CreatePlan(
         ResourceGroupResource rg,
         string planName,
         string location,
-        CreateOptions options)
+        CreateOptions options,
+        CancellationToken cancellationToken = default)
     {
         var sku = !string.IsNullOrWhiteSpace(options.ExplicitSku)
             ? new AppServiceSkuDescription { Name = options.ExplicitSku!.Trim(), Tier = FunctionAppValidation.InferTier(options.ExplicitSku!) }
             : GetDefaultSku(options.HostingKind);
 
         var data = new AppServicePlanData(location) { Sku = sku, IsReserved = options.RequiresLinux };
-        var op = await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, planName, data);
+        var op = await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, planName, data, cancellationToken);
         return op.Value;
     }
 
