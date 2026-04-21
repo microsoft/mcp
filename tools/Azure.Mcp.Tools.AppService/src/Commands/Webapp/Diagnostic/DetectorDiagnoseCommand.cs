@@ -24,7 +24,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     public override string Description =>
         """
         Diagnoses an App Service Web App with the specified detector, returning the diagnostic results of the detector.
-        Use the detector's internal ID (the 'id' field from the diagnostic list output) for the detector-name parameter, not the display name.
+        Use the detector's internal ID (from the 'id' field in 'azmcp appservice webapp diagnostic list' output) for the detector-name parameter, not the display name.
         """;
 
     public override string Title => CommandTitle;
