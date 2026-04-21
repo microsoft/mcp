@@ -43,7 +43,7 @@ public sealed class FunctionAppCreateContainerAppCommand(ILogger<FunctionAppCrea
     - container-apps-environment: Existing Container Apps managed environment name. When omitted one is created named '<function-app>-env'.
 
     Automatic resources & defaults:
-    - Storage account: Always created when not supplied (Standard_LRS, HTTPS only, blob public access disabled). Connection string injected as AzureWebJobsStorage.
+    - Storage account: Always created when not supplied (Standard_LRS, HTTPS only, blob public access disabled). With the default managed-identity auth mode, `AzureWebJobsStorage__accountName` + `AzureWebJobsStorage__credential=managedidentity` env vars are set on the container app; with --storage-auth-mode connection-string, `AzureWebJobsStorage` is set with the account key.
     - Container Apps managed environment: Created when not supplied.
     - Container image: Official Azure Functions image for the runtime (mcr.microsoft.com/azure-functions/<runtime>:4).
     - Operating system: Always Linux.
@@ -51,11 +51,11 @@ public sealed class FunctionAppCreateContainerAppCommand(ILogger<FunctionAppCrea
         * python -> 3.12
         * node -> 22
         * dotnet / dotnet-isolated -> 8.0
-        * java -> 17.0
+        * java -> 17
         * powershell -> 7.4
     - FUNCTIONS_EXTENSION_VERSION: Always ~4.
 
-    Returns: functionApp object (name, resourceGroup, location, plan, state, defaultHostName, tags)
+    Returns: functionApp object (name, resourceGroup, location, plan, state, defaultHostName, operatingSystem, tags)
     """;
 
     public override string Title => CommandTitle;
