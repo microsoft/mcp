@@ -115,6 +115,16 @@ public sealed class PromptParserTests : IDisposable
 
         Assert.Single(result);
         Assert.Equal(string.Empty, result[0].Section);
+    }
+
+    [Fact]
+    public void ParseFile_RowBeforeAnySection_DerivesNamespaceFromToolPrefix()
+    {
+        File.WriteAllText(_tempFile, "| my_tool | do something |\n");
+
+        var result = PromptParser.ParseFile(_tempFile);
+
+        Assert.Single(result);
         Assert.Equal("my", result[0].Namespace);
     }
 
@@ -167,6 +177,16 @@ public sealed class PromptParserTests : IDisposable
         var result = PromptParser.ParseNamespaces(_tempFile);
 
         Assert.Empty(result);
+    }
+
+    [Theory]
+    [InlineData("get_azure_bestpractices_get", "get_azure_bestpractices")]
+    [InlineData("get_azure_bestpractices_ai_app", "get_azure_bestpractices")]
+    [InlineData("storage_account_get", "storage")]
+    [InlineData("redis", "redis")]
+    public void GetNamespace_ReturnsExpected(string tool, string expected)
+    {
+        Assert.Equal(expected, PromptParser.GetNamespace(tool));
     }
 
     [Fact]
