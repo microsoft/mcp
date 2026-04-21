@@ -6,8 +6,6 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FunctionApp.Models;
-using Azure.ResourceManager.AppContainers;
-using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
@@ -34,30 +32,11 @@ public sealed class FunctionAppService(
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ILogger<FunctionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    private static class ContainerAppsDefaults
-    {
-        public const double CpuCores = 0.25;
-        public const string Memory = "0.5Gi";
-        public const int IngressPort = 80;
-        public const bool ExternalIngress = true;
-    }
-
     private static class FlexConsumptionDefaults
     {
         public const int InstanceMemoryMB = 2048;
         public const int MaximumInstanceCount = 100;
     }
-
-    internal static string GetContainerImage(string runtime) => runtime switch
-    {
-        "dotnet" => "mcr.microsoft.com/azure-functions/dotnet:4",
-        "dotnet-isolated" => "mcr.microsoft.com/azure-functions/dotnet-isolated:4",
-        "node" => "mcr.microsoft.com/azure-functions/node:4",
-        "python" => "mcr.microsoft.com/azure-functions/python:4",
-        "java" => "mcr.microsoft.com/azure-functions/java:4",
-        "powershell" => "mcr.microsoft.com/azure-functions/powershell:4",
-        _ => "mcr.microsoft.com/azure-functions/dotnet-isolated:4"
-    };
 
     public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
@@ -220,7 +199,7 @@ public sealed class FunctionAppService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
 
-        return await ContainerAppsStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, cancellationToken);
+        return await FunctionAppContainerAppStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, cancellationToken);
     }
 
     internal static SiteConfigProperties? BuildSiteConfig(bool isLinux, CreateOptions options)
@@ -377,79 +356,6 @@ public sealed class FunctionAppService(
         return op.Value;
     }
 
-    private static async Task<ContainerAppResource> EnsureMinimalContainerApp(
-        ResourceGroupResource rg,
-        string name,
-        string location,
-        string runtime,
-        StorageProvisioningResult storage,
-        bool useManagedIdentity,
-        string? containerAppsEnvironmentName,
-        CancellationToken cancellationToken)
-    {
-        var envs = rg.GetContainerAppManagedEnvironments();
-        var envName = containerAppsEnvironmentName ?? $"{name}-env";
-
-        ContainerAppManagedEnvironmentResource env;
-        if (await envs.ExistsAsync(envName, cancellationToken))
-        {
-            env = await envs.GetAsync(envName, cancellationToken);
-        }
-        else
-        {
-            var envData = new ContainerAppManagedEnvironmentData(location);
-            env = (await envs.CreateOrUpdateAsync(WaitUntil.Completed, envName, envData, cancellationToken)).Value;
-        }
-
-        var apps = rg.GetContainerApps();
-        var image = GetContainerImage(runtime);
-        var container = new ContainerAppContainer
-        {
-            Name = name,
-            Image = image,
-            Resources = new AppContainerResources
-            {
-                Cpu = ContainerAppsDefaults.CpuCores,
-                Memory = ContainerAppsDefaults.Memory
-            },
-            Env =
-            {
-                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_WORKER_RUNTIME", Value = runtime },
-                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" }
-            }
-        };
-        if (useManagedIdentity)
-        {
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__accountName", Value = storage.AccountName });
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__credential", Value = "managedidentity" });
-        }
-        else
-        {
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage", Value = storage.ConnectionString });
-        }
-
-        var data = new ContainerAppData(location)
-        {
-            ManagedEnvironmentId = env.Id,
-            Configuration = new ContainerAppConfiguration
-            {
-                Ingress = new ContainerAppIngressConfiguration
-                {
-                    External = ContainerAppsDefaults.ExternalIngress,
-                    TargetPort = ContainerAppsDefaults.IngressPort
-                }
-            },
-            Template = new ContainerAppTemplate
-            {
-                Containers = { container }
-            }
-        };
-        if (useManagedIdentity)
-            data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
-
-        return (await apps.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken)).Value;
-    }
-
     internal static FunctionAppInfo ConvertToFunctionAppModel(WebSiteResource siteResource)
     {
         var data = siteResource.Data;
@@ -486,30 +392,4 @@ public sealed class FunctionAppService(
         }
     }
 
-    internal static class ContainerAppsStrategy
-    {
-        public static async Task<FunctionAppInfo> CreateFunctionAppAsync(
-            SubscriptionResource subscription,
-            ResourceGroupResource rg,
-            string functionAppName,
-            string location,
-            CreateOptions options,
-            string? storageAccountName,
-            string? containerAppsEnvironmentName,
-            CancellationToken cancellationToken)
-        {
-            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
-            var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName, cancellationToken);
-            var host = containerApp.Data.Configuration?.Ingress?.Fqdn ?? containerApp.Data.LatestRevisionName ?? containerApp.Data.Name;
-            return new FunctionAppInfo(
-                containerApp.Data.Name,
-                rg.Data.Name,
-                location,
-                "containerapp",
-                containerApp.Data.ProvisioningState.ToString(),
-                host,
-                "linux",
-                containerApp.Data.Tags?.ToDictionary(k => k.Key, v => v.Value));
-        }
-    }
 }

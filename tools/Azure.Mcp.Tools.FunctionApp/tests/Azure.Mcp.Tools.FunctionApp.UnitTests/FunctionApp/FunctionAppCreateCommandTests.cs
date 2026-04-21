@@ -303,7 +303,7 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("unknownRuntime", "mcr.microsoft.com/azure-functions/dotnet-isolated:4")]
     public void GetContainerImage_MapsRuntimes(string runtime, string expectedImage)
     {
-        var image = FunctionAppService.GetContainerImage(runtime);
+        var image = FunctionAppContainerAppStrategy.GetContainerImage(runtime);
         Assert.Equal(expectedImage, image);
     }
 
