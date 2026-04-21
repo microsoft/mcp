@@ -109,8 +109,10 @@ function Test-ToolAreaTools {
 
     foreach ($file in $areaTools) {
         LogDebug "Processing: $($file.FullName)"
-        $content = Get-Content $file.FullName
+        $rawContent = Get-Content $file.FullName -Raw
 
+        # Use patterns that tolerate whitespace (including newlines) between the
+        # opening paren and the quoted name so multi-line declarations are caught.
         $patterns = @()
         if ($file.Name -like '*Command.cs') {
             $patterns += 'public override string Name => "([^"]+)";'
@@ -118,30 +120,31 @@ function Test-ToolAreaTools {
         elseif ($file.Name -like '*Setup.cs') {
             $patterns += 'public string Name => "([^"]+)";'
             # Matches: new CommandGroup("group-name", ...) - only string literals, not variables
+            # Also matches multi-line: new CommandGroup(\n    "group-name", ...)
+            $patterns += 'new CommandGroup\(\s*"([^"]+)",'
             # Matches: AddCommand("command-name", ...) - only string literals, not variables
-            $patterns += 'new CommandGroup\("([^"]+)",'
-            $patterns += 'AddCommand\("([^"]+)",'
+            $patterns += 'AddCommand\(\s*"([^"]+)",'
         }
 
-        for ($i = 0; $i -lt $content.Count; $i++) {
-            $line = $content[$i]
-            foreach ($matchingPattern in $patterns) {
-                if ($line -match $matchingPattern) {
-                    $toolName = $matches[1]
+        foreach ($matchingPattern in $patterns) {
+            $regexMatches = [regex]::Matches($rawContent, $matchingPattern)
+            foreach ($m in $regexMatches) {
+                $toolName = $m.Groups[1].Value
 
-                    # Validate tool name format:
-                    # - Each group contains alphanumeric chars or dashes
-                    # - Each group cannot start or end with a dash
-                    # Pattern breakdown:
-                    #   ^                           - Start of string
-                    #   [a-zA-Z0-9]                 - First char must be alphanumeric
-                    #   ([a-zA-Z0-9-]*[a-zA-Z0-9])? - Optional: middle chars (alphanumeric or dash) ending with alphanumeric
-                    #   $                           - End of string
-                    $isValid = $toolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$'
+                # Validate tool name format:
+                # - Each group contains alphanumeric chars or dashes
+                # - Each group cannot start or end with a dash
+                # Pattern breakdown:
+                #   ^                           - Start of string
+                #   [a-zA-Z0-9]                 - First char must be alphanumeric
+                #   ([a-zA-Z0-9-]*[a-zA-Z0-9])? - Optional: middle chars (alphanumeric or dash) ending with alphanumeric
+                #   $                           - End of string
+                $isValid = $toolName -match '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$'
 
-                    if (-not $isValid) {
-                        $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName, $i + 1)
-                    }
+                if (-not $isValid) {
+                    # Calculate line number from match position in raw content
+                    $lineNumber = ($rawContent.Substring(0, $m.Groups[1].Index) -split "`n").Count
+                    $toolViolationsForArea += [ToolNameViolation]::new($name, $file.FullName, $toolName, $lineNumber)
                 }
             }
         }
