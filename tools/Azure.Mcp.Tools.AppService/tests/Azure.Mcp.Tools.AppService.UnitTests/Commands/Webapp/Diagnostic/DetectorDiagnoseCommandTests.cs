@@ -121,7 +121,7 @@ public class DetectorDiagnoseCommandTests
     [InlineData("--detector-id", "detector")] // Missing subscription, resource group, and app name
     [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app name and detector name
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group and detector name
-    [InlineData("--subscription", "sub123", "--detector-id", "detector-name")] // Missing resource group and app name
+    [InlineData("--subscription", "sub123", "--detector-id", "LinuxMemoryDrillDown")] // Missing resource group and app name
     [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription and detector name
     [InlineData("--resource-group", "rg1", "--detector-id", "detector-name")] // Missing subscription and app name
     [InlineData("--app", "test-app", "--detector-id", "detector-name")] // Missing subscription and resource group
