@@ -1070,6 +1070,171 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         return null;
     }
 
+    public async Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? containerName, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(datasourceId), datasourceId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+
+        // Find the soft-deleted protected item by datasource ID
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        BackupProtectedItemData? matchedItemData = null;
+
+        // For RSV in-guest workloads (SQL/HANA), datasourceId is the protectable item name,
+        // not an ARM ID. In that case, --container is required to build the item identifier directly.
+        if (!datasourceId.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(containerName))
+            {
+                throw new ArgumentException(
+                    $"The --container parameter is required when --datasource-id is a protectable item name ('{datasourceId}'). " +
+                    "Use 'azurebackup protectableitem list' to discover containers and item names.");
+            }
+
+            // Build the protected item resource ID directly from container + item name
+            var directItemId = BackupProtectedItemResource.CreateResourceIdentifier(
+                subscription, resourceGroup, vaultName, FabricName, containerName, datasourceId);
+            var directItemResource = armClient.GetBackupProtectedItemResource(directItemId);
+            var directItem = await directItemResource.GetAsync(cancellationToken: cancellationToken);
+            matchedItemData = directItem.Value.Data;
+        }
+        else if (!string.IsNullOrEmpty(containerName))
+        {
+            // When --container is provided with an ARM ID, use it for direct lookup
+            // to avoid ambiguity (e.g., multiple file shares under one storage account).
+            var derivedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId);
+            var directItemId = BackupProtectedItemResource.CreateResourceIdentifier(
+                subscription, resourceGroup, vaultName, FabricName, containerName, derivedItemName);
+            var directItemResource = armClient.GetBackupProtectedItemResource(directItemId);
+            var directItem = await directItemResource.GetAsync(cancellationToken: cancellationToken);
+            matchedItemData = directItem.Value.Data;
+        }
+        else
+        {
+            // ARM ID path without --container: list all protected items and match by SourceResourceId.
+            // Prefer exact matches; only allow prefix matches when unambiguous.
+            var exactMatches = new List<BackupProtectedItemData>();
+            var prefixMatches = new List<BackupProtectedItemData>();
+            await foreach (var item in rgResource.GetBackupProtectedItemsAsync(vaultName, cancellationToken: cancellationToken))
+            {
+                if (item.Data.Properties is BackupGenericProtectedItem genericItem)
+                {
+                    var sourceId = genericItem.SourceResourceId?.ToString();
+                    if (sourceId is null)
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(sourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        exactMatches.Add(item.Data);
+                    }
+                    else if (datasourceId.StartsWith(sourceId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        prefixMatches.Add(item.Data);
+                    }
+                }
+            }
+
+            if (exactMatches.Count == 1)
+            {
+                matchedItemData = exactMatches[0];
+            }
+            else if (exactMatches.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    $"Multiple protected items found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
+                    "Provide --container to disambiguate.");
+            }
+            else if (prefixMatches.Count == 1)
+            {
+                matchedItemData = prefixMatches[0];
+            }
+            else if (prefixMatches.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    $"Multiple protected items match datasource ID '{datasourceId}' in vault '{vaultName}' " +
+                    "(shared storage account prefix). Provide a more specific datasource ID or --container to disambiguate.");
+            }
+        }
+
+        if (matchedItemData is null)
+        {
+            throw new KeyNotFoundException(
+                $"No protected item found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
+                "Verify the datasource ID is correct and the item exists in this vault.");
+        }
+
+        var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResourceId);
+        var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
+        var vaultLocation = vault.Value.Data.Location;
+
+        // Extract container and item name from the matched item's resource ID
+        var matchedItemId = matchedItemData.Id!;
+        var matchedContainerName = containerName ?? ExtractContainerName(matchedItemId.ToString());
+        var matchedItemName = matchedItemId.Name;
+
+        var protectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
+            subscription, resourceGroup, vaultName, FabricName, matchedContainerName, matchedItemName);
+
+        // Set IsRehydrate on the matched item's existing properties to preserve
+        // the full protection definition (PolicyId, ContainerName, etc.).
+        if (matchedItemData.Properties is not BackupGenericProtectedItem existingProperties)
+        {
+            throw new InvalidOperationException(
+                "The matched protected item does not contain properties required to perform undelete.");
+        }
+
+        existingProperties.IsRehydrate = true;
+
+        var protectedItemData = new BackupProtectedItemData(vaultLocation)
+        {
+            Properties = existingProperties
+        };
+
+        var protectedItemResource = armClient.GetBackupProtectedItemResource(protectedItemId);
+        var operation = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
+        var jobId = ExtractOperationIdFromResponse(operation.GetRawResponse());
+
+        return new OperationResult("Accepted", jobId,
+            jobId != null
+                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup job get --job {jobId}' to monitor progress."
+                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Extracts the container name from a full RSV protected item resource ID.
+    /// Format: .../protectionContainers/{containerName}/protectedItems/{itemName}
+    /// </summary>
+    private static string ExtractContainerName(string resourceId)
+    {
+        const string marker = "/protectionContainers/";
+        var idx = resourceId.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0)
+        {
+            throw new ArgumentException($"Cannot extract container name from resource ID: {resourceId}");
+        }
+
+        var start = idx + marker.Length;
+        var end = resourceId.IndexOf("/protectedItems/", start, StringComparison.OrdinalIgnoreCase);
+        if (end < 0)
+        {
+            throw new ArgumentException($"Cannot extract container name from resource ID: {resourceId}");
+        }
+
+        return resourceId[start..end];
+    }
+
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? workloadType, string? containerName, string? tenant,
