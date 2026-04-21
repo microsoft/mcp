@@ -28,7 +28,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-id", "Memoryusage"}
+                { "detector-id", "LinuxMemoryDrillDown"}
             });
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
