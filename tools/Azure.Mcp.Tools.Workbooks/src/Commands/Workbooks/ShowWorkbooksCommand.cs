@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) : BaseWorkbooksCommand<ShowWorkbooksOptions>
+public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<ShowWorkbooksOptions>
 {
     private const string CommandTitle = "Get Workbook";
     private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
     public override string Id => "a7a882cd-1729-49ed-b349-2a79f8c7de56";
 
     public override string Name => "show";
@@ -75,8 +76,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var result = await workbooksService.GetWorkbooksAsync(
+            var result = await _workbooksService.GetWorkbooksAsync(
                 options.WorkbookIds!,
                 options.RetryPolicy,
                 options.Tenant,
