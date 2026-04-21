@@ -10,8 +10,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : BaseMySqlCommand<MySqlDatabaseOptions>(logger)
 {
+    private readonly IMySqlService _mysqlService = mysqlService;
     public override string Id => "77e60b50-5c16-4879-96b1-6a40d9c08a37";
 
     public override string Name => "list";
@@ -48,6 +49,8 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
+        MySqlDatabaseOptions? options = null;
+
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -55,15 +58,13 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
                 return context.Response;
             }
 
-            var options = BindOptions(parseResult);
-
-            IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
+            options = BindOptions(parseResult);
 
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
                 // List tables in specified database
-                List<string> tables = await mysqlService.GetTablesAsync(
+                List<string> tables = await _mysqlService.GetTablesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -78,7 +79,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
             else if (!string.IsNullOrEmpty(options.Server))
             {
                 // List databases on specified server
-                List<string> databases = await mysqlService.ListDatabasesAsync(
+                List<string> databases = await _mysqlService.ListDatabasesAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -92,7 +93,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
             else
             {
                 // List servers in resource group
-                List<string> servers = await mysqlService.ListServersAsync(
+                List<string> servers = await _mysqlService.ListServersAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.User!,
@@ -105,7 +106,7 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger) : BaseMyS
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in {Operation}.", Name);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Server: {Server}, Database: {Database}.", Name, options?.Subscription, options?.ResourceGroup, options?.Server, options?.Database);
             HandleException(context, ex);
         }
 

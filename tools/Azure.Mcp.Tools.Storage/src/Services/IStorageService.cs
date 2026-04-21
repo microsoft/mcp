@@ -33,6 +33,7 @@ public interface IStorageService
         string container,
         string? blob,
         string subscription,
+        string? prefix = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
@@ -41,6 +42,7 @@ public interface IStorageService
         string account,
         string? container,
         string subscription,
+        string? prefix = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

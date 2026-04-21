@@ -52,7 +52,7 @@ public static class CommandHelper
     public static string? GetDefaultSubscription()
     {
         // Primary: Azure CLI profile (set via 'az account set') - cached to avoid repeated file I/O
-        var profileDefault = s_profileDefault.Value;
+        var profileDefault = GetProfileSubscription();
         if (!string.IsNullOrEmpty(profileDefault))
         {
             return profileDefault;
@@ -61,6 +61,8 @@ public static class CommandHelper
         // Fallback: AZURE_SUBSCRIPTION_ID environment variable (cheap, not cached)
         return EnvironmentHelpers.GetAzureSubscriptionId();
     }
+
+    internal static string? GetProfileSubscription() => s_profileDefault.Value;
 
     private static bool IsPlaceholder(string value) => value.Contains("subscription") || value.Contains("default");
 }

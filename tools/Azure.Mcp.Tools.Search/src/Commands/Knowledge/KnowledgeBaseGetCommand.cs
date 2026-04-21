@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger) : GlobalCommand<KnowledgeBaseGetOptions>()
+public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> logger, ISearchService searchService) : GlobalCommand<KnowledgeBaseGetOptions>()
 {
     private const string CommandTitle = "Get Azure AI Search Knowledge Base Details";
     private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     public override string Id => "e0e7c288-8d16-4d11-811d-9236dc86d9a8";
 
@@ -69,8 +70,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
+            var bases = await _searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)
