@@ -121,7 +121,7 @@ public static class FunctionAppValidation
         }
     }
 
-    public static CreateOptions BuildCreateOptions(NormalizedInputs inputs, bool useManagedIdentityStorage = false)
+    public static CreateOptions BuildCreateOptions(NormalizedInputs inputs, bool useManagedIdentityStorage = true)
     {
         var hostingKind = ParseHostingKind(inputs.PlanType);
         var selectedRuntime = hostingKind == HostingKind.FlexConsumption && inputs.Runtime == "dotnet"
