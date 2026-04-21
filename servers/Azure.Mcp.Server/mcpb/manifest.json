@@ -92,7 +92,22 @@
     "workbooks",
     "azqr",
     "quick reference",
-    "cli"
+    "cli",
+    "advisor",
+    "migrate",
+    "cloud architect",
+    "compute",
+    "container apps",
+    "device registry",
+    "documentation",
+    "file shares",
+    "functions",
+    "best practices",
+    "policy",
+    "pricing",
+    "service fabric",
+    "storage sync",
+    "well architected framework"
   ],
   "license": "MIT",
   "privacy_policies": [
