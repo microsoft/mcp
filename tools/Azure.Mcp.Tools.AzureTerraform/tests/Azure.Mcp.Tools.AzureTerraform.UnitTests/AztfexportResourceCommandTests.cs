@@ -102,6 +102,33 @@ public class AztfexportResourceCommandTests
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 
+    [Theory]
+    [InlineData("--resource-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/sa", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _aztfexportService.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+            _aztfexportService.GenerateResourceCommand(
+                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(),
+                Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<bool>())
+                .Returns(new AztfexportCommandResult { AztfexportFound = true, Command = "aztfexport", Args = [], Description = "test" });
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

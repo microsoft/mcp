@@ -127,6 +127,33 @@ public class ConftestPlanValidationCommandTests
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 
+    [Theory]
+    [InlineData("--plan-folder /home/user/project", true)]
+    [InlineData("--plan-folder /home/user/project --policy-set avmsec --severity-filter high", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _conftestService.IsConftestAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
+            _conftestService.GeneratePlanValidationCommand(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>())
+                .Returns(new ConftestCommandResult { ConftestFound = true, Command = "conftest", Args = [], Description = "test" });
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

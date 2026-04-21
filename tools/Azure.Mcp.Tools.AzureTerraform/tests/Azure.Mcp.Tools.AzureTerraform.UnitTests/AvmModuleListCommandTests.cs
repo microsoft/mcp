@@ -91,6 +91,29 @@ public class AvmModuleListCommandTests
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 
+    [Theory]
+    [InlineData("", true)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _avmDocsService.ListModulesAsync(Arg.Any<CancellationToken>())
+                .Returns(new List<AvmModule>());
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

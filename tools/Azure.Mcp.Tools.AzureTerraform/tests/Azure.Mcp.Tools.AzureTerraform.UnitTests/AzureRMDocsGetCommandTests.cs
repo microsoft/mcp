@@ -156,6 +156,32 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("--resource-type azurerm_resource_group", true)]
+    [InlineData("--resource-type azurerm_resource_group --doc-type data-source", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _docsService.GetDocumentationAsync(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

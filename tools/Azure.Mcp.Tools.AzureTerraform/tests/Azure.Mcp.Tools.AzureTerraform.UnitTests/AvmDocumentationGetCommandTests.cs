@@ -102,6 +102,32 @@ public class AvmDocumentationGetCommandTests
         await _avmDocsService.Received(1).GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("--module-name avm-res-storage-storageaccount --module-version 0.4.0", true)]
+    [InlineData("--module-name avm-res-storage-storageaccount", false)]
+    [InlineData("--module-version 0.4.0", false)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _avmDocsService.GetDocumentationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns("# Module docs");
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {

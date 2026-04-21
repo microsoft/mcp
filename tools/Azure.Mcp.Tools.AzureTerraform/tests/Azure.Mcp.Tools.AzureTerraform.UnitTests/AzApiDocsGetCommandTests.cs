@@ -161,6 +161,33 @@ public class AzApiDocsGetCommandTests
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 
+    [Theory]
+    [InlineData("--resource-type Microsoft.Compute/virtualMachines", true)]
+    [InlineData("--resource-type Microsoft.Compute/virtualMachines --api-version 2024-03-01", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            _docsService.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
+                .Returns(new AzApiDocsResult { ResourceType = "Microsoft.Compute/virtualMachines", ApiVersion = "2024-03-01", Schema = "...", Summary = "..." });
+            _examplesService.GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(new List<AzApiExample>());
+        }
+
+        var parseResult = _commandDefinition.Parse(args);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
