@@ -23,7 +23,7 @@ $architectures = @('x64', 'arm64')
 
 # Supported Azure clouds for where the MCP tools may operate. This is used to determine which clouds to run tests against.
 # The set of valid values in this list should align with the ones in eng\common\TestResources\New-TestResources.ps1 line 66.
-$supportedAzureClouds = @('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')
+$azureSupportedClouds = @('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')
 
 # Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
 $operatingSystems = Get-OperatingSystems
@@ -323,7 +323,7 @@ function Get-PathsToTest {
 
     $pathsToTest = $normalizedPaths | ForEach-Object -ThrottleLimit 5 -Parallel {
         $path = $_
-        $supportedAzureClouds = $using:supportedAzureClouds
+        $azureSupportedClouds = $using:azureSupportedClouds
 
         Write-Progress -Activity "Checking for test resources" -Status $path
 
@@ -344,12 +344,12 @@ function Get-PathsToTest {
 
         $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName
 
-        $resolvedClouds = $sourceProjectDetails.SupportedAzureClouds `
-            ? @($sourceProjectDetails.SupportedAzureClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            : $supportedAzureClouds
+        $resolvedClouds = $sourceProjectDetails.AzureSupportedClouds `
+            ? @($sourceProjectDetails.AzureSupportedClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+            : $azureSupportedClouds
 
-        if ($sourceProjectDetails.SupportedAzureClouds -and ($resolvedClouds | Where-Object { $supportedAzureClouds -notcontains $_ })) {
-            Write-Error "Project $($sourceProject.FullName) specifies supported Azure clouds that are not in the global supported list: $($sourceProjectDetails.SupportedAzureClouds). Supported clouds must be a subset of $($supportedAzureClouds -join ', ')."
+        if ($sourceProjectDetails.AzureSupportedClouds -and ($resolvedClouds | Where-Object { $azureSupportedClouds -notcontains $_ })) {
+            Write-Error "Project $($sourceProject.FullName) specifies supported Azure clouds that are not in the global supported list: $($sourceProjectDetails.AzureSupportedClouds). Supported clouds must be a subset of $($azureSupportedClouds -join ', ')."
             return @{ _error = $true }
         }
 
@@ -361,7 +361,7 @@ function Get-PathsToTest {
             hasLiveTests         = $hasLiveTests
             hasUnitTests         = $hasUnitTests
             hasRecordedTests     = $hasRecordedTests
-            supportedAzureClouds = $resolvedClouds
+            azureSupportedClouds = $resolvedClouds
         }
     }
 
