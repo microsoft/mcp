@@ -464,6 +464,193 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         policy.AssertProperty("datasourceTypes");
     }
 
+    [Fact]
+    public async Task PolicyUpdate_RsvVault_UpdatesIaasVmPolicyRetention_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("updateVmPolicyName", $"test-upd-vm-{Random.Shared.NextInt64()}");
+
+        // Create a VM policy first
+        await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureVM" },
+                { "daily-retention-days", "30" }
+            });
+
+        // Update retention to 14 days
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "daily-retention-days", "14" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.Contains("updated", opResult.AssertProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyUpdate_RsvVault_UpdatesIaasVmPolicyScheduleTime_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("updateVmSchedulePolicyName", $"test-upd-vms-{Random.Shared.NextInt64()}");
+
+        // Create a VM policy first
+        await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureVM" },
+                { "schedule-time", "02:00" }
+            });
+
+        // Update schedule time to 04:00
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "schedule-time", "04:00" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.Contains("updated", opResult.AssertProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyUpdate_RsvVault_UpdatesSqlWorkloadPolicyRetention_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("updateSqlPolicyName", $"test-upd-sql-{Random.Shared.NextInt64()}");
+
+        // Create a SQL (VmWorkload) policy first
+        await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "SQL" },
+                { "daily-retention-days", "30" }
+            });
+
+        // Update Full sub-policy retention to 60 days
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "daily-retention-days", "60" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.Contains("updated", opResult.AssertProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyUpdate_RsvVault_UpdatesSqlWorkloadPolicyScheduleAndRetention_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("updateSqlBothPolicyName", $"test-upd-sqlb-{Random.Shared.NextInt64()}");
+
+        // Create a SQL (VmWorkload) policy first
+        await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "SQL" }
+            });
+
+        // Update both schedule time and retention on the Full sub-policy
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "schedule-time", "06:00" },
+                { "daily-retention-days", "45" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.Contains("updated", opResult.AssertProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyUpdate_RsvVault_NoChanges_ReturnsUnchangedMessage()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        // Update DefaultPolicy with no schedule-time or retention changes
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", "DefaultPolicy" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.Contains("unchanged", opResult.AssertProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyUpdate_DppVault_ReturnsNotSupportedError()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+
+        // DPP vaults do not support policy update — should return an error response with type InvalidOperationException
+        var result = await CallToolAsync(
+            "azurebackup_policy_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", "some-policy" },
+                { "daily-retention-days", "30" }
+            });
+
+        Assert.NotNull(result);
+        var errorType = result.Value.AssertProperty("type");
+        Assert.Equal("InvalidOperationException", errorType.GetString());
+    }
+
     #endregion
 
     #region Policy Tests (DPP)

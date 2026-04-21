@@ -819,6 +819,16 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--schedule-time <schedule-time>] \
                                 [--daily-retention-days <daily-retention-days>]
 
+# Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup policy update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                --policy <policy> \
+                                [--vault-type <vault-type>] \
+                                [--schedule-time <schedule-time>] \
+                                [--daily-retention-days <daily-retention-days>]
+
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy get --subscription <subscription> \
