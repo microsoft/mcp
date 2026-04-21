@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated deploy tool descriptions to improve tool invocation rate for deployment planning, IaC rules, CI/CD pipeline guidance, architecture diagrams, and application logs"
