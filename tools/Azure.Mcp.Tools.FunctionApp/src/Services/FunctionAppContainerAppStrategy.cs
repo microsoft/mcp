@@ -3,33 +3,44 @@
 
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppContainers;
-using Azure.ResourceManager.AppContainers.Models;
+using Azure.ResourceManager.AppService;
+using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
-using Azure.ResourceManager.Storage;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
 internal static class FunctionAppContainerAppStrategy
 {
-    private static class ContainerAppsDefaults
+    private const string ContainerAppsFunctionKind = "functionapp,linux,container,azurecontainerapps";
+
+    internal static string GetContainerImage(string runtime, string? runtimeVersion)
     {
-        public const double CpuCores = 0.25;
-        public const string Memory = "0.5Gi";
-        public const int IngressPort = 80;
-        public const bool ExternalIngress = true;
+        var effectiveVersion = string.IsNullOrWhiteSpace(runtimeVersion)
+            ? FunctionAppValidation.GetDefaultRuntimeVersion(runtime)
+            : runtimeVersion;
+        var normalized = NormalizeVersionForImageTag(runtime, effectiveVersion);
+        return runtime switch
+        {
+            "dotnet" => $"mcr.microsoft.com/azure-functions/dotnet:4-dotnet{normalized}",
+            "dotnet-isolated" => $"mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated{normalized}",
+            "node" => $"mcr.microsoft.com/azure-functions/node:4-node{normalized}",
+            "python" => $"mcr.microsoft.com/azure-functions/python:4-python{normalized}",
+            "java" => $"mcr.microsoft.com/azure-functions/java:4-java{normalized}",
+            "powershell" => $"mcr.microsoft.com/azure-functions/powershell:4-powershell{normalized}",
+            _ => $"mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated{normalized}"
+        };
     }
 
-    internal static string GetContainerImage(string runtime) => runtime switch
+    private static string NormalizeVersionForImageTag(string runtime, string? version)
     {
-        "dotnet" => "mcr.microsoft.com/azure-functions/dotnet:4",
-        "dotnet-isolated" => "mcr.microsoft.com/azure-functions/dotnet-isolated:4",
-        "node" => "mcr.microsoft.com/azure-functions/node:4",
-        "python" => "mcr.microsoft.com/azure-functions/python:4",
-        "java" => "mcr.microsoft.com/azure-functions/java:4",
-        "powershell" => "mcr.microsoft.com/azure-functions/powershell:4",
-        _ => "mcr.microsoft.com/azure-functions/dotnet-isolated:4"
-    };
+        if (string.IsNullOrWhiteSpace(version))
+            return string.Empty;
+        var trimmed = version.Trim();
+        if ((runtime == "java" || runtime == "node") && trimmed.EndsWith(".0", StringComparison.Ordinal))
+            trimmed = trimmed[..^2];
+        return trimmed;
+    }
 
     public static async Task<FunctionAppInfo> CreateFunctionAppAsync(
         SubscriptionResource subscription,
@@ -42,31 +53,32 @@ internal static class FunctionAppContainerAppStrategy
         CancellationToken cancellationToken)
     {
         var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
-        var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName, cancellationToken);
-        var host = containerApp.Data.Configuration?.Ingress?.Fqdn ?? containerApp.Data.LatestRevisionName ?? containerApp.Data.Name;
+        var site = await EnsureContainerAppHostedFunctionAppAsync(rg, functionAppName, location, options.Runtime, options.RuntimeVersion, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName, cancellationToken);
+        var data = site.Data;
         return new FunctionAppInfo(
-            containerApp.Data.Name,
+            data.Name,
             rg.Data.Name,
             location,
             "containerapp",
-            containerApp.Data.ProvisioningState.ToString(),
-            host,
+            data.State,
+            data.DefaultHostName,
             "linux",
-            containerApp.Data.Tags?.ToDictionary(k => k.Key, v => v.Value));
+            data.Tags?.ToDictionary(k => k.Key, v => v.Value));
     }
 
-    private static async Task<ContainerAppResource> EnsureMinimalContainerApp(
+    private static async Task<WebSiteResource> EnsureContainerAppHostedFunctionAppAsync(
         ResourceGroupResource rg,
-        string name,
+        string functionAppName,
         string location,
         string runtime,
+        string? runtimeVersion,
         StorageProvisioningResult storage,
         bool useManagedIdentity,
         string? containerAppsEnvironmentName,
         CancellationToken cancellationToken)
     {
         var envs = rg.GetContainerAppManagedEnvironments();
-        var envName = containerAppsEnvironmentName ?? $"{name}-env";
+        var envName = containerAppsEnvironmentName ?? $"{functionAppName}-env";
 
         ContainerAppManagedEnvironmentResource env;
         if (await envs.ExistsAsync(envName, cancellationToken))
@@ -79,52 +91,33 @@ internal static class FunctionAppContainerAppStrategy
             env = (await envs.CreateOrUpdateAsync(WaitUntil.Completed, envName, envData, cancellationToken)).Value;
         }
 
-        var apps = rg.GetContainerApps();
-        var image = GetContainerImage(runtime);
-        var container = new ContainerAppContainer
+        var image = GetContainerImage(runtime, runtimeVersion);
+        var siteConfig = new SiteConfigProperties
         {
-            Name = name,
-            Image = image,
-            Resources = new AppContainerResources
-            {
-                Cpu = ContainerAppsDefaults.CpuCores,
-                Memory = ContainerAppsDefaults.Memory
-            },
-            Env =
-            {
-                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_WORKER_RUNTIME", Value = runtime },
-                new ContainerAppEnvironmentVariable { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" }
-            }
+            LinuxFxVersion = $"DOCKER|{image}"
         };
+        siteConfig.AppSettings.Add(new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" });
+        siteConfig.AppSettings.Add(new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = runtime });
         if (useManagedIdentity)
         {
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__accountName", Value = storage.AccountName });
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage__credential", Value = "managedidentity" });
+            siteConfig.AppSettings.Add(new AppServiceNameValuePair { Name = "AzureWebJobsStorage__accountName", Value = storage.AccountName });
+            siteConfig.AppSettings.Add(new AppServiceNameValuePair { Name = "AzureWebJobsStorage__credential", Value = "managedidentity" });
         }
         else
         {
-            container.Env.Add(new ContainerAppEnvironmentVariable { Name = "AzureWebJobsStorage", Value = storage.ConnectionString });
+            siteConfig.AppSettings.Add(new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = storage.ConnectionString });
         }
 
-        var data = new ContainerAppData(location)
+        var data = new WebSiteData(location)
         {
-            ManagedEnvironmentId = env.Id,
-            Configuration = new ContainerAppConfiguration
-            {
-                Ingress = new ContainerAppIngressConfiguration
-                {
-                    External = ContainerAppsDefaults.ExternalIngress,
-                    TargetPort = ContainerAppsDefaults.IngressPort
-                }
-            },
-            Template = new ContainerAppTemplate
-            {
-                Containers = { container }
-            }
+            Kind = ContainerAppsFunctionKind,
+            ManagedEnvironmentId = env.Id.ToString(),
+            SiteConfig = siteConfig
         };
         if (useManagedIdentity)
             data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
 
-        return (await apps.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken)).Value;
+        var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, functionAppName, data, cancellationToken);
+        return op.Value;
     }
 }

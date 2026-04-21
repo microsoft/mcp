@@ -294,16 +294,21 @@ public sealed class FunctionAppCreateCommandTests
     }
 
     [Theory]
-    [InlineData("dotnet", "mcr.microsoft.com/azure-functions/dotnet:4")]
-    [InlineData("dotnet-isolated", "mcr.microsoft.com/azure-functions/dotnet-isolated:4")]
-    [InlineData("node", "mcr.microsoft.com/azure-functions/node:4")]
-    [InlineData("python", "mcr.microsoft.com/azure-functions/python:4")]
-    [InlineData("java", "mcr.microsoft.com/azure-functions/java:4")]
-    [InlineData("powershell", "mcr.microsoft.com/azure-functions/powershell:4")]
-    [InlineData("unknownRuntime", "mcr.microsoft.com/azure-functions/dotnet-isolated:4")]
-    public void GetContainerImage_MapsRuntimes(string runtime, string expectedImage)
+    [InlineData("dotnet", null, "mcr.microsoft.com/azure-functions/dotnet:4-dotnet8.0")]
+    [InlineData("dotnet-isolated", null, "mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0")]
+    [InlineData("node", null, "mcr.microsoft.com/azure-functions/node:4-node22")]
+    [InlineData("node", "22", "mcr.microsoft.com/azure-functions/node:4-node22")]
+    [InlineData("python", null, "mcr.microsoft.com/azure-functions/python:4-python3.12")]
+    [InlineData("python", "3.12", "mcr.microsoft.com/azure-functions/python:4-python3.12")]
+    [InlineData("java", null, "mcr.microsoft.com/azure-functions/java:4-java17")]
+    [InlineData("java", "17", "mcr.microsoft.com/azure-functions/java:4-java17")]
+    [InlineData("java", "17.0", "mcr.microsoft.com/azure-functions/java:4-java17")]
+    [InlineData("java", "21", "mcr.microsoft.com/azure-functions/java:4-java21")]
+    [InlineData("powershell", null, "mcr.microsoft.com/azure-functions/powershell:4-powershell7.4")]
+    [InlineData("powershell", "7.4", "mcr.microsoft.com/azure-functions/powershell:4-powershell7.4")]
+    public void GetContainerImage_MapsRuntimesWithVersion(string runtime, string? runtimeVersion, string expectedImage)
     {
-        var image = FunctionAppContainerAppStrategy.GetContainerImage(runtime);
+        var image = FunctionAppContainerAppStrategy.GetContainerImage(runtime, runtimeVersion);
         Assert.Equal(expectedImage, image);
     }
 

@@ -272,6 +272,63 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         Assert.Equal("linux", osProp.GetString());
     }
 
+    [Fact]
+    public async Task Should_create_appservice_function_app_with_connection_string_auth()
+    {
+        var uniqueName = $"mcp-validate-fa-appservice-cs-{DateTime.UtcNow:MMddHHmm}";
+
+        var result = await CallToolAsync(
+            "functionapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "plan-type", "appservice" },
+                { "plan-sku", "B1" },
+                { "runtime", "node" },
+                { "os", "windows" },
+                { "runtime-version", "22" },
+                { "storage-auth-mode", "connection-string" }
+            });
+
+        Assert.NotNull(result);
+        var wrapper = result!.Value;
+        Assert.True(wrapper.TryGetProperty("functionApp", out var functionApp));
+        Assert.True(functionApp.TryGetProperty("name", out var nameProp));
+        Assert.Equal(uniqueName, nameProp.GetString());
+        Assert.True(functionApp.TryGetProperty("operatingSystem", out var osProp));
+        Assert.Equal("windows", osProp.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_containerapp_function_app_with_connection_string_auth()
+    {
+        var uniqueName = $"mcp-validate-ca-java-cs-{DateTime.UtcNow:MMddHHmm}";
+
+        var result = await CallToolAsync(
+            "functionapp_containerapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "runtime", "java" },
+                { "runtime-version", "17" },
+                { "storage-auth-mode", "connection-string" }
+            });
+
+        Assert.NotNull(result);
+        var wrapper = result!.Value;
+        Assert.True(wrapper.TryGetProperty("functionApp", out var functionApp));
+        Assert.True(functionApp.TryGetProperty("name", out var nameProp));
+        Assert.Equal(uniqueName, nameProp.GetString());
+        Assert.True(functionApp.TryGetProperty("operatingSystem", out var osProp));
+        Assert.Equal("linux", osProp.GetString());
+    }
+
     [Theory]
     [InlineData("python", "windows")]
     [InlineData("dotnet", "invalid-os")]
