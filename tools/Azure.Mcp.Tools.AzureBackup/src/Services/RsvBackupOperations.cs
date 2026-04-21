@@ -743,8 +743,25 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
             ?? throw new InvalidOperationException($"Policy '{policyName}' has an unsupported properties type.");
 
-        var newScheduleTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : (DateTimeOffset?)null;
-        var newRetentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : (int?)null;
+        DateTimeOffset? newScheduleTime = null;
+        if (!string.IsNullOrWhiteSpace(scheduleTime))
+        {
+            if (!DateTimeOffset.TryParse(scheduleTime, out var st))
+            {
+                throw new ArgumentException($"Invalid schedule time '{scheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
+            }
+            newScheduleTime = st;
+        }
+
+        int? newRetentionDays = null;
+        if (!string.IsNullOrWhiteSpace(dailyRetentionDays))
+        {
+            if (!int.TryParse(dailyRetentionDays, out var dd) || dd <= 0)
+            {
+                throw new ArgumentException($"Invalid daily retention days '{dailyRetentionDays}'. Provide a positive integer.");
+            }
+            newRetentionDays = dd;
+        }
 
         if (newScheduleTime is null && newRetentionDays is null)
         {
@@ -835,6 +852,9 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     }
                 }
                 break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
         }
     }
 

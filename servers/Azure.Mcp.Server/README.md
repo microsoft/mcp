@@ -958,6 +958,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
+* "Update backup policy schedule time to 04:00 in vault 'myvault'"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"

@@ -249,6 +249,69 @@ public class PolicyUpdateCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_HandlesNonDppInvalidOperationException()
+    {
+        // Arrange — a non-DPP InvalidOperationException should surface its own message
+        _backupService.UpdatePolicyAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Unsupported policy type 'SomePolicy'."));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--policy", "p"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Unsupported policy type", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesInvalidScheduleTime()
+    {
+        // Arrange — invalid schedule time should return ArgumentException error
+        _backupService.UpdatePolicyAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
+            Arg.Any<string?>(), Arg.Is("not-a-time"), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Invalid schedule time 'not-a-time'. Provide a valid time in UTC HH:mm format (e.g., '04:00')."));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--policy", "p", "--schedule-time", "not-a-time"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid schedule time", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesInvalidRetentionDays()
+    {
+        // Arrange — invalid retention days should return ArgumentException error
+        _backupService.UpdatePolicyAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is("-5"),
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Invalid daily retention days '-5'. Provide a positive integer."));
+
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
+            "--policy", "p", "--daily-retention-days", "-5"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid daily retention days", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_UpdatesWithScheduleTimeOnly()
     {
         // Arrange

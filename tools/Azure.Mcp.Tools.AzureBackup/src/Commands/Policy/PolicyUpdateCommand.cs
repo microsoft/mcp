@@ -88,8 +88,17 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed updating the policy. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
-        InvalidOperationException => "Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.",
+        InvalidOperationException ioEx when ioEx.Message.Contains("DPP", StringComparison.OrdinalIgnoreCase) =>
+            "Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.",
+        InvalidOperationException ioEx => ioEx.Message,
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => HttpStatusCode.BadRequest,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        _ => base.GetStatusCode(ex)
     };
 
     internal record PolicyUpdateCommandResult(OperationResult Result);
