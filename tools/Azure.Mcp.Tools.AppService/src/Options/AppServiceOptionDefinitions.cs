@@ -75,7 +75,7 @@ public static class AppServiceOptionDefinitions
 
     public static readonly Option<string> DetectorId = new($"--{DetectorIdName}")
     {
-        Description = "The internal ID of the diagnostic detector to run. Use the 'id' field from 'azmcp appservice webapp diagnostic list' output (e.g., LinuxContainerRecycle, Memoryusage).",
+        Description = "The internal ID of the diagnostic detector to run. Use the 'id' field from 'azmcp appservice webapp diagnostic list' output (e.g., LinuxContainerRecycle,  LinuxMemoryDrillDown).",
         Required = true
     };
 
