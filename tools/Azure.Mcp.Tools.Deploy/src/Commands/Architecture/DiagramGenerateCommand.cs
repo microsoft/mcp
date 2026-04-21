@@ -24,7 +24,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 
     public override string Description =>
         """
-        Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include ContainerApps, AppService, AKS, FunctionApp, SpringApps, StaticWebApp. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, EventHubs, KeyVault, and others.
+        Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include AppService, FunctionApp, ContainerApp, StaticWebApp, and AKS. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, KeyVault, and other supported Azure services.
         """;
 
     public override string Title => CommandTitle;
