@@ -64,18 +64,19 @@ internal class Program
             await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
-            var rootCommand = commandFactory.RootCommand;
-            var parseResult = rootCommand.Parse(args);
 
             // Short-circuit for --learn: return command metadata without executing.
-            // This MUST happen before InvokeAsync so that System.CommandLine's
-            // required-option validation cannot block the discovery response.
-            if (args.Any(a => string.Equals(a, CommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            // This MUST happen before Parse/InvokeAsync so that System.CommandLine's
+            // required-option validation cannot block the discovery response, and to
+            // avoid wastefully parsing 250+ commands and options only to discard the result.
+            if (args.Any(a => string.Equals(a, ICommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
             {
                 Console.WriteLine(commandFactory.GetLearnResponse(args));
                 return 0;
             }
 
+            var rootCommand = commandFactory.RootCommand;
+            var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
             if (status == 0)

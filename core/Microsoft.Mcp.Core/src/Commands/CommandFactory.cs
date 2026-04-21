@@ -222,7 +222,8 @@ public class CommandFactory : ICommandFactory
     {
         var commandDetails = command.GetCommand();
 
-        var optionInfos = commandDetails.Options?
+        // Command.Options is never null in System.CommandLine — the null-conditional is not needed.
+        var optionInfos = commandDetails.Options
             .Where(opt => opt is not HelpOption && !string.Equals(opt.Name, LearnOptionName, StringComparison.OrdinalIgnoreCase))
             .Select(opt => new OptionInfo(
                 name: opt.Name,
@@ -241,7 +242,7 @@ public class CommandFactory : ICommandFactory
         };
     }
 
-    private void ConfigureCommandHandler(Command command, IBaseCommand implementation, string fullTokenizedKey = "")
+    private void ConfigureCommandHandler(Command command, IBaseCommand implementation, string fullTokenizedKey)
     {
         // Add --learn as a recognized option on this command (for autocomplete/help display).
         // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called,
@@ -356,6 +357,8 @@ public class CommandFactory : ICommandFactory
     /// <returns>A JSON string ready to write to stdout.</returns>
     public string GetLearnResponse(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
+
         // Extract the command path: consume non-option tokens from the start.
         // Stop at the first token that begins with '-' (an option flag).
         var commandParts = new List<string>();
@@ -374,7 +377,7 @@ public class CommandFactory : ICommandFactory
             var leafResponse = new CommandResponse
             {
                 Status = HttpStatusCode.OK,
-                Results = ResponseResult.Create(new List<CommandInfo> { info }, ModelsJsonContext.Default.ListCommandInfo),
+                Results = ResponseResult.Create([info], ModelsJsonContext.Default.ListCommandInfo),
                 Duration = 0
             };
             return JsonSerializer.Serialize(leafResponse, _srcGenWithOptions.CommandResponse);
