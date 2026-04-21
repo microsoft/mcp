@@ -25,7 +25,6 @@ function Update-Solution {
 
     if ($Verify) {
         Write-Host "Verifying solution file for server: $serverName" -ForegroundColor Cyan
-        $targetFile = "$serverDirectory/$serverName.slnx.verify"
     } else {
         Write-Host "Removing existing solution files" -ForegroundColor Cyan
         Remove-Item -Path "$serverDirectory/$serverName.sln" -Force -ErrorAction SilentlyContinue
@@ -62,6 +61,7 @@ function Update-Solution {
         }
 
         if ($testProjects) {
+            $testProjects = $testProjects | Sort-Object -Property FullName
             dotnet sln $slnFile add $testProjects
         }
 
@@ -73,9 +73,6 @@ function Update-Solution {
             $serverRelativePath = Resolve-Path $fullPath -Relative -RelativeBasePath $serverDirectory
             $contents = $contents.Replace($match.Value, " Path=`"$($serverRelativePath.Replace('\', '/'))`"")
         }
-        Set-Content -Path $targetFile -Value $contents -NoNewline -Force
-
-        # After writing, if Verify, compare and clean up
         if ($Verify) {
             $originalFile = "$serverDirectory/$serverName.slnx"
             if (-not (Test-Path $originalFile)) {
@@ -89,7 +86,8 @@ function Update-Solution {
             } else {
                 Write-Host "✅ $serverName.slnx is up-to-date."
             }
-            Remove-Item -Path $targetFile -Force -ErrorAction SilentlyContinue
+        } else {
+            Set-Content -Path $targetFile -Value $contents -NoNewline -Force
         }
     }
     finally {
@@ -106,7 +104,6 @@ function Update-RootSolution {
 
     if ($Verify) {
         Write-Host "Verifying root solution file" -ForegroundColor Cyan
-        $targetFile = "Microsoft.Mcp.slnx.verify"
     } else {
         Write-Host "Removing existing root solution files" -ForegroundColor Cyan
         Remove-Item -Path "$RepoRoot/Microsoft.Mcp.sln" -Force -ErrorAction SilentlyContinue
@@ -121,7 +118,7 @@ function Update-RootSolution {
         Write-Host "Creating new root solution file" -ForegroundColor Cyan
         dotnet new sln -n ".temp.root" --format slnx
 
-        $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse
+        $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse | Sort-Object -Property FullName
         Write-Host "Adding all projects to root solution" -ForegroundColor Cyan
         dotnet sln $tempSlnFile add $allProjects
 
