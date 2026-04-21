@@ -53,7 +53,7 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
 
         command.Validators.Add(commandResult =>
         {
-            var language = commandResult.GetValueWithoutDefault<string>(FunctionsOptionDefinitions.Language.Name);
+            var language = commandResult.GetValueWithoutDefault(FunctionsOptionDefinitions.Language);
             if (string.IsNullOrWhiteSpace(language))
             {
                 commandResult.AddError("The --language parameter is required.");

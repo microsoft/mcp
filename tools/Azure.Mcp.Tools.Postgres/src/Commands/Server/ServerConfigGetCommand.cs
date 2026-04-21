@@ -9,8 +9,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
-public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
+public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
 {
+    private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Server Configuration";
 
     public override string Id => "049a0d10-0a6e-4278-a0a3-15ce6b2e5ee1";
@@ -44,8 +45,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         try
         {
 
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            var config = await pgService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
+            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = config?.Length > 0 ?
                 ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

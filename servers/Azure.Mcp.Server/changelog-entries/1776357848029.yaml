@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed compute_vmss_update tool returning HTTP 400 when only --capacity, --overprovision, or --enable-auto-os-upgrade is provided by correcting option type definitions to use nullable types"

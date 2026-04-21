@@ -11,9 +11,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Database;
 
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
     private const string CommandTitle = "Query MySQL Database";
+    private readonly IMySqlService _mysqlService = mysqlService;
 
     public override string Id => "b73afaa5-4c3f-41e8-9ef3-c54e75215a97";
 
@@ -57,8 +58,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
 
         try
         {
-            var mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            var result = await mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!, cancellationToken);
+            var result = await _mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result ?? []), MySqlJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)
