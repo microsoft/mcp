@@ -128,7 +128,7 @@ public class DetectorDiagnoseCommandTests
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app")] // Missing detector name
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-id", "detector-name")] // Missing app name
     [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-id", "detector-name")] // Missing resource group
-    [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-id", "detector-name")] // Missing subscription
+    [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
         // Arrange
