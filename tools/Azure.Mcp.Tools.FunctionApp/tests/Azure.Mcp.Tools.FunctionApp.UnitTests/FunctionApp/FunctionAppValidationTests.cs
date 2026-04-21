@@ -77,10 +77,10 @@ public sealed class FunctionAppValidationTests
     }
 
     [Fact]
-    public void BuildCreateOptions_DefaultIsConnectionString()
+    public void BuildCreateOptions_DefaultIsManagedIdentity()
     {
         var options = FunctionAppValidation.BuildCreateOptions(BuildInputs(null));
-        Assert.False(options.UseManagedIdentityStorage);
+        Assert.True(options.UseManagedIdentityStorage);
     }
 
     [Fact]
