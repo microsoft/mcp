@@ -60,12 +60,12 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
         * python -> 3.12
         * node -> 22
         * dotnet -> 8.0
-        * java -> 17.0
+        * java -> 17
         * powershell -> 7.4
     - WEBSITE_NODE_DEFAULT_VERSION: Set to ~<major> for Windows Node apps when a version is supplied.
     - FUNCTIONS_EXTENSION_VERSION: Always ~4.
 
-    Returns: functionApp object (name, resourceGroup, location, plan, state, defaultHostName, tags)
+    Returns: functionApp object (name, resourceGroup, location, plan, state, defaultHostName, operatingSystem, tags)
     """;
 
     public override string Title => CommandTitle;
@@ -180,7 +180,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource group or plan not found. Verify the resource group and plan exist and you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed accessing the Function App. Details: {reqEx.Message}",
+            $"Authorization failed creating the Function App. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
