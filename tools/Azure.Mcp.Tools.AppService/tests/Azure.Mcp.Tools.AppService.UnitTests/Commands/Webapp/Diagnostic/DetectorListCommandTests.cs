@@ -44,7 +44,7 @@ public class DetectorListCommandTests
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
     {
-        List<DetectorDetails> expectedValue = [new DetectorDetails("name", "type", "description", "category", ["analysisType1", "analysisType2"])];
+        List<DetectorDetails> expectedValue = [new DetectorDetails("id", "name", "type", "description", "category", ["analysisType1", "analysisType2"])];
         // Arrange
         // Set up the mock to return success for any arguments
         _appServiceService.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
@@ -69,6 +69,7 @@ public class DetectorListCommandTests
 
         Assert.NotNull(result);
         Assert.Single(result.Detectors);
+        Assert.Equal(expectedValue[0].Id, result.Detectors[0].Id);
         Assert.Equal(expectedValue[0].Name, result.Detectors[0].Name);
         Assert.Equal(expectedValue[0].Type, result.Detectors[0].Type);
         Assert.Equal(expectedValue[0].Description, result.Detectors[0].Description);

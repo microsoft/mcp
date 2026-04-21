@@ -56,7 +56,7 @@ public class DetectorDiagnoseCommandTests
             Table = new DataTableResponseObject(),
             RenderingProperties = new DiagnosticDataRendering()
         };
-        var expectedValue = new DiagnosisResults([dataset], new DetectorDetails("name", "type", "description", "category", ["analysisType1", "analysisType2"]));
+        var expectedValue = new DiagnosisResults([dataset], new DetectorDetails("id", "name", "type", "description", "category", ["analysisType1", "analysisType2"]));
 
         var startTime = startDateTimeString != null ? DateTimeOffset.Parse(startDateTimeString).ToUniversalTime() : (DateTimeOffset?)null;
         var endTime = endDateTimeString != null ? DateTimeOffset.Parse(endDateTimeString).ToUniversalTime() : (DateTimeOffset?)null;
@@ -105,6 +105,7 @@ public class DetectorDiagnoseCommandTests
         Assert.NotNull(result);
         Assert.Single(result.Diagnoses.Datasets);
         Assert.NotNull(result.Diagnoses.Datasets[0]);
+        Assert.Equal(expectedValue.Detector.Id, result.Diagnoses.Detector.Id);
         Assert.Equal(expectedValue.Detector.Name, result.Diagnoses.Detector.Name);
         Assert.Equal(expectedValue.Detector.Type, result.Diagnoses.Detector.Type);
         Assert.Equal(expectedValue.Detector.Description, result.Diagnoses.Detector.Description);
