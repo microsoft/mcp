@@ -191,7 +191,7 @@ public sealed class FunctionAppService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
 
-        return await AppServiceStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, planName, options, inputs.StorageAccountName);
+        return await AppServiceStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, planName, options, inputs.StorageAccountName, cancellationToken);
     }
 
     public async Task<FunctionAppInfo> CreateContainerAppFunctionApp(
@@ -220,7 +220,7 @@ public sealed class FunctionAppService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
 
-        return await ContainerAppsStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName);
+        return await ContainerAppsStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, cancellationToken);
     }
 
     internal static SiteConfigProperties? BuildSiteConfig(bool isLinux, CreateOptions options)
@@ -328,22 +328,22 @@ public sealed class FunctionAppService(
         settings.Properties.Remove("FUNCTIONS_WORKER_RUNTIME");
     }
 
-    private static async Task ApplyAppSettings(WebSiteResource site, CreateOptions options, StorageProvisioningResult storage)
+    private static async Task ApplyAppSettings(WebSiteResource site, CreateOptions options, StorageProvisioningResult storage, bool effectiveRequiresLinux, CancellationToken cancellationToken)
     {
         var appSettings = BuildAppSettingsInternal(
             options.Runtime,
             options.RuntimeVersion,
-            options.RequiresLinux,
+            effectiveRequiresLinux,
             storage.ConnectionString,
             storage.AccountName,
             options.UseManagedIdentityStorage,
             includeWorkerRuntime: options.HostingKind != HostingKind.FlexConsumption);
         if (options.HostingKind == HostingKind.FlexConsumption)
             SanitizeAppSettingsForFlexConsumption(appSettings);
-        await site.UpdateApplicationSettingsAsync(appSettings);
+        await site.UpdateApplicationSettingsAsync(appSettings, cancellationToken);
     }
 
-    private static async Task<WebSiteResource> CreateAppServiceSiteAsync(ResourceGroupResource rg, string functionAppName, string location, AppServicePlanResource plan, CreateOptions options, StorageProvisioningResult storage)
+    private static async Task<WebSiteResource> CreateAppServiceSiteAsync(ResourceGroupResource rg, string functionAppName, string location, AppServicePlanResource plan, CreateOptions options, StorageProvisioningResult storage, CancellationToken cancellationToken)
     {
         var isLinux = plan.Data.IsReserved == true;
         var data = new WebSiteData(location)
@@ -373,7 +373,7 @@ public sealed class FunctionAppService(
                 }
             };
         }
-        var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, functionAppName, data);
+        var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, functionAppName, data, cancellationToken);
         return op.Value;
     }
 
@@ -384,20 +384,21 @@ public sealed class FunctionAppService(
         string runtime,
         StorageProvisioningResult storage,
         bool useManagedIdentity,
-        string? containerAppsEnvironmentName = null)
+        string? containerAppsEnvironmentName,
+        CancellationToken cancellationToken)
     {
         var envs = rg.GetContainerAppManagedEnvironments();
         var envName = containerAppsEnvironmentName ?? $"{name}-env";
 
         ContainerAppManagedEnvironmentResource env;
-        if (await envs.ExistsAsync(envName))
+        if (await envs.ExistsAsync(envName, cancellationToken))
         {
-            env = await envs.GetAsync(envName);
+            env = await envs.GetAsync(envName, cancellationToken);
         }
         else
         {
             var envData = new ContainerAppManagedEnvironmentData(location);
-            env = (await envs.CreateOrUpdateAsync(WaitUntil.Completed, envName, envData)).Value;
+            env = (await envs.CreateOrUpdateAsync(WaitUntil.Completed, envName, envData, cancellationToken)).Value;
         }
 
         var apps = rg.GetContainerApps();
@@ -446,7 +447,7 @@ public sealed class FunctionAppService(
         if (useManagedIdentity)
             data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
 
-        return (await apps.CreateOrUpdateAsync(WaitUntil.Completed, name, data)).Value;
+        return (await apps.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken)).Value;
     }
 
     internal static FunctionAppInfo ConvertToFunctionAppModel(WebSiteResource siteResource)
@@ -473,12 +474,14 @@ public sealed class FunctionAppService(
             string location,
             string? planName,
             CreateOptions options,
-            string? storageAccountName = null)
+            string? storageAccountName,
+            CancellationToken cancellationToken)
         {
-            var plan = await FunctionAppPlanProvisioner.EnsureAppServicePlan(rg, planName, functionAppName, location, options);
-            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName);
-            var site = await CreateAppServiceSiteAsync(rg, functionAppName, location, plan, options, storage);
-            await ApplyAppSettings(site, options, storage);
+            var plan = await FunctionAppPlanProvisioner.EnsureAppServicePlan(rg, planName, functionAppName, location, options, cancellationToken);
+            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
+            var site = await CreateAppServiceSiteAsync(rg, functionAppName, location, plan, options, storage, cancellationToken);
+            var effectiveRequiresLinux = plan.Data.IsReserved == true;
+            await ApplyAppSettings(site, options, storage, effectiveRequiresLinux, cancellationToken);
             return ConvertToFunctionAppModel(site);
         }
     }
@@ -491,11 +494,12 @@ public sealed class FunctionAppService(
             string functionAppName,
             string location,
             CreateOptions options,
-            string? storageAccountName = null,
-            string? containerAppsEnvironmentName = null)
+            string? storageAccountName,
+            string? containerAppsEnvironmentName,
+            CancellationToken cancellationToken)
         {
-            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName);
-            var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName);
+            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
+            var containerApp = await EnsureMinimalContainerApp(rg, functionAppName, location, options.Runtime, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName, cancellationToken);
             var host = containerApp.Data.Configuration?.Ingress?.Fqdn ?? containerApp.Data.LatestRevisionName ?? containerApp.Data.Name;
             return new FunctionAppInfo(
                 containerApp.Data.Name,
