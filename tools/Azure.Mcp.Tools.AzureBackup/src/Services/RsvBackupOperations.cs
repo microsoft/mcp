@@ -777,6 +777,9 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
     {
+        bool scheduleApplied = newScheduleTime is null;
+        bool retentionApplied = newRetentionDays is null;
+
         switch (policyProperties)
         {
             case VmWorkloadProtectionPolicy wlPolicy:
@@ -789,6 +792,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                             var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                             fullSchedule.ScheduleRunTimes.Clear();
                             fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                            scheduleApplied = true;
                         }
 
                         if (newRetentionDays is not null && subPolicy.RetentionPolicy is LongTermRetentionPolicy fullRetention && fullRetention.DailySchedule is not null)
@@ -800,6 +804,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                                 fullRetention.DailySchedule.RetentionTimes.Clear();
                                 fullRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
                             }
+                            retentionApplied = true;
                         }
                     }
                 }
@@ -811,6 +816,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                     vmSchedule.ScheduleRunTimes.Clear();
                     vmSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                    scheduleApplied = true;
                 }
 
                 if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy vmRetention && vmRetention.DailySchedule is not null)
@@ -818,6 +824,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     if (newRetentionDays is not null)
                     {
                         vmRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
+                        retentionApplied = true;
                     }
 
                     if (newScheduleTime is not null)
@@ -825,7 +832,12 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                         var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                         vmRetention.DailySchedule.RetentionTimes.Clear();
                         vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
+                        scheduleApplied = true;
                     }
+                }
+                else if (newRetentionDays is not null)
+                {
+                    // Retention policy type not supported for update
                 }
                 break;
 
@@ -835,6 +847,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                     fsSchedule.ScheduleRunTimes.Clear();
                     fsSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                    scheduleApplied = true;
                 }
 
                 if (fsPolicy.RetentionPolicy is LongTermRetentionPolicy fsRetention && fsRetention.DailySchedule is not null)
@@ -842,6 +855,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                     if (newRetentionDays is not null)
                     {
                         fsRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
+                        retentionApplied = true;
                     }
 
                     if (newScheduleTime is not null)
@@ -849,12 +863,29 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                         var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                         fsRetention.DailySchedule.RetentionTimes.Clear();
                         fsRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
+                        scheduleApplied = true;
                     }
+                }
+                else if (newRetentionDays is not null)
+                {
+                    // Retention policy type not supported for update
                 }
                 break;
 
             default:
                 throw new InvalidOperationException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
+        }
+
+        if (!scheduleApplied)
+        {
+            throw new InvalidOperationException(
+                $"Schedule update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a schedule type that is not supported for update. Only SimpleSchedulePolicy is supported.");
+        }
+
+        if (!retentionApplied)
+        {
+            throw new InvalidOperationException(
+                $"Retention update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a retention type that is not supported for update. Only LongTermRetentionPolicy with a daily schedule is supported.");
         }
     }
 
