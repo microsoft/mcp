@@ -115,22 +115,30 @@ public sealed class PromptParserTests : IDisposable
 
         Assert.Single(result);
         Assert.Equal(string.Empty, result[0].Section);
-        Assert.Equal(string.Empty, result[0].Namespace);
+        Assert.Equal("my", result[0].Namespace);
     }
 
     [Fact]
-    public void ParseNamespaces_ExtractsSectionHeaders()
+    public void ParseNamespaces_ExtractsFromToolNames()
     {
         File.WriteAllText(_tempFile, """
             ## storage
 
-            Some text.
+            | Tool Name | Prompt |
+            |-----------|--------|
+            | storage_account_list | list accounts |
 
             ## keyvault
 
-            More text.
+            | Tool Name | Prompt |
+            |-----------|--------|
+            | keyvault_secret_get | get secret |
 
             ## cosmos
+
+            | Tool Name | Prompt |
+            |-----------|--------|
+            | cosmos_database_list | list databases |
             """);
 
         var result = PromptParser.ParseNamespaces(_tempFile);

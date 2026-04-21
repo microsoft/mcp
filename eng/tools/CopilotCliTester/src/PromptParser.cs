@@ -17,18 +17,20 @@ internal static partial class PromptParser
     [GeneratedRegex(@"^\|\s*([a-z0-9_-]+)\s*\|\s*(.+)\s*\|$", RegexOptions.IgnoreCase)]
     private static partial Regex TableRowRegex();
 
+    internal static string GetNamespace(string tool)
+    {
+        if (tool.StartsWith("get_azure_bestpractices_", StringComparison.OrdinalIgnoreCase))
+            return "get_azure_bestpractices";
+        return tool.Split('_')[0];
+    }
+
     public static List<string> ParseNamespaces(string filePath)
     {
-        var namespaces = new List<string>();
-        foreach (var line in File.ReadLines(filePath))
-        {
-            var match = SectionHeaderRegex().Match(line);
-            if (match.Success)
-            {
-                namespaces.Add(match.Groups[1].Value);
-            }
-        }
-        return namespaces;
+        return ParseFile(filePath)
+            .Select(p => p.Namespace)
+            .Where(ns => !string.IsNullOrEmpty(ns))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     public static List<TestPrompt> ParseFile(string filePath)
@@ -60,7 +62,7 @@ internal static partial class PromptParser
                     continue;
                 }
 
-                prompts.Add(new TestPrompt(currentSection, tool, prompt, currentSection));
+                prompts.Add(new TestPrompt(currentSection, tool, prompt, GetNamespace(tool)));
             }
         }
 

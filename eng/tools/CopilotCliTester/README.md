@@ -8,7 +8,7 @@ Parses test prompts from `e2eTestPrompts.md`, executes them through a Copilot SD
 
 ### How It Works
 
-1. **PromptParser** reads the markdown file and extracts `{ section, tool, prompt, namespace }` tuples
+1. **PromptParser** reads the markdown file and extracts `{ section, tool, prompt, namespace }` tuples (namespace is derived from the tool name prefix — the first `_`-delimited segment, e.g., `storage` from `storage_account_get`)
 2. **AgentRunner** creates a `CopilotClient` session with the Azure MCP server configured as a stdio MCP server
 3. Each prompt is sent to the agent, and tool invocation events are captured via `session.On` event handler
 4. **Early termination** aborts the session once the expected tool is called (saves time and cost)
@@ -95,7 +95,7 @@ Usage:
   CopilotCliTester run [options]
 
 Options:
-  --namespace <name>      Filter by namespace (partial, case-insensitive match against section headers in e2eTestPrompts.md, e.g., "storage" matches "Azure Storage")
+  --namespace <name>      Filter by namespace (partial, case-insensitive match against the tool name prefix, e.g., "storage" matches tools like storage_account_get)
   --tool <name>           Filter by tool name (exact match, e.g., "subscription_list")
   --max <n>               Maximum number of prompts to test (0 = all)
   --retries <n>           Maximum retry attempts per prompt (default: 3)
@@ -106,7 +106,7 @@ Options:
   --threshold <n>         Pass threshold percentage; exit code 1 if pass rate is below this value (default: 95)
   --prompts-file <path>   Custom prompts file path (format needs to match the e2eprompts.md format for successful parsing)
   --fail-on-no-match      Treat zero matching prompts as a failure (exit code 1) instead of silently passing
-  --list-namespaces       List all available namespace values from the prompts file and exit
+  --list-namespaces       List all available namespace values (derived from tool name prefixes) and exit
 ```
 
 ### Examples
@@ -131,12 +131,12 @@ dotnet run -- run --one-per-tool --max 20
 dotnet run -- run --namespace storage --parallel 5
 
 # Use a different model
-dotnet run -- run --namespace "key vault" --model gpt-4o
+dotnet run -- run --namespace keyvault --model gpt-4o
 
 # Use a custom prompts file
 dotnet run -- run --prompts-file ./my-prompts.md
 
-# List all available namespaces (useful for finding valid --namespace values)
+# List all available namespaces (derived from tool name prefixes)
 dotnet run -- run --list-namespaces
 
 # Set a custom pass threshold (fail if pass rate < 80%)
@@ -202,7 +202,7 @@ Azure MCP E2E Test Runner (Copilot SDK)
 SUCCESS: Loaded test context
 SUCCESS: Loading prompts from: .../e2eTestPrompts.md
   Found 620 total prompts
-  → Filtered to namespace "redis": 8 prompts
+  → Filtered to namespace "redis": 8 prompts (matched tool prefix)
 
 Testing 8 prompts across 1 namespaces
 Retries: 3, Model: claude-opus-4.6
@@ -280,22 +280,25 @@ The `--parallel` flag controls concurrent test execution using a `SemaphoreSlim`
 
 ## Namespace Examples
 
-Namespaces are derived from the `## ` section headers in `e2eTestPrompts.md` (e.g., `## Azure Storage` → namespace `Azure Storage`). The `--namespace` option performs a **partial, case-insensitive** match against these section headers, so `--namespace storage` matches `Azure Storage`, and `--namespace sql` matches `Azure SQL Database`, `Azure SQL Elastic Pool Operations`, and `Azure SQL Server Operations`.
+Namespaces are derived from tool name prefixes — the first `_`-delimited segment of each tool name (e.g., `storage_account_get` → namespace `storage`). The `--namespace` option performs a **partial, case-insensitive** match against these derived prefixes, so `--namespace storage` matches tools like `storage_account_get` and `storage_blob_list`.
 
 Use `--list-namespaces` to see all valid namespace values from the prompts file.
 
-Some example section headers (namespaces) from `e2eTestPrompts.md`:
+Some example namespaces (derived from tool name prefixes in `e2eTestPrompts.md`):
 
-| Namespace (Section Header) | Description |
-|----------------------------|-------------|
-| `Azure Storage` | Azure Storage (blobs, queues, tables, file shares) |
-| `Azure Key Vault` | Key Vault (secrets, keys, certificates) |
-| `Azure Redis` | Azure Cache for Redis |
-| `Azure SQL Database` | Azure SQL Database |
-| `Azure Cosmos DB` | Cosmos DB |
-| `Azure App Service` | App Service web apps |
-| `Azure Monitor` | Azure Monitor (metrics, logs, alerts) |
-| `Azure CLI` | Azure CLI extensions |
+| Namespace | Example Tools |
+|-----------|---------------|
+| `storage` | `storage_account_get`, `storage_blob_list` |
+| `keyvault` | `keyvault_secret_get`, `keyvault_key_list` |
+| `redis` | `redis_list`, `redis_create` |
+| `sql` | `sql_database_show`, `sql_server_get` |
+| `cosmos` | `cosmos_database_container_item_query` |
+| `appservice` | `appservice_webapp_get` |
+| `monitor` | `monitor_metrics_query`, `monitor_workspace_log_query` |
+| `extension` | `extension_cli_install`, `extension_cli_generate` |
+| `get_azure_bestpractices` | `get_azure_bestpractices_get`, `get_azure_bestpractices_ai_app` |
+
+> **Compound namespaces:** Some tools use a multi-segment prefix that can't be derived by splitting on the first `_` (e.g., `get_azure_bestpractices_get` → namespace `get_azure_bestpractices`, not `get`). These are handled by hardcoded exceptions in `PromptParser.cs`. If you add a new tool whose namespace spans multiple `_`-delimited segments, add a matching `StartsWith` check in `PromptParser.GetNamespace` so the tool is routed to the correct namespace.
 
 ## Troubleshooting
 

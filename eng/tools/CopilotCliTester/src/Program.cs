@@ -324,14 +324,14 @@ static class Program
             }
             catch (Exception ex)
             {
-                WriteLineLock($"ERROR: Task for tool '{prompt.Tool}' failed to initialize: {ex.Message}");
+                WriteLineLock($"ERROR: Task for tool '{prompt.Tool}' failed to initialize: {AgentRunner.RedactSecrets(ex.Message)}");
                 var errorResult = new TestResult
                 {
                     Tool = prompt.Tool,
                     Prompt = prompt.Prompt,
                     Duration = 0,
                     Status = TestStatus.Error,
-                    Error = $"Task infrastructure error: {ex.Message}"
+                    Error = $"Task infrastructure error: {AgentRunner.RedactSecrets(ex.Message)}"
                 };
                 AppendResultToMarkdown(reportFile, errorResult);
                 return errorResult;
@@ -414,13 +414,13 @@ static class Program
             }
             catch (Exception e)
             {
-                WriteLineLock($"  {toolTag} WARNING: Attempt {attempt} failed: {e.Message}");
+                WriteLineLock($"  {toolTag} WARNING: Attempt {attempt} failed: {AgentRunner.RedactSecrets(e.Message)}");
                 if (attempt <= retries)
                 {
                     continue;
                 }
                 // Final attempt failed
-                WriteLineLock($"  {toolTag} X ERROR: {e.Message}");
+                WriteLineLock($"  {toolTag} X ERROR: {AgentRunner.RedactSecrets(e.Message)}");
                 return new TestResult
                 {
                     Tool = prompt.Tool,
@@ -428,7 +428,7 @@ static class Program
                     Duration = stopwatch.Elapsed.TotalSeconds,
                     Attempts = attempt,
                     Status = TestStatus.Error,
-                    Error = e.Message
+                    Error = AgentRunner.RedactSecrets(e.Message)
                 };
             }
 
@@ -511,7 +511,7 @@ static class Program
             }
             catch (IOException ex)
             {
-                Console.Error.WriteLine($"Warning: Failed to write to report: {ex.Message}");
+                Console.Error.WriteLine($"Warning: Failed to write to report: {AgentRunner.RedactSecrets(ex.Message)}");
             }
         }
     }
@@ -563,7 +563,7 @@ static class Program
             foreach (var result in results.Where(r => r.Status == TestStatus.Error))
             {
                 var promptShort = (result.Prompt.Length > 50 ? result.Prompt[..50] + "..." : result.Prompt).Replace("|", "\\|");
-                var error = (result.Error ?? "").Replace("|", "\\|");
+                var error = AgentRunner.RedactSecrets((result.Error ?? "").Replace("|", "\\|"));
                 writer.WriteLine($"| `{result.Tool}` | {promptShort} | {error} |");
             }
         }
@@ -660,7 +660,7 @@ static class Program
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException(
-                $"'dotnet build' failed (exit code {process.ExitCode}).\n{stderr}");
+                $"'dotnet build' failed (exit code {process.ExitCode}).\n{AgentRunner.RedactSecrets(stderr)}");
         }
 
         // After build, the Debug output should exist

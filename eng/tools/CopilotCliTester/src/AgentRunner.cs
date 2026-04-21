@@ -199,7 +199,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
         catch (Exception ex)
         {
             isComplete = true;
-            Console.Error.WriteLine($"Agent runner error: {ex}");
+            Console.Error.WriteLine($"Agent runner error: {RedactSecrets(ex.ToString())}");
             if (metadata is not null)
             {
                 try
@@ -208,7 +208,7 @@ internal sealed partial class AgentRunner(CopilotClient client, string serverExe
                 }
                 catch (Exception reportEx)
                 {
-                    Console.Error.WriteLine($"Warning: Failed to write report: {reportEx.Message}");
+                    Console.Error.WriteLine($"Warning: Failed to write report: {RedactSecrets(reportEx.Message)}");
                 }
             }
 
