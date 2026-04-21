@@ -176,7 +176,7 @@ public class DetectorDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--app", "test-app",
-            "--detector-id", "detector-name"
+            "--detector-id", "LinuxMemoryDrillDown"
         ];
         if (startDateTimeString != null)
         {
