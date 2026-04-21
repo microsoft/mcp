@@ -34,8 +34,11 @@ public class FunctionAppSetup : IAreaSetup
         var createCommand = serviceProvider.GetRequiredService<FunctionAppCreateCommand>();
         functionApp.AddCommand(createCommand.Name, createCommand);
 
+        var containerApp = new CommandGroup("containerapp", "Azure Container Apps-hosted Function App operations.", "Azure Functions on Container Apps");
+        functionApp.AddSubGroup(containerApp);
+
         var createContainerAppCommand = serviceProvider.GetRequiredService<FunctionAppCreateContainerAppCommand>();
-        functionApp.AddCommand(createContainerAppCommand.Name, createContainerAppCommand);
+        containerApp.AddCommand(createContainerAppCommand.Name, createContainerAppCommand);
 
         return functionApp;
     }

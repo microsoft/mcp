@@ -2829,7 +2829,7 @@
       },
       "mappedToolList": [
         "functionapp_create",
-        "functionapp_create_containerapp"
+        "functionapp_containerapp_create"
       ]
     },
     {

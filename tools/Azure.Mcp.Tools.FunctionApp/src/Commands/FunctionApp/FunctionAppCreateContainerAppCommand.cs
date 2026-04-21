@@ -23,7 +23,7 @@ public sealed class FunctionAppCreateContainerAppCommand(ILogger<FunctionAppCrea
 
     public override string Id => "c7e8b8a4-9d71-4b91-8d15-7a4c2a5f3e02";
 
-    public override string Name => "create-containerapp";
+    public override string Name => "create";
 
     public override string Description =>
     """

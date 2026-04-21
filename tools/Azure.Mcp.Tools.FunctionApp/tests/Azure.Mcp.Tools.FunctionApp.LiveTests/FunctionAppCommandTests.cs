@@ -252,7 +252,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var uniqueName = $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}";
 
         var result = await CallToolAsync(
-            "azmcp_functionapp_create_containerapp",
+            "azmcp_functionapp_containerapp_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

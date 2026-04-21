@@ -39,7 +39,7 @@ public sealed class FunctionAppCreateContainerAppCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("create-containerapp", command.Name);
+        Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }

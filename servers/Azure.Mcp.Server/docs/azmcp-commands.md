@@ -2105,7 +2105,7 @@ azmcp functionapp create --subscription <subscription> \
 
 # Create a function app hosted in Azure Container Apps
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp functionapp create-containerapp --subscription <subscription> \
+azmcp functionapp containerapp create --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --function-app <function-app-name> \
                                        --location <location> \

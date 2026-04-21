@@ -29,7 +29,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     """
     Create a new Azure Function App hosted on an App Service plan (Consumption, Flex Consumption, Premium, or App Service).
     Automatically provisions dependencies when omitted (App Service plan and Storage account) and applies sensible runtime & SKU defaults.
-    For Container Apps hosting, use 'functionapp create-containerapp' instead.
+    For Container Apps hosting, use 'functionapp containerapp create' instead.
 
     Required options:
     - subscription: Target Azure subscription (ID or name)
@@ -137,7 +137,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
                 string.Equals(options.PlanType, "containerapps", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.Status = HttpStatusCode.BadRequest;
-                context.Response.Message = "Container Apps hosting is not supported by this command. Use 'functionapp create-containerapp' instead.";
+                context.Response.Message = "Container Apps hosting is not supported by this command. Use 'functionapp containerapp create' instead.";
                 return context.Response;
             }
 

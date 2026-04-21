@@ -183,7 +183,7 @@ public sealed class FunctionAppService(
 
         var resolvedHostingKind = FunctionAppValidation.ParseHostingKind(inputs.PlanType);
         if (resolvedHostingKind == HostingKind.ContainerApp)
-            throw new ArgumentException("Use the 'functionapp create-containerapp' command to host a Function App in Azure Container Apps.");
+            throw new ArgumentException("Use the 'functionapp containerapp create' command to host a Function App in Azure Container Apps.");
 
         var useManagedIdentity = requestedAuthMode ?? true;
         var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
