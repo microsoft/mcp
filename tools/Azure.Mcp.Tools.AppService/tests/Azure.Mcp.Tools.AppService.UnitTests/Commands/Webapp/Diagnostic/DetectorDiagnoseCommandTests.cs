@@ -63,7 +63,7 @@ public class DetectorDiagnoseCommandTests
 
         // Arrange
         // Set up the mock to return success for any arguments
-        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
+        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown", startTime, endTime,
             interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
@@ -71,7 +71,7 @@ public class DetectorDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--app", "test-app",
-            "--detector-id", "detector-name"
+            "--detector-id", "LinuxMemoryDrillDown"
         ];
         if (startDateTimeString != null)
         {
@@ -92,7 +92,7 @@ public class DetectorDiagnoseCommandTests
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
+        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown",
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
@@ -123,11 +123,11 @@ public class DetectorDiagnoseCommandTests
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group and detector name
     [InlineData("--subscription", "sub123", "--detector-id", "LinuxMemoryDrillDown")] // Missing resource group and app name
     [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription and detector name
-    [InlineData("--resource-group", "rg1", "--detector-id", "detector-name")] // Missing subscription and app name
-    [InlineData("--app", "test-app", "--detector-id", "detector-name")] // Missing subscription and resource group
+    [InlineData("--resource-group", "rg1", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription and app name
+    [InlineData("--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription and resource group
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app")] // Missing detector name
-    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-id", "detector-name")] // Missing app name
-    [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-id", "detector-name")] // Missing resource group
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-id", "LinuxMemoryDrillDown")] // Missing app name
+    [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing resource group
     [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
@@ -168,7 +168,7 @@ public class DetectorDiagnoseCommandTests
 
         // Arrange
         // Set up the mock to return success for any arguments
-        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name", startTime, endTime,
+        _appServiceService.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown", startTime, endTime,
             interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -199,7 +199,7 @@ public class DetectorDiagnoseCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "detector-name",
+        await _appServiceService.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown",
             startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
