@@ -216,7 +216,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var uniqueName = $"mcp-test-{planType}-{DateTime.UtcNow:MMddHHmmss}";
 
         var result = await CallToolAsync(
-            "azmcp_functionapp_create",
+            "functionapp_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -252,7 +252,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var uniqueName = $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}";
 
         var result = await CallToolAsync(
-            "azmcp_functionapp_containerapp_create",
+            "functionapp_containerapp_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -279,7 +279,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     {
         var uniqueFunctionAppName = $"test-functionapp-invalid-{runtime}-{DateTime.UtcNow:MMddHHmmss}";
         var result = await CallToolAsync(
-            "azmcp_functionapp_create",
+            "functionapp_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
