@@ -40,25 +40,30 @@ public static class FunctionAppStorageProvisioner
         ResourceGroupResource rg,
         string functionAppName,
         string location,
-        string? storageAccountName = null)
+        string? storageAccountName = null,
+        bool useManagedIdentity = false,
+        CancellationToken cancellationToken = default)
     {
         var accountName = storageAccountName ?? CreateStorageAccountName(functionAppName);
         var storageAccounts = rg.GetStorageAccounts();
 
         StorageAccountResource storage;
-        if (await storageAccounts.ExistsAsync(accountName))
+        if (await storageAccounts.ExistsAsync(accountName, cancellationToken: cancellationToken))
         {
-            storage = await storageAccounts.GetAsync(accountName);
+            storage = await storageAccounts.GetAsync(accountName, cancellationToken: cancellationToken);
         }
         else
         {
             var createOptions = CreateStorageAccountOptions(location);
-            var op = await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, accountName, createOptions);
+            var op = await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, accountName, createOptions, cancellationToken);
             storage = op.Value;
         }
 
+        if (useManagedIdentity)
+            return new StorageProvisioningResult(accountName, string.Empty);
+
         StorageAccountKey? primaryKey = null;
-        await foreach (var key in storage.GetKeysAsync())
+        await foreach (var key in storage.GetKeysAsync(cancellationToken: cancellationToken))
         {
             primaryKey = key;
             break;
