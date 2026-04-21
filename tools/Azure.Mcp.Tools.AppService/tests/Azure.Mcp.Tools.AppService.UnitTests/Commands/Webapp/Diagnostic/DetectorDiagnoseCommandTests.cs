@@ -71,7 +71,7 @@ public class DetectorDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--app", "test-app",
-            "--detector-name", "detector-name"
+            "--detector-id", "detector-name"
         ];
         if (startDateTimeString != null)
         {
@@ -118,17 +118,17 @@ public class DetectorDiagnoseCommandTests
     [InlineData("--subscription", "sub123")] // Missing resource group, app name, and detector name
     [InlineData("--resource-group", "rg1")] // Missing subscription, app name, and detector name
     [InlineData("--app", "app")] // Missing subscription, resource group, and detector name
-    [InlineData("--detector-name", "detector")] // Missing subscription, resource group, and app name
+    [InlineData("--detector-id", "detector")] // Missing subscription, resource group, and app name
     [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app name and detector name
     [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group and detector name
-    [InlineData("--subscription", "sub123", "--detector-name", "detector-name")] // Missing resource group and app name
+    [InlineData("--subscription", "sub123", "--detector-id", "detector-name")] // Missing resource group and app name
     [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription and detector name
-    [InlineData("--resource-group", "rg1", "--detector-name", "detector-name")] // Missing subscription and app name
-    [InlineData("--app", "test-app", "--detector-name", "detector-name")] // Missing subscription and resource group
+    [InlineData("--resource-group", "rg1", "--detector-id", "detector-name")] // Missing subscription and app name
+    [InlineData("--app", "test-app", "--detector-id", "detector-name")] // Missing subscription and resource group
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app")] // Missing detector name
-    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-name", "detector-name")] // Missing app name
-    [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-name", "detector-name")] // Missing resource group
-    [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-name", "detector-name")] // Missing subscription
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-id", "detector-name")] // Missing app name
+    [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-id", "detector-name")] // Missing resource group
+    [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-id", "detector-name")] // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
         // Arrange
@@ -176,7 +176,7 @@ public class DetectorDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--app", "test-app",
-            "--detector-name", "detector-name"
+            "--detector-id", "detector-name"
         ];
         if (startDateTimeString != null)
         {

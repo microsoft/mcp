@@ -42,7 +42,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.DetectorName.AsRequired());
+        command.Options.Add(AppServiceOptionDefinitions.DetectorId.AsRequired());
         command.Options.Add(AppServiceOptionDefinitions.StartTime);
         command.Options.Add(AppServiceOptionDefinitions.EndTime);
         command.Options.Add(AppServiceOptionDefinitions.Interval);
@@ -77,7 +77,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override DetectorDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DetectorName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorName.Name);
+        options.DetectorId = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorId.Name);
         if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name), out var startTime))
         {
             options.StartTime = startTime.ToUniversalTime();
@@ -109,7 +109,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
-                options.DetectorName!,
+                options.DetectorId!,
                 options.StartTime,
                 options.EndTime,
                 options.Interval,

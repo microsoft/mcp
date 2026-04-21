@@ -28,7 +28,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-name", "Memoryusage"}
+                { "detector-id", "Memoryusage"}
             });
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
@@ -51,7 +51,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-name", "Memoryusage"},
+                { "detector-id", "Memoryusage"},
                 { "start-time", DateTimeOffset.UtcNow.AddHours(-1).ToString("o") },
                 { "end-time", DateTimeOffset.UtcNow.ToString("o") },
                 { "time-grain", "PT10M" }
