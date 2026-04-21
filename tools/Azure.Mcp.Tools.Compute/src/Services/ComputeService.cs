@@ -26,7 +26,7 @@ public class ComputeService(
 {
     private readonly ILogger<ComputeService> _logger = logger;
 
-    // Default VM size (D-series v5: 2 vCPU, 8 GB RAM, available in all regions)
+    // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
 
     private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
