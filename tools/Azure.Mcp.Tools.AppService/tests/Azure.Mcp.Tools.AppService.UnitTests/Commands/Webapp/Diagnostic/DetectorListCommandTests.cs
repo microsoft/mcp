@@ -20,7 +20,8 @@ public class DetectorListCommandTests : CommandUnitTestsBase<DetectorListCommand
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments()
     {
-        List<DetectorDetails> expectedValue = [new("name", "type", "description", "category", ["analysisType1", "analysisType2"])];
+        List<DetectorDetails> expectedValue = [new("id", "name", "type", "description", "category", ["analysisType1", "analysisType2"])];
+
         // Arrange
         // Set up the mock to return success for any arguments
         Service.ListDetectorsAsync("sub123", "rg1", "test-app", Arg.Any<string?>(),
@@ -38,6 +39,7 @@ public class DetectorListCommandTests : CommandUnitTestsBase<DetectorListCommand
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorListResult);
 
         Assert.Single(result.Detectors);
+        Assert.Equal(expectedValue[0].Id, result.Detectors[0].Id);
         Assert.Equal(expectedValue[0].Name, result.Detectors[0].Name);
         Assert.Equal(expectedValue[0].Type, result.Detectors[0].Type);
         Assert.Equal(expectedValue[0].Description, result.Detectors[0].Description);
