@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger) : GlobalCommand<DeleteWorkbookOptions>
+public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logger, IWorkbooksService workbooksService) : GlobalCommand<DeleteWorkbookOptions>
 {
     private const string CommandTitle = "Delete Workbook";
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
     public override string Id => "17bb94ef-9df1-45d2-a1a0-ed57656ca067";
 
     public override string Name => "delete";
@@ -76,8 +77,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var result = await workbooksService.DeleteWorkbooksAsync(
+            var result = await _workbooksService.DeleteWorkbooksAsync(
                 options.WorkbookIds!,
                 options.RetryPolicy,
                 options.Tenant,

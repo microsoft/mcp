@@ -11,8 +11,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
+    private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Get PostgreSQL Table Schema";
 
     public override string Id => "643a3497-44e1-4727-b3d6-c2e5dba6cab2";
@@ -56,8 +57,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         {
 
 
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> schema = await pgService.GetTableSchemaAsync(
+            List<string> schema = await _postgresService.GetTableSchemaAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AuthType!,

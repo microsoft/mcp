@@ -1,39 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
-public class RegistryRepositoryListCommandTests
+public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryRepositoryListCommand, IAcrService>
 {
-    private readonly IAcrService _service;
-    private readonly ILogger<RegistryRepositoryListCommand> _logger;
-    private readonly RegistryRepositoryListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RegistryRepositoryListCommandTests()
-    {
-        _service = Substitute.For<IAcrService>();
-        _logger = Substitute.For<ILogger<RegistryRepositoryListCommand>>();
-
-        _command = new(_logger, _service);
-        _context = new(new ServiceCollection().BuildServiceProvider());
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Theory]
     [InlineData("--subscription sub", true)]
     [InlineData("--subscription sub --resource-group rg", true)]
@@ -44,17 +25,21 @@ public class RegistryRepositoryListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Service.ListRegistryRepositories(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(new Dictionary<string, List<string>>
                 {
                     ["myacr"] = ["repo1", "repo2"]
                 });
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -72,13 +57,17 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<Dictionary<string, List<string>>>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
+        Service.ListRegistryRepositories(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -90,20 +79,23 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRegistryRepositories(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
+        var result = DeserializeResponse(response, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.RepositoriesByRegistry);

@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
-public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : SubscriptionCommand<BaseQueueOptions>
+public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<BaseQueueOptions>
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     public override string Id => "a02c58ce-e89f-4303-ac4a-c9dfb118e761";
 
@@ -72,8 +73,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var details = await service.GetQueueDetails(
+            var details = await _serviceBusService.GetQueueDetails(
                 options.Namespace!,
                 options.Name!,
                 options.Tenant,

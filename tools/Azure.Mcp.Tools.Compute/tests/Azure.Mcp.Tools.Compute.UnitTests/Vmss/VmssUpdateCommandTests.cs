@@ -56,6 +56,9 @@ public class VmssUpdateCommandTests
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --upgrade-policy Automatic", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --tags env=test", true)]
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --scale-in-policy OldestVM", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --capacity 10", true)] // Capacity only
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --overprovision true", true)] // Overprovision only
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --enable-auto-os-upgrade true", true)] // EnableAutoOsUpgrade only
     [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123", false)] // No update property
     [InlineData("--resource-group test-rg --subscription sub123 --tags env=test", false)] // Missing vmss-name
     [InlineData("--vmss-name test-vmss --subscription sub123 --tags env=test", false)] // Missing resource-group

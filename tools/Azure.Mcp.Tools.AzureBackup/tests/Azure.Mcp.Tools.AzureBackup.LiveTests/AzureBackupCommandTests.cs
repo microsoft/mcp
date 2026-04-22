@@ -42,6 +42,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "AzureBackupRG_mcp-test",
             Value = "Sanitized",
+        }),
+        // RSV APIs may return resource group names in lowercase in sourceResourceId
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "(?i)azurebackuprg_mcp-test",
+            Value = "Sanitized",
         })
     ];
 
@@ -1057,6 +1063,65 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DisasterRecoveryEnableCrr_DPP");
         var opResult = result.AssertProperty("result");
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    #endregion
+
+    #region Undelete Protected Item Tests
+
+    [Fact]
+    public async Task ProtectedItemUndelete_DppVault_UndeletesDisk_Successfully()
+    {
+        // The test-resources-post.ps1 script protects a disk in the DPP vault and then
+        // soft-deletes it. This test restores the soft-deleted disk backup instance.
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var datasourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Compute/disks/{Settings.ResourceBaseName}-disk";
+
+        var result = await CallToolAsync(
+            "azurebackup_protecteditem_undelete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "datasource-id", datasourceId },
+                { "vault-type", "dpp" }
+            });
+
+        // Expect accepted (LRO started — item restore is in progress)
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Accepted", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task ProtectedItemUndelete_RsvVault_UndeletesFileShare_Successfully()
+    {
+        // The test-resources-post.ps1 script protects a file share in the RSV vault
+        // and then soft-deletes it. This test restores the soft-deleted file share backup.
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var storageAccountName = $"{Settings.ResourceBaseName.Replace("-", "")}sa";
+        if (storageAccountName.Length > 24)
+        {
+            storageAccountName = storageAccountName[..24];
+        }
+
+        // File share datasource ID format for RSV matching
+        var datasourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/fileServices/default/shares/{Settings.ResourceBaseName}-share";
+
+        var result = await CallToolAsync(
+            "azurebackup_protecteditem_undelete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "datasource-id", datasourceId },
+                { "vault-type", "rsv" }
+            });
+
+        // Expect accepted (LRO started — item restore is in progress)
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Accepted", opResult.AssertProperty("status").GetString());
     }
 
     #endregion

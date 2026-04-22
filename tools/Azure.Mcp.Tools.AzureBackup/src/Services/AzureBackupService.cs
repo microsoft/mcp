@@ -167,6 +167,18 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
+    public async Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? vaultType, string? containerName,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+
+        return VaultTypeResolver.IsRsv(resolvedType)
+            ? await rsvOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, containerName, tenant, retryPolicy, cancellationToken)
+            : await dppOps.UndeleteProtectedItemAsync(vaultName, resourceGroup, subscription, datasourceId, tenant, retryPolicy, cancellationToken);
+    }
+
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? vaultType, string? tenant,

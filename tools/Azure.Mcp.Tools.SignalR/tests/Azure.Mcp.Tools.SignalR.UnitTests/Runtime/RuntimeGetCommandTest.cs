@@ -33,9 +33,9 @@ public class RuntimeGetCommandTests
         _signalRService = Substitute.For<ISignalRService>();
         _logger = Substitute.For<ILogger<RuntimeGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_signalRService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _signalRService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

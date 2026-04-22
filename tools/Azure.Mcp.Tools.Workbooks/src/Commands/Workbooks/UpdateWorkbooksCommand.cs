@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger) : BaseWorkbooksCommand<UpdateWorkbooksOptions>
+public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger, IWorkbooksService workbooksService) : BaseWorkbooksCommand<UpdateWorkbooksOptions>
 {
     private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
     public override string Id => "9efdc32c-22bc-4b85-8b5c-2fbefc0e927e";
 
     public override string Name => "update";
@@ -65,8 +66,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var updatedWorkbook = await workbooksService.UpdateWorkbookAsync(
+            var updatedWorkbook = await _workbooksService.UpdateWorkbookAsync(
                 options.WorkbookId!,
                 options.DisplayName,
                 options.SerializedContent,

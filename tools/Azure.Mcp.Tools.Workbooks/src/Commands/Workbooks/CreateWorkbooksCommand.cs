@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger) : SubscriptionCommand<CreateWorkbookOptions>
+public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<CreateWorkbookOptions>
 {
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
     public override string Id => "a49c650d-8568-4b63-8bad-35eb6d9ab0a7";
 
     public override string Name => "create";
@@ -71,8 +72,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var createdWorkbook = await workbooksService.CreateWorkbookAsync(
+            var createdWorkbook = await _workbooksService.CreateWorkbookAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.DisplayName!,

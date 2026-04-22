@@ -815,6 +815,15 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--vault-type <vault-type>] \
                                         [--container <container>] \
                                         [--datasource-type <datasource-type>]
+
+# Restores a soft-deleted backup item to an active protection state. For RSV vaults, pass the datasource ARM resource ID as --datasource-id. For DPP vaults, pass the datasource ARM resource ID to find and restore the soft-deleted backup instance.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protecteditem undelete --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --vault <vault> \
+                                         --datasource-id <datasource-id> \
+                                         [--vault-type <vault-type>] \
+                                         [--container <container>]
 ```
 
 #### Protectable Item
