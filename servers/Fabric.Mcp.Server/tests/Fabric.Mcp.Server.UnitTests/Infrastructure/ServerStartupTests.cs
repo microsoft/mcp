@@ -69,7 +69,7 @@ public class ServerStartupTests
         {
             if (!process.HasExited)
             {
-                process.Kill();
+                process.Kill(entireProcessTree: true);
             }
         }
     }
