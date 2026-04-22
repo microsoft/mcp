@@ -58,14 +58,14 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
     {
         return new GetOptions
         {
-            WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.WorkspaceFolder.Name) ?? string.Empty,
-            ProjectName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProjectName.Name) ?? string.Empty,
-            TargetAppService = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.TargetAppService.Name) ?? string.Empty,
-            ProvisioningTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProvisioningTool.Name) ?? string.Empty,
-            IacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.IacOptions.Name) ?? string.Empty,
-            SourceType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.SourceType.Name) ?? string.Empty,
-            DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.DeployOption.Name) ?? string.Empty,
-            ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name) ?? string.Empty,
+            WorkspaceFolder = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.WorkspaceFolder) ?? string.Empty,
+            ProjectName = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.ProjectName) ?? string.Empty,
+            TargetAppService = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.TargetAppService) ?? string.Empty,
+            ProvisioningTool = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.ProvisioningTool) ?? string.Empty,
+            IacOptions = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.IacOptions) ?? string.Empty,
+            SourceType = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.SourceType) ?? string.Empty,
+            DeployOption = parseResult.GetValueOrDefault(DeployOptionDefinitions.PlanGet.DeployOption) ?? string.Empty,
+            ResourceGroup = parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup) ?? string.Empty,
         };
     }
 

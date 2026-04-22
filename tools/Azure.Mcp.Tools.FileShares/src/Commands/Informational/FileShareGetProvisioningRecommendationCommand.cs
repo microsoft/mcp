@@ -44,8 +44,8 @@ public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileSh
     protected override FileShareGetProvisioningRecommendationOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Location.Name);
-        options.ProvisionedStorageGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
+        options.Location = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Location);
+        options.ProvisionedStorageGiB = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.ProvisionedStorageGiB);
         return options;
     }
 

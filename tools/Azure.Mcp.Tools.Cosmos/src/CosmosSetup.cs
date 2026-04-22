@@ -29,8 +29,7 @@ public class CosmosSetup : IAreaSetup
         var cosmos = new CommandGroup(Name, "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for accounts, databases, containers, and document queries.", Title);
 
         // Consolidated hierarchical list command
-        var cosmosList = serviceProvider.GetRequiredService<CosmosListCommand>();
-        cosmos.AddCommand(cosmosList.Name, cosmosList);
+        cosmos.AddCommand(serviceProvider.GetRequiredService<CosmosListCommand>());
 
         // Create Cosmos subgroups for item query
         var databases = new CommandGroup("database", "Cosmos DB database operations - Commands for managing databases within your Cosmos DB accounts.");
@@ -43,8 +42,7 @@ public class CosmosSetup : IAreaSetup
         var cosmosItem = new CommandGroup("item", "Cosmos DB item operations - Commands for querying, creating, updating, and deleting documents within your Cosmos DB containers.");
         cosmosContainer.AddSubGroup(cosmosItem);
 
-        var itemQuery = serviceProvider.GetRequiredService<ItemQueryCommand>();
-        cosmosItem.AddCommand(itemQuery.Name, itemQuery);
+        cosmosItem.AddCommand(serviceProvider.GetRequiredService<ItemQueryCommand>());
 
         return cosmos;
     }

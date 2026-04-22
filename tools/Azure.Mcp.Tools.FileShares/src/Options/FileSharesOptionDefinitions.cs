@@ -21,7 +21,7 @@ public static class FileSharesOptionDefinitions
     /// <summary>
     /// Provisioned storage size in GiB.
     /// </summary>
-    public static readonly Option<int> ProvisionedStorageGiB = new("--provisioned-storage-in-gib")
+    public static readonly Option<int?> ProvisionedStorageGiB = new("--provisioned-storage-in-gib")
     {
         Description = "The desired provisioned storage size of the share in GiB",
         Required = false
@@ -57,7 +57,7 @@ public static class FileSharesOptionDefinitions
     /// <summary>
     /// Provisioned IOPS option.
     /// </summary>
-    public static readonly Option<int> ProvisionedIOPerSec = new("--provisioned-io-per-sec")
+    public static readonly Option<int?> ProvisionedIOPerSec = new("--provisioned-io-per-sec")
     {
         Description = "The provisioned IO operations per second",
         Required = false
@@ -66,7 +66,7 @@ public static class FileSharesOptionDefinitions
     /// <summary>
     /// Provisioned throughput option.
     /// </summary>
-    public static readonly Option<int> ProvisionedThroughputMiBPerSec = new("--provisioned-throughput-mib-per-sec")
+    public static readonly Option<int?> ProvisionedThroughputMiBPerSec = new("--provisioned-throughput-mib-per-sec")
     {
         Description = "The provisioned throughput in MiB per second",
         Required = false

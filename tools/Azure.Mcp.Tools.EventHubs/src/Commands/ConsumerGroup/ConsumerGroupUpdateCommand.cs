@@ -59,11 +59,11 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     protected override ConsumerGroupUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
-        options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
-        options.UserMetadata = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.UserMetadataOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Namespace = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption);
+        options.EventHub = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.EventHubOption);
+        options.ConsumerGroup = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.ConsumerGroupOption);
+        options.UserMetadata = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.UserMetadataOption);
         return options;
     }
 

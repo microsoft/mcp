@@ -66,10 +66,10 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
     protected override EventsPublishOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
-        options.EventData = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventData.Name);
-        options.EventSchema = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventSchema.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.TopicName = parseResult.GetValueOrDefault(EventGridOptionDefinitions.TopicName);
+        options.EventData = parseResult.GetValueOrDefault(EventGridOptionDefinitions.EventData);
+        options.EventSchema = parseResult.GetValueOrDefault(EventGridOptionDefinitions.EventSchema);
         return options;
     }
 

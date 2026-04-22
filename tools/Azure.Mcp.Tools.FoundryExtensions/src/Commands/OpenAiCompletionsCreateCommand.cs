@@ -58,12 +58,12 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
     protected override OpenAiCompletionsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
-        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.DeploymentNameOption.Name);
-        options.PromptText = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.PromptTextOption.Name);
-        options.MaxTokens = parseResult.GetValueOrDefault<int?>(FoundryExtensionsOptionDefinitions.MaxTokensOption.Name);
-        options.Temperature = parseResult.GetValueOrDefault<double?>(FoundryExtensionsOptionDefinitions.TemperatureOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.ResourceNameOption);
+        options.DeploymentName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.DeploymentNameOption);
+        options.PromptText = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.PromptTextOption);
+        options.MaxTokens = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.MaxTokensOption);
+        options.Temperature = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.TemperatureOption);
         return options;
     }
 

@@ -59,10 +59,10 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
     protected override ConsumerGroupGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
-        options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Namespace = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption);
+        options.EventHub = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.EventHubOption);
+        options.ConsumerGroup = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.ConsumerGroupOption);
         return options;
     }
 

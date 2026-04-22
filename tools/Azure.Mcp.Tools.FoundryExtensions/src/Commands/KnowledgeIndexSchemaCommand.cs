@@ -67,8 +67,8 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
     protected override KnowledgeIndexSchemaOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.EndpointOption.Name);
-        options.IndexName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.IndexNameOption.Name);
+        options.Endpoint = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
+        options.IndexName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.IndexNameOption);
         return options;
     }
 

@@ -47,9 +47,9 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     protected override RulesGetOptions BindOptions(ParseResult parseResult)
     {
         var options = new RulesGetOptions();
-        options.DeploymentTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.DeploymentTool.Name) ?? string.Empty;
-        options.IacType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.IacType.Name) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.ResourceTypes.Name) ?? string.Empty;
+        options.DeploymentTool = parseResult.GetValueOrDefault(DeployOptionDefinitions.IaCRules.DeploymentTool) ?? string.Empty;
+        options.IacType = parseResult.GetValueOrDefault(DeployOptionDefinitions.IaCRules.IacType) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValueOrDefault(DeployOptionDefinitions.IaCRules.ResourceTypes) ?? string.Empty;
         return options;
     }
 

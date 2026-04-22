@@ -246,14 +246,14 @@ public static class FoundryExtensionsOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<int> MaxTokensOption = new(
+    public static readonly Option<int?> MaxTokensOption = new(
         $"--{MaxTokens}"
     )
     {
         Description = "The maximum number of tokens to generate in the completion."
     };
 
-    public static readonly Option<double> TemperatureOption = new(
+    public static readonly Option<double?> TemperatureOption = new(
         $"--{Temperature}"
     )
     {
@@ -283,7 +283,7 @@ public static class FoundryExtensionsOptionDefinitions
         DefaultValueFactory = _ => "float"
     };
 
-    public static readonly Option<int> DimensionsOption = new(
+    public static readonly Option<int?> DimensionsOption = new(
         $"--{Dimensions}"
     )
     {
@@ -302,21 +302,25 @@ public static class FoundryExtensionsOptionDefinitions
         $"--{TopP}"
     )
     {
-        Description = "Controls diversity via nucleus sampling (0.0 to 1.0). Default is 1.0."
+        Description = "Controls diversity via nucleus sampling (0.0 to 1.0). Default is 1.0.",
+        DefaultValueFactory = _ => 1.0
     };
 
     public static readonly Option<double> FrequencyPenaltyOption = new(
         $"--{FrequencyPenalty}"
     )
     {
-        Description = "Penalizes new tokens based on their frequency (-2.0 to 2.0). Default is 0."
+        Description = "Penalizes new tokens based on their frequency (-2.0 to 2.0). Default is 0.",
+        DefaultValueFactory = _ => 0.0
     };
 
     public static readonly Option<double> PresencePenaltyOption = new(
         $"--{PresencePenalty}"
     )
     {
-        Description = "Penalizes new tokens based on presence (-2.0 to 2.0). Default is 0."
+        Description = "Penalizes new tokens based on presence (-2.0 to 2.0). Default is 0.",
+        DefaultValueFactory = _ => 0.0
+
     };
 
     public static readonly Option<string> StopOption = new(
@@ -330,10 +334,11 @@ public static class FoundryExtensionsOptionDefinitions
         $"--{Stream}"
     )
     {
-        Description = "Whether to stream back partial progress. Default is false."
+        Description = "Whether to stream back partial progress. Default is false.",
+        DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<int> SeedOption = new(
+    public static readonly Option<int?> SeedOption = new(
         $"--{Seed}"
     )
     {

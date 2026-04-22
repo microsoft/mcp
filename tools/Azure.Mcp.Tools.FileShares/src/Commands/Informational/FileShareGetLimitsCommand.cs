@@ -43,7 +43,7 @@ public sealed class FileShareGetLimitsCommand(ILogger<FileShareGetLimitsCommand>
     protected override FileShareGetLimitsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Location.Name);
+        options.Location = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Location);
         return options;
     }
 

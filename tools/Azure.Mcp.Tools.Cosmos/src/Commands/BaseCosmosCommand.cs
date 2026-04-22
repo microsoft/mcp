@@ -24,7 +24,7 @@ public abstract class BaseCosmosCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Account.Name);
+        options.Account = parseResult.GetValueOrDefault(CosmosOptionDefinitions.Account);
         return options;
     }
 

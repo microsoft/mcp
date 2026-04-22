@@ -42,7 +42,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         command.Options.Add(CosmosOptionDefinitions.Query);
         command.Validators.Add(result =>
         {
-            var query = result.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
+            var query = result.GetValueOrDefault(CosmosOptionDefinitions.Query);
             if (query != null)
             {
                 var validationResult = CosmosQueryValidator.EnsureReadOnlySelect(query);
@@ -57,7 +57,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     protected override ItemQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
+        options.Query = parseResult.GetValueOrDefault(CosmosOptionDefinitions.Query);
         return options;
     }
 

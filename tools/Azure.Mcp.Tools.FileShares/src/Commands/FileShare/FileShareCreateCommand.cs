@@ -54,20 +54,20 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
     protected override FileShareCreateOrUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Location.Name);
-        options.MountName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MountName.Name);
-        options.MediaTier = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.MediaTier.Name);
-        options.Redundancy = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Redundancy.Name);
-        options.Protocol = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Protocol.Name);
-        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedStorageGiB.Name);
-        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedIOPerSec.Name);
-        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault<int>(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec.Name);
-        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PublicNetworkAccess.Name);
-        options.NfsRootSquash = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.NfsRootSquash.Name);
-        options.AllowedSubnets = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.AllowedSubnets.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Tags.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.FileShare.Name);
+        options.Location = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.FileShare.Location);
+        options.MountName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.MountName);
+        options.MediaTier = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.MediaTier);
+        options.Redundancy = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Redundancy);
+        options.Protocol = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Protocol);
+        options.ProvisionedStorageInGiB = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.ProvisionedStorageGiB);
+        options.ProvisionedIOPerSec = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.ProvisionedIOPerSec);
+        options.ProvisionedThroughputMiBPerSec = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.ProvisionedThroughputMiBPerSec);
+        options.PublicNetworkAccess = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PublicNetworkAccess);
+        options.NfsRootSquash = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.NfsRootSquash);
+        options.AllowedSubnets = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.AllowedSubnets);
+        options.Tags = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Tags);
         return options;
     }
 

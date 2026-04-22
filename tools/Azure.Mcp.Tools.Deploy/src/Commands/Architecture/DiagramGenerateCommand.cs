@@ -44,7 +44,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
         command.Validators.Add(result =>
         {
-            var rawMcpToolInput = result.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
+            var rawMcpToolInput = result.GetValueOrDefault(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
             if (string.IsNullOrWhiteSpace(rawMcpToolInput))
             {
                 result.AddError("App topology cannot be null or empty.");
@@ -56,7 +56,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     {
         return new()
         {
-            RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name)
+            RawMcpToolInput = parseResult.GetValueOrDefault(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption)
         };
     }
 

@@ -47,8 +47,8 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
         command.Validators.Add(result =>
         {
             // Validate that --account is provided when --database is specified
-            if (!string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.DatabaseOptional.Name)) &&
-                string.IsNullOrEmpty(result.GetValueOrDefault<string>(CosmosOptionDefinitions.AccountOptional.Name)))
+            if (!string.IsNullOrEmpty(result.GetValueOrDefault(CosmosOptionDefinitions.DatabaseOptional)) &&
+                string.IsNullOrEmpty(result.GetValueOrDefault(CosmosOptionDefinitions.AccountOptional)))
             {
                 result.AddError("The --account parameter is required when --database is specified.");
             }
@@ -58,8 +58,8 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : Subsc
     protected override CosmosListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.AccountOptional.Name);
-        options.Database = parseResult.GetValueOrDefault<string?>(CosmosOptionDefinitions.DatabaseOptional.Name);
+        options.Account = parseResult.GetValueOrDefault(CosmosOptionDefinitions.AccountOptional);
+        options.Database = parseResult.GetValueOrDefault(CosmosOptionDefinitions.DatabaseOptional);
         return options;
     }
 

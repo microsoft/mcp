@@ -64,12 +64,12 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
     protected override EventHubUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name) ?? string.Empty;
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name) ?? string.Empty;
-        options.PartitionCount = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.PartitionCountOption.Name);
-        options.MessageRetentionInHours = parseResult.GetValueOrDefault<long?>(EventHubsOptionDefinitions.MessageRetentionInHoursOption.Name);
-        options.Status = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.StatusOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Namespace = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.EventHubOption) ?? string.Empty;
+        options.PartitionCount = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.PartitionCountOption);
+        options.MessageRetentionInHours = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.MessageRetentionInHoursOption);
+        options.Status = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.StatusOption);
         return options;
     }
 

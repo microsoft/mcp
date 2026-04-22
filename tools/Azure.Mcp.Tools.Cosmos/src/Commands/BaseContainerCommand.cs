@@ -22,7 +22,7 @@ public abstract class BaseContainerCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Container.Name);
+        options.Container = parseResult.GetValueOrDefault(CosmosOptionDefinitions.Container);
         return options;
     }
 }

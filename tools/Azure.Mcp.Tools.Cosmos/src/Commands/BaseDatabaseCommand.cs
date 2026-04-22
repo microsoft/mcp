@@ -21,7 +21,7 @@ public abstract class BaseDatabaseCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Database = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Database.Name);
+        options.Database = parseResult.GetValueOrDefault(CosmosOptionDefinitions.Database);
         return options;
     }
 }

@@ -72,15 +72,15 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         command.Validators.Add(commandResult =>
         {
             // Validate that at least one update property is provided (for update scenario)
-            var location = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
-            var skuName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
-            var skuTier = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);
-            var skuCapacity = commandResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.SkuCapacityOption.Name);
-            var isAutoInflateEnabled = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.IsAutoInflateEnabledOption.Name);
-            var maximumThroughputUnits = commandResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.MaximumThroughputUnitsOption.Name);
-            var kafkaEnabled = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.KafkaEnabledOption.Name);
-            var zoneRedundant = commandResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.ZoneRedundantOption.Name);
-            var tags = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.TagsOption.Name);
+            var location = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.LocationOption);
+            var skuName = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuNameOption);
+            var skuTier = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuTierOption);
+            var skuCapacity = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuCapacityOption);
+            var isAutoInflateEnabled = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.IsAutoInflateEnabledOption);
+            var maximumThroughputUnits = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.MaximumThroughputUnitsOption);
+            var kafkaEnabled = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.KafkaEnabledOption);
+            var zoneRedundant = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.ZoneRedundantOption);
+            var tags = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.TagsOption);
 
             if (string.IsNullOrEmpty(location) &&
                 string.IsNullOrEmpty(skuName) &&
@@ -106,17 +106,17 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
     protected override NamespaceUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
-        options.SkuName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.SkuCapacityOption.Name);
-        options.IsAutoInflateEnabled = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.IsAutoInflateEnabledOption.Name);
-        options.MaximumThroughputUnits = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.MaximumThroughputUnitsOption.Name);
-        options.KafkaEnabled = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.KafkaEnabledOption.Name);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(EventHubsOptionDefinitions.ZoneRedundantOption.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.TagsOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Namespace = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption);
+        options.Location = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.LocationOption);
+        options.SkuName = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuNameOption);
+        options.SkuTier = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuTierOption);
+        options.SkuCapacity = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.SkuCapacityOption);
+        options.IsAutoInflateEnabled = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.IsAutoInflateEnabledOption);
+        options.MaximumThroughputUnits = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.MaximumThroughputUnitsOption);
+        options.KafkaEnabled = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.KafkaEnabledOption);
+        options.ZoneRedundant = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.ZoneRedundantOption);
+        options.Tags = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.TagsOption);
         return options;
     }
 

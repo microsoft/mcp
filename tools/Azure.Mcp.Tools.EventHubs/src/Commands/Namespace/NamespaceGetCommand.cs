@@ -57,8 +57,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption);
         command.Validators.Add(commandResult =>
         {
-            var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var namespaceName = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption);
+            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
             if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
             {
@@ -70,8 +70,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
     protected override NamespaceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Namespace = parseResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceOption);
         return options;
     }
 

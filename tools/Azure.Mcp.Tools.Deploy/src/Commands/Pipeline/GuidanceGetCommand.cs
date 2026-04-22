@@ -49,9 +49,9 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.IsAZDProject = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.IsAZDProject.Name);
-        options.PipelinePlatform = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.PipelinePlatform.Name);
-        options.DeployOption = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.DeployOption.Name);
+        options.IsAZDProject = parseResult.GetValueOrDefault(DeployOptionDefinitions.PipelineGenerateOptions.IsAZDProject);
+        options.PipelinePlatform = parseResult.GetValueOrDefault(DeployOptionDefinitions.PipelineGenerateOptions.PipelinePlatform);
+        options.DeployOption = parseResult.GetValueOrDefault(DeployOptionDefinitions.PipelineGenerateOptions.DeployOption);
         return options;
     }
 

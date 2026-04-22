@@ -56,7 +56,7 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
     protected override CliInstallOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.CliType = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliInstall.CliType.Name);
+        options.CliType = parseResult.GetValueOrDefault(ExtensionOptionDefinitions.CliInstall.CliType);
         return options;
     }
 

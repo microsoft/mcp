@@ -47,9 +47,9 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
     protected override LogsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder.Name)!;
-        options.AzdEnvName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName.Name)!;
-        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AzdAppLogOptions.Limit.Name);
+        options.WorkspaceFolder = parseResult.GetValueOrDefault(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder)!;
+        options.AzdEnvName = parseResult.GetValueOrDefault(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName)!;
+        options.Limit = parseResult.GetValueOrDefault(DeployOptionDefinitions.AzdAppLogOptions.Limit);
         return options;
     }
 

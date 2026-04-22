@@ -41,8 +41,8 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
     protected override FileShareDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.FileShare.Name);
         return options;
     }
 

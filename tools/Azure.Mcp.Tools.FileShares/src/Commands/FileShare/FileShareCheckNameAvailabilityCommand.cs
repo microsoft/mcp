@@ -42,8 +42,8 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
     protected override FileShareCheckNameAvailabilityOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Location.Name);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.FileShare.Name);
+        options.Location = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.FileShare.Location);
         return options;
     }
 

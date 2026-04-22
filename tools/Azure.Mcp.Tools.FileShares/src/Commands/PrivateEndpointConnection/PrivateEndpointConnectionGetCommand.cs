@@ -43,9 +43,9 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
     protected override PrivateEndpointConnectionGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.Name);
-        options.ConnectionName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName);
+        options.ConnectionName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName);
         return options;
     }
 

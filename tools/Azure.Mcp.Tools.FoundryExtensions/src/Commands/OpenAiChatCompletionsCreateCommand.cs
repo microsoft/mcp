@@ -66,19 +66,19 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
     protected override OpenAiChatCompletionsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
-        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.DeploymentNameOption.Name);
-        options.MessageArray = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.MessageArrayOption.Name);
-        options.MaxTokens = parseResult.GetValueOrDefault<int?>(FoundryExtensionsOptionDefinitions.MaxTokensOption.Name);
-        options.Temperature = parseResult.GetValueOrDefault<double?>(FoundryExtensionsOptionDefinitions.TemperatureOption.Name);
-        options.TopP = parseResult.GetValueOrDefault<double?>(FoundryExtensionsOptionDefinitions.TopPOption.Name);
-        options.FrequencyPenalty = parseResult.GetValueOrDefault<double?>(FoundryExtensionsOptionDefinitions.FrequencyPenaltyOption.Name);
-        options.PresencePenalty = parseResult.GetValueOrDefault<double?>(FoundryExtensionsOptionDefinitions.PresencePenaltyOption.Name);
-        options.Stop = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.StopOption.Name);
-        options.Stream = parseResult.GetValueOrDefault<bool?>(FoundryExtensionsOptionDefinitions.StreamOption.Name);
-        options.Seed = parseResult.GetValueOrDefault<int?>(FoundryExtensionsOptionDefinitions.SeedOption.Name);
-        options.User = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.UserOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.ResourceNameOption);
+        options.DeploymentName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.DeploymentNameOption);
+        options.MessageArray = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.MessageArrayOption);
+        options.MaxTokens = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.MaxTokensOption);
+        options.Temperature = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.TemperatureOption);
+        options.TopP = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.TopPOption);
+        options.FrequencyPenalty = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.FrequencyPenaltyOption);
+        options.PresencePenalty = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.PresencePenaltyOption);
+        options.Stop = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.StopOption);
+        options.Stream = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.StreamOption);
+        options.Seed = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.SeedOption);
+        options.User = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.UserOption);
         return options;
     }
 

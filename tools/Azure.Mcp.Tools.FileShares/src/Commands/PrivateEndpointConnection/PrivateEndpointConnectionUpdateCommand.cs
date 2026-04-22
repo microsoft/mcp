@@ -44,11 +44,11 @@ public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpoi
     protected override PrivateEndpointConnectionUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName.Name);
-        options.ConnectionName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName.Name);
-        options.Status = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.Status.Name);
-        options.Description = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.PrivateEndpointConnection.Description.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.FileShareName);
+        options.ConnectionName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.ConnectionName);
+        options.Status = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.Status);
+        options.Description = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.PrivateEndpointConnection.Description);
         return options;
     }
 

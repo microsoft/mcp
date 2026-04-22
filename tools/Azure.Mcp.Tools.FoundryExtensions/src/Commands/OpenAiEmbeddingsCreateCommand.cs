@@ -58,13 +58,13 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
     protected override OpenAiEmbeddingsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
-        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.DeploymentNameOption.Name);
-        options.InputText = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.InputTextOption.Name);
-        options.User = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.UserOption.Name);
-        options.EncodingFormat = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.EncodingFormatOption.Name);
-        options.Dimensions = parseResult.GetValueOrDefault<int?>(FoundryExtensionsOptionDefinitions.DimensionsOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.ResourceNameOption);
+        options.DeploymentName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.DeploymentNameOption);
+        options.InputText = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.InputTextOption);
+        options.User = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.UserOption);
+        options.EncodingFormat = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EncodingFormatOption);
+        options.Dimensions = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.DimensionsOption);
         return options;
     }
 

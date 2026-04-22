@@ -42,9 +42,9 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
     protected override SnapshotGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Snapshot.FileShareName);
+        options.SnapshotName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Snapshot.SnapshotName);
         return options;
     }
 

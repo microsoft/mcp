@@ -52,7 +52,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
 
         command.Validators.Add(result =>
         {
-            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
+            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup))
             {
                 result.AddError($"--{FunctionAppOptionDefinitions.FunctionApp.Name} option requires --{OptionDefinitions.Common.ResourceGroup.Name} option to be specified.");
             }
@@ -62,8 +62,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
     protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FunctionAppName = parseResult.GetValueOrDefault(FunctionAppOptionDefinitions.FunctionApp);
         return options;
     }
 

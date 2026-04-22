@@ -57,8 +57,8 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
     protected override CliGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Intent = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.Intent.Name);
-        options.CliType = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.CliType.Name);
+        options.Intent = parseResult.GetValueOrDefault(ExtensionOptionDefinitions.CliGenerate.Intent);
+        options.CliType = parseResult.GetValueOrDefault(ExtensionOptionDefinitions.CliGenerate.CliType);
         return options;
     }
 

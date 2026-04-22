@@ -53,8 +53,8 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
     protected override OpenAiModelsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.ResourceNameOption.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceName = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.ResourceNameOption);
         return options;
     }
 

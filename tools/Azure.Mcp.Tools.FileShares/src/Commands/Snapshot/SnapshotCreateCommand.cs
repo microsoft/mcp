@@ -44,10 +44,10 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
     protected override SnapshotCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.FileShareName.Name);
-        options.SnapshotName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.SnapshotName.Name);
-        options.Metadata = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.Snapshot.Metadata.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.FileShareName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Snapshot.FileShareName);
+        options.SnapshotName = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Snapshot.SnapshotName);
+        options.Metadata = parseResult.GetValueOrDefault(FileSharesOptionDefinitions.Snapshot.Metadata);
         return options;
     }
 

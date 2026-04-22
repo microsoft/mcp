@@ -70,7 +70,7 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
     protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.EndpointOption.Name);
+        options.Endpoint = parseResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
         return options;
     }
 

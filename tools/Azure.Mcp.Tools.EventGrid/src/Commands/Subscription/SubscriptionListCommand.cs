@@ -49,7 +49,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         command.Validators.Add(commandResult =>
         {
             var hasSubscription = CommandHelper.HasSubscriptionAvailable(commandResult);
-            var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName.Name);
+            var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
             var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
             var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
 
@@ -71,9 +71,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     {
         var options = base.BindOptions(parseResult);
         options.Subscription = CommandHelper.GetSubscription(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.Location.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.TopicName = parseResult.GetValueOrDefault(EventGridOptionDefinitions.TopicName);
+        options.Location = parseResult.GetValueOrDefault(EventGridOptionDefinitions.Location);
         return options;
     }
 
