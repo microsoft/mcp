@@ -14,7 +14,7 @@ public static class AppServiceOptionDefinitions
     public const string AppSettingValueName = "setting-value";
     public const string AppSettingUpdateTypeName = "setting-update-type";
     public const string DeploymentIdName = "deployment-id";
-    public const string DetectorNameName = "detector-name";
+    public const string DetectorIdName = "detector-id";
     public const string StartTimeName = "start-time";
     public const string EndTimeName = "end-time";
     public const string IntervalName = "interval";
@@ -73,9 +73,9 @@ public static class AppServiceOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> DetectorName = new($"--{DetectorNameName}")
+    public static readonly Option<string> DetectorId = new($"--{DetectorIdName}")
     {
-        Description = "The name of the diagnostic detector to run (e.g., Availability, CpuAnalysis, MemoryAnalysis).",
+        Description = "The ID of the diagnostic detector to run. Use the 'id' field from 'azmcp appservice webapp diagnostic list' output (e.g., LinuxContainerRecycle, LinuxMemoryDrillDown).",
         Required = true
     };
 
