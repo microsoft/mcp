@@ -401,7 +401,7 @@
     },
     {
       "name": "deploy_azure_resources_and_applications",
-      "description": "Deploy resources and applications to Azure. Generate architecture diagrams, deployment plans, IaC rules for Bicep and Terraform, CI/CD pipeline guidance, and retrieve application logs.",
+      "description": "Deploy resources and applications to Azure. Generate architecture diagrams, deployment plans, IaC rules for Bicep and Terraform, and CI/CD pipeline guidance.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -429,11 +429,43 @@
         }
       },
       "mappedToolList": [
-        "deploy_app_logs_get",
         "deploy_architecture_diagram_generate",
         "deploy_iac_rules_get",
         "deploy_pipeline_guidance_get",
         "deploy_plan_get"
+      ]
+    },
+    {
+      "name": "get_azd_deployed_app_logs",
+      "description": "Retrieve application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local server mode to access the azure.yaml project file in the local workspace."
+        }
+      },
+      "mappedToolList": [
+        "deploy_app_logs_get"
       ]
     },
     {
