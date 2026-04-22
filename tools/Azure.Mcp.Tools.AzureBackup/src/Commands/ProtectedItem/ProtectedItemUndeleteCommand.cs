@@ -14,30 +14,28 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
-public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemProtectOptions>()
+public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions>()
 {
-    private const string CommandTitle = "Protect Resource";
-    private readonly ILogger<ProtectedItemProtectCommand> _logger = logger;
+    private const string CommandTitle = "Undelete Protected Item";
+    private readonly ILogger<ProtectedItemUndeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override string Id => "7a6fc193-ca3c-4309-97c5-ee1e7fe90e69";
-    public override string Name => "protect";
+    public override string Id => "d8e3a1b7-5c42-4f9e-b6d1-7a2e9c3f4b58";
+    public override string Name => "undelete";
     public override string Description =>
         """
-        Enables or configures backup protection for an Azure resource by creating a
-        protected item or backup instance. Protects VMs, disks, file shares, SQL databases,
-        SAP HANA databases, and other supported datasources.
-        For VMs: pass the VM ARM resource ID as --datasource-id.
-        For workloads (SQL/HANA): pass the protectable item name from 'protectableitem list'
-        as --datasource-id (e.g., 'SAPHanaDatabase;instance;dbname'), and specify --container.
-        Requires a backup policy name via --policy. The operation is asynchronous;
-        use 'azurebackup job get' to monitor the protection job progress.
+        Undeletes or restores a soft-deleted backup item to an active protection state.
+        Use this when a backup or protected item was accidentally deleted and needs to be recovered.
+        For RSV vaults: pass the datasource ARM resource ID as --datasource-id.
+        For DPP vaults: pass the datasource ARM resource ID as --datasource-id.
+        Optionally specify --container for RSV workload items (SQL/HANA).
+        The operation is asynchronous; use 'azurebackup job get' to monitor progress.
         """;
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
         Destructive = true,
-        Idempotent = false,
+        Idempotent = true,
         OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
@@ -48,18 +46,14 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     {
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.DatasourceId.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.Container);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceType);
     }
 
-    protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
+    protected override ProtectedItemUndeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
         options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
-        options.DatasourceType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
         return options;
     }
 
@@ -74,26 +68,24 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         try
         {
-            var result = await _azureBackupService.ProtectItemAsync(
+            var result = await _azureBackupService.UndeleteProtectedItemAsync(
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.DatasourceId!,
-                options.Policy!,
                 options.VaultType,
                 options.Container,
-                options.DatasourceType,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(result),
-                AzureBackupJsonContext.Default.ProtectedItemProtectCommandResult);
+                AzureBackupJsonContext.Default.ProtectedItemUndeleteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error protecting item. DatasourceId: {DatasourceId}, Vault: {Vault}",
+            _logger.LogError(ex, "Error undeleting protected item. DatasourceId: {DatasourceId}, Vault: {Vault}",
                 options.DatasourceId, options.Vault);
             HandleException(context, ex);
         }
@@ -104,13 +96,16 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
+        KeyNotFoundException => "Soft-deleted protected item not found. Verify the datasource ID and vault.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Soft-deleted protected item not found. Verify the datasource ID, vault name, and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed protecting the resource. Ensure the caller has Backup Contributor role. Details: {reqEx.Message}",
+            $"Authorization failed undeleting the protected item. Ensure the caller has Backup Contributor role. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "This resource is already protected. Use 'azurebackup protecteditem get' to view its status.",
+            "This protected item is not in a soft-deleted state. Use 'azurebackup protecteditem get' to view its current status.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record ProtectedItemProtectCommandResult(ProtectResult Result);
+    internal record ProtectedItemUndeleteCommandResult(OperationResult Result);
 }
