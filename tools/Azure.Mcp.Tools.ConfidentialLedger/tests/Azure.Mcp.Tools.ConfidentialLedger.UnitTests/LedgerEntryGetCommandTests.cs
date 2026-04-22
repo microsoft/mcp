@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -37,8 +41,9 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            Service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
+            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -54,8 +59,9 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("-startswithhyphen")]
     public async Task GetLedgerEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            Service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
+            service.GetLedgerEntryAsync(ledgerName, "1.0", null, TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -65,8 +71,9 @@ public sealed class LedgerEntryGetCommandTests : CommandUnitTestsBase<LedgerEntr
     [InlineData("name#fragment")]
     public async Task AppendEntryAsync_RejectsInvalidLedgerNames_PreventingSsrf(string ledgerName)
     {
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            Service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
+            service.AppendEntryAsync(ledgerName, "data", null, TestContext.Current.CancellationToken));
     }
 
     [Fact]
