@@ -1932,7 +1932,7 @@ azmcp postgres server param set --subscription <subscription> \
 
 ```bash
 # Get the application service log for a specific azd environment
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
