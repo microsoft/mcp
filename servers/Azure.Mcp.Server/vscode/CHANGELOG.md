@@ -1,5 +1,10 @@
 # Release History
 
+## 2.0.2 (2026-04-21)
+
+### Fixed
+
+- Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
 
 ## 2.0.1 (2026-04-14)
 
