@@ -32,7 +32,7 @@ public sealed class GroupSetup : IAreaSetup
         // Register Resource sub-group
         var resource = new CommandGroup("resource", "Resource operations - Commands for listing resources within a resource group.");
         group.AddSubGroup(resource);
-;
+
         resource.AddCommand(serviceProvider.GetRequiredService<ResourceListCommand>());
 
         return group;
