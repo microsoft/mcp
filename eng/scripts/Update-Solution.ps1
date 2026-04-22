@@ -88,7 +88,7 @@ function Update-Solution {
                 Write-Host "✅ $serverName.slnx is up-to-date."
             }
         } else {
-            Set-Content -Path $targetFile -Value $contents -NoNewline -Force
+            Set-Content -Path $targetFile -Value $contents -Encoding utf8 -NoNewline -Force
         }
     }
     finally {
@@ -140,7 +140,6 @@ function Update-RootSolution {
                 Write-Host "✅ $slnFile is up-to-date."
             }
         } else {
-            # Move-Item -Path $tempSlnFile -Destination $targetFile -Force
             $contents = Get-Content $tempSlnFile -Raw
             Set-Content -Path $targetFile -Value $contents -Encoding utf8 -NoNewline -Force
         }
