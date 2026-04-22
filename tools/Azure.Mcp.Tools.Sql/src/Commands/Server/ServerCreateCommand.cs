@@ -13,9 +13,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
+public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
     : BaseSqlCommand<ServerCreateOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Server";
 
     public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
@@ -74,9 +75,7 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var server = await sqlService.CreateServerAsync(
+            var server = await _sqlService.CreateServerAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

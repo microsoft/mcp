@@ -14,9 +14,10 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
+public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
     : BaseSqlCommand<DatabaseGetOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Get SQL Database";
 
     public override string Id => "2c4e6a8b-1d3f-4e5a-b6c7-8d9e0f1a2b3c";
@@ -68,11 +69,9 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
             if (!string.IsNullOrEmpty(options.Database))
             {
-                var database = await sqlService.GetDatabaseAsync(
+                var database = await _sqlService.GetDatabaseAsync(
                     options.Server!,
                     options.Database,
                     options.ResourceGroup!,
@@ -86,7 +85,7 @@ public sealed class DatabaseGetCommand(ILogger<DatabaseGetCommand> logger)
             }
             else
             {
-                var result = await sqlService.ListDatabasesAsync(
+                var result = await _sqlService.ListDatabasesAsync(
                     options.Server!,
                     options.ResourceGroup!,
                     options.Subscription!,

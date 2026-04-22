@@ -10,11 +10,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
-public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger)
+public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger, IVirtualDesktopService virtualDesktopService)
     : BaseSessionHostCommand
 {
     private const string CommandTitle = "List User Sessions on Session Host";
     private readonly ILogger<SessionHostUserSessionListCommand> _logger = logger;
+    private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
     public override string Id => "1653a208-ac9f-4e51-996f-fe2d29a79b2b";
 
     public override string Name => "user-list";
@@ -49,12 +50,11 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
 
         try
         {
-            var virtualDesktopService = context.GetService<IVirtualDesktopService>();
             IReadOnlyList<UserSession> userSessions;
 
             if (!string.IsNullOrEmpty(options.HostPoolResourceId))
             {
-                userSessions = await virtualDesktopService.ListUserSessionsByResourceIdAsync(
+                userSessions = await _virtualDesktopService.ListUserSessionsByResourceIdAsync(
                     options.Subscription!,
                     options.HostPoolResourceId,
                     options.SessionHostName!,
@@ -64,7 +64,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
-                userSessions = await virtualDesktopService.ListUserSessionsByResourceGroupAsync(
+                userSessions = await _virtualDesktopService.ListUserSessionsByResourceGroupAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.HostPoolName!,
@@ -75,7 +75,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
             }
             else
             {
-                userSessions = await virtualDesktopService.ListUserSessionsAsync(
+                userSessions = await _virtualDesktopService.ListUserSessionsAsync(
                     options.Subscription!,
                     options.HostPoolName!,
                     options.SessionHostName!,
