@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
-using NSubstitute.Core;
 using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
@@ -31,7 +30,6 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     protected CommandContext Context { get; init; }
     protected Command CommandDefinition { get; init; }
     protected ServiceProvider ServiceProvider { get; init; }
-    private readonly List<ConfiguredCall> _mockValidations = [];
 
     /// <summary>
     /// Initializes the command unit test base by setting up common dependency injection points with mocks.
