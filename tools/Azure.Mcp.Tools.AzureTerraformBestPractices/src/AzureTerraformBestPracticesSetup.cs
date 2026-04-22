@@ -30,8 +30,7 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
             If this tool needs to be categorized, it belongs to the Azure Best Practices category.", Title
         );
 
-        var practices = serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>();
-        azureTerraformBestPractices.AddCommand(practices.Name, practices);
+        azureTerraformBestPractices.AddCommand(serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>());
 
         return azureTerraformBestPractices;
     }

@@ -24,7 +24,7 @@ public abstract class BaseConfidentialLedgerCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.LedgerName = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.LedgerName.Name);
+        options.LedgerName = parseResult.GetValueOrDefault(ConfidentialLedgerOptionDefinitions.LedgerName);
         return options;
     }
 }

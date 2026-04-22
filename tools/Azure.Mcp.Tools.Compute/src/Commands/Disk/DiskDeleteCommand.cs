@@ -55,7 +55,7 @@ public sealed class DiskDeleteCommand(
     protected override DiskDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DiskName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
+        options.DiskName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Disk);
         return options;
     }
 
@@ -84,7 +84,7 @@ public sealed class DiskDeleteCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new DiskDeleteCommandResult(deleted, options.DiskName!),
+                new(deleted, options.DiskName!),
                 ComputeJsonContext.Default.DiskDeleteCommandResult);
         }
         catch (Exception ex)

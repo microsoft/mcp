@@ -52,16 +52,16 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         command.Options.Add(ComputeOptionDefinitions.InstanceId);
         command.Validators.Add(commandResult =>
         {
-            var vmssName = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
+            var vmssName = commandResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
             // Custom validation: If vmss-name is specified, resource-group is required (can't get specific VMSS without resource-group)
             if (!string.IsNullOrEmpty(vmssName) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name)))
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup)))
             {
                 commandResult.AddError("The --resource-group option is required when retrieving a specific VMSS with --vmss-name.");
             }
 
             // Custom validation: If instance-id is specified, vmss-name is required
-            if (!string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.InstanceId.Name)) &&
+            if (!string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.InstanceId)) &&
                 string.IsNullOrEmpty(vmssName))
             {
                 commandResult.AddError("When --instance-id is specified, --vmss-name is required.");
@@ -72,8 +72,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
     protected override VmssGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.InstanceId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.InstanceId.Name);
+        options.VmssName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
+        options.InstanceId = parseResult.GetValueOrDefault(ComputeOptionDefinitions.InstanceId);
         return options;
     }
 

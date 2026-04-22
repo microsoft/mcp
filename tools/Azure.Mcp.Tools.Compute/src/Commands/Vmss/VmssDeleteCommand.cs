@@ -56,7 +56,7 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
     protected override VmssDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
+        options.VmssName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
         options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
         return options;
     }

@@ -69,18 +69,18 @@ public sealed class DiskUpdateCommand(
 
         command.Validators.Add(commandResult =>
         {
-            if (!commandResult.HasOptionResult(ComputeOptionDefinitions.SizeGb.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Sku.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskIopsReadWrite.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskMbpsReadWrite.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.MaxShares.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.NetworkAccessPolicy.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableBursting.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskEncryptionSet.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.EncryptionType.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskAccessId.Name) &&
-                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tier.Name))
+            if (!commandResult.HasOptionResult(ComputeOptionDefinitions.SizeGb) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Sku) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskIopsReadWrite) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskMbpsReadWrite) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.MaxShares) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.NetworkAccessPolicy) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.EnableBursting) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tags) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskEncryptionSet) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.EncryptionType) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.DiskAccessId) &&
+                !commandResult.HasOptionResult(ComputeOptionDefinitions.Tier))
             {
                 commandResult.AddError(
                     "At least one update property must be provided "
@@ -94,30 +94,30 @@ public sealed class DiskUpdateCommand(
     protected override DiskUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Disk = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Disk);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
-        var sizeGb = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
+        var sizeGb = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SizeGb);
         options.SizeGb = sizeGb > 0 ? sizeGb : null;
 
-        options.Sku = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Sku.Name);
+        options.Sku = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Sku);
 
-        var iops = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskIopsReadWrite.Name);
+        var iops = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskIopsReadWrite);
         options.DiskIopsReadWrite = iops > 0 ? iops : null;
 
-        var mbps = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskMbpsReadWrite.Name);
+        var mbps = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskMbpsReadWrite);
         options.DiskMbpsReadWrite = mbps > 0 ? mbps : null;
 
-        var maxShares = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.MaxShares.Name);
+        var maxShares = parseResult.GetValueOrDefault(ComputeOptionDefinitions.MaxShares);
         options.MaxShares = maxShares > 0 ? maxShares : null;
 
-        options.NetworkAccessPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkAccessPolicy.Name);
-        options.EnableBursting = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EnableBursting.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
-        options.DiskEncryptionSet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskEncryptionSet.Name);
-        options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
-        options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
-        options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
+        options.NetworkAccessPolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.NetworkAccessPolicy);
+        options.EnableBursting = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EnableBursting);
+        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
+        options.DiskEncryptionSet = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskEncryptionSet);
+        options.EncryptionType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EncryptionType);
+        options.DiskAccessId = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskAccessId);
+        options.Tier = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tier);
         return options;
     }
 

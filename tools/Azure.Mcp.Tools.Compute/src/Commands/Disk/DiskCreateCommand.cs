@@ -84,12 +84,12 @@ public sealed class DiskCreateCommand(
         command.Options.Add(ComputeOptionDefinitions.SecurityType);
         command.Validators.Add(result =>
         {
-            var source = result.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
-            var sizeGb = result.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
-            var galleryImageReference = result.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
-            var uploadType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
-            var uploadSizeBytes = result.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
-            var securityType = result.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
+            var source = result.GetValueOrDefault(ComputeOptionDefinitions.Source);
+            var sizeGb = result.GetValueOrDefault(ComputeOptionDefinitions.SizeGb);
+            var galleryImageReference = result.GetValueOrDefault(ComputeOptionDefinitions.GalleryImageReference);
+            var uploadType = result.GetValueOrDefault(ComputeOptionDefinitions.UploadType);
+            var uploadSizeBytes = result.GetValueOrDefault(ComputeOptionDefinitions.UploadSizeBytes);
+            var securityType = result.GetValueOrDefault(ComputeOptionDefinitions.SecurityType);
 
             if (string.IsNullOrEmpty(source) && sizeGb <= 0 && string.IsNullOrEmpty(galleryImageReference) && string.IsNullOrEmpty(uploadType))
             {
@@ -112,45 +112,45 @@ public sealed class DiskCreateCommand(
     protected override DiskCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        options.Source = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Source.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Location.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Disk = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Disk);
+        options.Source = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Source);
+        options.Location = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Location);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
-        var sizeGb = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.SizeGb.Name);
+        var sizeGb = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SizeGb);
         options.SizeGb = sizeGb > 0 ? sizeGb : null;
 
-        options.Sku = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Sku.Name);
-        options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
-        options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
-        options.HyperVGeneration = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.HyperVGeneration.Name);
+        options.Sku = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Sku);
+        options.OsType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsType);
+        options.Zone = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Zone);
+        options.HyperVGeneration = parseResult.GetValueOrDefault(ComputeOptionDefinitions.HyperVGeneration);
 
-        var maxShares = parseResult.GetValueOrDefault<int>(ComputeOptionDefinitions.MaxShares.Name);
+        var maxShares = parseResult.GetValueOrDefault(ComputeOptionDefinitions.MaxShares);
         options.MaxShares = maxShares > 0 ? maxShares : null;
 
-        options.NetworkAccessPolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkAccessPolicy.Name);
-        options.EnableBursting = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EnableBursting.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
-        options.DiskEncryptionSet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskEncryptionSet.Name);
-        options.EncryptionType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.EncryptionType.Name);
-        options.DiskAccessId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.DiskAccessId.Name);
-        options.Tier = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tier.Name);
-        options.GalleryImageReference = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.GalleryImageReference.Name);
+        options.NetworkAccessPolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.NetworkAccessPolicy);
+        options.EnableBursting = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EnableBursting);
+        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
+        options.DiskEncryptionSet = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskEncryptionSet);
+        options.EncryptionType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.EncryptionType);
+        options.DiskAccessId = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskAccessId);
+        options.Tier = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tier);
+        options.GalleryImageReference = parseResult.GetValueOrDefault(ComputeOptionDefinitions.GalleryImageReference);
 
-        options.GalleryImageReferenceLun = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.GalleryImageReferenceLun.Name);
+        options.GalleryImageReferenceLun = parseResult.GetValueOrDefault(ComputeOptionDefinitions.GalleryImageReferenceLun);
 
-        var iops = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskIopsReadWrite.Name);
+        var iops = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskIopsReadWrite);
         options.DiskIopsReadWrite = iops > 0 ? iops : null;
 
-        var mbps = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.DiskMbpsReadWrite.Name);
+        var mbps = parseResult.GetValueOrDefault(ComputeOptionDefinitions.DiskMbpsReadWrite);
         options.DiskMbpsReadWrite = mbps > 0 ? mbps : null;
 
-        options.UploadType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UploadType.Name);
+        options.UploadType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UploadType);
 
-        var uploadSizeBytes = parseResult.GetValueOrDefault<long>(ComputeOptionDefinitions.UploadSizeBytes.Name);
+        var uploadSizeBytes = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UploadSizeBytes);
         options.UploadSizeBytes = uploadSizeBytes > 0 ? uploadSizeBytes : null;
 
-        options.SecurityType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SecurityType.Name);
+        options.SecurityType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SecurityType);
 
         return options;
     }

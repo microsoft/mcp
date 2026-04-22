@@ -277,7 +277,7 @@ public static class ComputeOptionDefinitions
 
 
 
-    public static readonly Option<int> OsDiskSizeGb = new($"--{OsDiskSizeGbName}")
+    public static readonly Option<int?> OsDiskSizeGb = new($"--{OsDiskSizeGbName}")
     {
         Description = "OS disk size in GB. Defaults based on image requirements",
         Required = false
@@ -293,7 +293,7 @@ public static class ComputeOptionDefinitions
     public const string InstanceCountName = "instance-count";
     public const string UpgradePolicyName = "upgrade-policy";
 
-    public static readonly Option<int> InstanceCount = new($"--{InstanceCountName}")
+    public static readonly Option<int?> InstanceCount = new($"--{InstanceCountName}")
     {
         Description = "Number of VM instances in the scale set. Default is 2",
         Required = false

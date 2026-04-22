@@ -50,8 +50,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         command.Options.Add(BestPracticesOptionDefinitions.Action);
         command.Validators.Add(commandResult =>
         {
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
+            var resource = commandResult.GetValueOrDefault(BestPracticesOptionDefinitions.Resource);
+            var action = commandResult.GetValueOrDefault(BestPracticesOptionDefinitions.Action);
 
             if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
             {
@@ -86,8 +86,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     {
         return new BestPracticesOptions
         {
-            Resource = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Resource.Name),
-            Action = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Action.Name)
+            Resource = parseResult.GetValueOrDefault(BestPracticesOptionDefinitions.Resource),
+            Action = parseResult.GetValueOrDefault(BestPracticesOptionDefinitions.Action)
         };
     }
 

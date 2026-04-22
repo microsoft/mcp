@@ -52,11 +52,11 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
     protected override SmsSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.From.Name);
-        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.To.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Message.Name);
-        options.EnableDeliveryReport = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.EnableDeliveryReport.Name);
-        options.Tag = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Tag.Name);
+        options.From = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.From);
+        options.To = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.To);
+        options.Message = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Message);
+        options.EnableDeliveryReport = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.EnableDeliveryReport);
+        options.Tag = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Tag);
         return options;
     }
 

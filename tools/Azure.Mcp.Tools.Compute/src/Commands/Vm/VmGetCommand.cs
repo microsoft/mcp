@@ -52,9 +52,9 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
         command.Options.Add(ComputeOptionDefinitions.InstanceView);
         command.Validators.Add(commandResult =>
         {
-            var vmName = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-            var instanceView = commandResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.InstanceView.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var vmName = commandResult.GetValueOrDefault(ComputeOptionDefinitions.VmName);
+            var instanceView = commandResult.GetValueOrDefault(ComputeOptionDefinitions.InstanceView);
+            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
             // Custom validation: If vm-name is specified, resource-group is required (can't get specific VM without resource-group)
             if (!string.IsNullOrEmpty(vmName) && string.IsNullOrEmpty(resourceGroup))
@@ -73,8 +73,8 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
     protected override VmGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.InstanceView = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.InstanceView.Name);
+        options.VmName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmName);
+        options.InstanceView = parseResult.GetValueOrDefault(ComputeOptionDefinitions.InstanceView);
         return options;
     }
 

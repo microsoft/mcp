@@ -117,22 +117,22 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLand
     protected override RequestOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name)!;
-        options.Action = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Action.Name)!;
-        options.RegionType = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.RegionType.Name);
-        options.FireWallType = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.FireWallType.Name);
-        options.NetworkArchitecture = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.NetworkArchitecture.Name);
-        options.IdentitySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.IdentitySubscriptionId.Name);
-        options.ManagementSubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.ManagementSubscriptionId.Name);
-        options.ConnectivitySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.ConnectivitySubscriptionId.Name);
-        options.SecuritySubscriptionId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.SecuritySubscriptionId.Name);
-        options.Regions = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Regions.Name);
-        options.EnvironmentName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.EnvironmentName.Name);
-        options.VersionControlSystem = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.VersionControlSystem.Name);
-        options.OrganizationName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.OrganizationName.Name);
-        options.MigrateProjectName = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectName.Name)!;
-        options.MigrateProjectResourceId = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(PlatformLandingZoneOptionDefinitions.Location.Name);
+        options.ResourceGroup = parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Action = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Action);
+        options.RegionType = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.RegionType);
+        options.FireWallType = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.FireWallType);
+        options.NetworkArchitecture = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.NetworkArchitecture);
+        options.IdentitySubscriptionId = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.IdentitySubscriptionId);
+        options.ManagementSubscriptionId = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.ManagementSubscriptionId);
+        options.ConnectivitySubscriptionId = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.ConnectivitySubscriptionId);
+        options.SecuritySubscriptionId = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.SecuritySubscriptionId);
+        options.Regions = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Regions);
+        options.EnvironmentName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.EnvironmentName);
+        options.VersionControlSystem = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.VersionControlSystem);
+        options.OrganizationName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.OrganizationName);
+        options.MigrateProjectName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.MigrateProjectName);
+        options.MigrateProjectResourceId = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.MigrateProjectResourceId);
+        options.Location = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Location);
         return options;
     }
 

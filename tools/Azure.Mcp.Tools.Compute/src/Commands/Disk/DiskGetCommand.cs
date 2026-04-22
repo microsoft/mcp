@@ -52,7 +52,7 @@ public sealed class DiskGetCommand(
     protected override DiskGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
+        options.Disk = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Disk);
         return options;
     }
 

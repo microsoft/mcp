@@ -21,7 +21,7 @@ public abstract class BaseBicepSchemaCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueOrDefault<string>(BicepSchemaOptionDefinitions.ResourceTypeName.Name);
+        options.ResourceType = parseResult.GetValueOrDefault(BicepSchemaOptionDefinitions.ResourceTypeName);
         return options;
     }
 }

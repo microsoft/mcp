@@ -53,8 +53,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
     protected override MonitoredResourcesListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.DatadogResource = parseResult.GetValueOrDefault<string>(DatadogOptionDefinitions.DatadogResourceName.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.DatadogResource = parseResult.GetValueOrDefault(DatadogOptionDefinitions.DatadogResourceName);
         return options;
     }
 

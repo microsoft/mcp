@@ -80,10 +80,10 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         // Resource group is required for create
         command.Validators.Add(commandResult =>
         {
-            var adminPassword = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
+            var adminPassword = commandResult.GetValueOrDefault(ComputeOptionDefinitions.AdminPassword);
             // Determine OS type from image
-            var osType = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
-            var image = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
+            var osType = commandResult.GetValueOrDefault(ComputeOptionDefinitions.OsType);
+            var image = commandResult.GetValueOrDefault(ComputeOptionDefinitions.Image);
             var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
             // Custom validation: For Windows VMs, password is required
@@ -94,14 +94,14 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
 
             // Custom validation: For Windows VMs, computer name cannot exceed 15 characters
             if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
-                && commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name)?.Length > 15)
+                && commandResult.GetValueOrDefault(ComputeOptionDefinitions.VmName)?.Length > 15)
             {
                 commandResult.AddError(VmRequirements.WindowsComputerName);
             }
 
             // Custom validation: For Linux VMs, either SSH key or password must be provided
             if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.SshPublicKey)) &&
                 string.IsNullOrEmpty(adminPassword))
             {
                 commandResult.AddError(
@@ -115,23 +115,23 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
     protected override VmCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Location.Name);
-        options.AdminUsername = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminUsername.Name);
-        options.AdminPassword = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
-        options.SshPublicKey = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name);
-        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Image = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
-        options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
-        options.VirtualNetwork = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VirtualNetwork.Name);
-        options.Subnet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Subnet.Name);
-        options.PublicIpAddress = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.PublicIpAddress.Name);
-        options.NetworkSecurityGroup = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.NetworkSecurityGroup.Name);
-        options.NoPublicIp = parseResult.GetValueOrDefault<bool>(ComputeOptionDefinitions.NoPublicIp.Name);
-        options.SourceAddressPrefix = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SourceAddressPrefix.Name);
-        options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
-        options.OsDiskSizeGb = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.OsDiskSizeGb.Name);
-        options.OsDiskType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsDiskType.Name);
+        options.VmName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmName);
+        options.Location = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Location);
+        options.AdminUsername = parseResult.GetValueOrDefault(ComputeOptionDefinitions.AdminUsername);
+        options.AdminPassword = parseResult.GetValueOrDefault(ComputeOptionDefinitions.AdminPassword);
+        options.SshPublicKey = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SshPublicKey);
+        options.VmSize = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize);
+        options.Image = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Image);
+        options.OsType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsType);
+        options.VirtualNetwork = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VirtualNetwork);
+        options.Subnet = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Subnet);
+        options.PublicIpAddress = parseResult.GetValueOrDefault(ComputeOptionDefinitions.PublicIpAddress);
+        options.NetworkSecurityGroup = parseResult.GetValueOrDefault(ComputeOptionDefinitions.NetworkSecurityGroup);
+        options.NoPublicIp = parseResult.GetValueOrDefault(ComputeOptionDefinitions.NoPublicIp);
+        options.SourceAddressPrefix = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SourceAddressPrefix);
+        options.Zone = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Zone);
+        options.OsDiskSizeGb = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsDiskSizeGb);
+        options.OsDiskType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsDiskType);
         return options;
     }
 

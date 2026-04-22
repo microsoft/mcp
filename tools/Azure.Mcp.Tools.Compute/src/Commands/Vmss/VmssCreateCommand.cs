@@ -81,10 +81,10 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
         {
             // Determine OS type from image
             var effectiveOsType = ComputeUtilities.DetermineOsType(
-                commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name),
-                commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name));
+                commandResult.GetValueOrDefault(ComputeOptionDefinitions.OsType),
+                commandResult.GetValueOrDefault(ComputeOptionDefinitions.Image));
 
-            var adminPassword = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
+            var adminPassword = commandResult.GetValueOrDefault(ComputeOptionDefinitions.AdminPassword);
             // Custom validation: For Windows VMSS, password is required
             if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(adminPassword))
             {
@@ -93,7 +93,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
             // Custom validation: For Windows VMSS, name cannot exceed 9 characters (Azure adds 6-char suffix for computer name)
             if (effectiveOsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
-                && commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name)?.Length > 9)
+                && commandResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName)?.Length > 9)
             {
                 commandResult.AddError(
                     "Windows VMSS name cannot exceed 9 characters. Azure appends a 6-character suffix to create the computer name, " +
@@ -102,7 +102,7 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
             // Custom validation: For Linux VMSS, either SSH key or password must be provided
             if (effectiveOsType.Equals("linux", StringComparison.OrdinalIgnoreCase) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.SshPublicKey)) &&
                 string.IsNullOrEmpty(adminPassword))
             {
                 commandResult.AddError(
@@ -116,21 +116,21 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
     protected override VmssCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Location.Name);
-        options.AdminUsername = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminUsername.Name);
-        options.AdminPassword = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.AdminPassword.Name);
-        options.SshPublicKey = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.SshPublicKey.Name);
-        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Image = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Image.Name);
-        options.OsType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsType.Name);
-        options.InstanceCount = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.InstanceCount.Name);
-        options.UpgradePolicy = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UpgradePolicy.Name);
-        options.VirtualNetwork = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VirtualNetwork.Name);
-        options.Subnet = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Subnet.Name);
-        options.Zone = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Zone.Name);
-        options.OsDiskSizeGb = parseResult.GetValueOrDefault<int?>(ComputeOptionDefinitions.OsDiskSizeGb.Name);
-        options.OsDiskType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.OsDiskType.Name);
+        options.VmssName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmssName);
+        options.Location = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Location);
+        options.AdminUsername = parseResult.GetValueOrDefault(ComputeOptionDefinitions.AdminUsername);
+        options.AdminPassword = parseResult.GetValueOrDefault(ComputeOptionDefinitions.AdminPassword);
+        options.SshPublicKey = parseResult.GetValueOrDefault(ComputeOptionDefinitions.SshPublicKey);
+        options.VmSize = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize);
+        options.Image = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Image);
+        options.OsType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsType);
+        options.InstanceCount = parseResult.GetValueOrDefault(ComputeOptionDefinitions.InstanceCount);
+        options.UpgradePolicy = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UpgradePolicy);
+        options.VirtualNetwork = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VirtualNetwork);
+        options.Subnet = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Subnet);
+        options.Zone = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Zone);
+        options.OsDiskSizeGb = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsDiskSizeGb);
+        options.OsDiskType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.OsDiskType);
         return options;
     }
 

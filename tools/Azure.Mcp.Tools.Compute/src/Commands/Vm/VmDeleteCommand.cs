@@ -57,7 +57,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
     protected override VmDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
+        options.VmName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmName);
         options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
         return options;
     }
@@ -87,9 +87,7 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new VmDeleteCommandResult(
-                    $"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
+                new($"Virtual machine '{options.VmName}' was successfully deleted from resource group '{options.ResourceGroup}'.", true),
                 ComputeJsonContext.Default.VmDeleteCommandResult);
         }
         catch (Exception ex)

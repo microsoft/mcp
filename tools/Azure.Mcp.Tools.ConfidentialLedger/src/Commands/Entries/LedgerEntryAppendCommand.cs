@@ -48,8 +48,8 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     protected override AppendEntryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Content = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
-        options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
+        options.Content = parseResult.GetValueOrDefault(ConfidentialLedgerOptionDefinitions.Content);
+        options.CollectionId = parseResult.GetValueOrDefault(ConfidentialLedgerOptionDefinitions.CollectionId);
         return options;
     }
 

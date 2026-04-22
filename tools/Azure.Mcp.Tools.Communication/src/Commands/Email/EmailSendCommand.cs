@@ -54,21 +54,21 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
         command.Options.Add(CommunicationOptionDefinitions.ReplyTo);
         command.Validators.Add(commandResult =>
         {
-            var to = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
+            var to = commandResult.GetValueOrDefault(CommunicationOptionDefinitions.ToEmail);
             if (to == null || to.Length == 0)
                 commandResult.AddError("At least one 'to' email address must be provided.");
             else if (to.Any(string.IsNullOrWhiteSpace))
                 commandResult.AddError("to email addresses cannot be empty.");
 
-            var cc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
+            var cc = commandResult.GetValueOrDefault(CommunicationOptionDefinitions.Cc);
             if (cc != null && cc.Any(string.IsNullOrWhiteSpace))
                 commandResult.AddError("CC email addresses should not be empty if provided by user.");
 
-            var bcc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
+            var bcc = commandResult.GetValueOrDefault(CommunicationOptionDefinitions.Bcc);
             if (bcc != null && bcc.Any(string.IsNullOrWhiteSpace))
                 commandResult.AddError("BCC email addresses should not be empty if provided by user.");
 
-            var replyTo = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
+            var replyTo = commandResult.GetValueOrDefault(CommunicationOptionDefinitions.ReplyTo);
             if (replyTo != null && replyTo.Any(string.IsNullOrWhiteSpace))
                 commandResult.AddError("Reply-To email addresses should not be empty if provided by user.");
         });
@@ -77,15 +77,15 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
     protected override EmailSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Sender.Name);
-        options.SenderName = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.SenderName.Name);
-        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
-        options.Cc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
-        options.Bcc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
-        options.Subject = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Subject.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.EmailMessage.Name);
-        options.IsHtml = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.IsHtml.Name);
-        options.ReplyTo = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
+        options.From = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Sender);
+        options.SenderName = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.SenderName);
+        options.To = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.ToEmail);
+        options.Cc = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Cc);
+        options.Bcc = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Bcc);
+        options.Subject = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.Subject);
+        options.Message = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.EmailMessage);
+        options.IsHtml = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.IsHtml);
+        options.ReplyTo = parseResult.GetValueOrDefault(CommunicationOptionDefinitions.ReplyTo);
         return options;
     }
 

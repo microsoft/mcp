@@ -61,11 +61,11 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
         command.Validators.Add(commandResult =>
         {
             // Custom validation: At least one update property must be specified
-            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))
+            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.Tags)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.LicenseType)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.BootDiagnostics)) &&
+                string.IsNullOrEmpty(commandResult.GetValueOrDefault(ComputeOptionDefinitions.UserData)))
             {
                 commandResult.AddError("At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.");
             }
@@ -75,12 +75,12 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
     protected override VmUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
-        options.LicenseType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name);
-        options.BootDiagnostics = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name);
-        options.UserData = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name);
+        options.VmName = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmName);
+        options.VmSize = parseResult.GetValueOrDefault(ComputeOptionDefinitions.VmSize);
+        options.Tags = parseResult.GetValueOrDefault(ComputeOptionDefinitions.Tags);
+        options.LicenseType = parseResult.GetValueOrDefault(ComputeOptionDefinitions.LicenseType);
+        options.BootDiagnostics = parseResult.GetValueOrDefault(ComputeOptionDefinitions.BootDiagnostics);
+        options.UserData = parseResult.GetValueOrDefault(ComputeOptionDefinitions.UserData);
         return options;
     }
 

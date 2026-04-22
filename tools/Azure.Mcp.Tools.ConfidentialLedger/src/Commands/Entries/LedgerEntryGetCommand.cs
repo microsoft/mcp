@@ -47,8 +47,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
     protected override GetEntryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TransactionId = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.TransactionId.Name);
-        options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
+        options.TransactionId = parseResult.GetValueOrDefault(ConfidentialLedgerOptionDefinitions.TransactionId);
+        options.CollectionId = parseResult.GetValueOrDefault(ConfidentialLedgerOptionDefinitions.CollectionId);
         return options;
     }
 
