@@ -32,7 +32,6 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
 
         using var client = httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Add("Accept", "text/plain");
-        client.DefaultRequestHeaders.Add("User-Agent", "Azure-Terraform-MCP-Server");
 
         string? markdownContent = null;
         bool isDataSourceUrl = isDataSource;

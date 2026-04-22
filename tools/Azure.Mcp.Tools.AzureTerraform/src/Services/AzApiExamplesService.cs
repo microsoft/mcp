@@ -75,7 +75,6 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
         string remarksUrl = $"{RawContentBase}/{@namespace}/remarks.json";
 
         using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "Azure-Terraform-MCP-Server");
 
         try
         {
@@ -88,7 +87,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
             string json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return JsonSerializer.Deserialize(json, AzApiExamplesJsonContext.Default.RemarksJson);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             return null;
         }
@@ -102,7 +101,6 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
         string contentUrl = $"{RawContentBase}/{@namespace}/{samplePath}";
 
         using var client = httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "Azure-Terraform-MCP-Server");
         client.DefaultRequestHeaders.Add("Accept", "text/plain");
 
         try
@@ -115,7 +113,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
 
             return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is HttpRequestException)
         {
             return null;
         }

@@ -100,7 +100,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         {
             if (s_cachedModules is not null && DateTime.UtcNow - s_cacheTimestamp < CacheExpiration)
             {
-                return s_cachedModules;
+                return s_cachedModules.ToList();
             }
         }
 
@@ -195,11 +195,22 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var current = new System.Text.StringBuilder();
         bool inQuotes = false;
 
-        foreach (char c in line)
+        for (int i = 0; i < line.Length; i++)
         {
+            char c = line[i];
+
             if (c == '"')
             {
-                inQuotes = !inQuotes;
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    // RFC 4180: escaped quote ("") represents a literal "
+                    current.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
             }
             else if (c == ',' && !inQuotes)
             {
