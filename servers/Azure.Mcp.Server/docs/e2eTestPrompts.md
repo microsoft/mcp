@@ -396,7 +396,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | deploy_app_logs_get | Show me the log of the application deployed by azd |
 | deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application |
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep |
-| deploy_pipeline_guidance_get | Set up a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices |
+| deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates |
 
 ## Azure Device Registry
