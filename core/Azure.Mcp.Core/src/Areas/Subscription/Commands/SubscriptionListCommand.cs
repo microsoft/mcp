@@ -11,10 +11,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : GlobalCommand<SubscriptionListOptions>()
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger, ISubscriptionService subscriptionService) : GlobalCommand<SubscriptionListOptions>()
 {
     private const string CommandTitle = "List Azure Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
     public override string Id => "72bbe80e-ca42-4a43-8f02-45495bca1179";
 
@@ -49,10 +50,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         try
         {
-            var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
+            var subscriptions = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
-            var defaultSubscriptionId = subscriptionService.GetDefaultSubscriptionId();
+            var defaultSubscriptionId = _subscriptionService.GetDefaultSubscriptionId();
             var subscriptionInfos = MapToSubscriptionInfos(subscriptions, defaultSubscriptionId);
 
             context.Response.Results = ResponseResult.Create(

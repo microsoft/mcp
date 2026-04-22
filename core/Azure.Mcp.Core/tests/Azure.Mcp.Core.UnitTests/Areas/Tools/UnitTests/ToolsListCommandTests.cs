@@ -29,19 +29,20 @@ public class ToolsListCommandTests
     private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
     private readonly Command _commandDefinition;
+    private readonly ICommandFactory _commandFactory;
 
     public ToolsListCommandTests()
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
 
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        collection.AddSingleton(commandFactory);
+        _commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        collection.AddSingleton(_commandFactory);
 
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<ToolsListCommand>>();
-        _command = new(_logger);
+        _command = new(_logger, _commandFactory);
         _commandDefinition = _command.GetCommand();
     }
 

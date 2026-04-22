@@ -12,10 +12,11 @@ using Microsoft.Mcp.Core.Models.ResourceGroup;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
-public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : SubscriptionCommand<BaseGroupOptions>()
+public sealed class GroupListCommand(ILogger<GroupListCommand> logger, IResourceGroupService resourceGroupService) : SubscriptionCommand<BaseGroupOptions>()
 {
     private const string CommandTitle = "List Resource Groups";
     private readonly ILogger<GroupListCommand> _logger = logger;
+    private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
 
     public override string Id => "a0049f31-9a32-4b5e-91ec-e7b074fc7246";
 
@@ -51,8 +52,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
 
         try
         {
-            var resourceGroupService = context.GetService<IResourceGroupService>();
-            var groups = await resourceGroupService.GetResourceGroups(
+            var groups = await _resourceGroupService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
