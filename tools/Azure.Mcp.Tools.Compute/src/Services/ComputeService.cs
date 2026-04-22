@@ -90,7 +90,8 @@ public class ComputeService(
         var (publisher, offer, sku, version) = ParseImage(image);
 
         // Create or get network resources
-        var nicId = await CreateOrGetNetworkResourcesAsync(
+        var (nicId, networkTracker) = await CreateOrGetNetworkResourcesAsync(
+            armClient,
             resourceGroupResource,
             vmName,
             location,
@@ -201,33 +202,42 @@ public class ComputeService(
         }
 
         // Create the VM
-        var vmCollection = resourceGroupResource.GetVirtualMachines();
-        var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
-            vmName,
-            vmData,
-            cancellationToken);
-        await WaitForLroCompletionAsync(vmOperation, cancellationToken);
+        try
+        {
+            var vmCollection = resourceGroupResource.GetVirtualMachines();
+            var vmOperation = await vmCollection.CreateOrUpdateAsync(
+                WaitUntil.Started,
+                vmName,
+                vmData,
+                cancellationToken);
+            await WaitForLroCompletionAsync(vmOperation, cancellationToken);
 
-        var createdVm = vmOperation.Value;
+            var createdVm = vmOperation.Value;
 
-        // Get IP addresses
-        var (publicIp, privateIp) = await GetVmIpAddressesAsync(
-            resourceGroupResource,
-            nicId,
-            cancellationToken);
+            // Get IP addresses
+            var (publicIp, privateIp) = await GetVmIpAddressesAsync(
+                resourceGroupResource,
+                nicId,
+                cancellationToken);
 
-        return new(
-            Name: createdVm.Data.Name,
-            Id: createdVm.Data.Id?.ToString(),
-            Location: createdVm.Data.Location.Name,
-            VmSize: createdVm.Data.HardwareProfile?.VmSize?.ToString(),
-            ProvisioningState: createdVm.Data.ProvisioningState,
-            OsType: effectiveOsType,
-            PublicIpAddress: publicIp,
-            PrivateIpAddress: privateIp,
-            Zones: createdVm.Data.Zones?.ToList(),
-            Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
+            return new(
+                Name: createdVm.Data.Name,
+                Id: createdVm.Data.Id?.ToString(),
+                Location: createdVm.Data.Location.Name,
+                VmSize: createdVm.Data.HardwareProfile?.VmSize?.ToString(),
+                ProvisioningState: createdVm.Data.ProvisioningState,
+                OsType: effectiveOsType,
+                PublicIpAddress: publicIp,
+                PrivateIpAddress: privateIp,
+                Zones: createdVm.Data.Zones?.ToList(),
+                Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
+        }
+        catch
+        {
+            _logger.LogWarning("VM creation failed. Rolling back newly created network resources.");
+            await networkTracker.RollbackAsync(armClient, cancellationToken);
+            throw;
+        }
     }
 
     private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
@@ -255,7 +265,8 @@ public class ComputeService(
         return s_imageAliases["Ubuntu2404"];
     }
 
-    private async Task<ResourceIdentifier> CreateOrGetNetworkResourcesAsync(
+    private async Task<(ResourceIdentifier NicId, CreatedResourceTracker Tracker)> CreateOrGetNetworkResourcesAsync(
+        ArmClient armClient,
         ResourceGroupResource resourceGroup,
         string vmName,
         string location,
@@ -268,183 +279,196 @@ public class ComputeService(
         string? sourceAddressPrefix,
         CancellationToken cancellationToken)
     {
-        var effectiveSourceAddressPrefix = sourceAddressPrefix ?? "*";
-        var vnetName = virtualNetwork ?? $"{vmName}-vnet";
-        var subnetName = subnet ?? "default";
-        var nsgName = networkSecurityGroup ?? $"{vmName}-nsg";
-        var nicName = $"{vmName}-nic";
-
-        // Create or get NSG
-        var nsgCollection = resourceGroup.GetNetworkSecurityGroups();
-        NetworkSecurityGroupResource nsgResource;
-
+        var tracker = new CreatedResourceTracker(_logger);
         try
         {
-            var existingNsg = await nsgCollection.GetAsync(nsgName, cancellationToken: cancellationToken);
-            nsgResource = existingNsg.Value;
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            var nsgData = new NetworkSecurityGroupData
-            {
-                Location = new(location)
-            };
+            var effectiveSourceAddressPrefix = sourceAddressPrefix ?? "*";
+            var vnetName = virtualNetwork ?? $"{vmName}-vnet";
+            var subnetName = subnet ?? "default";
+            var nsgName = networkSecurityGroup ?? $"{vmName}-nsg";
+            var nicName = $"{vmName}-nic";
 
-            // Add appropriate security rule based on OS type
-            // WARNING: These rules allow access from any source IP for quick-start scenarios.
-            // For production use, restrict SourceAddressPrefix to specific IP ranges.
-            var isWindows = osType.Equals("Windows", StringComparison.OrdinalIgnoreCase);
-
-            if (isWindows)
-            {
-                if (effectiveSourceAddressPrefix == "*")
-                {
-                    _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
-                }
-
-                nsgData.SecurityRules.Add(new()
-                {
-                    Name = "AllowRDP",
-                    Priority = 1000,
-                    Access = SecurityRuleAccess.Allow,
-                    Direction = SecurityRuleDirection.Inbound,
-                    Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = effectiveSourceAddressPrefix,
-                    SourcePortRange = "*",
-                    DestinationAddressPrefix = "*",
-                    DestinationPortRange = "3389"
-                });
-            }
-            else
-            {
-                if (effectiveSourceAddressPrefix == "*")
-                {
-                    _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
-                }
-
-                nsgData.SecurityRules.Add(new()
-                {
-                    Name = "AllowSSH",
-                    Priority = 1000,
-                    Access = SecurityRuleAccess.Allow,
-                    Direction = SecurityRuleDirection.Inbound,
-                    Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = effectiveSourceAddressPrefix,
-                    SourcePortRange = "*",
-                    DestinationAddressPrefix = "*",
-                    DestinationPortRange = "22"
-                });
-            }
-
-            var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
-                nsgName,
-                nsgData,
-                cancellationToken);
-            await WaitForLroCompletionAsync(nsgOperation, cancellationToken);
-            nsgResource = nsgOperation.Value;
-        }
-
-        // Create or get VNet
-        var vnetCollection = resourceGroup.GetVirtualNetworks();
-        VirtualNetworkResource vnetResource;
-
-        try
-        {
-            var existingVnet = await vnetCollection.GetAsync(vnetName, cancellationToken: cancellationToken);
-            vnetResource = existingVnet.Value;
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            var vnetData = new VirtualNetworkData
-            {
-                Location = new(location)
-            };
-            vnetData.AddressPrefixes.Add("10.0.0.0/16");
-            vnetData.Subnets.Add(new()
-            {
-                Name = subnetName,
-                AddressPrefix = "10.0.0.0/24",
-                NetworkSecurityGroup = new() { Id = nsgResource.Id }
-            });
-
-            var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
-                vnetName,
-                vnetData,
-                cancellationToken);
-            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
-            vnetResource = vnetOperation.Value;
-        }
-
-        // Get subnet
-        var subnetCollection = vnetResource.GetSubnets();
-        var subnetResource = await subnetCollection.GetAsync(subnetName, cancellationToken: cancellationToken);
-
-        // Create public IP if needed
-        PublicIPAddressResource? publicIpResource = null;
-        if (!noPublicIp)
-        {
-            var pipName = publicIpAddress ?? $"{vmName}-pip";
-            var pipCollection = resourceGroup.GetPublicIPAddresses();
+            // Create or get NSG
+            var nsgCollection = resourceGroup.GetNetworkSecurityGroups();
+            NetworkSecurityGroupResource nsgResource;
 
             try
             {
-                var existingPip = await pipCollection.GetAsync(pipName, cancellationToken: cancellationToken);
-                publicIpResource = existingPip.Value;
+                var existingNsg = await nsgCollection.GetAsync(nsgName, cancellationToken: cancellationToken);
+                nsgResource = existingNsg.Value;
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                var pipData = new PublicIPAddressData
+                var nsgData = new NetworkSecurityGroupData
                 {
-                    Location = new(location),
-                    PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
-                    Sku = new()
-                    {
-                        Name = PublicIPAddressSkuName.Standard
-                    }
+                    Location = new(location)
                 };
 
-                var pipOperation = await pipCollection.CreateOrUpdateAsync(
+                // Add appropriate security rule based on OS type
+                // WARNING: These rules allow access from any source IP for quick-start scenarios.
+                // For production use, restrict SourceAddressPrefix to specific IP ranges.
+                var isWindows = osType.Equals("Windows", StringComparison.OrdinalIgnoreCase);
+
+                if (isWindows)
+                {
+                    if (effectiveSourceAddressPrefix == "*")
+                    {
+                        _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
+                    }
+
+                    nsgData.SecurityRules.Add(new()
+                    {
+                        Name = "AllowRDP",
+                        Priority = 1000,
+                        Access = SecurityRuleAccess.Allow,
+                        Direction = SecurityRuleDirection.Inbound,
+                        Protocol = SecurityRuleProtocol.Tcp,
+                        SourceAddressPrefix = effectiveSourceAddressPrefix,
+                        SourcePortRange = "*",
+                        DestinationAddressPrefix = "*",
+                        DestinationPortRange = "3389"
+                    });
+                }
+                else
+                {
+                    if (effectiveSourceAddressPrefix == "*")
+                    {
+                        _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
+                    }
+
+                    nsgData.SecurityRules.Add(new()
+                    {
+                        Name = "AllowSSH",
+                        Priority = 1000,
+                        Access = SecurityRuleAccess.Allow,
+                        Direction = SecurityRuleDirection.Inbound,
+                        Protocol = SecurityRuleProtocol.Tcp,
+                        SourceAddressPrefix = effectiveSourceAddressPrefix,
+                        SourcePortRange = "*",
+                        DestinationAddressPrefix = "*",
+                        DestinationPortRange = "22"
+                    });
+                }
+
+                var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
                     WaitUntil.Started,
-                    pipName,
-                    pipData,
+                    nsgName,
+                    nsgData,
                     cancellationToken);
-                await WaitForLroCompletionAsync(pipOperation, cancellationToken);
-                publicIpResource = pipOperation.Value;
+                await WaitForLroCompletionAsync(nsgOperation, cancellationToken);
+                nsgResource = nsgOperation.Value;
+                tracker.Track(nsgResource.Id);
             }
+
+            // Create or get VNet
+            var vnetCollection = resourceGroup.GetVirtualNetworks();
+            VirtualNetworkResource vnetResource;
+
+            try
+            {
+                var existingVnet = await vnetCollection.GetAsync(vnetName, cancellationToken: cancellationToken);
+                vnetResource = existingVnet.Value;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                var vnetData = new VirtualNetworkData
+                {
+                    Location = new(location)
+                };
+                vnetData.AddressPrefixes.Add("10.0.0.0/16");
+                vnetData.Subnets.Add(new()
+                {
+                    Name = subnetName,
+                    AddressPrefix = "10.0.0.0/24",
+                    NetworkSecurityGroup = new() { Id = nsgResource.Id }
+                });
+
+                var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
+                    WaitUntil.Started,
+                    vnetName,
+                    vnetData,
+                    cancellationToken);
+                await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
+                vnetResource = vnetOperation.Value;
+                tracker.Track(vnetResource.Id);
+            }
+
+            // Get subnet
+            var subnetCollection = vnetResource.GetSubnets();
+            var subnetResource = await subnetCollection.GetAsync(subnetName, cancellationToken: cancellationToken);
+
+            // Create public IP if needed
+            PublicIPAddressResource? publicIpResource = null;
+            if (!noPublicIp)
+            {
+                var pipName = publicIpAddress ?? $"{vmName}-pip";
+                var pipCollection = resourceGroup.GetPublicIPAddresses();
+
+                try
+                {
+                    var existingPip = await pipCollection.GetAsync(pipName, cancellationToken: cancellationToken);
+                    publicIpResource = existingPip.Value;
+                }
+                catch (RequestFailedException ex) when (ex.Status == 404)
+                {
+                    var pipData = new PublicIPAddressData
+                    {
+                        Location = new(location),
+                        PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
+                        Sku = new()
+                        {
+                            Name = PublicIPAddressSkuName.Standard
+                        }
+                    };
+
+                    var pipOperation = await pipCollection.CreateOrUpdateAsync(
+                        WaitUntil.Started,
+                        pipName,
+                        pipData,
+                        cancellationToken);
+                    await WaitForLroCompletionAsync(pipOperation, cancellationToken);
+                    publicIpResource = pipOperation.Value;
+                    tracker.Track(publicIpResource.Id);
+                }
+            }
+
+            // Create NIC (always new)
+            var nicCollection = resourceGroup.GetNetworkInterfaces();
+            var nicData = new NetworkInterfaceData
+            {
+                Location = new(location)
+            };
+
+            var ipConfig = new NetworkInterfaceIPConfigurationData
+            {
+                Name = "ipconfig1",
+                Primary = true,
+                PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
+                Subnet = new() { Id = subnetResource.Value.Id }
+            };
+
+            if (publicIpResource != null)
+            {
+                ipConfig.PublicIPAddress = new() { Id = publicIpResource.Id };
+            }
+
+            nicData.IPConfigurations.Add(ipConfig);
+
+            var nicOperation = await nicCollection.CreateOrUpdateAsync(
+                WaitUntil.Started,
+                nicName,
+                nicData,
+                cancellationToken);
+            await WaitForLroCompletionAsync(nicOperation, cancellationToken);
+            tracker.Track(nicOperation.Value.Id);
+
+            return (nicOperation.Value.Id, tracker);
         }
-
-        // Create NIC
-        var nicCollection = resourceGroup.GetNetworkInterfaces();
-        var nicData = new NetworkInterfaceData
+        catch
         {
-            Location = new(location)
-        };
-
-        var ipConfig = new NetworkInterfaceIPConfigurationData
-        {
-            Name = "ipconfig1",
-            Primary = true,
-            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
-            Subnet = new() { Id = subnetResource.Value.Id }
-        };
-
-        if (publicIpResource != null)
-        {
-            ipConfig.PublicIPAddress = new() { Id = publicIpResource.Id };
+            await tracker.RollbackAsync(armClient, cancellationToken);
+            throw;
         }
-
-        nicData.IPConfigurations.Add(ipConfig);
-
-        var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
-            nicName,
-            nicData,
-            cancellationToken);
-        await WaitForLroCompletionAsync(nicOperation, cancellationToken);
-
-        return nicOperation.Value.Id;
     }
 
     private static async Task<(string? PublicIp, string? PrivateIp)> GetVmIpAddressesAsync(
@@ -729,7 +753,8 @@ public class ComputeService(
         var (publisher, offer, sku, version) = ParseImage(image);
 
         // Create or get network resources for VMSS
-        var subnetId = await CreateOrGetVmssNetworkResourcesAsync(
+        var (subnetId, networkTracker) = await CreateOrGetVmssNetworkResourcesAsync(
+            armClient,
             resourceGroupResource,
             vmssName,
             location,
@@ -846,27 +871,36 @@ public class ComputeService(
         }
 
         // Create the VMSS
-        var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
-        var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            WaitUntil.Started,
-            vmssName,
-            vmssData,
-            cancellationToken);
-        await WaitForLroCompletionAsync(vmssOperation, cancellationToken);
+        try
+        {
+            var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
+            var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
+                WaitUntil.Started,
+                vmssName,
+                vmssData,
+                cancellationToken);
+            await WaitForLroCompletionAsync(vmssOperation, cancellationToken);
 
-        var createdVmss = vmssOperation.Value;
+            var createdVmss = vmssOperation.Value;
 
-        return new(
-            Name: createdVmss.Data.Name,
-            Id: createdVmss.Data.Id?.ToString(),
-            Location: createdVmss.Data.Location.Name,
-            VmSize: createdVmss.Data.Sku?.Name,
-            ProvisioningState: createdVmss.Data.ProvisioningState,
-            OsType: effectiveOsType,
-            Capacity: (int)(createdVmss.Data.Sku?.Capacity ?? effectiveInstanceCount),
-            UpgradePolicy: createdVmss.Data.UpgradePolicy?.Mode?.ToString(),
-            Zones: createdVmss.Data.Zones?.ToList(),
-            Tags: createdVmss.Data.Tags as IReadOnlyDictionary<string, string>);
+            return new(
+                Name: createdVmss.Data.Name,
+                Id: createdVmss.Data.Id?.ToString(),
+                Location: createdVmss.Data.Location.Name,
+                VmSize: createdVmss.Data.Sku?.Name,
+                ProvisioningState: createdVmss.Data.ProvisioningState,
+                OsType: effectiveOsType,
+                Capacity: (int)(createdVmss.Data.Sku?.Capacity ?? effectiveInstanceCount),
+                UpgradePolicy: createdVmss.Data.UpgradePolicy?.Mode?.ToString(),
+                Zones: createdVmss.Data.Zones?.ToList(),
+                Tags: createdVmss.Data.Tags as IReadOnlyDictionary<string, string>);
+        }
+        catch
+        {
+            _logger.LogWarning("VMSS creation failed. Rolling back newly created network resources.");
+            await networkTracker.RollbackAsync(armClient, cancellationToken);
+            throw;
+        }
     }
 
     public async Task<VmssUpdateResult> UpdateVmssAsync(
@@ -1180,7 +1214,8 @@ public class ComputeService(
         };
     }
 
-    private async Task<ResourceIdentifier> CreateOrGetVmssNetworkResourcesAsync(
+    private async Task<(ResourceIdentifier SubnetId, CreatedResourceTracker Tracker)> CreateOrGetVmssNetworkResourcesAsync(
+        ArmClient armClient,
         ResourceGroupResource resourceGroup,
         string vmssName,
         string location,
@@ -1188,69 +1223,80 @@ public class ComputeService(
         string? subnet,
         CancellationToken cancellationToken)
     {
-        var vnetName = virtualNetwork ?? $"{vmssName}-vnet";
-        var subnetName = subnet ?? "default";
-
-        // Create or get VNet
-        var vnetCollection = resourceGroup.GetVirtualNetworks();
-        VirtualNetworkResource vnetResource;
-
+        var tracker = new CreatedResourceTracker(_logger);
         try
         {
-            var existingVnet = await vnetCollection.GetAsync(vnetName, cancellationToken: cancellationToken);
-            vnetResource = existingVnet.Value;
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            var vnetData = new VirtualNetworkData
+            var vnetName = virtualNetwork ?? $"{vmssName}-vnet";
+            var subnetName = subnet ?? "default";
+
+            // Create or get VNet
+            var vnetCollection = resourceGroup.GetVirtualNetworks();
+            VirtualNetworkResource vnetResource;
+
+            try
             {
-                Location = new(location),
-                AddressPrefixes = { "10.0.0.0/16" },
-                Subnets =
+                var existingVnet = await vnetCollection.GetAsync(vnetName, cancellationToken: cancellationToken);
+                vnetResource = existingVnet.Value;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                var vnetData = new VirtualNetworkData
                 {
-                    new()
+                    Location = new(location),
+                    AddressPrefixes = { "10.0.0.0/16" },
+                    Subnets =
                     {
-                        Name = subnetName,
-                        AddressPrefix = "10.0.0.0/24"
+                        new()
+                        {
+                            Name = subnetName,
+                            AddressPrefix = "10.0.0.0/24"
+                        }
                     }
-                }
-            };
+                };
 
-            var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
-                vnetName,
-                vnetData,
-                cancellationToken);
-            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
-            vnetResource = vnetOperation.Value;
-        }
+                var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
+                    WaitUntil.Started,
+                    vnetName,
+                    vnetData,
+                    cancellationToken);
+                await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
+                vnetResource = vnetOperation.Value;
+                tracker.Track(vnetResource.Id);
+            }
 
-        // Get subnet
-        var subnetCollection = vnetResource.GetSubnets();
-        SubnetResource subnetResource;
+            // Get subnet
+            var subnetCollection = vnetResource.GetSubnets();
+            SubnetResource subnetResource;
 
-        try
-        {
-            var existingSubnet = await subnetCollection.GetAsync(subnetName, cancellationToken: cancellationToken);
-            subnetResource = existingSubnet.Value;
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            var subnetData = new SubnetData
+            try
             {
-                AddressPrefix = "10.0.1.0/24"
-            };
+                var existingSubnet = await subnetCollection.GetAsync(subnetName, cancellationToken: cancellationToken);
+                subnetResource = existingSubnet.Value;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                var subnetData = new SubnetData
+                {
+                    AddressPrefix = "10.0.1.0/24"
+                };
 
-            var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Started,
-                subnetName,
-                subnetData,
-                cancellationToken);
-            await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
-            subnetResource = subnetOperation.Value;
+                var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
+                    WaitUntil.Started,
+                    subnetName,
+                    subnetData,
+                    cancellationToken);
+                await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
+                subnetResource = subnetOperation.Value;
+                // Don't track subnet separately — it's deleted with the VNet
+            }
+
+            return (subnetResource.Id, tracker);
         }
-
-        return subnetResource.Id;
+        catch
+        {
+            await tracker.RollbackAsync(armClient, cancellationToken);
+            throw;
+        }
     }
 
     private static VmInfo MapToVmInfo(VirtualMachineData data)
