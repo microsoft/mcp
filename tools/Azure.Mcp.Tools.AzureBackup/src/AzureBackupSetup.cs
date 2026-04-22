@@ -68,53 +68,47 @@ public sealed class AzureBackupSetup : IAreaSetup
 
         var vault = new CommandGroup("vault", "Backup vault operations – Get vault details or list all vaults, create, and update vaults.");
         azureBackup.AddSubGroup(vault);
-        RegisterCommand<VaultGetCommand>(serviceProvider, vault);
-        RegisterCommand<VaultCreateCommand>(serviceProvider, vault);
-        RegisterCommand<VaultUpdateCommand>(serviceProvider, vault);
+        vault.AddCommand(serviceProvider.GetRequiredService<VaultGetCommand>());
+        vault.AddCommand(serviceProvider.GetRequiredService<VaultCreateCommand>());
+        vault.AddCommand(serviceProvider.GetRequiredService<VaultUpdateCommand>());
 
         var policy = new CommandGroup("policy", "Backup policy operations – Get policy details or list all policies, and create policies.");
         azureBackup.AddSubGroup(policy);
-        RegisterCommand<PolicyGetCommand>(serviceProvider, policy);
-        RegisterCommand<PolicyCreateCommand>(serviceProvider, policy);
+        policy.AddCommand(serviceProvider.GetRequiredService<PolicyGetCommand>());
+        policy.AddCommand(serviceProvider.GetRequiredService<PolicyCreateCommand>());
 
         var protectedItem = new CommandGroup("protecteditem", "Protected item operations – Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
         azureBackup.AddSubGroup(protectedItem);
-        RegisterCommand<ProtectedItemGetCommand>(serviceProvider, protectedItem);
-        RegisterCommand<ProtectedItemProtectCommand>(serviceProvider, protectedItem);
-        RegisterCommand<ProtectedItemUndeleteCommand>(serviceProvider, protectedItem);
+        protectedItem.AddCommand(serviceProvider.GetRequiredService<ProtectedItemGetCommand>());
+        protectedItem.AddCommand(serviceProvider.GetRequiredService<ProtectedItemProtectCommand>());
+        protectedItem.AddCommand(serviceProvider.GetRequiredService<ProtectedItemUndeleteCommand>());
 
         var protectableItem = new CommandGroup("protectableitem", "Protectable item operations – List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);
-        RegisterCommand<ProtectableItemListCommand>(serviceProvider, protectableItem);
+        protectableItem.AddCommand(serviceProvider.GetRequiredService<ProtectableItemListCommand>());
 
         var backup = new CommandGroup("backup", "Backup operations – Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);
-        RegisterCommand<BackupStatusCommand>(serviceProvider, backup);
+        backup.AddCommand(serviceProvider.GetRequiredService<BackupStatusCommand>());
 
         var job = new CommandGroup("job", "Backup job operations – Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);
-        RegisterCommand<JobGetCommand>(serviceProvider, job);
+        job.AddCommand(serviceProvider.GetRequiredService<JobGetCommand>());
 
         var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations – Get recovery point details or list all for a protected item.");
         azureBackup.AddSubGroup(recoveryPoint);
-        RegisterCommand<RecoveryPointGetCommand>(serviceProvider, recoveryPoint);
+        recoveryPoint.AddCommand(serviceProvider.GetRequiredService<RecoveryPointGetCommand>());
 
         var governance = new CommandGroup("governance", "Governance operations – Find unprotected resources, configure immutability and soft delete.");
         azureBackup.AddSubGroup(governance);
-        RegisterCommand<GovernanceFindUnprotectedCommand>(serviceProvider, governance);
-        RegisterCommand<GovernanceImmutabilityCommand>(serviceProvider, governance);
-        RegisterCommand<GovernanceSoftDeleteCommand>(serviceProvider, governance);
+        governance.AddCommand(serviceProvider.GetRequiredService<GovernanceFindUnprotectedCommand>());
+        governance.AddCommand(serviceProvider.GetRequiredService<GovernanceImmutabilityCommand>());
+        governance.AddCommand(serviceProvider.GetRequiredService<GovernanceSoftDeleteCommand>());
 
         var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations – Enable Cross-Region Restore on a GRS vault.");
         azureBackup.AddSubGroup(disasterrecovery);
-        RegisterCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider, disasterrecovery);
+        disasterrecovery.AddCommand(serviceProvider.GetRequiredService<DisasterRecoveryEnableCrrCommand>());
 
         return azureBackup;
-    }
-
-    private static void RegisterCommand<T>(IServiceProvider serviceProvider, CommandGroup group) where T : IBaseCommand
-    {
-        var cmd = serviceProvider.GetRequiredService<T>();
-        group.AddCommand(cmd.Name, cmd);
     }
 }
