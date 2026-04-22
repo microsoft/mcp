@@ -31,9 +31,9 @@ public class ManagedClusterNodeTypeRestartCommandTests
         _serviceFabricService = Substitute.For<IServiceFabricService>();
         _logger = Substitute.For<ILogger<ManagedClusterNodeTypeRestartCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_serviceFabricService);
+        var collection = new ServiceCollection();
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _serviceFabricService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
