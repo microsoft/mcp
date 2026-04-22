@@ -28,7 +28,7 @@ If your command interacts with Azure resources (storage accounts, databases, VMs
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
 - ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}.LiveTests`
-- ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see `/docs/recorded-tests.md`)
+- ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
 If your command is a wrapper/utility (CLI tools, best practices, documentation):
@@ -1322,7 +1322,7 @@ Guidelines:
 
 ### 8. Live Tests
 
-Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](/docs/recorded-tests.md) for the full recording workflow.
+Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the full recording workflow.
 
 ```csharp
 public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
