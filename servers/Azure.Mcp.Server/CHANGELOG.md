@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.2 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 2.0.2 (2026-04-21)
 
 ### Other Changes
+
+- Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
 
 ## 2.0.1 (2026-04-14)
 
