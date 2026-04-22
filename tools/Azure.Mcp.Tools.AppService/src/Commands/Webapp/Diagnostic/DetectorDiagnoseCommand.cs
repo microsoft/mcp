@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
+public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "Diagnose an App Service Web App";
     private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
     public override string Id => "a8aa0966-4c0c-4e22-8854-cced583f0fb2";
     public override string Name => "diagnose";
 
@@ -103,8 +104,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var diagnoses = await appServiceService.DiagnoseDetectorAsync(
+            var diagnoses = await _appServiceService.DiagnoseDetectorAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,

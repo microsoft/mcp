@@ -10,11 +10,12 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
+public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAppServiceService appServiceService)
     : BaseAppServiceCommand<BaseAppServiceOptions>(resourceGroupRequired: true, appRequired: true)
 {
     private const string CommandTitle = "List the Diagnostic Detectors for an App Service Web App";
     private readonly ILogger<DetectorListCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
     public override string Id => "7807fdb6-4b92-4361-8042-be61dd342e17";
     public override string Name => "list";
 
@@ -54,8 +55,7 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
-            var detectors = await appServiceService.ListDetectorsAsync(
+            var detectors = await _appServiceService.ListDetectorsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,

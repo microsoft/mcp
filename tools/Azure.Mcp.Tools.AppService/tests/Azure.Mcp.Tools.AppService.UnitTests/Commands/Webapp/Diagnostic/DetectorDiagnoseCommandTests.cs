@@ -37,7 +37,7 @@ public class DetectorDiagnoseCommandTests
         var collection = new ServiceCollection().AddSingleton(_appServiceService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _appServiceService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
