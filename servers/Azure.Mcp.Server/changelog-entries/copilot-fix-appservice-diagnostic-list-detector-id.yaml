@@ -1,3 +1,3 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Fixed App Service `diagnostic_list` returning detector display names instead of internal detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors."
+    description: "Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors."
