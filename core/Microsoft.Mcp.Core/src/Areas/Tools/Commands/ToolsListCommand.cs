@@ -12,9 +12,10 @@ using Microsoft.Mcp.Core.Models.Option;
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<ToolsListOptions>
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger, ICommandFactory commandFactory) : BaseCommand<ToolsListOptions>
 {
     private const string CommandTitle = "List Available Tools";
+    private readonly ICommandFactory _commandFactory = commandFactory;
 
     public override string Id => "63de05a7-047d-4f8a-86ea-cebd64527e2b";
 
@@ -62,7 +63,6 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     {
         try
         {
-            var factory = context.GetService<ICommandFactory>();
             var options = BindOptions(parseResult);
 
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
@@ -70,7 +70,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             {
                 var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
                 var surfaced = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "extension" };
-                var rootGroup = factory.RootGroup; // azmcp
+                var rootGroup = _commandFactory.RootGroup; // azmcp
 
                 var namespaceCommands = rootGroup.SubGroup
                     .Where(g => !ignored.Contains(g.Name) && !surfaced.Contains(g.Name))
@@ -120,7 +120,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             if (options.NameOnly)
             {
                 // Get all visible commands and extract their tokenized names (full command paths)
-                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                var allToolNames = CommandFactory.GetVisibleCommands(_commandFactory.AllCommands)
                     .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
                     .Where(name => !string.IsNullOrEmpty(name));
 
@@ -137,7 +137,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             }
 
             // Get all tools with full details
-            var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
+            var allTools = CommandFactory.GetVisibleCommands(_commandFactory.AllCommands)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
