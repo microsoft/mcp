@@ -23,8 +23,10 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
 
     public override string Description =>
         """
-        Diagnoses an App Service Web App with the specified detector, returning the diagnostic results of the detector.
-        Use the detector's internal ID (from the 'id' field in 'azmcp appservice webapp diagnostic list' output) for the detector-id parameter
+        Runs a specific diagnostic detector on an App Service Web App to troubleshoot issues with performance, availability,
+        configuration, or errors. Returns detailed analysis results including insights and recommendations. Use this to investigate
+        why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
+        Supports optional time range filtering for historical analysis.
         """;
 
     public override string Title => CommandTitle;
