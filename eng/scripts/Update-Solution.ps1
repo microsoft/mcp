@@ -21,7 +21,8 @@ function Update-Solution {
     Write-Host "Updating solution for server directory: $($serverDirectory)"
     $serverName = Split-Path -Leaf $serverDirectory
 
-    $slnFile = ".temp.slnx"
+    $tempName = ".temp.$([guid]::NewGuid())"
+    $slnFile = "$tempName.slnx"
 
     if ($Verify) {
         Write-Host "Verifying solution file for server: $serverName" -ForegroundColor Cyan
@@ -37,13 +38,13 @@ function Update-Solution {
     try {
         # we're creating the solution file in the repo root so it auto creates the repo folder structure in the solution
         Write-Host "Creating new solution file: $slnFile" -ForegroundColor Cyan
-        dotnet new sln -n ".temp" --format slnx
+        dotnet new sln -n $tempName --format slnx
 
         Write-Host "Adding server projects and dependencies to solution" -ForegroundColor Cyan
         $serverProjects = Get-ChildItem -Path "$serverDirectory/src" -Filter "*.csproj" | Sort-Object -Property FullName
         dotnet sln $slnFile add $serverProjects
 
-        $projects = dotnet sln $slnFile list | Where-Object { $_ -like "*.csproj" } | ForEach-Object { Resolve-Path $_ }
+        $projects = dotnet sln $slnFile list | Where-Object { $_ -like "*.csproj" } | ForEach-Object { Resolve-Path $_ } | Sort-Object
 
         Write-Host "Adding tests to solution" -ForegroundColor Cyan
 
@@ -61,7 +62,7 @@ function Update-Solution {
         }
 
         if ($testProjects) {
-            $testProjects = $testProjects | Sort-Object -Property FullName
+            $testProjects = $testProjects | Sort-Object -Property FullName -Unique
             dotnet sln $slnFile add $testProjects
         }
 
@@ -79,7 +80,7 @@ function Update-Solution {
                 Write-Host "❌ $serverName.slnx does not exist."
                 $script:stale = $true
                 $script:staleFiles += "$serverName.slnx"
-            } elseif ((Get-Content $originalFile -Raw) -ne $contents) {
+            } elseif ((Normalize-Solution (Get-Content $originalFile -Raw)) -ne (Normalize-Solution $contents)) {
                 Write-Host "❌ $serverName.slnx is out of date."
                 $script:stale = $true
                 $script:staleFiles += "$serverName.slnx"
@@ -91,7 +92,9 @@ function Update-Solution {
         }
     }
     finally {
-        Remove-Item -Path $slnFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path $slnFile) {    
+            Remove-Item -Path $slnFile -Force -ErrorAction SilentlyContinue
+        }
     }
 
     Write-Host "Solution update complete for server: $serverName" -ForegroundColor Green
@@ -111,12 +114,13 @@ function Update-RootSolution {
         $targetFile = $slnFile
     }
 
-    $tempSlnFile = ".temp.root.slnx"
+    $tempRootName = ".temp.root.$([guid]::NewGuid())"
+    $tempSlnFile = "$tempRootName.slnx"
     Remove-Item -Path $tempSlnFile -Force -ErrorAction SilentlyContinue
 
     try {
         Write-Host "Creating new root solution file" -ForegroundColor Cyan
-        dotnet new sln -n ".temp.root" --format slnx
+        dotnet new sln -n $tempRootName --format slnx
 
         $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse | Sort-Object -Property FullName
         Write-Host "Adding all projects to root solution" -ForegroundColor Cyan
@@ -128,7 +132,7 @@ function Update-RootSolution {
                 Write-Host "❌ $slnFile does not exist."
                 $script:stale = $true
                 $script:staleFiles += $slnFile
-            } elseif ((Get-Content $slnFile -Raw) -ne $contents) {
+            } elseif ((Normalize-Solution (Get-Content $slnFile -Raw)) -ne (Normalize-Solution $contents)) {
                 Write-Host "❌ $slnFile is out of date."
                 $script:stale = $true
                 $script:staleFiles += $slnFile
@@ -136,14 +140,30 @@ function Update-RootSolution {
                 Write-Host "✅ $slnFile is up-to-date."
             }
         } else {
-            Move-Item -Path $tempSlnFile -Destination $targetFile -Force
+            # Move-Item -Path $tempSlnFile -Destination $targetFile -Force
+            $contents = Get-Content $tempSlnFile -Raw
+            Set-Content -Path $targetFile -Value $contents -Encoding utf8 -NoNewline -Force
         }
     }
     finally {
-        Remove-Item -Path $tempSlnFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path $tempSlnFile) {
+            Remove-Item -Path $tempSlnFile -Force -ErrorAction SilentlyContinue
+        }    
     }
 
     Write-Host "Root solution update complete." -ForegroundColor Green
+}
+
+function Normalize-Solution($solution) {
+    if ($null -eq $solution) {
+        return ""
+    }
+ 
+    # Normalize all newline styles to LF
+    $solution = $solution -replace "`r`n?|`n", "`n"
+ 
+    $lines = $solution.Split("`n") | ForEach-Object { $_.TrimEnd() }
+    return ($lines -join "`n").TrimEnd("`n")
 }
 
 $originalLocation = Get-Location
@@ -170,9 +190,19 @@ try {
             }
         }
 
+        if ($ServerNames -and -not $serverDirectories) {
+            Write-Host "❌ No matching server directories found for: $($ServerNames -join ', ')" -ForegroundColor Red
+            $script:stale = $true
+            $script:staleFiles += "No matching servers: $($ServerNames -join ', ')"
+        }
+
         foreach ($serverDir in $serverDirectories) {
             Update-Solution -ServerDirectory $serverDir
         }
+    }
+
+    if (-not ($All -or $ServerNames -or $Root)) {
+        Write-Host "No update targets specified. Use -All, -ServerNames, or -Root." -ForegroundColor Yellow
     }
 }
 finally {
