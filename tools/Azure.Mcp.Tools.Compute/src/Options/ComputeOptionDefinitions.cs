@@ -209,7 +209,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_DS1_v2 if not specified",
+        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
         Required = false
     };
 

@@ -13,9 +13,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
+public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<DatabaseRenameCommand> logger)
     : BaseDatabaseCommand<DatabaseRenameOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Rename SQL Database";
 
     public override string Id => "3bddfa1a-ab9d-44f0-830a-e56a159e5469";
@@ -65,9 +66,7 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.RenameDatabaseAsync(
+            var database = await _sqlService.RenameDatabaseAsync(
                 options.Server!,
                 options.Database!,
                 options.NewDatabaseName!,

@@ -11,9 +11,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 
-public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
+public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger)
     : BaseSqlCommand<EntraAdminListOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Server Entra ID Administrators";
 
     public override string Id => "240aac03-0eb0-4cd3-91f8-475577289186";
@@ -50,9 +51,7 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var administrators = await sqlService.GetEntraAdministratorsAsync(
+            var administrators = await _sqlService.GetEntraAdministratorsAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,
