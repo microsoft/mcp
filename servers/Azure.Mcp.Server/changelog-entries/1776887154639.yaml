@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added a `-Verify` flag to `Update-Solution.ps1` that checks whether `.slnx` solution files are up to date without overwriting them, and integrated this verification into `Analyze-Code.ps1` so stale solution files are caught before merge."
