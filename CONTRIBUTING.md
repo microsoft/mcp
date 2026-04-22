@@ -580,7 +580,7 @@ This will produce .tgz files in the `.dist` directory and set the `TestPackage` 
 
 ### Recording Live Tests
 
-All live tests **must** be recorded for playback. Live tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
+All new live tests **must** be recorded for playback. Live tests use the Azure SDK Test Proxy to capture and replay HTTP traffic, ensuring CI can validate tests without live Azure resources. For the full migration guide, recording workflow, sanitizer/matcher configuration, and troubleshooting tips, see [docs/recorded-tests.md](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 
 ### Debugging Live Tests
 

@@ -1325,8 +1325,8 @@ Guidelines:
 Live tests **must** inherit from `RecordedCommandTestsBase` and use test fixtures. All live tests are required to be recorded for playback. See [`/docs/recorded-tests.md`](/docs/recorded-tests.md) for the full recording workflow.
 
 ```csharp
-public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture)
-    : RecordedCommandTestsBase(output, fixture)
+public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
