@@ -328,6 +328,52 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         return policies;
     }
 
+    public async Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(datasourceId), datasourceId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // List soft-deleted backup instances and find the one matching the datasource ID
+        var deletedCollection = vaultResource.GetDeletedDataProtectionBackupInstances();
+
+        DeletedDataProtectionBackupInstanceResource? matchedInstance = null;
+        await foreach (var deletedInstance in deletedCollection.GetAllAsync(cancellationToken))
+        {
+            var deletedDatasourceId = deletedInstance.Data?.Properties?.DataSourceInfo?.ResourceId?.ToString();
+            if (string.Equals(deletedDatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+            {
+                matchedInstance = deletedInstance;
+                break;
+            }
+        }
+
+        if (matchedInstance is null)
+        {
+            throw new KeyNotFoundException(
+                $"No soft-deleted backup instance found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
+                "Verify the datasource ID is correct and the item is in a soft-deleted state.");
+        }
+
+        var undeleteOperation = await matchedInstance.UndeleteAsync(WaitUntil.Started, cancellationToken);
+        var jobId = ExtractJobIdFromOperation(undeleteOperation.GetRawResponse());
+        var monitorMessage = string.IsNullOrWhiteSpace(jobId)
+            ? $"Restore operation started, but no backup job ID was returned. Operation ID: '{undeleteOperation.Id}'."
+            : $"Use 'azurebackup job get --job {jobId}' to monitor progress.";
+
+        return new OperationResult("Accepted", jobId,
+            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. {monitorMessage}");
+    }
+
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? tenant,

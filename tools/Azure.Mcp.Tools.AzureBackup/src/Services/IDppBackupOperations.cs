@@ -104,6 +104,15 @@ public interface IDppBackupOperations
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
+    Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string datasourceId,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
     Task<BackupJobInfo> GetJobAsync(
         string vaultName,
         string resourceGroup,

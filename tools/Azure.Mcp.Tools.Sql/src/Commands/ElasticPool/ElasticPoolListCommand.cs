@@ -11,9 +11,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 
-public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logger)
+public sealed class ElasticPoolListCommand(ISqlService sqlService, ILogger<ElasticPoolListCommand> logger)
     : BaseElasticPoolCommand<ElasticPoolListOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Elastic Pools";
 
     public override string Id => "f980fda7-4bd6-4c24-b139-a091f088584f";
@@ -53,9 +54,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var elasticPools = await sqlService.GetElasticPoolsAsync(
+            var elasticPools = await _sqlService.GetElasticPoolsAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

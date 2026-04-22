@@ -14,11 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
+public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
     : SubscriptionCommand<ServerGetOptions>
 {
     private const string CommandTitle = "Get SQL Server";
-
+    private readonly ISqlService _sqlService = sqlService;
     private readonly ILogger<ServerGetCommand> _logger = logger;
 
     public override string Id => "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f";
@@ -72,11 +72,9 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
             if (!string.IsNullOrEmpty(options.Server))
             {
-                var server = await sqlService.GetServerAsync(
+                var server = await _sqlService.GetServerAsync(
                     options.Server,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -87,7 +85,7 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
             }
             else
             {
-                var servers = await sqlService.ListServersAsync(
+                var servers = await _sqlService.ListServersAsync(
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.RetryPolicy,

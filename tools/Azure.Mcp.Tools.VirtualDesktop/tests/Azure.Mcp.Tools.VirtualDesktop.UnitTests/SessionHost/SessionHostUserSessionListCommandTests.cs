@@ -30,10 +30,10 @@ public class SessionHostUserSessionListCommandTests
         _virtualDesktopService = Substitute.For<IVirtualDesktopService>();
         _logger = Substitute.For<ILogger<SessionHostUserSessionListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_virtualDesktopService);
+        var collection = new ServiceCollection();
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _virtualDesktopService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

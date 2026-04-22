@@ -14,9 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
+public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
 {
     private const string CommandTitle = "Get or list web tests";
+    private readonly ILogger<WebTestsGetCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
 
@@ -40,8 +42,6 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         LocalRequired = false,
         Secret = false
     };
-
-    private readonly ILogger<WebTestsGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,12 +79,10 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // If --webtest-resource is provided, get a specific web test
             if (!string.IsNullOrEmpty(options.WebTestName))
             {
-                var webTest = await monitorWebTestService.GetWebTest(
+                var webTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.WebTestName!,
@@ -106,8 +104,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
             {
                 // Otherwise, list web tests
                 var webTests = options.ResourceGroup == null
-                    ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
-                    : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
+                    ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
+                    : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandListResult);
             }

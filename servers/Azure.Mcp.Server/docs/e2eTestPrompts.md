@@ -153,7 +153,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> |
-| azurebackup_protecteditem_protect | Protect item <item_name> with backup policy <policy_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> |
+| azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> |
+| azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' |
@@ -223,7 +225,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
-| compute_vm_create | Create a virtual machine with Standard_DS1_v2 size in <resource-group-name> |
+| compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> |
 | compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
 | compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication |
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> |

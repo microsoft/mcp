@@ -39,7 +39,7 @@ public class PostgresListCommandTests
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2", "postgres-server-3" };
         _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns(expectedServers);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1"
@@ -67,7 +67,7 @@ public class PostgresListCommandTests
         var expectedServers = new List<string> { "postgres-server-1", "postgres-server-2" };
         _postgresService.ListServersAsync("sub123", null, Arg.Any<CancellationToken>()).Returns(expectedServers);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123"
         ]);
@@ -91,7 +91,7 @@ public class PostgresListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServerProvidedWithoutUser()
     {
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--server", "server1"
@@ -118,7 +118,7 @@ public class PostgresListCommandTests
             "server1",
             Arg.Any<CancellationToken>()).Returns(expectedDatabases);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -157,7 +157,7 @@ public class PostgresListCommandTests
             "db1",
             Arg.Any<CancellationToken>()).Returns(expectedTables);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -188,7 +188,7 @@ public class PostgresListCommandTests
     {
         _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1"
@@ -222,7 +222,7 @@ public class PostgresListCommandTests
             "server1",
             Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -260,7 +260,7 @@ public class PostgresListCommandTests
             "db1",
             Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -293,7 +293,7 @@ public class PostgresListCommandTests
         _postgresService.ListServersAsync("sub123", "rg1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1"
@@ -321,7 +321,7 @@ public class PostgresListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -353,7 +353,7 @@ public class PostgresListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -375,7 +375,7 @@ public class PostgresListCommandTests
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123")
         ));
@@ -391,7 +391,7 @@ public class PostgresListCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
 
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
@@ -400,14 +400,14 @@ public class PostgresListCommandTests
     [Fact]
     public void Name_IsCorrect()
     {
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         Assert.Equal("list", command.Name);
     }
 
     [Fact]
     public void Description_IsCorrect()
     {
-        var command = new PostgresListCommand(_logger);
+        var command = new PostgresListCommand(_postgresService, _logger);
         Assert.Contains("List PostgreSQL servers", command.Description);
         Assert.Contains("databases, or tables", command.Description);
     }

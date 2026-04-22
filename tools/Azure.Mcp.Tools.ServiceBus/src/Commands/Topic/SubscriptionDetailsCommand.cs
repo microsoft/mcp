@@ -15,10 +15,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger) : SubscriptionCommand<SubscriptionDetailsOptions>
+public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions>
 {
     private const string CommandTitle = "Get Service Bus Topic Subscription Details";
     private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     public override string Id => "578edf30-01f3-45da-b451-3932dcce7cc5";
 
@@ -74,8 +75,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
 
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var details = await service.GetSubscriptionDetails(
+            var details = await _serviceBusService.GetSubscriptionDetails(
                 options.Namespace!,
                 options.TopicName!,
                 options.SubscriptionName!,

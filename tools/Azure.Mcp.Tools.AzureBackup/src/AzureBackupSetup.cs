@@ -38,6 +38,7 @@ public sealed class AzureBackupSetup : IAreaSetup
 
         services.AddSingleton<ProtectedItemGetCommand>();
         services.AddSingleton<ProtectedItemProtectCommand>();
+        services.AddSingleton<ProtectedItemUndeleteCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
 
@@ -76,10 +77,11 @@ public sealed class AzureBackupSetup : IAreaSetup
         RegisterCommand<PolicyGetCommand>(serviceProvider, policy);
         RegisterCommand<PolicyCreateCommand>(serviceProvider, policy);
 
-        var protectedItem = new CommandGroup("protecteditem", "Protected item operations – Get protected item details or list all, and enable backup protection.");
+        var protectedItem = new CommandGroup("protecteditem", "Protected item operations – Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
         azureBackup.AddSubGroup(protectedItem);
         RegisterCommand<ProtectedItemGetCommand>(serviceProvider, protectedItem);
         RegisterCommand<ProtectedItemProtectCommand>(serviceProvider, protectedItem);
+        RegisterCommand<ProtectedItemUndeleteCommand>(serviceProvider, protectedItem);
 
         var protectableItem = new CommandGroup("protectableitem", "Protectable item operations – List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);

@@ -1,6 +1,19 @@
 # Release History
 
 
+
+## 3.0.4 (2026-04-21) (pre-release)
+
+### Added
+
+- Added Azure Backup toolset for vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery. Tools added: `azurebackup_vault_get`, `azurebackup_vault_create`, `azurebackup_vault_update`, `azurebackup_policy_get`, `azurebackup_policy_create`, `azurebackup_protecteditem_get`, `azurebackup_protecteditem_protect`, `azurebackup_protectableitem_list`, `azurebackup_backup_status`, `azurebackup_job_get`, `azurebackup_recoverypoint_get`, `azurebackup_governance_find-unprotected`, `azurebackup_governance_immutability`, `azurebackup_governance_soft-delete`, `azurebackup_disasterrecovery_enable-crr`. [[#2116](https://github.com/microsoft/mcp/pull/2116)]
+- Added a new `azurebackup protecteditem undelete` command that restores soft-deleted backup items to an active protection state for both RSV (Recovery Services vault) and DPP (Data Protection) vault types. [[#2441](https://github.com/microsoft/mcp/pull/2441)]
+
+### Fixed
+
+- Added validation in `SearchService.GetSearchEndpoint` to prevent URL injection if called without prior `ValidateServiceName` check. [[#2420](https://github.com/microsoft/mcp/pull/2420)]
+- Fixed `compute_vmss_update` tool returning HTTP 400 when only `--capacity`, `--overprovision`, or `--enable-auto-os-upgrade` is provided by correcting option type definitions to use nullable types. [[#2421](https://github.com/microsoft/mcp/pull/2421)]
+
 ## 3.0.3 (2026-04-16) (pre-release)
 
 ### Added

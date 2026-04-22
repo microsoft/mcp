@@ -82,7 +82,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
         HttpStatusCode expectedStatus = HttpStatusCode.OK)
     {
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(expectedStatus, response.Status);
         Assert.NotNull(response.Results);
         var result = DeserializeResponse(response, jsonTypeInfo);
         Assert.NotNull(result);
@@ -99,7 +99,8 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     {
         if (_disposed)
             return;
-        ServiceProvider.Dispose();
+        if (disposing)
+            ServiceProvider.Dispose();
         _disposed = true;
     }
 }

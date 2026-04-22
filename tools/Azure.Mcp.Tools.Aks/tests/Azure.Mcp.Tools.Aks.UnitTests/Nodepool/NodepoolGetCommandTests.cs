@@ -155,22 +155,8 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         var response = await ExecuteCommandAsync("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
-        // Verify the mock was called
-        await Service.Received(1).GetNodePools(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
-
-        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedNodePools.Count, result.NodePools.Count);
 
         // Validate enriched fields for first pool
@@ -206,6 +192,16 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         Assert.Equal(1, result.NodePools[0].NetworkProfile?.AllowedHostPorts?.Count);
         Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePools[0].PodSubnetId);
         Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePools[0].VnetSubnetId);
+
+        // Verify the mock was called
+        await Service.Received(1).GetNodePools(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -226,12 +222,8 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         var response = await ExecuteCommandAsync("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
-        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.NodePools);
     }
 
@@ -312,14 +304,8 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         var response = await ExecuteCommandAsync("--subscription sub123 --resource-group rg1 --cluster c1 --nodepool userpool");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
 
-        await Service.Received(1).GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-
-        var result = DeserializeResponse(response, AksJsonContext.Default.NodepoolGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.NodePools);
         Assert.Equal(expectedNodePool.Name, result.NodePools[0].Name);
         Assert.Equal(expectedNodePool.Count, result.NodePools[0].Count);
@@ -354,5 +340,7 @@ public sealed class NodepoolGetCommandTests : CommandUnitTestsBase<NodepoolGetCo
         Assert.Equal(1, result.NodePools[0].NetworkProfile?.AllowedHostPorts?.Count);
         Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePools[0].PodSubnetId);
         Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePools[0].VnetSubnetId);
+
+        await Service.Received(1).GetNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 }

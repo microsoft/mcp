@@ -11,9 +11,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> logger)
+public sealed class FirewallRuleListCommand(ISqlService sqlService, ILogger<FirewallRuleListCommand> logger)
     : BaseSqlCommand<FirewallRuleListOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "List SQL Server Firewall Rules";
 
     public override string Id => "1f55cab9-0bbb-499a-a9ac-1492f11c043a";
@@ -50,9 +51,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var firewallRules = await sqlService.ListFirewallRulesAsync(
+            var firewallRules = await _sqlService.ListFirewallRulesAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

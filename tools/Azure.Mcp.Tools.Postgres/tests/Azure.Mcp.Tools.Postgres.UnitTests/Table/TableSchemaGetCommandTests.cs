@@ -39,7 +39,7 @@ public class TableSchemaGetCommandTests
         var expectedSchema = new List<string>(["CREATE TABLE test (id INT);"]);
         _postgresService.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -58,7 +58,7 @@ public class TableSchemaGetCommandTests
     {
         _postgresService.GetTableSchemaAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "table123", Arg.Any<CancellationToken>()).Returns([]);
 
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
         var context = new CommandContext(_serviceProvider);
 
@@ -83,7 +83,7 @@ public class TableSchemaGetCommandTests
     [InlineData("--table")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new TableSchemaGetCommand(_logger);
+        var command = new TableSchemaGetCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
