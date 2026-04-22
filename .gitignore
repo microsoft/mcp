@@ -4,7 +4,7 @@
 .work/
 tests/test-cmds.txt
 .testsettings.json
-.temp.slnx
+.temp.*.slnx
 
 bin/
 obj/
