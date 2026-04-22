@@ -364,7 +364,8 @@ public class CommandFactory : ICommandFactory
         var commandParts = new List<string>();
         foreach (var token in args)
         {
-            if (token.StartsWith("-", StringComparison.Ordinal)) break;
+            if (token.StartsWith("-", StringComparison.Ordinal))
+                break;
             commandParts.Add(token);
         }
 
