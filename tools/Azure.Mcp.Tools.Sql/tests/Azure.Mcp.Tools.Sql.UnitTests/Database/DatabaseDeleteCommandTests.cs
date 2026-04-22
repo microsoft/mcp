@@ -28,11 +28,9 @@ public class DatabaseDeleteCommandTests
         _sqlService = Substitute.For<ISqlService>();
         _logger = Substitute.For<ILogger<DatabaseDeleteCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_sqlService);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_sqlService, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

@@ -12,9 +12,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 
-public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand> logger)
+public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<FirewallRuleDeleteCommand> logger)
     : BaseSqlCommand<FirewallRuleDeleteOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Delete SQL Server Firewall Rule";
 
     public override string Id => "f13fc5d2-7547-480b-a704-36120e2e9b92";
@@ -65,9 +66,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var deleted = await sqlService.DeleteFirewallRuleAsync(
+            var deleted = await _sqlService.DeleteFirewallRuleAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

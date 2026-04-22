@@ -13,9 +13,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
+public sealed class DatabaseCreateCommand(ISqlService sqlService, ILogger<DatabaseCreateCommand> logger)
     : BaseDatabaseCommand<DatabaseCreateOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Create SQL Database";
 
     public override string Id => "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c";
@@ -79,9 +80,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var database = await sqlService.CreateDatabaseAsync(
+            var database = await _sqlService.CreateDatabaseAsync(
                 options.Server!,
                 options.Database!,
                 options.ResourceGroup!,
