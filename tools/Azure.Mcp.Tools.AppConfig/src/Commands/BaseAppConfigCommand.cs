@@ -22,7 +22,7 @@ public abstract class BaseAppConfigCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Account.Name);
+        options.Account = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Account);
         return options;
     }
 }

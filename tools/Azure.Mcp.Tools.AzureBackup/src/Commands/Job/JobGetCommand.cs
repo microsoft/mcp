@@ -52,7 +52,7 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
     protected override JobGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Job = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Job.Name);
+        options.Job = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Job);
         return options;
     }
 

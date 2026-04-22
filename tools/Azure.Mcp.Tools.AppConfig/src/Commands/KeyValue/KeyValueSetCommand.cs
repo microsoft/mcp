@@ -52,8 +52,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
     protected override KeyValueSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Value = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Value.Name);
-        options.Tags = parseResult.GetValueOrDefault<string[]>(AppConfigOptionDefinitions.Tags.Name);
+        options.Value = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Value);
+        options.Tags = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Tags);
         return options;
     }
 

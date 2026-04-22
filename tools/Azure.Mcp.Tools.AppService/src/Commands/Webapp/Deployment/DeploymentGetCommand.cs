@@ -50,7 +50,7 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger)
     protected override DeploymentGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DeploymentId = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DeploymentIdOption.Name);
+        options.DeploymentId = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DeploymentIdOption);
         return options;
     }
 

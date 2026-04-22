@@ -44,27 +44,21 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         command.Options.Add(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDelete.Name))
+            var softDelete = commandResult.GetValueOrDefault(AzureBackupOptionDefinitions.SoftDelete);
+            if (!string.IsNullOrEmpty(softDelete) &&
+                !softDelete.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
+                !softDelete.Equals("On", StringComparison.OrdinalIgnoreCase) &&
+                !softDelete.Equals("Off", StringComparison.OrdinalIgnoreCase))
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("On", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Off", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
-                }
+                commandResult.AddError("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
             }
 
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name))
+            var softDeleteRetentionDays = commandResult.GetValueOrDefault(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
+            if (!string.IsNullOrEmpty(softDeleteRetentionDays))
             {
-                var retentionValue = commandResult.GetValue<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
-                if (!string.IsNullOrEmpty(retentionValue))
+                if (!int.TryParse(softDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
                 {
-                    if (!int.TryParse(retentionValue, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
-                    {
-                        commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
-                    }
+                    commandResult.AddError("--soft-delete-retention-days must be an integer between 14 and 180.");
                 }
             }
         });
@@ -73,8 +67,8 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
     protected override GovernanceSoftDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SoftDeleteState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDelete.Name);
-        options.SoftDeleteRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SoftDeleteRetentionDays.Name);
+        options.SoftDeleteState = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.SoftDelete);
+        options.SoftDeleteRetentionDays = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.SoftDeleteRetentionDays);
         return options;
     }
 

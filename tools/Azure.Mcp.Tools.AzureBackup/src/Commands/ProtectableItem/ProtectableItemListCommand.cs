@@ -49,8 +49,8 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
     protected override ProtectableItemListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
+        options.WorkloadType = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.WorkloadType);
+        options.Container = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Container);
         return options;
     }
 

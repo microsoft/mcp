@@ -43,8 +43,8 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
     protected override BackupStatusOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Location = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Location.Name);
+        options.DatasourceId = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.DatasourceId);
+        options.Location = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Location);
         return options;
     }
 

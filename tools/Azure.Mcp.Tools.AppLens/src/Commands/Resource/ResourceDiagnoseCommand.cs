@@ -58,11 +58,11 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Subscription = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Subscription.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceGroup.Name);
-        options.Question = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Question.Name) ?? string.Empty;
-        options.Resource = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Resource.Name) ?? string.Empty;
-        options.ResourceType = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceType.Name);
+        options.Subscription = parseResult.GetValueOrDefault(AppLensOptionDefinitions.Subscription);
+        options.ResourceGroup = parseResult.GetValueOrDefault(AppLensOptionDefinitions.ResourceGroup);
+        options.Question = parseResult.GetValueOrDefault(AppLensOptionDefinitions.Question) ?? string.Empty;
+        options.Resource = parseResult.GetValueOrDefault(AppLensOptionDefinitions.Resource) ?? string.Empty;
+        options.ResourceType = parseResult.GetValueOrDefault(AppLensOptionDefinitions.ResourceType);
         return options;
     }
 

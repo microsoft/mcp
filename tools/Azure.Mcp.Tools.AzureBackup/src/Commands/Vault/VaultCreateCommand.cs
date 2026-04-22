@@ -46,13 +46,13 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
         command.Options.Add(AzureBackupOptionDefinitions.StorageType);
         command.Validators.Add(commandResult =>
         {
-            if (!commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
+            if (!commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType))
             {
                 commandResult.AddError("--vault-type is required for vault creation. Specify 'rsv' or 'dpp'.");
             }
             else
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
+                var value = commandResult.GetValue(AzureBackupOptionDefinitions.VaultType);
                 if (!string.IsNullOrEmpty(value) &&
                     !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
                     !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
@@ -60,13 +60,10 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                     commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
                 }
             }
-        });
 
-        command.Validators.Add(commandResult =>
-        {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.StorageType.Name))
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.StorageType))
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.StorageType.Name);
+                var value = commandResult.GetValue(AzureBackupOptionDefinitions.StorageType);
                 if (!string.IsNullOrEmpty(value) &&
                     !value.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
                     !value.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
@@ -81,9 +78,9 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     protected override VaultCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Location.Name);
-        options.Sku = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Sku.Name);
-        options.StorageType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.StorageType.Name);
+        options.Location = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Location);
+        options.Sku = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Sku);
+        options.StorageType = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.StorageType);
         return options;
     }
 

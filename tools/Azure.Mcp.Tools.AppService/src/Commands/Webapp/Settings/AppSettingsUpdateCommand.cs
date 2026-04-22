@@ -53,8 +53,8 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         command.Options.Add(AppServiceOptionDefinitions.AppSettingUpdateType);
         command.Validators.Add(commandResult =>
         {
-            var updateType = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingUpdateType.Name);
-            var settingValue = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingValue.Name);
+            var updateType = commandResult.GetValueOrDefault(AppServiceOptionDefinitions.AppSettingUpdateType);
+            var settingValue = commandResult.GetValueOrDefault(AppServiceOptionDefinitions.AppSettingValue);
 
             if (!ValidateUpdateType(updateType, out var errorMessage))
             {
@@ -94,9 +94,9 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     protected override AppSettingsUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SettingName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingName.Name);
-        options.SettingValue = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingValue.Name);
-        options.SettingUpdateType = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingUpdateType.Name);
+        options.SettingName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppSettingName);
+        options.SettingValue = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppSettingValue);
+        options.SettingUpdateType = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppSettingUpdateType);
         return options;
     }
 

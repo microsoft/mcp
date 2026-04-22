@@ -47,8 +47,8 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
         command.Options.Add(AppServiceOptionDefinitions.Interval);
         command.Validators.Add(result =>
         {
-            var startTime = result.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name);
-            var endTime = result.GetValueOrDefault<string?>(AppServiceOptionDefinitions.EndTime.Name);
+            var startTime = result.GetValueOrDefault(AppServiceOptionDefinitions.StartTime);
+            var endTime = result.GetValueOrDefault(AppServiceOptionDefinitions.EndTime);
 
             bool hasStartTime = !string.IsNullOrEmpty(startTime);
             bool hasEndTime = !string.IsNullOrEmpty(endTime);
@@ -76,16 +76,16 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override DetectorDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DetectorName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorName.Name);
-        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name), out var startTime))
+        options.DetectorName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DetectorName);
+        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault(AppServiceOptionDefinitions.StartTime), out var startTime))
         {
             options.StartTime = startTime.ToUniversalTime();
         }
-        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.EndTime.Name), out var endTime))
+        if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault(AppServiceOptionDefinitions.EndTime), out var endTime))
         {
             options.EndTime = endTime.ToUniversalTime();
         }
-        options.Interval = parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.Interval.Name);
+        options.Interval = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.Interval);
         return options;
     }
 

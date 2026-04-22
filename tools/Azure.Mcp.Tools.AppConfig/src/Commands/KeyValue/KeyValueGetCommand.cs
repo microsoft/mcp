@@ -53,7 +53,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
         command.Options.Add(AppConfigOptionDefinitions.LabelFilter);
         command.Validators.Add(result =>
         {
-            var key = result.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
+            var key = result.GetValueOrDefault(AppConfigOptionDefinitions.Key);
             var keyFilter = result.GetValueOrDefault(AppConfigOptionDefinitions.KeyFilter);
             if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(keyFilter))
             {
@@ -65,10 +65,10 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
     protected override KeyValueGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
-        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Label.Name);
-        options.KeyFilter = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyFilter.Name);
-        options.LabelFilter = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.LabelFilter.Name);
+        options.Key = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Key);
+        options.Label = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Label);
+        options.KeyFilter = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.KeyFilter);
+        options.LabelFilter = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.LabelFilter);
         return options;
     }
 

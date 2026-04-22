@@ -44,13 +44,12 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
         command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState.AsRequired());
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.ImmutabilityState.Name))
+            var immutabilityState = commandResult.GetValueOrDefault(AzureBackupOptionDefinitions.ImmutabilityState);
+            if (!string.IsNullOrEmpty(immutabilityState))
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("Disabled", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Locked", StringComparison.OrdinalIgnoreCase))
+                if (!immutabilityState.Equals("Disabled", StringComparison.OrdinalIgnoreCase) &&
+                    !immutabilityState.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
+                    !immutabilityState.Equals("Locked", StringComparison.OrdinalIgnoreCase))
                 {
                     commandResult.AddError("--immutability-state must be 'Disabled', 'Enabled', or 'Locked'. Warning: 'Locked' is irreversible.");
                 }
@@ -61,7 +60,7 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     protected override GovernanceImmutabilityOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ImmutabilityState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
+        options.ImmutabilityState = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.ImmutabilityState);
         return options;
     }
 

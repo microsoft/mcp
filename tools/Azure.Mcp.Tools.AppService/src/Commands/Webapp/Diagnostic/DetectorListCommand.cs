@@ -36,10 +36,6 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
         LocalRequired = false
     };
 
-    protected override void RegisterOptions(Command command) => base.RegisterOptions(command);
-
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Validate first, then bind

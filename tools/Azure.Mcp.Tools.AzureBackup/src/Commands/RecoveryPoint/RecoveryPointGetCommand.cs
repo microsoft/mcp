@@ -52,7 +52,7 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
     protected override RecoveryPointGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.RecoveryPoint = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.RecoveryPoint.Name);
+        options.RecoveryPoint = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.RecoveryPoint);
         return options;
     }
 

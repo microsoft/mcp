@@ -24,9 +24,9 @@ public abstract class BaseKeyValueCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
-        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Label.Name);
-        options.ContentType = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.ContentType.Name);
+        options.Key = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Key);
+        options.Label = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Label);
+        options.ContentType = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.ContentType);
         return options;
     }
 }

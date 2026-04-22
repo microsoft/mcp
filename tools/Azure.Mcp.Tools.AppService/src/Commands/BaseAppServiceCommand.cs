@@ -29,8 +29,8 @@ public abstract class BaseAppServiceCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.AppName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.AppName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
         return options;
     }
 }

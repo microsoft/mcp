@@ -38,10 +38,10 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
-        options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
+        options.Policy = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Policy);
+        options.WorkloadType = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.WorkloadType);
+        options.ScheduleTime = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.ScheduleTime);
+        options.DailyRetentionDays = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.DailyRetentionDays);
         return options;
     }
 

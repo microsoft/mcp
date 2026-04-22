@@ -49,9 +49,9 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
     protected override GovernanceFindUnprotectedOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceTypeFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ResourceTypeFilter.Name);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.TagFilter = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.TagFilter.Name);
+        options.ResourceTypeFilter = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.ResourceTypeFilter);
+        options.ResourceGroup = parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.TagFilter = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.TagFilter);
         return options;
     }
 

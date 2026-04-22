@@ -46,16 +46,14 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
         base.RegisterOptions(command);
         command.Validators.Add(commandResult =>
         {
-            var appName = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppServiceName.Name);
-            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+            var appName = commandResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
+            var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
             if (!string.IsNullOrWhiteSpace(appName) && string.IsNullOrWhiteSpace(resourceGroup))
             {
                 commandResult.AddError($"When specifying '{AppServiceOptionDefinitions.AppServiceName.Name}', you must also specify '{OptionDefinitions.Common.ResourceGroup.Name}'.");
             }
         });
     }
-
-    protected override BaseAppServiceOptions BindOptions(ParseResult parseResult) => base.BindOptions(parseResult);
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

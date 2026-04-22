@@ -54,8 +54,8 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
     protected override BaseProtectedItemOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProtectedItem = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ProtectedItem.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
+        options.ProtectedItem = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.ProtectedItem);
+        options.Container = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Container);
         return options;
     }
 

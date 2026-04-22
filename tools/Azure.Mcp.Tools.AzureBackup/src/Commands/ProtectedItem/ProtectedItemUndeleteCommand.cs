@@ -52,8 +52,8 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
     protected override ProtectedItemUndeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
+        options.DatasourceId = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.DatasourceId);
+        options.Container = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Container);
         return options;
     }
 

@@ -56,10 +56,10 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     protected override ProtectedItemProtectOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DatasourceId = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceId.Name);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.Container = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Container.Name);
-        options.DatasourceType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceType.Name);
+        options.DatasourceId = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.DatasourceId);
+        options.Policy = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Policy);
+        options.Container = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Container);
+        options.DatasourceType = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.DatasourceType);
         return options;
     }
 

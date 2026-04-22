@@ -52,7 +52,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
     protected override PolicyGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
+        options.Policy = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Policy);
         return options;
     }
 

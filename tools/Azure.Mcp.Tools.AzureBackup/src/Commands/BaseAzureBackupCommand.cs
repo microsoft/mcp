@@ -23,9 +23,9 @@ public abstract class BaseAzureBackupCommand<
         command.Options.Add(AzureBackupOptionDefinitions.VaultType);
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
+            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType))
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
+                var value = commandResult.GetValue(AzureBackupOptionDefinitions.VaultType);
                 if (!string.IsNullOrEmpty(value) &&
                     !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
                     !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
@@ -39,9 +39,9 @@ public abstract class BaseAzureBackupCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Vault = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Vault.Name);
-        options.VaultType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultType.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.Vault = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.Vault);
+        options.VaultType = parseResult.GetValueOrDefault(AzureBackupOptionDefinitions.VaultType);
         return options;
     }
 }
