@@ -2,8 +2,13 @@
 
 ## 2.0.2 (2026-04-21)
 
+### Changes
+
+- **Breaking:** Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name.
+
 ### Fixed
 
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors.
 - Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
 
 ## 2.0.1 (2026-04-14)

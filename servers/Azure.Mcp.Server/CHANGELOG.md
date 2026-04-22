@@ -4,13 +4,21 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 2.0.2 (2026-04-21)
 
+### Breaking Changes
+
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name.
+
+### Bugs Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors.
+
 ### Other Changes
 
 - Fixed MCPB packaging to only include the platform a bundle was created for. Also updated the descriptions in `manifest.json`, as well as its list of keywords to reflect new namespace additions. [[#2461](https://github.com/microsoft/mcp/pull/2461)]
 
 #### Dependency Updates
 
-- Updated the following `System` dependencies:
+- Updated the following `System` dependencies: [[#2461](https://github.com/microsoft/mcp/pull/2461)]
   - `System.CommandLine`: `2.0.1` → `2.0.6`
   - `System.Formats.Asn1`: `10.0.2` → `10.0.6`
   - `System.IdentityModel.Tokens.Jwt`: `8.15.0` → `8.17.0`
