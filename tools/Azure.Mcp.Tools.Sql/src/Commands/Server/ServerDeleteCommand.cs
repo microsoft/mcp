@@ -12,9 +12,10 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
+public sealed class ServerDeleteCommand(ISqlService sqlService, ILogger<ServerDeleteCommand> logger)
     : BaseSqlCommand<ServerDeleteOptions>(logger)
 {
+    private readonly ISqlService _sqlService = sqlService;
     private const string CommandTitle = "Delete SQL Server";
 
     public override string Id => "381bd0ef-5bb4-45ed-ae51-d129dcc044b2";
@@ -75,9 +76,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
                 return context.Response;
             }
 
-            var sqlService = context.GetService<ISqlService>();
-
-            var deleted = await sqlService.DeleteServerAsync(
+            var deleted = await _sqlService.DeleteServerAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

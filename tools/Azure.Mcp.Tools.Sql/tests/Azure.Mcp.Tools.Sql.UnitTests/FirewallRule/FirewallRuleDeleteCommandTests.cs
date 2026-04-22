@@ -28,11 +28,9 @@ public class FirewallRuleDeleteCommandTests
         _service = Substitute.For<ISqlService>();
         _logger = Substitute.For<ILogger<FirewallRuleDeleteCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_service, _logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
