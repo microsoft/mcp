@@ -12,8 +12,9 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
+    private readonly IPostgresService _postgresService = postgresService;
     private const string CommandTitle = "Query PostgreSQL Database";
 
     public override string Id => "81a28bca-014c-4738-9e1a-654d77cb2dd8";
@@ -58,10 +59,9 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
 
         try
         {
-            IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             // Validate the query early to avoid sending unsafe SQL to the server.
             SqlQueryValidator.EnsureReadOnlySelect(options.Query);
-            List<string> queryResult = await pgService.ExecuteQueryAsync(
+            List<string> queryResult = await _postgresService.ExecuteQueryAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AuthType!,

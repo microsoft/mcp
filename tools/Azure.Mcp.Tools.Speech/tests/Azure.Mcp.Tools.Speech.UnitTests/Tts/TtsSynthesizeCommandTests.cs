@@ -33,10 +33,10 @@ public class TtsSynthesizeCommandTests
         _speechService = Substitute.For<ISpeechService>();
         _logger = Substitute.For<ILogger<TtsSynthesizeCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_speechService);
+        var collection = new ServiceCollection();
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _speechService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

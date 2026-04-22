@@ -10,10 +10,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWorkspaceMonitorCommand<TableListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
 
     public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
 
@@ -61,8 +62,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
 
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
-            var tables = await monitorService.ListTables(
+            var tables = await _monitorService.ListTables(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Workspace!,

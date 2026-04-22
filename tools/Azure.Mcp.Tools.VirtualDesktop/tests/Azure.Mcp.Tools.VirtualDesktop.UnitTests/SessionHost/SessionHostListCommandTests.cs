@@ -30,10 +30,9 @@ public class SessionHostListCommandTests
         _logger = Substitute.For<ILogger<SessionHostListCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_virtualDesktopService);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _virtualDesktopService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }

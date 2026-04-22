@@ -45,7 +45,7 @@ public class DatabaseQueryCommandTests
         _postgresService.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
@@ -66,7 +66,7 @@ public class DatabaseQueryCommandTests
         _postgresService.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_postgresService, _logger);
 
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
@@ -91,7 +91,7 @@ public class DatabaseQueryCommandTests
     [InlineData("--query")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
@@ -154,7 +154,7 @@ public class DatabaseQueryCommandTests
     [InlineData("SELECT * FROM pg_user_mappings")] // FDW credential exposure
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -178,7 +178,7 @@ public class DatabaseQueryCommandTests
     public async Task ExecuteAsync_LongQuery_ValidationError()
     {
         var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
-        var command = new DatabaseQueryCommand(_logger);
+        var command = new DatabaseQueryCommand(_postgresService, _logger);
         var args = command.GetCommand().Parse([
             "--subscription", "sub123",
             "--resource-group", "rg1",

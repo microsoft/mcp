@@ -26,7 +26,6 @@ public class IndexGetCommandTests
     public IndexGetCommandTests()
     {
         var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
 
         _serviceProvider = collection.BuildServiceProvider();
     }
@@ -46,7 +45,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -73,7 +72,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -103,7 +102,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
@@ -131,7 +130,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
@@ -168,7 +167,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
@@ -200,7 +199,7 @@ public class IndexGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
@@ -218,7 +217,7 @@ public class IndexGetCommandTests
     public async Task ExecuteAsync_ValidatesRequiredOptions()
     {
         // Arrange
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
 
         var args = command.GetCommand().Parse(""); // Missing required options
         var context = new CommandContext(_serviceProvider);
@@ -237,7 +236,7 @@ public class IndexGetCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange & Act
-        var command = new IndexGetCommand(_logger);
+        var command = new IndexGetCommand(_logger, _searchService);
         var cmd = command.GetCommand();
 
         // Assert

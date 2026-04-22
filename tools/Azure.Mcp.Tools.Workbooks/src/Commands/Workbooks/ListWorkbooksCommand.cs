@@ -14,10 +14,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) : SubscriptionCommand<ListWorkbooksOptions>
+public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, IWorkbooksService workbooksService) : SubscriptionCommand<ListWorkbooksOptions>
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
     public override string Id => "c4c90435-fbc0-4598-ba82-3b9213d58b26";
 
     public override string Name => "list";
@@ -105,10 +106,9 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
 
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
             var filters = options.ToFilters();
 
-            var result = await workbooksService.ListWorkbooksAsync(
+            var result = await _workbooksService.ListWorkbooksAsync(
                 string.IsNullOrEmpty(options.Subscription) ? null : [options.Subscription],
                 options.ResourceGroups,
                 filters,

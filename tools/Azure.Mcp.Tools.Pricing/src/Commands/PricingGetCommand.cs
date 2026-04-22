@@ -14,10 +14,11 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
 /// <summary>
 /// Gets Azure retail pricing information based on specified filters.
 /// </summary>
-public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BasePricingCommand<PricingGetOptions>
+public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService) : BasePricingCommand<PricingGetOptions>
 {
     private const string CommandTitle = "Get Azure Retail Pricing";
     private readonly ILogger<PricingGetCommand> _logger = logger;
+    private readonly IPricingService _pricingService = pricingService;
 
     public override string Id => "c5a8f7d2-9e3b-4a1c-8d6f-2b5e9c4a7d3e";
 
@@ -121,8 +122,7 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger) : BaseP
                 options.PriceType,
                 options.Currency ?? "USD");
 
-            var pricingService = context.GetService<IPricingService>();
-            var prices = await pricingService.GetPricesAsync(
+            var prices = await _pricingService.GetPricesAsync(
                 sku: options.Sku,
                 service: options.Service,
                 region: options.Region,

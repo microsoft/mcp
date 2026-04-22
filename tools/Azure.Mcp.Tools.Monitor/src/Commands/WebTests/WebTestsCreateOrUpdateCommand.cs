@@ -14,11 +14,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
-public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
+public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdateCommand> logger, IMonitorWebTestService monitorWebTestService) : BaseMonitorWebTestsCommand<WebTestsCreateOrUpdateOptions>
 {
     private const string CommandTitle = "Create or update a web test in Azure Monitor";
 
     private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger = logger;
+    private readonly IMonitorWebTestService _monitorWebTestService = monitorWebTestService;
 
     public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
 
@@ -133,13 +134,11 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         var options = BindOptions(parseResult);
         try
         {
-            var monitorWebTestService = context.GetService<IMonitorWebTestService>();
-
             // Check if the web test exists
             WebTestDetailedInfo? existingWebTest = null;
             try
             {
-                existingWebTest = await monitorWebTestService.GetWebTest(
+                existingWebTest = await _monitorWebTestService.GetWebTest(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.ResourceName!,
@@ -177,7 +176,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? new Dictionary<string, string>(0) : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.CreateWebTest(
+                webTest = await _monitorWebTestService.CreateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,
@@ -210,7 +209,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                 var locationsArray = options.Locations?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 var headersDictionary = options.Headers == null ? null : OptionParsingHelpers.ParseKeyValuePairStringToDictionary(options.Headers);
 
-                webTest = await monitorWebTestService.UpdateWebTest(
+                webTest = await _monitorWebTestService.UpdateWebTest(
                     subscription: options.Subscription!,
                     resourceGroup: options.ResourceGroup!,
                     resourceName: options.ResourceName!,

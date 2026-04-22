@@ -13,13 +13,14 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
 
-public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) : BaseSpeechCommand<TtsSynthesizeOptions>()
+public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<TtsSynthesizeOptions>()
 {
     internal record TtsSynthesizeCommandResult(SynthesisResult Result);
 
     private const string CommandTitle = "Synthesize Speech from Text";
     private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
     private readonly ILogger<TtsSynthesizeCommand> _logger = logger;
+    private readonly ISpeechService _speechService = speechService;
 
     public override string Name => "synthesize";
 
@@ -140,8 +141,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
 
         try
         {
-            var speechService = context.GetService<ISpeechService>();
-            var result = await speechService.SynthesizeSpeechToFile(
+            var result = await _speechService.SynthesizeSpeechToFile(
                 options.Endpoint!,
                 options.Text!,
                 options.OutputAudio!,
