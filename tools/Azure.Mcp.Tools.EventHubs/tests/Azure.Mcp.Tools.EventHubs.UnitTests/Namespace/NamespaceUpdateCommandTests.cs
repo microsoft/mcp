@@ -62,7 +62,7 @@ public class NamespaceUpdateCommandTests : CommandUnitTestsBase<NamespaceUpdateC
         }
 
         // Act
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         if (shouldSucceed)
