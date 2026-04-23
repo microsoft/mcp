@@ -271,8 +271,8 @@ public class ProductListCommandTests : CommandUnitTestsBase<ProductListCommand, 
         var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
         Assert.Equal(expectedNextCursor, result.NextCursor);
-        Assert.Contains(result.Products, p => p.DisplayName == "test-product-1");
-        Assert.Contains(result.Products, p => p.DisplayName == "test-product-2");
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-1");
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-2");
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public class ProductListCommandTests : CommandUnitTestsBase<ProductListCommand, 
         var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
         Assert.Null(result.NextCursor);
-        Assert.Contains(result.Products, p => p.DisplayName == "test-product");
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product");
     }
 
     [Fact]

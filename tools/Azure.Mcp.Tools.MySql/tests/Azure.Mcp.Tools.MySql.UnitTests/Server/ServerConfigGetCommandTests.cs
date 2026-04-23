@@ -18,7 +18,7 @@ public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetC
     [Fact]
     public async Task ExecuteAsync_ReturnsConfiguration_WhenSuccessful()
     {
-        var expectedConfig = JsonSerializer.Serialize(new
+        var expectedConfig = JsonSerializer.Serialize(new()
         {
             ServerName = "test-server",
             Location = "East US",

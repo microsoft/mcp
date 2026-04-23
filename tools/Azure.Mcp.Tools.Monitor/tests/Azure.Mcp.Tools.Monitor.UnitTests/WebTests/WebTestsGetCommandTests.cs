@@ -297,7 +297,7 @@ public class WebTestsGetCommandTests : CommandUnitTestsBase<WebTestsGetCommand, 
             .Returns([]);
 
         // Act
-        await ExecuteCommandAsync("--subscription", "sub1", "--resource-group", "rg1"); 
+        await ExecuteCommandAsync("--subscription", "sub1", "--resource-group", "rg1");
 
         // Assert
         await Service.Received(1).ListWebTests("sub1", "rg1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

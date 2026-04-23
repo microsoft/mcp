@@ -66,7 +66,7 @@ public class EntityGetHealthCommandTests : CommandUnitTestsBase<EntityGetHealthC
 
     [Fact]
     public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsBadRequest()
-    {        
+    {
         // Arrange & Act - missing entity parameter
         var result = await ExecuteCommandAsync(
             "--health-model", TestHealthModel,
