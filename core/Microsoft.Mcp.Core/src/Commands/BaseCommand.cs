@@ -4,6 +4,7 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
@@ -22,16 +23,26 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected BaseCommand()
     {
+        var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>();
+        if (attr is not null)
+        {
+            Id = attr.Id;
+            Name = attr.Name;
+            Description = attr.Description;
+            Title = attr.Title;
+            Metadata = attr.ToToolMetadata();
+        }
+
         _command = new Command(Name, Description);
         RegisterOptions(_command);
     }
 
     public Command GetCommand() => _command;
-    public abstract string Id { get; }
-    public abstract string Name { get; }
-    public abstract string Description { get; }
-    public abstract string Title { get; }
-    public abstract ToolMetadata Metadata { get; }
+    public virtual string Id { get; protected set; } = null!;
+    public virtual string Name { get; protected set; } = null!;
+    public virtual string Description { get; protected set; } = null!;
+    public virtual string Title { get; protected set; } = null!;
+    public virtual ToolMetadata Metadata { get; protected set; } = null!;
 
     protected virtual void RegisterOptions(Command command)
     {

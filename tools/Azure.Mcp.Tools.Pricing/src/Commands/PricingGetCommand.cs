@@ -14,33 +14,25 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
 /// <summary>
 /// Gets Azure retail pricing information based on specified filters.
 /// </summary>
+[CommandMetadata(
+    Id = "c5a8f7d2-9e3b-4a1c-8d6f-2b5e9c4a7d3e",
+    Name = "get",
+    Title = "Get Azure Retail Pricing",
+    Description =
+        "Get Azure retail pricing information. CRITICAL/MANDATORY: Do NOT call this tool if the user only specifies a broad service name (e.g., 'Virtual Machines', 'Storage', 'SQL Database') without a specific SKU. Instead, FIRST ask the user which specific SKU or tier they want pricing for. If the user asks to compare pricing across regions or SKUs without specifying exact ARM SKU names, ask them which specific SKUs they want to compare. " +
+        "Do NOT assume or pick default SKUs. Only call this tool AFTER the user provides a specific SKU (--sku) or confirms they want all pricing for that service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. SAVINGS PLAN: 'SavingsPlan' is NOT a valid --price-type. Use --include-savings-plan flag instead. " +
+        "Valid --price-type values: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption items include nested 'savingsPlan' array with 1-year/3-year pricing (mainly Linux VMs). " +
+        "FOR BICEP/ARM COST ESTIMATION: When user asks to estimate costs from a Bicep or ARM template file, read the file, extract each resource's type and SKU, call this tool for each resource and aggregate the monthly costs (hourly price * 730 hours/month).",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService) : BasePricingCommand<PricingGetOptions>
 {
-    private const string CommandTitle = "Get Azure Retail Pricing";
     private readonly ILogger<PricingGetCommand> _logger = logger;
     private readonly IPricingService _pricingService = pricingService;
-
-    public override string Id => "c5a8f7d2-9e3b-4a1c-8d6f-2b5e9c4a7d3e";
-
-    public override string Name => "get";
-
-    public override string Description =>
-    "Get Azure retail pricing information. CRITICAL/MANDATORY: Do NOT call this tool if the user only specifies a broad service name (e.g., 'Virtual Machines', 'Storage', 'SQL Database') without a specific SKU. Instead, FIRST ask the user which specific SKU or tier they want pricing for. If the user asks to compare pricing across regions or SKUs without specifying exact ARM SKU names, ask them which specific SKUs they want to compare. " +
-    "Do NOT assume or pick default SKUs. Only call this tool AFTER the user provides a specific SKU (--sku) or confirms they want all pricing for that service. Requires at least one filter: --sku, --service, --region, --service-family, or --filter. SAVINGS PLAN: 'SavingsPlan' is NOT a valid --price-type. Use --include-savings-plan flag instead. " +
-    "Valid --price-type values: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption items include nested 'savingsPlan' array with 1-year/3-year pricing (mainly Linux VMs). " +
-    "FOR BICEP/ARM COST ESTIMATION: When user asks to estimate costs from a Bicep or ARM template file, read the file, extract each resource's type and SKU, call this tool for each resource and aggregate the monthly costs (hourly price * 730 hours/month).";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
