@@ -9,26 +9,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
-public sealed class TableSchemaCommandTests
+public sealed class TableSchemaCommandTests : CommandUnitTestsBase<TableSchemaCommand, IKustoService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKustoService _kusto;
-    private readonly ILogger<TableSchemaCommand> _logger;
-
-    public TableSchemaCommandTests()
-    {
-        _kusto = Substitute.For<IKustoService>();
-        _logger = Substitute.For<ILogger<TableSchemaCommand>>();
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     public static IEnumerable<object[]> TableSchemaArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --table table1", false };
@@ -43,7 +32,7 @@ public sealed class TableSchemaCommandTests
 
         if (useClusterUri)
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
@@ -52,24 +41,17 @@ public sealed class TableSchemaCommandTests
         }
         else
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
-        var command = new TableSchemaCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(cliArgs);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
-        var result = System.Text.Json.JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableSchemaCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.TableSchemaCommandResult);
+
         Assert.NotNull(result.Schema);
-
         Assert.Equal(expectedSchema, result.Schema);
     }
 
@@ -82,7 +64,7 @@ public sealed class TableSchemaCommandTests
 
         if (useClusterUri)
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
@@ -91,17 +73,13 @@ public sealed class TableSchemaCommandTests
         }
         else
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
-        var command = new TableSchemaCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
 
         // Assert
         Assert.NotNull(response);
@@ -116,26 +94,22 @@ public sealed class TableSchemaCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<string>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
-            _kusto.GetTableSchemaAsync(
+            Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<string>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
-        var command = new TableSchemaCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
@@ -144,12 +118,7 @@ public sealed class TableSchemaCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new TableSchemaCommand(_logger, _kusto);
-
-        var args = command.GetCommand().Parse("");
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("");
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

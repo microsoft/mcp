@@ -2,51 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.UnitTests;
 
-public class TestResourceCreateCommandTests
+public class TestResourceCreateCommandTests : CommandUnitTestsBase<TestResourceCreateCommand, ILoadTestingService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILoadTestingService _service;
-    private readonly ILogger<TestResourceCreateCommand> _logger;
-    private readonly TestResourceCreateCommand _command;
-
-    public TestResourceCreateCommandTests()
-    {
-        _service = Substitute.For<ILoadTestingService>();
-        _logger = Substitute.For<ILogger<TestResourceCreateCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_logger, _service);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_CreateLoadTests()
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
-        _service.CreateOrUpdateLoadTestingResourceAsync(
+        Service.CreateOrUpdateLoadTestingResourceAsync(
             Arg.Is("sub123"),
             Arg.Is("resourceGroup123"),
             Arg.Is("testResourceName"),
@@ -55,22 +37,14 @@ public class TestResourceCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceCreateCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+            "--tenant", "tenant123");
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, LoadTestJsonContext.Default.TestResourceCreateCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("Id1", result.LoadTest.Id);
         Assert.Equal("loadTest1", result.LoadTest.Name);
     }
@@ -80,7 +54,7 @@ public class TestResourceCreateCommandTests
     public async Task ExecuteAsync_CreateLoadTests_FromDefaultResource()
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
-        _service.CreateOrUpdateLoadTestingResourceAsync(
+        Service.CreateOrUpdateLoadTestingResourceAsync(
             Arg.Is("sub123"),
             Arg.Is("resourceGroup123"),
             Arg.Is((string?)null),
@@ -89,21 +63,13 @@ public class TestResourceCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
-        var command = new TestResourceCreateCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+            "--tenant", "tenant123");
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceCreateCommandResult);
+        var result = ValidateAndDeserializeResponse(response, LoadTestJsonContext.Default.TestResourceCreateCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("Id1", result.LoadTest.Id);
         Assert.Equal("loadTest1", result.LoadTest.Name);
     }
@@ -111,23 +77,21 @@ public class TestResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.CreateOrUpdateLoadTestingResourceAsync(
+        Service.CreateOrUpdateLoadTestingResourceAsync(
             Arg.Is("sub123"),
             Arg.Is("resourceGroup123"),
             Arg.Is("loadTestName"),
             Arg.Is("tenant123"),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<TestResource>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "loadTestName",
-            "--tenant", "tenant123"
-        ]);
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
+
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

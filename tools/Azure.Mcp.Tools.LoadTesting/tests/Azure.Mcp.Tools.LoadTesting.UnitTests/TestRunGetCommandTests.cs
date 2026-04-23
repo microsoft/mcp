@@ -2,51 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.UnitTests;
 
-public class TestRunGetCommandTests
+public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, ILoadTestingService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILoadTestingService _service;
-    private readonly ILogger<TestRunGetCommand> _logger;
-    private readonly TestRunGetCommand _command;
-
-    public TestRunGetCommandTests()
-    {
-        _service = Substitute.For<ILoadTestingService>();
-        _logger = Substitute.For<ILogger<TestRunGetCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_logger, _service);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsLoadTestRun_WhenExists()
     {
         var expected = new TestRun { TestId = "testId1", TestRunId = "testRunId1" };
-        _service.GetLoadTestRunAsync(
+        Service.GetLoadTestRunAsync(
             Arg.Is("sub123"),
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
@@ -56,24 +38,15 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunGetCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
             "--testrun-id", "run1",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+            "--tenant", "tenant123");
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestRunGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, LoadTestJsonContext.Default.TestRunGetCommandResult);
 
-        Assert.NotNull(result);
         Assert.NotNull(result.TestRuns);
         Assert.Single(result.TestRuns);
         Assert.Equal(expected.TestId, result.TestRuns.First().TestId);
@@ -83,9 +56,7 @@ public class TestRunGetCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesBadRequestErrors()
     {
-
-        var expected = new TestRun();
-        _service.GetLoadTestRunAsync(
+        Service.GetLoadTestRunAsync(
             Arg.Is("sub123"),
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
@@ -93,22 +64,17 @@ public class TestRunGetCommandTests
             Arg.Is("tenant123"),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expected);
+            .Returns(new TestRun());
 
-        var command = new TestRunGetCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--tenant", "tenant123");
+
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-
-        _service.GetLoadTestRunAsync(
+        Service.GetLoadTestRunAsync(
             Arg.Is("sub123"),
             Arg.Is("testResourceName"),
             Arg.Is("run1"),
@@ -116,18 +82,15 @@ public class TestRunGetCommandTests
             Arg.Is("tenant123"),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<TestRun>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
-        var command = new TestRunGetCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
             "--testrun-id", "run1",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
+
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
@@ -141,7 +104,7 @@ public class TestRunGetCommandTests
             new() { TestId = "testId1", TestRunId = "testRunId1" },
             new() { TestId = "testId2", TestRunId = "testRunId2" }
         };
-        _service.GetLoadTestRunsFromTestIdAsync(
+        Service.GetLoadTestRunsFromTestIdAsync(
             Arg.Is("sub123"),
             Arg.Is("testResourceName"),
             Arg.Is("testId"),
@@ -151,24 +114,15 @@ public class TestRunGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestRunGetCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
             "--test-id", "testId",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+            "--tenant", "tenant123");
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestRunGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, LoadTestJsonContext.Default.TestRunGetCommandResult);
 
-        Assert.NotNull(result);
         Assert.NotNull(result.TestRuns);
         Assert.Equal(2, result.TestRuns.Count);
         Assert.Equal(expected.First().TestId, result.TestRuns.First().TestId);
@@ -178,7 +132,7 @@ public class TestRunGetCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesListServiceErrors()
     {
-        _service.GetLoadTestRunsFromTestIdAsync(
+        Service.GetLoadTestRunsFromTestIdAsync(
             Arg.Is("sub123"),
             Arg.Is("testResourceName"),
             Arg.Is("testId"),
@@ -186,18 +140,15 @@ public class TestRunGetCommandTests
             Arg.Is("tenant123"),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<TestRun>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
-        var command = new TestRunGetCommand(_logger, _service);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
             "--test-id", "testId",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
+
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
