@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cspell:ignore USERASSIGNED SYSTEMASSIGNEDUSERASSIGNED SYSTEMASSIGNED Lifecycles azurebackup protecteditem protectable
+
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -64,7 +66,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings));
+        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings))
+        {
+            // DPP (Backup Vault) requires a Managed Identity to authenticate to protected
+            // datasources (storage accounts, disks, PG Flex, etc.). Without it every
+            // 'protecteditem protect' call would fail server-side with VaultMSIUnauthorized.
+            // Default to SystemAssigned so the vault is usable out of the box; callers can
+            // change this later via 'vault update --identity-type ...'.
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
+        };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
 
@@ -197,15 +208,44 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             Properties = instanceProperties
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, instanceName, instanceData, cancellationToken);
+        // DPP protection is asynchronous on the server side and is NOT surfaced as a
+        // backup job (only on-demand backup, restore, etc. are jobs). MCP must therefore
+        // wait for the underlying operationStatus to reach a terminal state and then read
+        // back the BackupInstance to confirm the protection actually configured. Using
+        // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
+        // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
+        // RequestFailedException, instead of silently returning "Accepted".
+        try
+        {
+            var operation = await collection.CreateOrUpdateAsync(
+                WaitUntil.Completed, instanceName, instanceData, cancellationToken);
 
-        var jobId = ExtractJobIdFromOperation(result.GetRawResponse());
+            // Re-read the backup instance to capture the authoritative protection status.
+            // The LRO can complete while the BI is still in ConfiguringProtection; both
+            // outcomes are surfaced to the caller via ProtectionStatus.
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            var protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
 
-        return new ProtectResult(
-            "Accepted",
-            instanceName,
-            jobId,
-            jobId != null ? $"Protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Protection initiated.");
+            return new ProtectResult(
+                "Succeeded",
+                instanceName,
+                JobId: null,
+                $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+                $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+                ProtectionStatus: protectionStatus,
+                ErrorMessage: null);
+        }
+        catch (RequestFailedException ex)
+        {
+            return new ProtectResult(
+                "Failed",
+                instanceName,
+                JobId: null,
+                $"Protection failed for backup instance '{instanceName}': {ex.Message}",
+                ProtectionStatus: null,
+                ErrorMessage: ex.Message);
+        }
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cspell:ignore azurebackup
+
 using System.Net;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
@@ -25,7 +27,11 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     public override string Description =>
         """
         Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault
-        or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
+        or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned
+        Managed Identity is enabled by default so the vault can authenticate to protected
+        datasources (storage accounts, disks, PG Flex, etc.) - change later with
+        'azurebackup vault update --identity-type ...' if needed. Returns the created
+        vault details.
         """;
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()

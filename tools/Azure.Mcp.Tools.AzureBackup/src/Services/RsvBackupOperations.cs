@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cspell:ignore SQLINSTANCE SAPHANADATABASE SQLDATABASE protectable hana iaasvmcontainerv azurebackup protectableitem dbname Fileshare protecteditem vmname ALWAYSON SYSTEMASSIGNED USERASSIGNED SYSTEMASSIGNEDUSERASSIGNED SAPHANA SAPHANASYSTEM SAPHANADBINSTANCE SAPHANADBI
+
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -150,8 +152,9 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
             jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse());
 
-            return new ProtectResult("Accepted", protectedItemName, jobId,
-                jobId != null ? $"Workload protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Workload protection initiated.");
+            return await BuildRsvProtectResultAsync(
+                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId,
+                "Workload protection", cancellationToken);
         }
 
         if (profile.ProtectedItemType == RsvProtectedItemType.AzureFileShare)
@@ -196,45 +199,16 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var fsJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
             fsJobId ??= ExtractOperationIdFromResponse(fsResult.GetRawResponse());
 
-            return new ProtectResult("Accepted", fsProtectedItemName, fsJobId,
-                fsJobId != null ? $"File share protection initiated. Use 'azurebackup job get --job {fsJobId}' to monitor progress." : "File share protection initiated.");
+            return await BuildRsvProtectResultAsync(
+                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId,
+                "File share protection", cancellationToken);
         }
 
-        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
-        var rgResource = armClient.GetResourceGroupResource(rgId);
-        await rgResource.RefreshProtectionContainerAsync(vaultName, FabricName, filter: null, cancellationToken);
-
+        // For IaaS VM protection MCP follows the same approach as `az backup protection enable-for-vm`:
+        // submit the protected-item PUT directly. The Recovery Services backend registers the
+        // VM container as part of accepting the protect request, so a separate refresh +
+        // discovery poll is unnecessary and was causing 180s timeouts on freshly created VMs.
         var container = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId);
-
-        // Poll for container visibility after refresh (up to 180s with 5s intervals).
-        // The RSV RefreshProtectionContainerAsync API does not return a pollable LRO,
-        // so we must manually poll for the container to become visible.
-        // Container discovery can take 2-3 minutes for some workloads.
-        const int maxRetries = 36;
-        const int delayMs = 5000;
-        for (int i = 0; i < maxRetries; i++)
-        {
-            await Task.Delay(delayMs, cancellationToken);
-            try
-            {
-                var checkContainerId = BackupProtectionContainerResource.CreateResourceIdentifier(
-                    subscription, resourceGroup, vaultName, FabricName, container);
-                var checkContainer = armClient.GetBackupProtectionContainerResource(checkContainerId);
-                await checkContainer.GetAsync(cancellationToken: cancellationToken);
-                break; // Container is visible
-            }
-            catch (RequestFailedException ex) when (ex.Status == 404)
-            {
-                if (i == maxRetries - 1)
-                {
-                    throw new InvalidOperationException(
-                        $"Container '{container}' was not discovered after {maxRetries * delayMs / 1000}s. " +
-                        "Container discovery can take several minutes for some workloads. " +
-                        "Retry later or verify the VM resource ID is correct.", ex);
-                }
-            }
-        }
-
         var vmProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId);
 
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
@@ -255,11 +229,9 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
         vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
 
-        return new ProtectResult(
-            "Accepted",
-            vmProtectedItemName,
-            vmJobId,
-            vmJobId != null ? $"Protection initiated. Use 'azurebackup job get --job {vmJobId}' to monitor progress." : "Protection initiated.");
+        return await BuildRsvProtectResultAsync(
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId,
+            "VM protection", cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -1234,6 +1206,120 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         return resourceId[start..end];
     }
+
+    /// <summary>
+    /// Polls the RSV ConfigureBackup job to a terminal state and builds a
+    /// <see cref="ProtectResult"/> reflecting the actual job outcome. RSV protection is
+    /// asynchronous; the protect PUT only accepts the request, so MCP must follow up by
+    /// reading the job until it reports success or failure. If polling exceeds the timeout
+    /// the result is returned with status <c>InProgress</c> and the job id, so the caller
+    /// can continue monitoring with <c>azurebackup job get</c>.
+    /// </summary>
+    private static async Task<ProtectResult> BuildRsvProtectResultAsync(
+        ArmClient armClient, string subscription, string resourceGroup, string vaultName,
+        string protectedItemName, string? jobId, string operationDescription,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(jobId))
+        {
+            return new ProtectResult(
+                "Accepted",
+                protectedItemName,
+                null,
+                $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify.");
+        }
+
+        var finalJob = await WaitForJobAsync(
+            armClient, subscription, resourceGroup, vaultName, jobId, cancellationToken);
+
+        if (finalJob == null)
+        {
+            return new ProtectResult(
+                "InProgress",
+                protectedItemName,
+                jobId,
+                $"{operationDescription} is still running after the polling budget elapsed. " +
+                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.");
+        }
+
+        var status = finalJob.Status ?? "Unknown";
+        var errorMessage = ExtractJobErrorMessage(finalJob);
+        var isFailure = status.Contains("Fail", StringComparison.OrdinalIgnoreCase) ||
+                        status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+
+        var message = isFailure
+            ? $"{operationDescription} failed: {errorMessage ?? status}. See 'azurebackup job get --job {jobId}' for details."
+            : $"{operationDescription} {status.ToLowerInvariant()}. Use 'azurebackup protecteditem get' to verify the protected item.";
+
+        return new ProtectResult(
+            status,
+            protectedItemName,
+            jobId,
+            message,
+            ProtectionStatus: null,
+            ErrorMessage: isFailure ? errorMessage ?? status : null);
+    }
+
+    /// <summary>
+    /// Polls a Recovery Services backup job until it reaches a terminal state. Returns the
+    /// final <see cref="BackupGenericJob"/> on completion, or <c>null</c> if the job did not
+    /// reach a terminal state within the polling budget. ConfigureBackup jobs typically
+    /// finish in 2-10 minutes, so a 12-minute budget with 10-second intervals balances
+    /// responsiveness and tolerance for slow operations.
+    /// </summary>
+    private static async Task<BackupGenericJob?> WaitForJobAsync(
+        ArmClient armClient, string subscription, string resourceGroup, string vaultName,
+        string jobId, CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 72;          // 72 * 10s = 12 minutes
+        var pollDelay = TimeSpan.FromSeconds(10);
+
+        var jobResourceId = BackupJobResource.CreateResourceIdentifier(
+            subscription, resourceGroup, vaultName, jobId);
+        var jobResource = armClient.GetBackupJobResource(jobResourceId);
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                var jobResponse = await jobResource.GetAsync(cancellationToken);
+                if (jobResponse.Value.Data.Properties is BackupGenericJob job &&
+                    !string.IsNullOrEmpty(job.Status) &&
+                    !job.Status.Equals("InProgress", StringComparison.OrdinalIgnoreCase))
+                {
+                    return job;
+                }
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Job entry not yet visible; keep polling.
+            }
+
+            await Task.Delay(pollDelay, cancellationToken);
+        }
+
+        return null;
+    }
+
+    private static string? ExtractJobErrorMessage(BackupGenericJob job)
+    {
+        switch (job)
+        {
+            case IaasVmBackupJob vm when vm.ErrorDetails.Count > 0:
+                return FirstNonEmpty(vm.ErrorDetails[0].ErrorString, vm.ErrorDetails[0].ErrorTitle);
+            case IaasVmBackupJobV2 vm2 when vm2.ErrorDetails.Count > 0:
+                return FirstNonEmpty(vm2.ErrorDetails[0].ErrorString, vm2.ErrorDetails[0].ErrorTitle);
+            case StorageBackupJob storage when storage.ErrorDetails.Count > 0:
+                return storage.ErrorDetails[0].ErrorString;
+            case WorkloadBackupJob wl when wl.ErrorDetails.Count > 0:
+                return FirstNonEmpty(wl.ErrorDetails[0].ErrorString, wl.ErrorDetails[0].ErrorTitle);
+            default:
+                return null;
+        }
+    }
+
+    private static string? FirstNonEmpty(string? primary, string? fallback) =>
+        string.IsNullOrEmpty(primary) ? fallback : primary;
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
