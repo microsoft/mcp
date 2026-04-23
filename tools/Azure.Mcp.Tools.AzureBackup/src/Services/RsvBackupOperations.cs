@@ -1249,7 +1249,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         var message = isFailure
             ? $"{operationDescription} failed: {errorMessage ?? status}. See 'azurebackup job get --job {jobId}' for details."
-            : $"{operationDescription} {status.ToLowerInvariant()}. Use 'azurebackup protecteditem get' to verify the protected item.";
+            : $"{operationDescription} status: {status}. Use 'azurebackup protecteditem get' to verify the protected item.";
 
         return new ProtectResult(
             status,
