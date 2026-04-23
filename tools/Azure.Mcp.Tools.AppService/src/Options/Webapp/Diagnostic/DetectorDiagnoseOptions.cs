@@ -7,8 +7,8 @@ namespace Azure.Mcp.Tools.AppService.Options.Webapp.Diagnostic;
 
 public sealed class DetectorDiagnoseOptions : BaseAppServiceOptions
 {
-    [JsonPropertyName(AppServiceOptionDefinitions.DetectorNameName)]
-    public string? DetectorName { get; set; }
+    [JsonPropertyName(AppServiceOptionDefinitions.DetectorIdName)]
+    public string? DetectorId { get; set; }
 
     [JsonPropertyName(AppServiceOptionDefinitions.StartTimeName)]
     public DateTimeOffset? StartTime { get; set; }

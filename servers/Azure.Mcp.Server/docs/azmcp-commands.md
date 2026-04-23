@@ -709,7 +709,7 @@ azmcp appservice webapp diagnostic list --subscription "my-subscription" \
 azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --app <app> \
-                                            --detector-name <detector-name> \
+                                            --detector-id <detector-id> \
                                             [--start-time <start-time>] \
                                             [--end-time <end-time>] \
                                             [--interval <interval>]
@@ -720,14 +720,14 @@ azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-name "detector"
+                                            --detector-id "detector"
 
 # Diagnose the Web App with detector between start and end time with interval
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-name "detector"
+                                            --detector-id "detector" \
                                             --start-time "2026-01-01T00:00:00Z" \
                                             --end-time "2026-01-01T23:59:59Z" \
                                             --interval "PT1H"
