@@ -50,6 +50,20 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "(?i)azurebackuprg_mcp-test",
             Value = "Sanitized",
+        }),
+        // ARM x-ms-arm-resource-system-data header may include the recording user's UPN
+        // when fresh resources are created (createdBy / lastModifiedBy fields).
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"[A-Za-z0-9._%+-]+@microsoft\.com",
+            Value = "sanitized@example.com",
+        }),
+        // x-ms-operation-identifier and certificate URLs in response headers leak the
+        // tenant id of the recording subscription. Replace with the well-known zero GUID.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
+            Value = "00000000-0000-0000-0000-000000000000",
         })
     ];
 
@@ -177,7 +191,10 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "vault-type", "dpp" }
             });
-        var fetchedVault = getResult.AssertProperty("vault");
+        // azurebackup_vault_get returns a 'vaults' array; pick the first matching entry.
+        var vaults = getResult.AssertProperty("vaults");
+        Assert.Equal(JsonValueKind.Array, vaults.ValueKind);
+        var fetchedVault = vaults.EnumerateArray().First();
         var identityType = fetchedVault.AssertProperty("identityType").GetString();
         Assert.Equal("SystemAssigned", identityType, ignoreCase: true);
     }
