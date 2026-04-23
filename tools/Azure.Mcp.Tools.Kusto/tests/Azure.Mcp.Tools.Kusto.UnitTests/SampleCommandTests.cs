@@ -5,30 +5,16 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
-public sealed class SampleCommandTests
+public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKustoService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKustoService _kusto;
-    private readonly ILogger<SampleCommand> _logger;
-
-    public SampleCommandTests()
-    {
-        _kusto = Substitute.For<IKustoService>();
-        _logger = Substitute.For<ILogger<SampleCommand>>();
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     public static IEnumerable<object[]> SampleArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --table table1", false };
@@ -43,7 +29,7 @@ public sealed class SampleCommandTests
         var expectedJson = JsonDocument.Parse("[{\"foo\":42}]").RootElement.EnumerateArray().Select(e => e.Clone()).ToList();
         if (useClusterUri)
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "['table1'] | sample 10",
@@ -52,25 +38,18 @@ public sealed class SampleCommandTests
         }
         else
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
-        var command = new SampleCommand(_logger, _kusto);
-
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.SampleCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.SampleCommandResult);
+
         Assert.NotNull(result.Results);
         Assert.Single(result.Results);
         var actualJson = result.Results[0].ToString();
@@ -84,7 +63,7 @@ public sealed class SampleCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "['table1'] | sample 10",
@@ -93,22 +72,15 @@ public sealed class SampleCommandTests
         }
         else
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "['table1'] | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new SampleCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(cliArgs);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.SampleCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.SampleCommandResult);
         Assert.Empty(result.Results);
     }
 
@@ -148,12 +120,7 @@ public sealed class SampleCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new SampleCommand(_logger, _kusto);
-
-        var args = command.GetCommand().Parse("");
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("");
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
