@@ -61,13 +61,11 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmssAsync(
+            await _computeService.DeleteVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

@@ -28,11 +28,13 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Secret = false,
     LocalRequired = false)]
 public sealed class DiskGetCommand(
-    ILogger<DiskGetCommand> logger)
+    ILogger<DiskGetCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskGetOptions>(false)
 {
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -60,14 +62,13 @@ public sealed class DiskGetCommand(
             var diskNamePattern = options.Disk;
             var hasWildcard = !string.IsNullOrEmpty(diskNamePattern) && (diskNamePattern.Contains('*') || diskNamePattern.Contains('?'));
             var hasResourceGroup = !string.IsNullOrEmpty(options.ResourceGroup);
-            var computeService = context.GetService<IComputeService>();
 
             if (!string.IsNullOrEmpty(diskNamePattern) && !hasWildcard && hasResourceGroup)
             {
                 // Get specific disk by exact name and resource group
                 _logger.LogInformation("Getting disk {DiskName} in resource group {ResourceGroup}", diskNamePattern, options.ResourceGroup!);
 
-                var disk = await computeService.GetDiskAsync(
+                var disk = await _computeService.GetDiskAsync(
                     diskNamePattern,
                     options.ResourceGroup!,
                     options.Subscription!,
@@ -83,7 +84,7 @@ public sealed class DiskGetCommand(
                 _logger.LogInformation("Listing disks in subscription {Subscription}, resource group {ResourceGroup}, pattern {Pattern}",
                     options.Subscription, options.ResourceGroup, diskNamePattern);
 
-                var disks = await computeService.ListDisksAsync(
+                var disks = await _computeService.ListDisksAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,

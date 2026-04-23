@@ -62,13 +62,11 @@ public sealed class VmDeleteCommand(ILogger<VmDeleteCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmAsync(
+            await _computeService.DeleteVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

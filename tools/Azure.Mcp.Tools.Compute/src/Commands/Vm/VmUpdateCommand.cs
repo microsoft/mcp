@@ -84,13 +84,12 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,

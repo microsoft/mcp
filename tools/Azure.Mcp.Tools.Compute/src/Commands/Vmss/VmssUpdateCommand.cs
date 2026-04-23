@@ -91,13 +91,12 @@ public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
 
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmssAsync(
+            var result = await _computeService.UpdateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

@@ -134,13 +134,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger)
 
         var options = BindOptions(parseResult);
 
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.CreateVmssAsync(
+            var result = await _computeService.CreateVmssAsync(
                 options.VmssName!,
                 options.ResourceGroup!,
                 options.Subscription!,

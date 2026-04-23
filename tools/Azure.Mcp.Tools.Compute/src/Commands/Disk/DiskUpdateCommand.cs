@@ -28,7 +28,8 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Secret = false,
     LocalRequired = false)]
 public sealed class DiskUpdateCommand(
-    ILogger<DiskUpdateCommand> logger)
+    ILogger<DiskUpdateCommand> logger,
+    IComputeService computeService)
     : BaseComputeCommand<DiskUpdateOptions>(false)
 {
 
@@ -115,8 +116,6 @@ public sealed class DiskUpdateCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var computeService = context.GetService<IComputeService>();
-
             // If resource group is not provided, search for the disk by name in the subscription
             if (string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -124,7 +123,7 @@ public sealed class DiskUpdateCommand(
                     "Resource group not specified, searching for disk {DiskName} in subscription {Subscription}",
                     options.Disk, options.Subscription);
 
-                var disks = await computeService.ListDisksAsync(
+                var disks = await _computeService.ListDisksAsync(
                     options.Subscription!,
                     null,
                     options.Tenant,
@@ -161,7 +160,7 @@ public sealed class DiskUpdateCommand(
                 "Updating disk {DiskName} in resource group {ResourceGroup}",
                 options.Disk, options.ResourceGroup);
 
-            var disk = await computeService.UpdateDiskAsync(
+            var disk = await _computeService.UpdateDiskAsync(
                 options.Disk!,
                 options.ResourceGroup!,
                 options.Subscription!,
