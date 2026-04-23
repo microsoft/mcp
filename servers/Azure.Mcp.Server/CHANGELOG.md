@@ -2,15 +2,20 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.5 (Unreleased)
-
-### Features Added
+## 3.0.0-beta.5 (2026-04-23)
 
 ### Breaking Changes
 
+- Changed default VM size for `vm create` and `vmss create` commands from `Standard_DS1_v2` (older generation) to `Standard_D2s_v5` (2 vCPU, 8 GB RAM, D-series v5) [[#2415](https://github.com/microsoft/mcp/pull/2415)]
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+
 ### Bugs Fixed
 
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+
 ### Other Changes
+
+- Added a `-Verify` flag to `Update-Solution.ps1` that checks whether `.slnx` solution files are up to date without overwriting them, and integrated this verification into `Analyze-Code.ps1` so stale solution files are caught before merge. [[#2430](https://github.com/microsoft/mcp/pull/2430)]
 
 ## 3.0.0-beta.4 (2026-04-21)
 
