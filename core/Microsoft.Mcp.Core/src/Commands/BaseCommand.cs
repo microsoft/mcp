@@ -33,10 +33,28 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             Metadata = attr.ToToolMetadata();
         }
 
+        ValidateMetadataConfiguration();
+
         _command = new Command(Name, Description);
         RegisterOptions(_command);
     }
 
+    private void ValidateMetadataConfiguration()
+    {
+        if (!string.IsNullOrWhiteSpace(Id) &&
+            !string.IsNullOrWhiteSpace(Name) &&
+            !string.IsNullOrWhiteSpace(Description) &&
+            !string.IsNullOrWhiteSpace(Title) &&
+            Metadata is not null)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Command type '{GetType().FullName}' is missing required command metadata. " +
+            "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
+            "with non-null values that are available during BaseCommand construction.");
+    }
     public Command GetCommand() => _command;
     public virtual string Id { get; protected set; } = null!;
     public virtual string Name { get; protected set; } = null!;
