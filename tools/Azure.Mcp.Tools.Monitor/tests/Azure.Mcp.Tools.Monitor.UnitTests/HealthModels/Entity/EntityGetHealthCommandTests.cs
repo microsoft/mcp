@@ -1,30 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.HealthModels.Entity;
 
-public class EntityGetHealthCommandTests
+public class EntityGetHealthCommandTests : CommandUnitTestsBase<EntityGetHealthCommand, IMonitorHealthModelService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<EntityGetHealthCommand> _logger;
-    private readonly IMonitorHealthModelService _monitorHealthService;
-    private readonly EntityGetHealthCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     // Sample test data
     private const string TestEntity = "entity123";
     private const string TestHealthModel = "healthModel1";
@@ -32,46 +23,37 @@ public class EntityGetHealthCommandTests
     private const string TestSubscription = "sub123";
     private const string TestTenant = "tenant123";
 
-    public EntityGetHealthCommandTests()
-    {
-        _monitorHealthService = Substitute.For<IMonitorHealthModelService>();
-        _logger = Substitute.For<ILogger<EntityGetHealthCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new EntityGetHealthCommand(_logger, _monitorHealthService);
-        _context = new CommandContext(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ReturnsEntityHealth()
     {
         // Arrange
-        JsonNode mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy"", ""timestamp"": ""2023-05-01T12:00:00Z""}") ?? "";
+        JsonNode mockResponse = new JsonObject([new("entityId", "entity123"), new("health", "Healthy"), new("timestamp", "2023-05-01T12:00:00Z")]);
 
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Any<AuthMethod?>(),
-                TestTenant,
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Any<AuthMethod?>(),
+            TestTenant,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription,
+            "--tenant", TestTenant);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
@@ -84,11 +66,12 @@ public class EntityGetHealthCommandTests
 
     [Fact]
     public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsBadRequest()
-    {        // Arrange - missing entity parameter
-        var args = _commandDefinition.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
-
-        // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+    {        
+        // Arrange & Act - missing entity parameter
+        var result = await ExecuteCommandAsync(
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription);
 
         // Assert
         Assert.NotNull(result);
@@ -96,7 +79,7 @@ public class EntityGetHealthCommandTests
         Assert.Contains("required", result.Message, StringComparison.OrdinalIgnoreCase);
 
         // Verify service was not called
-        await _monitorHealthService.DidNotReceive().GetEntityHealth(
+        await Service.DidNotReceive().GetEntityHealth(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -111,29 +94,30 @@ public class EntityGetHealthCommandTests
     public async Task ExecuteAsync_EntityNotFound_ReturnsNotFound()
     {
         // Arrange
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Any<AuthMethod?>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<JsonNode>(new KeyNotFoundException("Entity not found")));
-
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Entity not found"));
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("not found", result.Message, StringComparison.OrdinalIgnoreCase);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
@@ -148,29 +132,30 @@ public class EntityGetHealthCommandTests
     public async Task ExecuteAsync_InvalidArgument_ReturnsBadRequest()
     {
         // Arrange
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Any<AuthMethod?>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<JsonNode>(new ArgumentException("Invalid health model format")));
-
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Invalid health model format"));
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("Invalid argument", result.Message);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
@@ -186,29 +171,30 @@ public class EntityGetHealthCommandTests
     {
         // Arrange
         var expectedError = "Unexpected error occurred";
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Any<AuthMethod?>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<JsonNode>(new Exception(expectedError)));
-
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains(expectedError, result.Message);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
@@ -223,36 +209,38 @@ public class EntityGetHealthCommandTests
     public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToService()
     {
         // Arrange
-        var mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy""}") ?? "";
+        var mockResponse = new JsonObject([new("entityId", "entity123"), new("health", "Healthy")]);
         var authMethod = AuthMethod.Credential.ToString().ToLowerInvariant();
 
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription,
+            "--auth-method", authMethod);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
             TestSubscription,
-            Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
+            Arg.Is(AuthMethod.Credential),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
@@ -262,32 +250,35 @@ public class EntityGetHealthCommandTests
     public async Task ExecuteAsync_WithRetryPolicy_PassesRetryPolicyToService()
     {
         // Arrange
-        var mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy""}") ?? "";
+        var mockResponse = new JsonObject([new("entityId", "entity123"), new("health", "Healthy")]);
         const double RetryDelay = 3;
         const int MaxRetries = 5;
 
-        _monitorHealthService
-            .GetEntityHealth(
-                TestEntity,
-                TestHealthModel,
-                TestResourceGroup,
-                TestSubscription,
-                Arg.Any<AuthMethod?>(),
-                Arg.Any<string>(),
-                Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries),
-                Arg.Any<CancellationToken>())
+        Service.GetEntityHealth(
+            TestEntity,
+            TestHealthModel,
+            TestResourceGroup,
+            TestSubscription,
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<string>(),
+            Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries),
+            Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
-        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
-
         // Act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync(
+            "--entity", TestEntity,
+            "--health-model", TestHealthModel,
+            "--resource-group", TestResourceGroup,
+            "--subscription", TestSubscription,
+            "--retry-delay", RetryDelay.ToString(),
+            "--retry-max-retries", MaxRetries.ToString());
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        await _monitorHealthService.Received(1).GetEntityHealth(
+        await Service.Received(1).GetEntityHealth(
             TestEntity,
             TestHealthModel,
             TestResourceGroup,
