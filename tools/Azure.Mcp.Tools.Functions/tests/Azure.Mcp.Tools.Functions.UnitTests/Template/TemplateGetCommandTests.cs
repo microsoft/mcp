@@ -1,68 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Template;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Functions.UnitTests.Template;
 
-public sealed class TemplateGetCommandTests
+public sealed class TemplateGetCommandTests : CommandUnitTestsBase<TemplateGetCommand, IFunctionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFunctionsService _service;
-    private readonly ILogger<TemplateGetCommand> _logger;
-    private readonly CommandContext _context;
-    private readonly TemplateGetCommand _command;
-    private readonly Command _commandDefinition;
-
-    public TemplateGetCommandTests()
-    {
-        _service = Substitute.For<IFunctionsService>();
-        _logger = Substitute.For<ILogger<TemplateGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.Equal("Get Function Template", _command.Title);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.Equal("Get Function Template", Command.Title);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.OpenWorld);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.False(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Fact]
     public void Command_HasLanguageRequiredAndTemplateOptional()
     {
-        var options = _commandDefinition.Options.ToList();
+        var options = CommandDefinition.Options.ToList();
         var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
         var templateOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.TemplateName}");
         var runtimeOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.RuntimeVersionName}");
@@ -87,14 +63,14 @@ public sealed class TemplateGetCommandTests
             Language = "python",
             Triggers =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "HttpTrigger",
                     DisplayName = "HTTP Trigger",
                     Description = "A function triggered by HTTP requests",
                     Resource = null
                 },
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "BlobTrigger",
                     DisplayName = "Blob Storage Trigger",
@@ -104,7 +80,7 @@ public sealed class TemplateGetCommandTests
             ],
             InputBindings =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "BlobInput",
                     DisplayName = "Blob Storage Input",
@@ -115,22 +91,14 @@ public sealed class TemplateGetCommandTests
             OutputBindings = []
         };
 
-        _service.GetTemplateListAsync("python", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetTemplateListAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act - no --template means list mode
-        var args = _commandDefinition.Parse(["--language", "python"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.TemplateList);
         Assert.Null(result.FunctionTemplate);
         Assert.Equal("python", result.TemplateList.Language);
@@ -154,43 +122,35 @@ public sealed class TemplateGetCommandTests
             Resource = null,
             Files =
             [
-                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
-                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" },
-                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
-                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+                new() { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new() { FileName = "README.md", Content = "# HTTP Trigger template" },
+                new() { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new() { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new() { FileName = "requirements.txt", Content = "azure-functions" }
             ],
             FunctionFiles =
             [
-                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
-                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" }
+                new() { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new() { FileName = "README.md", Content = "# HTTP Trigger template" }
             ],
             ProjectFiles =
             [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
-                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+                new() { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new() { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new() { FileName = "requirements.txt", Content = "azure-functions" }
             ],
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
+        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
 
         // Act - with --template means get mode, default mode is New
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python", "--template", "HttpTrigger");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Null(result.TemplateList);
         Assert.NotNull(result.FunctionTemplate);
         Assert.Equal("python", result.FunctionTemplate.Language);
@@ -220,35 +180,27 @@ public sealed class TemplateGetCommandTests
             Resource = null,
             FunctionFiles =
             [
-                new ProjectTemplateFile { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
-                new ProjectTemplateFile { FileName = "README.md", Content = "# HTTP Trigger template" }
+                new() { FileName = "function_app.py", Content = "import azure.functions as func\napp = func.FunctionApp()" },
+                new() { FileName = "README.md", Content = "# HTTP Trigger template" }
             ],
             ProjectFiles =
             [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
-                new ProjectTemplateFile { FileName = "requirements.txt", Content = "azure-functions" }
+                new() { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new() { FileName = "local.settings.json", Content = "{ \"Values\": {} }" },
+                new() { FileName = "requirements.txt", Content = "azure-functions" }
             ],
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
+        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
 
         // Act - with --output Add
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger", "--output", "Add"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python", "--template", "HttpTrigger", "--output", "Add");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Null(result.TemplateList);
         Assert.NotNull(result.FunctionTemplate);
         Assert.Equal("python", result.FunctionTemplate.Language);
@@ -273,26 +225,21 @@ public sealed class TemplateGetCommandTests
             BindingType = "trigger",
             Files =
             [
-                new ProjectTemplateFile { FileName = "src/functions/httpTrigger.ts", Content = "import { app } from '@azure/functions';" },
-                new ProjectTemplateFile { FileName = "package.json", Content = "{ \"devDependencies\": { \"@types/node\": \"22.x\" } }" }
+                new() { FileName = "src/functions/httpTrigger.ts", Content = "import { app } from '@azure/functions';" },
+                new() { FileName = "package.json", Content = "{ \"devDependencies\": { \"@types/node\": \"22.x\" } }" }
             ]
         };
 
-        _service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
+        Service.GetFunctionTemplateAsync("typescript", "HttpTrigger", "22", TemplateOutput.New, Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "typescript", "--template", "HttpTrigger", "--runtime-version", "22"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "typescript", "--template", "HttpTrigger", "--runtime-version", "22");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result?.FunctionTemplate);
+        Assert.NotNull(result.FunctionTemplate);
         Assert.Equal("typescript", result.FunctionTemplate.Language);
         Assert.NotNull(result.FunctionTemplate.Files);
         Assert.Equal(2, result.FunctionTemplate.Files.Count);
@@ -302,11 +249,8 @@ public sealed class TemplateGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ListMode_HandlesInvalidLanguage()
     {
-        // Arrange - no mock setup needed, validator catches it
-
-        // Act
-        var args = _commandDefinition.Parse(["--language", "invalid"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act - no mock setup needed, validator catches it
+        var response = await ExecuteCommandAsync("--language", "invalid");
 
         // Assert - validator returns error before service is called
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -317,13 +261,11 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidTemplate()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
-            .Returns<FunctionTemplateResult>(_ => throw new ArgumentException(
-                "Template \"NonExistent\" not found for language \"python\"."));
+        Service.GetFunctionTemplateAsync("python", "NonExistent", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Template \"NonExistent\" not found for language \"python\"."));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "NonExistent"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python", "--template", "NonExistent");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -334,12 +276,11 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesInvalidRuntimeVersion()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
-            .Returns<FunctionTemplateResult>(_ => throw new ArgumentException("Invalid runtime version \"99\" for java."));
+        Service.GetFunctionTemplateAsync("java", "HttpTrigger", "99", TemplateOutput.New, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Invalid runtime version \"99\" for java."));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "99"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "java", "--template", "HttpTrigger", "--runtime-version", "99");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -350,12 +291,11 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_ListMode_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetTemplateListAsync("python", Arg.Any<CancellationToken>())
-            .Returns<TemplateListResult>(_ => throw new InvalidOperationException("Network error"));
+        Service.GetTemplateListAsync("python", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Network error"));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
@@ -366,12 +306,11 @@ public sealed class TemplateGetCommandTests
     public async Task ExecuteAsync_GetMode_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
-            .Returns<FunctionTemplateResult>(_ => throw new InvalidOperationException("Could not fetch template"));
+        Service.GetFunctionTemplateAsync("python", "HttpTrigger", null, TemplateOutput.New, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Could not fetch template"));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python", "--template", "HttpTrigger"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python", "--template", "HttpTrigger");
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
@@ -387,14 +326,14 @@ public sealed class TemplateGetCommandTests
             Language = "typescript",
             Triggers =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "HttpTrigger",
                     DisplayName = "HTTP Trigger",
                     Description = "Triggered by HTTP",
                     Resource = null
                 },
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "TimerTrigger",
                     DisplayName = "Timer Trigger",
@@ -404,7 +343,7 @@ public sealed class TemplateGetCommandTests
             ],
             InputBindings =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "CosmosDBInput",
                     DisplayName = "Cosmos DB Input",
@@ -414,7 +353,7 @@ public sealed class TemplateGetCommandTests
             ],
             OutputBindings =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "ServiceBusOutput",
                     DisplayName = "Service Bus Output",
@@ -424,21 +363,15 @@ public sealed class TemplateGetCommandTests
             ]
         };
 
-        _service.GetTemplateListAsync("typescript", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetTemplateListAsync("typescript", Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "typescript"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "typescript");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result?.TemplateList);
+        Assert.NotNull(result.TemplateList);
         Assert.Equal("typescript", result.TemplateList.Language);
         Assert.Equal(2, result.TemplateList.Triggers.Count);
         Assert.Single(result.TemplateList.InputBindings);
@@ -468,7 +401,7 @@ public sealed class TemplateGetCommandTests
             Resource = null,
             FunctionFiles =
             [
-                new ProjectTemplateFile
+                new()
                 {
                     FileName = "src/main/java/com/function/Function.java",
                     Content = "package com.function;\nimport com.microsoft.azure.functions.*;"
@@ -476,27 +409,22 @@ public sealed class TemplateGetCommandTests
             ],
             ProjectFiles =
             [
-                new ProjectTemplateFile { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
-                new ProjectTemplateFile { FileName = "local.settings.json", Content = "{ \"Values\": {} }" }
+                new() { FileName = "host.json", Content = "{ \"version\": \"2.0\" }" },
+                new() { FileName = "local.settings.json", Content = "{ \"Values\": {} }" }
             ],
             MergeInstructions = "## Merging Template Files"
         };
 
-        _service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
+        Service.GetFunctionTemplateAsync("java", "HttpTrigger", null, TemplateOutput.Add, Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--output", "Add"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "java", "--template", "HttpTrigger", "--output", "Add");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result?.FunctionTemplate);
+        Assert.NotNull(result.FunctionTemplate);
         Assert.Equal("java", result.FunctionTemplate.Language);
         Assert.Equal("HttpTrigger", result.FunctionTemplate.TemplateName);
         Assert.Equal("A function that responds to HTTP requests", result.FunctionTemplate.Description);
@@ -527,7 +455,7 @@ public sealed class TemplateGetCommandTests
             Language = language,
             Triggers =
             [
-                new TemplateSummary
+                new()
                 {
                     TemplateName = "HttpTrigger",
                     DisplayName = "HTTP Trigger",
@@ -536,20 +464,15 @@ public sealed class TemplateGetCommandTests
             ]
         };
 
-        _service.GetTemplateListAsync(language, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetTemplateListAsync(language, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", language]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", language);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.TemplateGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TemplateGetCommandResult>(
-            json, FunctionsJsonContext.Default.TemplateGetCommandResult);
-
-        Assert.NotNull(result?.TemplateList);
+        Assert.NotNull(result.TemplateList);
         Assert.Equal(language, result.TemplateList.Language);
         Assert.Single(result.TemplateList.Triggers);
     }
@@ -558,12 +481,12 @@ public sealed class TemplateGetCommandTests
     public void BindOptions_BindsAllOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--output", "Add"]);
+        var args = CommandDefinition.Parse(["--language", "java", "--template", "HttpTrigger", "--runtime-version", "21", "--output", "Add"]);
 
-        var method = typeof(TemplateGetCommand).GetMethod(
+        var method = Command.GetType().GetMethod(
             "BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (TemplateGetOptions?)method?.Invoke(_command, [args]);
+        var options = (TemplateGetOptions?)method?.Invoke(Command, [args]);
 
         // Assert
         Assert.NotNull(options);
@@ -577,12 +500,12 @@ public sealed class TemplateGetCommandTests
     public void BindOptions_TemplateIsNullWhenOmitted()
     {
         // Arrange & Act - only language provided, no template
-        var args = _commandDefinition.Parse(["--language", "python"]);
+        var args = CommandDefinition.Parse(["--language", "python"]);
 
-        var method = typeof(TemplateGetCommand).GetMethod(
+        var method = Command.GetType().GetMethod(
             "BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (TemplateGetOptions?)method?.Invoke(_command, [args]);
+        var options = (TemplateGetOptions?)method?.Invoke(Command, [args]);
 
         // Assert
         Assert.NotNull(options);
