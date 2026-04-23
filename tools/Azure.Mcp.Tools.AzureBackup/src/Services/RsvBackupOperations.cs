@@ -832,7 +832,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                         var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                         vmRetention.DailySchedule.RetentionTimes.Clear();
                         vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
-                        scheduleApplied = true;
                     }
                 }
                 else if (newRetentionDays is not null)
@@ -863,7 +862,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                         var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
                         fsRetention.DailySchedule.RetentionTimes.Clear();
                         fsRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
-                        scheduleApplied = true;
                     }
                 }
                 else if (newRetentionDays is not null)

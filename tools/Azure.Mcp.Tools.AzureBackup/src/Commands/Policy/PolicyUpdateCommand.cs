@@ -52,6 +52,8 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.UpdatePolicyAsync(
@@ -97,6 +99,7 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
+        InvalidOperationException => HttpStatusCode.BadRequest,
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };

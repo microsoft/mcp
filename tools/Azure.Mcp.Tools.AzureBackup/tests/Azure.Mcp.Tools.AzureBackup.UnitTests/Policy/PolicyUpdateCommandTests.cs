@@ -243,8 +243,8 @@ public class PolicyUpdateCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        // Assert — DPP-not-supported is a user-input error, returns BadRequest
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("RSV", response.Message);
     }
 
@@ -264,8 +264,8 @@ public class PolicyUpdateCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        // Assert — unsupported policy type is a user-input error, returns BadRequest
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Unsupported policy type", response.Message);
     }
 
