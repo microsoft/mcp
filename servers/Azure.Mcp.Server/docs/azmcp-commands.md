@@ -727,7 +727,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-id "detector"
+                                            --detector-id "detector" \
                                             --start-time "2026-01-01T00:00:00Z" \
                                             --end-time "2026-01-01T23:59:59Z" \
                                             --interval "PT1H"

@@ -115,17 +115,17 @@ public class DetectorDiagnoseCommandTests
 
     [Theory]
     [InlineData()] // Missing all parameters
-    [InlineData("--subscription", "sub123")] // Missing resource group, app name, and detector name
-    [InlineData("--resource-group", "rg1")] // Missing subscription, app name, and detector name
-    [InlineData("--app", "app")] // Missing subscription, resource group, and detector name
+    [InlineData("--subscription", "sub123")] // Missing resource group, app name, and detector id
+    [InlineData("--resource-group", "rg1")] // Missing subscription, app name, and detector id
+    [InlineData("--app", "app")] // Missing subscription, resource group, and detector id
     [InlineData("--detector-id", "detector")] // Missing subscription, resource group, and app name
-    [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app name and detector name
-    [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group and detector name
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1")] // Missing app name and detector id
+    [InlineData("--subscription", "sub123", "--app", "test-app")] // Missing resource group and detector id
     [InlineData("--subscription", "sub123", "--detector-id", "LinuxMemoryDrillDown")] // Missing resource group and app name
-    [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription and detector name
+    [InlineData("--resource-group", "rg1", "--app", "test-app")] // Missing subscription and detector id
     [InlineData("--resource-group", "rg1", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription and app name
     [InlineData("--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription and resource group
-    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app")] // Missing detector name
+    [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app")] // Missing detector id
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--detector-id", "LinuxMemoryDrillDown")] // Missing app name
     [InlineData("--subscription", "sub123", "--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing resource group
     [InlineData("--resource-group", "rg1", "--app", "test-app", "--detector-id", "LinuxMemoryDrillDown")] // Missing subscription
