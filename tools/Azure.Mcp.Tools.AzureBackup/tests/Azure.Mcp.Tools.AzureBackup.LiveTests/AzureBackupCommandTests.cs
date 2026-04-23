@@ -149,13 +149,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task VaultCreate_CreatesDppVault_Successfully()
     {
-        // No session recording is published for this test yet; skip in playback to avoid
-        // a 404 from the test proxy. The test still runs in Live mode for validation.
-        if (TestMode == TestMode.Playback)
-        {
-            return;
-        }
-
         var vaultName = RegisterOrRetrieveVariable("createdDppVaultName", $"test-dpp-{Random.Shared.NextInt64()}");
 
         var result = await CallToolAsync(
@@ -722,13 +715,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task ProtectedItemProtect_DppVault_DiskProtection_Succeeds_E2E()
     {
-        // No session recording is published for this E2E test yet; skip in playback to
-        // avoid a 404 from the test proxy. The test still runs in Live mode for validation.
-        if (TestMode == TestMode.Playback)
-        {
-            return;
-        }
-
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
         var policyName = $"{Settings.ResourceBaseName}-disk-policy";
         var diskName = $"{Settings.ResourceBaseName}-disk";
