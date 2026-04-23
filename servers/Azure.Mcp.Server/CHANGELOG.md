@@ -6,11 +6,11 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name.
+- Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
 
 ### Bugs Fixed
 
-- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors.
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
 
 ### Other Changes
 
