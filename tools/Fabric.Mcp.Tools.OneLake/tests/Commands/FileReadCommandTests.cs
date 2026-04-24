@@ -16,13 +16,11 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
-    public FileReadCommandTests() : base(services =>
+    public FileReadCommandTests()
     {
         var serviceStartOptions = Substitute.For<IOptions<ServiceStartOptions>>();
         serviceStartOptions.Value.Returns(new ServiceStartOptions { Transport = TransportTypes.StdIo });
-        services.AddSingleton(serviceStartOptions);
-    })
-    {
+        Services.AddSingleton(serviceStartOptions);
     }
 
     [Fact]

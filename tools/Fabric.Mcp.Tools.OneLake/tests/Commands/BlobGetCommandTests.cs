@@ -17,14 +17,12 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
 public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLakeService>
 {
-    private static readonly IOptions<ServiceStartOptions> _serviceStartOptions = Substitute.For<IOptions<ServiceStartOptions>>();
+    private readonly IOptions<ServiceStartOptions> _serviceStartOptions = Substitute.For<IOptions<ServiceStartOptions>>();
 
-    public BlobGetCommandTests() : base(services =>
+    public BlobGetCommandTests()
     {
         _serviceStartOptions.Value.Returns(new ServiceStartOptions { Transport = TransportTypes.StdIo });
-        services.AddSingleton(_serviceStartOptions);
-    })
-    {
+        Services.AddSingleton(_serviceStartOptions);
     }
 
     [Fact]

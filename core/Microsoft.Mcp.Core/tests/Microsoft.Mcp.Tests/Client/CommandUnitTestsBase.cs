@@ -25,28 +25,24 @@ public abstract class CommandUnitTestsBase<TCommand, TService>
 {
     protected TService Service { get; init; }
     protected ILogger<TCommand> Logger { get; init; }
-    protected CommandContext Context { get; init; }
-    protected Command CommandDefinition { get; init; }
-    protected IServiceProvider ServiceProvider { get; init; }
-    protected TCommand Command { get; init; }
+    protected IServiceCollection Services { get; init; }
+
+    protected ServiceProvider ServiceProvider { get => field ??= Services.BuildServiceProvider(); }
+    protected CommandContext Context { get => field ??= new CommandContext(ServiceProvider); }
+    protected TCommand Command { get => field ??= ServiceProvider.GetRequiredService<TCommand>(); }
+    protected Command CommandDefinition { get => field ??= Command.GetCommand(); }
 
     /// <summary>
     /// Initializes the command unit test base by setting up common dependency injection points with mocks.
     /// </summary>
-    /// <param name="extensions">Optional additional service registrations for the test.</param>
-    public CommandUnitTestsBase(Action<IServiceCollection>? extensions = null)
+    public CommandUnitTestsBase()
     {
         Service = Substitute.For<TService>();
         Logger = Substitute.For<ILogger<TCommand>>();
-        var serviceCollection = new ServiceCollection()
+        Services = new ServiceCollection()
             .AddSingleton(Logger)
             .AddSingleton(Service)
             .AddSingleton<TCommand>();
-        extensions?.Invoke(serviceCollection);
-        ServiceProvider = serviceCollection.BuildServiceProvider();
-        Command = ServiceProvider.GetRequiredService<TCommand>();
-        Context = new(ServiceProvider);
-        CommandDefinition = Command.GetCommand();
     }
 
     protected Task<CommandResponse> ExecuteCommandAsync(params string[] args)
