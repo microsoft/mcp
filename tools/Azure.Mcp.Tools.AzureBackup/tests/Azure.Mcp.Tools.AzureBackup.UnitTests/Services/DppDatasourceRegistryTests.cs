@@ -99,6 +99,7 @@ public class DppDatasourceRegistryTests
     [InlineData("azuredisk", false)]
     [InlineData("azureblob", false)]
     [InlineData("postgresqlflexible", false)]
+    [InlineData("cosmosdb", false)]
     public void Resolve_RequiresDataSourceSetInfo_ReturnsExpected(string datasourceType, bool expected)
     {
         var profile = DppDatasourceRegistry.Resolve(datasourceType);
@@ -180,6 +181,46 @@ public class DppDatasourceRegistryTests
 
         // MySQLFlexible is not a supported datasource type
         Assert.DoesNotContain("MySQLFlexible", friendlyNames);
+    }
+
+    #endregion
+
+    #region CosmosDB profile shape (weekly Full vault-store, mirrors PostgreSQL Flexible)
+
+    [Fact]
+    public void CosmosDb_Profile_UsesWeeklyFullVaultStoreSchedule()
+    {
+        var profile = DppDatasourceRegistry.Resolve("cosmosdb");
+
+        Assert.Equal("CosmosDB", profile.FriendlyName);
+        Assert.Equal("Microsoft.DocumentDB/databaseAccounts", profile.ArmResourceType);
+        Assert.False(profile.UsesOperationalStore);
+        Assert.False(profile.IsContinuousBackup);
+        Assert.Equal("P1W", profile.ScheduleInterval);
+        Assert.Equal("Full", profile.BackupType);
+        Assert.Equal("BackupWeekly", profile.BackupRuleName);
+        Assert.Equal(30, profile.DefaultRetentionDays);
+        Assert.False(profile.RequiresSnapshotResourceGroup);
+        Assert.Equal(DppDataSourceSetMode.None, profile.DataSourceSetMode);
+        Assert.Equal(DppRestoreMode.RecoveryPoint, profile.DefaultRestoreMode);
+    }
+
+    [Fact]
+    public void CosmosDb_Profile_MatchesPostgreSqlFlexibleShape()
+    {
+        // Per the policy create overhaul plan, CosmosDB and PostgreSQL Flexible share
+        // the same backup shape: weekly Full backups in the vault store with multi-tier
+        // retention via vault-tier copy rules.
+        var cosmos = DppDatasourceRegistry.Resolve("cosmosdb");
+        var pg = DppDatasourceRegistry.Resolve("postgresqlflexible");
+
+        Assert.Equal(pg.UsesOperationalStore, cosmos.UsesOperationalStore);
+        Assert.Equal(pg.IsContinuousBackup, cosmos.IsContinuousBackup);
+        Assert.Equal(pg.ScheduleInterval, cosmos.ScheduleInterval);
+        Assert.Equal(pg.BackupType, cosmos.BackupType);
+        Assert.Equal(pg.BackupRuleName, cosmos.BackupRuleName);
+        Assert.Equal(pg.RequiresSnapshotResourceGroup, cosmos.RequiresSnapshotResourceGroup);
+        Assert.Equal(pg.DataSourceSetMode, cosmos.DataSourceSetMode);
     }
 
     #endregion

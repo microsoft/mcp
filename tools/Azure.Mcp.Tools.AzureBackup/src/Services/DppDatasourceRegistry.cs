@@ -113,8 +113,9 @@ public static class DppDatasourceRegistry
     };
 
     /// <summary>
-    /// CosmosDB: Full backups only. Weekly schedule (P7D). Vault store.
-    /// Multi-tier retention is supported (e.g., retain weekly backups for N months).
+    /// CosmosDB: Full backups only. Weekly schedule (P1W). Vault store (no operational tier).
+    /// Multi-tier retention is supported (e.g., retain weekly backups for N months/years
+    /// via vault-tier copy rules), mirroring the PostgreSQL Flexible profile.
     /// </summary>
     public static readonly DppDatasourceProfile CosmosDb = new()
     {
@@ -123,12 +124,11 @@ public static class DppDatasourceRegistry
         Aliases = ["cosmosdb", "cosmos"],
         UsesOperationalStore = false,
         IsContinuousBackup = false,
-        ScheduleInterval = "PT4H",
-        BackupType = "Incremental",
-        BackupRuleName = "BackupHourly",
+        ScheduleInterval = "P1W",
+        BackupType = "Full",
+        BackupRuleName = "BackupWeekly",
         DefaultRetentionDays = 30,
         RequiresSnapshotResourceGroup = false,
-        DataSourceSetMode = DppDataSourceSetMode.Self,
         DefaultRestoreMode = DppRestoreMode.RecoveryPoint,
         SupportsPolicyUpdate = false,
     };
