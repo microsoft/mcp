@@ -5,100 +5,50 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class FileReadCommandTests
+public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        // Assert
-        Assert.Equal("read", command.Name);
-        Assert.Equal("Read OneLake File", command.Title);
-        Assert.Contains("Read the contents of a file from OneLake storage", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
+        Assert.Equal("read", Command.Name);
+        Assert.Equal("Read OneLake File", Command.Title);
+        Assert.Contains("Read the contents of a file from OneLake storage", Command.Description);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("read", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
-    }
-
-    [Fact]
-    public void CommandOptions_ContainsRequiredOptions()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert - Just verify we have some options
-        Assert.NotEmpty(systemCommand.Options);
+        Assert.Equal("read", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Options);
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        // Arrange
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, oneLakeService));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!));
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
+        var metadata = Command.Metadata;
 
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
         Assert.False(metadata.Destructive);
         Assert.True(metadata.Idempotent);
         Assert.False(metadata.LocalRequired);
@@ -113,10 +63,6 @@ public class FileReadCommandTests
     public async Task ExecuteAsync_ReadsFileSuccessfully(string identifierArgs, string expectedWorkspace, string expectedItem)
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
         var filePath = "test/file.txt";
         var fileContent = "Hello, OneLake!";
 
@@ -148,35 +94,29 @@ public class FileReadCommandTests
             InlineContentTruncated = false
         };
 
-        oneLakeService
-            .ReadFileAsync(
-                expectedWorkspace,
-                expectedItem,
-                filePath,
-                Arg.Do<BlobDownloadOptions?>(options =>
-                {
-                    Assert.NotNull(options);
-                    Assert.True(options!.IncludeInlineContent);
-                    Assert.True(options.InlineContentLimit.HasValue);
-                    Assert.Equal(1024 * 1024L, options.InlineContentLimit);
-                    Assert.Null(options.DestinationStream);
-                    Assert.Null(options.LocalFilePath);
-                }),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(blobResult));
-
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"{identifierArgs} --file-path {filePath}");
-        var context = CreateContext();
+        Service.ReadFileAsync(
+            expectedWorkspace,
+            expectedItem,
+            filePath,
+            Arg.Do<BlobDownloadOptions?>(options =>
+            {
+                Assert.NotNull(options);
+                Assert.True(options!.IncludeInlineContent);
+                Assert.True(options.InlineContentLimit.HasValue);
+                Assert.Equal(1024 * 1024L, options.InlineContentLimit);
+                Assert.Null(options.DestinationStream);
+                Assert.Null(options.LocalFilePath);
+            }),
+            Arg.Any<CancellationToken>())
+            .Returns(blobResult);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync($"{identifierArgs} --file-path {filePath}");
 
         // Assert
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await oneLakeService
-            .Received(1)
+        await Service.Received(1)
             .ReadFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>());
     }
 
@@ -184,10 +124,6 @@ public class FileReadCommandTests
     public async Task ExecuteAsync_WritesToFile_WhenDownloadPathProvided()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
         var workspaceId = "workspace";
         var itemId = "item";
         var filePath = "Files/sample.txt";
@@ -221,35 +157,33 @@ public class FileReadCommandTests
             ContentFilePath = downloadPath
         };
 
-        oneLakeService
-            .ReadFileAsync(
-                workspaceId,
-                itemId,
-                filePath,
-                Arg.Do<BlobDownloadOptions?>(options =>
-                {
-                    Assert.NotNull(options);
-                    Assert.False(options!.IncludeInlineContent);
-                    Assert.Equal(downloadPath, options.LocalFilePath);
-                    Assert.NotNull(options.DestinationStream);
-                }),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(blobResult));
+        Service.ReadFileAsync(
+            workspaceId,
+            itemId,
+            filePath,
+            Arg.Do<BlobDownloadOptions?>(options =>
+            {
+                Assert.NotNull(options);
+                Assert.False(options!.IncludeInlineContent);
+                Assert.Equal(downloadPath, options.LocalFilePath);
+                Assert.NotNull(options.DestinationStream);
+            }),
+            Arg.Any<CancellationToken>())
+            .Returns(blobResult);
 
         try
         {
-            var systemCommand = command.GetCommand();
-            var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath} --download-file-path {downloadPath}");
-            var context = CreateContext();
-
             // Act
-            var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+            var response = await ExecuteCommandAsync(
+                "--workspace-id", workspaceId,
+                "--item-id", itemId,
+                "--file-path", filePath,
+                "--download-file-path", downloadPath);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.Contains(downloadPath, response.Message, StringComparison.OrdinalIgnoreCase);
-            await oneLakeService
-                .Received(1)
+            await Service.Received(1)
                 .ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>());
         }
         finally
@@ -265,51 +199,34 @@ public class FileReadCommandTests
     public async Task ExecuteAsync_HandlesServiceException()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
         var workspaceId = "test-workspace";
         var itemId = "test-item";
         var filePath = "test/file.txt";
 
-        oneLakeService
-            .ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>())
+        Service.ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath}");
-        var context = CreateContext();
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", filePath);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-        await oneLakeService
-            .Received(1)
+        await Service.Received(1)
             .ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WithMissingIdentifiers_ReturnsValidationError()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse("");
-        var context = CreateContext();
-
-        // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await oneLakeService
-            .DidNotReceive()
+        await Service.DidNotReceive()
             .ReadFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions?>(), Arg.Any<CancellationToken>());
 
     }
@@ -320,37 +237,19 @@ public class FileReadCommandTests
     [InlineData("../credentials.env")]
     public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
     {
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileReadCommand(logger, oneLakeService);
-
-        oneLakeService
-            .ReadFileAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
-                Arg.Any<BlobDownloadOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.ReadFileAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+            Arg.Any<BlobDownloadOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "filePath"));
 
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id workspace --item-id item --file-path {traversalPath}");
-        var context = CreateContext();
-
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "workspace",
+            "--item-id", "item",
+            "--file-path", traversalPath);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-    }
-
-    private static CommandContext CreateContext(string transport = "stdio")
-    {
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Transport = transport
-        });
-
-        serviceProvider.GetService(typeof(IOptions<ServiceStartOptions>)).Returns(serviceOptions);
-        return new CommandContext(serviceProvider);
     }
 }
