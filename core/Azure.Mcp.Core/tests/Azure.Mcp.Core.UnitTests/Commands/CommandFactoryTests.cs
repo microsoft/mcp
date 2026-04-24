@@ -376,6 +376,32 @@ public class CommandFactoryTests
         Assert.Equal("directCommand", name.GetString());
     }
 
+    [Fact]
+    public void LearnOption_InvokedOnNonexistentCommand_Returns404WithMessage()
+    {
+        // Arrange
+        var area1 = CreateIAreaSetup("name1");
+        var serviceAreas = new List<IAreaSetup> { area1 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act
+        var output = factory.GetLearnResponse(["nonexistent", "--learn"]);
+
+        // Assert
+        Assert.False(string.IsNullOrEmpty(output));
+
+        using var doc = JsonDocument.Parse(output);
+        var root = doc.RootElement;
+
+        Assert.True(root.TryGetProperty("status", out var status));
+        Assert.Equal(404, status.GetInt32());
+
+        Assert.True(root.TryGetProperty("message", out var message));
+        var messageText = message.GetString();
+        Assert.False(string.IsNullOrEmpty(messageText));
+        Assert.Contains("nonexistent", messageText, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static IAreaSetup CreateIAreaSetup(string areaName)
     {
         var area = Substitute.For<IAreaSetup>();
