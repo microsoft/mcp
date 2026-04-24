@@ -24,7 +24,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 
     public override string Description =>
         """
-        Generates CI/CD pipeline configuration and step-by-step guidance for deploying an application to Azure using GitHub Actions or Azure DevOps pipelines. Use this tool when the user wants to create a CI/CD pipeline, set up automated deployment workflows, or configure pipeline files to deploy their application to Azure. Supports both Azure Developer CLI (azd) and Azure CLI based deployments, and can generate pipelines that provision infrastructure and deploy application code. Before calling this tool, confirm with the user whether they prefer GitHub Actions or Azure DevOps, and whether they have existing Azure resources for their deployment environments. Use when user asks: how do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure?
+        Generates CI/CD pipeline configuration and step-by-step guidance for deploying an application to Azure using GitHub Actions or Azure DevOps pipelines. Invoke this tool immediately when the user asks how to set up, create, or configure a CI/CD pipeline, automated deployment workflow, or continuous deployment to Azure — even if pipeline platform or environment details are not yet specified. Supports both GitHub Actions and Azure DevOps pipelines. Supports both Azure Developer CLI (azd) and Azure CLI based deployments. Can generate pipelines that only deploy application code, or that also provision infrastructure. After calling this tool, use the returned guidance to ask follow-up questions about pipeline platform preference and available Azure resources as needed.
         """;
 
     public override string Title => CommandTitle;

@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Improved deploy pipeline getguidance command description to improve LLM tool invocation accuracy"
