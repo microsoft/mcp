@@ -42,28 +42,13 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         RegisterOptions(_command);
     }
 
-    private void ValidateMetadataConfiguration()
-    {
-        if (!string.IsNullOrWhiteSpace(Id) &&
-            !string.IsNullOrWhiteSpace(Name) &&
-            !string.IsNullOrWhiteSpace(Description) &&
-            !string.IsNullOrWhiteSpace(Title) &&
-            Metadata is not null)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException(
-            $"Command type '{GetType().FullName}' is missing required command metadata. " +
-            "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
-            "with non-null values that are available during BaseCommand construction.");
-    }
-    public Command GetCommand() => _command;
     public virtual string Id { get; protected set; } = null!;
     public virtual string Name { get; protected set; } = null!;
     public virtual string Description { get; protected set; } = null!;
     public virtual string Title { get; protected set; } = null!;
     public virtual ToolMetadata Metadata { get; protected set; } = null!;
+
+    public Command GetCommand() => _command;
 
     protected virtual void RegisterOptions(Command command)
     {
@@ -195,6 +180,23 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Status = statusCode;
             response.Message = errorMessage;
         }
+    }
+
+    private void ValidateMetadataConfiguration()
+    {
+        if (!string.IsNullOrWhiteSpace(Id) &&
+            !string.IsNullOrWhiteSpace(Name) &&
+            !string.IsNullOrWhiteSpace(Description) &&
+            !string.IsNullOrWhiteSpace(Title) &&
+            Metadata is not null)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Command type '{GetType().FullName}' is missing required command metadata. " +
+            "Apply [CommandMetadata] to the command class or override Id, Name, Description, Title, and Metadata " +
+            "with non-null values that are available during BaseCommand construction.");
     }
 }
 
