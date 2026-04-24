@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
@@ -264,7 +265,9 @@ public class CommandFactoryTests
 
         // Act
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
-        var learnOption = name1Group.Command.Options.FirstOrDefault(o => o.Name == "--learn");
+        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+        var learnOption = name1Group.Command.Options.FirstOrDefault(o =>
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
 
         // Assert
         Assert.NotNull(learnOption);
@@ -285,7 +288,9 @@ public class CommandFactoryTests
         // The leaf command is in the subgroup Commands collection
         var leafCommand = name1Group.Commands.Values.FirstOrDefault();
         var leafSystemCommand = leafCommand?.GetCommand();
-        var learnOption = leafSystemCommand?.Options.FirstOrDefault(o => o.Name == "--learn");
+        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+        var learnOption = leafSystemCommand?.Options.FirstOrDefault(o =>
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
 
         // Assert
         Assert.NotNull(learnOption);
@@ -303,7 +308,9 @@ public class CommandFactoryTests
         // Act - verify nested subgroup (subgroup1) also has --learn
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
         var subgroup1 = name1Group.SubGroup.FirstOrDefault(g => g.Name == "subgroup1");
-        var learnOption = subgroup1?.Command.Options.FirstOrDefault(o => o.Name == "--learn");
+        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+        var learnOption = subgroup1?.Command.Options.FirstOrDefault(o =>
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
 
         // Assert
         Assert.NotNull(subgroup1);
@@ -402,6 +409,24 @@ public class CommandFactoryTests
         Assert.Contains("nonexistent", messageText, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Constructor_Throws_When_Command_Uses_Reserved_Learn_Option(bool useAlias)
+    {
+        // Arrange
+        var area = Substitute.For<IAreaSetup>();
+        area.Name.Returns("name1");
+        area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ => CreateCommandGroupWithReservedLearnOption("name1", useAlias));
+
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new CommandFactory(_serviceProvider, [area], _telemetryService, _configurationOptions, _logger));
+
+        Assert.Contains(ICommandFactory.LearnOptionName, ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("name1 directCommand", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static IAreaSetup CreateIAreaSetup(string areaName)
     {
         var area = Substitute.For<IAreaSetup>();
@@ -459,6 +484,30 @@ public class CommandFactoryTests
         group.SubGroup.Add(subGroup);
         group.SubGroup.Add(subGroup2);
 
+        return group;
+    }
+
+    private static CommandGroup CreateCommandGroupWithReservedLearnOption(string rootName, bool useAlias)
+    {
+        var group = new CommandGroup(rootName, "Test root");
+        var command = new Command("directCommand");
+
+        if (useAlias)
+        {
+            var option = new Option<bool>("--custom");
+            option.Aliases.Add(ICommandFactory.LearnOptionName);
+            command.Options.Add(option);
+        }
+        else
+        {
+            command.Options.Add(new Option<bool>(ICommandFactory.LearnOptionName));
+        }
+
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Name.Returns("directCommand");
+        baseCommand.GetCommand().Returns(command);
+
+        group.Commands.Add("directCommand", baseCommand);
         return group;
     }
 }

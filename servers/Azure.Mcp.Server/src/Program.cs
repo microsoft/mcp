@@ -71,8 +71,11 @@ internal class Program
             // avoid wastefully parsing 250+ commands and options only to discard the result.
             if (args.Any(a => string.Equals(a, ICommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
             {
-                Console.WriteLine(commandFactory.GetLearnResponse(args));
-                return 0;
+                var learnJson = commandFactory.GetLearnResponse(args);
+                Console.WriteLine(learnJson);
+                var learnResponse = JsonSerializer.Deserialize(learnJson, ModelsJsonContext.Default.CommandResponse);
+                var learnStatus = (int)(learnResponse?.Status ?? HttpStatusCode.InternalServerError);
+                return (learnStatus >= (int)HttpStatusCode.OK && learnStatus < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
             }
 
             var rootCommand = commandFactory.RootCommand;

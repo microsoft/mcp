@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
@@ -30,12 +31,6 @@ public class CommandFactory : ICommandFactory
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
 
-    /// <summary>
-    /// Name of the <c>--learn</c> option added to every command and command group.
-    /// Exposed as a public constant so <c>Program.cs</c> can detect it in raw arg arrays
-    /// without taking a hard dependency on the option object itself.
-    /// </summary>
-    public const string LearnOptionName = "--learn";
     private const string LearnOptionDescription =
         "Discover available sub-commands and their parameters without executing any Azure operation. " +
         "Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, " +
@@ -48,11 +43,36 @@ public class CommandFactory : ICommandFactory
     /// <see cref="ParseResult.GetValue{T}"/> to return the default value on every command
     /// except the last one the option was added to.
     /// </summary>
-    private static Option<bool> CreateLearnOption() => new(LearnOptionName)
+    private static Option<bool> CreateLearnOption() => new(ICommandFactory.LearnOptionName)
     {
         Description = LearnOptionDescription,
         Required = false
     };
+
+    private static bool IsReservedLearnOptionIdentifier(string? identifier)
+    {
+        return string.Equals(
+            NameNormalization.NormalizeOptionName(identifier),
+            NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ValidateNoReservedLearnOption(Command command, string commandPath)
+    {
+        foreach (var option in command.Options)
+        {
+            if (IsReservedLearnOptionIdentifier(option.Name) || option.Aliases.Any(IsReservedLearnOptionIdentifier))
+            {
+                var message = $"Command '{commandPath}' defines the reserved option '{ICommandFactory.LearnOptionName}'. This option name is reserved for discovery and cannot be used by commands.";
+                var error = new ArgumentException(message);
+                _logger.LogError(error,
+                    "Command {CommandPath} defines the reserved discovery option {OptionName}.",
+                    commandPath,
+                    ICommandFactory.LearnOptionName);
+                throw error;
+            }
+        }
+    }
     private readonly ModelsJsonContext _srcGenWithOptions;
 
     /// <summary>
@@ -189,11 +209,25 @@ public class CommandFactory : ICommandFactory
         }
     }
 
+    private bool HasLearnOption(Command command)
+    {
+        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+        return command.Options.Any(o =>
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void ConfigureCommands(CommandGroup group, string parentTokenizedPrefix = "")
     {
-        // Add --learn as a recognized option on this group's command (for autocomplete/help display).
-        // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called.
-        group.Command.Options.Add(CreateLearnOption());
+        var groupTokenizedPath = GetPrefix(parentTokenizedPrefix, group.Name);
+
+        // Guard against the same Command object being processed by a second CommandFactory instance
+        // (e.g. ConsolidatedToolDiscoveryStrategy reuses the same IAreaSetup/CommandGroup objects).
+        // If --learn is already present it was injected by a prior factory run — skip validation and re-injection.
+        if (!HasLearnOption(group.Command))
+        {
+            ValidateNoReservedLearnOption(group.Command, groupTokenizedPath.Replace(Separator, ' '));
+            group.Command.Options.Add(CreateLearnOption());
+        }
 
         // Configure direct commands in this group
         foreach (var command in group.Commands.Values)
@@ -201,8 +235,12 @@ public class CommandFactory : ICommandFactory
             var cmd = command.GetCommand();
 
             // Build the full tokenized key for this leaf command (e.g. "storage_account_list").
-            var fullTokenizedKey = GetPrefix(GetPrefix(parentTokenizedPrefix, group.Name), command.Name);
-            ConfigureCommandHandler(cmd, command, fullTokenizedKey);
+            var fullTokenizedKey = GetPrefix(groupTokenizedPath, command.Name);
+            if (!HasLearnOption(cmd))
+            {
+                ValidateNoReservedLearnOption(cmd, fullTokenizedKey.Replace(Separator, ' '));
+            }
+            ConfigureCommandHandler(cmd, command);
 
             group.Command.Subcommands.Add(cmd);
         }
@@ -210,7 +248,7 @@ public class CommandFactory : ICommandFactory
         // Recursively configure subgroup commands, passing the accumulated prefix.
         foreach (var subGroup in group.SubGroup)
         {
-            ConfigureCommands(subGroup, GetPrefix(parentTokenizedPrefix, group.Name));
+            ConfigureCommands(subGroup, groupTokenizedPath);
         }
     }
 
@@ -223,8 +261,11 @@ public class CommandFactory : ICommandFactory
         var commandDetails = command.GetCommand();
 
         // Command.Options is never null in System.CommandLine — the null-conditional is not needed.
+        var normalizedLearnName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
         var optionInfos = commandDetails.Options
-            .Where(opt => opt is not HelpOption && !string.Equals(opt.Name, LearnOptionName, StringComparison.OrdinalIgnoreCase))
+            .Where(opt => opt is not HelpOption
+                && !string.Equals(NameNormalization.NormalizeOptionName(opt.Name), normalizedLearnName, StringComparison.OrdinalIgnoreCase)
+                && !opt.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnName, StringComparison.OrdinalIgnoreCase)))
             .Select(opt => new OptionInfo(
                 name: opt.Name,
                 description: opt.Description ?? string.Empty,
@@ -242,12 +283,16 @@ public class CommandFactory : ICommandFactory
         };
     }
 
-    private void ConfigureCommandHandler(Command command, IBaseCommand implementation, string fullTokenizedKey)
+    private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
     {
         // Add --learn as a recognized option on this command (for autocomplete/help display).
         // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called,
         // which bypasses System.CommandLine's required-option validation that would otherwise block the action.
-        command.Options.Add(CreateLearnOption());
+        // Guard: skip if already added by a prior factory run on the same Command instance.
+        if (!HasLearnOption(command))
+        {
+            command.Options.Add(CreateLearnOption());
+        }
 
         command.SetAction(async (parseResult, ct) =>
         {
