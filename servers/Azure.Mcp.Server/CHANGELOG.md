@@ -14,7 +14,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - RSV VmWorkload (SQL/SAPHANA/SAPASE) sub-policies: `--full-schedule-*`, `--differential-schedule-*`, `--differential-retention-days`, `--incremental-schedule-*`, `--incremental-retention-days`, `--log-frequency-minutes`, `--log-retention-days`, `--is-compression`, `--is-sql-compression`.
   - DPP-only flags: `--data-store-type`, `--vault-tier-retention-duration`, `--archive-tier-retention-duration`, `--datasource-types`.
 - Added a `PolicyCreateValidator` that returns a 400 with grouped validation messages before any Azure call when required fields are missing or combinations are invalid.
-- AKS workload now returns a clear validation error (`policy create` for AKS is deferred); CosmosDB remains pass-through preview.
+- Extended `azurebackup policy create` with Stage 2 advanced backup capabilities adding 14 new flags:
+  - **Smart tiering (RSV VM)**: `--smart-tier` enables ML-recommended archive tiering (`TieringMode.TierRecommended`), overriding any explicit `--archive-tier-after-days`.
+  - **SAP HANA snapshot/instance backups**: `--enable-snapshot-backup`, `--snapshot-instant-rp-retention-days`, `--snapshot-instant-rp-resource-group` add a `SnapshotFull` sub-policy with instant recovery point details for HANA System Replication.
+  - **VmWorkload archive tier**: SQL / SAPHANA / SAPASE Full sub-policies now propagate `--archive-tier-mode` / `--archive-tier-after-days` so archive moves apply to the Full backups as well as the policy root.
+  - **AzureFileShare hourly + multi-tier retention**: `--schedule-frequency Hourly` now produces `SimpleSchedulePolicyV2` with an `HourlySchedule` for AFS, and `--weekly-/--monthly-/--yearly-retention-*` flags now flow into `LongTermRetentionPolicy` for AFS in addition to IaasVm.
+  - **DPP AzureDisk vault-tier copy**: `--enable-vault-tier-copy` and `--vault-tier-copy-after-days` append a `VaultStore` `TargetCopySetting` to the disk policy lifecycle for cross-tier disaster recovery.
+  - **DPP storage backup-mode**: `--backup-mode Vaulted` switches AzureBlob, AzureDataLakeStorage, and the new AzureFiles datasource from continuous (PITR) to discrete `VaultStore` policies, emitting an explicit backup rule.
+  - **DPP storage PITR retention**: `--pitr-retention-days` overrides the default retention duration on continuous Blob/ADLS policies (matches CLI `--retention-duration-in-days`).
+  - **DPP AzureFiles vaulted profile**: New `AzureFiles` profile in the DPP datasource registry mapped to `Microsoft.Storage/storageAccounts/fileServices/shares` with vault-store discrete backups.
+  - **AKS first-class support**: AKS policy create is no longer hard-blocked. The validator now treats AKS as a regular DPP discrete workload, while the AKS per-instance scoping flags (`--aks-included-namespaces`, `--aks-excluded-namespaces`, `--aks-label-selectors`, `--aks-include-cluster-scope-resources`, `--aks-snapshot-resource-group`) are surfaced and rejected on `policy create` with guidance to supply them to `azurebackup protecteditem protect` instead.
+  - **Policy tags (RSV)**: `--policy-tags` accepts a comma-separated `key=value` list and writes ARM resource tags onto the Recovery Services backup policy. (DPP backup policies are sub-resources and cannot carry tags; the validator rejects `--policy-tags` for DPP with a clear message.)
+- AKS workload is now first-class for `policy create`; CosmosDB remains pass-through preview.
 
 ### Breaking Changes
 

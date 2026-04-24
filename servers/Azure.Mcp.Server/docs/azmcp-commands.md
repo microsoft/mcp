@@ -826,7 +826,22 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--data-store-type <OperationalStore|VaultStore|ArchiveStore>] \
                                 [--vault-tier-retention-duration <ISO8601>] \
                                 [--archive-tier-retention-duration <ISO8601>] \
-                                [--datasource-types <type[,type...]>]
+                                [--datasource-types <type[,type...]>] \
+                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
+                                [--smart-tier <true|false>] \
+                                [--enable-snapshot-backup <true|false>] \
+                                [--snapshot-instant-rp-retention-days <int>] \
+                                [--snapshot-instant-rp-resource-group <resource-group>] \
+                                [--enable-vault-tier-copy <true|false>] \
+                                [--vault-tier-copy-after-days <int>] \
+                                [--backup-mode <Continuous|Vaulted>] \
+                                [--pitr-retention-days <int>] \
+                                [--policy-tags <key=value[,key=value...]>] \
+                                [--aks-snapshot-resource-group <resource-group>] \
+                                [--aks-included-namespaces <ns[,ns...]>] \
+                                [--aks-excluded-namespaces <ns[,ns...]>] \
+                                [--aks-label-selectors <selector[,selector...]>] \
+                                [--aks-include-cluster-scope-resources <true|false>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
