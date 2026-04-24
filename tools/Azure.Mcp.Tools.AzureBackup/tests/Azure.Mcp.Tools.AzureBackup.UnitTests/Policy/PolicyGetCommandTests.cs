@@ -2,50 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Policy;
 
-public class PolicyGetCommandTests
+public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<PolicyGetCommand> _logger;
-    private readonly PolicyGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public PolicyGetCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<PolicyGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -61,7 +37,7 @@ public class PolicyGetCommandTests
             new("id2", "CustomPolicy", "rsv", ["SQLDataBase"], 3, null, null, null)
         };
 
-        _backupService.ListPoliciesAsync(
+        Service.ListPoliciesAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -69,22 +45,17 @@ public class PolicyGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicies));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup]);
+            .Returns(expectedPolicies);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PolicyGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.PolicyGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Policies.Count);
         Assert.Equal("DefaultPolicy", result.Policies[0].Name);
     }
@@ -97,9 +68,8 @@ public class PolicyGetCommandTests
         var vault = "myVault";
         var resourceGroup = "myRg";
         var policyName = "DefaultPolicy";
-        var expectedPolicy = new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5, null, null, null);
 
-        _backupService.GetPolicyAsync(
+        Service.GetPolicyAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -108,21 +78,18 @@ public class PolicyGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedPolicy));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup, "--policy", policyName]);
+            .Returns(new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5, null, null, null));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup,
+            "--policy", policyName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PolicyGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.PolicyGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Policies);
         Assert.Equal(policyName, result.Policies[0].Name);
     }
@@ -135,7 +102,7 @@ public class PolicyGetCommandTests
         var vault = "myVault";
         var resourceGroup = "myRg";
 
-        _backupService.ListPoliciesAsync(
+        Service.ListPoliciesAsync(
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -143,20 +110,17 @@ public class PolicyGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<BackupPolicyInfo>()));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PolicyGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.PolicyGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Policies);
     }
 
@@ -168,14 +132,15 @@ public class PolicyGetCommandTests
         var vault = "myVault";
         var resourceGroup = "myRg";
 
-        _backupService.ListPoliciesAsync(
+        Service.ListPoliciesAsync(
             Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -191,14 +156,16 @@ public class PolicyGetCommandTests
         var resourceGroup = "myRg";
         var policyName = "nonexistent";
 
-        _backupService.GetPolicyAsync(
+        Service.GetPolicyAsync(
             Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Is(policyName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Policy not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vault, "--resource-group", resourceGroup, "--policy", policyName]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vault,
+            "--resource-group", resourceGroup,
+            "--policy", policyName);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -213,19 +180,17 @@ public class PolicyGetCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.ListPoliciesAsync(
+            Service.ListPoliciesAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<BackupPolicyInfo>()));
+                .Returns([]);
 
-            _backupService.GetPolicyAsync(
+            Service.GetPolicyAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1, null, null, null)));
+                .Returns(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1, null, null, null));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -242,8 +207,7 @@ public class PolicyGetCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");
