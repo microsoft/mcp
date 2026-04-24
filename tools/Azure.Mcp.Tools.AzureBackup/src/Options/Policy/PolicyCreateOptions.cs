@@ -77,4 +77,48 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
 
     [JsonPropertyName(AzureBackupOptionDefinitions.ArchiveTierModeName)]
     public string? ArchiveTierMode { get; set; }
+
+    // RSV-VM only flags (new in policy create overhaul; not yet consumed by builders).
+    [JsonPropertyName(AzureBackupOptionDefinitions.PolicySubTypeName)]
+    public string? PolicySubType { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.InstantRpRetentionDaysName)]
+    public string? InstantRpRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.InstantRpResourceGroupName)]
+    public string? InstantRpResourceGroup { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.SnapshotConsistencyName)]
+    public string? SnapshotConsistency { get; set; }
+
+    // RSV-VmWorkload (SQL / SAPHANA / SAPASE) flags.
+    [JsonPropertyName(AzureBackupOptionDefinitions.FullScheduleFrequencyName)]
+    public string? FullScheduleFrequency { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.FullScheduleDaysOfWeekName)]
+    public string? FullScheduleDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeekName)]
+    public string? DifferentialScheduleDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.DifferentialRetentionDaysName)]
+    public string? DifferentialRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeekName)]
+    public string? IncrementalScheduleDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.IncrementalRetentionDaysName)]
+    public string? IncrementalRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.LogFrequencyMinutesName)]
+    public string? LogFrequencyMinutes { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.LogRetentionDaysName)]
+    public string? LogRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.IsCompressionName)]
+    public string? IsCompression { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.IsSqlCompressionName)]
+    public string? IsSqlCompression { get; set; }
 }

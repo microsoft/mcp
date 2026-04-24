@@ -165,19 +165,35 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--yearly-retention-days-of-month");
         Assert.Contains(options, o => o.Name == "--archive-tier-after-days");
         Assert.Contains(options, o => o.Name == "--archive-tier-mode");
+        // RSV-VM only.
+        Assert.Contains(options, o => o.Name == "--policy-sub-type");
+        Assert.Contains(options, o => o.Name == "--instant-rp-retention-days");
+        Assert.Contains(options, o => o.Name == "--instant-rp-resource-group");
+        Assert.Contains(options, o => o.Name == "--snapshot-consistency");
+        // RSV-VmWorkload.
+        Assert.Contains(options, o => o.Name == "--full-schedule-frequency");
+        Assert.Contains(options, o => o.Name == "--full-schedule-days-of-week");
+        Assert.Contains(options, o => o.Name == "--differential-schedule-days-of-week");
+        Assert.Contains(options, o => o.Name == "--differential-retention-days");
+        Assert.Contains(options, o => o.Name == "--incremental-schedule-days-of-week");
+        Assert.Contains(options, o => o.Name == "--incremental-retention-days");
+        Assert.Contains(options, o => o.Name == "--log-frequency-minutes");
+        Assert.Contains(options, o => o.Name == "--log-retention-days");
+        Assert.Contains(options, o => o.Name == "--is-compression");
+        Assert.Contains(options, o => o.Name == "--is-sql-compression");
     }
 
     [Fact]
-    public void BindOptions_DoesNotContainRsvOrDppSpecificOptionsYet()
+    public void BindOptions_DoesNotContainDppOnlyOptionsYet()
     {
-        // RSV-VM, RSV-VmWorkload, and DPP-only option defs land in later commits.
+        // DPP-only option defs land in a later commit.
         var command = _command.GetCommand();
         var optionNames = command.Options.Select(o => o.Name).ToList();
 
-        Assert.DoesNotContain("--policy-sub-type", optionNames);
-        Assert.DoesNotContain("--instant-rp-retention-days", optionNames);
-        Assert.DoesNotContain("--log-frequency-minutes", optionNames);
         Assert.DoesNotContain("--data-store-type", optionNames);
+        Assert.DoesNotContain("--vault-tier-retention-duration", optionNames);
+        Assert.DoesNotContain("--archive-tier-retention-duration", optionNames);
+        Assert.DoesNotContain("--datasource-types", optionNames);
     }
 
     [Fact]

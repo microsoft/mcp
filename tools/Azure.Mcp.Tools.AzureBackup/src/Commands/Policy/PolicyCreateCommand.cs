@@ -54,6 +54,22 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonth);
         command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierAfterDays);
         command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierMode);
+        // RSV-VM only.
+        command.Options.Add(AzureBackupOptionDefinitions.PolicySubType);
+        command.Options.Add(AzureBackupOptionDefinitions.InstantRpRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.InstantRpResourceGroup);
+        command.Options.Add(AzureBackupOptionDefinitions.SnapshotConsistency);
+        // RSV-VmWorkload (SQL / SAPHANA / SAPASE).
+        command.Options.Add(AzureBackupOptionDefinitions.FullScheduleFrequency);
+        command.Options.Add(AzureBackupOptionDefinitions.FullScheduleDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.DifferentialRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.IncrementalRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.LogFrequencyMinutes);
+        command.Options.Add(AzureBackupOptionDefinitions.LogRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.IsCompression);
+        command.Options.Add(AzureBackupOptionDefinitions.IsSqlCompression);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -82,6 +98,20 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.YearlyRetentionDaysOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonth.Name);
         options.ArchiveTierAfterDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierAfterDays.Name);
         options.ArchiveTierMode = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierMode.Name);
+        options.PolicySubType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.PolicySubType.Name);
+        options.InstantRpRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.InstantRpRetentionDays.Name);
+        options.InstantRpResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.InstantRpResourceGroup.Name);
+        options.SnapshotConsistency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotConsistency.Name);
+        options.FullScheduleFrequency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.FullScheduleFrequency.Name);
+        options.FullScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.FullScheduleDaysOfWeek.Name);
+        options.DifferentialScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeek.Name);
+        options.DifferentialRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DifferentialRetentionDays.Name);
+        options.IncrementalScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IncrementalScheduleDaysOfWeek.Name);
+        options.IncrementalRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IncrementalRetentionDays.Name);
+        options.LogFrequencyMinutes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogFrequencyMinutes.Name);
+        options.LogRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogRetentionDays.Name);
+        options.IsCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsCompression.Name);
+        options.IsSqlCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsSqlCompression.Name);
         return options;
     }
 

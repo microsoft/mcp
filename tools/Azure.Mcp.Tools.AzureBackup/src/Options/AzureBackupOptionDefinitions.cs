@@ -53,6 +53,24 @@ public static class AzureBackupOptionDefinitions
     public const string ArchiveTierAfterDaysName = "archive-tier-after-days";
     public const string ArchiveTierModeName = "archive-tier-mode";
 
+    // Policy create — RSV-VM only flags
+    public const string PolicySubTypeName = "policy-sub-type";
+    public const string InstantRpRetentionDaysName = "instant-rp-retention-days";
+    public const string InstantRpResourceGroupName = "instant-rp-resource-group";
+    public const string SnapshotConsistencyName = "snapshot-consistency";
+
+    // Policy create — RSV-VmWorkload (SQL / SAPHANA / SAPASE) flags
+    public const string FullScheduleFrequencyName = "full-schedule-frequency";
+    public const string FullScheduleDaysOfWeekName = "full-schedule-days-of-week";
+    public const string DifferentialScheduleDaysOfWeekName = "differential-schedule-days-of-week";
+    public const string DifferentialRetentionDaysName = "differential-retention-days";
+    public const string IncrementalScheduleDaysOfWeekName = "incremental-schedule-days-of-week";
+    public const string IncrementalRetentionDaysName = "incremental-retention-days";
+    public const string LogFrequencyMinutesName = "log-frequency-minutes";
+    public const string LogRetentionDaysName = "log-retention-days";
+    public const string IsCompressionName = "is-compression";
+    public const string IsSqlCompressionName = "is-sql-compression";
+
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
         Description = "The name of the backup vault (Recovery Services vault or Backup vault).",
@@ -308,6 +326,90 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> ArchiveTierMode = new($"--{ArchiveTierModeName}")
     {
         Description = "Archive tiering mode: 'TierAfter' (always tier after --archive-tier-after-days) or 'TierRecommended' (tier when service recommends it).",
+        Required = false
+    };
+
+    public static readonly Option<string> PolicySubType = new($"--{PolicySubTypeName}")
+    {
+        Description = "RSV VM policy sub-type: 'Standard' or 'Enhanced'. Enhanced is required for hourly schedules and Trusted Launch VMs. RSV VM only.",
+        Required = false
+    };
+
+    public static readonly Option<string> InstantRpRetentionDays = new($"--{InstantRpRetentionDaysName}")
+    {
+        Description = "Instant recovery point retention in days (1-30 for Standard, 1-7 for Enhanced). RSV VM only.",
+        Required = false
+    };
+
+    public static readonly Option<string> InstantRpResourceGroup = new($"--{InstantRpResourceGroupName}")
+    {
+        Description = "Resource group that hosts the instant recovery point snapshots. RSV VM only.",
+        Required = false
+    };
+
+    public static readonly Option<string> SnapshotConsistency = new($"--{SnapshotConsistencyName}")
+    {
+        Description = "Snapshot consistency mode for VM backups: 'ApplicationConsistent' or 'CrashConsistent'. RSV VM only.",
+        Required = false
+    };
+
+    public static readonly Option<string> FullScheduleFrequency = new($"--{FullScheduleFrequencyName}")
+    {
+        Description = "Full backup schedule frequency for SQL/SAPHANA/SAPASE: 'Daily' or 'Weekly'. RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> FullScheduleDaysOfWeek = new($"--{FullScheduleDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week for the Full backup (e.g., 'Sunday'). Required when --full-schedule-frequency is 'Weekly'. RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> DifferentialScheduleDaysOfWeek = new($"--{DifferentialScheduleDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week for the Differential backup (e.g., 'Monday,Thursday'). RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> DifferentialRetentionDays = new($"--{DifferentialRetentionDaysName}")
+    {
+        Description = "Retention period in days for Differential backups. RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> IncrementalScheduleDaysOfWeek = new($"--{IncrementalScheduleDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week for the Incremental backup. RSV SAPHANA / SAPASE only.",
+        Required = false
+    };
+
+    public static readonly Option<string> IncrementalRetentionDays = new($"--{IncrementalRetentionDaysName}")
+    {
+        Description = "Retention period in days for Incremental backups. RSV SAPHANA / SAPASE only.",
+        Required = false
+    };
+
+    public static readonly Option<string> LogFrequencyMinutes = new($"--{LogFrequencyMinutesName}")
+    {
+        Description = "Transaction log backup frequency in minutes (e.g., 15, 30, 60). RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> LogRetentionDays = new($"--{LogRetentionDaysName}")
+    {
+        Description = "Retention period in days for transaction log backups. RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> IsCompression = new($"--{IsCompressionName}")
+    {
+        Description = "Enable backup compression at the policy level: 'true' or 'false'. RSV VmWorkload only.",
+        Required = false
+    };
+
+    public static readonly Option<string> IsSqlCompression = new($"--{IsSqlCompressionName}")
+    {
+        Description = "Enable SQL-native backup compression: 'true' or 'false'. RSV SQL only.",
         Required = false
     };
 }
