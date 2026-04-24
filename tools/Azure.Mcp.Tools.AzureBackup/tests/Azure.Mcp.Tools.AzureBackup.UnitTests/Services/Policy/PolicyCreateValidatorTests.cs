@@ -1,0 +1,535 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.AzureBackup.Options.Policy;
+using Azure.Mcp.Tools.AzureBackup.Services.Policy;
+using Xunit;
+
+namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Services.Policy;
+
+public class PolicyCreateValidatorTests
+{
+    private static PolicyCreateOptions BaseOptions(string workload = "VM") => new()
+    {
+        Subscription = "sub",
+        ResourceGroup = "rg",
+        Vault = "v",
+        Policy = "p",
+        WorkloadType = workload,
+    };
+
+    // ----- Rule C: AKS gate -----
+
+    [Theory]
+    [InlineData("AKS")]
+    [InlineData("aks")]
+    public void Validate_AksWorkload_IsRejectedRegardlessOfOtherFlags(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Single(result.Issues);
+        Assert.Equal("--workload-type", result.Issues[0].Flag);
+        Assert.Contains("AKS is not yet supported", result.Issues[0].Message);
+    }
+
+    // ----- Rule D: CosmosDB pass-through -----
+
+    [Fact]
+    public void Validate_CosmosDb_WithDailyRetention_PassesThrough()
+    {
+        var options = BaseOptions("CosmosDB");
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.1: at least one schedule/retention input -----
+
+    [Fact]
+    public void Validate_NoScheduleOrRetention_Fails()
+    {
+        var result = PolicyCreateValidator.Validate(BaseOptions("VM"));
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Message.StartsWith("Provide at least one schedule"));
+    }
+
+    [Theory]
+    [InlineData("VM")]
+    [InlineData("SQL")]
+    [InlineData("AzureDisk")]
+    [InlineData("PostgreSQLFlexible")]
+    public void Validate_DailyRetentionAlone_Passes(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.2: Weekly requires --schedule-days-of-week -----
+
+    [Fact]
+    public void Validate_WeeklyWithoutDaysOfWeek_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.ScheduleFrequency = "Weekly";
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--schedule-days-of-week");
+    }
+
+    [Fact]
+    public void Validate_WeeklyWithDaysOfWeek_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.ScheduleFrequency = "Weekly";
+        options.ScheduleDaysOfWeek = "Sunday";
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.3: Hourly requires all three hourly inputs -----
+
+    [Theory]
+    [InlineData(null, "08:00", "12")]
+    [InlineData("4", null, "12")]
+    [InlineData("4", "08:00", null)]
+    [InlineData(null, null, null)]
+    public void Validate_HourlyWithMissingInputs_Fails(string? interval, string? start, string? duration)
+    {
+        var options = BaseOptions("VM");
+        options.ScheduleFrequency = "Hourly";
+        options.HourlyIntervalHours = interval;
+        options.HourlyWindowStartTime = start;
+        options.HourlyWindowDurationHours = duration;
+        options.DailyRetentionDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--schedule-frequency" && i.Message.Contains("Hourly"));
+    }
+
+    [Fact]
+    public void Validate_HourlyWithAllInputs_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.PolicySubType = "Enhanced";
+        options.ScheduleFrequency = "Hourly";
+        options.HourlyIntervalHours = "4";
+        options.HourlyWindowStartTime = "08:00";
+        options.HourlyWindowDurationHours = "12";
+        options.DailyRetentionDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.4: Weekly retention partial -----
+
+    [Theory]
+    [InlineData("4", null)]
+    [InlineData(null, "Sunday")]
+    public void Validate_PartialWeeklyRetention_Fails(string? weeks, string? days)
+    {
+        var options = BaseOptions("VM");
+        options.WeeklyRetentionWeeks = weeks;
+        options.WeeklyRetentionDaysOfWeek = days;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--weekly-retention-weeks" && i.Message.Contains("Weekly retention"));
+    }
+
+    [Fact]
+    public void Validate_FullWeeklyRetention_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.WeeklyRetentionWeeks = "12";
+        options.WeeklyRetentionDaysOfWeek = "Sunday";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.5: Monthly retention partials and exclusivity -----
+
+    [Fact]
+    public void Validate_MonthlyMonthsAlone_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionMonths = "12";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--monthly-retention-months");
+    }
+
+    [Fact]
+    public void Validate_MonthlyDayInputsWithoutMonths_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionDaysOfMonth = "1";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--monthly-retention-months" && i.Message.Contains("require"));
+    }
+
+    [Fact]
+    public void Validate_MonthlyMixedRelativeAndAbsolute_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionDaysOfMonth = "1";
+        options.MonthlyRetentionWeekOfMonth = "First";
+        options.MonthlyRetentionDaysOfWeek = "Sunday";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--monthly-retention-days-of-month");
+    }
+
+    [Fact]
+    public void Validate_MonthlyPartialRelative_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionWeekOfMonth = "First";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--monthly-retention-days-of-week");
+    }
+
+    [Fact]
+    public void Validate_MonthlyAbsolute_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionDaysOfMonth = "1,15,Last";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_MonthlyRelative_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.MonthlyRetentionMonths = "12";
+        options.MonthlyRetentionWeekOfMonth = "First";
+        options.MonthlyRetentionDaysOfWeek = "Sunday";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.6: Yearly retention -----
+
+    [Fact]
+    public void Validate_YearlyYearsAlone_Fails()
+    {
+        var options = BaseOptions("VM");
+        options.YearlyRetentionYears = "5";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--yearly-retention-months");
+    }
+
+    [Fact]
+    public void Validate_YearlyAbsolute_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionMonths = "January";
+        options.YearlyRetentionDaysOfMonth = "1";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_YearlyRelative_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.YearlyRetentionYears = "5";
+        options.YearlyRetentionMonths = "January";
+        options.YearlyRetentionWeekOfMonth = "First";
+        options.YearlyRetentionDaysOfWeek = "Sunday";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.7: Archive tier pair -----
+
+    [Theory]
+    [InlineData("60", null)]
+    [InlineData(null, "TierAfter")]
+    public void Validate_ArchiveTierPartial_Fails(string? days, string? mode)
+    {
+        var options = BaseOptions("VM");
+        options.DailyRetentionDays = "30";
+        options.ArchiveTierAfterDays = days;
+        options.ArchiveTierMode = mode;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Message.Contains("--archive-tier-after-days and --archive-tier-mode"));
+    }
+
+    [Fact]
+    public void Validate_ArchiveTierBoth_Passes()
+    {
+        var options = BaseOptions("VM");
+        options.DailyRetentionDays = "30";
+        options.ArchiveTierAfterDays = "60";
+        options.ArchiveTierMode = "TierAfter";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule A.8: DPP tier-duration requires data-store-type -----
+
+    [Theory]
+    [InlineData("P1Y", null)]
+    [InlineData(null, "P2Y")]
+    [InlineData("P1Y", "P2Y")]
+    public void Validate_DppTierDurationWithoutDataStoreType_Fails(string? vaultDur, string? archiveDur)
+    {
+        var options = BaseOptions("AzureDisk");
+        options.DailyRetentionDays = "7";
+        options.VaultTierRetentionDuration = vaultDur;
+        options.ArchiveTierRetentionDuration = archiveDur;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--data-store-type");
+    }
+
+    [Fact]
+    public void Validate_DppTierDurationWithDataStoreType_Passes()
+    {
+        var options = BaseOptions("AzureDisk");
+        options.DailyRetentionDays = "7";
+        options.DataStoreType = "VaultStore";
+        options.VaultTierRetentionDuration = "P1Y";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Rule B: shape rules (workload exclusivity) -----
+
+    [Theory]
+    [InlineData("SQL", "--policy-sub-type", "Enhanced")]
+    [InlineData("AzureDisk", "--policy-sub-type", "Standard")]
+    [InlineData("AzureDisk", "--instant-rp-retention-days", "5")]
+    [InlineData("SQL", "--snapshot-consistency", "ApplicationConsistent")]
+    [InlineData("PostgreSQLFlexible", "--instant-rp-resource-group", "rg")]
+    public void Validate_RsvVmFlagsOnNonRsvVm_Fail(string workload, string flag, string value)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+        switch (flag)
+        {
+            case "--policy-sub-type": options.PolicySubType = value; break;
+            case "--instant-rp-retention-days": options.InstantRpRetentionDays = value; break;
+            case "--snapshot-consistency": options.SnapshotConsistency = value; break;
+            case "--instant-rp-resource-group": options.InstantRpResourceGroup = value; break;
+        }
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("RSV VM"));
+    }
+
+    [Theory]
+    [InlineData("VM", "--log-frequency-minutes", "60")]
+    [InlineData("AzureDisk", "--full-schedule-frequency", "Weekly")]
+    [InlineData("VM", "--differential-retention-days", "10")]
+    [InlineData("VM", "--is-compression", "true")]
+    public void Validate_RsvVmWorkloadFlagsOnNonRsvVmWorkload_Fail(string workload, string flag, string value)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+        switch (flag)
+        {
+            case "--log-frequency-minutes": options.LogFrequencyMinutes = value; break;
+            case "--full-schedule-frequency": options.FullScheduleFrequency = value; break;
+            case "--differential-retention-days": options.DifferentialRetentionDays = value; break;
+            case "--is-compression": options.IsCompression = value; break;
+        }
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("SQL / SAPHANA / SAPASE"));
+    }
+
+    [Theory]
+    [InlineData("VM")]
+    [InlineData("SQL")]
+    public void Validate_IncrementalOnNonSap_Fails(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+        options.IncrementalScheduleDaysOfWeek = "Tuesday";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--incremental-schedule-days-of-week");
+    }
+
+    [Fact]
+    public void Validate_IncrementalOnSapHana_Passes()
+    {
+        var options = BaseOptions("SAPHANA");
+        options.DailyRetentionDays = "7";
+        options.IncrementalScheduleDaysOfWeek = "Tuesday";
+        options.IncrementalRetentionDays = "15";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData("VM")]
+    [InlineData("SAPHANA")]
+    public void Validate_IsSqlCompressionOnNonSql_Fails(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+        options.IsSqlCompression = "true";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--is-sql-compression");
+    }
+
+    [Theory]
+    [InlineData("AzureDisk")]
+    [InlineData("PostgreSQLFlexible")]
+    public void Validate_HourlyOnDpp_Fails(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.ScheduleFrequency = "Hourly";
+        options.HourlyIntervalHours = "4";
+        options.HourlyWindowStartTime = "08:00";
+        options.HourlyWindowDurationHours = "12";
+        options.DailyRetentionDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--schedule-frequency" && i.Message.Contains("RSV"));
+    }
+
+    [Theory]
+    [InlineData("VM", "--data-store-type", "VaultStore")]
+    [InlineData("SQL", "--datasource-types", "Microsoft.Compute/disks")]
+    [InlineData("VM", "--vault-tier-retention-duration", "P1M")]
+    [InlineData("SQL", "--archive-tier-retention-duration", "P2Y")]
+    public void Validate_DppFlagsOnRsv_Fail(string workload, string flag, string value)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+        switch (flag)
+        {
+            case "--data-store-type": options.DataStoreType = value; break;
+            case "--datasource-types": options.DatasourceTypes = value; break;
+            case "--vault-tier-retention-duration": options.VaultTierRetentionDuration = value; break;
+            case "--archive-tier-retention-duration": options.ArchiveTierRetentionDuration = value; break;
+        }
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("DPP"));
+    }
+
+    // ----- Continuous DPP rejects schedule/retention -----
+
+    [Theory]
+    [InlineData("AzureBlob")]
+    [InlineData("ADLS")]
+    public void Validate_ContinuousDppWithScheduleOrRetention_Fails(string workload)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "policy" && i.Message.Contains("Continuous DPP"));
+    }
+
+    [Theory]
+    [InlineData("AzureBlob")]
+    [InlineData("ADLS")]
+    public void Validate_ContinuousDppWithoutFlags_Passes(string workload)
+    {
+        var result = PolicyCreateValidator.Validate(BaseOptions(workload));
+
+        Assert.True(result.IsValid);
+    }
+
+    // ----- Multiple issues surfaced together -----
+
+    [Fact]
+    public void Validate_MultipleProblems_AllSurfaced()
+    {
+        var options = BaseOptions("VM");
+        options.ScheduleFrequency = "Weekly";          // missing --schedule-days-of-week
+        options.WeeklyRetentionWeeks = "4";             // missing --weekly-retention-days-of-week
+        options.ArchiveTierAfterDays = "60";            // missing --archive-tier-mode
+        options.LogFrequencyMinutes = "60";             // RSV VmWorkload only
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.True(result.Issues.Count >= 4);
+        Assert.Contains(result.Issues, i => i.Flag == "--schedule-days-of-week");
+        Assert.Contains(result.Issues, i => i.Flag == "--weekly-retention-weeks");
+        Assert.Contains(result.Issues, i => i.Flag == "--archive-tier-mode");
+        Assert.Contains(result.Issues, i => i.Flag == "--log-frequency-minutes");
+    }
+}
