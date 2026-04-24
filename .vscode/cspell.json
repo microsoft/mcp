@@ -622,6 +622,17 @@
         "workloadidentitycredential",
         "wscript",
         "xunit",
-        "xvfb"
+        "xvfb",
+        "apimanagement",
+        "aprl",
+        "avmsec",
+        "aztfexport",
+        "azureterraform",
+        "choco",
+        "conftest",
+        "navm",
+        "rego",
+        "virtualmachine",
+        "virtualnetwork"
     ]
 }
