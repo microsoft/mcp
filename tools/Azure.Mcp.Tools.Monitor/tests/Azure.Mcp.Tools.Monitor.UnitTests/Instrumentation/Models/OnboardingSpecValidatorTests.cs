@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Tools.Monitor.Models;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Monitor.UnitTests.Models;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Instrumentation.Models;
 
 public sealed class OnboardingSpecValidatorTests
 {

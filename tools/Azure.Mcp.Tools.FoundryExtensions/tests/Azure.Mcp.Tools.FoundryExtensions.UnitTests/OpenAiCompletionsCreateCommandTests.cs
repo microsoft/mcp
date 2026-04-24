@@ -1,35 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class OpenAiCompletionsCreateCommandTests
+public class OpenAiCompletionsCreateCommandTests : CommandUnitTestsBase<OpenAiCompletionsCreateCommand, IFoundryExtensionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFoundryExtensionsService _foundryService;
-
-    public OpenAiCompletionsCreateCommandTests()
-    {
-        _foundryService = Substitute.For<IFoundryExtensionsService>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_CreatesCompletion_WhenValidOptionsProvided()
     {
@@ -43,39 +28,31 @@ public class OpenAiCompletionsCreateCommandTests
         var expectedUsage = new CompletionUsageInfo(10, 50, 60);
         var expectedResult = new CompletionResult("Azure is a cloud computing platform...", expectedUsage);
 
-        _foundryService.CreateCompletionAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == promptText),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Any<int?>(),
-                Arg.Any<double?>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateCompletionAsync(
+            Arg.Is(resourceName),
+            Arg.Is(deploymentName),
+            Arg.Is(promptText),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Any<int?>(),
+            Arg.Any<double?>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
-            "--prompt-text", promptText
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--prompt-text", promptText);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.OpenAiCompletionsCreateCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<OpenAiCompletionsCreateCommandResult>(json);
-        Assert.NotNull(result);
         Assert.Equal(expectedResult.CompletionText, result.CompletionText);
         Assert.Equal(expectedUsage.PromptTokens, result.UsageInfo.PromptTokens);
         Assert.Equal(expectedUsage.CompletionTokens, result.UsageInfo.CompletionTokens);
@@ -97,40 +74,36 @@ public class OpenAiCompletionsCreateCommandTests
         var expectedUsage = new CompletionUsageInfo(10, 50, 60);
         var expectedResult = new CompletionResult("Azure is a cloud computing platform...", expectedUsage);
 
-        _foundryService.CreateCompletionAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == promptText),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Is<int?>(i => i == maxTokens),
-                Arg.Is<double?>(d => d == temperature),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateCompletionAsync(
+            Arg.Is(resourceName),
+            Arg.Is(deploymentName),
+            Arg.Is(promptText),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Is(maxTokens),
+            Arg.Is(temperature),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
             "--prompt-text", promptText,
             "--max-tokens", maxTokens.ToString(),
-            "--temperature", temperature.ToString()
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--temperature", temperature.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
         // Verify the service was called at least once with the core parameters
-        await _foundryService.Received(1).CreateCompletionAsync(
+        await Service.Received(1).CreateCompletionAsync(
             resourceName,
             deploymentName,
             promptText,
@@ -139,7 +112,7 @@ public class OpenAiCompletionsCreateCommandTests
             Arg.Any<int?>(),
             Arg.Any<double?>(),
             Arg.Any<string?>(),
-            Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
+            Arg.Is(AuthMethod.Credential),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
@@ -155,31 +128,27 @@ public class OpenAiCompletionsCreateCommandTests
         var resourceGroup = "test-resource-group";
         var expectedError = "Test error";
 
-        _foundryService.CreateCompletionAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<double?>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateCompletionAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<double?>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiCompletionsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
-            "--prompt-text", promptText
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--prompt-text", promptText);
 
         // Assert
         Assert.NotNull(response);
@@ -190,30 +159,13 @@ public class OpenAiCompletionsCreateCommandTests
     [Fact]
     public void Command_HasCorrectName()
     {
-        // Arrange & Act
-        var command = new OpenAiCompletionsCreateCommand(_foundryService);
-
-        // Assert
-        Assert.Equal("create-completion", command.Name);
+        Assert.Equal("create-completion", Command.Name);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        // Arrange & Act
-        var command = new OpenAiCompletionsCreateCommand(_foundryService);
-
-        // Assert
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class OpenAiCompletionsCreateCommandResult
-    {
-        [JsonPropertyName("completionText")]
-        public string CompletionText { get; set; } = string.Empty;
-
-        [JsonPropertyName("usageInfo")]
-        public CompletionUsageInfo UsageInfo { get; set; } = new CompletionUsageInfo(0, 0, 0);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 }
