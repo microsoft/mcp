@@ -164,7 +164,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
     {
         // Arrange
         var args = CommandDefinition.Parse(["--service", inputServiceName]);
-        
+
         // Act
         var response = await ExecuteCommandAsync("--service", inputServiceName);
 
