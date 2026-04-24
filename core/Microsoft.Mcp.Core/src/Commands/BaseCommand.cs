@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -21,6 +22,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     private readonly Command _command;
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
+        Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
     protected BaseCommand()
     {
         var attr = GetType().GetCustomAttribute<CommandMetadataAttribute>();
