@@ -6,34 +6,19 @@ using System.Text.Json;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.UnitTests.Server;
 
-public class ServerConfigGetCommandTests
+public class ServerConfigGetCommandTests : CommandUnitTestsBase<ServerConfigGetCommand, IMySqlService>
 {
-
-    private readonly IMySqlService _mysqlService;
-    private readonly ILogger<ServerConfigGetCommand> _logger;
-
-    public ServerConfigGetCommandTests()
-    {
-        _mysqlService = Substitute.For<IMySqlService>();
-        _logger = Substitute.For<ILogger<ServerConfigGetCommand>>();
-
-
-
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsConfiguration_WhenSuccessful()
     {
-        var expectedConfig = JsonSerializer.Serialize(new
+        var expectedConfig = JsonSerializer.Serialize(new()
         {
             ServerName = "test-server",
             Location = "East US",
@@ -42,48 +27,31 @@ public class ServerConfigGetCommandTests
             StorageSizeGB = 20,
             BackupRetentionDays = 7,
             GeoRedundantBackup = "Disabled"
-        }, new JsonSerializerOptions { WriteIndented = true });
+        }, MySqlJsonContext.Default.ServerConfigGetResult);
 
-        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
+        Service.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
-        var command = new ServerConfigGetCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
-            "--server", "test-server"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
+            "--server", "test-server");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerConfigGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.ServerConfigGetCommandResult);
         Assert.Equal(expectedConfig, result.Configuration);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>())
+        Service.GetServerConfigAsync("sub123", "rg1", "user1", "test-server", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        var command = new ServerConfigGetCommand(_logger, _mysqlService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
-            "--server", "test-server"
-        ]);
-        var context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--server", "test-server");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -93,9 +61,7 @@ public class ServerConfigGetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new ServerConfigGetCommand(_logger, _mysqlService);
-
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 }
