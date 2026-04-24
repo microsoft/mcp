@@ -182,7 +182,7 @@ public class DeleteWorkbooksCommandTests : CommandUnitTestsBase<DeleteWorkbooksC
             .Returns(batchResult);
 
         // Act
-        await ExecuteCommandAsync(":--workbook-ids", workbookId, "--tenant", "test-tenant");
+        await ExecuteCommandAsync("--workbook-ids", workbookId, "--tenant", "test-tenant");
 
         // Assert
         await Service.Received(1).DeleteWorkbooksAsync(

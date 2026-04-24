@@ -92,7 +92,7 @@ public class ServiceGuidesJsonSchemaTests
 
             // Should be a valid URI
             Assert.True(Uri.TryCreate(url, UriKind.Absolute, out var uri));
-            Assert.Equal("https", uri!.Scheme);
+            Assert.Equal("https", uri.Scheme);
         }
     }
 
@@ -152,7 +152,7 @@ public class ServiceGuidesJsonSchemaTests
             // Assert - Has expected variations
             foreach (var expectedVariation in expectedVariations)
             {
-                Assert.True(service.ServiceNameVariationsNormalized!.Contains(expectedVariation),
+                Assert.True(service.ServiceNameVariationsNormalized.Contains(expectedVariation),
                     $"Service '{serviceKey}' should have variation '{expectedVariation}'");
             }
         }
@@ -166,7 +166,7 @@ public class ServiceGuidesJsonSchemaTests
         {
             foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
-                Assert.True(variation.Equals(variation, StringComparison.InvariantCultureIgnoreCase),
+                Assert.True(variation.All(char.IsLower),
                     $"Variation '{variation}' in service '{kvp.Key}' should be lowercase");
             }
         }
@@ -180,9 +180,9 @@ public class ServiceGuidesJsonSchemaTests
         {
             foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
-                Assert.False(variation.Contains("-"),
+                Assert.False(variation.Contains('-'),
                     $"Variation '{variation}' in service '{kvp.Key}' should not contain hyphens");
-                Assert.False(variation.Contains(" "),
+                Assert.False(variation.Contains(' '),
                     $"Variation '{variation}' in service '{kvp.Key}' should not contain spaces");
             }
         }
@@ -222,8 +222,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            Assert.True(kvp.Key.Equals(kvp.Key, StringComparison.InvariantCultureIgnoreCase),
-                $"Service key '{kvp.Key}' should be lowercase");
+            Assert.True(kvp.Key.All(char.IsLower), $"Service key '{kvp.Key}' should be lowercase");
         }
     }
 
