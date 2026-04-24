@@ -24,23 +24,26 @@ public abstract class CommandUnitTestsBase<TCommand, TService>
     where TService : class
 {
     protected TService Service { get; init; }
-    protected TCommand Command { get; init; }
     protected ILogger<TCommand> Logger { get; init; }
     protected CommandContext Context { get; init; }
     protected Command CommandDefinition { get; init; }
     protected IServiceProvider ServiceProvider { get; init; }
+    protected TCommand Command { get; init; }
 
     /// <summary>
     /// Initializes the command unit test base by setting up common dependency injection points with mocks.
     /// </summary>
-    public CommandUnitTestsBase()
+    /// <param name="extensions">Optional additional service registrations for the test.</param>
+    public CommandUnitTestsBase(Action<IServiceCollection>? extensions = null)
     {
         Service = Substitute.For<TService>();
         Logger = Substitute.For<ILogger<TCommand>>();
-        ServiceProvider = Substitute.For<IServiceProvider>();
-        ServiceProvider.GetService(typeof(ILogger<TCommand>)).Returns(Logger);
-        ServiceProvider.GetService(typeof(TService)).Returns(Service);
-
+        var serviceCollection = new ServiceCollection()
+            .AddSingleton(Logger)
+            .AddSingleton(Service)
+            .AddSingleton<TCommand>();
+        extensions?.Invoke(serviceCollection);
+        ServiceProvider = serviceCollection.BuildServiceProvider();
         Command = ServiceProvider.GetRequiredService<TCommand>();
         Context = new(ServiceProvider);
         CommandDefinition = Command.GetCommand();

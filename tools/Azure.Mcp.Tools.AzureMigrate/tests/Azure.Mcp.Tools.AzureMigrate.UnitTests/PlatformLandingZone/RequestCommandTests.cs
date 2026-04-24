@@ -18,10 +18,13 @@ namespace Azure.Mcp.Tools.AzureMigrate.UnitTests.PlatformLandingZone;
 
 public class RequestCommandTests : CommandUnitTestsBase<RequestCommand, IPlatformLandingZoneService>
 {
-    public RequestCommandTests()
+    public RequestCommandTests() : base(serviceCollection =>
     {
-        ServiceProvider.GetService(typeof(AzureMigrateProjectHelper))
-        .Returns(new AzureMigrateProjectHelper(Substitute.For<ISubscriptionService>(), Substitute.For<ITenantService>()));
+        serviceCollection.AddSingleton(Substitute.For<ISubscriptionService>());
+        serviceCollection.AddSingleton(Substitute.For<ITenantService>());
+        serviceCollection.AddSingleton<AzureMigrateProjectHelper>();
+    })
+    {
     }
 
     [Fact]

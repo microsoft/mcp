@@ -5,6 +5,9 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -13,6 +16,15 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
+    public FileReadCommandTests() : base(services =>
+    {
+        var serviceStartOptions = Substitute.For<IOptions<ServiceStartOptions>>();
+        serviceStartOptions.Value.Returns(new ServiceStartOptions { Transport = TransportTypes.StdIo });
+        services.AddSingleton(serviceStartOptions);
+    })
+    {
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {

@@ -79,7 +79,7 @@ public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLake
             false,
             Arg.Any<CancellationToken>());
 
-        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.BlobPutCommandResult);
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.BlobPutCommandResult, HttpStatusCode.Created);
 
         Assert.Equal("2023-11-03", result.Version);
         Assert.True(result.RequestServerEncrypted);
