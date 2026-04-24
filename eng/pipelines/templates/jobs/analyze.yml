@@ -7,19 +7,10 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
-
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
-
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
+    parameters:
+      AdditionalVersions: ['9.0.x']
+  
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
