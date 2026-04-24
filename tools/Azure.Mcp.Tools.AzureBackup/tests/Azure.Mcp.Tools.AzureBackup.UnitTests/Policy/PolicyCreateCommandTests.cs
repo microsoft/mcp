@@ -63,7 +63,7 @@ public class PolicyCreateCommandTests
             .Returns(Task.FromResult(expected));
 
         var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "myPolicy", "--workload-type", "AzureIaasVM"]);
+            "--policy", "myPolicy", "--workload-type", "AzureIaasVM", "--daily-retention-days", "30"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -91,7 +91,7 @@ public class PolicyCreateCommandTests
             .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "p", "--workload-type", "AzureIaasVM"]);
+            "--policy", "p", "--workload-type", "AzureIaasVM", "--daily-retention-days", "30"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -102,7 +102,7 @@ public class PolicyCreateCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg --policy p --workload-type VM", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --policy p --workload-type VM --daily-retention-days 30", true)]
     [InlineData("--subscription sub --vault v --resource-group rg", false)] // Missing policy and workload-type
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -244,7 +244,7 @@ public class PolicyCreateCommandTests
             .Returns(Task.FromResult(expected));
 
         var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "p", "--workload-type", "VM"]);
+            "--policy", "p", "--workload-type", "VM", "--daily-retention-days", "30"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
@@ -273,7 +273,7 @@ public class PolicyCreateCommandTests
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", "sub", "--vault", "v", "--resource-group", "rg",
-            "--policy", "p", "--workload-type", "VM"]);
+            "--policy", "p", "--workload-type", "VM", "--daily-retention-days", "30"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);

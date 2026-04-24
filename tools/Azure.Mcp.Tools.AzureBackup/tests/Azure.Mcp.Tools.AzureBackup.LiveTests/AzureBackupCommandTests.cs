@@ -306,7 +306,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureVM" }
+                { "workload-type", "AzureVM" },
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -349,7 +350,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureFileShare" }
+                { "workload-type", "AzureFileShare" },
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -370,7 +372,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "SQL" }
+                { "workload-type", "SQL" },
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -391,7 +394,96 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "SAPHANA" }
+                { "workload-type", "SAPHANA" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvVm_WeeklyMultiTierWithArchive_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdRsvVmWeeklyArchivePolicyName", $"test-vm-weekly-arch-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureVM" },
+                { "schedule-frequency", "Weekly" },
+                { "schedule-days-of-week", "Monday" },
+                { "schedule-times", "03:00" },
+                { "weekly-retention-weeks", "8" },
+                { "monthly-retention-months", "12" },
+                { "monthly-retention-days-of-month", "1" },
+                { "yearly-retention-years", "5" },
+                { "yearly-retention-months", "January" },
+                { "yearly-retention-week-of-month", "First" },
+                { "yearly-retention-days-of-week", "Sunday" },
+                { "archive-tier-mode", "TierAfter" },
+                { "archive-tier-after-days", "90" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvVm_HourlyEnhanced_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdRsvVmHourlyEnhancedPolicyName", $"test-vm-hourly-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureVM" },
+                { "policy-sub-type", "Enhanced" },
+                { "schedule-frequency", "Hourly" },
+                { "hourly-interval-hours", "4" },
+                { "hourly-window-start-time", "08:00" },
+                { "hourly-window-duration-hours", "12" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvSql_FullLogDiff_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdRsvSqlFullLogDiffPolicyName", $"test-sql-fld-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "SQL" },
+                { "full-schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" },
+                { "differential-schedule-days-of-week", "Wednesday" },
+                { "differential-retention-days", "30" },
+                { "log-frequency-minutes", "60" },
+                { "log-retention-days", "15" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -460,7 +552,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureDisk" }
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -511,12 +604,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task PolicyCreate_DppVault_CreatesAksPolicy_Successfully()
+    public async Task PolicyCreate_DppVault_AksWorkload_ReturnsValidationError()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
-        var policyName = RegisterOrRetrieveVariable("createdAksPolicyName", $"test-aks-{Random.Shared.NextInt64()}");
+        var policyName = $"test-aks-{Random.Shared.NextInt64()}";
 
-        var result = await CallToolAsync(
+        // AKS is intentionally not yet supported via this command — expect a 400 with a clear message.
+        var status = await CallToolAsync(
             "azurebackup_policy_create",
             new()
             {
@@ -525,10 +619,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AKS" }
-            });
+            },
+            mcpClient: null,
+            resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
 
-        var opResult = result.AssertProperty("result");
-        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+        Assert.NotNull(status);
+        Assert.Equal(400, status!.Value.GetInt32());
     }
 
     [Fact]
@@ -545,7 +641,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "PostgreSQLFlexible" }
+                { "workload-type", "PostgreSQLFlexible" },
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -566,7 +663,37 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "ElasticSAN" }
+                { "workload-type", "ElasticSAN" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppDisk_VaultTierMultiTierArchive_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdDppDiskMultiTierPolicyName", $"test-disk-mt-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureDisk" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "7" },
+                { "weekly-retention-weeks", "4" },
+                { "monthly-retention-months", "12" },
+                { "yearly-retention-years", "5" },
+                { "archive-tier-mode", "TierAfter" },
+                { "archive-tier-after-days", "180" }
             });
 
         var opResult = result.AssertProperty("result");

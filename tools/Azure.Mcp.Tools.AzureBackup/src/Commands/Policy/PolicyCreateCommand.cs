@@ -133,6 +133,14 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        var validation = Services.Policy.PolicyCreateValidator.Validate(options);
+        if (!validation.IsValid)
+        {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}"));
+            return context.Response;
+        }
+
         try
         {
             var request = new Services.Policy.PolicyCreateRequest
