@@ -28,17 +28,8 @@ public static class PolicyCreateValidator
         var workload = (options.WorkloadType ?? string.Empty).Trim();
         var family = ClassifyWorkload(workload);
 
-        // Rule C: AKS gate — defer until structured AKS support lands.
-        if (family == WorkloadFamily.Aks)
-        {
-            issues.Add(new PolicyValidationIssue(
-                $"--{AzureBackupOptionDefinitions.WorkloadTypeName}",
-                "AKS is not yet supported via this command (label/namespace/hook selectors are pending). " +
-                "Use 'az dataprotection backup-policy create' or the Azure portal in the meantime."));
-            return PolicyValidationResult.Fail(issues);
-        }
-
         // Rule D: CosmosDB pass-through — no special validator action; fall through to common rules.
+        // (AKS gate removed in Stage 2 — AKS now flows through normal DPP discrete validation.)
 
         ValidateRequiredInputs(options, family, issues);
         ValidateShape(options, family, issues);
@@ -52,6 +43,13 @@ public static class PolicyCreateValidator
         // Continuous DPP workloads (AzureBlob, ADLS) reject any schedule/retention/archive flag.
         // Reported as shape errors, not required-input errors.
         if (family == WorkloadFamily.DppContinuous)
+        {
+            return;
+        }
+
+        // Storage workloads with --backup-mode unspecified or "Continuous" behave like DppContinuous —
+        // no schedule/retention required. Vaulted-mode storage workloads use the regular validation.
+        if (family == WorkloadFamily.DppStorageBackupMode && !IsVaultedBackupMode(options.BackupMode))
         {
             return;
         }
@@ -206,12 +204,122 @@ public static class PolicyCreateValidator
         EnsureDpp(options.DatasourceTypes,
             $"--{AzureBackupOptionDefinitions.DatasourceTypesName}", family, issues);
 
-        // Continuous DPP (Blob / ADLS) rejects every schedule, retention, and archive flag.
-        if (family == WorkloadFamily.DppContinuous && HasAnyScheduleRetentionOrArchiveInput(options))
+        // Continuous DPP rejects schedule, retention, and archive flags. This covers both the legacy
+        // DppContinuous family and DppStorageBackupMode workloads when --backup-mode is unset/Continuous.
+        var isContinuousStorage = family == WorkloadFamily.DppContinuous ||
+            (family == WorkloadFamily.DppStorageBackupMode && !IsVaultedBackupMode(options.BackupMode));
+        if (isContinuousStorage && HasAnyScheduleRetentionOrArchiveInput(options))
         {
             issues.Add(new PolicyValidationIssue(
                 AnyFlag,
-                "Continuous DPP workloads (AzureBlob, AzureDataLakeStorage) do not accept schedule, retention, or archive flags."));
+                "Continuous DPP workloads (AzureBlob, AzureDataLakeStorage, AzureFiles) do not accept schedule, retention, or archive flags."));
+        }
+
+        // ===== Stage 2 shape rules =====
+
+        // --smart-tier is RSV VM only.
+        if (!string.IsNullOrWhiteSpace(options.SmartTier) && family != WorkloadFamily.RsvVm)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.SmartTierName}",
+                "--smart-tier is supported only for RSV VM workloads."));
+        }
+
+        // Snapshot/instance backup flags are SAPHANA only.
+        var snapshotFlags = new (string? value, string flag)[]
+        {
+            (options.EnableSnapshotBackup, $"--{AzureBackupOptionDefinitions.EnableSnapshotBackupName}"),
+            (options.SnapshotInstantRpRetentionDays, $"--{AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDaysName}"),
+            (options.SnapshotInstantRpResourceGroup, $"--{AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroupName}"),
+        };
+        foreach (var (value, flag) in snapshotFlags)
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !IsHanaWorkload(options.WorkloadType))
+            {
+                issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for SAPHANA workloads."));
+            }
+        }
+
+        // Vault-tier copy flags are DPP AzureDisk only.
+        var vaultCopyFlags = new (string? value, string flag)[]
+        {
+            (options.EnableVaultTierCopy, $"--{AzureBackupOptionDefinitions.EnableVaultTierCopyName}"),
+            (options.VaultTierCopyAfterDays, $"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName}"),
+        };
+        foreach (var (value, flag) in vaultCopyFlags)
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !IsAzureDiskWorkload(options.WorkloadType))
+            {
+                issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP AzureDisk workloads."));
+            }
+        }
+
+        // Vault-tier copy partial input check.
+        var hasVaultCopyToggle = ParseBool(options.EnableVaultTierCopy);
+        var hasVaultCopyDays = !string.IsNullOrWhiteSpace(options.VaultTierCopyAfterDays);
+        if (hasVaultCopyToggle && !hasVaultCopyDays)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName}",
+                "--enable-vault-tier-copy requires --vault-tier-copy-after-days."));
+        }
+
+        // --backup-mode is DPP storage only (Blob / ADLS / AzureFiles).
+        if (!string.IsNullOrWhiteSpace(options.BackupMode) && family != WorkloadFamily.DppStorageBackupMode)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.BackupModeName}",
+                "--backup-mode is supported only for DPP AzureBlob, AzureDataLakeStorage, and AzureFiles workloads."));
+        }
+
+        // --pitr-retention-days is DPP storage continuous only.
+        if (!string.IsNullOrWhiteSpace(options.PitrRetentionDays) &&
+            family != WorkloadFamily.DppStorageBackupMode &&
+            family != WorkloadFamily.DppContinuous)
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.PitrRetentionDaysName}",
+                "--pitr-retention-days is supported only for DPP AzureBlob and AzureDataLakeStorage continuous backups."));
+        }
+
+        // --policy-tags is DPP only.
+        // --policy-tags is RSV only (DPP backup policies are sub-resources of the vault and the SDK
+        // does not expose Tags on DataProtectionBackupPolicyData).
+        if (!string.IsNullOrWhiteSpace(options.PolicyTags) && !IsRsvFamily(family))
+        {
+            issues.Add(new PolicyValidationIssue(
+                $"--{AzureBackupOptionDefinitions.PolicyTagsName}",
+                "--policy-tags is supported only for Recovery Services vault (RSV) policies."));
+        }
+
+        // AKS-specific flags. AKS policy create itself takes only schedule + retention + datastore; the
+        // namespace/label/hook selectors live on the backup INSTANCE, not the policy. Surface a clear
+        // error guiding the user to 'azurebackup protecteditem protect' for those flags, while still
+        // allowing AKS policy create to flow through the normal DPP discrete validation.
+        var aksScopingFlags = new (string? value, string flag)[]
+        {
+            (options.AksIncludedNamespaces, $"--{AzureBackupOptionDefinitions.AksIncludedNamespacesName}"),
+            (options.AksExcludedNamespaces, $"--{AzureBackupOptionDefinitions.AksExcludedNamespacesName}"),
+            (options.AksLabelSelectors, $"--{AzureBackupOptionDefinitions.AksLabelSelectorsName}"),
+            (options.AksIncludeClusterScopeResources, $"--{AzureBackupOptionDefinitions.AksIncludeClusterScopeResourcesName}"),
+            (options.AksSnapshotResourceGroup, $"--{AzureBackupOptionDefinitions.AksSnapshotResourceGroupName}"),
+        };
+        foreach (var (value, flag) in aksScopingFlags)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                if (family != WorkloadFamily.DppAks && family != WorkloadFamily.Aks)
+                {
+                    issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP AKS workloads."));
+                }
+                else
+                {
+                    issues.Add(new PolicyValidationIssue(
+                        flag,
+                        $"{flag} is a per-backup-instance setting, not a policy-level setting. " +
+                        "Supply it to 'azmcp azurebackup protecteditem protect' when enabling protection for an AKS cluster."));
+                }
+            }
         }
     }
 
@@ -223,13 +331,18 @@ public static class PolicyCreateValidator
         RsvVm,
         RsvVmWorkload,
         RsvFileShare,
-        DppDiscrete,    // AzureDisk, ElasticSAN, PostgreSQLFlexible, CosmosDB
-        DppContinuous,  // AzureBlob, AzureDataLakeStorage
-        Aks,
+        DppDiscrete,            // AzureDisk, ElasticSAN, PostgreSQLFlexible, CosmosDB
+        DppContinuous,          // (legacy) AzureBlob, AzureDataLakeStorage when --backup-mode unspecified
+        DppStorageBackupMode,   // AzureBlob, ADLS, AzureFiles — mode-driven (Continuous default vs Vaulted)
+        DppAks,                 // AKS — has AKS-specific flags
+        Aks,                    // (legacy alias retained for backward compatibility in tests)
     }
 
     private static bool IsRsvFamily(WorkloadFamily f) =>
         f is WorkloadFamily.RsvVm or WorkloadFamily.RsvVmWorkload or WorkloadFamily.RsvFileShare;
+
+    private static bool IsDppFamily(WorkloadFamily f) =>
+        f is WorkloadFamily.DppDiscrete or WorkloadFamily.DppContinuous or WorkloadFamily.DppStorageBackupMode or WorkloadFamily.DppAks or WorkloadFamily.Aks;
 
     private static WorkloadFamily ClassifyWorkload(string workloadType)
     {
@@ -244,8 +357,8 @@ public static class PolicyCreateValidator
             "sql" or "sqldatabase" or "saphana" or "saphanadatabase" or "sapase" => WorkloadFamily.RsvVmWorkload,
             "azurefileshare" => WorkloadFamily.RsvFileShare,
             "azuredisk" or "elasticsan" or "postgresqlflexible" or "cosmosdb" or "cosmos" => WorkloadFamily.DppDiscrete,
-            "azureblob" or "adls" or "azuredatalakestorage" => WorkloadFamily.DppContinuous,
-            "aks" => WorkloadFamily.Aks,
+            "aks" or "kubernetes" => WorkloadFamily.DppAks,
+            "azureblob" or "adls" or "azuredatalakestorage" or "azurefiles" => WorkloadFamily.DppStorageBackupMode,
             _ => WorkloadFamily.Unknown,
         };
     }
@@ -260,6 +373,23 @@ public static class PolicyCreateValidator
         workloadType is not null &&
         (workloadType.Equals("SQL", StringComparison.OrdinalIgnoreCase) ||
          workloadType.Equals("SQLDatabase", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsHanaWorkload(string? workloadType) =>
+        workloadType is not null &&
+        (workloadType.Equals("SAPHANA", StringComparison.OrdinalIgnoreCase) ||
+         workloadType.Equals("SAPHanaDatabase", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsAzureDiskWorkload(string? workloadType) =>
+        workloadType is not null &&
+        (workloadType.Equals("AzureDisk", StringComparison.OrdinalIgnoreCase) ||
+         workloadType.Equals("Disk", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsVaultedBackupMode(string? backupMode) =>
+        !string.IsNullOrWhiteSpace(backupMode) &&
+        backupMode.Trim().Equals("Vaulted", StringComparison.OrdinalIgnoreCase);
+
+    private static bool ParseBool(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out var b) && b;
 
     private static bool IsRsvWeekly(string? frequency) =>
         string.Equals(frequency, "Weekly", StringComparison.OrdinalIgnoreCase);
@@ -408,7 +538,7 @@ public static class PolicyCreateValidator
 
     private static void EnsureDpp(string? value, string flag, WorkloadFamily actual, List<PolicyValidationIssue> issues)
     {
-        if (!string.IsNullOrWhiteSpace(value) && actual is WorkloadFamily.RsvVm or WorkloadFamily.RsvVmWorkload or WorkloadFamily.RsvFileShare)
+        if (!string.IsNullOrWhiteSpace(value) && IsRsvFamily(actual))
         {
             issues.Add(new PolicyValidationIssue(flag, $"{flag} is supported only for DPP (Backup vault) workloads."));
         }

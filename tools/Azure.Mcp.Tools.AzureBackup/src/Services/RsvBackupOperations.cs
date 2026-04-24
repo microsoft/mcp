@@ -638,9 +638,36 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             Properties = policyProperties
         };
 
+        // --policy-tags maps to ARM resource tags on the policy (RSV only).
+        ApplyPolicyTags(policyData.Tags, request.PolicyTags);
+
         await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
+    }
+
+    private static void ApplyPolicyTags(IDictionary<string, string> destination, string? tagsCsv)
+    {
+        if (string.IsNullOrWhiteSpace(tagsCsv))
+        {
+            return;
+        }
+
+        foreach (var pair in tagsCsv!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var idx = pair.IndexOf('=');
+            if (idx <= 0 || idx == pair.Length - 1)
+            {
+                continue;
+            }
+
+            var key = pair[..idx].Trim();
+            var value = pair[(idx + 1)..].Trim();
+            if (key.Length > 0)
+            {
+                destination[key] = value;
+            }
+        }
     }
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(

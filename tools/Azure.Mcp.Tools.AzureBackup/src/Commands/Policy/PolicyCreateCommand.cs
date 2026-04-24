@@ -75,6 +75,21 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.VaultTierRetentionDuration);
         command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration);
         command.Options.Add(AzureBackupOptionDefinitions.DatasourceTypes);
+        // Stage 2 expansion.
+        command.Options.Add(AzureBackupOptionDefinitions.SmartTier);
+        command.Options.Add(AzureBackupOptionDefinitions.EnableSnapshotBackup);
+        command.Options.Add(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroup);
+        command.Options.Add(AzureBackupOptionDefinitions.EnableVaultTierCopy);
+        command.Options.Add(AzureBackupOptionDefinitions.VaultTierCopyAfterDays);
+        command.Options.Add(AzureBackupOptionDefinitions.BackupMode);
+        command.Options.Add(AzureBackupOptionDefinitions.PitrRetentionDays);
+        command.Options.Add(AzureBackupOptionDefinitions.PolicyTags);
+        command.Options.Add(AzureBackupOptionDefinitions.AksSnapshotResourceGroup);
+        command.Options.Add(AzureBackupOptionDefinitions.AksIncludedNamespaces);
+        command.Options.Add(AzureBackupOptionDefinitions.AksExcludedNamespaces);
+        command.Options.Add(AzureBackupOptionDefinitions.AksLabelSelectors);
+        command.Options.Add(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -121,6 +136,20 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.VaultTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultTierRetentionDuration.Name);
         options.ArchiveTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration.Name);
         options.DatasourceTypes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceTypes.Name);
+        options.SmartTier = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SmartTier.Name);
+        options.EnableSnapshotBackup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.EnableSnapshotBackup.Name);
+        options.SnapshotInstantRpRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDays.Name);
+        options.SnapshotInstantRpResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroup.Name);
+        options.EnableVaultTierCopy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.EnableVaultTierCopy.Name);
+        options.VaultTierCopyAfterDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultTierCopyAfterDays.Name);
+        options.BackupMode = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.BackupMode.Name);
+        options.PitrRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.PitrRetentionDays.Name);
+        options.PolicyTags = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.PolicyTags.Name);
+        options.AksSnapshotResourceGroup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksSnapshotResourceGroup.Name);
+        options.AksIncludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludedNamespaces.Name);
+        options.AksExcludedNamespaces = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksExcludedNamespaces.Name);
+        options.AksLabelSelectors = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksLabelSelectors.Name);
+        options.AksIncludeClusterScopeResources = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.AksIncludeClusterScopeResources.Name);
         return options;
     }
 
@@ -186,6 +215,20 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 VaultTierRetentionDuration = options.VaultTierRetentionDuration,
                 ArchiveTierRetentionDuration = options.ArchiveTierRetentionDuration,
                 DatasourceTypes = options.DatasourceTypes,
+                SmartTier = options.SmartTier,
+                EnableSnapshotBackup = options.EnableSnapshotBackup,
+                SnapshotInstantRpRetentionDays = options.SnapshotInstantRpRetentionDays,
+                SnapshotInstantRpResourceGroup = options.SnapshotInstantRpResourceGroup,
+                EnableVaultTierCopy = options.EnableVaultTierCopy,
+                VaultTierCopyAfterDays = options.VaultTierCopyAfterDays,
+                BackupMode = options.BackupMode,
+                PitrRetentionDays = options.PitrRetentionDays,
+                PolicyTags = options.PolicyTags,
+                AksSnapshotResourceGroup = options.AksSnapshotResourceGroup,
+                AksIncludedNamespaces = options.AksIncludedNamespaces,
+                AksExcludedNamespaces = options.AksExcludedNamespaces,
+                AksLabelSelectors = options.AksLabelSelectors,
+                AksIncludeClusterScopeResources = options.AksIncludeClusterScopeResources,
             };
 
             var result = await _azureBackupService.CreatePolicyAsync(

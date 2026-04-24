@@ -18,22 +18,44 @@ public class PolicyCreateValidatorTests
         WorkloadType = workload,
     };
 
-    // ----- Rule C: AKS gate -----
+    // ----- Rule C: AKS support (Stage 2 — AKS is now first-class) -----
 
     [Theory]
     [InlineData("AKS")]
     [InlineData("aks")]
-    public void Validate_AksWorkload_IsRejectedRegardlessOfOtherFlags(string workload)
+    public void Validate_AksWorkload_WithDailyRetention_PassesThrough(string workload)
     {
         var options = BaseOptions(workload);
         options.DailyRetentionDays = "30";
 
         var result = PolicyCreateValidator.Validate(options);
 
+        Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData("AKS", "--aks-included-namespaces", "ns1,ns2")]
+    [InlineData("AKS", "--aks-excluded-namespaces", "kube-system")]
+    [InlineData("AKS", "--aks-label-selectors", "env=prod")]
+    [InlineData("AKS", "--aks-include-cluster-scope-resources", "true")]
+    [InlineData("AKS", "--aks-snapshot-resource-group", "snapshots-rg")]
+    public void Validate_Aks_PerInstanceFlagsOnPolicyCreate_AreRejectedWithGuidance(string workload, string flag, string value)
+    {
+        var options = BaseOptions(workload);
+        options.DailyRetentionDays = "30";
+        switch (flag)
+        {
+            case "--aks-included-namespaces": options.AksIncludedNamespaces = value; break;
+            case "--aks-excluded-namespaces": options.AksExcludedNamespaces = value; break;
+            case "--aks-label-selectors": options.AksLabelSelectors = value; break;
+            case "--aks-include-cluster-scope-resources": options.AksIncludeClusterScopeResources = value; break;
+            case "--aks-snapshot-resource-group": options.AksSnapshotResourceGroup = value; break;
+        }
+
+        var result = PolicyCreateValidator.Validate(options);
+
         Assert.False(result.IsValid);
-        Assert.Single(result.Issues);
-        Assert.Equal("--workload-type", result.Issues[0].Flag);
-        Assert.Contains("AKS is not yet supported", result.Issues[0].Message);
+        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("per-backup-instance setting"));
     }
 
     // ----- Rule D: CosmosDB pass-through -----

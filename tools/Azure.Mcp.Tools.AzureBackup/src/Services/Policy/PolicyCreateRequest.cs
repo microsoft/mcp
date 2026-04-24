@@ -71,4 +71,20 @@ public sealed class PolicyCreateRequest
     public string? VaultTierRetentionDuration { get; set; }
     public string? ArchiveTierRetentionDuration { get; set; }
     public string? DatasourceTypes { get; set; }
+
+    // ===== Stage 2 expansion =====
+    public string? SmartTier { get; set; }
+    public string? EnableSnapshotBackup { get; set; }
+    public string? SnapshotInstantRpRetentionDays { get; set; }
+    public string? SnapshotInstantRpResourceGroup { get; set; }
+    public string? EnableVaultTierCopy { get; set; }
+    public string? VaultTierCopyAfterDays { get; set; }
+    public string? BackupMode { get; set; }
+    public string? PitrRetentionDays { get; set; }
+    public string? PolicyTags { get; set; }
+    public string? AksSnapshotResourceGroup { get; set; }
+    public string? AksIncludedNamespaces { get; set; }
+    public string? AksExcludedNamespaces { get; set; }
+    public string? AksLabelSelectors { get; set; }
+    public string? AksIncludeClusterScopeResources { get; set; }
 }

@@ -31,13 +31,19 @@ public static class DppPolicyBuilder
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(profile);
 
-        var dataStoreType = profile.UsesOperationalStore
-            ? DataStoreType.OperationalStore
-            : DataStoreType.VaultStore;
+        // --backup-mode allows storage workloads (Blob / ADLS / AzureFiles) to flip between
+        // continuous (PITR) and vaulted (discrete recovery points). Vaulted overrides the
+        // profile's IsContinuousBackup flag and switches the data store to VaultStore.
+        var isVaultedMode = IsVaultedMode(request.BackupMode);
+        var isContinuous = profile.IsContinuousBackup && !isVaultedMode;
+
+        var dataStoreType = isVaultedMode || !profile.UsesOperationalStore
+            ? DataStoreType.VaultStore
+            : DataStoreType.OperationalStore;
 
         var rules = new List<DataProtectionBasePolicyRule>
         {
-            BuildDefaultRetentionRule(request, profile, dataStoreType),
+            BuildDefaultRetentionRule(request, profile, dataStoreType, isContinuous),
         };
 
         // Per-tier retention rules (opt-in via positive weeks/months/years).
@@ -54,7 +60,7 @@ public static class DppPolicyBuilder
             rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(years * 365), dataStoreType, request));
         }
 
-        if (!profile.IsContinuousBackup)
+        if (!isContinuous)
         {
             rules.Add(BuildBackupRule(request, profile, dataStoreType));
         }
@@ -65,17 +71,23 @@ public static class DppPolicyBuilder
     private static DataProtectionRetentionRule BuildDefaultRetentionRule(
         PolicyCreateRequest request,
         DppDatasourceProfile profile,
-        DataStoreType dataStoreType)
+        DataStoreType dataStoreType,
+        bool isContinuous)
     {
-        var retentionDays = TryParsePositiveInt(request.DailyRetentionDays, out var dd)
-            ? dd
-            : profile.DefaultRetentionDays;
+        // For continuous (PITR) backups, --pitr-retention-days takes precedence over --daily-retention-days,
+        // matching the CLI's `--retention-duration-in-days` behaviour for Blob/ADLS continuous policies.
+        var retentionDays = isContinuous && TryParsePositiveInt(request.PitrRetentionDays, out var pitr)
+            ? pitr
+            : TryParsePositiveInt(request.DailyRetentionDays, out var dd)
+                ? dd
+                : profile.DefaultRetentionDays;
 
         var lifeCycle = new SourceLifeCycle(
             new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(retentionDays)),
             new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase"));
 
         AppendArchiveCopyIfRequested(lifeCycle, request);
+        AppendVaultTierCopyIfRequested(lifeCycle, request);
 
         return new DataProtectionRetentionRule("Default", [lifeCycle])
         {
@@ -123,6 +135,28 @@ public static class DppPolicyBuilder
         lifeCycle.TargetDataStoreCopySettings.Add(
             new TargetCopySetting(copySetting, new DataStoreInfoBase(DataStoreType.ArchiveStore, "DataStoreInfoBase")));
     }
+
+    private static void AppendVaultTierCopyIfRequested(SourceLifeCycle lifeCycle, PolicyCreateRequest request)
+    {
+        if (!ParseBool(request.EnableVaultTierCopy))
+        {
+            return;
+        }
+
+        var copySetting = TryParsePositiveInt(request.VaultTierCopyAfterDays, out var afterDays)
+            ? (DataProtectionBackupCopySetting)new CustomCopySetting { Duration = TimeSpan.FromDays(afterDays) }
+            : new CopyOnExpirySetting();
+
+        lifeCycle.TargetDataStoreCopySettings.Add(
+            new TargetCopySetting(copySetting, new DataStoreInfoBase(DataStoreType.VaultStore, "DataStoreInfoBase")));
+    }
+
+    private static bool IsVaultedMode(string? backupMode) =>
+        !string.IsNullOrWhiteSpace(backupMode) &&
+        backupMode.Trim().Equals("Vaulted", StringComparison.OrdinalIgnoreCase);
+
+    private static bool ParseBool(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out var b) && b;
 
     private static DataProtectionBackupRule BuildBackupRule(
         PolicyCreateRequest request,

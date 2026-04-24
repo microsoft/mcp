@@ -77,6 +77,29 @@ public static class AzureBackupOptionDefinitions
     public const string ArchiveTierRetentionDurationName = "archive-tier-retention-duration";
     public const string DatasourceTypesName = "datasource-types";
 
+    // Policy create — Stage 2 expansion flags
+    // RSV VM Smart Tier (ML-based archive recommendation)
+    public const string SmartTierName = "smart-tier";
+    // RSV SAPHANA snapshot/instance backups
+    public const string EnableSnapshotBackupName = "enable-snapshot-backup";
+    public const string SnapshotInstantRpRetentionDaysName = "snapshot-instant-rp-retention-days";
+    public const string SnapshotInstantRpResourceGroupName = "snapshot-instant-rp-resource-group";
+    // DPP Disk vault tier copy
+    public const string EnableVaultTierCopyName = "enable-vault-tier-copy";
+    public const string VaultTierCopyAfterDaysName = "vault-tier-copy-after-days";
+    // DPP Blob/ADLS/AzureFiles backup mode (Continuous vs Vaulted)
+    public const string BackupModeName = "backup-mode";
+    // DPP PITR retention for continuous Blob/ADLS
+    public const string PitrRetentionDaysName = "pitr-retention-days";
+    // DPP policy-level tags
+    public const string PolicyTagsName = "policy-tags";
+    // DPP AKS-specific
+    public const string AksSnapshotResourceGroupName = "aks-snapshot-resource-group";
+    public const string AksIncludedNamespacesName = "aks-included-namespaces";
+    public const string AksExcludedNamespacesName = "aks-excluded-namespaces";
+    public const string AksLabelSelectorsName = "aks-label-selectors";
+    public const string AksIncludeClusterScopeResourcesName = "aks-include-cluster-scope-resources";
+
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
         Description = "The name of the backup vault (Recovery Services vault or Backup vault).",
@@ -440,6 +463,92 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> DatasourceTypes = new($"--{DatasourceTypesName}")
     {
         Description = "Comma-separated ARM datasource types overriding the default for the workload (e.g., 'Microsoft.Compute/disks'). Advanced; DPP only.",
+        Required = false
+    };
+
+    // ===== Stage 2 expansion =====
+
+    public static readonly Option<string> SmartTier = new($"--{SmartTierName}")
+    {
+        Description = "Enable smart-tiering (ML-based archive recommendation): 'true' or 'false'. RSV VM only — equivalent to TieringMode=TierRecommended.",
+        Required = false
+    };
+
+    public static readonly Option<string> EnableSnapshotBackup = new($"--{EnableSnapshotBackupName}")
+    {
+        Description = "Enable snapshot/instance backups (HANA System Replication snapshot RPs): 'true' or 'false'. RSV SAPHANA only.",
+        Required = false
+    };
+
+    public static readonly Option<string> SnapshotInstantRpRetentionDays = new($"--{SnapshotInstantRpRetentionDaysName}")
+    {
+        Description = "Snapshot instant RP retention range in days. RSV SAPHANA snapshot only.",
+        Required = false
+    };
+
+    public static readonly Option<string> SnapshotInstantRpResourceGroup = new($"--{SnapshotInstantRpResourceGroupName}")
+    {
+        Description = "Resource group prefix for snapshot instant RPs. RSV SAPHANA snapshot only.",
+        Required = false
+    };
+
+    public static readonly Option<string> EnableVaultTierCopy = new($"--{EnableVaultTierCopyName}")
+    {
+        Description = "Enable vault-tier copy of operational store backups: 'true' or 'false'. DPP AzureDisk only.",
+        Required = false
+    };
+
+    public static readonly Option<string> VaultTierCopyAfterDays = new($"--{VaultTierCopyAfterDaysName}")
+    {
+        Description = "Days after which an operational backup is copied to the vault tier. DPP AzureDisk only.",
+        Required = false
+    };
+
+    public static readonly Option<string> BackupMode = new($"--{BackupModeName}")
+    {
+        Description = "Backup mode for storage workloads: 'Continuous' (default for AzureBlob, ADLS) or 'Vaulted' (discrete recovery points). DPP AzureBlob, AzureDataLakeStorage, AzureFiles.",
+        Required = false
+    };
+
+    public static readonly Option<string> PitrRetentionDays = new($"--{PitrRetentionDaysName}")
+    {
+        Description = "Point-in-time restore retention in days for continuous backups. DPP AzureBlob, AzureDataLakeStorage.",
+        Required = false
+    };
+
+    public static readonly Option<string> PolicyTags = new($"--{PolicyTagsName}")
+    {
+        Description = "Resource tags applied to the DPP backup policy as 'k1=v1,k2=v2'. DPP only.",
+        Required = false
+    };
+
+    public static readonly Option<string> AksSnapshotResourceGroup = new($"--{AksSnapshotResourceGroupName}")
+    {
+        Description = "Resource group used to store AKS volume snapshots created by Backup. DPP AKS only.",
+        Required = false
+    };
+
+    public static readonly Option<string> AksIncludedNamespaces = new($"--{AksIncludedNamespacesName}")
+    {
+        Description = "Comma-separated list of namespaces to include in the AKS backup policy default scope. DPP AKS only.",
+        Required = false
+    };
+
+    public static readonly Option<string> AksExcludedNamespaces = new($"--{AksExcludedNamespacesName}")
+    {
+        Description = "Comma-separated list of namespaces to exclude from the AKS backup policy default scope. DPP AKS only.",
+        Required = false
+    };
+
+    public static readonly Option<string> AksLabelSelectors = new($"--{AksLabelSelectorsName}")
+    {
+        Description = "Comma-separated label selectors (e.g. 'app=frontend,tier=web') applied to the AKS backup policy default scope. DPP AKS only.",
+        Required = false
+    };
+
+    public static readonly Option<string> AksIncludeClusterScopeResources = new($"--{AksIncludeClusterScopeResourcesName}")
+    {
+        Description = "Include cluster-scoped resources in the AKS backup policy: 'true' or 'false'. DPP AKS only.",
         Required = false
     };
 }

@@ -82,13 +82,26 @@ public static class RsvPolicyBuilder
             policy.TieringPolicy["ArchivedRP"] = tiering;
         }
 
+        // Smart tier (ML-recommended archive) overrides any explicit archive flag for VM workloads.
+        if (ParseBoolOrFalse(req.SmartTier))
+        {
+            policy.TieringPolicy["ArchivedRP"] = new BackupTieringPolicy { TieringMode = TieringMode.TierRecommended };
+        }
+
         return policy;
     }
 
     private static FileShareProtectionPolicy BuildFileShare(PolicyCreateRequest req)
     {
         var scheduleTimes = ParseScheduleTimes(req.ScheduleTimes);
-        var schedule = BuildSimpleSchedule(req, scheduleTimes);
+        // AFS supports the same Daily / Weekly / Hourly schedule shapes as IaasVm via SimpleSchedulePolicyV2.
+        // When --schedule-frequency Hourly is supplied, emit a V2 hourly schedule; otherwise fall back
+        // to the simple daily/weekly shape that the long-standing AFS policies use.
+        var freq = ParseScheduleRunType(req.ScheduleFrequency, defaultDaily: true);
+        BackupSchedulePolicy schedule = freq == ScheduleRunType.Hourly
+            ? new SimpleSchedulePolicyV2 { ScheduleRunFrequency = freq, HourlySchedule = BuildHourlySchedule(req) }
+            : BuildSimpleSchedule(req, scheduleTimes);
+
         var retention = BuildLongTermRetention(req, scheduleTimes);
 
         return new FileShareProtectionPolicy
@@ -134,6 +147,12 @@ public static class RsvPolicyBuilder
         // Log sub-policy: emitted by default for compatibility with existing live tests.
         policy.SubProtectionPolicy.Add(BuildVmWorkloadLogSubPolicy(req));
 
+        // SAPHANA snapshot/instance backup sub-policy (opt-in via --enable-snapshot-backup).
+        if (ParseBoolOrFalse(req.EnableSnapshotBackup))
+        {
+            policy.SubProtectionPolicy.Add(BuildVmWorkloadSnapshotSubPolicy(req, scheduleTimes));
+        }
+
         return policy;
     }
 
@@ -142,12 +161,47 @@ public static class RsvPolicyBuilder
         var fullSchedule = BuildVmWorkloadFullSchedule(req, scheduleTimes);
         var fullRetention = BuildLongTermRetention(req, scheduleTimes);
 
-        return new SubProtectionPolicy
+        var sub = new SubProtectionPolicy
         {
             PolicyType = new SubProtectionPolicyType("Full"),
             SchedulePolicy = fullSchedule,
             RetentionPolicy = fullRetention,
         };
+
+        var tiering = BuildTieringPolicy(req);
+        if (tiering is not null)
+        {
+            sub.TieringPolicy["ArchivedRP"] = tiering;
+        }
+
+        return sub;
+    }
+
+    private static SubProtectionPolicy BuildVmWorkloadSnapshotSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)
+    {
+        // Snapshot/instance backups for SAPHANA System Replication. Schedule mirrors the Full sub-policy.
+        var schedule = BuildVmWorkloadFullSchedule(req, scheduleTimes);
+        var retention = BuildLongTermRetention(req, scheduleTimes);
+
+        var sub = new SubProtectionPolicy
+        {
+            PolicyType = new SubProtectionPolicyType("SnapshotFull"),
+            SchedulePolicy = schedule,
+            RetentionPolicy = retention,
+        };
+
+        var details = new SnapshotBackupAdditionalDetails();
+        if (TryParsePositiveInt(req.SnapshotInstantRpRetentionDays, out var rp))
+        {
+            details.InstantRpRetentionRangeInDays = rp;
+        }
+        if (!string.IsNullOrWhiteSpace(req.SnapshotInstantRpResourceGroup))
+        {
+            details.InstantRPDetails = req.SnapshotInstantRpResourceGroup;
+        }
+        sub.SnapshotBackupAdditionalDetails = details;
+
+        return sub;
     }
 
     private static SubProtectionPolicy BuildVmWorkloadDifferentialSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)

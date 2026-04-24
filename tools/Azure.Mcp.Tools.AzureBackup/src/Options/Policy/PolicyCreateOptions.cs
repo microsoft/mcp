@@ -134,4 +134,48 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
 
     [JsonPropertyName(AzureBackupOptionDefinitions.DatasourceTypesName)]
     public string? DatasourceTypes { get; set; }
+
+    // ===== Stage 2 expansion =====
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.SmartTierName)]
+    public string? SmartTier { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.EnableSnapshotBackupName)]
+    public string? EnableSnapshotBackup { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDaysName)]
+    public string? SnapshotInstantRpRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.SnapshotInstantRpResourceGroupName)]
+    public string? SnapshotInstantRpResourceGroup { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.EnableVaultTierCopyName)]
+    public string? EnableVaultTierCopy { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.VaultTierCopyAfterDaysName)]
+    public string? VaultTierCopyAfterDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.BackupModeName)]
+    public string? BackupMode { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.PitrRetentionDaysName)]
+    public string? PitrRetentionDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.PolicyTagsName)]
+    public string? PolicyTags { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.AksSnapshotResourceGroupName)]
+    public string? AksSnapshotResourceGroup { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.AksIncludedNamespacesName)]
+    public string? AksIncludedNamespaces { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.AksExcludedNamespacesName)]
+    public string? AksExcludedNamespaces { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.AksLabelSelectorsName)]
+    public string? AksLabelSelectors { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.AksIncludeClusterScopeResourcesName)]
+    public string? AksIncludeClusterScopeResources { get; set; }
 }
