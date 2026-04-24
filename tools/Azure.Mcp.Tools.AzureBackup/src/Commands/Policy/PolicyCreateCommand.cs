@@ -70,6 +70,11 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.LogRetentionDays);
         command.Options.Add(AzureBackupOptionDefinitions.IsCompression);
         command.Options.Add(AzureBackupOptionDefinitions.IsSqlCompression);
+        // DPP (Backup vault) only.
+        command.Options.Add(AzureBackupOptionDefinitions.DataStoreType);
+        command.Options.Add(AzureBackupOptionDefinitions.VaultTierRetentionDuration);
+        command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration);
+        command.Options.Add(AzureBackupOptionDefinitions.DatasourceTypes);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -112,6 +117,10 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.LogRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogRetentionDays.Name);
         options.IsCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsCompression.Name);
         options.IsSqlCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsSqlCompression.Name);
+        options.DataStoreType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DataStoreType.Name);
+        options.VaultTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultTierRetentionDuration.Name);
+        options.ArchiveTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration.Name);
+        options.DatasourceTypes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceTypes.Name);
         return options;
     }
 

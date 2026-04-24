@@ -121,4 +121,17 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
 
     [JsonPropertyName(AzureBackupOptionDefinitions.IsSqlCompressionName)]
     public string? IsSqlCompression { get; set; }
+
+    // DPP (Backup vault) only flags.
+    [JsonPropertyName(AzureBackupOptionDefinitions.DataStoreTypeName)]
+    public string? DataStoreType { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.VaultTierRetentionDurationName)]
+    public string? VaultTierRetentionDuration { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.ArchiveTierRetentionDurationName)]
+    public string? ArchiveTierRetentionDuration { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.DatasourceTypesName)]
+    public string? DatasourceTypes { get; set; }
 }

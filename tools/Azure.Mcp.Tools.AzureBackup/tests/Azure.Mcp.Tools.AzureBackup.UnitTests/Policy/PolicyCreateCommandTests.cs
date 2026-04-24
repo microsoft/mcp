@@ -181,19 +181,49 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--log-retention-days");
         Assert.Contains(options, o => o.Name == "--is-compression");
         Assert.Contains(options, o => o.Name == "--is-sql-compression");
+        // DPP only.
+        Assert.Contains(options, o => o.Name == "--data-store-type");
+        Assert.Contains(options, o => o.Name == "--vault-tier-retention-duration");
+        Assert.Contains(options, o => o.Name == "--archive-tier-retention-duration");
+        Assert.Contains(options, o => o.Name == "--datasource-types");
     }
 
     [Fact]
-    public void BindOptions_DoesNotContainDppOnlyOptionsYet()
+    public void BindOptions_AllPolicyCreateOverhaulOptionsRegistered()
     {
-        // DPP-only option defs land in a later commit.
+        // Sanity check: the full set of new policy-create flags from the overhaul plan is registered.
         var command = _command.GetCommand();
-        var optionNames = command.Options.Select(o => o.Name).ToList();
+        var optionNames = command.Options.Select(o => o.Name).ToHashSet();
 
-        Assert.DoesNotContain("--data-store-type", optionNames);
-        Assert.DoesNotContain("--vault-tier-retention-duration", optionNames);
-        Assert.DoesNotContain("--archive-tier-retention-duration", optionNames);
-        Assert.DoesNotContain("--datasource-types", optionNames);
+        var expected = new[]
+        {
+            // common schedule
+            "--time-zone", "--schedule-frequency", "--schedule-times", "--schedule-days-of-week",
+            "--hourly-interval-hours", "--hourly-window-start-time", "--hourly-window-duration-hours",
+            // retention
+            "--weekly-retention-weeks", "--weekly-retention-days-of-week",
+            "--monthly-retention-months", "--monthly-retention-week-of-month",
+            "--monthly-retention-days-of-week", "--monthly-retention-days-of-month",
+            "--yearly-retention-years", "--yearly-retention-months",
+            "--yearly-retention-week-of-month", "--yearly-retention-days-of-week",
+            "--yearly-retention-days-of-month",
+            "--archive-tier-after-days", "--archive-tier-mode",
+            // RSV-VM
+            "--policy-sub-type", "--instant-rp-retention-days",
+            "--instant-rp-resource-group", "--snapshot-consistency",
+            // RSV-VmWorkload
+            "--full-schedule-frequency", "--full-schedule-days-of-week",
+            "--differential-schedule-days-of-week", "--differential-retention-days",
+            "--incremental-schedule-days-of-week", "--incremental-retention-days",
+            "--log-frequency-minutes", "--log-retention-days",
+            "--is-compression", "--is-sql-compression",
+            // DPP
+            "--data-store-type", "--vault-tier-retention-duration",
+            "--archive-tier-retention-duration", "--datasource-types",
+        };
+
+        var missing = expected.Where(n => !optionNames.Contains(n)).ToList();
+        Assert.Empty(missing);
     }
 
     [Fact]
