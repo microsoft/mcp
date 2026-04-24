@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
@@ -148,9 +148,9 @@ public class VmPowerStateCommandTests
         var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(_knownVmName, result.Result.Name);
-        Assert.Equal(state, result.Result.State);
-        Assert.True(result.Result.Completed);
+        Assert.Equal(_knownVmName, result.PowerState.Name);
+        Assert.Equal(state, result.PowerState.State);
+        Assert.True(result.PowerState.Completed);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class VmPowerStateCommandTests
         var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
 
         Assert.NotNull(result);
-        Assert.False(result.Result.Completed);
+        Assert.False(result.PowerState.Completed);
 
         await _computeService.Received(1).ChangeVmPowerStateAsync(
             _knownVmName,
@@ -387,10 +387,10 @@ public class VmPowerStateCommandTests
 
         var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.VmPowerStateCommandResult);
         Assert.NotNull(result);
-        Assert.Equal(_knownVmName, result.Result.Name);
-        Assert.Equal(_knownResourceGroup, result.Result.ResourceGroup);
-        Assert.Equal("start", result.Result.State);
-        Assert.True(result.Result.Completed);
+        Assert.Equal(_knownVmName, result.PowerState.Name);
+        Assert.Equal(_knownResourceGroup, result.PowerState.ResourceGroup);
+        Assert.Equal("start", result.PowerState.State);
+        Assert.True(result.PowerState.Completed);
     }
 
     [Fact]

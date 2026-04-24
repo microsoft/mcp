@@ -132,5 +132,5 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmPowerStateCommandResult(Models.VmPowerStateResult Result);
+    internal record VmPowerStateCommandResult(Models.VmPowerStateResult PowerState);
 }
