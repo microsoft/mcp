@@ -6,6 +6,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Overhauled `azurebackup policy create` with comprehensive schedule and retention support across both Recovery Services vaults (RSV) and Backup vaults (DPP). Added 38 new flags including:
+  - Common schedule controls: `--time-zone`, `--schedule-frequency` (Daily/Weekly/Hourly), `--schedule-times`, `--schedule-days-of-week`, plus hourly window flags (`--hourly-interval-hours`, `--hourly-window-start-time`, `--hourly-window-duration-hours`).
+  - Multi-tier retention: `--daily-retention-days`, `--weekly-retention-*`, `--monthly-retention-*`, `--yearly-retention-*` (weeks/months/days-of-month/days-of-week/week-of-month).
+  - Archive tiering for both vault types: `--archive-tier-mode` (CopyOnExpiry/TierAfter) and `--archive-tier-after-days`.
+  - RSV-VM Enhanced policies: `--policy-sub-type`, `--instant-rp-retention-days`, `--instant-rp-resource-group`, `--snapshot-consistency`.
+  - RSV VmWorkload (SQL/SAPHANA/SAPASE) sub-policies: `--full-schedule-*`, `--differential-schedule-*`, `--differential-retention-days`, `--incremental-schedule-*`, `--incremental-retention-days`, `--log-frequency-minutes`, `--log-retention-days`, `--is-compression`, `--is-sql-compression`.
+  - DPP-only flags: `--data-store-type`, `--vault-tier-retention-duration`, `--archive-tier-retention-duration`, `--datasource-types`.
+- Added a `PolicyCreateValidator` that returns a 400 with grouped validation messages before any Azure call when required fields are missing or combinations are invalid.
+- AKS workload now returns a clear validation error (`policy create` for AKS is deferred); CosmosDB remains pass-through preview.
+
 ### Breaking Changes
 
 ### Bugs Fixed

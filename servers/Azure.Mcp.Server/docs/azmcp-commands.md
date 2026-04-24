@@ -774,6 +774,8 @@ azmcp azurebackup vault update --subscription <subscription> \
 
 ```bash
 # Creates a backup policy for a specified workload type with schedule and retention rules.
+# Supports daily/weekly/hourly schedules, multi-tier retention (daily/weekly/monthly/yearly), and archive
+# tiering on both Recovery Services vaults (RSV) and Backup vaults (DPP).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy create --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -781,8 +783,50 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 --policy <policy> \
                                 --workload-type <workload-type> \
                                 [--vault-type <vault-type>] \
-                                [--schedule-time <schedule-time>] \
-                                [--daily-retention-days <daily-retention-days>]
+                                # --- Common schedule (RSV + DPP) ---
+                                [--time-zone <time-zone>] \
+                                [--schedule-frequency <Daily|Weekly|Hourly>] \
+                                [--schedule-times <HH:mm[,HH:mm...]>] \
+                                [--schedule-days-of-week <day[,day...]>] \
+                                [--hourly-interval-hours <4|6|8|12|24>] \
+                                [--hourly-window-start-time <HH:mm>] \
+                                [--hourly-window-duration-hours <4-24>] \
+                                # --- Retention (RSV + DPP) ---
+                                [--daily-retention-days <int>] \
+                                [--weekly-retention-weeks <int>] \
+                                [--weekly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-months <int>] \
+                                [--monthly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--monthly-retention-days-of-week <day[,day...]>] \
+                                [--monthly-retention-days-of-month <int[,int...]>] \
+                                [--yearly-retention-years <int>] \
+                                [--yearly-retention-months <month[,month...]>] \
+                                [--yearly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
+                                [--yearly-retention-days-of-week <day[,day...]>] \
+                                [--yearly-retention-days-of-month <int[,int...]>] \
+                                [--archive-tier-mode <CopyOnExpiry|TierAfter>] \
+                                [--archive-tier-after-days <int>] \
+                                # --- RSV-VM only ---
+                                [--policy-sub-type <Standard|Enhanced>] \
+                                [--instant-rp-retention-days <int>] \
+                                [--instant-rp-resource-group <resource-group>] \
+                                [--snapshot-consistency <ApplicationConsistent|FileSystemConsistent|Crash>] \
+                                # --- RSV VmWorkload (SQL/SAPHANA/SAPASE) ---
+                                [--full-schedule-frequency <Daily|Weekly>] \
+                                [--full-schedule-days-of-week <day[,day...]>] \
+                                [--differential-schedule-days-of-week <day[,day...]>] \
+                                [--differential-retention-days <int>] \
+                                [--incremental-schedule-days-of-week <day[,day...]>] \
+                                [--incremental-retention-days <int>] \
+                                [--log-frequency-minutes <15-240>] \
+                                [--log-retention-days <int>] \
+                                [--is-compression <true|false>] \
+                                [--is-sql-compression <true|false>] \
+                                # --- DPP (Backup vault) only ---
+                                [--data-store-type <OperationalStore|VaultStore|ArchiveStore>] \
+                                [--vault-tier-retention-duration <ISO8601>] \
+                                [--archive-tier-retention-duration <ISO8601>] \
+                                [--datasource-types <type[,type...]>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
