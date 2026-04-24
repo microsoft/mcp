@@ -26,6 +26,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - **AKS first-class support**: AKS policy create is no longer hard-blocked. The validator now treats AKS as a regular DPP discrete workload, while the AKS per-instance scoping flags (`--aks-included-namespaces`, `--aks-excluded-namespaces`, `--aks-label-selectors`, `--aks-include-cluster-scope-resources`, `--aks-snapshot-resource-group`) are surfaced and rejected on `policy create` with guidance to supply them to `azurebackup protecteditem protect` instead.
   - **Policy tags (RSV)**: `--policy-tags` accepts a comma-separated `key=value` list and writes ARM resource tags onto the Recovery Services backup policy. (DPP backup policies are sub-resources and cannot carry tags; the validator rejects `--policy-tags` for DPP with a clear message.)
 - AKS workload is now first-class for `policy create`; CosmosDB remains pass-through preview.
+- Expanded validator workload-type aliases: `azurebackup policy create` now classifies the full `RsvDatasourceRegistry`/`DppDatasourceRegistry` alias surface (e.g., `AzureIaasVM`, `AzureVM`, `MSSQL`, `SAPHANA`, `SAPASE`, `AzureFileShare`, `AzureDisk`, `AzureBlob`, `ADLS`, `AKS`, `CosmosDB`, etc.) so policy bodies are routed to the correct vault/builder regardless of the alias the caller uses. Previously several aliases fell through to `Unknown` and were rejected before the Azure call.
 
 ### Breaking Changes
 

@@ -353,12 +353,12 @@ public static class PolicyCreateValidator
 
         return workloadType.ToLowerInvariant() switch
         {
-            "vm" or "azurevm" => WorkloadFamily.RsvVm,
-            "sql" or "sqldatabase" or "saphana" or "saphanadatabase" or "sapase" => WorkloadFamily.RsvVmWorkload,
-            "azurefileshare" => WorkloadFamily.RsvFileShare,
-            "azuredisk" or "elasticsan" or "postgresqlflexible" or "cosmosdb" or "cosmos" => WorkloadFamily.DppDiscrete,
-            "aks" or "kubernetes" => WorkloadFamily.DppAks,
-            "azureblob" or "adls" or "azuredatalakestorage" or "azurefiles" => WorkloadFamily.DppStorageBackupMode,
+            "vm" or "azurevm" or "iaasvm" or "azureiaasvm" or "virtualmachine" or "iaasvmcontainer" => WorkloadFamily.RsvVm,
+            "sql" or "sqldatabase" or "sqldb" or "mssql" or "azuresql" or "saphana" or "saphanadatabase" or "saphanadb" or "hana" or "sapase" or "ase" or "sybase" => WorkloadFamily.RsvVmWorkload,
+            "azurefileshare" or "fileshare" or "afs" => WorkloadFamily.RsvFileShare,
+            "azuredisk" or "disk" or "elasticsan" or "esan" or "postgresqlflexible" or "postgres" or "pgflex" or "cosmosdb" or "cosmos" => WorkloadFamily.DppDiscrete,
+            "aks" or "kubernetes" or "kubernetescluster" => WorkloadFamily.DppAks,
+            "azureblob" or "blob" or "adls" or "azuredatalakestorage" or "datalake" or "datalakestorage" or "azurefiles" or "files" or "afsvaulted" => WorkloadFamily.DppStorageBackupMode,
             _ => WorkloadFamily.Unknown,
         };
     }
