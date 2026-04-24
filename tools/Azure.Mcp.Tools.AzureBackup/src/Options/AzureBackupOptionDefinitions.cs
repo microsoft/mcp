@@ -38,6 +38,21 @@ public static class AzureBackupOptionDefinitions
     public const string HourlyWindowStartTimeName = "hourly-window-start-time";
     public const string HourlyWindowDurationHoursName = "hourly-window-duration-hours";
 
+    // Policy create — retention flags (new in policy create overhaul)
+    public const string WeeklyRetentionWeeksName = "weekly-retention-weeks";
+    public const string WeeklyRetentionDaysOfWeekName = "weekly-retention-days-of-week";
+    public const string MonthlyRetentionMonthsName = "monthly-retention-months";
+    public const string MonthlyRetentionWeekOfMonthName = "monthly-retention-week-of-month";
+    public const string MonthlyRetentionDaysOfWeekName = "monthly-retention-days-of-week";
+    public const string MonthlyRetentionDaysOfMonthName = "monthly-retention-days-of-month";
+    public const string YearlyRetentionYearsName = "yearly-retention-years";
+    public const string YearlyRetentionMonthsName = "yearly-retention-months";
+    public const string YearlyRetentionWeekOfMonthName = "yearly-retention-week-of-month";
+    public const string YearlyRetentionDaysOfWeekName = "yearly-retention-days-of-week";
+    public const string YearlyRetentionDaysOfMonthName = "yearly-retention-days-of-month";
+    public const string ArchiveTierAfterDaysName = "archive-tier-after-days";
+    public const string ArchiveTierModeName = "archive-tier-mode";
+
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
         Description = "The name of the backup vault (Recovery Services vault or Backup vault).",
@@ -215,6 +230,84 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> HourlyWindowDurationHours = new($"--{HourlyWindowDurationHoursName}")
     {
         Description = "Duration of the hourly backup window in hours (e.g., 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Required = false
+    };
+
+    public static readonly Option<string> WeeklyRetentionWeeks = new($"--{WeeklyRetentionWeeksName}")
+    {
+        Description = "Number of weeks to keep weekly recovery points. Pair with --weekly-retention-days-of-week.",
+        Required = false
+    };
+
+    public static readonly Option<string> WeeklyRetentionDaysOfWeek = new($"--{WeeklyRetentionDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week tagged for weekly retention (e.g., 'Sunday' or 'Saturday,Sunday'). Pair with --weekly-retention-weeks.",
+        Required = false
+    };
+
+    public static readonly Option<string> MonthlyRetentionMonths = new($"--{MonthlyRetentionMonthsName}")
+    {
+        Description = "Number of months to keep monthly recovery points. Combine with either --monthly-retention-days-of-month (absolute) OR --monthly-retention-week-of-month + --monthly-retention-days-of-week (relative).",
+        Required = false
+    };
+
+    public static readonly Option<string> MonthlyRetentionWeekOfMonth = new($"--{MonthlyRetentionWeekOfMonthName}")
+    {
+        Description = "Which week of the month to tag for monthly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with --monthly-retention-days-of-week (relative scheme).",
+        Required = false
+    };
+
+    public static readonly Option<string> MonthlyRetentionDaysOfWeek = new($"--{MonthlyRetentionDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week for the monthly retention tag (e.g., 'Sunday'). Use with --monthly-retention-week-of-month (relative scheme).",
+        Required = false
+    };
+
+    public static readonly Option<string> MonthlyRetentionDaysOfMonth = new($"--{MonthlyRetentionDaysOfMonthName}")
+    {
+        Description = "Comma-separated days of the month for monthly retention (1-28 or 'Last'; e.g., '1,15,Last'). Absolute scheme; mutually exclusive with --monthly-retention-week-of-month.",
+        Required = false
+    };
+
+    public static readonly Option<string> YearlyRetentionYears = new($"--{YearlyRetentionYearsName}")
+    {
+        Description = "Number of years to keep yearly recovery points. Combine with --yearly-retention-months and either --yearly-retention-days-of-month (absolute) OR --yearly-retention-week-of-month + --yearly-retention-days-of-week (relative).",
+        Required = false
+    };
+
+    public static readonly Option<string> YearlyRetentionMonths = new($"--{YearlyRetentionMonthsName}")
+    {
+        Description = "Comma-separated months tagged for yearly retention (e.g., 'January' or 'January,July').",
+        Required = false
+    };
+
+    public static readonly Option<string> YearlyRetentionWeekOfMonth = new($"--{YearlyRetentionWeekOfMonthName}")
+    {
+        Description = "Which week of the selected month(s) to tag for yearly retention: 'First', 'Second', 'Third', 'Fourth', or 'Last'. Use with --yearly-retention-days-of-week (relative scheme).",
+        Required = false
+    };
+
+    public static readonly Option<string> YearlyRetentionDaysOfWeek = new($"--{YearlyRetentionDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week for the yearly retention tag (e.g., 'Sunday'). Use with --yearly-retention-week-of-month (relative scheme).",
+        Required = false
+    };
+
+    public static readonly Option<string> YearlyRetentionDaysOfMonth = new($"--{YearlyRetentionDaysOfMonthName}")
+    {
+        Description = "Comma-separated days of the selected month(s) for yearly retention (1-28 or 'Last'; e.g., '1,Last'). Absolute scheme; mutually exclusive with --yearly-retention-week-of-month.",
+        Required = false
+    };
+
+    public static readonly Option<string> ArchiveTierAfterDays = new($"--{ArchiveTierAfterDaysName}")
+    {
+        Description = "Move recovery points to the archive tier after this many days. Pair with --archive-tier-mode.",
+        Required = false
+    };
+
+    public static readonly Option<string> ArchiveTierMode = new($"--{ArchiveTierModeName}")
+    {
+        Description = "Archive tiering mode: 'TierAfter' (always tier after --archive-tier-after-days) or 'TierRecommended' (tier when service recommends it).",
         Required = false
     };
 }

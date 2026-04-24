@@ -37,4 +37,44 @@ public class PolicyCreateOptions : BaseAzureBackupOptions
 
     [JsonPropertyName(AzureBackupOptionDefinitions.HourlyWindowDurationHoursName)]
     public string? HourlyWindowDurationHours { get; set; }
+
+    // Retention flags (new in policy create overhaul; not yet consumed by builders).
+    [JsonPropertyName(AzureBackupOptionDefinitions.WeeklyRetentionWeeksName)]
+    public string? WeeklyRetentionWeeks { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.WeeklyRetentionDaysOfWeekName)]
+    public string? WeeklyRetentionDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionMonthsName)]
+    public string? MonthlyRetentionMonths { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionWeekOfMonthName)]
+    public string? MonthlyRetentionWeekOfMonth { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfWeekName)]
+    public string? MonthlyRetentionDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfMonthName)]
+    public string? MonthlyRetentionDaysOfMonth { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionYearsName)]
+    public string? YearlyRetentionYears { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionMonthsName)]
+    public string? YearlyRetentionMonths { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionWeekOfMonthName)]
+    public string? YearlyRetentionWeekOfMonth { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionDaysOfWeekName)]
+    public string? YearlyRetentionDaysOfWeek { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonthName)]
+    public string? YearlyRetentionDaysOfMonth { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.ArchiveTierAfterDaysName)]
+    public string? ArchiveTierAfterDays { get; set; }
+
+    [JsonPropertyName(AzureBackupOptionDefinitions.ArchiveTierModeName)]
+    public string? ArchiveTierMode { get; set; }
 }

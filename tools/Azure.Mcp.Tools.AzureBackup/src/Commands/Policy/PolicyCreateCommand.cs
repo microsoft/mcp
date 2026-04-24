@@ -40,6 +40,20 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.HourlyIntervalHours);
         command.Options.Add(AzureBackupOptionDefinitions.HourlyWindowStartTime);
         command.Options.Add(AzureBackupOptionDefinitions.HourlyWindowDurationHours);
+        // Retention flags (new in policy create overhaul; bound here, consumed by builders in a later commit).
+        command.Options.Add(AzureBackupOptionDefinitions.WeeklyRetentionWeeks);
+        command.Options.Add(AzureBackupOptionDefinitions.WeeklyRetentionDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.MonthlyRetentionMonths);
+        command.Options.Add(AzureBackupOptionDefinitions.MonthlyRetentionWeekOfMonth);
+        command.Options.Add(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfMonth);
+        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionYears);
+        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionMonths);
+        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionWeekOfMonth);
+        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonth);
+        command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierAfterDays);
+        command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierMode);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -55,6 +69,19 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.HourlyIntervalHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyIntervalHours.Name);
         options.HourlyWindowStartTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowStartTime.Name);
         options.HourlyWindowDurationHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowDurationHours.Name);
+        options.WeeklyRetentionWeeks = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WeeklyRetentionWeeks.Name);
+        options.WeeklyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WeeklyRetentionDaysOfWeek.Name);
+        options.MonthlyRetentionMonths = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionMonths.Name);
+        options.MonthlyRetentionWeekOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionWeekOfMonth.Name);
+        options.MonthlyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfWeek.Name);
+        options.MonthlyRetentionDaysOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.MonthlyRetentionDaysOfMonth.Name);
+        options.YearlyRetentionYears = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionYears.Name);
+        options.YearlyRetentionMonths = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionMonths.Name);
+        options.YearlyRetentionWeekOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionWeekOfMonth.Name);
+        options.YearlyRetentionDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionDaysOfWeek.Name);
+        options.YearlyRetentionDaysOfMonth = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.YearlyRetentionDaysOfMonth.Name);
+        options.ArchiveTierAfterDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierAfterDays.Name);
+        options.ArchiveTierMode = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierMode.Name);
         return options;
     }
 

@@ -151,18 +151,33 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--hourly-interval-hours");
         Assert.Contains(options, o => o.Name == "--hourly-window-start-time");
         Assert.Contains(options, o => o.Name == "--hourly-window-duration-hours");
+        // Retention flags added by the policy create overhaul.
+        Assert.Contains(options, o => o.Name == "--weekly-retention-weeks");
+        Assert.Contains(options, o => o.Name == "--weekly-retention-days-of-week");
+        Assert.Contains(options, o => o.Name == "--monthly-retention-months");
+        Assert.Contains(options, o => o.Name == "--monthly-retention-week-of-month");
+        Assert.Contains(options, o => o.Name == "--monthly-retention-days-of-week");
+        Assert.Contains(options, o => o.Name == "--monthly-retention-days-of-month");
+        Assert.Contains(options, o => o.Name == "--yearly-retention-years");
+        Assert.Contains(options, o => o.Name == "--yearly-retention-months");
+        Assert.Contains(options, o => o.Name == "--yearly-retention-week-of-month");
+        Assert.Contains(options, o => o.Name == "--yearly-retention-days-of-week");
+        Assert.Contains(options, o => o.Name == "--yearly-retention-days-of-month");
+        Assert.Contains(options, o => o.Name == "--archive-tier-after-days");
+        Assert.Contains(options, o => o.Name == "--archive-tier-mode");
     }
 
     [Fact]
-    public void BindOptions_DoesNotContainRetentionOptionsYet()
+    public void BindOptions_DoesNotContainRsvOrDppSpecificOptionsYet()
     {
-        // Retention option defs land in a later commit of the policy create overhaul.
+        // RSV-VM, RSV-VmWorkload, and DPP-only option defs land in later commits.
         var command = _command.GetCommand();
         var optionNames = command.Options.Select(o => o.Name).ToList();
 
-        Assert.DoesNotContain("--weekly-retention-weeks", optionNames);
-        Assert.DoesNotContain("--monthly-retention-months", optionNames);
-        Assert.DoesNotContain("--yearly-retention-years", optionNames);
+        Assert.DoesNotContain("--policy-sub-type", optionNames);
+        Assert.DoesNotContain("--instant-rp-retention-days", optionNames);
+        Assert.DoesNotContain("--log-frequency-minutes", optionNames);
+        Assert.DoesNotContain("--data-store-type", optionNames);
     }
 
     [Fact]
