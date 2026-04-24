@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Linq;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Xunit;
@@ -208,5 +209,146 @@ public class RsvPolicyBuilderTests
         Assert.Equal(RetentionScheduleFormat.Weekly, monthly!.RetentionScheduleFormatType);
         Assert.Equal(BackupDayOfWeek.Friday, monthly.RetentionScheduleWeekly!.DaysOfTheWeek[0]);
         Assert.Equal(BackupWeekOfMonth.Last, monthly.RetentionScheduleWeekly.WeeksOfTheMonth[0]);
+    }
+
+    // ===== Stage 2 tests =====
+
+    [Fact]
+    public void Build_VmSmartTier_SetsTierRecommended()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureIaasVM",
+            DailyRetentionDays = "30",
+            SmartTier = "true",
+        };
+
+        var policy = (IaasVmProtectionPolicy)RsvPolicyBuilder.Build(req);
+
+        Assert.True(policy.TieringPolicy.ContainsKey("ArchivedRP"));
+        Assert.Equal(TieringMode.TierRecommended, policy.TieringPolicy["ArchivedRP"].TieringMode);
+    }
+
+    [Fact]
+    public void Build_VmSmartTier_OverridesArchiveTierAfterDays()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureIaasVM",
+            DailyRetentionDays = "30",
+            ArchiveTierAfterDays = "60",
+            SmartTier = "true",
+        };
+
+        var policy = (IaasVmProtectionPolicy)RsvPolicyBuilder.Build(req);
+
+        Assert.Equal(TieringMode.TierRecommended, policy.TieringPolicy["ArchivedRP"].TieringMode);
+    }
+
+    [Fact]
+    public void Build_HanaWithSnapshotBackup_AddsSnapshotFullSubPolicy()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "SAPHANA",
+            DailyRetentionDays = "30",
+            EnableSnapshotBackup = "true",
+            SnapshotInstantRpRetentionDays = "5",
+            SnapshotInstantRpResourceGroup = "snapRG",
+        };
+
+        var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
+
+        Assert.Contains(policy.SubProtectionPolicy, sp => sp.PolicyType.ToString() == "SnapshotFull");
+        var snap = policy.SubProtectionPolicy.First(sp => sp.PolicyType.ToString() == "SnapshotFull");
+        Assert.NotNull(snap.SnapshotBackupAdditionalDetails);
+        Assert.Equal(5, snap.SnapshotBackupAdditionalDetails!.InstantRpRetentionRangeInDays);
+        Assert.Equal("snapRG", snap.SnapshotBackupAdditionalDetails.InstantRPDetails);
+    }
+
+    [Fact]
+    public void Build_HanaWithoutSnapshotBackup_DoesNotAddSnapshotSubPolicy()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "SAPHANA",
+            DailyRetentionDays = "30",
+        };
+
+        var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
+
+        Assert.DoesNotContain(policy.SubProtectionPolicy, sp => sp.PolicyType.ToString() == "SnapshotFull");
+    }
+
+    [Fact]
+    public void Build_VmWorkloadFullSubPolicy_PropagatesArchiveTier()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "MSSQL",
+            DailyRetentionDays = "30",
+            ArchiveTierMode = "TierAfter",
+            ArchiveTierAfterDays = "90",
+        };
+
+        var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
+        var fullSub = policy.SubProtectionPolicy.First(sp => sp.PolicyType.ToString() == "Full");
+
+        Assert.True(fullSub.TieringPolicy.ContainsKey("ArchivedRP"));
+        Assert.Equal(TieringMode.TierAfter, fullSub.TieringPolicy["ArchivedRP"].TieringMode);
+        Assert.Equal(90, fullSub.TieringPolicy["ArchivedRP"].DurationValue);
+    }
+
+    [Fact]
+    public void Build_AzureFileShareHourly_ProducesV2WithHourlySchedule()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureFileShare",
+            ScheduleFrequency = "Hourly",
+            HourlyIntervalHours = "6",
+            HourlyWindowStartTime = "09:00",
+            HourlyWindowDurationHours = "12",
+            DailyRetentionDays = "30",
+        };
+
+        var policy = (FileShareProtectionPolicy)RsvPolicyBuilder.Build(req);
+
+        var schedule = Assert.IsType<SimpleSchedulePolicyV2>(policy.SchedulePolicy);
+        Assert.Equal(ScheduleRunType.Hourly, schedule.ScheduleRunFrequency);
+        Assert.Equal(6, schedule.HourlySchedule!.Interval);
+        Assert.Equal(12, schedule.HourlySchedule.ScheduleWindowDuration);
+    }
+
+    [Fact]
+    public void Build_AzureFileShareMultiTier_PopulatesWeeklyMonthlyYearly()
+    {
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureFileShare",
+            DailyRetentionDays = "30",
+            WeeklyRetentionWeeks = "12",
+            WeeklyRetentionDaysOfWeek = "Sunday",
+            MonthlyRetentionMonths = "12",
+            MonthlyRetentionDaysOfMonth = "1",
+            YearlyRetentionYears = "5",
+            YearlyRetentionMonths = "January",
+            YearlyRetentionDaysOfMonth = "1",
+        };
+
+        var policy = (FileShareProtectionPolicy)RsvPolicyBuilder.Build(req);
+        var retention = Assert.IsType<LongTermRetentionPolicy>(policy.RetentionPolicy);
+
+        Assert.Equal(30, retention.DailySchedule!.RetentionDuration!.Count);
+        Assert.Equal(12, retention.WeeklySchedule!.RetentionDuration!.Count);
+        Assert.Equal(12, retention.MonthlySchedule!.RetentionDuration!.Count);
+        Assert.Equal(5, retention.YearlySchedule!.RetentionDuration!.Count);
     }
 }

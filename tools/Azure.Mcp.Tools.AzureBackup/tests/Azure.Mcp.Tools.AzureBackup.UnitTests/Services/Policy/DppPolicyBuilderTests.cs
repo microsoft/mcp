@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Azure.ResourceManager.DataProtectionBackup.Models;
@@ -134,5 +135,121 @@ public class DppPolicyBuilderTests
         Assert.EndsWith("/PT4H", interval);
         Assert.Contains("14:30:00", interval);
         Assert.Equal("UTC", trigger.Schedule.TimeZone);
+    }
+
+    // ===== Stage 2 tests =====
+
+    [Fact]
+    public void Build_DiskWithVaultTierCopy_AppendsVaultStoreCopySetting()
+    {
+        var profile = DppDatasourceRegistry.Resolve("AzureDisk");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureDisk",
+            EnableVaultTierCopy = "true",
+            VaultTierCopyAfterDays = "7",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
+        var lifeCycle = defaultRule.Lifecycles[0];
+
+        Assert.Single(lifeCycle.TargetDataStoreCopySettings);
+        var copy = lifeCycle.TargetDataStoreCopySettings[0];
+        Assert.Equal(DataStoreType.VaultStore, copy.DataStore.DataStoreType);
+        var custom = Assert.IsType<CustomCopySetting>(copy.CopyAfter);
+        Assert.Equal(TimeSpan.FromDays(7), custom.Duration);
+    }
+
+    [Fact]
+    public void Build_BlobVaultedMode_EmitsBackupRuleAndUsesVaultStore()
+    {
+        var profile = DppDatasourceRegistry.Resolve("AzureBlob");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureBlob",
+            BackupMode = "Vaulted",
+            DailyRetentionDays = "30",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+
+        Assert.Equal(2, policy.PolicyRules.Count);
+        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
+        Assert.Equal(DataStoreType.VaultStore, defaultRule.Lifecycles[0].SourceDataStore.DataStoreType);
+        Assert.IsType<DataProtectionBackupRule>(policy.PolicyRules[1]);
+    }
+
+    [Fact]
+    public void Build_BlobContinuousWithPitrRetentionDays_OverridesDefault()
+    {
+        var profile = DppDatasourceRegistry.Resolve("AzureBlob");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureBlob",
+            PitrRetentionDays = "60",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
+        var deleteSetting = (DataProtectionBackupAbsoluteDeleteSetting)defaultRule.Lifecycles[0].DeleteAfter;
+
+        Assert.Equal(TimeSpan.FromDays(60), deleteSetting.Duration);
+    }
+
+    [Fact]
+    public void Build_AdlsVaultedMode_EmitsDiscreteBackupRule()
+    {
+        var profile = DppDatasourceRegistry.Resolve("ADLS");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureDataLakeStorage",
+            BackupMode = "Vaulted",
+            DailyRetentionDays = "30",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+
+        Assert.Equal(2, policy.PolicyRules.Count);
+        Assert.IsType<DataProtectionBackupRule>(policy.PolicyRules[1]);
+    }
+
+    [Fact]
+    public void Build_AzureFilesVaulted_ProducesDiscreteBackupRule()
+    {
+        var profile = DppDatasourceRegistry.Resolve("AzureFiles");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AzureFiles",
+            BackupMode = "Vaulted",
+            DailyRetentionDays = "30",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+
+        Assert.Equal(2, policy.PolicyRules.Count);
+        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
+        Assert.Equal(DataStoreType.VaultStore, defaultRule.Lifecycles[0].SourceDataStore.DataStoreType);
+    }
+
+    [Fact]
+    public void Build_AksMinimal_ProducesPolicyForKubernetesArmType()
+    {
+        var profile = DppDatasourceRegistry.Resolve("AKS");
+        var req = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "AKS",
+        };
+
+        var policy = DppPolicyBuilder.Build(req, profile);
+
+        Assert.Contains("Microsoft.ContainerService", policy.DataSourceTypes[0]);
+        Assert.NotEmpty(policy.PolicyRules);
     }
 }

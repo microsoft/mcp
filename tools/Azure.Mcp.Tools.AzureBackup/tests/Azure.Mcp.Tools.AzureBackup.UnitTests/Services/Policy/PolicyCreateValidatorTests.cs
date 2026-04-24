@@ -554,4 +554,171 @@ public class PolicyCreateValidatorTests
         Assert.Contains(result.Issues, i => i.Flag == "--archive-tier-mode");
         Assert.Contains(result.Issues, i => i.Flag == "--log-frequency-minutes");
     }
+
+    // ===== Stage 2 validator shape rules =====
+
+    [Fact]
+    public void Validate_SmartTier_RequiresVmWorkload()
+    {
+        var options = BaseOptions("MSSQL");
+        options.DailyRetentionDays = "30";
+        options.SmartTier = "true";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--smart-tier");
+    }
+
+    [Fact]
+    public void Validate_SmartTier_OnVm_PassesThrough()
+    {
+        var options = BaseOptions("VM");
+        options.DailyRetentionDays = "30";
+        options.SmartTier = "true";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_SnapshotBackup_RequiresHana()
+    {
+        var options = BaseOptions("MSSQL");
+        options.DailyRetentionDays = "30";
+        options.EnableSnapshotBackup = "true";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--enable-snapshot-backup");
+    }
+
+    [Fact]
+    public void Validate_SnapshotBackup_OnHana_PassesThrough()
+    {
+        var options = BaseOptions("SAPHANA");
+        options.DailyRetentionDays = "30";
+        options.EnableSnapshotBackup = "true";
+        options.SnapshotInstantRpRetentionDays = "5";
+        options.SnapshotInstantRpResourceGroup = "snapRG";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_VaultTierCopy_RequiresAzureDisk()
+    {
+        var options = BaseOptions("AzureBlob");
+        options.BackupMode = "Vaulted";
+        options.DailyRetentionDays = "30";
+        options.EnableVaultTierCopy = "true";
+        options.VaultTierCopyAfterDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--enable-vault-tier-copy");
+    }
+
+    [Fact]
+    public void Validate_VaultTierCopy_PartialInput_Fails()
+    {
+        var options = BaseOptions("AzureDisk");
+        options.EnableVaultTierCopy = "true";
+        // Missing --vault-tier-copy-after-days.
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--vault-tier-copy-after-days");
+    }
+
+    [Fact]
+    public void Validate_VaultTierCopy_OnDisk_PassesThrough()
+    {
+        var options = BaseOptions("AzureDisk");
+        options.DailyRetentionDays = "30";
+        options.EnableVaultTierCopy = "true";
+        options.VaultTierCopyAfterDays = "7";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_BackupMode_RequiresStorageWorkload()
+    {
+        var options = BaseOptions("VM");
+        options.DailyRetentionDays = "30";
+        options.BackupMode = "Vaulted";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--backup-mode");
+    }
+
+    [Fact]
+    public void Validate_BackupMode_VaultedOnBlob_PassesThrough()
+    {
+        var options = BaseOptions("AzureBlob");
+        options.BackupMode = "Vaulted";
+        options.DailyRetentionDays = "30";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_PitrRetentionDays_RequiresStorageWorkload()
+    {
+        var options = BaseOptions("AzureDisk");
+        options.PitrRetentionDays = "60";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--pitr-retention-days");
+    }
+
+    [Fact]
+    public void Validate_PitrRetentionDays_OnBlob_PassesThrough()
+    {
+        var options = BaseOptions("AzureBlob");
+        options.PitrRetentionDays = "60";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_PolicyTags_RejectedOnDpp()
+    {
+        var options = BaseOptions("AzureDisk");
+        options.PolicyTags = "env=prod,team=backup";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--policy-tags");
+    }
+
+    [Fact]
+    public void Validate_PolicyTags_AllowedOnRsv()
+    {
+        var options = BaseOptions("VM");
+        options.DailyRetentionDays = "30";
+        options.PolicyTags = "env=prod,team=backup";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid);
+    }
 }
