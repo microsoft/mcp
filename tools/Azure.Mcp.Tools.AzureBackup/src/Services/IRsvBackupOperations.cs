@@ -65,13 +65,10 @@ public interface IRsvBackupOperations
         CancellationToken cancellationToken);
 
     Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string workloadType,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);

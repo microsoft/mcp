@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -317,14 +318,21 @@ public class AzureBackupServiceTests
         _rsvOps.GetVaultAsync("v", "rg", "sub", null, null, Arg.Any<CancellationToken>())
             .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
         _rsvOps.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM",
-            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM" && r.DailyRetentionDays == "30"),
+            "v", "rg", "sub",
             Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(baseResult);
 
+        var request = new PolicyCreateRequest
+        {
+            Policy = "p",
+            WorkloadType = "VM",
+            DailyRetentionDays = "30",
+        };
+
         var result = await _service.CreatePolicyAsync(
-            "v", "rg", "sub", "p", "VM", null,
-            null, "30",
+            request,
+            "v", "rg", "sub", null,
             null, null, CancellationToken.None);
 
         Assert.Equal("Succeeded", result.Status);

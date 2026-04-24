@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
@@ -55,8 +56,9 @@ public class PolicyCreateCommandTests
         var expected = new OperationResult("Succeeded", null, "Policy created successfully");
 
         _backupService.CreatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("myPolicy"), Arg.Is("AzureIaasVM"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "myPolicy" && r.WorkloadType == "AzureIaasVM"),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
@@ -82,8 +84,9 @@ public class PolicyCreateCommandTests
     {
         // Arrange
         _backupService.CreatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("AzureIaasVM"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "AzureIaasVM"),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -106,8 +109,9 @@ public class PolicyCreateCommandTests
         if (shouldSucceed)
         {
             _backupService.CreatePolicyAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("VM"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
         }
@@ -233,8 +237,9 @@ public class PolicyCreateCommandTests
         var expected = new OperationResult("Succeeded", null, "Policy created successfully");
 
         _backupService.CreatePolicyAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<PolicyCreateRequest>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
@@ -261,8 +266,9 @@ public class PolicyCreateCommandTests
     {
         // Arrange
         _backupService.CreatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"), Arg.Is("VM"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
