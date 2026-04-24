@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
+using Microsoft.Mcp.Core.TestUtilities;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
@@ -55,12 +56,13 @@ public class ServerParamGetCommandTests : CommandUnitTestsBase<ServerParamGetCom
     [InlineData("--param")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--user", "user1",
-            "--server", "server123",
-            "--param", "param123");
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123"),
+            ("--param", "param123")
+        ));
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

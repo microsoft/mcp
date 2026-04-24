@@ -266,7 +266,7 @@ public class PostgresListCommandTests : CommandUnitTestsBase<PostgresListCommand
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,("--subscription", "sub123")));
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter, ("--subscription", "sub123")));
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
