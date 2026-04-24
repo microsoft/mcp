@@ -5,7 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
+namespace Azure.Mcp.Tools.Speech.UnitTests.Models.Realtime;
 
 public class RealtimeRecognitionDetailedResultTests
 {
@@ -16,7 +16,7 @@ public class RealtimeRecognitionDetailedResultTests
         var result = new RealtimeRecognitionDetailedResult();
 
         // Assert
-        Assert.IsAssignableFrom<RealtimeRecognitionResult>(result);
+        Assert.IsType<RealtimeRecognitionResult>(result, exactMatch: false);
         Assert.Null(result.NBest);
     }
 
@@ -34,7 +34,6 @@ public class RealtimeRecognitionDetailedResultTests
         var result = new RealtimeRecognitionDetailedResult
         {
             Text = "Hello world",
-
             NBest = nBestResults
         };
 
@@ -53,12 +52,11 @@ public class RealtimeRecognitionDetailedResultTests
         var result = new RealtimeRecognitionDetailedResult
         {
             Text = "Hello world",
-
-            NBest = new List<RealtimeRecognitionNBestResult>
-            {
+            NBest =
+            [
                 new() { Display = "Hello world",  },
                 new() { Display = "Hello word",  }
-            }
+            ]
         };
 
         // Act
@@ -89,7 +87,7 @@ public class RealtimeRecognitionDetailedResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionDetailedResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionDetailedResult);
 
         // Assert
         Assert.NotNull(result);

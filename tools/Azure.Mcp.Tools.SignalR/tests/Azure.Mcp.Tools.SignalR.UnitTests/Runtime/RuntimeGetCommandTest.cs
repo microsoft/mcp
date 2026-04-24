@@ -1,52 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.SignalR.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.Mcp.Tools.SignalR.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SignalR.UnitTests.Runtime;
 
-public class RuntimeGetCommandTests
+public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, ISignalRService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISignalRService _signalRService;
-    private readonly ILogger<RuntimeGetCommand> _logger;
-    private readonly RuntimeGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public RuntimeGetCommandTests()
-    {
-        _signalRService = Substitute.For<ISignalRService>();
-        _logger = Substitute.For<ILogger<RuntimeGetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _signalRService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -100,7 +76,7 @@ public class RuntimeGetCommandTests
                     }
                 }
             };
-            _signalRService.GetRuntimeAsync(
+            Service.GetRuntimeAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -111,10 +87,8 @@ public class RuntimeGetCommandTests
                 .Returns(runtimes);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -133,7 +107,7 @@ public class RuntimeGetCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoRuntimes()
     {
         // Arrange
-        _signalRService.GetRuntimeAsync(
+        Service.GetRuntimeAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -143,17 +117,12 @@ public class RuntimeGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SignalRJsonContext.Default.RuntimeGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, SignalRJsonContext.Default.RuntimeGetCommandResult);
+
         Assert.Empty(result.Runtimes);
     }
 
@@ -161,7 +130,7 @@ public class RuntimeGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _signalRService.GetRuntimeAsync(
+        Service.GetRuntimeAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -171,10 +140,8 @@ public class RuntimeGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -187,7 +154,7 @@ public class RuntimeGetCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException(404, "Not Found");
-        _signalRService.GetRuntimeAsync(
+        Service.GetRuntimeAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -197,10 +164,8 @@ public class RuntimeGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("`--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -211,7 +176,7 @@ public class RuntimeGetCommandTests
     {
         // Arrange
         var forbiddenException = new RequestFailedException(403, "Forbidden");
-        _signalRService.GetRuntimeAsync(
+        Service.GetRuntimeAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -221,10 +186,8 @@ public class RuntimeGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
-        var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

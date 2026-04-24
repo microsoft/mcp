@@ -1,52 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
+using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
+using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
-namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests;
+namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.Commands.ServiceGuide;
 
-public class ServiceGuideGetCommandTests
+public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetCommand, IServiceGuideService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ServiceGuideGetCommand> _logger;
-    private readonly IServiceGuideService _serviceGuideService;
-    private readonly CommandContext _context;
-    private readonly ServiceGuideGetCommand _command;
-    private readonly Command _commandDefinition;
-
-    public ServiceGuideGetCommandTests()
-    {
-        _logger = Substitute.For<ILogger<ServiceGuideGetCommand>>();
-        _serviceGuideService = new ServiceGuideService();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger, _serviceGuideService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.NotNull(_command);
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.OpenWorld);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.False(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Theory]
@@ -58,58 +35,31 @@ public class ServiceGuideGetCommandTests
     [InlineData("--service", false)]  // --service without value should fail
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
         {
-            // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-            // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            // For failure cases, check if there are parse errors first
-            if (parseResult.Errors.Count > 0)
-            {
-                // Parse-time validation errors (option without value)
-                Assert.True(parseResult.Errors.Count > 0);
-                Assert.Contains("--service", parseResult.Errors.Select(e => e.Message).FirstOrDefault() ?? string.Empty);
-            }
-            else
-            {
-                // Act
-                var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-                // Runtime validation errors
-                Assert.NotEqual(HttpStatusCode.OK, response.Status);
-                Assert.Contains("'--service'", response.Message);
-            }
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+            Assert.Contains("'--service'", response.Message);
         }
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsServiceList_WhenNoServiceProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse("");
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<string>>(json);
-
-        Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains("Azure Well-Architected Framework service guides are available for the following services:", result[0]);
         Assert.Contains("To get guidance for a specific service, use this command with the --service <service-name> option", result[0]);
@@ -124,27 +74,17 @@ public class ServiceGuideGetCommandTests
     [InlineData("cosmos-db")]
     public async Task ExecuteAsync_ReturnsGuidance_WhenValidServiceProvided(string serviceName)
     {
-        // Arrange
-        var args = _commandDefinition.Parse($"--service {serviceName}");
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("--service", serviceName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<string>>(json);
-
-        var serviceGuideUrlPrefix = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides";
-
-        Assert.NotNull(result);
         Assert.Single(result);
         // Check for the key parts of the multi-line response
         Assert.Contains($"For detailed Azure Well-Architected Framework guidance on", result[0]);
         Assert.Contains("please refer to the markdown file at this URL:", result[0]);
+        var serviceGuideUrlPrefix = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides";
         Assert.Contains(serviceGuideUrlPrefix, result[0]);
     }
 
@@ -153,20 +93,13 @@ public class ServiceGuideGetCommandTests
     {
         // Arrange
         var serviceName = "non-existent-service-12345";
-        var args = _commandDefinition.Parse($"--service {serviceName}");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName);
 
         // Assert - Should return OK with placeholder guidance instead of error
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<string>>(json);
-
-        Assert.NotNull(result);
         Assert.Single(result);
         Assert.Contains($"Azure Well-Architected Framework guidance for '{serviceName}' service is not available.", result[0]);
         Assert.Contains("For more information, visit: https://learn.microsoft.com/azure/well-architected/service-guides", result[0]);
@@ -196,21 +129,12 @@ public class ServiceGuideGetCommandTests
     [InlineData("'sql-db'")]
     public async Task ExecuteAsync_HandlesServiceNameVariationsNormalized_Correctly(string serviceNameInput)
     {
-        // Arrange
-        var args = _commandDefinition.Parse($"--service {serviceNameInput}");
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("--service", serviceNameInput);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<string>>(json);
-
-        Assert.NotNull(result);
         Assert.Single(result);
 
         // Should return guidance URL (not the "not available" message)
@@ -239,10 +163,10 @@ public class ServiceGuideGetCommandTests
     public async Task ExecuteAsync_HandlesQuotedServiceNames_Correctly(string inputServiceName, string expectedServiceName, bool shouldSucceed)
     {
         // Arrange
-        var args = _commandDefinition.Parse($"--service {inputServiceName}");
-
+        var args = CommandDefinition.Parse(["--service", inputServiceName]);
+        
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", inputServiceName);
 
         // Assert
         Assert.NotNull(response);
@@ -256,7 +180,7 @@ public class ServiceGuideGetCommandTests
             // Verify the service name was parsed correctly by checking the bound options
             var options = typeof(ServiceGuideGetCommand)
                 .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.Invoke(_command, new object[] { args }) as Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide.ServiceGuideGetOptions;
+                ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
 
             Assert.NotNull(options);
             Assert.Equal(expectedServiceName, options.Service);
@@ -273,12 +197,12 @@ public class ServiceGuideGetCommandTests
     public void BindOptions_BindsOptionsCorrectly_WhenNoServiceProvided()
     {
         // Arrange
-        var args = _commandDefinition.Parse("");
+        var args = CommandDefinition.Parse("");
 
         // Act
         var options = typeof(ServiceGuideGetCommand)
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, new object[] { args }) as Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide.ServiceGuideGetOptions;
+            ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
 
         // Assert
         Assert.NotNull(options);
@@ -290,12 +214,12 @@ public class ServiceGuideGetCommandTests
     {
         // Arrange
         var serviceName = "app-service";
-        var args = _commandDefinition.Parse($"--service {serviceName}");
+        var args = CommandDefinition.Parse($"--service {serviceName}");
 
         // Act
         var options = typeof(ServiceGuideGetCommand)
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, new object[] { args }) as Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide.ServiceGuideGetOptions;
+            ?.Invoke(Command, [args]) as ServiceGuideGetOptions;
 
         // Assert
         Assert.NotNull(options);
