@@ -34,6 +34,13 @@
   </Folder>
   <Folder Name="/eng/" />
   <Folder Name="/eng/tools/" />
+  <Folder Name="/eng/tools/CopilotCliTester/" />
+  <Folder Name="/eng/tools/CopilotCliTester/src/">
+    <Project Path="eng/tools/CopilotCliTester/src/CopilotCliTester.csproj" />
+  </Folder>
+  <Folder Name="/eng/tools/CopilotCliTester/tests/">
+    <Project Path="eng/tools/CopilotCliTester/tests/CopilotCliTester.Tests.csproj" />
+  </Folder>
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/" />
   <Folder Name="/eng/tools/ToolDescriptionEvaluator/src/">
     <Project Path="eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj" />
