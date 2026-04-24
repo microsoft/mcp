@@ -604,12 +604,36 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task PolicyCreate_DppVault_AksWorkload_ReturnsValidationError()
+    public async Task PolicyCreate_DppVault_CreatesAksPolicy_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
-        var policyName = $"test-aks-{Random.Shared.NextInt64()}";
+        var policyName = RegisterOrRetrieveVariable("createdAksPolicyName", $"test-aks-{Random.Shared.NextInt64()}");
 
-        // AKS is intentionally not yet supported via this command — expect a 400 with a clear message.
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AKS" },
+                { "schedule-frequency", "PT4H" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppVault_AksWithPerInstanceFlag_ReturnsValidationError()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = $"test-aks-bad-{Random.Shared.NextInt64()}";
+
+        // AKS namespace selectors are per-backup-instance, not per-policy. The validator should reject them with guidance.
         var status = await CallToolAsync(
             "azurebackup_policy_create",
             new()
@@ -618,7 +642,9 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AKS" }
+                { "workload-type", "AKS" },
+                { "daily-retention-days", "30" },
+                { "aks-included-namespaces", "ns1,ns2" }
             },
             mcpClient: null,
             resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
@@ -722,6 +748,297 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var opResult = result.AssertProperty("result");
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    // ===== Stage 2 live tests =====
+
+    [Fact]
+    public async Task PolicyCreate_RsvVm_SmartTier_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdVmSmartTierPolicyName", $"test-vm-smart-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureIaasVM" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" },
+                { "smart-tier", "true" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvHana_WithSnapshotBackup_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdHanaSnapshotPolicyName", $"test-hana-snap-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "SAPHANA" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" },
+                { "log-frequency-minutes", "60" },
+                { "enable-snapshot-backup", "true" },
+                { "snapshot-instant-rp-retention-days", "5" },
+                { "snapshot-instant-rp-resource-group", Settings.ResourceGroupName }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvSql_WithArchiveTier_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdSqlArchivePolicyName", $"test-sql-archive-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "MSSQL" },
+                { "full-schedule-frequency", "Weekly" },
+                { "full-schedule-days-of-week", "Sunday" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" },
+                { "monthly-retention-months", "12" },
+                { "monthly-retention-days-of-month", "1" },
+                { "archive-tier-mode", "TierAfter" },
+                { "archive-tier-after-days", "90" },
+                { "log-frequency-minutes", "60" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvFileShare_HourlyMultiTier_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdAfsHourlyPolicyName", $"test-afs-hourly-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureFileShare" },
+                { "schedule-frequency", "Hourly" },
+                { "hourly-interval-hours", "6" },
+                { "hourly-window-start-time", "08:00" },
+                { "hourly-window-duration-hours", "12" },
+                { "daily-retention-days", "30" },
+                { "weekly-retention-weeks", "12" },
+                { "weekly-retention-days-of-week", "Sunday" },
+                { "monthly-retention-months", "12" },
+                { "monthly-retention-days-of-month", "1" },
+                { "yearly-retention-years", "5" },
+                { "yearly-retention-months", "January" },
+                { "yearly-retention-days-of-month", "1" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_RsvVm_WithPolicyTags_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var policyName = RegisterOrRetrieveVariable("createdVmTaggedPolicyName", $"test-vm-tags-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureIaasVM" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" },
+                { "policy-tags", "env=test,team=mcp" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppDisk_VaultTierCopy_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdDiskVaultCopyPolicyName", $"test-disk-vc-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureDisk" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "7" },
+                { "enable-vault-tier-copy", "true" },
+                { "vault-tier-copy-after-days", "7" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppBlob_Vaulted_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdBlobVaultedPolicyName", $"test-blob-vault-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureBlob" },
+                { "backup-mode", "Vaulted" },
+                { "schedule-frequency", "P1D" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppBlob_ContinuousWithPitr_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdBlobPitrPolicyName", $"test-blob-pitr-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureBlob" },
+                { "pitr-retention-days", "60" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppAdls_Vaulted_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdAdlsVaultedPolicyName", $"test-adls-vault-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureDataLakeStorage" },
+                { "backup-mode", "Vaulted" },
+                { "schedule-frequency", "P1D" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppAzureFiles_Vaulted_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = RegisterOrRetrieveVariable("createdAzureFilesVaultedPolicyName", $"test-files-vault-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureFiles" },
+                { "backup-mode", "Vaulted" },
+                { "schedule-frequency", "P1D" },
+                { "schedule-times", "02:00" },
+                { "daily-retention-days", "30" }
+            });
+
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task PolicyCreate_DppVault_PolicyTags_RejectedWithGuidance()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = $"test-dpp-tags-{Random.Shared.NextInt64()}";
+
+        var status = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "policy", policyName },
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "7" },
+                { "policy-tags", "env=test" }
+            },
+            mcpClient: null,
+            resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
+
+        Assert.NotNull(status);
+        Assert.Equal(400, status!.Value.GetInt32());
     }
 
     [Fact]
