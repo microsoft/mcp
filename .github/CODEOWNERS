@@ -351,10 +351,10 @@
 # ServiceOwners:                       @linmeng08 @jkochhar
 
 # PRLabel: %tools-SignalR
-/tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @kenchennt @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @chenkennt @microsoft/azure-mcp
 
 # ServiceLabel: %tools-SignalR
-# ServiceOwners:                       @HaofanLiao @JialinXin @kenchennt 
+# ServiceOwners:                       @HaofanLiao @JialinXin @chenkennt
 
 # PRLabel: %tools-Speech
 /tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
