@@ -31,8 +31,15 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         base.RegisterOptions(command);
         command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
         command.Options.Add(AzureBackupOptionDefinitions.WorkloadType.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
         command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
+        // Common schedule flags (new in policy create overhaul; bound here, consumed by builders in a later commit).
+        command.Options.Add(AzureBackupOptionDefinitions.TimeZone);
+        command.Options.Add(AzureBackupOptionDefinitions.ScheduleFrequency);
+        command.Options.Add(AzureBackupOptionDefinitions.ScheduleTimes);
+        command.Options.Add(AzureBackupOptionDefinitions.ScheduleDaysOfWeek);
+        command.Options.Add(AzureBackupOptionDefinitions.HourlyIntervalHours);
+        command.Options.Add(AzureBackupOptionDefinitions.HourlyWindowStartTime);
+        command.Options.Add(AzureBackupOptionDefinitions.HourlyWindowDurationHours);
     }
 
     protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
@@ -40,8 +47,14 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         var options = base.BindOptions(parseResult);
         options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
         options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
         options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
+        options.TimeZone = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.TimeZone.Name);
+        options.ScheduleFrequency = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleFrequency.Name);
+        options.ScheduleTimes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTimes.Name);
+        options.ScheduleDaysOfWeek = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleDaysOfWeek.Name);
+        options.HourlyIntervalHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyIntervalHours.Name);
+        options.HourlyWindowStartTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowStartTime.Name);
+        options.HourlyWindowDurationHours = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.HourlyWindowDurationHours.Name);
         return options;
     }
 
@@ -63,7 +76,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 options.Policy!,
                 options.WorkloadType!,
                 options.VaultType,
-                options.ScheduleTime,
+                options.ScheduleTimes,
                 options.DailyRetentionDays,
                 options.Tenant,
                 options.RetryPolicy,

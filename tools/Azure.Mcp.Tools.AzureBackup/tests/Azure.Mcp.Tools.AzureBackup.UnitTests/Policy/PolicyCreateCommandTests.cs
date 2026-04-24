@@ -142,17 +142,24 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--policy");
         Assert.Contains(options, o => o.Name == "--workload-type");
-        Assert.Contains(options, o => o.Name == "--schedule-time");
         Assert.Contains(options, o => o.Name == "--daily-retention-days");
+        // Common schedule flags added by the policy create overhaul.
+        Assert.Contains(options, o => o.Name == "--time-zone");
+        Assert.Contains(options, o => o.Name == "--schedule-frequency");
+        Assert.Contains(options, o => o.Name == "--schedule-times");
+        Assert.Contains(options, o => o.Name == "--schedule-days-of-week");
+        Assert.Contains(options, o => o.Name == "--hourly-interval-hours");
+        Assert.Contains(options, o => o.Name == "--hourly-window-start-time");
+        Assert.Contains(options, o => o.Name == "--hourly-window-duration-hours");
     }
 
     [Fact]
-    public void BindOptions_DoesNotContainRemovedRetentionOptions()
+    public void BindOptions_DoesNotContainRetentionOptionsYet()
     {
+        // Retention option defs land in a later commit of the policy create overhaul.
         var command = _command.GetCommand();
         var optionNames = command.Options.Select(o => o.Name).ToList();
 
-        Assert.DoesNotContain("--schedule-frequency", optionNames);
         Assert.DoesNotContain("--weekly-retention-weeks", optionNames);
         Assert.DoesNotContain("--monthly-retention-months", optionNames);
         Assert.DoesNotContain("--yearly-retention-years", optionNames);

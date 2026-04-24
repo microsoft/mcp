@@ -24,11 +24,19 @@ public static class AzureBackupOptionDefinitions
     public const string SoftDeleteRetentionDaysName = "soft-delete-retention-days";
     public const string TagsName = "tags";
     public const string WorkloadTypeName = "workload-type";
-    public const string ScheduleTimeName = "schedule-time";
     public const string DailyRetentionDaysName = "daily-retention-days";
     public const string VmResourceIdName = "vm-resource-id";
     public const string ResourceTypeFilterName = "resource-type-filter";
     public const string TagFilterName = "tag-filter";
+
+    // Policy create — common schedule flags (new in policy create overhaul)
+    public const string TimeZoneName = "time-zone";
+    public const string ScheduleFrequencyName = "schedule-frequency";
+    public const string ScheduleTimesName = "schedule-times";
+    public const string ScheduleDaysOfWeekName = "schedule-days-of-week";
+    public const string HourlyIntervalHoursName = "hourly-interval-hours";
+    public const string HourlyWindowStartTimeName = "hourly-window-start-time";
+    public const string HourlyWindowDurationHoursName = "hourly-window-duration-hours";
 
     public static readonly Option<string> Vault = new($"--{VaultName}")
     {
@@ -144,12 +152,6 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> ScheduleTime = new($"--{ScheduleTimeName}")
-    {
-        Description = "Backup time in UTC (e.g., '02:00').",
-        Required = false
-    };
-
     public static readonly Option<string> DailyRetentionDays = new($"--{DailyRetentionDaysName}")
     {
         Description = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.",
@@ -171,6 +173,48 @@ public static class AzureBackupOptionDefinitions
     public static readonly Option<string> TagFilter = new($"--{TagFilterName}")
     {
         Description = "Tag-based filter in key=value format (e.g., 'environment=production').",
+        Required = false
+    };
+
+    public static readonly Option<string> TimeZone = new($"--{TimeZoneName}")
+    {
+        Description = "Windows time-zone identifier for the backup schedule (e.g., 'UTC', 'Pacific Standard Time', 'India Standard Time'). If omitted, the schedule runs in UTC.",
+        Required = false
+    };
+
+    public static readonly Option<string> ScheduleFrequency = new($"--{ScheduleFrequencyName}")
+    {
+        Description = "Backup schedule frequency. RSV vaults accept 'Daily', 'Weekly', or 'Hourly'. DPP (Backup) vaults accept ISO 8601 intervals: 'PT4H', 'PT6H', 'PT8H', 'PT12H', 'P1D', 'P1W', 'P2W', or 'P1M'.",
+        Required = false
+    };
+
+    public static readonly Option<string> ScheduleTimes = new($"--{ScheduleTimesName}")
+    {
+        Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone.",
+        Required = false
+    };
+
+    public static readonly Option<string> ScheduleDaysOfWeek = new($"--{ScheduleDaysOfWeekName}")
+    {
+        Description = "Comma-separated days of the week the backup should run (e.g., 'Monday,Wednesday,Friday'). Required for Weekly schedules.",
+        Required = false
+    };
+
+    public static readonly Option<string> HourlyIntervalHours = new($"--{HourlyIntervalHoursName}")
+    {
+        Description = "Interval in hours between hourly backups (e.g., 4, 6, 8, 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Required = false
+    };
+
+    public static readonly Option<string> HourlyWindowStartTime = new($"--{HourlyWindowStartTimeName}")
+    {
+        Description = "Start time of the hourly backup window in 24h HH:mm format (e.g., '08:00'). Used only when --schedule-frequency is 'Hourly' (RSV).",
+        Required = false
+    };
+
+    public static readonly Option<string> HourlyWindowDurationHours = new($"--{HourlyWindowDurationHoursName}")
+    {
+        Description = "Duration of the hourly backup window in hours (e.g., 12). Used only when --schedule-frequency is 'Hourly' (RSV).",
         Required = false
     };
 }
