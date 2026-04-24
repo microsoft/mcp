@@ -613,8 +613,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         var policyName = request.Policy;
         var workloadType = request.WorkloadType;
-        var scheduleTime = request.ScheduleTimes;
-        var dailyRetentionDays = request.DailyRetentionDays;
 
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -633,92 +631,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
 
-        var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
-
-        // Stage 2 TODO: Multi-tier retention
-        // When adding weekly/monthly/yearly retention support, add the parameters
-        // back to this method and replace the current DailyRetentionSchedule-only approach
-        // with a full LongTermRetentionPolicy:
-        //   - DailySchedule: always present, using retentionDays.
-        //   - WeeklySchedule: WeeklyRetentionSchedule with DaysOfTheWeek=[Sunday].
-        //   - MonthlySchedule: MonthlyRetentionSchedule with WeeksOfTheMonth=[First].
-        //   - YearlySchedule: YearlyRetentionSchedule with MonthsOfYear=[January].
-        // For VmWorkload: multi-tier retention goes on the Full sub-policy only.
-
-        var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
-        var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,
-            scheduleDateTime.Hour, scheduleDateTime.Minute, 0, TimeSpan.Zero);
-
-        BackupGenericProtectionPolicy policyProperties;
-
-        var profile = RsvDatasourceRegistry.ResolveOrDefault(workloadType);
-
-        if (profile.PolicyType == RsvPolicyType.VmWorkload)
-        {
-            var fullSchedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var fullRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            fullRetention.RetentionTimes.Add(scheduleRunTime);
-
-            var fullSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Full"),
-                SchedulePolicy = fullSchedule,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = fullRetention }
-            };
-
-            var logSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Log"),
-                SchedulePolicy = new LogSchedulePolicy { ScheduleFrequencyInMins = 60 },
-                RetentionPolicy = new SimpleRetentionPolicy { RetentionDuration = new RetentionDuration { Count = 15, DurationType = RetentionDurationType.Days } }
-            };
-
-            var wlPolicy = new VmWorkloadProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType(profile.ApiWorkloadType ?? "SQLDataBase"),
-                Settings = new BackupCommonSettings
-                {
-                    TimeZone = "UTC",
-                    IsCompression = false,
-                    IsSqlCompression = false
-                }
-            };
-            wlPolicy.SubProtectionPolicy.Add(fullSubPolicy);
-            wlPolicy.SubProtectionPolicy.Add(logSubPolicy);
-
-            policyProperties = wlPolicy;
-        }
-        else if (profile.PolicyType == RsvPolicyType.AzureFileShare)
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new FileShareProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType("AzureFileShare"),
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
-        else
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new IaasVmProtectionPolicy
-            {
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
+        var policyProperties = Policy.RsvPolicyBuilder.Build(request);
 
         var policyData = new BackupProtectionPolicyData(vaultLocation)
         {
