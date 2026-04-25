@@ -73,8 +73,10 @@ internal class Program
             {
                 var learnJson = commandFactory.GetLearnResponse(args);
                 Console.WriteLine(learnJson);
-                var learnResponse = JsonSerializer.Deserialize(learnJson, ModelsJsonContext.Default.CommandResponse);
-                var learnStatus = (int)(learnResponse?.Status ?? HttpStatusCode.InternalServerError);
+                using var learnDoc = JsonDocument.Parse(learnJson);
+                var learnStatus = learnDoc.RootElement.TryGetProperty("status", out var statusEl)
+                    ? statusEl.GetInt32()
+                    : (int)HttpStatusCode.InternalServerError;
                 return (learnStatus >= (int)HttpStatusCode.OK && learnStatus < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
             }
 
