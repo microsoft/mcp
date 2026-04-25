@@ -31,7 +31,7 @@ public static class FunctionAppPlanProvisioner
 
         if (await plans.ExistsAsync(effectivePlanName, cancellationToken))
         {
-            var existing = await plans.GetAsync(effectivePlanName, cancellationToken);
+            var existing = (await plans.GetAsync(effectivePlanName, cancellationToken)).Value;
             ValidateExistingPlan(existing, effectivePlanName, options);
             return existing;
         }

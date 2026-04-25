@@ -83,7 +83,7 @@ internal static class FunctionAppContainerAppStrategy
         ContainerAppManagedEnvironmentResource env;
         if (await envs.ExistsAsync(envName, cancellationToken))
         {
-            env = await envs.GetAsync(envName, cancellationToken);
+            env = (await envs.GetAsync(envName, cancellationToken)).Value;
         }
         else
         {

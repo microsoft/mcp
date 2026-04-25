@@ -50,7 +50,7 @@ public static class FunctionAppStorageProvisioner
         StorageAccountResource storage;
         if (await storageAccounts.ExistsAsync(accountName, cancellationToken: cancellationToken))
         {
-            storage = await storageAccounts.GetAsync(accountName, cancellationToken: cancellationToken);
+            storage = (await storageAccounts.GetAsync(accountName, cancellationToken: cancellationToken)).Value;
         }
         else
         {
