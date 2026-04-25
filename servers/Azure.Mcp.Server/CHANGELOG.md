@@ -59,8 +59,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `--disable-caching` to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
 - Added endpoint validation for Service Bus namespace parameter to ensure it resolves to a valid Azure Service Bus domain. [[#2347](https://github.com/microsoft/mcp/pull/2347)]
 
-### Breaking Changes
-
 ### Bugs Fixed
 
 - Fixed endpoint validation on non-Public cloud environments. [[#2320](https://github.com/microsoft/mcp/pull/2320)]
