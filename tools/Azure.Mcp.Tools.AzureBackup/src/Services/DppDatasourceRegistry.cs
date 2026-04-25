@@ -113,27 +113,6 @@ public static class DppDatasourceRegistry
     };
 
     /// <summary>
-    /// AzureFiles vaulted backup. Discrete recovery points (Daily/Weekly schedule) stored in the
-    /// vault tier — distinct from RSV operational AFS snapshots which live under "AzureFileShare"
-    /// in the Recovery Services vault. Currently used only for policy create; backup-instance
-    /// support requires the BackupInstance.protectFile flow which is not yet implemented.
-    /// </summary>
-    public static readonly DppDatasourceProfile AzureFiles = new()
-    {
-        FriendlyName = "AzureFiles",
-        ArmResourceType = "Microsoft.Storage/storageAccounts/fileServices/shares",
-        Aliases = ["azurefiles", "afsvaulted"],
-        UsesOperationalStore = false,
-        ScheduleInterval = "P1D",
-        BackupType = "Full",
-        BackupRuleName = "BackupDaily",
-        DefaultRetentionDays = 30,
-        RequiresSnapshotResourceGroup = false,
-        DefaultRestoreMode = DppRestoreMode.RecoveryPoint,
-        SupportsPolicyUpdate = false,
-    };
-
-    /// <summary>
     /// CosmosDB: Full backups only. Weekly schedule (P1W). Vault store (no operational tier).
     /// Multi-tier retention is supported (e.g., retain weekly backups for N months/years
     /// via vault-tier copy rules), mirroring the PostgreSQL Flexible profile.
@@ -164,7 +143,6 @@ public static class DppDatasourceRegistry
         ElasticSan,
         PostgreSqlFlexible,
         AzureDataLakeStorage,
-        AzureFiles,
         CosmosDb,
     ];
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Globalization;
+using System.Linq;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
@@ -83,9 +84,15 @@ public static class RsvPolicyBuilder
         }
 
         // Smart tier (ML-recommended archive) overrides any explicit archive flag for VM workloads.
+        // Backend requires Duration=0 + DurationType=Invalid when TieringMode is TierRecommended (matches Az CLI shape).
         if (ParseBoolOrFalse(req.SmartTier))
         {
-            policy.TieringPolicy["ArchivedRP"] = new BackupTieringPolicy { TieringMode = TieringMode.TierRecommended };
+            policy.TieringPolicy["ArchivedRP"] = new BackupTieringPolicy
+            {
+                TieringMode = TieringMode.TierRecommended,
+                DurationValue = 0,
+                DurationType = RetentionDurationType.Invalid,
+            };
         }
 
         return policy;
@@ -147,10 +154,12 @@ public static class RsvPolicyBuilder
         // Log sub-policy: emitted by default for compatibility with existing live tests.
         policy.SubProtectionPolicy.Add(BuildVmWorkloadLogSubPolicy(req));
 
-        // SAPHANA snapshot/instance backup sub-policy (opt-in via --enable-snapshot-backup).
+        // SAPHANA snapshot/instance backup is enabled by attaching SnapshotBackupAdditionalDetails
+        // to the Full sub-policy (matches Az CLI behavior for `az backup policy set` with
+        // --snapshot-instant-rp-retention-days). Not a separate sub-policy.
         if (ParseBoolOrFalse(req.EnableSnapshotBackup))
         {
-            policy.SubProtectionPolicy.Add(BuildVmWorkloadSnapshotSubPolicy(req, scheduleTimes));
+            AttachSnapshotDetailsToFullSubPolicy(policy, req);
         }
 
         return policy;
@@ -179,16 +188,48 @@ public static class RsvPolicyBuilder
 
     private static SubProtectionPolicy BuildVmWorkloadSnapshotSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)
     {
-        // Snapshot/instance backups for SAPHANA System Replication. Schedule mirrors the Full sub-policy.
-        var schedule = BuildVmWorkloadFullSchedule(req, scheduleTimes);
-        var retention = BuildLongTermRetention(req, scheduleTimes);
+        // Retained for backward-compatibility with existing unit tests; not currently invoked by Build().
+        var schedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
+        foreach (var t in scheduleTimes)
+        {
+            schedule.ScheduleRunTimes.Add(t);
+        }
+
+        var snapshotDays = TryParsePositiveInt(req.SnapshotInstantRpRetentionDays, out var rpDays) ? rpDays : 2;
+        var retention = new SimpleRetentionPolicy
+        {
+            RetentionDuration = new RetentionDuration { Count = snapshotDays, DurationType = RetentionDurationType.Days },
+        };
 
         var sub = new SubProtectionPolicy
         {
-            PolicyType = new SubProtectionPolicyType("SnapshotFull"),
+            PolicyType = new SubProtectionPolicyType("SnapshotCopyOnlyFull"),
             SchedulePolicy = schedule,
             RetentionPolicy = retention,
         };
+
+        var details = new SnapshotBackupAdditionalDetails
+        {
+            InstantRpRetentionRangeInDays = snapshotDays,
+        };
+        if (!string.IsNullOrWhiteSpace(req.SnapshotInstantRpResourceGroup))
+        {
+            details.InstantRPDetails = req.SnapshotInstantRpResourceGroup;
+        }
+        sub.SnapshotBackupAdditionalDetails = details;
+
+        return sub;
+    }
+
+    private static void AttachSnapshotDetailsToFullSubPolicy(VmWorkloadProtectionPolicy policy, PolicyCreateRequest req)
+    {
+        // Per Az CLI: snapshot backup for SAPHANA is enabled by adding SnapshotBackupAdditionalDetails
+        // to the Full sub-policy, not by introducing a new SnapshotFull/SnapshotCopyOnlyFull sub-policy.
+        var full = policy.SubProtectionPolicy.FirstOrDefault(s => s.PolicyType?.ToString() == "Full");
+        if (full is null)
+        {
+            return;
+        }
 
         var details = new SnapshotBackupAdditionalDetails();
         if (TryParsePositiveInt(req.SnapshotInstantRpRetentionDays, out var rp))
@@ -199,9 +240,7 @@ public static class RsvPolicyBuilder
         {
             details.InstantRPDetails = req.SnapshotInstantRpResourceGroup;
         }
-        sub.SnapshotBackupAdditionalDetails = details;
-
-        return sub;
+        full.SnapshotBackupAdditionalDetails = details;
     }
 
     private static SubProtectionPolicy BuildVmWorkloadDifferentialSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)

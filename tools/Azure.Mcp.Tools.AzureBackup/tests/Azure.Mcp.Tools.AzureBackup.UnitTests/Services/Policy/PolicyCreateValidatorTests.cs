@@ -45,11 +45,21 @@ public class PolicyCreateValidatorTests
         options.DailyRetentionDays = "30";
         switch (flag)
         {
-            case "--aks-included-namespaces": options.AksIncludedNamespaces = value; break;
-            case "--aks-excluded-namespaces": options.AksExcludedNamespaces = value; break;
-            case "--aks-label-selectors": options.AksLabelSelectors = value; break;
-            case "--aks-include-cluster-scope-resources": options.AksIncludeClusterScopeResources = value; break;
-            case "--aks-snapshot-resource-group": options.AksSnapshotResourceGroup = value; break;
+            case "--aks-included-namespaces":
+                options.AksIncludedNamespaces = value;
+                break;
+            case "--aks-excluded-namespaces":
+                options.AksExcludedNamespaces = value;
+                break;
+            case "--aks-label-selectors":
+                options.AksLabelSelectors = value;
+                break;
+            case "--aks-include-cluster-scope-resources":
+                options.AksIncludeClusterScopeResources = value;
+                break;
+            case "--aks-snapshot-resource-group":
+                options.AksSnapshotResourceGroup = value;
+                break;
         }
 
         var result = PolicyCreateValidator.Validate(options);
@@ -389,10 +399,18 @@ public class PolicyCreateValidatorTests
         options.DailyRetentionDays = "7";
         switch (flag)
         {
-            case "--policy-sub-type": options.PolicySubType = value; break;
-            case "--instant-rp-retention-days": options.InstantRpRetentionDays = value; break;
-            case "--snapshot-consistency": options.SnapshotConsistency = value; break;
-            case "--instant-rp-resource-group": options.InstantRpResourceGroup = value; break;
+            case "--policy-sub-type":
+                options.PolicySubType = value;
+                break;
+            case "--instant-rp-retention-days":
+                options.InstantRpRetentionDays = value;
+                break;
+            case "--snapshot-consistency":
+                options.SnapshotConsistency = value;
+                break;
+            case "--instant-rp-resource-group":
+                options.InstantRpResourceGroup = value;
+                break;
         }
 
         var result = PolicyCreateValidator.Validate(options);
@@ -412,10 +430,18 @@ public class PolicyCreateValidatorTests
         options.DailyRetentionDays = "7";
         switch (flag)
         {
-            case "--log-frequency-minutes": options.LogFrequencyMinutes = value; break;
-            case "--full-schedule-frequency": options.FullScheduleFrequency = value; break;
-            case "--differential-retention-days": options.DifferentialRetentionDays = value; break;
-            case "--is-compression": options.IsCompression = value; break;
+            case "--log-frequency-minutes":
+                options.LogFrequencyMinutes = value;
+                break;
+            case "--full-schedule-frequency":
+                options.FullScheduleFrequency = value;
+                break;
+            case "--differential-retention-days":
+                options.DifferentialRetentionDays = value;
+                break;
+            case "--is-compression":
+                options.IsCompression = value;
+                break;
         }
 
         var result = PolicyCreateValidator.Validate(options);
@@ -496,10 +522,18 @@ public class PolicyCreateValidatorTests
         options.DailyRetentionDays = "7";
         switch (flag)
         {
-            case "--data-store-type": options.DataStoreType = value; break;
-            case "--datasource-types": options.DatasourceTypes = value; break;
-            case "--vault-tier-retention-duration": options.VaultTierRetentionDuration = value; break;
-            case "--archive-tier-retention-duration": options.ArchiveTierRetentionDuration = value; break;
+            case "--data-store-type":
+                options.DataStoreType = value;
+                break;
+            case "--datasource-types":
+                options.DatasourceTypes = value;
+                break;
+            case "--vault-tier-retention-duration":
+                options.VaultTierRetentionDuration = value;
+                break;
+            case "--archive-tier-retention-duration":
+                options.ArchiveTierRetentionDuration = value;
+                break;
         }
 
         var result = PolicyCreateValidator.Validate(options);

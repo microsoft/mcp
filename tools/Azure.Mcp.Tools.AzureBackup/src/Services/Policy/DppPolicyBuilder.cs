@@ -31,11 +31,16 @@ public static class DppPolicyBuilder
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(profile);
 
-        // --backup-mode allows storage workloads (Blob / ADLS / AzureFiles) to flip between
+        // --backup-mode allows storage workloads (Blob / ADLS) to flip between
         // continuous (PITR) and vaulted (discrete recovery points). Vaulted overrides the
         // profile's IsContinuousBackup flag and switches the data store to VaultStore.
         var isVaultedMode = IsVaultedMode(request.BackupMode);
         var isContinuous = profile.IsContinuousBackup && !isVaultedMode;
+
+        // For vaulted storage workloads (Blob/ADLS Vaulted mode), the policy is driven entirely
+        // by VaultStore retention rules — no AzureBackupRule (the trigger is implicit, managed by
+        // the storage platform). This matches the Az CLI shape and is what the DPP service accepts.
+        var isVaultedStorage = isVaultedMode && profile.IsContinuousBackup;
 
         var dataStoreType = isVaultedMode || !profile.UsesOperationalStore
             ? DataStoreType.VaultStore
@@ -45,6 +50,15 @@ public static class DppPolicyBuilder
         {
             BuildDefaultRetentionRule(request, profile, dataStoreType, isContinuous),
         };
+
+        // Vault tier copy on AzureDisk emits a SEPARATE named retention rule ("Daily")
+        // pointing at VaultStore, plus a matching tagging criterion in the BackupRule.
+        // This mirrors what `az dataprotection backup-policy retention-rule set` produces.
+        var vaultTierEnabled = ParseBool(request.EnableVaultTierCopy);
+        if (vaultTierEnabled)
+        {
+            rules.Add(BuildVaultTierCopyRetentionRule(request));
+        }
 
         // Per-tier retention rules (opt-in via positive weeks/months/years).
         if (TryParsePositiveInt(request.WeeklyRetentionWeeks, out var weeks))
@@ -60,9 +74,9 @@ public static class DppPolicyBuilder
             rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(years * 365), dataStoreType, request));
         }
 
-        if (!isContinuous)
+        if (!isContinuous && !isVaultedStorage)
         {
-            rules.Add(BuildBackupRule(request, profile, dataStoreType));
+            rules.Add(BuildBackupRule(request, profile, dataStoreType, vaultTierEnabled));
         }
 
         return new RuleBasedBackupPolicy([profile.ArmResourceType], rules);
@@ -94,7 +108,22 @@ public static class DppPolicyBuilder
             IsDefault = true,
         };
     }
+    private static DataProtectionRetentionRule BuildVaultTierCopyRetentionRule(PolicyCreateRequest request)
+    {
+        // Default retention for the vault-tier rule is 30 days unless --vault-tier-copy-after-days specified.
+        var retentionDays = TryParsePositiveInt(request.VaultTierCopyAfterDays, out var d) ? d : 30;
 
+        var lifeCycle = new SourceLifeCycle(
+            new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(retentionDays)),
+            new DataStoreInfoBase(DataStoreType.VaultStore, "DataStoreInfoBase"));
+
+        AppendArchiveCopyIfRequested(lifeCycle, request);
+
+        return new DataProtectionRetentionRule("Daily", [lifeCycle])
+        {
+            IsDefault = false,
+        };
+    }
     private static DataProtectionRetentionRule BuildTierRetentionRule(
         string tierName,
         TimeSpan duration,
@@ -138,17 +167,11 @@ public static class DppPolicyBuilder
 
     private static void AppendVaultTierCopyIfRequested(SourceLifeCycle lifeCycle, PolicyCreateRequest request)
     {
-        if (!ParseBool(request.EnableVaultTierCopy))
-        {
-            return;
-        }
-
-        var copySetting = TryParsePositiveInt(request.VaultTierCopyAfterDays, out var afterDays)
-            ? (DataProtectionBackupCopySetting)new CustomCopySetting { Duration = TimeSpan.FromDays(afterDays) }
-            : new CopyOnExpirySetting();
-
-        lifeCycle.TargetDataStoreCopySettings.Add(
-            new TargetCopySetting(copySetting, new DataStoreInfoBase(DataStoreType.VaultStore, "DataStoreInfoBase")));
+        // Retained for backward compatibility but no longer called from Build(). Vault tier copy is now
+        // emitted as a separate retention rule (see BuildVaultTierCopyRetentionRule) so the service
+        // accepts the policy shape that Az CLI produces.
+        _ = lifeCycle;
+        _ = request;
     }
 
     private static bool IsVaultedMode(string? backupMode) =>
@@ -161,7 +184,8 @@ public static class DppPolicyBuilder
     private static DataProtectionBackupRule BuildBackupRule(
         PolicyCreateRequest request,
         DppDatasourceProfile profile,
-        DataStoreType dataStoreType)
+        DataStoreType dataStoreType,
+        bool vaultTierEnabled = false)
     {
         var scheduleStartTime = ParseScheduleStartTime(request.ScheduleTimes);
         var scheduleInterval = string.IsNullOrWhiteSpace(request.ScheduleFrequency)
@@ -174,7 +198,7 @@ public static class DppPolicyBuilder
             TimeZone = string.IsNullOrWhiteSpace(request.TimeZone) ? "UTC" : request.TimeZone!,
         };
 
-        var taggingCriteria = BuildTaggingCriteria(request);
+        var taggingCriteria = BuildTaggingCriteria(request, vaultTierEnabled);
 
         var triggerContext = new ScheduleBasedBackupTriggerContext(schedule, taggingCriteria);
 
@@ -187,7 +211,7 @@ public static class DppPolicyBuilder
         };
     }
 
-    private static List<DataProtectionBackupTaggingCriteria> BuildTaggingCriteria(PolicyCreateRequest request)
+    private static List<DataProtectionBackupTaggingCriteria> BuildTaggingCriteria(PolicyCreateRequest request, bool vaultTierEnabled = false)
     {
         // The default rule is always present; portal/cli uses TaggingPriority=99 with IsDefault=true.
         var list = new List<DataProtectionBackupTaggingCriteria>
@@ -196,6 +220,13 @@ public static class DppPolicyBuilder
         };
 
         long priority = 25;
+
+        // Vault tier copy emits a 'Daily' tag with FirstOfDay marker so the service knows which RP to copy.
+        if (vaultTierEnabled)
+        {
+            list.Add(BuildTierTagging("Daily", priority, BackupAbsoluteMarker.FirstOfDay));
+            priority -= 5;
+        }
 
         if (TryParsePositiveInt(request.WeeklyRetentionWeeks, out _))
         {

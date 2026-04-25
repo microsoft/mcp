@@ -140,7 +140,7 @@ public class DppPolicyBuilderTests
     // ===== Stage 2 tests =====
 
     [Fact]
-    public void Build_DiskWithVaultTierCopy_AppendsVaultStoreCopySetting()
+    public void Build_DiskWithVaultTierCopy_EmitsSeparateNamedRetentionRuleAndDailyTag()
     {
         var profile = DppDatasourceRegistry.Resolve("AzureDisk");
         var req = new PolicyCreateRequest
@@ -152,18 +152,28 @@ public class DppPolicyBuilderTests
         };
 
         var policy = DppPolicyBuilder.Build(req, profile);
-        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
-        var lifeCycle = defaultRule.Lifecycles[0];
 
-        Assert.Single(lifeCycle.TargetDataStoreCopySettings);
-        var copy = lifeCycle.TargetDataStoreCopySettings[0];
-        Assert.Equal(DataStoreType.VaultStore, copy.DataStore.DataStoreType);
-        var custom = Assert.IsType<CustomCopySetting>(copy.CopyAfter);
-        Assert.Equal(TimeSpan.FromDays(7), custom.Duration);
+        // Default operational retention rule (rule[0]) should have NO TargetDataStoreCopySettings.
+        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
+        Assert.Empty(defaultRule.Lifecycles[0].TargetDataStoreCopySettings);
+
+        // A separate "Daily" retention rule sourced from VaultStore must follow.
+        var vaultRule = (DataProtectionRetentionRule)policy.PolicyRules[1];
+        Assert.Equal("Daily", vaultRule.Name);
+        Assert.False(vaultRule.IsDefault);
+        Assert.Equal(DataStoreType.VaultStore, vaultRule.Lifecycles[0].SourceDataStore.DataStoreType);
+        var deleteAfter = (DataProtectionBackupAbsoluteDeleteSetting)vaultRule.Lifecycles[0].DeleteAfter;
+        Assert.Equal(TimeSpan.FromDays(7), deleteAfter.Duration);
+
+        // BackupRule's tagging criteria must contain a "Daily" tag with FirstOfDay marker.
+        var backupRule = (DataProtectionBackupRule)policy.PolicyRules[^1];
+        var trigger = (ScheduleBasedBackupTriggerContext)backupRule.Trigger;
+        Assert.Contains(trigger.TaggingCriteriaList, t => t.TagInfo.TagName == "Daily" &&
+            t.Criteria.OfType<ScheduleBasedBackupCriteria>().Any(c => c.AbsoluteCriteria.Contains(BackupAbsoluteMarker.FirstOfDay)));
     }
 
     [Fact]
-    public void Build_BlobVaultedMode_EmitsBackupRuleAndUsesVaultStore()
+    public void Build_BlobVaultedMode_EmitsRetentionOnlyAndUsesVaultStore()
     {
         var profile = DppDatasourceRegistry.Resolve("AzureBlob");
         var req = new PolicyCreateRequest
@@ -176,10 +186,10 @@ public class DppPolicyBuilderTests
 
         var policy = DppPolicyBuilder.Build(req, profile);
 
-        Assert.Equal(2, policy.PolicyRules.Count);
-        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
-        Assert.Equal(DataStoreType.VaultStore, defaultRule.Lifecycles[0].SourceDataStore.DataStoreType);
-        Assert.IsType<DataProtectionBackupRule>(policy.PolicyRules[1]);
+        // Vaulted Blob: only a single VaultStore retention rule (no AzureBackupRule).
+        var rule = Assert.Single(policy.PolicyRules);
+        var retention = Assert.IsType<DataProtectionRetentionRule>(rule);
+        Assert.Equal(DataStoreType.VaultStore, retention.Lifecycles[0].SourceDataStore.DataStoreType);
     }
 
     [Fact]
@@ -201,7 +211,7 @@ public class DppPolicyBuilderTests
     }
 
     [Fact]
-    public void Build_AdlsVaultedMode_EmitsDiscreteBackupRule()
+    public void Build_AdlsVaultedMode_EmitsRetentionOnly()
     {
         var profile = DppDatasourceRegistry.Resolve("ADLS");
         var req = new PolicyCreateRequest
@@ -214,27 +224,10 @@ public class DppPolicyBuilderTests
 
         var policy = DppPolicyBuilder.Build(req, profile);
 
-        Assert.Equal(2, policy.PolicyRules.Count);
-        Assert.IsType<DataProtectionBackupRule>(policy.PolicyRules[1]);
-    }
-
-    [Fact]
-    public void Build_AzureFilesVaulted_ProducesDiscreteBackupRule()
-    {
-        var profile = DppDatasourceRegistry.Resolve("AzureFiles");
-        var req = new PolicyCreateRequest
-        {
-            Policy = "p",
-            WorkloadType = "AzureFiles",
-            BackupMode = "Vaulted",
-            DailyRetentionDays = "30",
-        };
-
-        var policy = DppPolicyBuilder.Build(req, profile);
-
-        Assert.Equal(2, policy.PolicyRules.Count);
-        var defaultRule = (DataProtectionRetentionRule)policy.PolicyRules[0];
-        Assert.Equal(DataStoreType.VaultStore, defaultRule.Lifecycles[0].SourceDataStore.DataStoreType);
+        // Vaulted ADLS: only a single VaultStore retention rule (no AzureBackupRule).
+        var rule = Assert.Single(policy.PolicyRules);
+        var retention = Assert.IsType<DataProtectionRetentionRule>(rule);
+        Assert.Equal(DataStoreType.VaultStore, retention.Lifecycles[0].SourceDataStore.DataStoreType);
     }
 
     [Fact]

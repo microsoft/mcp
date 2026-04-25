@@ -248,7 +248,7 @@ public class RsvPolicyBuilderTests
     }
 
     [Fact]
-    public void Build_HanaWithSnapshotBackup_AddsSnapshotFullSubPolicy()
+    public void Build_HanaWithSnapshotBackup_AttachesSnapshotDetailsToFullSubPolicy()
     {
         var req = new PolicyCreateRequest
         {
@@ -262,15 +262,16 @@ public class RsvPolicyBuilderTests
 
         var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
 
-        Assert.Contains(policy.SubProtectionPolicy, sp => sp.PolicyType.ToString() == "SnapshotFull");
-        var snap = policy.SubProtectionPolicy.First(sp => sp.PolicyType.ToString() == "SnapshotFull");
-        Assert.NotNull(snap.SnapshotBackupAdditionalDetails);
-        Assert.Equal(5, snap.SnapshotBackupAdditionalDetails!.InstantRpRetentionRangeInDays);
-        Assert.Equal("snapRG", snap.SnapshotBackupAdditionalDetails.InstantRPDetails);
+        var full = policy.SubProtectionPolicy.First(sp => sp.PolicyType.ToString() == "Full");
+        Assert.NotNull(full.SnapshotBackupAdditionalDetails);
+        Assert.Equal(5, full.SnapshotBackupAdditionalDetails!.InstantRpRetentionRangeInDays);
+        Assert.Equal("snapRG", full.SnapshotBackupAdditionalDetails.InstantRPDetails);
+        // Snapshot is attached to Full, not a separate SnapshotFull sub-policy.
+        Assert.DoesNotContain(policy.SubProtectionPolicy, sp => sp.PolicyType.ToString() == "SnapshotFull" || sp.PolicyType.ToString() == "SnapshotCopyOnlyFull");
     }
 
     [Fact]
-    public void Build_HanaWithoutSnapshotBackup_DoesNotAddSnapshotSubPolicy()
+    public void Build_HanaWithoutSnapshotBackup_DoesNotAttachSnapshotDetails()
     {
         var req = new PolicyCreateRequest
         {
@@ -281,7 +282,8 @@ public class RsvPolicyBuilderTests
 
         var policy = (VmWorkloadProtectionPolicy)RsvPolicyBuilder.Build(req);
 
-        Assert.DoesNotContain(policy.SubProtectionPolicy, sp => sp.PolicyType.ToString() == "SnapshotFull");
+        var full = policy.SubProtectionPolicy.First(sp => sp.PolicyType.ToString() == "Full");
+        Assert.Null(full.SnapshotBackupAdditionalDetails);
     }
 
     [Fact]

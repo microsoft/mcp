@@ -87,7 +87,7 @@ public static class AzureBackupOptionDefinitions
     // DPP Disk vault tier copy
     public const string EnableVaultTierCopyName = "enable-vault-tier-copy";
     public const string VaultTierCopyAfterDaysName = "vault-tier-copy-after-days";
-    // DPP Blob/ADLS/AzureFiles backup mode (Continuous vs Vaulted)
+    // DPP Blob/ADLS backup mode (Continuous vs Vaulted)
     public const string BackupModeName = "backup-mode";
     // DPP PITR retention for continuous Blob/ADLS
     public const string PitrRetentionDaysName = "pitr-retention-days";
@@ -506,7 +506,7 @@ public static class AzureBackupOptionDefinitions
 
     public static readonly Option<string> BackupMode = new($"--{BackupModeName}")
     {
-        Description = "Backup mode for storage workloads: 'Continuous' (default for AzureBlob, ADLS) or 'Vaulted' (discrete recovery points). DPP AzureBlob, AzureDataLakeStorage, AzureFiles.",
+        Description = "Backup mode for storage workloads: 'Continuous' (default for AzureBlob, ADLS) or 'Vaulted' (discrete recovery points). DPP AzureBlob, AzureDataLakeStorage.",
         Required = false
     };
 

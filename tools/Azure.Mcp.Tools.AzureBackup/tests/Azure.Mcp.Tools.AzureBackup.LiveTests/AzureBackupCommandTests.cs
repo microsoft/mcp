@@ -402,7 +402,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: VM weekly multi-tier + archive policy shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). Multi-tier retention + archive tier combination needs Az CLI cross-reference.")]
+    [Fact(Skip = "VM Enhanced V2 with Weekly schedule + multi-tier (weekly/monthly/yearly) retention + archive tier shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). Specific combination of V2 enhanced + Weekly schedule with WeeklySchedule retention shape needs additional cross-reference. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvVm_WeeklyMultiTierWithArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -436,7 +436,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: VM Enhanced hourly policy shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). SimpleSchedulePolicyV2 hourly fields need Az CLI cross-reference.")]
+    [Fact]
     public async Task PolicyCreate_RsvVm_HourlyEnhanced_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -463,7 +463,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: SQL workload Full+Log+Differential sub-policy shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). VmWorkload sub-policy structure needs Az CLI cross-reference.")]
+    [Fact(Skip = "SQL workload Full+Differential+Log policy shape persistently rejected by RSV API (BMSUserErrorInvalidPolicyInput) even when constructed directly via ARM REST PUT with multiple shape variations (Differential as SimpleRetentionPolicy/LongTermRetentionPolicy, with/without scheduleWeeklyFrequency, with/without makePolicyConsistent, multiple API versions). The Differential sub-policy for SQL appears to need additional vault-side workload registration or a shape we have not been able to reverse-engineer. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_FullLogDiff_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -698,7 +698,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: AzureDisk multi-tier + archive policy shape rejected by DPP API (BMSUserErrorInvalidInput). Vault tier copy + archive tier combination needs Az CLI cross-reference.")]
+    [Fact(Skip = "AzureDisk operational tier does not accept multi-tier (weekly/monthly/yearly) retention rules; only vault tier supports multi-tier. Combining --vault-tier-copy with multi-tier requires the multi-tier rules to source from VaultStore (with their own taggingCriteria), which is a deeper builder change tracked in a follow-up.")]
     public async Task PolicyCreate_DppDisk_VaultTierMultiTierArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -713,7 +713,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureDisk" },
-                { "schedule-frequency", "Daily" },
                 { "schedule-times", "02:00" },
                 { "daily-retention-days", "7" },
                 { "weekly-retention-weeks", "4" },
@@ -758,7 +757,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     // ===== Stage 2 live tests =====
 
-    [Fact(Skip = "Stage 3: VM smart-tier policy body shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). TieringPolicy ArchivedRP=TierRecommended likely requires additional retention duration shape.")]
+    [Fact(Skip = "VM smart-tier (TierRecommended) requires the smart-tiering preview feature to be enabled on the vault. Confirmed via direct ARM REST PUT: backend rejects the same shape Az CLI emits with BMSUserErrorInvalidPolicyInput on this vault. Builder now emits the Az-CLI-aligned shape (TieringMode=TierRecommended + Duration=0 + DurationType=Invalid) which will work where the feature is enabled.")]
     public async Task PolicyCreate_RsvVm_SmartTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -775,7 +774,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "workload-type", "AzureIaasVM" },
                 { "schedule-frequency", "Daily" },
                 { "schedule-times", "02:00" },
-                { "daily-retention-days", "30" },
+                { "daily-retention-days", "180" },
                 { "smart-tier", "true" }
             });
 
@@ -783,7 +782,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: HANA SnapshotFull sub-policy shape requires SimpleRetentionPolicy + Daily schedule. RSV API rejects current LongTerm/Weekly shape with BMSUserErrorInvalidPolicyInput.")]
+    [Fact]
     public async Task PolicyCreate_RsvHana_WithSnapshotBackup_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -811,7 +810,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: SQL workload archive-tier policy body shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). VmWorkload sub-policy TieringPolicy structure needs investigation against Az CLI body.")]
+    [Fact(Skip = "SQL workload archive-tier policy shape rejected by RSV API (BMSUserErrorInvalidPolicyInput) when sub-policy TieringPolicy is attached to the Full sub-policy. Same root cause as the SQL Full+Diff+Log test: SQL workload sub-policy structure for vault tier copy/archive needs further investigation. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_WithArchiveTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -841,7 +840,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: AFS hourly schedule + multi-tier retention combo rejected by RSV API (UserErrorInvalidRequestParameter). Schedule shape needs investigation against Az CLI body.")]
+    [Fact(Skip = "AFS hourly schedule + multi-tier (weekly/monthly/yearly) retention combo rejected by RSV API (UserErrorInvalidRequestParameter). The combination of hourly schedule with long-term retention is unusual for AFS; verify whether Az CLI supports it. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvFileShare_HourlyMultiTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -899,7 +898,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: Vault tier copy on AzureDisk likely requires a separate AzureRetentionRule with VaultStore source. DPP API rejects current shape with BMSUserErrorInvalidInput.")]
+    [Fact]
     public async Task PolicyCreate_DppDisk_VaultTierCopy_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -914,7 +913,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureDisk" },
-                { "schedule-frequency", "Daily" },
                 { "schedule-times", "02:00" },
                 { "daily-retention-days", "7" },
                 { "enable-vault-tier-copy", "true" },
@@ -925,7 +923,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: Vaulted Blob policy needs BackupType=Discrete + explicit schedule. DPP API rejects current shape with BMSUserErrorInvalidInput.")]
+    [Fact(Skip = "Vaulted Blob/ADLS DPP backup requires per-storage-account feature enablement that is not configured on the test vault. Confirmed via Az CLI: even the CLI-generated shape is rejected with BMSUserErrorInvalidInput on this vault. Builder now emits the correct Az-CLI-aligned shape (single VaultStore retention rule, no AzureBackupRule) but the service rejects all attempts in this environment.")]
     public async Task PolicyCreate_DppBlob_Vaulted_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -972,7 +970,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Stage 3: Vaulted ADLS policy follows Blob vaulted shape. Needs BackupType=Discrete + explicit schedule.")]
+    [Fact(Skip = "Vaulted ADLS DPP backup follows Blob vaulted shape; same service-side limitation — see PolicyCreate_DppBlob_Vaulted_E2E.")]
     public async Task PolicyCreate_DppAdls_Vaulted_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -987,31 +985,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureDataLakeStorage" },
-                { "backup-mode", "Vaulted" },
-                { "schedule-frequency", "P1D" },
-                { "schedule-times", "02:00" },
-                { "daily-retention-days", "30" }
-            });
-
-        var opResult = result.AssertProperty("result");
-        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
-    }
-
-    [Fact(Skip = "Stage 3: AzureFiles vaulted DPP profile ARM type rejected by service (UserErrorInvalidRequestParameter). Needs Az CLI cross-reference for correct DataSourceType.")]
-    public async Task PolicyCreate_DppAzureFiles_Vaulted_E2E()
-    {
-        var vaultName = $"{Settings.ResourceBaseName}-dpp";
-        var policyName = RegisterOrRetrieveVariable("createdAzureFilesVaultedPolicyName", $"test-files-vault-{Random.Shared.NextInt64()}");
-
-        var result = await CallToolAsync(
-            "azurebackup_policy_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName },
-                { "policy", policyName },
-                { "workload-type", "AzureFiles" },
                 { "backup-mode", "Vaulted" },
                 { "schedule-frequency", "P1D" },
                 { "schedule-times", "02:00" },

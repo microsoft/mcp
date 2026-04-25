@@ -212,7 +212,7 @@ public static class PolicyCreateValidator
         {
             issues.Add(new PolicyValidationIssue(
                 AnyFlag,
-                "Continuous DPP workloads (AzureBlob, AzureDataLakeStorage, AzureFiles) do not accept schedule, retention, or archive flags."));
+                "Continuous DPP workloads (AzureBlob, AzureDataLakeStorage) do not accept schedule, retention, or archive flags."));
         }
 
         // ===== Stage 2 shape rules =====
@@ -264,12 +264,12 @@ public static class PolicyCreateValidator
                 "--enable-vault-tier-copy requires --vault-tier-copy-after-days."));
         }
 
-        // --backup-mode is DPP storage only (Blob / ADLS / AzureFiles).
+        // --backup-mode is DPP storage only (Blob / ADLS).
         if (!string.IsNullOrWhiteSpace(options.BackupMode) && family != WorkloadFamily.DppStorageBackupMode)
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.BackupModeName}",
-                "--backup-mode is supported only for DPP AzureBlob, AzureDataLakeStorage, and AzureFiles workloads."));
+                "--backup-mode is supported only for DPP AzureBlob and AzureDataLakeStorage workloads."));
         }
 
         // --pitr-retention-days is DPP storage continuous only.
@@ -333,7 +333,7 @@ public static class PolicyCreateValidator
         RsvFileShare,
         DppDiscrete,            // AzureDisk, ElasticSAN, PostgreSQLFlexible, CosmosDB
         DppContinuous,          // (legacy) AzureBlob, AzureDataLakeStorage when --backup-mode unspecified
-        DppStorageBackupMode,   // AzureBlob, ADLS, AzureFiles — mode-driven (Continuous default vs Vaulted)
+        DppStorageBackupMode,   // AzureBlob, ADLS — mode-driven (Continuous default vs Vaulted). Vaulted Azure Files lives under RSV (workload-type AzureFileShare).
         DppAks,                 // AKS — has AKS-specific flags
         Aks,                    // (legacy alias retained for backward compatibility in tests)
     }
@@ -358,7 +358,7 @@ public static class PolicyCreateValidator
             "azurefileshare" or "fileshare" or "afs" => WorkloadFamily.RsvFileShare,
             "azuredisk" or "disk" or "elasticsan" or "esan" or "postgresqlflexible" or "postgres" or "pgflex" or "cosmosdb" or "cosmos" => WorkloadFamily.DppDiscrete,
             "aks" or "kubernetes" or "kubernetescluster" => WorkloadFamily.DppAks,
-            "azureblob" or "blob" or "adls" or "azuredatalakestorage" or "datalake" or "datalakestorage" or "azurefiles" or "files" or "afsvaulted" => WorkloadFamily.DppStorageBackupMode,
+            "azureblob" or "blob" or "adls" or "azuredatalakestorage" or "datalake" or "datalakestorage" => WorkloadFamily.DppStorageBackupMode,
             _ => WorkloadFamily.Unknown,
         };
     }
