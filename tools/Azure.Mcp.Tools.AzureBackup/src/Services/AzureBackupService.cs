@@ -609,14 +609,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await dppOps.ConfigureCrossRegionRestoreAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
-    public Task<OperationResult> UndeleteProtectedItemAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string datasourceId, string? vaultType, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("Undelete protected item is not yet implemented.");
-    }
-
     private async Task<string> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,

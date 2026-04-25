@@ -43,7 +43,4 @@ public interface IAzureBackupService
 
     // DR
     Task<OperationResult> ConfigureCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
-
-    // Undelete
-    Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string? vaultType = null, string? containerName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }
