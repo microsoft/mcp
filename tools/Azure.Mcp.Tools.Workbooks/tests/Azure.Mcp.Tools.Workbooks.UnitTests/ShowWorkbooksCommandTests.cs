@@ -29,10 +29,9 @@ public class ShowWorkbooksCommandTests
         _logger = Substitute.For<ILogger<ShowWorkbooksCommand>>();
 
         var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
 
-        _command = new(_logger);
+        _command = new(_logger, _service);
     }
 
     [Fact]

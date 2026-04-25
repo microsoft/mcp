@@ -1,62 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Language;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Functions.UnitTests.Language;
 
-public sealed class LanguageListCommandTests
+public sealed class LanguageListCommandTests : CommandUnitTestsBase<LanguageListCommand, IFunctionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFunctionsService _service;
-    private readonly ILogger<LanguageListCommand> _logger;
-    private readonly CommandContext _context;
-    private readonly LanguageListCommand _command;
-    private readonly Command _commandDefinition;
-
-    public LanguageListCommandTests()
-    {
-        _service = Substitute.For<IFunctionsService>();
-        _logger = Substitute.For<ILogger<LanguageListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.Equal("List Supported Languages", _command.Title);
+        Assert.Equal("list", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.Equal("List Supported Languages", Command.Title);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.OpenWorld);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.False(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Fact]
@@ -69,10 +46,10 @@ public sealed class LanguageListCommandTests
             ExtensionBundleVersion = "[4.*, 5.0.0)",
             Languages =
             [
-                new LanguageDetails
+                new()
                 {
                     Language = "python",
-                    Info = new LanguageInfo
+                    Info = new()
                     {
                         Name = "Python",
                         Runtime = "python",
@@ -83,7 +60,7 @@ public sealed class LanguageListCommandTests
                         RunCommand = "func start",
                         BuildCommand = null,
                         ProjectFiles = ["requirements.txt"],
-                        RuntimeVersions = new RuntimeVersionInfo
+                        RuntimeVersions = new()
                         {
                             Supported = ["3.10", "3.11", "3.12", "3.13"],
                             Preview = ["3.14"],
@@ -92,17 +69,17 @@ public sealed class LanguageListCommandTests
                         InitInstructions = "Test instructions",
                         ProjectStructure = ["function_app.py"]
                     },
-                    RuntimeVersions = new RuntimeVersionInfo
+                    RuntimeVersions = new()
                     {
                         Supported = ["3.10", "3.11", "3.12", "3.13"],
                         Preview = ["3.14"],
                         Default = "3.11"
                     }
                 },
-                new LanguageDetails
+                new()
                 {
                     Language = "csharp",
-                    Info = new LanguageInfo
+                    Info = new()
                     {
                         Name = "C#",
                         Runtime = "dotnet",
@@ -113,7 +90,7 @@ public sealed class LanguageListCommandTests
                         RunCommand = "func start",
                         BuildCommand = "dotnet build",
                         ProjectFiles = [],
-                        RuntimeVersions = new RuntimeVersionInfo
+                        RuntimeVersions = new()
                         {
                             Supported = ["8", "9", "10"],
                             Deprecated = ["6", "7"],
@@ -123,7 +100,7 @@ public sealed class LanguageListCommandTests
                         InitInstructions = "Test instructions",
                         ProjectStructure = ["*.csproj"]
                     },
-                    RuntimeVersions = new RuntimeVersionInfo
+                    RuntimeVersions = new()
                     {
                         Supported = ["8", "9", "10"],
                         Deprecated = ["6", "7"],
@@ -134,21 +111,14 @@ public sealed class LanguageListCommandTests
             ]
         };
 
-        _service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListLanguageListResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<LanguageListResult>>(json, FunctionsJsonContext.Default.ListLanguageListResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
 
         var result = results[0];
@@ -166,11 +136,10 @@ public sealed class LanguageListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns<LanguageListResult>(_ => throw new InvalidOperationException("Service error"));
+        Service.GetLanguageListAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
         Assert.NotNull(response);
@@ -183,10 +152,7 @@ public sealed class LanguageListCommandTests
     {
         // Arrange - use the real service to verify actual data shape
         // GetLanguageListAsync now fetches manifest for runtime versions
-        var mockHttpClientFactory = Substitute.For<IHttpClientFactory>();
-        var languageMetadata = new LanguageMetadataProvider();
         var mockManifestService = Substitute.For<IManifestService>();
-        var mockLogger = Substitute.For<ILogger<FunctionsService>>();
 
         // Set up manifest with runtime versions
         var manifest = new TemplateManifest
@@ -201,25 +167,23 @@ public sealed class LanguageListCommandTests
                 ["PowerShell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" }
             }
         };
-        mockManifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+        mockManifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
 
-        var mockCacheService = Substitute.For<ICacheService>();
-        var realService = new FunctionsService(mockHttpClientFactory, languageMetadata, mockManifestService, mockCacheService, mockLogger);
+        var realService = new FunctionsService(
+            Substitute.For<IHttpClientFactory>(),
+            new LanguageMetadataProvider(),
+            mockManifestService,
+            Substitute.For<ICacheService>(),
+            Substitute.For<ILogger<FunctionsService>>());
         var realResult = await realService.GetLanguageListAsync(TestContext.Current.CancellationToken);
-        _service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(realResult));
+        Service.GetLanguageListAsync(Arg.Any<CancellationToken>()).Returns(realResult);
 
         // Act
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync();
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListLanguageListResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<LanguageListResult>>(json, FunctionsJsonContext.Default.ListLanguageListResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
 
         var result = results[0];

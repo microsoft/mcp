@@ -26,8 +26,8 @@ public class ComputeService(
 {
     private readonly ILogger<ComputeService> _logger = logger;
 
-    // Default VM size matching Azure CLI (az vm create --size default)
-    private const string DefaultVmSize = "Standard_DS1_v2";
+    // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
+    private const string DefaultVmSize = "Standard_D2s_v5";
 
     private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -78,7 +78,7 @@ public class ComputeService(
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        // Use default VM size (Standard_D2s_v5) when not specified
         var effectiveVmSize = vmSize ?? DefaultVmSize;
 
         // Determine disk settings - let Azure choose disk type based on VM size when not specified
@@ -716,7 +716,7 @@ public class ComputeService(
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        // Use default VM size (Standard_D2s_v5) when not specified
         var effectiveVmSize = vmSize ?? DefaultVmSize;
 
         // Determine disk settings - let Azure choose disk type based on VM size when not specified

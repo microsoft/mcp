@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Mcp.Tools.Monitor.Models;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Monitor.UnitTests.Models;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Instrumentation.Models;
 
 public sealed class OnboardingSpecBuilderTests
 {
@@ -59,7 +62,7 @@ public sealed class OnboardingSpecBuilderTests
             Id = "invalid",
             Type = ActionType.ManualStep,
             Description = "Invalid because details are missing required instructions",
-            Details = new Dictionary<string, object>(),
+            Details = [],
             Order = 0
         };
 

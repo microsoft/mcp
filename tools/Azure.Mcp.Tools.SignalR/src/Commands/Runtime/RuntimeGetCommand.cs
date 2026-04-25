@@ -14,11 +14,12 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 /// <summary>
 /// Shows details of an Azure SignalR Service.
 /// </summary>
-public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
+public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignalRService signalRService)
     : BaseSignalRCommand<RuntimeGetOptions>
 {
     private const string CommandTitle = "Show Service Details";
     private readonly ILogger<RuntimeGetCommand> _logger = logger;
+    private readonly ISignalRService _signalRService = signalRService;
 
     public override string Id => "bb9035f6-f642-4ee0-83c8-87d6da8266b1";
 
@@ -67,8 +68,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
 
         try
         {
-            var signalRService = context.GetService<ISignalRService>();
-            var runtimes = await signalRService.GetRuntimeAsync(
+            var runtimes = await _signalRService.GetRuntimeAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.SignalR,

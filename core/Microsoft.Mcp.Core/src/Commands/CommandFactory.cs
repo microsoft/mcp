@@ -3,6 +3,7 @@
 
 using System.CommandLine.Help;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
@@ -43,11 +44,26 @@ public class CommandFactory : ICommandFactory
     /// <see cref="ParseResult.GetValue{T}"/> to return the default value on every command
     /// except the last one the option was added to.
     /// </summary>
-    private static Option<bool> CreateLearnOption() => new(ICommandFactory.LearnOptionName)
+    private static Option<bool> CreateLearnOption()
     {
-        Description = LearnOptionDescription,
-        Required = false
-    };
+        var opt = new Option<bool>(ICommandFactory.LearnOptionName)
+        {
+            Description = LearnOptionDescription,
+            Required = false
+        };
+        _factoryInjectedLearnOptions.Add(opt, null);
+        return opt;
+    }
+
+    /// <summary>
+    /// Weak-keyed set of <see cref="Option"/> instances created and injected by <see cref="CommandFactory"/>.
+    /// Allows any factory instance to distinguish its own injected <c>--learn</c> options from
+    /// options added by command authors — without requiring the same factory instance to be reused.
+    /// </summary>
+    private static readonly ConditionalWeakTable<Option, object?> _factoryInjectedLearnOptions = new();
+
+    private static bool HasFactoryInjectedLearnOption(Command command)
+        => command.Options.Any(o => _factoryInjectedLearnOptions.TryGetValue(o, out _));
 
     private static bool IsReservedLearnOptionIdentifier(string? identifier)
     {
@@ -209,21 +225,16 @@ public class CommandFactory : ICommandFactory
         }
     }
 
-    private bool HasLearnOption(Command command)
-    {
-        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
-        return command.Options.Any(o =>
-            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
-    }
-
     private void ConfigureCommands(CommandGroup group, string parentTokenizedPrefix = "")
     {
         var groupTokenizedPath = GetPrefix(parentTokenizedPrefix, group.Name);
 
         // Guard against the same Command object being processed by a second CommandFactory instance
         // (e.g. ConsolidatedToolDiscoveryStrategy reuses the same IAreaSetup/CommandGroup objects).
-        // If --learn is already present it was injected by a prior factory run — skip validation and re-injection.
-        if (!HasLearnOption(group.Command))
+        // HasFactoryInjectedLearnOption checks whether the --learn on this command was created by
+        // us (via _factoryInjectedLearnOptions) rather than by a command author, so we skip
+        // re-validation and re-injection only when we own the existing option.
+        if (!HasFactoryInjectedLearnOption(group.Command))
         {
             ValidateNoReservedLearnOption(group.Command, groupTokenizedPath.Replace(Separator, ' '));
             group.Command.Options.Add(CreateLearnOption());
@@ -236,7 +247,7 @@ public class CommandFactory : ICommandFactory
 
             // Build the full tokenized key for this leaf command (e.g. "storage_account_list").
             var fullTokenizedKey = GetPrefix(groupTokenizedPath, command.Name);
-            if (!HasLearnOption(cmd))
+            if (!HasFactoryInjectedLearnOption(cmd))
             {
                 ValidateNoReservedLearnOption(cmd, fullTokenizedKey.Replace(Separator, ' '));
             }
@@ -288,8 +299,8 @@ public class CommandFactory : ICommandFactory
         // Add --learn as a recognized option on this command (for autocomplete/help display).
         // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called,
         // which bypasses System.CommandLine's required-option validation that would otherwise block the action.
-        // Guard: skip if already added by a prior factory run on the same Command instance.
-        if (!HasLearnOption(command))
+        // Guard: skip if already injected by a prior factory run on the same Command instance.
+        if (!HasFactoryInjectedLearnOption(command))
         {
             command.Options.Add(CreateLearnOption());
         }

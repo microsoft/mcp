@@ -141,6 +141,7 @@ public class SpeechSetupTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddHttpClient();
         // Add required dependencies
         services.AddSingleton(Substitute.For<ITenantService>());
         setup.ConfigureServices(services);
