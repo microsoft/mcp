@@ -106,15 +106,12 @@ public sealed class FunctionAppCreateContainerAppCommand(ILogger<FunctionAppCrea
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
                 return context.Response;
 
-            if (!string.IsNullOrWhiteSpace(options.FunctionAppName))
+            var functionAppNameError = FunctionAppValidation.ValidateFunctionAppNameLength(options.FunctionAppName);
+            if (functionAppNameError is not null)
             {
-                var len = options.FunctionAppName.Length;
-                if (len < 2 || len > 43)
-                {
-                    context.Response.Status = HttpStatusCode.BadRequest;
-                    context.Response.Message = "function-app name must be between 2 and 43 characters.";
-                    return context.Response;
-                }
+                context.Response.Status = HttpStatusCode.BadRequest;
+                context.Response.Message = functionAppNameError;
+                return context.Response;
             }
 
             var result = await _functionAppService.CreateContainerAppFunctionApp(

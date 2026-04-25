@@ -35,6 +35,9 @@ public readonly record struct CreateOptions(
 
 public static class FunctionAppValidation
 {
+    public const int MinFunctionAppNameLength = 2;
+    public const int MaxFunctionAppNameLength = 43;
+
     private static readonly HashSet<string> SupportedRuntimes = new()
     {
         "dotnet", "dotnet-isolated", "node", "python", "java", "powershell", "custom"
@@ -44,6 +47,18 @@ public static class FunctionAppValidation
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException($"Missing required parameter: {name}");
+    }
+
+    public static string? ValidateFunctionAppNameLength(string? functionAppName)
+    {
+        if (string.IsNullOrWhiteSpace(functionAppName))
+            return null;
+
+        var length = functionAppName.Length;
+        if (length < MinFunctionAppNameLength || length > MaxFunctionAppNameLength)
+            return $"function-app name must be between {MinFunctionAppNameLength} and {MaxFunctionAppNameLength} characters.";
+
+        return null;
     }
 
     public static string? GetDefaultRuntimeVersion(string runtime) => runtime switch
