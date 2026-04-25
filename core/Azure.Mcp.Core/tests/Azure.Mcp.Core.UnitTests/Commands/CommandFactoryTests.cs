@@ -312,6 +312,49 @@ public class CommandFactoryTests
     }
 
     [Fact]
+    public void LearnOption_InvokedAtRootLevel_OutputsAllCommandsAsJson()
+    {
+        // Arrange — two areas, each with 4 commands = 8 total visible commands
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var serviceAreas = new List<IAreaSetup> { area1, area2 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _configurationOptions, _logger);
+
+        // Act — no command prefix, only the --learn flag (the root-level code path sets prefix = "")
+        var output = factory.GetLearnResponse(["--learn"]);
+
+        // Assert
+        Assert.False(string.IsNullOrEmpty(output));
+
+        using var doc = JsonDocument.Parse(output);
+        var root = doc.RootElement;
+
+        Assert.True(root.TryGetProperty("status", out var status));
+        Assert.Equal(200, status.GetInt32());
+
+        Assert.True(root.TryGetProperty("results", out var results));
+        Assert.Equal(JsonValueKind.Array, results.ValueKind);
+
+        // All 8 commands (4 per area × 2 areas) should be returned
+        Assert.Equal(8, results.GetArrayLength());
+
+        // Every entry must have the required shape fields
+        foreach (var entry in results.EnumerateArray())
+        {
+            Assert.True(entry.TryGetProperty("name", out _));
+            Assert.True(entry.TryGetProperty("description", out _));
+            Assert.True(entry.TryGetProperty("command", out _));
+        }
+
+        // Results are ordered — verify both area prefixes are present
+        var commandPaths = results.EnumerateArray()
+            .Select(e => e.GetProperty("command").GetString())
+            .ToList();
+        Assert.Contains(commandPaths, p => p!.StartsWith("name1", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(commandPaths, p => p!.StartsWith("name2", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void LearnOption_InvokedOnGroup_OutputsCommandListAsJson()
     {
         // Arrange
