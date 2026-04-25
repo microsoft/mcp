@@ -56,6 +56,13 @@ public class CommandFactory : ICommandFactory
     }
 
     /// <summary>
+    /// Pre-computed normalized form of <see cref="ICommandFactory.LearnOptionName"/> (i.e. <c>"learn"</c>).
+    /// Cached to avoid recomputing on every option comparison.
+    /// </summary>
+    private static readonly string _normalizedLearnName =
+        NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+
+    /// <summary>
     /// Weak-keyed set of <see cref="Option"/> instances created and injected by <see cref="CommandFactory"/>.
     /// Allows any factory instance to distinguish its own injected <c>--learn</c> options from
     /// options added by command authors — without requiring the same factory instance to be reused.
@@ -73,18 +80,13 @@ public class CommandFactory : ICommandFactory
         => IsReservedLearnOptionIdentifier(option.Name) || option.Aliases.Any(IsReservedLearnOptionIdentifier);
 
     private static bool IsReservedLearnOptionIdentifier(string? identifier)
-    {
-        return string.Equals(
-            NameNormalization.NormalizeOptionName(identifier),
-            NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName),
-            StringComparison.OrdinalIgnoreCase);
-    }
+        => string.Equals(NameNormalization.NormalizeOptionName(identifier), _normalizedLearnName, StringComparison.OrdinalIgnoreCase);
 
     private void ValidateNoReservedLearnOption(Command command, string commandPath)
     {
         foreach (var option in command.Options)
         {
-            if (IsReservedLearnOptionIdentifier(option.Name) || option.Aliases.Any(IsReservedLearnOptionIdentifier))
+            if (IsLearnOption(option))
             {
                 var message = $"Command '{commandPath}' defines the reserved option '{ICommandFactory.LearnOptionName}'. This option name is reserved for discovery and cannot be used by commands.";
                 var error = new ArgumentException(message);

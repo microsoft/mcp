@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
@@ -265,9 +264,7 @@ public class CommandFactoryTests
 
         // Act
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
-        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
-        var learnOption = name1Group.Command.Options.FirstOrDefault(o =>
-            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
+        var learnOption = name1Group.Command.Options.FirstOrDefault(CommandFactory.IsLearnOption);
 
         // Assert
         Assert.NotNull(learnOption);
@@ -288,9 +285,7 @@ public class CommandFactoryTests
         // The leaf command is in the subgroup Commands collection
         var leafCommand = name1Group.Commands.Values.FirstOrDefault();
         var leafSystemCommand = leafCommand?.GetCommand();
-        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
-        var learnOption = leafSystemCommand?.Options.FirstOrDefault(o =>
-            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
+        var learnOption = leafSystemCommand?.Options.FirstOrDefault(CommandFactory.IsLearnOption);
 
         // Assert
         Assert.NotNull(learnOption);
@@ -308,9 +303,7 @@ public class CommandFactoryTests
         // Act - verify nested subgroup (subgroup1) also has --learn
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
         var subgroup1 = name1Group.SubGroup.FirstOrDefault(g => g.Name == "subgroup1");
-        var normalizedLearn = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
-        var learnOption = subgroup1?.Command.Options.FirstOrDefault(o =>
-            string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearn, StringComparison.OrdinalIgnoreCase));
+        var learnOption = subgroup1?.Command.Options.FirstOrDefault(CommandFactory.IsLearnOption);
 
         // Assert
         Assert.NotNull(subgroup1);
