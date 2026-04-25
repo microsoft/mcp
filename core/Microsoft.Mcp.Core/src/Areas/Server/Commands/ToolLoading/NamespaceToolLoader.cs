@@ -418,10 +418,8 @@ public sealed class NamespaceToolLoader(
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
-            var normalizedLearnOptionName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
             var effectiveOptions = realCommand.Options
-                .Where(o => !string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)
-                         && !o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)))
+                .Where(o => !CommandFactory.IsLearnOption(o))
                 .ToList();
 
             if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
@@ -638,10 +636,8 @@ public sealed class NamespaceToolLoader(
         tool.Meta = meta;
 
         var schema = new ToolInputSchema();
-        var normalizedLearnOptionName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
         var options = command.GetCommand().Options
-            .Where(o => !string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)
-                     && !o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
         if (options.Count > 0)

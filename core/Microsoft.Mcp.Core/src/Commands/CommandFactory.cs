@@ -3,9 +3,9 @@
 
 using System.CommandLine.Help;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -64,6 +64,13 @@ public class CommandFactory : ICommandFactory
 
     private static bool HasFactoryInjectedLearnOption(Command command)
         => command.Options.Any(o => _factoryInjectedLearnOptions.TryGetValue(o, out _));
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="option"/> is the reserved <c>--learn</c>
+    /// discovery option, matched by primary name or any alias, ignoring prefix and case.
+    /// </summary>
+    internal static bool IsLearnOption(Option option)
+        => IsReservedLearnOptionIdentifier(option.Name) || option.Aliases.Any(IsReservedLearnOptionIdentifier);
 
     private static bool IsReservedLearnOptionIdentifier(string? identifier)
     {
@@ -272,11 +279,8 @@ public class CommandFactory : ICommandFactory
         var commandDetails = command.GetCommand();
 
         // Command.Options is never null in System.CommandLine — the null-conditional is not needed.
-        var normalizedLearnName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
         var optionInfos = commandDetails.Options
-            .Where(opt => opt is not HelpOption
-                && !string.Equals(NameNormalization.NormalizeOptionName(opt.Name), normalizedLearnName, StringComparison.OrdinalIgnoreCase)
-                && !opt.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnName, StringComparison.OrdinalIgnoreCase)))
+            .Where(opt => opt is not HelpOption && !IsLearnOption(opt))
             .Select(opt => new OptionInfo(
                 name: opt.Name,
                 description: opt.Description ?? string.Empty,

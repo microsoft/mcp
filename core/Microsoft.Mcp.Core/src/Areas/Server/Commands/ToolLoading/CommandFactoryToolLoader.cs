@@ -197,10 +197,8 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        var normalizedLearnOptionName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
         var effectiveOptions = realCommand.Options
-            .Where(o => !string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)
-                     && !o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
         if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
@@ -289,10 +287,8 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
-        var normalizedLearnOptionName = NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
         var options = command.GetCommand().Options
-            .Where(o => !string.Equals(NameNormalization.NormalizeOptionName(o.Name), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)
-                     && !o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), normalizedLearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            .Where(o => !CommandFactory.IsLearnOption(o))
             .ToList();
 
         var schema = new ToolInputSchema();
