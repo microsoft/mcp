@@ -24,7 +24,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 
     public override string Description =>
         """
-        Provides the recommended Azure-specific rules for generating CI/CD pipeline files (GitHub Actions or Azure DevOps) for deploying to Azure. Call this tool before writing pipeline/workflow YAML when the user asks to set up CI/CD pipelines or workflows — it returns current authentication patterns (e.g., OIDC with managed identity), multi-environment configuration, and deployment constraints that vary by platform and are not covered by general best practices. Determine the pipeline platform (github-actions or azure-devops) and deployment scope (deploy-only or provision-and-deploy) from project context before calling. Handles both azd-based and Azure CLI-based deployments.
+        Provides the recommended Azure-specific rules for generating CI/CD pipeline files (GitHub Actions or Azure DevOps) for deploying to Azure. Call this tool before writing pipeline/workflow YAML when the user asks to set up CI/CD pipelines or workflows. It returns current authentication patterns (e.g., OIDC with managed identity), multi-environment configuration, and deployment constraints that vary by platform and are not covered by general best practices. Determine the pipeline platform (github-actions or azure-devops) and deployment scope (deploy-only or provision-and-deploy) from project context before calling. Handles both azd-based and Azure CLI-based deployments.
         """;
 
     public override string Title => CommandTitle;
