@@ -116,14 +116,20 @@ function BuildServer($server) {
             return
         }
         
+        # Even if we call the script with the SmokeTest switch, we can only run the test if the built platform is supported on the current OS
+        $currentRid = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
         if($SmokeTest) {
-            Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
-            try {
-                & $exePath tools list
-            } catch {
-                LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
-                $script:exitCode = 1
-                return
+            if ($runtime -eq $currentRid) {
+                Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
+                try {
+                    & $exePath tools list
+                } catch {
+                    LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
+                    $script:exitCode = 1
+                    return
+                }
+            } else { 
+                Write-Host "Skipping smoke test for cross platorm build (current platform: $currentRid, build platform: $runtime)" -ForegroundColor Yellow
             }
         }
     }
