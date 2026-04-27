@@ -54,6 +54,9 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.WorkloadType, options.WorkloadType);
+
         try
         {
             var result = await _azureBackupService.CreatePolicyAsync(

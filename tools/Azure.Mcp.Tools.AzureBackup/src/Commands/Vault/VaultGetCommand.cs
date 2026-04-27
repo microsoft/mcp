@@ -90,6 +90,9 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Vault) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.Vault))

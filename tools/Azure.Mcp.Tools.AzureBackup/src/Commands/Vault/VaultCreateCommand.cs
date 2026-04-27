@@ -96,6 +96,8 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.CreateVaultAsync(

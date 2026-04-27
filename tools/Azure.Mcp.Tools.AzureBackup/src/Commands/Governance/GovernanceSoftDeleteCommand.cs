@@ -87,6 +87,8 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.ConfigureSoftDeleteAsync(

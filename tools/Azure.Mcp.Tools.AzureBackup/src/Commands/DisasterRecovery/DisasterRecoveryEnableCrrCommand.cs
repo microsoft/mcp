@@ -34,6 +34,8 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.ConfigureCrossRegionRestoreAsync(

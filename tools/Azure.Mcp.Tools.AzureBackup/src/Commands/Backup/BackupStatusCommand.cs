@@ -51,6 +51,8 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
+
         try
         {
             var result = await _azureBackupService.GetBackupStatusAsync(
