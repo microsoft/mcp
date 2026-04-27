@@ -14,8 +14,10 @@
 - Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
 - Use name-based binding with `parseResult.GetValueOrDefault<T>()`
 - Always call `HandleException(context, ex)` in catch blocks
+- Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
 - Include post-deployment scripts (`test-resources-post.ps1`)
+- Record all live tests according to the guidelines in `/docs/recorded-tests.md`
 - Submit one tool per pull request
 - Use `BaseAzureResourceService` for Resource Graph queries when possible
 - Register all response models in JSON serialization context for AOT safety
@@ -35,7 +37,7 @@
 - Use `subscriptionId` parameter name
 - Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
 - Use readonly option fields in commands
-- Skip live test infrastructure for Azure service commands
+- Skip live tests, live test infrastructure, or test recordings for Azure service commands
 - Use `parseResult.GetValue()` without generic type parameter
 - Redefine base class properties in Options classes
 - Skip `base.RegisterOptions()` or `base.Dispose()` calls
@@ -164,9 +166,10 @@ dotnet build
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
 - Implementation guide: `/servers/Azure.Mcp.Server/docs/new-command.md` - Step-by-step command creation
-- Test prompts: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
-- Contributing guide: `CONTRIBUTING.md` - Development workflow and standards
-- Code guidelines: `.github/copilot-instructions.md` - Specific coding standards
+- Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
+- Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
+- Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
+- Code guidelines: `/.github/copilot-instructions.md` - Specific coding standards
 
 ## When Stuck
 - Ask clarifying questions about Azure service requirements or command patterns
@@ -179,10 +182,12 @@ dotnet build
 - Format and type check: `dotnet format && dotnet build` - all green
 - Unit tests: Add comprehensive tests following existing patterns
 - Live test infrastructure: Include Bicep template and post-deployment script for Azure services
+- Live tests: Include live tests for all commands that interact with Azure resources
+- Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md` or `servers/Fabric.Mcp.Server/CHANGELOG.md`).
+- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `/docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `/servers/Azure.Mcp.Server/CHANGELOG.md` or `/servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
@@ -313,6 +318,9 @@ All commands must include comprehensive unit tests:
 
 Command unit tests should extend `CommandUnitTestsBase<TCommand, TService>` where `TCommand` is the command class being
 tested and `TService` is the service that the command uses.
+
+### Live Testing Requirements
+Azure service commands require live tests to validate functionality against actual Azure resources. Live tests must be recorded for playback using `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
 
 ### Live Test Infrastructure
 Azure service commands require Bicep templates for test resources:

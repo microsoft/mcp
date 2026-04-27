@@ -394,10 +394,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | deploy_app_logs_get | Show me the log of the application deployed by azd |
-| deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules and best practices for writing Bicep and Terraform IaC for Azure |
-| deploy_pipeline_guidance_get | How do I set up a CI/CD pipeline with GitHub Actions or Azure DevOps to deploy my app to Azure? |
-| deploy_plan_get | How do I create a step-by-step deployment plan for my application to Azure using azd with Bicep or Terraform IaC? |
+| deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application |
+| deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep |
+| deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices |
+| deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates |
 
 ## Azure Device Registry
 
@@ -998,6 +998,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azureterraformbestpractices_get | Fetch the Azure Terraform best practices |
 | azureterraformbestpractices_get | Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault |
+
+## Azure Terraform
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azureterraform_azurerm_get | Get the documentation for azurerm_virtual_network |
+| azureterraform_azurerm_get | Show me the Terraform provider arguments for azurerm_storage_account |
+| azureterraform_azurerm_get | Get the data source documentation for azurerm_subscription |
+| azureterraform_azurerm_get | Get the Terraform AzureRM provider documentation for the 'sku' argument of azurerm_storage_account |
+| azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Storage/storageAccounts |
+| azureterraform_azapi_get | Get AzAPI docs for Microsoft.Network/virtualNetworks |
+| azureterraform_azapi_get | Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01 |
+| azureterraform_avm_list | List all available Azure Verified Modules |
+| azureterraform_avm_list | Show me the available AVM modules for Terraform |
+| azureterraform_avm_versions | Show all versions of avm-res-network-virtualnetwork |
+| azureterraform_avm_versions | What versions are available for avm-res-storage-storageaccount? |
+| azureterraform_avm_get | Get the documentation for avm-res-storage-storageaccount version 0.1.0 |
+| azureterraform_avm_get | Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork |
+| azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform |
+| azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform |
+| azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform |
+| azureterraform_aztfexport_resourcegroup | Export resource group my-rg to Terraform using the azapi provider |
+| azureterraform_aztfexport_query | Export all storage accounts in my subscription using a resource graph query |
+| azureterraform_aztfexport_query | Generate an aztfexport query command to export resources matching "type == 'Microsoft.Storage/storageAccounts'" |
+| azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies |
+| azureterraform_conftest_workspace | Validate Terraform files in ./infra using the avmsec policy set |
+| azureterraform_conftest_plan | Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies |
+| azureterraform_conftest_plan | Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter |
 
 ## Azure Virtual Desktop
 
