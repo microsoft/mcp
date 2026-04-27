@@ -59,7 +59,7 @@ public class TableConfigGetCommandTests : CommandUnitTestsBase<TableConfigGetCom
     public async Task ExecuteAsync_MissingOption_ReturnsBadRequest(string missingOption)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingOption,
-            ("workspace-id", "workspace"),
+            ("--workspace-id", "workspace"),
             ("--item-id", "lakehouse")
         ));
 

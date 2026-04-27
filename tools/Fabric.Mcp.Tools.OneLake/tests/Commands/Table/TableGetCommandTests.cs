@@ -91,10 +91,10 @@ public class TableGetCommandTests : CommandUnitTestsBase<TableGetCommand, IOneLa
     public async Task ExecuteAsync_MissingOption_ReturnsBadRequest(string missingOption)
     {
         var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingOption,
-            ("workspace-id", "workspace"),
-            ("item-id", "item"),
-            ("namespace", "sales"),
-            ("table", "transactions")));
+            ("--workspace-id", "workspace"),
+            ("--item-id", "item"),
+            ("--namespace", "sales"),
+            ("--table", "transactions")));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceive().GetTableAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());

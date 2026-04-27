@@ -19,10 +19,11 @@ namespace Microsoft.Mcp.Tests.Client;
 /// </summary>
 /// <typeparam name="TCommand">The tool command.</typeparam>
 /// <typeparam name="TService">The tool service.</typeparam>
-public abstract class CommandUnitTestsBase<TCommand, TService>
+public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
     where TCommand : class, IBaseCommand
     where TService : class
 {
+    private bool _disposed = false;
     protected TService Service { get; init; }
     protected ILogger<TCommand> Logger { get; init; }
     protected IServiceCollection Services { get; init; }
@@ -80,5 +81,20 @@ public abstract class CommandUnitTestsBase<TCommand, TService>
         var result = DeserializeResponse(response, jsonTypeInfo);
         Assert.NotNull(result);
         return result;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+        if (disposing)
+            ServiceProvider.Dispose();
+        _disposed = true;
     }
 }
