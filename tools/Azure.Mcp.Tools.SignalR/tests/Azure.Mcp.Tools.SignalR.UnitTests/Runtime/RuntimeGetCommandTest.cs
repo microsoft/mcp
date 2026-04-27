@@ -165,7 +165,7 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
             .ThrowsAsync(notFoundException);
 
         // Act
-        var response = await ExecuteCommandAsync("`--subscription", "sub1");
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);

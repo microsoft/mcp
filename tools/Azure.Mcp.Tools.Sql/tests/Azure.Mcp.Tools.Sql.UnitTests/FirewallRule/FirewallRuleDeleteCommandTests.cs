@@ -83,10 +83,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name TestRule");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -109,10 +109,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name NonExistentRule");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "NonExistentRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -135,10 +135,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name TestRule");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -162,10 +162,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name TestRule");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -188,10 +188,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name TestRule");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -218,10 +218,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         await ExecuteCommandAsync(
-            $"--subscription {subscription}",
-            $"--resource-group {resourceGroup}",
-            $"--server {serverName}",
-            $"--firewall-rule-name {ruleName}");
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--server", serverName,
+            "--firewall-rule-name", ruleName);
 
         // Assert
         await Service.Received(1).DeleteFirewallRuleAsync(
@@ -248,11 +248,11 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
-            "--firewall-rule-name TestRule",
-            "--retry-max-retries 3");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule",
+            "--retry-max-retries", "3");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -288,10 +288,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            $"--subscription testsub",
-            $"--resource-group testrg",
-            $"--server testserver",
-            $"--firewall-rule-name {ruleName}");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", ruleName);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -323,9 +323,9 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription testsub",
-            "--resource-group testrg",
-            "--server testserver",
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
             "--firewall-rule-name InvalidRule");
 
         // Assert
@@ -349,10 +349,10 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
 
         // Act
         var response = await ExecuteCommandAsync(
-            $"--subscription testsub",
-            $"--resource-group testrg",
-            $"--server testserver",
-            $"--firewall-rule-name {ruleName}");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", ruleName);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

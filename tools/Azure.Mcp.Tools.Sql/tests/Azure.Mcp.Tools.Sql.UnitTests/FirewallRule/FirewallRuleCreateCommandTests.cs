@@ -289,12 +289,12 @@ public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleC
 
         // Act
         await ExecuteCommandAsync(
-            $"--subscription {subscription}",
-            $"--resource-group {resourceGroup}",
-            $"--server {serverName}",
-            $"--firewall-rule-name {ruleName}",
-            $"--start-ip-address {startIp}",
-            $"--end-ip-address {endIp}");
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--server", serverName,
+            "--firewall-rule-name", ruleName,
+            "--start-ip-address", startIp,
+            "--end-ip-address", endIp);
 
         // Assert
         await Service.Received(1).CreateFirewallRuleAsync(
@@ -383,12 +383,12 @@ public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleC
 
         // Act
         var response = await ExecuteCommandAsync(
-            $"--subscription testsub",
-            $"--resource-group testrg",
-            $"--server testserver",
-            $"--firewall-rule-name TestRule",
-            $"--start-ip-address {startIp}",
-            $"--end-ip-address {endIp}");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule",
+            "--start-ip-address", startIp,
+            "--end-ip-address", endIp);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -407,12 +407,12 @@ public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleC
     {
         // Arrange & Act
         var response = await ExecuteCommandAsync(
-            $"--subscription testsub",
-            $"--resource-group testrg",
-            $"--server testserver",
-            $"--firewall-rule-name TestRule",
-            $"--start-ip-address {startIp}",
-             $"--end-ip-address {endIp}");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule",
+            "--start-ip-address", startIp,
+            "--end-ip-address", endIp);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -430,12 +430,12 @@ public class FirewallRuleCreateCommandTests : CommandUnitTestsBase<FirewallRuleC
     {
         // Arrange & Act
         var response = await ExecuteCommandAsync(
-            $"--subscription testsub",
-            $"--resource-group testrg",
-            $"--server testserver",
-            $"--firewall-rule-name TestRule",
-            $"--start-ip-address {startIp}",
-             $"--end-ip-address {endIp}");
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--firewall-rule-name", "TestRule",
+            "--start-ip-address", startIp,
+            "--end-ip-address", endIp);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

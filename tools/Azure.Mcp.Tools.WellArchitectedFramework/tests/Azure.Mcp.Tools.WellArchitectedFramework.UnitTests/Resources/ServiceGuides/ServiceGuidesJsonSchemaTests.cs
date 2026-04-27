@@ -166,7 +166,7 @@ public class ServiceGuidesJsonSchemaTests
         {
             foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
-                Assert.True(variation.All(char.IsLower),
+                Assert.True(variation == variation.ToLowerInvariant(),
                     $"Variation '{variation}' in service '{kvp.Key}' should be lowercase");
             }
         }
@@ -222,7 +222,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            Assert.True(kvp.Key.All(char.IsLower), $"Service key '{kvp.Key}' should be lowercase");
+            Assert.True(kvp.Key == kvp.Key.ToLowerInvariant(), $"Service key '{kvp.Key}' should be lowercase");
         }
     }
 
