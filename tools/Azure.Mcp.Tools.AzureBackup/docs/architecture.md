@@ -304,6 +304,47 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 | Azure Data Lake Storage | `AzureDataLakeStorage` | adls, datalake | `.../storageAccounts/blobServices` | Operational | Continuous |
 | Azure Cosmos DB | `CosmosDB` | cosmosdb, cosmos | `Microsoft.DocumentDB/databaseAccounts` | Operational | Continuous |
 
+### `policy create` — Feature Support Matrix
+
+Coverage of `azmcp azurebackup policy create` flags by workload, validated by the live test suite.
+Legend: ✅ supported & live-test covered · ⚠️ shape emitted but blocked on a vault/subscription preview-feature flag (see test skip reasons) · 🔬 deeper investigation tracked as a follow-up · — not applicable to this workload.
+
+#### Recovery Services Vault (RSV)
+
+| Feature / flag(s) | AzureVM (Standard) | AzureVM (Enhanced V2) | SQL | SAP HANA | AzureFileShare |
+|---|:--:|:--:|:--:|:--:|:--:|
+| Daily schedule + daily retention | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Weekly schedule + weekly retention | ✅ | 🔬 | — | — | ✅ |
+| Hourly schedule (`--policy-sub-type Enhanced`) | — | ✅ | — | — | 🔬 |
+| Multi-tier retention (W + M + Y) | ✅ | 🔬 | ✅ | ✅ | 🔬 |
+| Archive tier (`--archive-tier-mode TierAfter`) | ✅ | 🔬 | 🔬 | ✅ | — |
+| Smart-tier (`TieringMode = TierRecommended`) | ⚠️ | ⚠️ | — | — | — |
+| Snapshot backup (`--snapshot-instant-rp-retention-days`) | — | — | — | ✅ | — |
+| Full + Log sub-policies | — | — | ✅ | ✅ | — |
+| Full + Differential + Log sub-policies | — | — | 🔬 | — | — |
+| Policy tags (`--policy-tags`) | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+#### Backup Vault (DPP)
+
+| Feature / flag(s) | AzureDisk | AzureBlob | ADLS Gen2 | AKS | ElasticSAN | PostgreSQL Flex | CosmosDB |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| Default schedule + retention | ✅ (PT4H) | ✅ (continuous) | ✅ (continuous) | ✅ (PT4H) | ✅ (P1D) | ✅ (P1W) | ✅ (P1W) |
+| Operational tier | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
+| Vault tier (vaulted backup mode) | ✅ (via `--enable-vault-tier-copy`) | ⚠️ | ⚠️ | — | — | ✅ | — |
+| Vault-tier copy with multi-tier (W + M + Y) | 🔬 | — | — | — | — | ✅ | ✅ |
+| Continuous / PITR (`--backup-mode Continuous`) | — | ✅ | ✅ | — | — | — | — |
+| `--per-instance-snapshot` flag | — | — | — | ✅ | — | — | — |
+| Policy tags (`--policy-tags`) | rejected with guidance (DPP API does not accept tags on policies) |
+
+#### Notes on ⚠️ preview-feature dependencies
+
+The three ⚠️ cells emit the same JSON shape that `az backup` / `az dataprotection` CLI produce. They are blocked on per-subscription / per-vault preview-feature enablement, verified by issuing the same body via direct ARM REST PUT:
+
+- **Vaulted Blob / ADLS Gen2 (DPP)** → vault rejects with `BMSUserErrorInvalidInput`. Requires per-storage-account vaulted backup enablement.
+- **VM Smart-Tier (RSV)** → vault rejects with `BMSUserErrorInvalidPolicyInput`. Requires the smart-tiering preview to be enabled on the vault.
+
+These tests are skipped with detailed root-cause comments and will pass once enabled on the test vault.
+
 ### Cross-Platform Protectable Resource Types
 
 The `FindUnprotectedResourcesAsync` governance tool scans for all of these ARM resource types:
