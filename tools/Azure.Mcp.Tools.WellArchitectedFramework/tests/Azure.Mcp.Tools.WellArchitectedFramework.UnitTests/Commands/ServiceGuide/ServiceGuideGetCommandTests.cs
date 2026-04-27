@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
 using Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
@@ -13,6 +14,15 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.Commands.ServiceGui
 
 public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetCommand, IServiceGuideService>
 {
+    public ServiceGuideGetCommandTests() : base(services =>
+    {
+        // Register the real ServiceGuideService to test the actual logic, not a mock
+        services.AddSingleton<IServiceGuideService, ServiceGuideService>();
+    })
+    {
+    }
+
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -35,19 +45,37 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
     [InlineData("--service", false)]  // --service without value should fail
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Arrange & Act
-        var response = await ExecuteCommandAsync(args);
+        // Arrange
+        var parseResult = CommandDefinition.Parse(args);
 
         // Assert
         if (shouldSucceed)
         {
+            // Act
+            var response = await ExecuteCommandAsync(args);
+
+            // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            Assert.NotEqual(HttpStatusCode.OK, response.Status);
-            Assert.Contains("'--service'", response.Message);
+            // For failure cases, check if there are parse errors first
+            if (parseResult.Errors.Count > 0)
+            {
+                // Parse-time validation errors (option without value)
+                Assert.True(parseResult.Errors.Count > 0);
+                Assert.Contains("--service", parseResult.Errors.Select(e => e.Message).FirstOrDefault() ?? string.Empty);
+            }
+            else
+            {
+                // Act
+                var response = await ExecuteCommandAsync(args);
+
+                // Runtime validation errors
+                Assert.NotEqual(HttpStatusCode.OK, response.Status);
+                Assert.Contains("'--service'", response.Message);
+            }
         }
     }
 
@@ -75,7 +103,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
     public async Task ExecuteAsync_ReturnsGuidance_WhenValidServiceProvided(string serviceName)
     {
         // Arrange & Act
-        var response = await ExecuteCommandAsync("--service", serviceName);
+        var response = await ExecuteCommandAsync($"--service {serviceName}");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
@@ -130,7 +158,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
     public async Task ExecuteAsync_HandlesServiceNameVariationsNormalized_Correctly(string serviceNameInput)
     {
         // Arrange & Act
-        var response = await ExecuteCommandAsync("--service", serviceNameInput);
+        var response = await ExecuteCommandAsync($"--service {serviceNameInput}");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ListString);
@@ -163,10 +191,10 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
     public async Task ExecuteAsync_HandlesQuotedServiceNames_Correctly(string inputServiceName, string expectedServiceName, bool shouldSucceed)
     {
         // Arrange
-        var args = CommandDefinition.Parse(["--service", inputServiceName]);
+        var args = CommandDefinition.Parse($"--service {inputServiceName}");
 
         // Act
-        var response = await ExecuteCommandAsync("--service", inputServiceName);
+        var response = await ExecuteCommandAsync($"--service {inputServiceName}");
 
         // Assert
         Assert.NotNull(response);

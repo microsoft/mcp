@@ -326,7 +326,7 @@ public class FirewallRuleDeleteCommandTests : CommandUnitTestsBase<FirewallRuleD
             "--subscription", "testsub",
             "--resource-group", "testrg",
             "--server", "testserver",
-            "--firewall-rule-name InvalidRule");
+            "--firewall-rule-name", "InvalidRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
