@@ -110,15 +110,6 @@ public static class PolicyCreateValidator
                 "--archive-tier-after-days and --archive-tier-mode must be supplied together."));
         }
 
-        // A.8 — DPP tier-duration flags require --data-store-type.
-        var hasVaultDur = !string.IsNullOrWhiteSpace(options.VaultTierRetentionDuration);
-        var hasArchiveDur = !string.IsNullOrWhiteSpace(options.ArchiveTierRetentionDuration);
-        if ((hasVaultDur || hasArchiveDur) && string.IsNullOrWhiteSpace(options.DataStoreType))
-        {
-            issues.Add(new PolicyValidationIssue(
-                $"--{AzureBackupOptionDefinitions.DataStoreTypeName}",
-                "--data-store-type is required when --vault-tier-retention-duration or --archive-tier-retention-duration is supplied."));
-        }
     }
 
     // ----- Rule B: shape (workload exclusivity) -----
@@ -193,16 +184,6 @@ public static class PolicyCreateValidator
                 $"--{AzureBackupOptionDefinitions.ScheduleFrequencyName}",
                 "Hourly schedules are supported only for RSV workloads."));
         }
-
-        // DPP-only flags.
-        EnsureDpp(options.DataStoreType,
-            $"--{AzureBackupOptionDefinitions.DataStoreTypeName}", family, issues);
-        EnsureDpp(options.VaultTierRetentionDuration,
-            $"--{AzureBackupOptionDefinitions.VaultTierRetentionDurationName}", family, issues);
-        EnsureDpp(options.ArchiveTierRetentionDuration,
-            $"--{AzureBackupOptionDefinitions.ArchiveTierRetentionDurationName}", family, issues);
-        EnsureDpp(options.DatasourceTypes,
-            $"--{AzureBackupOptionDefinitions.DatasourceTypesName}", family, issues);
 
         // Continuous DPP rejects schedule, retention, and archive flags. This covers both the legacy
         // DppContinuous family and DppStorageBackupMode workloads when --backup-mode is unset/Continuous.
@@ -519,9 +500,6 @@ public static class PolicyCreateValidator
         !string.IsNullOrWhiteSpace(o.YearlyRetentionDaysOfMonth) ||
         !string.IsNullOrWhiteSpace(o.ArchiveTierAfterDays) ||
         !string.IsNullOrWhiteSpace(o.ArchiveTierMode) ||
-        !string.IsNullOrWhiteSpace(o.VaultTierRetentionDuration) ||
-        !string.IsNullOrWhiteSpace(o.ArchiveTierRetentionDuration) ||
-        !string.IsNullOrWhiteSpace(o.DataStoreType) ||
         !string.IsNullOrWhiteSpace(o.FullScheduleFrequency) ||
         !string.IsNullOrWhiteSpace(o.LogFrequencyMinutes);
 

@@ -71,12 +71,6 @@ public static class AzureBackupOptionDefinitions
     public const string IsCompressionName = "is-compression";
     public const string IsSqlCompressionName = "is-sql-compression";
 
-    // Policy create — DPP (Backup vault) only flags
-    public const string DataStoreTypeName = "data-store-type";
-    public const string VaultTierRetentionDurationName = "vault-tier-retention-duration";
-    public const string ArchiveTierRetentionDurationName = "archive-tier-retention-duration";
-    public const string DatasourceTypesName = "datasource-types";
-
     // Policy create — Stage 2 expansion flags
     // RSV VM Smart Tier (ML-based archive recommendation)
     public const string SmartTierName = "smart-tier";
@@ -442,31 +436,8 @@ public static class AzureBackupOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> DataStoreType = new($"--{DataStoreTypeName}")
-    {
-        Description = "DPP backup data store: 'OperationalStore', 'VaultStore', or 'ArchiveStore'. Required when specifying --vault-tier-retention-duration or --archive-tier-retention-duration. DPP only.",
-        Required = false
-    };
-
-    public static readonly Option<string> VaultTierRetentionDuration = new($"--{VaultTierRetentionDurationName}")
-    {
-        Description = "ISO 8601 retention duration for the vault tier (e.g., 'P1M', 'P6M', 'P1Y'). DPP only.",
-        Required = false
-    };
-
-    public static readonly Option<string> ArchiveTierRetentionDuration = new($"--{ArchiveTierRetentionDurationName}")
-    {
-        Description = "ISO 8601 retention duration for the archive tier (e.g., 'P2Y', 'P5Y'). DPP only.",
-        Required = false
-    };
-
-    public static readonly Option<string> DatasourceTypes = new($"--{DatasourceTypesName}")
-    {
-        Description = "Comma-separated ARM datasource types overriding the default for the workload (e.g., 'Microsoft.Compute/disks'). Advanced; DPP only.",
-        Required = false
-    };
-
     // ===== Stage 2 expansion =====
+
 
     public static readonly Option<string> SmartTier = new($"--{SmartTierName}")
     {

@@ -353,38 +353,6 @@ public class PolicyCreateValidatorTests
         Assert.True(result.IsValid);
     }
 
-    // ----- Rule A.8: DPP tier-duration requires data-store-type -----
-
-    [Theory]
-    [InlineData("P1Y", null)]
-    [InlineData(null, "P2Y")]
-    [InlineData("P1Y", "P2Y")]
-    public void Validate_DppTierDurationWithoutDataStoreType_Fails(string? vaultDur, string? archiveDur)
-    {
-        var options = BaseOptions("AzureDisk");
-        options.DailyRetentionDays = "7";
-        options.VaultTierRetentionDuration = vaultDur;
-        options.ArchiveTierRetentionDuration = archiveDur;
-
-        var result = PolicyCreateValidator.Validate(options);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Issues, i => i.Flag == "--data-store-type");
-    }
-
-    [Fact]
-    public void Validate_DppTierDurationWithDataStoreType_Passes()
-    {
-        var options = BaseOptions("AzureDisk");
-        options.DailyRetentionDays = "7";
-        options.DataStoreType = "VaultStore";
-        options.VaultTierRetentionDuration = "P1Y";
-
-        var result = PolicyCreateValidator.Validate(options);
-
-        Assert.True(result.IsValid);
-    }
-
     // ----- Rule B: shape rules (workload exclusivity) -----
 
     [Theory]
@@ -509,37 +477,6 @@ public class PolicyCreateValidatorTests
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Issues, i => i.Flag == "--schedule-frequency" && i.Message.Contains("RSV"));
-    }
-
-    [Theory]
-    [InlineData("VM", "--data-store-type", "VaultStore")]
-    [InlineData("SQL", "--datasource-types", "Microsoft.Compute/disks")]
-    [InlineData("VM", "--vault-tier-retention-duration", "P1M")]
-    [InlineData("SQL", "--archive-tier-retention-duration", "P2Y")]
-    public void Validate_DppFlagsOnRsv_Fail(string workload, string flag, string value)
-    {
-        var options = BaseOptions(workload);
-        options.DailyRetentionDays = "7";
-        switch (flag)
-        {
-            case "--data-store-type":
-                options.DataStoreType = value;
-                break;
-            case "--datasource-types":
-                options.DatasourceTypes = value;
-                break;
-            case "--vault-tier-retention-duration":
-                options.VaultTierRetentionDuration = value;
-                break;
-            case "--archive-tier-retention-duration":
-                options.ArchiveTierRetentionDuration = value;
-                break;
-        }
-
-        var result = PolicyCreateValidator.Validate(options);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains("DPP"));
     }
 
     // ----- Continuous DPP rejects schedule/retention -----

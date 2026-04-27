@@ -66,13 +66,8 @@ public sealed class PolicyCreateRequest
     public string? IsCompression { get; set; }
     public string? IsSqlCompression { get; set; }
 
-    // DPP-only flags
-    public string? DataStoreType { get; set; }
-    public string? VaultTierRetentionDuration { get; set; }
-    public string? ArchiveTierRetentionDuration { get; set; }
-    public string? DatasourceTypes { get; set; }
-
     // ===== Stage 2 expansion =====
+
     public string? SmartTier { get; set; }
     public string? EnableSnapshotBackup { get; set; }
     public string? SnapshotInstantRpRetentionDays { get; set; }

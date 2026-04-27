@@ -185,11 +185,6 @@ public class PolicyCreateCommandTests
         Assert.Contains(options, o => o.Name == "--log-retention-days");
         Assert.Contains(options, o => o.Name == "--is-compression");
         Assert.Contains(options, o => o.Name == "--is-sql-compression");
-        // DPP only.
-        Assert.Contains(options, o => o.Name == "--data-store-type");
-        Assert.Contains(options, o => o.Name == "--vault-tier-retention-duration");
-        Assert.Contains(options, o => o.Name == "--archive-tier-retention-duration");
-        Assert.Contains(options, o => o.Name == "--datasource-types");
     }
 
     [Fact]
@@ -221,9 +216,6 @@ public class PolicyCreateCommandTests
             "--incremental-schedule-days-of-week", "--incremental-retention-days",
             "--log-frequency-minutes", "--log-retention-days",
             "--is-compression", "--is-sql-compression",
-            // DPP
-            "--data-store-type", "--vault-tier-retention-duration",
-            "--archive-tier-retention-duration", "--datasource-types",
         };
 
         var missing = expected.Where(n => !optionNames.Contains(n)).ToList();

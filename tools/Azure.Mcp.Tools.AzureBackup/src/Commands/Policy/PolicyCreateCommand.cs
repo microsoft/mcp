@@ -70,11 +70,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         command.Options.Add(AzureBackupOptionDefinitions.LogRetentionDays);
         command.Options.Add(AzureBackupOptionDefinitions.IsCompression);
         command.Options.Add(AzureBackupOptionDefinitions.IsSqlCompression);
-        // DPP (Backup vault) only.
-        command.Options.Add(AzureBackupOptionDefinitions.DataStoreType);
-        command.Options.Add(AzureBackupOptionDefinitions.VaultTierRetentionDuration);
-        command.Options.Add(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration);
-        command.Options.Add(AzureBackupOptionDefinitions.DatasourceTypes);
         // Stage 2 expansion.
         command.Options.Add(AzureBackupOptionDefinitions.SmartTier);
         command.Options.Add(AzureBackupOptionDefinitions.EnableSnapshotBackup);
@@ -132,10 +127,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         options.LogRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.LogRetentionDays.Name);
         options.IsCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsCompression.Name);
         options.IsSqlCompression = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.IsSqlCompression.Name);
-        options.DataStoreType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DataStoreType.Name);
-        options.VaultTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultTierRetentionDuration.Name);
-        options.ArchiveTierRetentionDuration = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ArchiveTierRetentionDuration.Name);
-        options.DatasourceTypes = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DatasourceTypes.Name);
         options.SmartTier = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SmartTier.Name);
         options.EnableSnapshotBackup = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.EnableSnapshotBackup.Name);
         options.SnapshotInstantRpRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.SnapshotInstantRpRetentionDays.Name);
@@ -211,10 +202,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 LogRetentionDays = options.LogRetentionDays,
                 IsCompression = options.IsCompression,
                 IsSqlCompression = options.IsSqlCompression,
-                DataStoreType = options.DataStoreType,
-                VaultTierRetentionDuration = options.VaultTierRetentionDuration,
-                ArchiveTierRetentionDuration = options.ArchiveTierRetentionDuration,
-                DatasourceTypes = options.DatasourceTypes,
                 SmartTier = options.SmartTier,
                 EnableSnapshotBackup = options.EnableSnapshotBackup,
                 SnapshotInstantRpRetentionDays = options.SnapshotInstantRpRetentionDays,

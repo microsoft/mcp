@@ -822,11 +822,6 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--log-retention-days <int>] \
                                 [--is-compression <true|false>] \
                                 [--is-sql-compression <true|false>] \
-                                # --- DPP (Backup vault) only ---
-                                [--data-store-type <OperationalStore|VaultStore|ArchiveStore>] \
-                                [--vault-tier-retention-duration <ISO8601>] \
-                                [--archive-tier-retention-duration <ISO8601>] \
-                                [--datasource-types <type[,type...]>] \
                                 # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
                                 [--smart-tier <true|false>] \
                                 [--enable-snapshot-backup <true|false>] \

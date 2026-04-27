@@ -12,7 +12,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - Archive tiering for both vault types: `--archive-tier-mode` (CopyOnExpiry/TierAfter) and `--archive-tier-after-days`.
   - RSV-VM Enhanced policies: `--policy-sub-type`, `--instant-rp-retention-days`, `--instant-rp-resource-group`, `--snapshot-consistency`.
   - RSV VmWorkload (SQL/SAPHANA/SAPASE) sub-policies: `--full-schedule-*`, `--differential-schedule-*`, `--differential-retention-days`, `--incremental-schedule-*`, `--incremental-retention-days`, `--log-frequency-minutes`, `--log-retention-days`, `--is-compression`, `--is-sql-compression`.
-  - DPP-only flags: `--data-store-type`, `--vault-tier-retention-duration`, `--archive-tier-retention-duration`, `--datasource-types`.
 - Added a `PolicyCreateValidator` that returns a 400 with grouped validation messages before any Azure call when required fields are missing or combinations are invalid.
 - Extended `azurebackup policy create` with Stage 2 advanced backup capabilities adding 14 new flags:
   - **Smart tiering (RSV VM)**: `--smart-tier` enables ML-recommended archive tiering (`TieringMode.TierRecommended` with `Duration=0` / `DurationType=Invalid` per Az CLI shape), overriding any explicit `--archive-tier-after-days`.
@@ -37,6 +36,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - SAP HANA snapshot backup now attaches `SnapshotBackupAdditionalDetails` to the Full sub-policy instead of adding a separate `SnapshotFull` sub-policy (matches `az backup policy set --snapshot-instant-rp-retention-days`).
   - Smart-tier (RSV VM) `TieringPolicy.ArchivedRP` now sets `Duration=0` + `DurationType=Invalid` alongside `TieringMode=TierRecommended` (required by the RSV API).
 - Removed the AzureFiles entry from the DPP datasource registry — Azure File Shares are not a valid DPP `--datasource-type`. Vaulted AFS continues to be supported via RSV (`AzureFileShare`).
+- Removed the unused DPP-only `azurebackup policy create` flags `--data-store-type`, `--vault-tier-retention-duration`, `--archive-tier-retention-duration`, and `--datasource-types`. These flags were bound and validated but had no effect on the emitted policy body. The data store, retention duration, and datasource type are determined automatically from the workload profile and `--backup-mode`; vault-tier copy is configured via `--enable-vault-tier-copy` and `--vault-tier-copy-after-days`, and archive tiering via `--archive-tier-mode` and `--archive-tier-after-days`.
 
 ### Other Changes
 
