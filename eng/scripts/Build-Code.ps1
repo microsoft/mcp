@@ -14,6 +14,7 @@ param (
     [switch] $SingleFile,
     [switch] $ReadyToRun,
     [switch] $ReleaseBuild,
+    [switch] $SmokeTest,
     [switch] $CleanBuild,
 
     # build_info.json based parameters
@@ -75,6 +76,7 @@ function BuildServer($server) {
         $arch = $platform.architecture
         $configuration = if ($ReleaseBuild) { 'Release' } else { 'Debug' }
         $runtime = "$dotnetOs-$arch"
+        $exeName = "$($server.cliName)$($platform.extension)"
 
         $outputDir = "$OutputPath/$($platform.artifactPath)"
         Write-Host "Building $configuration $runtime, version $version in $outputDir" -ForegroundColor Green
@@ -106,6 +108,24 @@ function BuildServer($server) {
         }
 
         Invoke-LoggedMsBuildCommand $command -GroupOutput
+
+        $exePath = Join-Path $outputDir $exeName
+        if (!(Test-Path $exePath)) {
+            LogError "Expected output executable not found at '$exePath' after build."
+            $script:exitCode = 1
+            return
+        }
+        
+        if($SmokeTest) {
+            Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
+            try {
+                & $exePath tools list
+            } catch {
+                LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
+                $script:exitCode = 1
+                return
+            }
+        }
     }
 
     Write-Host "`nBuild completed successfully!" -ForegroundColor Green
