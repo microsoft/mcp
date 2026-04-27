@@ -45,7 +45,7 @@ Recorded tests reference tool names inside their JSON session files. Old recordi
   ```
 - [ ] Verify playback passes locally:
   ```powershell
-  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests --no-build
+  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests --no-build
   ```
 
 ### 4. Unit tests
@@ -54,7 +54,7 @@ Recorded tests reference tool names inside their JSON session files. Old recordi
 - [ ] Update test class names and file names if they encode the old command name.
 - [ ] Confirm all unit tests pass:
   ```powershell
-  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests
+  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests
   ```
 
 ### 5. Changelog

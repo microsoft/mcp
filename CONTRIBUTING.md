@@ -89,8 +89,8 @@ If you are contributing significant changes, or if the issue is already assigned
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
-      - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
+      - `{server}.Mcp.Tools.{tool-name}.Tests/UnitTests/` - Unit tests require no authentication or test resources
+      - `{server}.Mcp.Tools.{tool-name}.Tests/LiveTests/` - Live tests depend on Azure resources and authentication
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials

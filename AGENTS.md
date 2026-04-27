@@ -124,7 +124,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 ### Good examples to follow
 - Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountGetCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/UnitTests/Account/StorageAccountGetCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
 - Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
 
@@ -226,8 +226,9 @@ Azure.Mcp.Tools.{Service}/
 │   ├── Models/                   # Data models and DTOs
 │   └── {Service}Setup.cs         # Service registration and configuration
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/     # Unit tests (no Azure resources)
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/     # Integration tests (requires Azure)
+    ├── Azure.Mcp.Tools.{Service}.Tests/     
+    │   ├── UnitTests/                      # Unit tests (no Azure resources)
+    │   └── LiveTests/                      # Integration tests (requires Azure)
     ├── test-resources.bicep                     # Test infrastructure template
     └── test-resources-post.ps1                  # Post-deployment setup script
 ```
@@ -277,7 +278,7 @@ dotnet build
 ./eng/scripts/Deploy-TestResources.ps1 -Paths Storage
 
 # Run tests from specific directory
-pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests'
+pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/UnitTests'
 dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
 popd
 ```
@@ -512,8 +513,8 @@ tools/Azure.Mcp.Tools.{Service}/
 │   ├── Services/{Service}Service.cs                 # Service implementation
 │   └── Commands/{Service}JsonContext.cs             # JSON serialization context
 └── tests/
-    ├── Azure.Mcp.Tools.{Service}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs
-    ├── Azure.Mcp.Tools.{Service}.LiveTests/{Service}CommandTests.cs
+    ├── Azure.Mcp.Tools.{Service}.Tests/UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs
+    ├── Azure.Mcp.Tools.{Service}.Tests/LiveTests/{Service}CommandTests.cs
     ├── test-resources.bicep                          # Test infrastructure (Azure services only)
     └── test-resources-post.ps1                       # Post-deployment script (Azure services only)
 ```
