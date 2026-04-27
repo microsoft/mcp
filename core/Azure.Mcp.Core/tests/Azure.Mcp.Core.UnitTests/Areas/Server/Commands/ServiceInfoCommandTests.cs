@@ -22,7 +22,7 @@ public class ServiceInfoCommandTests : CommandUnitTestsBase<ServiceInfoCommand, 
             DisplayName = "Test Display",
             RootCommandGroupName = "azmcp"
         };
-        Services.AddSingleton(_mcpServerConfiguration);
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(_mcpServerConfiguration));
     }
 
     [Fact]
