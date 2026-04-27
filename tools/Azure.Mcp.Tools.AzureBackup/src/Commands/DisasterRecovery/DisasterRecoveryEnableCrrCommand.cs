@@ -34,7 +34,7 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
 
         var options = BindOptions(parseResult);
 
-        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {

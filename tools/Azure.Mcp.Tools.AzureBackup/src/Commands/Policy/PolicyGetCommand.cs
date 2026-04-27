@@ -65,7 +65,7 @@ public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBac
 
         var options = BindOptions(parseResult);
 
-        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Policy) ? "list" : "single");
 
         try

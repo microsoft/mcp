@@ -96,7 +96,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
         var options = BindOptions(parseResult);
 
-        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {

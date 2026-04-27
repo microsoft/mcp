@@ -63,8 +63,7 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
 
         var options = BindOptions(parseResult);
 
-        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
-        context.Activity?.AddTag(AzureBackupTelemetryTags.WorkloadType, options.WorkloadType);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? "rsv", options.WorkloadType);
 
         try
         {

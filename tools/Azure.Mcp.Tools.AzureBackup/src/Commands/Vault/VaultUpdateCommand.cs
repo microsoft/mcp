@@ -99,7 +99,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
 
         var options = BindOptions(parseResult);
 
-        context.Activity?.AddTag(AzureBackupTelemetryTags.VaultType, options.VaultType);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {
