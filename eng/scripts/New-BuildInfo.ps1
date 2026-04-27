@@ -195,7 +195,7 @@ $macVmImage = CheckVariable 'MACVMIMAGE'
 function Split-PropertyGroup {
     param([string]$propertyGroup)
 
-    return @($propertyGroup -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    return @($propertyGroup -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
 }
 
 function Get-PathsToTest {
