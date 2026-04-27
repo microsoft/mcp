@@ -51,7 +51,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IOne
         await Service.Received(1).ListTablesAsync(workspaceId, itemId, namespaceName, Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.TableListCommandResult);
-        
+
         Assert.Equal(workspaceId, result.Workspace);
         Assert.Equal(itemId, result.Item);
         Assert.Equal(namespaceName, result.Namespace);
