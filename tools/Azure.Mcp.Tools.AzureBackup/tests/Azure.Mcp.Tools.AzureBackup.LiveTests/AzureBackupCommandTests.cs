@@ -402,7 +402,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "VM Enhanced V2 with Weekly schedule + multi-tier (weekly/monthly/yearly) retention + archive tier shape rejected by RSV API (BMSUserErrorInvalidPolicyInput). Specific combination of V2 enhanced + Weekly schedule with WeeklySchedule retention shape needs additional cross-reference. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): VM Enhanced V2 + Weekly schedule + multi-tier (weekly/monthly/yearly) retention + archive tier shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format'). Other VM policy shapes succeed against the same vault, so this is a service-side shape/feature issue, not a vault setup issue. Tracked as a follow-up requiring further reverse-engineering of the V2-enhanced + Weekly + LongTerm retention shape.")]
     public async Task PolicyCreate_RsvVm_WeeklyMultiTierWithArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -463,7 +463,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "SQL workload Full+Differential+Log policy shape persistently rejected by RSV API (BMSUserErrorInvalidPolicyInput) even when constructed directly via ARM REST PUT with multiple shape variations (Differential as SimpleRetentionPolicy/LongTermRetentionPolicy, with/without scheduleWeeklyFrequency, with/without makePolicyConsistent, multiple API versions). The Differential sub-policy for SQL appears to need additional vault-side workload registration or a shape we have not been able to reverse-engineer. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): SQL Full+Differential+Log policy shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format'). Previously validated via direct ARM REST PUT with multiple shape variations (Differential as SimpleRetentionPolicy/LongTermRetentionPolicy, with/without scheduleWeeklyFrequency, with/without makePolicyConsistent, multiple API versions) - all rejected. Other SQL policy shapes (Full only) succeed against the same vault, confirming this is shape work, not feature flag work. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_FullLogDiff_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -698,7 +698,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "AzureDisk operational tier does not accept multi-tier (weekly/monthly/yearly) retention rules; only vault tier supports multi-tier. Combining --vault-tier-copy with multi-tier requires the multi-tier rules to source from VaultStore (with their own taggingCriteria), which is a deeper builder change tracked in a follow-up.")]
+    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): AzureDisk operational tier does not accept multi-tier (weekly/monthly/yearly) retention rules; only vault tier supports multi-tier on Disk. Combining --enable-vault-tier-copy with multi-tier retention requires the multi-tier rules to be sourced from VaultStore (with their own taggingCriteria), which is a deeper DppPolicyBuilder change. DPP API rejects current shape with BMSUserErrorInvalidInput. Tracked as a follow-up builder enhancement.")]
     public async Task PolicyCreate_DppDisk_VaultTierMultiTierArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -810,7 +810,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "SQL workload archive-tier policy shape rejected by RSV API (BMSUserErrorInvalidPolicyInput) when sub-policy TieringPolicy is attached to the Full sub-policy. Same root cause as the SQL Full+Diff+Log test: SQL workload sub-policy structure for vault tier copy/archive needs further investigation. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): SQL workload archive-tier policy shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format') when sub-policy TieringPolicy is attached to the Full sub-policy. Same root cause as PolicyCreate_RsvSql_FullLogDiff_E2E: SQL workload sub-policy structure for vault tier copy/archive needs further reverse-engineering. Other SQL policy shapes succeed against the same vault, confirming this is shape work. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_WithArchiveTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -840,7 +840,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "AFS hourly schedule + multi-tier (weekly/monthly/yearly) retention combo rejected by RSV API (UserErrorInvalidRequestParameter). The combination of hourly schedule with long-term retention is unusual for AFS; verify whether Az CLI supports it. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): AFS hourly schedule + multi-tier (weekly/monthly/yearly) retention combo rejected by RSV API with UserErrorInvalidRequestParameter ('Parameter NO_PARAM in request is invalid'). The combination of hourly schedule with long-term retention is unusual for AFS; needs verification whether Az CLI / Portal supports it for AFS workload. Other AFS policy shapes (daily) succeed against the same vault. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvFileShare_HourlyMultiTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
