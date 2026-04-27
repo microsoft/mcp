@@ -14,12 +14,9 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.Commands.ServiceGui
 
 public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetCommand, IServiceGuideService>
 {
-    public ServiceGuideGetCommandTests() : base(services =>
+    public ServiceGuideGetCommandTests()
     {
-        // Register the real ServiceGuideService to test the actual logic, not a mock
-        services.AddSingleton<IServiceGuideService, ServiceGuideService>();
-    })
-    {
+        Services.AddSingleton<IServiceGuideService, ServiceGuideService>();
     }
 
 

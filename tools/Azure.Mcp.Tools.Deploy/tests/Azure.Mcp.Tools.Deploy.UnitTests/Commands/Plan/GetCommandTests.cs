@@ -1,51 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Deploy.Commands.Plan;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.UnitTests.Commands.Plan;
 
 
-public class GetCommandTests
+public class GetCommandTests : CommandUnitTestsBase<GetCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<GetCommand> _logger;
-    private readonly Command _commandDefinition;
-    private readonly CommandContext _context;
-    private readonly GetCommand _command;
-
-    public GetCommandTests()
-    {
-        _logger = Substitute.For<ILogger<GetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task GetPlan_Should_Return_Expected_Result()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--workspace-folder", "C:/",
             "--project-name", "django",
             "--target-app-service", "ContainerApp",
             "--provisioning-tool", "AZD",
-            "--iac-options", "bicep"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--iac-options", "bicep");
 
         // assert
         Assert.NotNull(result);
@@ -58,17 +33,12 @@ public class GetCommandTests
     [Fact]
     public async Task Should_get_plan_with_default_iac_options()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--workspace-folder", "C:/test",
             "--project-name", "myapp",
             "--target-app-service", "WebApp",
-            "--provisioning-tool", "azd"
-            // No iac-options provided - should default to "bicep"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--provisioning-tool", "azd");
 
         // assert
         Assert.NotNull(result);
@@ -81,16 +51,12 @@ public class GetCommandTests
     [Fact]
     public async Task Should_get_plan_for_kubernetes()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--workspace-folder", "C:/k8s-project",
             "--project-name", "k8s-app",
             "--target-app-service", "AKS",
-            "--provisioning-tool", "azcli"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--provisioning-tool", "azcli");
 
         // assert
         Assert.NotNull(result);
@@ -106,15 +72,12 @@ public class GetCommandTests
     [Fact]
     public async Task Should_get_plan_with_default_target_service()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--workspace-folder", "C:/",
             "--project-name", "default-app",
             "--target-app-service", "unknown-service", // This should default to Container Apps
-            "--provisioning-tool", "AZD"
-        ]);
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--provisioning-tool", "AZD");
 
         // assert
         Assert.NotNull(result);
@@ -127,16 +90,14 @@ public class GetCommandTests
     [Fact]
     public async Task Should_get_deploy_only_plan()
     {
-        var args = _commandDefinition.Parse([
+        var result = await ExecuteCommandAsync(
             "--workspace-folder", "C:/",
             "--project-name", "default-app",
             "--target-app-service", "ContainerApp",
             "--provisioning-tool", "AzCli",
             "--deploy-option", "deploy-only",
             "--source-type", "from-azure",
-            "--resource-group", "DefaultRG"
-        ]);
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-group", "DefaultRG");
 
         // assert
         Assert.NotNull(result);

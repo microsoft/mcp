@@ -5,36 +5,20 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Deploy.Commands.Architecture;
 using Azure.Mcp.Tools.Deploy.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.UnitTests.Commands.Architecture;
 
 
-public class DiagramGenerateCommandTests
+public class DiagramGenerateCommandTests : CommandUnitTestsBase<DiagramGenerateCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DiagramGenerateCommand> _logger;
-
-    public DiagramGenerateCommandTests()
-    {
-        _logger = Substitute.For<ILogger<DiagramGenerateCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
-
     [Fact]
     public async Task GenerateArchitectureDiagram_ShouldReturnNoServiceDetected()
     {
-        var command = new DiagramGenerateCommand(_logger);
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}");
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("No service detected", response.Message);
@@ -43,10 +27,8 @@ public class DiagramGenerateCommandTests
     [Fact]
     public async Task GenerateArchitectureDiagram_InvalidJsonInput()
     {
-        var command = new DiagramGenerateCommand(_logger);
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "test"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--raw-mcp-tool-input", "test");
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("invalid JSON literal", response.Message);
@@ -55,7 +37,6 @@ public class DiagramGenerateCommandTests
     [Fact]
     public async Task GenerateArchitectureDiagram_ShouldReturnEncryptedDiagramUrl()
     {
-        var command = new DiagramGenerateCommand(_logger);
         var appTopology = new AppTopology()
         {
             WorkspaceFolder = "testWorkspace",
@@ -125,9 +106,8 @@ public class DiagramGenerateCommandTests
             ]
         };
 
-        var args = command.GetCommand().Parse(["--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology)]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology));
+
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         // Extract the URL from the response message
