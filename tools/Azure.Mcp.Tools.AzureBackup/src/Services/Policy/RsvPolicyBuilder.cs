@@ -47,9 +47,10 @@ public static class RsvPolicyBuilder
         var scheduleTimes = ParseScheduleTimes(req.ScheduleTimes);
         var timeZone = string.IsNullOrWhiteSpace(req.TimeZone) ? DefaultTimeZone : req.TimeZone!;
         var policyType = ParseIaasVmPolicyType(req.PolicySubType);
+        var iaasFreq = ParseScheduleRunType(req.ScheduleFrequency, defaultDaily: true);
 
         var schedule = BuildIaasVmSchedule(req, policyType, scheduleTimes);
-        var retention = BuildLongTermRetention(req, scheduleTimes);
+        var retention = BuildLongTermRetention(req, scheduleTimes, iaasFreq);
 
         var policy = new IaasVmProtectionPolicy
         {
@@ -109,7 +110,7 @@ public static class RsvPolicyBuilder
             ? new SimpleSchedulePolicyV2 { ScheduleRunFrequency = freq, HourlySchedule = BuildHourlySchedule(req) }
             : BuildSimpleSchedule(req, scheduleTimes);
 
-        var retention = BuildLongTermRetention(req, scheduleTimes);
+        var retention = BuildLongTermRetention(req, scheduleTimes, freq);
 
         return new FileShareProtectionPolicy
         {
@@ -168,7 +169,8 @@ public static class RsvPolicyBuilder
     private static SubProtectionPolicy BuildVmWorkloadFullSubPolicy(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)
     {
         var fullSchedule = BuildVmWorkloadFullSchedule(req, scheduleTimes);
-        var fullRetention = BuildLongTermRetention(req, scheduleTimes);
+        var fullFreq = ParseScheduleRunType(req.FullScheduleFrequency, defaultDaily: true);
+        var fullRetention = BuildLongTermRetention(req, scheduleTimes, fullFreq);
 
         var sub = new SubProtectionPolicy
         {
@@ -447,20 +449,28 @@ public static class RsvPolicyBuilder
         return ws;
     }
 
-    private static LongTermRetentionPolicy BuildLongTermRetention(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes)
+    private static LongTermRetentionPolicy BuildLongTermRetention(PolicyCreateRequest req, IList<DateTimeOffset> scheduleTimes, ScheduleRunType? scheduleFrequency = null)
     {
         var retention = new LongTermRetentionPolicy();
 
-        var dailyDays = TryParsePositiveInt(req.DailyRetentionDays, out var dd) ? dd : DefaultDailyRetentionDays;
-        var daily = new DailyRetentionSchedule
+        // DailyRetentionSchedule only makes sense when the Full backup schedule is Daily (or Hourly).
+        // For a Weekly schedule the RSV API rejects DailySchedule alongside WeeklySchedule (Az CLI omits it).
+        // Honor an explicit --daily-retention-days regardless of frequency for backward compatibility.
+        var dailyExplicit = TryParsePositiveInt(req.DailyRetentionDays, out var dd);
+        var isWeekly = scheduleFrequency == ScheduleRunType.Weekly;
+        if (dailyExplicit || !isWeekly)
         {
-            RetentionDuration = new RetentionDuration { Count = dailyDays, DurationType = RetentionDurationType.Days },
-        };
-        foreach (var t in scheduleTimes)
-        {
-            daily.RetentionTimes.Add(t);
+            var dailyDays = dailyExplicit ? dd : DefaultDailyRetentionDays;
+            var daily = new DailyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = dailyDays, DurationType = RetentionDurationType.Days },
+            };
+            foreach (var t in scheduleTimes)
+            {
+                daily.RetentionTimes.Add(t);
+            }
+            retention.DailySchedule = daily;
         }
-        retention.DailySchedule = daily;
 
         if (TryParsePositiveInt(req.WeeklyRetentionWeeks, out var weeks))
         {

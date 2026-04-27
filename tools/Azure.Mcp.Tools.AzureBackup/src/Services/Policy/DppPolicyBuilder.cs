@@ -61,17 +61,22 @@ public static class DppPolicyBuilder
         }
 
         // Per-tier retention rules (opt-in via positive weeks/months/years).
+        // When vault-tier copy is enabled on an operational-store workload (e.g. AzureDisk), the
+        // per-tier rules MUST source from VaultStore — the operational (snapshot) tier on AzureDisk
+        // does not accept multi-tier (weekly/monthly/yearly) retention rules. The matching tagging
+        // criteria on the AzureBackupRule lifecycle direct the service to copy tagged RPs to vault.
+        var tierStore = vaultTierEnabled ? DataStoreType.VaultStore : dataStoreType;
         if (TryParsePositiveInt(request.WeeklyRetentionWeeks, out var weeks))
         {
-            rules.Add(BuildTierRetentionRule("Weekly", TimeSpan.FromDays(weeks * 7), dataStoreType, request));
+            rules.Add(BuildTierRetentionRule("Weekly", TimeSpan.FromDays(weeks * 7), tierStore, request));
         }
         if (TryParsePositiveInt(request.MonthlyRetentionMonths, out var months))
         {
-            rules.Add(BuildTierRetentionRule("Monthly", TimeSpan.FromDays(months * 30), dataStoreType, request));
+            rules.Add(BuildTierRetentionRule("Monthly", TimeSpan.FromDays(months * 30), tierStore, request));
         }
         if (TryParsePositiveInt(request.YearlyRetentionYears, out var years))
         {
-            rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(years * 365), dataStoreType, request));
+            rules.Add(BuildTierRetentionRule("Yearly", TimeSpan.FromDays(years * 365), tierStore, request));
         }
 
         if (!isContinuous && !isVaultedStorage)

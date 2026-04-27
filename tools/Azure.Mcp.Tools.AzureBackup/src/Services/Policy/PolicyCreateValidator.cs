@@ -177,6 +177,31 @@ public static class PolicyCreateValidator
                 "--is-sql-compression is supported only for SQL workloads."));
         }
 
+        // SQL Full and Differential cannot run on the same day. Detect the common cases:
+        //   * Full schedule is Daily (runs every day) AND --differential-schedule-days-of-week is set.
+        //   * Full schedule is Weekly AND any Differential day overlaps a Full day.
+        if (IsSqlWorkload(options.WorkloadType) &&
+            !string.IsNullOrWhiteSpace(options.DifferentialScheduleDaysOfWeek))
+        {
+            var fullFreq = (options.FullScheduleFrequency ?? string.Empty).Trim();
+            if (string.Equals(fullFreq, "Daily", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(fullFreq))
+            {
+                issues.Add(new PolicyValidationIssue(
+                    $"--{AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeekName}",
+                    "SQL Full and Differential backups cannot run on the same day. " +
+                    "Use --full-schedule-frequency Weekly with --full-schedule-days-of-week and choose Differential days that do not overlap."));
+            }
+            else if (string.Equals(fullFreq, "Weekly", StringComparison.OrdinalIgnoreCase) &&
+                     !string.IsNullOrWhiteSpace(options.FullScheduleDaysOfWeek) &&
+                     HasDayOverlap(options.FullScheduleDaysOfWeek, options.DifferentialScheduleDaysOfWeek))
+            {
+                issues.Add(new PolicyValidationIssue(
+                    $"--{AzureBackupOptionDefinitions.DifferentialScheduleDaysOfWeekName}",
+                    "SQL Full and Differential backups cannot run on the same day. " +
+                    "Choose Differential days that do not overlap with --full-schedule-days-of-week."));
+            }
+        }
+
         // Hourly schedules are RSV only.
         if (IsRsvHourly(options.ScheduleFrequency) && !IsRsvFamily(family))
         {
@@ -377,6 +402,21 @@ public static class PolicyCreateValidator
 
     private static bool IsRsvHourly(string? frequency) =>
         string.Equals(frequency, "Hourly", StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasDayOverlap(string? daysA, string? daysB)
+    {
+        if (string.IsNullOrWhiteSpace(daysA) || string.IsNullOrWhiteSpace(daysB))
+        {
+            return false;
+        }
+        var a = SplitDays(daysA!);
+        var b = SplitDays(daysB!);
+        return a.Overlaps(b);
+    }
+
+    private static HashSet<string> SplitDays(string csv) =>
+        new(csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            StringComparer.OrdinalIgnoreCase);
 
     private static bool IsPartialWeeklyRetention(PolicyCreateOptions o)
     {

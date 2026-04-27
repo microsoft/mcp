@@ -402,7 +402,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): VM Enhanced V2 + Weekly schedule + multi-tier (weekly/monthly/yearly) retention + archive tier shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format'). Other VM policy shapes succeed against the same vault, so this is a service-side shape/feature issue, not a vault setup issue. Tracked as a follow-up requiring further reverse-engineering of the V2-enhanced + Weekly + LongTerm retention shape.")]
+    [Fact(Skip = "Deferred: VM Enhanced V2 + Weekly schedule + multi-tier (weekly/monthly/yearly) retention + archive tier shape still rejected by RSV API with BMSUserErrorInvalidPolicyInput after dropping the redundant DailySchedule alongside WeeklySchedule. The remaining shape work (likely involving WeeklyRetentionFormat days alignment or TieringPolicy placement on the SubProtectionPolicy) requires further reverse-engineering. Other VM policy shapes succeed against the same vault. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvVm_WeeklyMultiTierWithArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
@@ -463,12 +463,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): SQL Full+Differential+Log policy shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format'). Previously validated via direct ARM REST PUT with multiple shape variations (Differential as SimpleRetentionPolicy/LongTermRetentionPolicy, with/without scheduleWeeklyFrequency, with/without makePolicyConsistent, multiple API versions) - all rejected. Other SQL policy shapes (Full only) succeed against the same vault, confirming this is shape work, not feature flag work. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred: SQL Full+Differential+Log policy with non-overlapping Full/Diff days (Full Weekly Sunday, Diff Wed,Fri) and log<diff retention is rejected by RSV API with BMSUserErrorPolicyRetentionInvalid. SQL workload retention duration constraints for the Diff sub-policy when Full is on a Weekly schedule need further reverse-engineering. Other SQL policy shapes succeed against the same vault. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_FullLogDiff_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable("createdRsvSqlFullLogDiffPolicyName", $"test-sql-fld-{Random.Shared.NextInt64()}");
 
+        // SQL Full and Differential cannot share a day. Use Full=Weekly Sunday and Diff=Wed,Fri.
         var result = await CallToolAsync(
             "azurebackup_policy_create",
             new()
@@ -478,10 +479,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "SQL" },
-                { "full-schedule-frequency", "Daily" },
+                { "full-schedule-frequency", "Weekly" },
+                { "full-schedule-days-of-week", "Sunday" },
                 { "schedule-times", "02:00" },
-                { "daily-retention-days", "30" },
-                { "differential-schedule-days-of-week", "Wednesday" },
+                { "weekly-retention-weeks", "4" },
+                { "weekly-retention-days-of-week", "Sunday" },
+                { "differential-schedule-days-of-week", "Wednesday,Friday" },
                 { "differential-retention-days", "30" },
                 { "log-frequency-minutes", "60" },
                 { "log-retention-days", "15" }
@@ -698,7 +701,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): AzureDisk operational tier does not accept multi-tier (weekly/monthly/yearly) retention rules; only vault tier supports multi-tier on Disk. Combining --enable-vault-tier-copy with multi-tier retention requires the multi-tier rules to be sourced from VaultStore (with their own taggingCriteria), which is a deeper DppPolicyBuilder change. DPP API rejects current shape with BMSUserErrorInvalidInput. Tracked as a follow-up builder enhancement.")]
+    [Fact(Skip = "Deferred: AzureDisk operational tier does not accept multi-tier (weekly/monthly/yearly) retention rules. Sourcing the multi-tier rules from VaultStore (when --enable-vault-tier-copy is set) still produces BMSUserErrorInvalidInput from the DPP API; additional shape work is required for the per-tier taggingCriteria/policyRules combination on AzureDisk vault tier. Tracked as a follow-up builder enhancement.")]
     public async Task PolicyCreate_DppDisk_VaultTierMultiTierArchive_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -810,12 +813,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): SQL workload archive-tier policy shape rejected by RSV API with BMSUserErrorInvalidPolicyInput ('Input for create or update policy is not in proper format') when sub-policy TieringPolicy is attached to the Full sub-policy. Same root cause as PolicyCreate_RsvSql_FullLogDiff_E2E: SQL workload sub-policy structure for vault tier copy/archive needs further reverse-engineering. Other SQL policy shapes succeed against the same vault, confirming this is shape work. Tracked as a follow-up.")]
+    [Fact(Skip = "Deferred: SQL workload + Weekly Full + LongTerm retention + TieringPolicy still rejected by RSV API with BMSUserErrorInvalidPolicyInput after dropping the redundant DailySchedule alongside WeeklySchedule. The SQL sub-policy shape for archive tier copy needs further reverse-engineering (likely affects the Full sub-policy's RetentionPolicy/TieringPolicy combination). Other SQL policy shapes succeed against the same vault. Tracked as a follow-up.")]
     public async Task PolicyCreate_RsvSql_WithArchiveTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable("createdSqlArchivePolicyName", $"test-sql-archive-{Random.Shared.NextInt64()}");
 
+        // SQL Full Weekly + monthly retention + archive on Full sub-policy. Drop daily retention
+        // (not valid alongside Weekly schedule per RSV shape rules).
         var result = await CallToolAsync(
             "azurebackup_policy_create",
             new()
@@ -828,7 +833,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "full-schedule-frequency", "Weekly" },
                 { "full-schedule-days-of-week", "Sunday" },
                 { "schedule-times", "02:00" },
-                { "daily-retention-days", "30" },
+                { "weekly-retention-weeks", "4" },
+                { "weekly-retention-days-of-week", "Sunday" },
                 { "monthly-retention-months", "12" },
                 { "monthly-retention-days-of-month", "1" },
                 { "archive-tier-mode", "TierAfter" },
@@ -840,12 +846,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
-    [Fact(Skip = "Deferred (re-confirmed 2026-04-27): AFS hourly schedule + multi-tier (weekly/monthly/yearly) retention combo rejected by RSV API with UserErrorInvalidRequestParameter ('Parameter NO_PARAM in request is invalid'). The combination of hourly schedule with long-term retention is unusual for AFS; needs verification whether Az CLI / Portal supports it for AFS workload. Other AFS policy shapes (daily) succeed against the same vault. Tracked as a follow-up.")]
-    public async Task PolicyCreate_RsvFileShare_HourlyMultiTier_E2E()
+    [Fact]
+    public async Task PolicyCreate_RsvFileShare_DailyMultiTier_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
-        var policyName = RegisterOrRetrieveVariable("createdAfsHourlyPolicyName", $"test-afs-hourly-{Random.Shared.NextInt64()}");
+        var policyName = RegisterOrRetrieveVariable("createdAfsDailyMultiTierPolicyName", $"test-afs-daily-mt-{Random.Shared.NextInt64()}");
 
+        // AFS supports Daily schedule + multi-tier (weekly/monthly/yearly) long-term retention.
+        // Hourly schedule + LTR is not supported by AFS today (rejected with UserErrorInvalidRequestParameter).
         var result = await CallToolAsync(
             "azurebackup_policy_create",
             new()
@@ -855,10 +863,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureFileShare" },
-                { "schedule-frequency", "Hourly" },
-                { "hourly-interval-hours", "6" },
-                { "hourly-window-start-time", "08:00" },
-                { "hourly-window-duration-hours", "12" },
+                { "schedule-frequency", "Daily" },
+                { "schedule-times", "02:00" },
                 { "daily-retention-days", "30" },
                 { "weekly-retention-weeks", "12" },
                 { "weekly-retention-days-of-week", "Sunday" },
