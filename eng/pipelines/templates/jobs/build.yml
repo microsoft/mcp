@@ -73,7 +73,7 @@ jobs:
         -OutputPath '$(Build.ArtifactStagingDirectory)'
         -ServerName '${{ parameters.ServerName }}'
         -PlatformName '$(BuildPlatformName)'
-        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
+        -ReleaseBuild
         -SelfContained
         -SingleFile
 
