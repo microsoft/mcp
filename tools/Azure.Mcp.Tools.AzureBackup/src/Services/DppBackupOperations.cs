@@ -215,26 +215,11 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
         // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
         // RequestFailedException, instead of silently returning "Accepted".
+        ArmOperation<DataProtectionBackupInstanceResource> operation;
         try
         {
-            var operation = await collection.CreateOrUpdateAsync(
+            operation = await collection.CreateOrUpdateAsync(
                 WaitUntil.Completed, instanceName, instanceData, cancellationToken);
-
-            // Re-read the backup instance to capture the authoritative protection status.
-            // The LRO can complete while the BI is still in ConfiguringProtection; both
-            // outcomes are surfaced to the caller via ProtectionStatus.
-            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
-            var bi = await instanceResource.GetAsync(cancellationToken);
-            var protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
-
-            return new ProtectResult(
-                "Succeeded",
-                instanceName,
-                JobId: null,
-                $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
-                $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
-                ProtectionStatus: protectionStatus,
-                ErrorMessage: null);
         }
         catch (RequestFailedException ex)
         {
@@ -246,6 +231,32 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                 ProtectionStatus: null,
                 ErrorMessage: ex.Message);
         }
+
+        // Re-read the backup instance to capture the authoritative protection status.
+        // The LRO can complete while the BI is still in ConfiguringProtection; both
+        // outcomes are surfaced to the caller via ProtectionStatus. If the re-read
+        // fails with a transient error, report success (protection did complete) and
+        // let the caller verify with 'protecteditem get'.
+        string? protectionStatus = null;
+        try
+        {
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+        }
+        catch (RequestFailedException)
+        {
+            // Transient re-read failure; protection itself succeeded.
+        }
+
+        return new ProtectResult(
+            "Succeeded",
+            instanceName,
+            JobId: null,
+            $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+            $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+            ProtectionStatus: protectionStatus,
+            ErrorMessage: null);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
