@@ -50,9 +50,10 @@ internal static class FunctionAppContainerAppStrategy
         CreateOptions options,
         string? storageAccountName,
         string? containerAppsEnvironmentName,
+        string endpointSuffix,
         CancellationToken cancellationToken)
     {
-        var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
+        var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, endpointSuffix, cancellationToken);
         var site = await EnsureContainerAppHostedFunctionAppAsync(rg, functionAppName, location, options.Runtime, options.RuntimeVersion, storage, options.UseManagedIdentityStorage, containerAppsEnvironmentName, cancellationToken);
         var data = site.Data;
         return new FunctionAppInfo(

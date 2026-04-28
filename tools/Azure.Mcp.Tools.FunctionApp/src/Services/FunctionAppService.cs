@@ -12,6 +12,7 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
@@ -37,6 +38,13 @@ public sealed class FunctionAppService(
         public const int InstanceMemoryMB = 2048;
         public const int MaximumInstanceCount = 100;
     }
+
+    private string GetStorageEndpointSuffix() => TenantService.CloudConfiguration.CloudType switch
+    {
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "core.chinacloudapi.cn",
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "core.usgovcloudapi.net",
+        _ => FunctionAppStorageProvisioner.DefaultStorageEndpointSuffix
+    };
 
     public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
@@ -170,7 +178,7 @@ public sealed class FunctionAppService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
 
-        return await AppServiceStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, planName, options, inputs.StorageAccountName, cancellationToken);
+        return await AppServiceStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, planName, options, inputs.StorageAccountName, GetStorageEndpointSuffix(), cancellationToken);
     }
 
     public async Task<FunctionAppInfo> CreateContainerAppFunctionApp(
@@ -199,7 +207,7 @@ public sealed class FunctionAppService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy, cancellationToken);
 
-        return await FunctionAppContainerAppStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, cancellationToken);
+        return await FunctionAppContainerAppStrategy.CreateFunctionAppAsync(subscriptionResource, rg, functionAppName, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, GetStorageEndpointSuffix(), cancellationToken);
     }
 
     internal static SiteConfigProperties? BuildSiteConfig(bool isLinux, CreateOptions options)
@@ -322,7 +330,7 @@ public sealed class FunctionAppService(
         await site.UpdateApplicationSettingsAsync(appSettings, cancellationToken);
     }
 
-    private static async Task<WebSiteResource> CreateAppServiceSiteAsync(ResourceGroupResource rg, string functionAppName, string location, AppServicePlanResource plan, CreateOptions options, StorageProvisioningResult storage, CancellationToken cancellationToken)
+    private static async Task<WebSiteResource> CreateAppServiceSiteAsync(ResourceGroupResource rg, string functionAppName, string location, AppServicePlanResource plan, CreateOptions options, StorageProvisioningResult storage, string endpointSuffix, CancellationToken cancellationToken)
     {
         var isLinux = plan.Data.IsReserved == true;
         var data = new WebSiteData(location)
@@ -344,7 +352,7 @@ public sealed class FunctionAppService(
                     Name = MapToFunctionAppRuntimeName(options.Runtime),
                     Version = NormalizeRuntimeVersionForConfig(options.Runtime, options.RuntimeVersion)
                 },
-                DeploymentStorage = FunctionAppStorageProvisioner.BuildDeploymentStorageForAccount(storage.AccountName, options.UseManagedIdentityStorage),
+                DeploymentStorage = FunctionAppStorageProvisioner.BuildDeploymentStorageForAccount(storage.AccountName, options.UseManagedIdentityStorage, endpointSuffix),
                 ScaleAndConcurrency = new FunctionAppScaleAndConcurrency
                 {
                     InstanceMemoryMB = FlexConsumptionDefaults.InstanceMemoryMB,
@@ -381,11 +389,12 @@ public sealed class FunctionAppService(
             string? planName,
             CreateOptions options,
             string? storageAccountName,
+            string endpointSuffix,
             CancellationToken cancellationToken)
         {
             var plan = await FunctionAppPlanProvisioner.EnsureAppServicePlan(rg, planName, functionAppName, location, options, cancellationToken);
-            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, cancellationToken);
-            var site = await CreateAppServiceSiteAsync(rg, functionAppName, location, plan, options, storage, cancellationToken);
+            var storage = await FunctionAppStorageProvisioner.EnsureStorageForFunctionApp(subscription, rg, functionAppName, location, storageAccountName, options.UseManagedIdentityStorage, endpointSuffix, cancellationToken);
+            var site = await CreateAppServiceSiteAsync(rg, functionAppName, location, plan, options, storage, endpointSuffix, cancellationToken);
             var effectiveRequiresLinux = plan.Data.IsReserved == true;
             await ApplyAppSettings(site, options, storage, effectiveRequiresLinux, cancellationToken);
             return ConvertToFunctionAppModel(site);

@@ -8,9 +8,9 @@ using Azure.ResourceManager.Storage.Models;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
-public readonly record struct StorageProvisioningResult(string AccountName, string ConnectionString);
+internal readonly record struct StorageProvisioningResult(string AccountName, string ConnectionString);
 
-public static class FunctionAppStorageProvisioner
+internal static class FunctionAppStorageProvisioner
 {
     public static string CreateStorageAccountName(string functionAppName)
     {
@@ -23,8 +23,10 @@ public static class FunctionAppStorageProvisioner
         return $"{trimmed}{suffix}";
     }
 
-    public static string BuildConnectionString(string accountName, string key) =>
-        $"DefaultEndpointsProtocol=https;AccountName={accountName};AccountKey={key};EndpointSuffix=core.windows.net";
+    public const string DefaultStorageEndpointSuffix = "core.windows.net";
+
+    public static string BuildConnectionString(string accountName, string key, string endpointSuffix = DefaultStorageEndpointSuffix) =>
+        $"DefaultEndpointsProtocol=https;AccountName={accountName};AccountKey={key};EndpointSuffix={endpointSuffix}";
 
     public static StorageAccountCreateOrUpdateContent CreateStorageAccountOptions(string location) =>
         new(new StorageSku(StorageSkuName.StandardLrs), StorageKind.StorageV2, location)
@@ -42,6 +44,7 @@ public static class FunctionAppStorageProvisioner
         string location,
         string? storageAccountName = null,
         bool useManagedIdentity = false,
+        string endpointSuffix = DefaultStorageEndpointSuffix,
         CancellationToken cancellationToken = default)
     {
         var accountName = storageAccountName ?? CreateStorageAccountName(functionAppName);
@@ -70,7 +73,7 @@ public static class FunctionAppStorageProvisioner
         }
         if (primaryKey is null)
             throw new InvalidOperationException($"No keys found for storage account '{accountName}'");
-        return new StorageProvisioningResult(accountName, BuildConnectionString(accountName, primaryKey.Value));
+        return new StorageProvisioningResult(accountName, BuildConnectionString(accountName, primaryKey.Value, endpointSuffix));
     }
 
     public static string? ExtractStorageAccountName(string? connectionString)
@@ -83,13 +86,13 @@ public static class FunctionAppStorageProvisioner
         return accountNamePart?[12..];
     }
 
-    public static FunctionAppStorage? BuildDeploymentStorage(string storageConnectionString)
+    public static FunctionAppStorage? BuildDeploymentStorage(string storageConnectionString, string endpointSuffix = DefaultStorageEndpointSuffix)
     {
         var accountName = ExtractStorageAccountName(storageConnectionString);
-        return BuildDeploymentStorageForAccount(accountName, useManagedIdentity: false);
+        return BuildDeploymentStorageForAccount(accountName, useManagedIdentity: false, endpointSuffix);
     }
 
-    public static FunctionAppStorage? BuildDeploymentStorageForAccount(string? accountName, bool useManagedIdentity)
+    public static FunctionAppStorage? BuildDeploymentStorageForAccount(string? accountName, bool useManagedIdentity, string endpointSuffix = DefaultStorageEndpointSuffix)
     {
         if (string.IsNullOrWhiteSpace(accountName))
             return null;
@@ -106,7 +109,7 @@ public static class FunctionAppStorageProvisioner
         return new FunctionAppStorage
         {
             StorageType = FunctionAppStorageType.BlobContainer,
-            Value = new Uri($"https://{accountName}.blob.core.windows.net/azure-webjobs-hosts"),
+            Value = new Uri($"https://{accountName}.blob.{endpointSuffix}/azure-webjobs-hosts"),
             Authentication = authentication
         };
     }
