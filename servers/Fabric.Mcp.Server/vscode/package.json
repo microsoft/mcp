@@ -62,14 +62,16 @@
                     },
                     "uniqueItems": true,
                     "markdownDescription": "Service namespaces to enable. Leave empty to enable all. Choose from the list to avoid typing errors. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
-
                 },
                 "fabricMcp.serverMode": {
                     "type": "string",
-                    "enum": ["single", "namespace", "all"],
+                    "enum": [
+                        "single",
+                        "namespace",
+                        "all"
+                    ],
                     "default": "all",
                     "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool into one single tool that routes internally, `namespace` collapses all tools down into logical Fabric service namespace grouping, while `all` (default) exposes every MCP tool directly to the MCP client. We recommend all as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Fabric MCP → Start/Restart)."
-
                 },
                 "fabricMcp.readOnly": {
                     "type": "boolean",
@@ -100,7 +102,7 @@
         "@typescript-eslint/eslint-plugin": "^8.47.0",
         "@typescript-eslint/parser": "^8.47.0",
         "@vscode/test-electron": "~2",
-        "@vscode/vsce": "~3",
+        "@vscode/vsce": "^2.25.0",
         "chai": "~4",
         "eslint": "~9",
         "glob": "^13.0.0",
@@ -115,7 +117,7 @@
         "webpack-cli": "^6.0.1"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "~2",
+        "@microsoft/vscode-azext-utils": "^4.0.7",
         "@microsoft/vscode-azureresources-api": "~2",
         "dayjs": "~1",
         "dotenv": "~16",
