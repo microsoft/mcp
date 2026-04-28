@@ -160,14 +160,21 @@ public static class FunctionAppValidation
         };
     }
 
-    public static HostingKind ParseHostingKind(string? planType) => planType switch
+    public static HostingKind ParseHostingKind(string? planType)
     {
-        "flex" or "flexconsumption" => HostingKind.FlexConsumption,
-        "premium" or "functionspremium" => HostingKind.Premium,
-        "appservice" => HostingKind.AppService,
-        "containerapp" or "containerapps" => HostingKind.ContainerApp,
-        _ => HostingKind.Consumption
-    };
+        if (string.IsNullOrWhiteSpace(planType))
+            return HostingKind.Consumption;
+
+        return planType switch
+        {
+            "consumption" => HostingKind.Consumption,
+            "flex" or "flexconsumption" => HostingKind.FlexConsumption,
+            "premium" or "functionspremium" => HostingKind.Premium,
+            "appservice" => HostingKind.AppService,
+            "containerapp" or "containerapps" => HostingKind.ContainerApp,
+            _ => throw new ArgumentException($"Unsupported plan type '{planType}'. Supported values: consumption, flex, premium, appservice, containerapp.")
+        };
+    }
 
     public static (bool RequiresLinux, string? NormalizedOs) ResolveOs(string runtime, HostingKind hostingKind, string? operatingSystem)
     {
