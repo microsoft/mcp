@@ -58,7 +58,7 @@ jobs:
       Write-Host "Contents of server.json before staging:"
       Get-Content -Path $serverJsonPath | Write-Host
 
-      $stagingDirectory = '$(Build.ArtifactStagingDirectory)'
+      $stagingDirectory = '$(Build.ArtifactStagingDirectory)/server-json'
       New-Item -ItemType Directory -Path $stagingDirectory -ErrorAction SilentlyContinue | Out-Null
       Copy-Item -Path $serverJsonPath -Destination $stagingDirectory
 
@@ -68,10 +68,10 @@ jobs:
   - task: 1ES.PublishPipelineArtifact@1
     displayName: Publish Server.json artifact
     inputs:
-      path: $(Build.ArtifactStagingDirectory)
+      path: $(Build.ArtifactStagingDirectory)/server-json
       artifact: server.json_${{ parameters.ServerName }}
   
-  - task: ESRPRelease@11
+  - task: ESRPRelease@12
     displayName: Publish server.json to MCP Repository
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -83,7 +83,7 @@ jobs:
       Intent: 'PackageDistribution'
       ContentType: 'mcpregistry'
       ContentSource: 'Folder'
-      FolderLocation: '$(Build.ArtifactStagingDirectory)'
+      FolderLocation: '$(Build.ArtifactStagingDirectory)/server-json'
       Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
