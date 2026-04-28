@@ -92,12 +92,8 @@ public class RegistryRepositoryListCommandTests : CommandUnitTestsBase<RegistryR
         var response = await ExecuteCommandAsync("--subscription", "sub");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
 
-        var result = DeserializeResponse(response, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.RepositoriesByRegistry);
     }
 }

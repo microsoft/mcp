@@ -1,45 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.Server;
 
-public class ServerCreateCommandTests
+public class ServerCreateCommandTests : CommandUnitTestsBase<ServerCreateCommand, ISqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISqlService _service;
-    private readonly ILogger<ServerCreateCommand> _logger;
-    private readonly ServerCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ServerCreateCommandTests()
-    {
-        _service = Substitute.For<ISqlService>();
-        _logger = Substitute.For<ILogger<ServerCreateCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_service, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -73,7 +52,7 @@ public class ServerCreateCommandTests
                 Tags: []
             );
 
-            _service.CreateServerAsync(
+            Service.CreateServerAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -87,11 +66,8 @@ public class ServerCreateCommandTests
                 .Returns(expectedServer);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -122,7 +98,7 @@ public class ServerCreateCommandTests
             Tags: []
         );
 
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             "testserver",
             "rg",
             "sub",
@@ -135,18 +111,21 @@ public class ServerCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _service.Received(1).CreateServerAsync(
+        await Service.Received(1).CreateServerAsync(
             "testserver",
             "rg",
             "sub",
@@ -176,7 +155,7 @@ public class ServerCreateCommandTests
             Tags: []
         );
 
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             "testserver",
             "rg",
             "sub",
@@ -189,17 +168,22 @@ public class ServerCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --version 12.0 --public-network-access Disabled");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!",
+            "--version", "12.0",
+            "--public-network-access", "Disabled");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
 
-        await _service.Received(1).CreateServerAsync(
+        await Service.Received(1).CreateServerAsync(
             "testserver",
             "rg",
             "sub",
@@ -230,7 +214,7 @@ public class ServerCreateCommandTests
             Tags: []
         );
 
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -243,18 +227,21 @@ public class ServerCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _service.Received(1).CreateServerAsync(
+        await Service.Received(1).CreateServerAsync(
             "testserver",
             "rg",
             "sub",
@@ -271,7 +258,7 @@ public class ServerCreateCommandTests
     public async Task ExecuteAsync_WithInvalidPublicNetworkAccess_ReturnsBadRequest()
     {
         // Arrange
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -282,13 +269,17 @@ public class ServerCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid value 'Enabeld' for public-network-access. Allowed values are 'Enabled' or 'Disabled'.", "publicNetworkAccess")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --public-network-access Enabeld");
+            .ThrowsAsync(new ArgumentException("Invalid value 'Enabeld' for public-network-access. Allowed values are 'Enabled' or 'Disabled'.", "publicNetworkAccess"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!",
+            "--public-network-access", "Enabeld");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -299,7 +290,7 @@ public class ServerCreateCommandTests
     public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -310,13 +301,16 @@ public class ServerCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<SqlServer>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -329,7 +323,7 @@ public class ServerCreateCommandTests
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Conflict, "Conflict: Server already exists");
 
-        _service.CreateServerAsync(
+        Service.CreateServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -340,13 +334,16 @@ public class ServerCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<SqlServer>(requestException));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+            .ThrowsAsync(requestException);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver",
+            "--location", "eastus",
+            "--administrator-login", "admin",
+            "--administrator-password", "Password123!");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);

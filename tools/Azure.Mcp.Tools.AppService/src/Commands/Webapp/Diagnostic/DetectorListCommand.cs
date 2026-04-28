@@ -20,8 +20,10 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger)
 
     public override string Description =>
         """
-        Retrieves detailed information about detectors detector for the specified App Service Web App, returning the name,
-        detector type, description, category, and analysis types for each detector.
+        Lists all available diagnostic detectors for an App Service Web App. Use this to discover which diagnostics
+        are available before running a specific detector. Returns the detector ID, name, type, description, category,
+        and analysis types for each detector. Useful for troubleshooting app service issues, checking available
+        health checks, and finding the right detector for performance, availability, or configuration analysis.
         """;
 
     public override string Title => CommandTitle;

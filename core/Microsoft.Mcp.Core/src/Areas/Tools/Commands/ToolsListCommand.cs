@@ -49,7 +49,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
     protected override ToolsListOptions BindOptions(ParseResult parseResult)
     {
-        var namespaces = parseResult.GetValueOrDefault<string[]>(ToolsListOptionDefinitions.Namespace.Name) ?? [];
+        var namespaces = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.Namespace) ?? [];
         return new ToolsListOptions
         {
             NamespaceMode = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NamespaceMode),

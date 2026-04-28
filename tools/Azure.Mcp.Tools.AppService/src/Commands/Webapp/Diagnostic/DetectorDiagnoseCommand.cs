@@ -23,7 +23,10 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
 
     public override string Description =>
         """
-        Diagnoses an App Service Web App with the specified detector, returning the diagnostic results of the detector.
+        Runs a specific diagnostic detector on an App Service Web App to troubleshoot issues with performance, availability,
+        configuration, or errors. Returns detailed analysis results including insights and recommendations. Use this to investigate
+        why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
+        Supports optional time range filtering for historical analysis.
         """;
 
     public override string Title => CommandTitle;
@@ -41,7 +44,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.DetectorName.AsRequired());
+        command.Options.Add(AppServiceOptionDefinitions.DetectorId.AsRequired());
         command.Options.Add(AppServiceOptionDefinitions.StartTime);
         command.Options.Add(AppServiceOptionDefinitions.EndTime);
         command.Options.Add(AppServiceOptionDefinitions.Interval);
@@ -76,7 +79,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override DetectorDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DetectorName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DetectorName);
+        options.DetectorId = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DetectorId);
         if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault(AppServiceOptionDefinitions.StartTime), out var startTime))
         {
             options.StartTime = startTime.ToUniversalTime();
@@ -108,7 +111,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
-                options.DetectorName!,
+                options.DetectorId!,
                 options.StartTime,
                 options.EndTime,
                 options.Interval,
