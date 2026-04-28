@@ -27,6 +27,9 @@ parameters:
 - name: TestTimeoutInMinutes
   type: number
   default: 30
+- name: RunPerfTests
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -94,6 +97,25 @@ extends:
           Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.linuxBuildMatrices.arm64']
           MaxParallel: 4
           HostArchitecture: arm64
+
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunPerfTests, 'true')) }}:
+      - stage: Perf
+        displayName: 'Performance test'
+        dependsOn:
+        - Initialize
+        pool:
+          name: $(WINDOWSPOOL)
+          image: $(WINDOWSVMIMAGE)
+          os: windows
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/perf-test.yml
+          parameters:
+            Runs: 5
+            # Uncomment to gate on regressions once a baseline is committed:
+            # BaselinePath: eng/perf-baseline.json
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
