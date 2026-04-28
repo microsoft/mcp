@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using Xunit;
 
@@ -95,6 +94,20 @@ public class AzureBackupSetupTests
         Assert.Contains(governance.Commands, c => c.Key == "find-unprotected");
         Assert.Contains(governance.Commands, c => c.Key == "immutability");
         Assert.Contains(governance.Commands, c => c.Key == "soft-delete");
+    }
+
+    [Fact]
+    public void RegisterCommands_ProtectedItemGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var protectedItem = root.SubGroup.First(g => g.Name == "protecteditem");
+
+        Assert.Contains(protectedItem.Commands, c => c.Key == "get");
+        Assert.Contains(protectedItem.Commands, c => c.Key == "protect");
+        Assert.Contains(protectedItem.Commands, c => c.Key == "undelete");
     }
 
     [Fact]

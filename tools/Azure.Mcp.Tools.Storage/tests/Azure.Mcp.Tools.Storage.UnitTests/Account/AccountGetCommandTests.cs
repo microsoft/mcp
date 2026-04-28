@@ -40,12 +40,8 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
         Assert.Equal(expectedAccounts.Results.Count, result.Accounts.Count);
         Assert.Equal(expectedAccounts.Results.Select(a => a.Name), result.Accounts.Select(a => a.Name));
@@ -69,12 +65,8 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Accounts);
     }
 
@@ -171,15 +163,9 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var response = await ExecuteCommandAsync("--account", account, "--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
-        var result = DeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Accounts);
-
         Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
         Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
         Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);

@@ -20,7 +20,7 @@ public static class CommandHelper
     /// <returns>True if a subscription is available, false otherwise.</returns>
     public static bool HasSubscriptionAvailable(CommandResult commandResult)
     {
-        if (commandResult.HasOptionResult(OptionDefinitions.Common.Subscription.Name))
+        if (commandResult.HasOptionResult(OptionDefinitions.Common.Subscription))
         {
             return true;
         }
@@ -31,7 +31,7 @@ public static class CommandHelper
     public static string? GetSubscription(ParseResult parseResult)
     {
         // Get subscription from command line option or fallback to default subscription
-        var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
+        var subscriptionValue = parseResult.GetValueOrDefault(OptionDefinitions.Common.Subscription);
 
         if (!string.IsNullOrEmpty(subscriptionValue) && !IsPlaceholder(subscriptionValue))
         {

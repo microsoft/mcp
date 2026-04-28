@@ -5,7 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
+namespace Azure.Mcp.Tools.Speech.UnitTests.Models.Realtime;
 
 public class RealtimeRecognitionContinuousResultTests
 {
@@ -53,7 +53,7 @@ public class RealtimeRecognitionContinuousResultTests
         var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Complete text",
-            Segments = new List<RealtimeRecognitionResult>()
+            Segments = []
         };
 
         // Assert
@@ -69,12 +69,12 @@ public class RealtimeRecognitionContinuousResultTests
         var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Hello world test",
-            Segments = new List<RealtimeRecognitionResult>
-            {
+            Segments =
+            [
                 new() { Text = "Hello", Offset = 0, Duration = 1000, Language = "en-US" },
                 new() { Text = "world", Offset = 1000, Duration = 1200, Language = "en-US" },
                 new() { Text = "test", Offset = 2200, Duration = 800, Language = "en-US" }
-            }
+            ]
         };
 
         // Act
@@ -122,7 +122,7 @@ public class RealtimeRecognitionContinuousResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionContinuousResult);
 
         // Assert
         Assert.NotNull(result);
@@ -156,7 +156,7 @@ public class RealtimeRecognitionContinuousResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionContinuousResult);
 
         // Assert
         Assert.NotNull(result);
@@ -176,7 +176,7 @@ public class RealtimeRecognitionContinuousResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
+        var result = JsonSerializer.Deserialize(json, SpeechJsonContext.Default.RealtimeRecognitionContinuousResult);
 
         // Assert
         Assert.NotNull(result);
@@ -202,7 +202,7 @@ public class RealtimeRecognitionContinuousResultTests
         var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Single segment",
-            Segments = new List<RealtimeRecognitionResult> { segment }
+            Segments = [segment]
         };
 
         // Assert

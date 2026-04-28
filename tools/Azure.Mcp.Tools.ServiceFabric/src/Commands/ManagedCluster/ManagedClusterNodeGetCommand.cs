@@ -13,11 +13,12 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
-public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCommand> logger)
+public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCommand> logger, IServiceFabricService serviceFabricService)
     : BaseServiceFabricCommand<ManagedClusterNodeGetOptions>
 {
     private const string CommandTitle = "Get Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeGetCommand> _logger = logger;
+    private readonly IServiceFabricService _serviceFabricService = serviceFabricService;
 
     public override string Id => "a3f1b2c4-d5e6-47f8-9a0b-1c2d3e4f5a6b";
 
@@ -66,11 +67,9 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
 
         try
         {
-            var service = context.GetService<IServiceFabricService>();
-
             if (!string.IsNullOrEmpty(options.NodeName))
             {
-                var node = await service.GetManagedClusterNode(
+                var node = await _serviceFabricService.GetManagedClusterNode(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.ClusterName!,
@@ -83,7 +82,7 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
             }
             else
             {
-                var nodes = await service.ListManagedClusterNodes(
+                var nodes = await _serviceFabricService.ListManagedClusterNodes(
                     options.Subscription!,
                     options.ResourceGroup!,
                     options.ClusterName!,

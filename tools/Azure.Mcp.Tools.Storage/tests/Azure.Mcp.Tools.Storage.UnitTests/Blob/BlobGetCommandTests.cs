@@ -1,43 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Blob;
 
-public class BlobGetCommandTests
+public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<BlobGetCommand> _logger;
-    private readonly BlobGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public BlobGetCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<BlobGetCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsBlobs()
     {
@@ -51,7 +29,7 @@ public class BlobGetCommandTests
             new("blob2", DateTimeOffset.UtcNow, null, null, "application/octet-stream", null, null, new Dictionary<string, string>(), null, null, null, null, null, null, null, null, false, null, null, null)
         ]);
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -62,19 +40,15 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedBlobs);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--account", account,
+            "--container", container);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.BlobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Blobs);
         Assert.Equal(expectedBlobs.Count, result.Blobs.Count);
         Assert.Equal(expectedBlobs.Select(a => a.Name), result.Blobs.Select(a => a.Name));
@@ -88,7 +62,7 @@ public class BlobGetCommandTests
         var account = "testaccount";
         var container = "container123";
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -99,19 +73,15 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--account", account,
+            "--container", container);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.BlobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Blobs);
     }
 
@@ -124,7 +94,7 @@ public class BlobGetCommandTests
         var account = "testaccount";
         var container = "container123";
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -135,10 +105,11 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--account", account, "--container", container]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--account", account,
+            "--container", container);
 
         // Assert
         Assert.NotNull(response);
@@ -149,10 +120,9 @@ public class BlobGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -177,7 +147,7 @@ public class BlobGetCommandTests
                 new("blob", DateTimeOffset.UtcNow, null, null, "application/octet-stream", null, null, new Dictionary<string, string>(), null, null, null, null, null, null, null, null, false, null, null, null)
             ]);
 
-            _storageService.GetBlobDetails(
+            Service.GetBlobDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -189,10 +159,8 @@ public class BlobGetCommandTests
                 .Returns(expectedBlobs);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -218,7 +186,7 @@ public class BlobGetCommandTests
         var expected = new BlobInfo(blob, DateTimeOffset.UtcNow, null, null, "application/octet-stream", null, null,
             new Dictionary<string, string>(), null, null, null, null, null, null, null, null, false, null, null, null);
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
@@ -229,20 +197,16 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
-        var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container, "--blob", blob]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container,
+            "--blob", blob);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.BlobGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Blobs);
 
         Assert.Equal(expected.Name, result.Blobs[0].Name);
@@ -259,7 +223,7 @@ public class BlobGetCommandTests
         var container = "container123";
         var blob = "blob123";
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
@@ -270,10 +234,12 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container, "--blob", blob]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container,
+            "--blob", blob);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -290,7 +256,7 @@ public class BlobGetCommandTests
         var container = "container123";
         var blob = "notfound";
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
@@ -301,10 +267,12 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Blob not found"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container, "--blob", blob]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container,
+            "--blob", blob);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -320,7 +288,7 @@ public class BlobGetCommandTests
         var container = "container123";
         var blob = "blob123";
 
-        _storageService.GetBlobDetails(
+        Service.GetBlobDetails(
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
@@ -331,10 +299,12 @@ public class BlobGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription, "--container", container, "--blob", blob]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", account,
+            "--subscription", subscription,
+            "--container", container,
+            "--blob", blob);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

@@ -1,55 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem;
 
-public class FileSystemListCommandTests
+public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemListCommand> _logger;
-    private readonly FileSystemListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
     private readonly string _knownResourceIdRg1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Lustre/amlfs/fs1";
     private readonly string _knownResourceIdRg2 = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.Lustre/amlfs/fs2";
     private const string SubnetId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1";
 
-    public FileSystemListCommandTests()
-    {
-        _amlfsService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemListCommand>>();
-
-        var services = new ServiceCollection().AddSingleton(_amlfsService);
-        _serviceProvider = services.BuildServiceProvider();
-
-        _command = new(_amlfsService, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -102,7 +78,7 @@ public class FileSystemListCommandTests
             ),
         };
 
-        _amlfsService.ListFileSystemsAsync(
+        Service.ListFileSystemsAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -110,22 +86,13 @@ public class FileSystemListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscriptionId
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemListResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result!.FileSystems);
+        Assert.NotNull(result.FileSystems);
         Assert.Equal(2, result.FileSystems.Count);
         Assert.Equal("fs1", result.FileSystems[0].Name);
     }
@@ -165,31 +132,24 @@ public class FileSystemListCommandTests
                 ),
             };
 
-            _amlfsService.ListFileSystemsAsync(
+            Service.ListFileSystemsAsync(
                 Arg.Is(_knownSubscriptionId),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
-
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            Assert.Equal("Success", response.Message);
-
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemListResult);
-            Assert.NotNull(result!.FileSystems);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
+            Assert.NotNull(result.FileSystems);
             Assert.NotNull(result.FileSystems[0].Name);
             Assert.Equal("fs1", result.FileSystems[0].Name);
         }
@@ -204,7 +164,7 @@ public class FileSystemListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoItems()
     {
         // Arrange
-        _amlfsService.ListFileSystemsAsync(
+        Service.ListFileSystemsAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Is<string?>(x => x == null),
             Arg.Any<string?>(),
@@ -212,21 +172,12 @@ public class FileSystemListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscriptionId
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemListResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemListResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.FileSystems);
     }
 
@@ -234,7 +185,7 @@ public class FileSystemListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange - 404 Not Found
-        _amlfsService.ListFileSystemsAsync(
+        Service.ListFileSystemsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -242,8 +193,7 @@ public class FileSystemListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -254,7 +204,7 @@ public class FileSystemListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange - 403 Forbidden
-        _amlfsService.ListFileSystemsAsync(
+        Service.ListFileSystemsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -262,8 +212,7 @@ public class FileSystemListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
-        var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", _knownSubscriptionId);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
