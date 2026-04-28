@@ -11,29 +11,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
+[CommandMetadata(
+    Id = "35f577d9-6378-4d34-b822-111ff6e8957c",
+    Name = "orchestrator-start",
+    Title = "Start Azure Monitor Instrumentation",
+    Description = "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator-next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> logger)
     : BaseCommand<OrchestratorStartOptions>
 {
     private readonly ILogger<OrchestratorStartCommand> _logger = logger;
-
-    public override string Id => "35f577d9-6378-4d34-b822-111ff6e8957c";
-
-    public override string Name => "orchestrator-start";
-
-    public override string Description =>
-        "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator-next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.";
-
-    public override string Title => "Start Azure Monitor Instrumentation";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -12,30 +12,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
+[CommandMetadata(
+    Id = "c39f6e9c-86a7-4cba-b267-0fa71f1ac743",
+    Name = "create",
+    Title = "Test Resource Create",
+    Description = """
+        Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. 
+        Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestResourceCreateOptions>
 {
-    private const string _commandTitle = "Test Resource Create";
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "c39f6e9c-86a7-4cba-b267-0fa71f1ac743";
-    public override string Name => "create";
-    public override string Description =>
-        $"""
-        Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. 
-        Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

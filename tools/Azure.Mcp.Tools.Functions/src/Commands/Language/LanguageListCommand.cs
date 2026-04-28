@@ -9,31 +9,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Language;
 
+[CommandMetadata(
+    Id = "f7c8d9e0-a1b2-4c3d-8e5f-6a7b8c9d0e1f",
+    Name = "list",
+    Title = "List Supported Languages",
+    Description = "List supported programming languages for Azure Functions development. Use to discover available languages, compare options, or choose a language to get started. Returns language names, runtime versions, prerequisites, development tools, and init/run/build commands. Start here before using functions project get and functions template get.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger) : BaseCommand<EmptyOptions>
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
-
-    public override string Id => "f7c8d9e0-a1b2-4c3d-8e5f-6a7b8c9d0e1f";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List supported programming languages for Azure Functions development. " +
-        "Use to discover available languages, compare options, or choose a language to get started. " +
-        "Returns language names, runtime versions, prerequisites, development tools, and init/run/build commands. " +
-        "Start here before using functions project get and functions template get.";
-
-    public override string Title => "List Supported Languages";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

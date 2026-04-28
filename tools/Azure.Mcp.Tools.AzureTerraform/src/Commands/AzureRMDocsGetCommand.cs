@@ -11,37 +11,29 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
+[CommandMetadata(
+    Id = "d4e5f6a7-b8c9-0123-abcd-567890123def",
+    Name = "get",
+    Title = "Get AzureRM Provider Documentation",
+    Description = """
+        Retrieves comprehensive AzureRM Terraform provider documentation for a specified resource type.
+        Returns the resource summary, arguments with descriptions and requirements, attributes,
+        usage examples, and important notes. Use --resource-type to specify the resource
+        (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),
+        --argument, or --attribute.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AzureRMDocsGetCommand(
     ILogger<AzureRMDocsGetCommand> logger,
     IAzureRMDocsService docsService) : BaseCommand<AzureRMDocsOptions>
 {
     private readonly ILogger<AzureRMDocsGetCommand> _logger = logger;
     private readonly IAzureRMDocsService _docsService = docsService;
-
-    public override string Id => "d4e5f6a7-b8c9-0123-abcd-567890123def";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves comprehensive AzureRM Terraform provider documentation for a specified resource type.
-        Returns the resource summary, arguments with descriptions and requirements, attributes,
-        usage examples, and important notes. Use --resource-type to specify the resource
-        (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),
-        --argument, or --attribute.
-        """;
-
-    public override string Title => "Get AzureRM Provider Documentation";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

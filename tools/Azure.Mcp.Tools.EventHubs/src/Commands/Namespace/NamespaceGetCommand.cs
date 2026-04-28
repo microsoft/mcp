@@ -12,43 +12,34 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceGetOptions>
-{
-    private const string CommandTitle = "Get Event Hubs Namespaces";
-
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<NamespaceGetCommand> _logger = logger;
-
-    public override string Id => "71ec6c5b-b6e4-4c64-b31b-2d61dfad3b5c";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "71ec6c5b-b6e4-4c64-b31b-2d61dfad3b5c",
+    Name = "get",
+    Title = "Get Event Hubs Namespaces",
+    Description = """
         Get Event Hubs namespaces from Azure. This command supports three modes of operation:
         1. List all Event Hubs namespaces in a subscription 
         2. List all Event Hubs namespaces in a specific resource group 
         3. Get a single namespace by name 
-        
+
         When retrieving a single namespace, detailed information including SKU, settings, and metadata 
         is returned. When listing namespaces, the same detailed information is returned for all 
         namespaces in the specified scope.
-        
+
         The --resource-group parameter is optional for listing operations but required when getting a specific namespace.
-        """;
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<NamespaceGetOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = false,   // Safe read-only operation
-        Idempotent = true,     // Same parameters produce same results
-        ReadOnly = true,       // Only reads data, no modifications
-        Secret = false,        // Returns non-sensitive information
-        LocalRequired = false  // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<NamespaceGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

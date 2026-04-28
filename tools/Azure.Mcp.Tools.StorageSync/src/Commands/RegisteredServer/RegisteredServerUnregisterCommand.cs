@@ -12,29 +12,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
+[CommandMetadata(
+    Id = "346661e1-64be-463a-96c6-3626966f55fa",
+    Name = "unregister",
+    Title = "Unregister Server",
+    Description = "Unregister a server from a Storage Sync service.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUnregisterOptions>
 {
-    private const string CommandTitle = "Unregister Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUnregisterCommand> _logger = logger;
-
-    public override string Id => "346661e1-64be-463a-96c6-3626966f55fa";
-
-    public override string Name => "unregister";
-
-    public override string Description => "Unregister a server from a Storage Sync service.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

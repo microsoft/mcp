@@ -12,30 +12,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
+[CommandMetadata(
+    Id = "f1281e49-6392-455d-8caf-eb58428e8f5e",
+    Name = "get",
+    Title = "Retrieve Confidential Ledger Entry",
+    Description = "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, ILogger<LedgerEntryGetCommand> logger)
     : BaseConfidentialLedgerCommand<GetEntryOptions>
 {
-    private const string CommandTitle = "Retrieve Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryGetCommand> _logger = logger;
-    public override string Id => "f1281e49-6392-455d-8caf-eb58428e8f5e";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

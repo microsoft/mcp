@@ -13,31 +13,26 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
+[CommandMetadata(
+    Id = "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e",
+    Name = "send-brownfield-analysis",
+    Title = "Send Brownfield Analysis",
+    Description = """
+        Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
+        You must have scanned the workspace source files and filled in the analysis template.
+        For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
+        After this call succeeds, continue with orchestrator-next as usual.
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger)
     : BaseCommand<SendBrownfieldAnalysisOptions>
 {
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
-
-    public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
-
-    public override string Name => "send-brownfield-analysis";
-
-    public override string Description => @"Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
-You must have scanned the workspace source files and filled in the analysis template.
-For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
-After this call succeeds, continue with orchestrator-next as usual.";
-
-    public override string Title => "Send Brownfield Analysis";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

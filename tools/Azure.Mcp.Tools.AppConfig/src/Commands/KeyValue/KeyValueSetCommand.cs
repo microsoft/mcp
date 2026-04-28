@@ -11,36 +11,28 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 
+[CommandMetadata(
+    Id = "a89086eb-acf4-4168-9d32-de5cd7384030",
+    Name = "set",
+    Title = "Set App Configuration Key-Value Setting",
+    Description = """
+        Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting
+        with the specified value. You must specify an account name, key, and value. Optionally, you can specify a
+        label otherwise the default label will be used. You can also specify a content type to indicate how the value
+        should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppConfigService appConfigService)
     : BaseKeyValueCommand<KeyValueSetOptions>()
 {
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "a89086eb-acf4-4168-9d32-de5cd7384030";
-
-    public override string Name => "set";
-
-    public override string Description =>
-        """
-        Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting
-        with the specified value. You must specify an account name, key, and value. Optionally, you can specify a
-        label otherwise the default label will be used. You can also specify a content type to indicate how the value
-        should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

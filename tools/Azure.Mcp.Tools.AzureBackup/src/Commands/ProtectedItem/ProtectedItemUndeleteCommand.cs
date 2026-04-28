@@ -14,33 +14,28 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 
-public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions>()
-{
-    private const string CommandTitle = "Undelete Protected Item";
-    private readonly ILogger<ProtectedItemUndeleteCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "d8e3a1b7-5c42-4f9e-b6d1-7a2e9c3f4b58";
-    public override string Name => "undelete";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d8e3a1b7-5c42-4f9e-b6d1-7a2e9c3f4b58",
+    Name = "undelete",
+    Title = "Undelete Protected Item",
+    Description = """
         Undeletes or restores a soft-deleted backup item to an active protection state.
         Use this when a backup or protected item was accidentally deleted and needs to be recovered.
         For RSV vaults: pass the datasource ARM resource ID as --datasource-id.
         For DPP vaults: pass the datasource ARM resource ID as --datasource-id.
         Optionally specify --container for RSV workload items (SQL/HANA).
         The operation is asynchronous; use 'azurebackup job get' to monitor progress.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<ProtectedItemUndeleteOptions>()
+{
+    private readonly ILogger<ProtectedItemUndeleteCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {
