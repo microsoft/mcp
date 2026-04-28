@@ -29,7 +29,7 @@ public static class AzureBackupTelemetryTags
         string.IsNullOrWhiteSpace(workloadType) ? null : workloadType.ToLowerInvariant();
 
     /// <summary>
-    /// Adds normalized vault type and operation scope tags to the activity.
+    /// Adds a normalized vault type tag to the activity.
     /// </summary>
     public static void AddVaultTags(Activity? activity, string? vaultType)
     {
@@ -37,7 +37,7 @@ public static class AzureBackupTelemetryTags
     }
 
     /// <summary>
-    /// Adds normalized vault type, operation scope, and workload type tags to the activity.
+    /// Adds normalized vault type and workload type tags to the activity.
     /// </summary>
     public static void AddVaultAndWorkloadTags(Activity? activity, string? vaultType, string? workloadType)
     {
