@@ -2519,12 +2519,10 @@ azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
                               [--include-stop-sold-plans <true/false>] \
                               [--language <language-code>] \
-                              [--market <market-code>] \
                               [--lookup-offer-in-tenant-level <true/false>] \
                               [--plan-id <plan-id>] \
                               [--sku-id <sku-id>] \
-                              [--include-service-instruction-templates <true/false>] \
-                              [--pricing-audience <pricing-audience>]
+                              [--include-service-instruction-templates <true/false>]
 ```
 
 ### Azure MCP Best Practices
