@@ -7,7 +7,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
-public static class FunctionAppPlanProvisioner
+internal static class FunctionAppPlanProvisioner
 {
     private static AppServiceSkuDescription GetDefaultSku(HostingKind hostingKind) => hostingKind switch
     {
