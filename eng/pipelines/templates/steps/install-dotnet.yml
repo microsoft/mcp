@@ -4,7 +4,7 @@ parameters:
   default: []
 
 steps:
-  # Need to authenticate so our pipeline can consume packages from the Azure Artifacts feed.
+  # Need to authenticate so our pipeline can ingest new packages into the feed when restoring.
 - task: NuGetAuthenticate@1
 
 - task: UseDotNet@2
