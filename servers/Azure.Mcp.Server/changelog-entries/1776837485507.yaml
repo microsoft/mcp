@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added learn-mode discovery for azmcp commands. AI agents can use the azmcp CLI `--learn` flag, and MCP tool flows surface the same command and parameter discovery behavior without executing Azure operations."
