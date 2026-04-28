@@ -69,7 +69,7 @@ cd mcp
 dotnet build
 
 # 2. Verify everything works
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 3. Run unit tests for a specific toolset
 ./eng/scripts/Test-Code.ps1 -Paths Storage
