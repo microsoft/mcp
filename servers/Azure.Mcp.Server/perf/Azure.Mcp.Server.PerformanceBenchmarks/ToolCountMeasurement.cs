@@ -49,7 +49,9 @@ internal static class ToolCountMeasurement
             {
                 exact_gpt4o_o200k_base = exactTokens,
                 approx_bytes_div_4 = approxTokens,
-                error_pct = Math.Round(Math.Abs(approxTokens - exactTokens) / (double)exactTokens * 100, 1)
+                error_pct = exactTokens == 0
+                    ? (double?)null
+                    : Math.Round(Math.Abs(approxTokens - exactTokens) / (double)exactTokens * 100, 1)
             },
             notes = "Counts name+description only. Use --mcp-startup for full inputSchema token cost."
         };

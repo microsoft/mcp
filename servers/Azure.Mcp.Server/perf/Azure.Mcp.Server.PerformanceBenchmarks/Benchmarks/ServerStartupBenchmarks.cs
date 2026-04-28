@@ -4,6 +4,9 @@
 using Azure.Mcp.Server;
 using Azure.Mcp.Server.Perf;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -14,16 +17,52 @@ namespace Azure.Mcp.Server.Perf.Benchmarks;
 /// Measures each phase of the Azure MCP Server startup pipeline in isolation so regressions
 /// can be pinpointed to the specific phase that changed.
 ///
+/// Each phase's prerequisites are built in a per-target <see cref="IterationSetupAttribute"/>
+/// hook so they are excluded from the timed body — e.g. the BuildServiceProvider benchmark
+/// times only <c>BuildServiceProvider()</c>, not the ConfigureServices work that precedes it.
+/// To keep setup/measurement one-to-one, the job runs a single invocation per iteration
+/// (InvocationCount = 1, UnrollFactor = 1), which is the pattern BenchmarkDotNet requires
+/// when IterationSetup establishes non-idempotent state.
+///
 /// Run with:
 ///   dotnet run -c Release --project servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks -- --filter *
-///
-/// Quick smoke-run (shorter iteration count, useful in CI):
-///   dotnet run -c Release ... -- --filter * --job short
 /// </summary>
-[MemoryDiagnoser]
-[SimpleJob(launchCount: 1, warmupCount: 2, iterationCount: 5)]
+[Config(typeof(IsolatedPhaseConfig))]
 public class ServerStartupBenchmarks
 {
+    // Per-phase prerequisites, prepared in IterationSetup so they are not part of the
+    // timed body. Each is disposed in DisposeProviders after the iteration is recorded.
+    private IServiceCollection _servicesForConfigure = null!;
+    private IServiceCollection _servicesForBuild = null!;
+    private ServiceProvider? _builtProvider;
+    private ServiceProvider? _providerForInitialize;
+    private ServiceProvider? _providerForCommandTree;
+
+    private sealed class IsolatedPhaseConfig : ManualConfig
+    {
+        public IsolatedPhaseConfig()
+        {
+            AddJob(Job.Default
+                .WithLaunchCount(1)
+                .WithWarmupCount(2)
+                .WithIterationCount(10)
+                .WithInvocationCount(1)
+                .WithUnrollFactor(1));
+            AddDiagnoser(MemoryDiagnoser.Default);
+        }
+    }
+
+    [IterationCleanup]
+    public void DisposeProviders()
+    {
+        _builtProvider?.Dispose();
+        _providerForInitialize?.Dispose();
+        _providerForCommandTree?.Dispose();
+        _builtProvider = null;
+        _providerForInitialize = null;
+        _providerForCommandTree = null;
+    }
+
     // -------------------------------------------------------------------------
     // Phase 1 – instantiate all IAreaSetup objects (the 60+ toolset registrations)
     // -------------------------------------------------------------------------
@@ -35,48 +74,66 @@ public class ServerStartupBenchmarks
     // Phase 2 – wire the DI container (call all area.ConfigureServices)
     // -------------------------------------------------------------------------
 
+    [IterationSetup(Target = nameof(ConfigureServices))]
+    public void SetupConfigureServices() => _servicesForConfigure = new ServiceCollection();
+
     [Benchmark(Description = "ConfigureServices – register services into the DI container")]
-    public IServiceCollection ConfigureServices() => CreateSilentServices();
+    public IServiceCollection ConfigureServices()
+    {
+        Program.ConfigureServices(_servicesForConfigure);
+        return _servicesForConfigure;
+    }
 
     // -------------------------------------------------------------------------
     // Phase 3 – compile the DI container (BuildServiceProvider)
     // -------------------------------------------------------------------------
 
+    [IterationSetup(Target = nameof(BuildServiceProvider))]
+    public void SetupBuildServiceProvider() => _servicesForBuild = CreateSilentServices();
+
     [Benchmark(Description = "BuildServiceProvider – compile the DI container")]
-    public ServiceProvider BuildServiceProvider() => CreateSilentServices().BuildServiceProvider();
+    public ServiceProvider BuildServiceProvider()
+    {
+        _builtProvider = _servicesForBuild.BuildServiceProvider();
+        return _builtProvider;
+    }
 
     // -------------------------------------------------------------------------
     // Phase 4 – async service initialization (telemetry, user-agent policy, etc.)
     // -------------------------------------------------------------------------
 
+    [IterationSetup(Target = nameof(InitializeServicesAsync))]
+    public void SetupInitializeServices() => _providerForInitialize = CreateSilentServices().BuildServiceProvider();
+
     [Benchmark(Description = "InitializeServicesAsync – async service warm-up")]
-    public async Task InitializeServicesAsync()
-    {
-        var sp = CreateSilentServices().BuildServiceProvider();
-        await Program.InitializeServicesAsync(sp);
-    }
+    public async Task InitializeServicesAsync() => await Program.InitializeServicesAsync(_providerForInitialize!);
 
     // -------------------------------------------------------------------------
     // Phase 5 – build the full System.CommandLine command tree
     // -------------------------------------------------------------------------
 
-    [Benchmark(Description = "CommandFactory.RootCommand – build the full command tree")]
-    public System.CommandLine.RootCommand BuildCommandTree()
+    [IterationSetup(Target = nameof(BuildCommandTree))]
+    public void SetupBuildCommandTree()
     {
-        var sp = CreateSilentServices().BuildServiceProvider();
-        Program.InitializeServicesAsync(sp).GetAwaiter().GetResult();
-        return sp.GetRequiredService<ICommandFactory>().RootCommand;
+        _providerForCommandTree = CreateSilentServices().BuildServiceProvider();
+        Program.InitializeServicesAsync(_providerForCommandTree).GetAwaiter().GetResult();
     }
 
+    [Benchmark(Description = "CommandFactory.RootCommand – build the full command tree")]
+    public System.CommandLine.RootCommand BuildCommandTree() =>
+        _providerForCommandTree!.GetRequiredService<ICommandFactory>().RootCommand;
+
     // -------------------------------------------------------------------------
-    // Full pipeline – all phases combined (closest to real startup cost for
-    // the first DI container in Program.Main)
+    // Full pipeline – DI build + service init + command tree.
+    // This is the cumulative end-to-end measurement, so ConfigureServices/BuildServiceProvider
+    // remain inside the timed body by design. RegisterAreas runs once as a static initializer
+    // and is NOT included here (it has its own dedicated benchmark above).
     // -------------------------------------------------------------------------
 
-    [Benchmark(Description = "FullStartup – all phases combined (DI build → command tree)")]
+    [Benchmark(Description = "FullStartup – DI build + service init + command tree (excludes RegisterAreas static init)")]
     public async Task<System.CommandLine.RootCommand> FullStartup()
     {
-        var sp = CreateSilentServices().BuildServiceProvider();
+        await using var sp = CreateSilentServices().BuildServiceProvider();
         await Program.InitializeServicesAsync(sp);
         return sp.GetRequiredService<ICommandFactory>().RootCommand;
     }
@@ -93,3 +150,4 @@ public class ServerStartupBenchmarks
         return services;
     }
 }
+

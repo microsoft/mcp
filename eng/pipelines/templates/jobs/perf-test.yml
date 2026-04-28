@@ -61,26 +61,11 @@ jobs:
       displayName: "Check regression against baseline"
       inputs:
         pwsh: true
-        targetType: inline
-        script: |
-          $results   = Get-Content '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json' | ConvertFrom-Json
-          $baseline  = Get-Content '${{ parameters.BaselinePath }}' | ConvertFrom-Json
-          $threshold = ${{ parameters.BaselineThreshold }}
-          $s = $results.scenarios
-          $b = $baseline.scenarios
-          $failures = @()
-          $checks = @(
-            @{ Name='cli_cold_start_ms (median)';           Current=$s.cli_cold_start_ms.median;            Baseline=$b.cli_cold_start_ms.median }
-            @{ Name='mcp_stdio_default (median)';           Current=$s.mcp_stdio_to_tools_list_ms.median;   Baseline=$b.mcp_stdio_to_tools_list_ms.median }
-            @{ Name='mcp_namespace_mode (median)';          Current=$s.mcp_namespace_mode_startup_ms.median; Baseline=$b.mcp_namespace_mode_startup_ms.median }
-            @{ Name='mcp_all_mode (median)';                Current=$s.mcp_all_mode_startup_ms.median;      Baseline=$b.mcp_all_mode_startup_ms.median }
-          )
-          foreach ($c in $checks) {
-            $limit  = [math]::Round($c.Baseline * $threshold)
-            $status = if ($c.Current -le $limit) { 'PASS' } else { $failures += $c.Name; 'FAIL' }
-            Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  limit={4}ms" -f $status, $c.Name, $c.Current, $c.Baseline, $limit)
-          }
-          if ($failures.Count -gt 0) { Write-Error "Regression detected in: $($failures -join ', ')" }
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Check-StartupPerformanceRegression.ps1
+        arguments: >
+          -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
+          -BaselinePath '${{ parameters.BaselinePath }}'
+          -Threshold ${{ parameters.BaselineThreshold }}
 
   - task: Powershell@2
     displayName: "Publish metrics to Azure Monitor (optional)"
@@ -88,27 +73,6 @@ jobs:
     continueOnError: true
     inputs:
       pwsh: true
-      targetType: inline
-      script: |
-        $results = Get-Content '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json' | ConvertFrom-Json
-        $s = $results.scenarios
-
-        $metrics = @(
-          @{ name = 'startup.cli.cold.median_ms';         value = $s.cli_cold_start_ms.median }
-          @{ name = 'startup.mcp.default.median_ms';      value = $s.mcp_stdio_to_tools_list_ms.median }
-          @{ name = 'startup.mcp.namespace.median_ms';    value = $s.mcp_namespace_mode_startup_ms.median }
-          @{ name = 'startup.mcp.all.median_ms';          value = $s.mcp_all_mode_startup_ms.median }
-          @{ name = 'tokens.default.exact_gpt4o';         value = $s.tools_list_payload.exact_tokens_gpt4o_o200k }
-          @{ name = 'tokens.namespace.exact_gpt4o';       value = $s.namespace_mode_tools_list_payload.exact_tokens_gpt4o_o200k }
-          @{ name = 'tokens.all.exact_gpt4o';             value = $s.all_mode_tools_list_payload.exact_tokens_gpt4o_o200k }
-          @{ name = 'tools.default.count';                value = $s.tools_list_payload.tool_count }
-          @{ name = 'tools.all.count';                    value = $s.all_mode_tools_list_payload.tool_count }
-        )
-
-        foreach ($m in $metrics) {
-          Write-Host ("##vso[task.logissue type=warning]METRIC: {0} = {1}" -f $m.name, $m.value)
-          # Replace the log statement above with your preferred telemetry sink, e.g.:
-          #   az monitor metrics alert create ...
-          #   Invoke-RestMethod -Uri $AppInsightsEndpoint -Body @{ name=$m.name; value=$m.value } ...
-        }
-        Write-Host "Metrics logged. Wire up a telemetry sink to persist them."
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Publish-StartupPerformanceMetrics.ps1
+      arguments: >
+        -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
