@@ -17,6 +17,24 @@ The following options are available for all commands:
 | `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
 | `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
+| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+
+### Discovery with `--learn`
+
+The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
+
+```bash
+# List all commands available under the 'storage' namespace
+azmcp storage --learn
+
+# List all commands under 'storage account'
+azmcp storage account --learn
+
+# Show the options for a specific command without executing it
+azmcp storage account list --learn
+```
+
+The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
 
 ## Available Commands
 
@@ -710,7 +728,7 @@ azmcp appservice webapp diagnostic list --subscription "my-subscription" \
 azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --app <app> \
-                                            --detector-name <detector-name> \
+                                            --detector-id <detector-id> \
                                             [--start-time <start-time>] \
                                             [--end-time <end-time>] \
                                             [--interval <interval>]
@@ -721,14 +739,14 @@ azmcp appservice webapp diagnostic diagnose --subscription <subscription> \
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-name "detector"
+                                            --detector-id "detector"
 
 # Diagnose the Web App with detector between start and end time with interval
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
                                             --resource-group "my-resource-group" \
                                             --app "my-web-app" \
-                                            --detector-name "detector"
+                                            --detector-id "detector"
                                             --start-time "2026-01-01T00:00:00Z" \
                                             --end-time "2026-01-01T23:59:59Z" \
                                             --interval "PT1H"
@@ -739,7 +757,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
+# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -805,7 +823,7 @@ azmcp azurebackup protecteditem get --subscription <subscription> \
                                     [--protected-item <protected-item>] \
                                     [--container <container>]
 
-# Enables backup protection for a resource by creating a protected item or backup instance.
+# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --resource-group <resource-group> \
@@ -1941,7 +1959,7 @@ azmcp postgres server param set --subscription <subscription> \
 
 ```bash
 # Get the application service log for a specific azd environment
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
@@ -2140,8 +2158,9 @@ azmcp fileshares fileshare delete --subscription <subscription> \
                                   --name <file-share-name>
 
 # Check File Share name availability
-azmcp fileshares fileshare checkname --subscription <subscription> \
-                                     --name <file-share-name>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp fileshares fileshare check-name-availability --subscription <subscription> \
+                                                   --name <file-share-name>
 ```
 
 ```bash
@@ -2500,12 +2519,10 @@ azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
                               [--include-stop-sold-plans <true/false>] \
                               [--language <language-code>] \
-                              [--market <market-code>] \
                               [--lookup-offer-in-tenant-level <true/false>] \
                               [--plan-id <plan-id>] \
                               [--sku-id <sku-id>] \
-                              [--include-service-instruction-templates <true/false>] \
-                              [--pricing-audience <pricing-audience>]
+                              [--include-service-instruction-templates <true/false>]
 ```
 
 ### Azure MCP Best Practices
@@ -3647,6 +3664,97 @@ azmcp subscription list [--tenant-id <tenant-id>]
 # Get secure, production-grade Azure Terraform best practices for effective code generation and command execution.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraformbestpractices get
+```
+
+### Azure Terraform Operations
+
+#### AzureRM Provider Documentation
+
+```bash
+# Retrieve comprehensive AzureRM Terraform provider documentation for a specified resource type
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform azurerm get --resource-type <resource-type> \
+                                 [--doc-type <doc-type>] \
+                                 [--argument <argument>] \
+                                 [--attribute <attribute>]
+```
+
+#### AzAPI Provider Documentation
+
+```bash
+# Retrieve AzAPI Terraform provider documentation and schema for a specified Azure resource type
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform azapi get --resource-type <resource-type> \
+                               [--api-version <api-version>]
+```
+
+#### Azure Verified Modules (AVM)
+
+```bash
+# List all available Azure Verified Modules (AVM) for Terraform
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm list
+
+# List all available versions of a specified Azure Verified Module
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm versions --module-name <module-name>
+
+# Retrieve the documentation (README.md) for a specific version of an Azure Verified Module
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureterraform avm get --module-name <module-name> \
+                             --module-version <module-version>
+```
+
+#### Azure Export for Terraform (aztfexport)
+
+```bash
+# Generate an aztfexport command to export a single Azure resource to Terraform configuration
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport resource --resource-id <resource-id> \
+                                         [--output-folder <output-folder>] \
+                                         [--provider <provider>] \
+                                         [--terraform-resource-name <terraform-resource-name>] \
+                                         [--include-role-assignment] \
+                                         [--parallelism <parallelism>] \
+                                         [--continue-on-error]
+
+# Generate an aztfexport command to export an Azure resource group to Terraform configuration
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport resourcegroup --resource-group <resource-group> \
+                                              [--output-folder <output-folder>] \
+                                              [--provider <provider>] \
+                                              [--name-pattern <name-pattern>] \
+                                              [--include-role-assignment] \
+                                              [--parallelism <parallelism>] \
+                                              [--continue-on-error]
+
+# Generate an aztfexport command to export Azure resources matching a Resource Graph query
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform aztfexport query --query <query> \
+                                      [--output-folder <output-folder>] \
+                                      [--provider <provider>] \
+                                      [--name-pattern <name-pattern>] \
+                                      [--include-role-assignment] \
+                                      [--parallelism <parallelism>] \
+                                      [--continue-on-error]
+```
+
+#### Conftest Policy Validation
+
+```bash
+# Generate a conftest command to validate Terraform .tf files in a workspace against Azure policies
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform conftest workspace --workspace-folder <workspace-folder> \
+                                        [--policy-set <policy-set>] \
+                                        [--severity-filter <severity-filter>] \
+                                        [--custom-policies <custom-policies>]
+
+# Generate a conftest command to validate a Terraform plan JSON file against Azure policies
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp azureterraform conftest plan --plan-folder <plan-folder> \
+                                   [--policy-set <policy-set>] \
+                                   [--severity-filter <severity-filter>] \
+                                   [--custom-policies <custom-policies>]
 ```
 
 ### Azure Virtual Desktop Operations

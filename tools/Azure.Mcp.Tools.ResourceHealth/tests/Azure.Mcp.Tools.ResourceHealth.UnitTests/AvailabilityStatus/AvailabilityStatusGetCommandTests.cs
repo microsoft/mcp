@@ -2,13 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,19 +13,8 @@ using AvailabilityStatusModel = Azure.Mcp.Tools.ResourceHealth.Models.Availabili
 
 namespace Azure.Mcp.Tools.ResourceHealth.UnitTests.AvailabilityStatus;
 
-public class AvailabilityStatusGetCommandTests
+public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<AvailabilityStatusGetCommand, IResourceHealthService>
 {
-    private readonly IResourceHealthService _resourceHealthService;
-    private readonly ILogger<AvailabilityStatusGetCommand> _logger;
-    private readonly CommandContext _context;
-
-    public AvailabilityStatusGetCommandTests()
-    {
-        _resourceHealthService = Substitute.For<IResourceHealthService>();
-        _logger = Substitute.For<ILogger<AvailabilityStatusGetCommand>>();
-        _context = new CommandContext(new ServiceCollection().BuildServiceProvider());
-    }
-
     #region Get (Single Resource) Tests
 
     [Fact]
@@ -44,22 +30,13 @@ public class AvailabilityStatusGetCommandTests
             DetailedStatus = "Virtual machine is running normally"
         };
 
-        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatus);
 
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
-        var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Statuses);
         Assert.Single(result.Statuses);
         Assert.Equal(resourceId, result.Statuses[0].ResourceId);
@@ -74,14 +51,10 @@ public class AvailabilityStatusGetCommandTests
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
-
-        var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
-
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -114,22 +87,13 @@ public class AvailabilityStatusGetCommandTests
             }
         };
 
-        _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
-        var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Statuses);
         Assert.Equal(2, result.Statuses.Count);
         Assert.Equal("Available", result.Statuses[0].AvailabilityState);
@@ -152,22 +116,13 @@ public class AvailabilityStatusGetCommandTests
             }
         };
 
-        _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
-        var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Statuses);
         Assert.Single(result.Statuses);
         Assert.Contains("test-rg", result.Statuses[0].ResourceId);
@@ -179,14 +134,10 @@ public class AvailabilityStatusGetCommandTests
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        _resourceHealthService.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
-
-        var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -201,7 +152,6 @@ public class AvailabilityStatusGetCommandTests
     [InlineData("--subscription")]
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
-        var command = new AvailabilityStatusGetCommand(_logger, _resourceHealthService);
         var argsList = new List<string>();
         if (missingParameter != "--subscription")
         {
@@ -209,9 +159,7 @@ public class AvailabilityStatusGetCommandTests
             argsList.Add("12345678-1234-1234-1234-123456789012");
         }
 
-        var args = command.GetCommand().Parse([.. argsList]);
-
-        var response = await command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(argsList.ToArray());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

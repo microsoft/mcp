@@ -2,50 +2,26 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.UnitTests.Vault;
 
-public class VaultGetCommandTests
+public class VaultGetCommandTests : CommandUnitTestsBase<VaultGetCommand, IAzureBackupService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAzureBackupService _backupService;
-    private readonly ILogger<VaultGetCommand> _logger;
-    private readonly VaultGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly System.CommandLine.Command _commandDefinition;
-
-    public VaultGetCommandTests()
-    {
-        _backupService = Substitute.For<IAzureBackupService>();
-        _logger = Substitute.For<ILogger<VaultGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_backupService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger, _backupService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
@@ -59,29 +35,21 @@ public class VaultGetCommandTests
             new("id2", "vault2", "dpp", "westus", "rg2", "Succeeded", "Standard", "LocallyRedundant", null, null, null, null, null, null)
         };
 
-        _backupService.ListVaultsAsync(
+        Service.ListVaultsAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedVaults));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+            .Returns(expectedVaults);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.VaultGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.VaultGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(2, result.Vaults.Count);
         Assert.Equal("vault1", result.Vaults[0].Name);
         Assert.Equal("vault2", result.Vaults[1].Name);
@@ -96,7 +64,7 @@ public class VaultGetCommandTests
         var resourceGroup = "myRg";
         var expectedVault = new BackupVaultInfo("id1", vaultName, "rsv", "eastus", resourceGroup, "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null);
 
-        _backupService.GetVaultAsync(
+        Service.GetVaultAsync(
             Arg.Is(vaultName),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -104,22 +72,17 @@ public class VaultGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedVault));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vaultName, "--resource-group", resourceGroup]);
+            .Returns(expectedVault);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vaultName,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.VaultGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.VaultGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Vaults);
         Assert.Equal(vaultName, result.Vaults[0].Name);
         Assert.Equal("eastus", result.Vaults[0].Location);
@@ -131,28 +94,21 @@ public class VaultGetCommandTests
         // Arrange
         var subscription = "sub123";
 
-        _backupService.ListVaultsAsync(
+        Service.ListVaultsAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<BackupVaultInfo>()));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+            .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.VaultGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureBackupJsonContext.Default.VaultGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Vaults);
     }
 
@@ -162,7 +118,7 @@ public class VaultGetCommandTests
         // Arrange
         var subscription = "sub123";
 
-        _backupService.ListVaultsAsync(
+        Service.ListVaultsAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -171,10 +127,8 @@ public class VaultGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
         Assert.NotNull(response);
@@ -190,7 +144,7 @@ public class VaultGetCommandTests
         var vaultName = "nonexistent";
         var resourceGroup = "myRg";
 
-        _backupService.GetVaultAsync(
+        Service.GetVaultAsync(
             Arg.Is(vaultName),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
@@ -200,10 +154,11 @@ public class VaultGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Vault not found"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--vault", vaultName, "--resource-group", resourceGroup]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vaultName,
+            "--resource-group", resourceGroup);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -217,8 +172,7 @@ public class VaultGetCommandTests
     [InlineData("recovery")]
     public async Task ExecuteAsync_RejectsInvalidVaultType(string vaultType)
     {
-        var args = _commandDefinition.Parse(["--subscription", "sub123", "--vault-type", vaultType]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--vault-type", vaultType);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("--vault-type must be", response.Message);
     }
@@ -230,12 +184,11 @@ public class VaultGetCommandTests
     [InlineData("DPP")]
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
-        _backupService.ListVaultsAsync(
+        Service.ListVaultsAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<BackupVaultInfo>()));
+            .Returns([]);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub123", "--vault-type", vaultType]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--vault-type", vaultType);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
@@ -246,19 +199,17 @@ public class VaultGetCommandTests
     {
         if (shouldSucceed)
         {
-            _backupService.ListVaultsAsync(
+            Service.ListVaultsAsync(
                 Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new List<BackupVaultInfo>()));
+                .Returns([]);
 
-            _backupService.GetVaultAsync(
+            Service.GetVaultAsync(
                 Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null)));
+                .Returns(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -276,8 +227,7 @@ public class VaultGetCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         // Assert
         Assert.Contains(options, o => o.Name == "--subscription");

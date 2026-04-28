@@ -1,31 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem;
 
-public class FileSystemCreateCommandTests
+public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreateCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _svc;
-    private readonly ILogger<FileSystemCreateCommand> _logger;
-    private readonly FileSystemCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string Sub = "sub123";
     private const string Rg = "rg1";
     private const string Name = "amlfs-01";
@@ -35,24 +24,12 @@ public class FileSystemCreateCommandTests
     private const string SubnetId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1";
     private const string Zone = "1";
 
-    public FileSystemCreateCommandTests()
-    {
-        _svc = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemCreateCommand>>();
-        var services = new ServiceCollection().AddSingleton(_svc);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_svc, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -73,7 +50,7 @@ public class FileSystemCreateCommandTests
         if (shouldSucceed)
         {
             var expected = CreateLustre();
-            _svc.CreateFileSystemAsync(
+            Service.CreateFileSystemAsync(
                 Arg.Is(Sub),
                 Arg.Is(Rg),
                 Arg.Is(Name),
@@ -101,20 +78,15 @@ public class FileSystemCreateCommandTests
                 .Returns(expected);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemCreateResult);
-            Assert.NotNull(result);
-            Assert.Equal(Name, result!.FileSystem.Name);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemCreateResult);
+            Assert.Equal(Name, result.FileSystem.Name);
         }
         else
         {
@@ -125,7 +97,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingOtherParams_Returns400()
     {
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -136,10 +108,7 @@ public class FileSystemCreateCommandTests
             "--zone", Zone,
             "--maintenance-day", "Monday",
             "--maintenance-time", "00:00",
-            "--root-squash-mode", "All"
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--root-squash-mode", "All");
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("root-squash-mode", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -149,7 +118,7 @@ public class FileSystemCreateCommandTests
     public async Task ExecuteAsync_RootSquashNotNone_WithParams_CallsService()
     {
         var expected = CreateLustre();
-        _svc.CreateFileSystemAsync(
+        Service.CreateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -176,7 +145,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -190,13 +159,10 @@ public class FileSystemCreateCommandTests
             "--root-squash-mode", "All",
             "--no-squash-nid-list", "nid1,nid2",
             "--squash-uid", "1000",
-            "--squash-gid", "1000"
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--squash-gid", "1000");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).CreateFileSystemAsync(
+        await Service.Received(1).CreateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -226,7 +192,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
     {
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -239,10 +205,7 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00",
             "--root-squash-mode", "All",
             "--squash-uid", "1000",
-            "--squash-gid", "1000"
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--squash-gid", "1000");
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -251,7 +214,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_EncryptionEnabledWithoutKey_Returns400()
     {
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -263,10 +226,7 @@ public class FileSystemCreateCommandTests
             "--maintenance-day", "Monday",
             "--maintenance-time", "00:00",
             "--custom-encryption", "true",
-            "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv"
-        ]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv");
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("key-url", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -276,7 +236,7 @@ public class FileSystemCreateCommandTests
     public async Task ExecuteAsync_EncryptionEnabledWithKeyAndVault_CallsService()
     {
         var expected = CreateLustre();
-        _svc.CreateFileSystemAsync(
+        Service.CreateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -303,7 +263,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -317,12 +277,10 @@ public class FileSystemCreateCommandTests
             "--custom-encryption", "true",
             "--key-url", "https://kv.vault.azure.net/keys/k/123",
             "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-            "--user-assigned-identity-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1"
-        ]);
+            "--user-assigned-identity-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).CreateFileSystemAsync(
+        await Service.Received(1).CreateFileSystemAsync(
             Sub,
             Rg,
             Name,
@@ -352,7 +310,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsGeneralException_Returns500()
     {
-        _svc.CreateFileSystemAsync(
+        Service.CreateFileSystemAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -379,7 +337,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -389,10 +347,8 @@ public class FileSystemCreateCommandTests
             "--subnet-id", SubnetId,
             "--zone", Zone,
             "--maintenance-day", "Monday",
-            "--maintenance-time", "00:00"
-        ]);
+            "--maintenance-time", "00:00");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -400,7 +356,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesRequestFailedException_Conflict()
     {
-        _svc.CreateFileSystemAsync(
+        Service.CreateFileSystemAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -427,7 +383,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -437,10 +393,8 @@ public class FileSystemCreateCommandTests
             "--subnet-id", SubnetId,
             "--zone", Zone,
             "--maintenance-day", "Monday",
-            "--maintenance-time", "00:00"
-        ]);
+            "--maintenance-time", "00:00");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("conflict", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -448,7 +402,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HsmOneContainerMissing_ReturnsErrorFromService()
     {
-        _svc.CreateFileSystemAsync(
+        Service.CreateFileSystemAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -472,9 +426,10 @@ public class FileSystemCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -485,10 +440,8 @@ public class FileSystemCreateCommandTests
             "--zone", Zone,
             "--maintenance-day", "Monday",
             "--maintenance-time", "00:00",
-            "--hsm-container", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/acc/blobServices/default/containers/hsm"
-        ]);
+            "--hsm-container", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/acc/blobServices/default/containers/hsm");
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("Azure Blob Integration", response.Message, StringComparison.OrdinalIgnoreCase);
     }

@@ -1,46 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.DeviceRegistry.Commands;
 using Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DeviceRegistry.UnitTests.Namespace;
 
-public class NamespaceListCommandTests
+public class NamespaceListCommandTests : CommandUnitTestsBase<NamespaceListCommand, IDeviceRegistryService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IDeviceRegistryService _deviceRegistryService;
-    private readonly ILogger<NamespaceListCommand> _logger;
-    private readonly NamespaceListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public NamespaceListCommandTests()
-    {
-        _deviceRegistryService = Substitute.For<IDeviceRegistryService>();
-        _logger = Substitute.For<ILogger<NamespaceListCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_deviceRegistryService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsNamespaces_WhenSubscriptionProvided()
     {
@@ -53,24 +29,17 @@ public class NamespaceListCommandTests
                 "West US", "Succeeded", "defe124a-6971-4c90-a7a9-99be82def2ab", "rg1", "Microsoft.DeviceRegistry/namespaces")
         ], false);
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedNamespaces));
+            .Returns(expectedNamespaces);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Namespaces);
         Assert.Equal(expectedNamespaces.Results.Count, result.Namespaces.Count);
         Assert.Equal(expectedNamespaces.Results.Select(n => n.Name), result.Namespaces.Select(n => n.Name));
@@ -87,25 +56,17 @@ public class NamespaceListCommandTests
                 "North Europe", "Succeeded", "cefe124a-6971-4c90-a7a9-99be82def1ab", "myRG", "Microsoft.DeviceRegistry/namespaces")
         ], false);
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Is(resourceGroup),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedNamespaces));
+            .Returns(expectedNamespaces);
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup]);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Namespaces);
         Assert.Equal("adr-ns-01", result.Namespaces[0].Name);
     }
@@ -115,24 +76,17 @@ public class NamespaceListCommandTests
     {
         var subscription = "sub123";
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<DeviceRegistryNamespaceInfo>([], false));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, DeviceRegistryJsonContext.Default.NamespaceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Namespaces);
     }
 
@@ -142,16 +96,14 @@ public class NamespaceListCommandTests
         var expectedError = "Test error";
         var subscription = "sub123";
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
-
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -161,10 +113,9 @@ public class NamespaceListCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -181,14 +132,12 @@ public class NamespaceListCommandTests
                     "North Europe", "Succeeded", "cefe124a-6971-4c90-a7a9-99be82def1ab", "rg1", "Microsoft.DeviceRegistry/namespaces")
             ], false);
 
-            _deviceRegistryService.ListNamespacesAsync(
+            Service.ListNamespacesAsync(
                 Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(expectedNamespaces));
+                .Returns(expectedNamespaces);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
@@ -207,13 +156,11 @@ public class NamespaceListCommandTests
     {
         var subscription = "sub123";
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -224,13 +171,11 @@ public class NamespaceListCommandTests
     {
         var subscription = "sub123";
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
     }
@@ -240,13 +185,11 @@ public class NamespaceListCommandTests
     {
         var subscription = "sub123";
 
-        _deviceRegistryService.ListNamespacesAsync(
+        Service.ListNamespacesAsync(
             Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--subscription", subscription]);
-
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
     }
