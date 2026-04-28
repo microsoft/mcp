@@ -119,7 +119,7 @@ Commands follow the naming pattern: `azmcp <service> <resource> <operation>`
    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description "<description>" -Section "<section>" -PR <pr-number>
    ```
 6. **Add CODEOWNERS entry** in `.github/CODEOWNERS`
-7. **Add to consolidated mode** — update `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`
+7. **Add to consolidated mode** — update `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`
 8. **Submit one tool per PR** — this results in faster reviews and better feedback
 
 ### Good Examples to Follow
