@@ -74,6 +74,8 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+
         try
         {
             var result = await _azureBackupService.ConfigureImmutabilityAsync(

@@ -64,6 +64,8 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
 
         var options = BindOptions(parseResult);
 
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+
         try
         {
             var resources = await _azureBackupService.FindUnprotectedResourcesAsync(

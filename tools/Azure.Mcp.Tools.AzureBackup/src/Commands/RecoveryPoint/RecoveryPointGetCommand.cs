@@ -65,6 +65,9 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.RecoveryPoint) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.RecoveryPoint))

@@ -68,6 +68,9 @@ public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> log
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.ProtectedItem) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.ProtectedItem))
