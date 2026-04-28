@@ -212,7 +212,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         string expectedOperatingSystem,
         string? runtimeVersion)
     {
-        var uniqueName = $"mcp-test-{planType}-{DateTime.UtcNow:MMddHHmmss}";
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-{planType}-{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
             "functionapp_create",
@@ -248,7 +248,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [InlineData("python", "3.12")]
     public async Task Should_create_containerapp_function_app(string runtime, string? runtimeVersion)
     {
-        var uniqueName = $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}";
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
             "functionapp_containerapp_create",
@@ -274,7 +274,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [Fact]
     public async Task Should_create_appservice_function_app_with_connection_string_auth()
     {
-        var uniqueName = $"mcp-validate-fa-appservice-cs-{DateTime.UtcNow:MMddHHmm}";
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-validate-fa-appservice-cs-{DateTime.UtcNow:MMddHHmm}");
 
         var result = await CallToolAsync(
             "functionapp_create",
@@ -304,7 +304,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [Fact]
     public async Task Should_create_containerapp_function_app_with_connection_string_auth()
     {
-        var uniqueName = $"mcp-validate-ca-java-cs-{DateTime.UtcNow:MMddHHmm}";
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-validate-ca-java-cs-{DateTime.UtcNow:MMddHHmm}");
 
         var result = await CallToolAsync(
             "functionapp_containerapp_create",
