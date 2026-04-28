@@ -24,6 +24,13 @@ namespace Azure.Mcp.Server.Perf.Benchmarks;
 [SimpleJob(launchCount: 1, warmupCount: 2, iterationCount: 5)]
 public class ServerStartupBenchmarks
 {
+    // Tracks the ServiceProvider returned by BuildServiceProvider so it can be
+    // disposed in the iteration cleanup hook (after BenchmarkDotNet records results).
+    private ServiceProvider? _lastBuiltProvider;
+
+    [IterationCleanup]
+    public void DisposeLastProvider() => _lastBuiltProvider?.Dispose();
+
     // -------------------------------------------------------------------------
     // Phase 1 – instantiate all IAreaSetup objects (the 60+ toolset registrations)
     // -------------------------------------------------------------------------
@@ -43,7 +50,11 @@ public class ServerStartupBenchmarks
     // -------------------------------------------------------------------------
 
     [Benchmark(Description = "BuildServiceProvider – compile the DI container")]
-    public ServiceProvider BuildServiceProvider() => CreateSilentServices().BuildServiceProvider();
+    public ServiceProvider BuildServiceProvider()
+    {
+        _lastBuiltProvider = CreateSilentServices().BuildServiceProvider();
+        return _lastBuiltProvider;
+    }
 
     // -------------------------------------------------------------------------
     // Phase 4 – async service initialization (telemetry, user-agent policy, etc.)
@@ -52,7 +63,7 @@ public class ServerStartupBenchmarks
     [Benchmark(Description = "InitializeServicesAsync – async service warm-up")]
     public async Task InitializeServicesAsync()
     {
-        var sp = CreateSilentServices().BuildServiceProvider();
+        await using var sp = CreateSilentServices().BuildServiceProvider();
         await Program.InitializeServicesAsync(sp);
     }
 
@@ -63,20 +74,21 @@ public class ServerStartupBenchmarks
     [Benchmark(Description = "CommandFactory.RootCommand – build the full command tree")]
     public System.CommandLine.RootCommand BuildCommandTree()
     {
-        var sp = CreateSilentServices().BuildServiceProvider();
+        using var sp = CreateSilentServices().BuildServiceProvider();
         Program.InitializeServicesAsync(sp).GetAwaiter().GetResult();
         return sp.GetRequiredService<ICommandFactory>().RootCommand;
     }
 
     // -------------------------------------------------------------------------
-    // Full pipeline – all phases combined (closest to real startup cost for
-    // the first DI container in Program.Main)
+    // Full pipeline – DI build + service init + command tree.
+    // Note: RegisterAreas runs once as a static initializer and is NOT included
+    // in this measurement (it has its own dedicated benchmark above).
     // -------------------------------------------------------------------------
 
-    [Benchmark(Description = "FullStartup – all phases combined (DI build → command tree)")]
+    [Benchmark(Description = "FullStartup – DI build + service init + command tree (excludes RegisterAreas static init)")]
     public async Task<System.CommandLine.RootCommand> FullStartup()
     {
-        var sp = CreateSilentServices().BuildServiceProvider();
+        await using var sp = CreateSilentServices().BuildServiceProvider();
         await Program.InitializeServicesAsync(sp);
         return sp.GetRequiredService<ICommandFactory>().RootCommand;
     }

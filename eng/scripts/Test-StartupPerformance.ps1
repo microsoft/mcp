@@ -109,17 +109,38 @@ function Measure-CliColdStart {
         CreateNoWindow         = $true
     }
 
-    $sw   = [System.Diagnostics.Stopwatch]::StartNew()
-    $proc = [System.Diagnostics.Process]::Start($psi)
-    # Drain both streams asynchronously to prevent buffer deadlocks
-    $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
-    $stderrTask = $proc.StandardError.ReadToEndAsync()
-    $proc.WaitForExit()
-    $sw.Stop()
-    $null = $stdoutTask.Result
-    $null = $stderrTask.Result
-    $proc.Dispose()
-    return $sw.ElapsedMilliseconds
+    $timeoutMs = 30000
+    $sw        = [System.Diagnostics.Stopwatch]::StartNew()
+    $proc      = [System.Diagnostics.Process]::Start($psi)
+    try {
+        # Drain both streams asynchronously to prevent buffer deadlocks
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+        $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+        if (-not $proc.WaitForExit($timeoutMs)) {
+            $sw.Stop()
+            try   { $proc.Kill($true) }
+            catch { if (-not $proc.HasExited) { throw } }
+            $null          = $proc.WaitForExit(5000)
+            $stderr        = $stderrTask.GetAwaiter().GetResult()
+            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
+            throw "CLI cold start timed out after $timeoutMs ms for '$ExePath tools list'. stderr: $stderrMessage"
+        }
+
+        $sw.Stop()
+        $null   = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+
+        if ($proc.ExitCode -ne 0) {
+            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
+            throw "CLI cold start failed with exit code $($proc.ExitCode) for '$ExePath tools list'. stderr: $stderrMessage"
+        }
+
+        return $sw.ElapsedMilliseconds
+    }
+    finally {
+        if ($null -ne $proc) { $proc.Dispose() }
+    }
 }
 
 # ---------------------------------------------------------------------------
@@ -137,12 +158,61 @@ function Invoke-BenchmarkMcpStartup {
     param(
         [string]   $BenchmarkExe,
         [string]   $ExePath,
-        [string[]] $ServerArgTokens
+        [string[]] $ServerArgTokens,
+        [int]      $TimeoutSeconds = 60
     )
 
-    $output  = & $BenchmarkExe --mcp-startup $ExePath @ServerArgTokens 2>$null
-    $jsonLine = @($output) | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-    return $jsonLine | ConvertFrom-Json
+    $processStartInfo                      = [System.Diagnostics.ProcessStartInfo]::new()
+    $processStartInfo.FileName             = $BenchmarkExe
+    $processStartInfo.RedirectStandardOutput = $true
+    $processStartInfo.RedirectStandardError  = $true
+    $processStartInfo.UseShellExecute      = $false
+    $processStartInfo.CreateNoWindow       = $true
+    $null = $processStartInfo.ArgumentList.Add('--mcp-startup')
+    $null = $processStartInfo.ArgumentList.Add($ExePath)
+    foreach ($serverArgToken in $ServerArgTokens) {
+        $null = $processStartInfo.ArgumentList.Add($serverArgToken)
+    }
+
+    $process           = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $processStartInfo
+    try {
+        if (-not $process.Start()) {
+            throw "Failed to start benchmark process '$BenchmarkExe'."
+        }
+
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+            try   { $process.Kill($true) }
+            catch { if (-not $process.HasExited) { throw } }
+            $null          = $process.WaitForExit()
+            $stderr        = $stderrTask.GetAwaiter().GetResult()
+            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
+            throw "Benchmark process '$BenchmarkExe' timed out after $TimeoutSeconds seconds. Stderr: $stderrMessage"
+        }
+
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+
+        if ($process.ExitCode -ne 0) {
+            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
+            throw "Benchmark process '$BenchmarkExe' exited with code $($process.ExitCode). Stderr: $stderrMessage"
+        }
+
+        $output   = @($stdout -split "`r?`n")
+        $jsonLine = $output | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+        if ([string]::IsNullOrWhiteSpace($jsonLine)) {
+            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
+            throw "Benchmark process '$BenchmarkExe' did not emit a JSON result. Stderr: $stderrMessage"
+        }
+
+        return $jsonLine | ConvertFrom-Json
+    }
+    finally {
+        $process.Dispose()
+    }
 }
 
 # ---------------------------------------------------------------------------
@@ -179,19 +249,18 @@ function Write-PayloadStats {
 # ---------------------------------------------------------------------------
 function Invoke-McpScenario {
     param(
-        [string] $Label,
-        [string] $ServerArgs,
-        [string] $ExePath,
-        [int]    $Runs,
-        [string] $BenchmarkExe
+        [string]   $Label,
+        [string[]] $ServerArgs,
+        [string]   $ExePath,
+        [int]      $Runs,
+        [string]   $BenchmarkExe
     )
     Write-Host "=== $Label ==="
     $ms              = @()
     $lastBenchResult = $null
-    $serverArgTokens = $ServerArgs -split '\s+'
     for ($i = 1; $i -le $Runs; $i++) {
         $benchResult = Invoke-BenchmarkMcpStartup -BenchmarkExe $BenchmarkExe `
-                           -ExePath $ExePath -ServerArgTokens $serverArgTokens
+                           -ExePath $ExePath -ServerArgTokens $ServerArgs
         $ms += [long]$benchResult.elapsed_ms
         $lastBenchResult = $benchResult
         Write-Host ("  Run {0}: {1} ms" -f $i, $benchResult.elapsed_ms)
@@ -231,15 +300,15 @@ Write-Host ""
 # (McpClient.CreateAsync + ListToolsAsync via StdioClientTransport).
 # ---------------------------------------------------------------------------
 $s2 = Invoke-McpScenario -Label 'Scenario 2: MCP stdio startup (default mode)' `
-                          -ServerArgs 'server start' -ExePath $Executable -Runs $Runs `
+                          -ServerArgs @('server', 'start') -ExePath $Executable -Runs $Runs `
                           -BenchmarkExe $BenchmarkExe
 
 $s3 = Invoke-McpScenario -Label 'Scenario 3: MCP stdio startup (--mode namespace)' `
-                          -ServerArgs 'server start --mode namespace' -ExePath $Executable -Runs $Runs `
+                          -ServerArgs @('server', 'start', '--mode', 'namespace') -ExePath $Executable -Runs $Runs `
                           -BenchmarkExe $BenchmarkExe
 
 $s4 = Invoke-McpScenario -Label 'Scenario 4: MCP stdio startup (--mode all)' `
-                          -ServerArgs 'server start --mode all' -ExePath $Executable -Runs $Runs `
+                          -ServerArgs @('server', 'start', '--mode', 'all') -ExePath $Executable -Runs $Runs `
                           -BenchmarkExe $BenchmarkExe
 
 # ---------------------------------------------------------------------------

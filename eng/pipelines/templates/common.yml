@@ -102,7 +102,7 @@ extends:
       - stage: Perf
         displayName: 'Performance test'
         dependsOn:
-        - Initialize
+        - Build
         pool:
           name: $(WINDOWSPOOL)
           image: $(WINDOWSVMIMAGE)
