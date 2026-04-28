@@ -38,7 +38,7 @@ internal class Program
     private static readonly string ServerAreaName =
         Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
 
-    private static async Task<int> Main(string[] args)
+    internal static async Task<int> Main(string[] args)
     {
         try
         {
@@ -169,7 +169,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    internal static IAreaSetup[] RegisterAreas()
     {
 
         return [
