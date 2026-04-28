@@ -83,7 +83,7 @@ builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
 ## Package Reference
 
 ```xml
-<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.3.0" />
+<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
 ```
 
 ## When to Use
