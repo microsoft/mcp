@@ -10,6 +10,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed `azurebackup vault create --vault-type dpp` to enable a System-Assigned Managed Identity by default. Without this, every subsequent `protecteditem protect` call against the new DPP vault would fail server-side with `VaultMSIUnauthorized`. Existing vaults are unaffected; use `azurebackup vault update --identity-type SystemAssigned` if needed.
+- Fixed `azurebackup protecteditem protect` to surface the real outcome of the protect operation instead of returning a synthetic "Accepted" with a base64 job id that callers could not resolve. RSV now polls the underlying `ConfigureBackup` job to a terminal state and returns its real status (`Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, or `InProgress` if polling exceeds the budget) along with any error details. DPP now waits for the protect operation to complete and reads back the backup instance, returning the actual `protectionStatus` (e.g. `ProtectionConfigured`); DPP responses no longer carry a misleading `jobId` because DPP protection is not surfaced as a job — use `azurebackup protecteditem get` or `list` to verify.
+- Fixed `azurebackup protecteditem protect` for IaaS VM (RSV) so it submits the protect request directly instead of doing a 180-second container-discovery pre-poll. Freshly created VMs no longer time out; container registration is performed by the Recovery Services backend as part of accepting the protect request, matching the behavior of `az backup protection enable-for-vm`.
+
 ### Other Changes
 
 ## 3.0.0-beta.5 (2026-04-23)

@@ -757,7 +757,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
+# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -823,7 +823,7 @@ azmcp azurebackup protecteditem get --subscription <subscription> \
                                     [--protected-item <protected-item>] \
                                     [--container <container>]
 
-# Enables backup protection for a resource by creating a protected item or backup instance.
+# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --resource-group <resource-group> \
