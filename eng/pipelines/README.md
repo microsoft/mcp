@@ -48,6 +48,10 @@ The release flow is guided by the following requirements, in reverse order of ex
 - Can be written as single-server stages by depending on a required `ServerName` parameter
 - These stages are typically gated and only run on designated release branches
 - Use server-specific parameters to control which agents execute these critical jobs
+- Should use a `deployment:` job so it can depend on a ADO environment that provides a manual approval gate
+- Should not checkout the repo
+  - Deployment jobs should only download artifacts and publish them. They shouldn't do any artifact mutation.
+  - 1ES release jobs will produce an error if they include a checkout step
 
 ## Best Practices
 
