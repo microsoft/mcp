@@ -381,6 +381,7 @@ public sealed class FunctionAppCreateCommandTests
     [Theory]
     [InlineData(null, "consumption")]
     [InlineData("", "consumption")]
+    [InlineData("consumption", "consumption")]
     [InlineData("flex", "flexconsumption")]
     [InlineData("flexconsumption", "flexconsumption")]
     [InlineData("premium", "premium")]
@@ -388,7 +389,6 @@ public sealed class FunctionAppCreateCommandTests
     [InlineData("appservice", "appservice")]
     [InlineData("containerapp", "containerapp")]
     [InlineData("containerapps", "containerapp")]
-    [InlineData("unknown", "consumption")]
     public void ParseHostingKind_MapsCorrectly(string? planType, string expected)
     {
         var result = FunctionAppValidation.ParseHostingKind(planType);
@@ -401,6 +401,16 @@ public sealed class FunctionAppCreateCommandTests
             _ => HostingKind.Consumption
         };
         Assert.Equal(expectedEnum, result);
+    }
+
+    [Theory]
+    [InlineData("unknown")]
+    [InlineData("premmium")]
+    [InlineData("Consumption")]
+    public void ParseHostingKind_ThrowsForUnsupportedValue(string planType)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => FunctionAppValidation.ParseHostingKind(planType));
+        Assert.Contains(planType, ex.Message);
     }
 
     [Theory]
