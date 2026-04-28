@@ -32,7 +32,7 @@ internal class Program
 {
     private static IAreaSetup[] Areas = RegisterAreas();
 
-    private static async Task<int> Main(string[] args)
+    internal static async Task<int> Main(string[] args)
     {
         try
         {
@@ -87,7 +87,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    internal static IAreaSetup[] RegisterAreas()
     {
 
         return [

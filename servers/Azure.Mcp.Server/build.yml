@@ -20,6 +20,7 @@ extends:
     ServerName: Azure.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
+    RunPerfTests: true
     PackageDocker: true
     PackageVSIX: true
     PackagePyPI: true
