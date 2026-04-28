@@ -5,30 +5,17 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
-public sealed class QueryCommandTests
+public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKustoService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKustoService _kusto;
-    private readonly ILogger<QueryCommand> _logger;
-
-    public QueryCommandTests()
-    {
-        _kusto = Substitute.For<IKustoService>();
-        _logger = Substitute.For<ILogger<QueryCommand>>();
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     public static IEnumerable<object[]> QueryArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --query \"StormEvents | take 1\"", false };
@@ -43,7 +30,7 @@ public sealed class QueryCommandTests
         var expectedJson = JsonDocument.Parse("[{\"foo\":42}]").RootElement.EnumerateArray().Select(e => e.Clone()).ToList();
         if (useClusterUri)
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
@@ -52,25 +39,18 @@ public sealed class QueryCommandTests
         }
         else
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
-        var command = new QueryCommand(_logger, _kusto);
-
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.QueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.QueryCommandResult);
+
         Assert.NotNull(result.Items);
         Assert.Single(result.Items);
         var actualJson = result.Items[0].ToString();
@@ -84,7 +64,7 @@ public sealed class QueryCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
@@ -93,23 +73,15 @@ public sealed class QueryCommandTests
         }
         else
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new QueryCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(cliArgs);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.QueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.QueryCommandResult);
         Assert.Empty(result.Items);
     }
 
@@ -120,26 +92,22 @@ public sealed class QueryCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
-            _kusto.QueryItemsAsync(
+            Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
-        var command = new QueryCommand(_logger, _kusto);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -149,12 +117,7 @@ public sealed class QueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new QueryCommand(_logger, _kusto);
-
-        var args = command.GetCommand().Parse(""); // No arguments
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

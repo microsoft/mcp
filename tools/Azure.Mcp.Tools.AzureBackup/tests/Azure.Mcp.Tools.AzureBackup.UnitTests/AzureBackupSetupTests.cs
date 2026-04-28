@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using Xunit;
 

@@ -1,29 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
-public sealed class ResourceLogQueryCommandTests
+public sealed class ResourceLogQueryCommandTests : CommandUnitTestsBase<ResourceLogQueryCommand, IMonitorService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMonitorService _monitorService;
-    private readonly ILogger<ResourceLogQueryCommand> _logger;
-    private readonly ResourceLogQueryCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string _knownSubscription = "knownSubscription";
     private const string _knownResourceId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/storage1";
     private const string _knownTable = "StorageEvents";
@@ -31,19 +22,6 @@ public sealed class ResourceLogQueryCommandTests
     private const string _knownTenant = "knownTenant";
     private const string _knownHours = "24";
     private const string _knownLimit = "100";
-
-    public ResourceLogQueryCommandTests()
-    {
-        _monitorService = Substitute.For<IMonitorService>();
-        _logger = Substitute.For<ILogger<ResourceLogQueryCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _monitorService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Theory]
     [InlineData($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"", true)]
@@ -58,10 +36,10 @@ public sealed class ResourceLogQueryCommandTests
         {
             var mockResults = new List<JsonNode>
             {
-                JsonNode.Parse(@"{""TimeGenerated"": ""2023-01-01T12:00:00Z"", ""Message"": ""Resource log entry""}") ?? JsonNode.Parse("{}") ?? new JsonObject(),
-                JsonNode.Parse(@"{""TimeGenerated"": ""2023-01-01T12:01:00Z"", ""Message"": ""Another resource log entry""}") ?? JsonNode.Parse("{}") ?? new JsonObject()
+                new JsonObject([new("TimeGenerated", "2023-01-01T12:00:00Z"), new("Message", "Resource log entry")]),
+                new JsonObject([new("TimeGenerated", "2023-01-01T12:01:00Z"), new("Message", "Another resource log entry")])
             };
-            _monitorService.QueryResourceLogs(
+            Service.QueryResourceLogs(
                 _knownSubscription,
                 _knownResourceId,
                 _knownQuery,
@@ -75,7 +53,7 @@ public sealed class ResourceLogQueryCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -96,11 +74,11 @@ public sealed class ResourceLogQueryCommandTests
         // Arrange
         var mockResults = new List<JsonNode>
         {
-            JsonNode.Parse($@"{{""TimeGenerated"": ""2023-01-01T12:00:00Z"", ""ResourceId"": ""{_knownResourceId}"", ""Level"": ""Info""}}") ?? new JsonObject(),
-            JsonNode.Parse($@"{{""TimeGenerated"": ""2023-01-01T12:01:00Z"", ""ResourceId"": ""{_knownResourceId}"", ""Level"": ""Warning""}}") ?? new JsonObject(),
-            JsonNode.Parse($@"{{""TimeGenerated"": ""2023-01-01T12:02:00Z"", ""ResourceId"": ""{_knownResourceId}"", ""Level"": ""Error""}}") ?? new JsonObject()
+            new JsonObject([new("TimeGenerated", "2023-01-01T12:00:00Z"), new("ResourceId", _knownResourceId), new("Level", "Info")]),
+            new JsonObject([new("TimeGenerated", "2023-01-01T12:01:00Z"), new("ResourceId", _knownResourceId), new("Level", "Warning")]),
+            new JsonObject([new("TimeGenerated", "2023-01-01T12:02:00Z"), new("ResourceId", _knownResourceId), new("Level", "Error")])
         };
-        _monitorService.QueryResourceLogs(
+        Service.QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -112,17 +90,19 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-id", _knownResourceId,
+            "--table", _knownTable,
+            "--query", _knownQuery);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _monitorService.Received(1).QueryResourceLogs(
+        await Service.Received(1).QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -138,8 +118,8 @@ public sealed class ResourceLogQueryCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        var mockResults = new List<JsonNode> { JsonNode.Parse(@"{""result"": ""data""}") ?? new JsonObject() };
-        _monitorService.QueryResourceLogs(
+        var mockResults = new List<JsonNode> { new JsonObject([new("result", "data")]) };
+        Service.QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -151,14 +131,19 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-id", _knownResourceId,
+            "--table", _knownTable,
+            "--query", _knownQuery,
+            "--hours", _knownHours,
+            "--limit", _knownLimit,
+            "--tenant", _knownTenant);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _monitorService.Received(1).QueryResourceLogs(
+        await Service.Received(1).QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -174,8 +159,8 @@ public sealed class ResourceLogQueryCommandTests
     public async Task ExecuteAsync_WithDefaultParameters_UsesExpectedDefaults()
     {
         // Arrange
-        var mockResults = new List<JsonNode> { JsonNode.Parse(@"{""result"": ""data""}") ?? new JsonObject() };
-        _monitorService.QueryResourceLogs(
+        var mockResults = new List<JsonNode> { new JsonObject([new("result", "data")]) };
+        Service.QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -187,14 +172,16 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-id", _knownResourceId,
+            "--table", _knownTable,
+            "--query", _knownQuery);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _monitorService.Received(1).QueryResourceLogs(
+        await Service.Received(1).QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -210,7 +197,7 @@ public sealed class ResourceLogQueryCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _monitorService.QueryResourceLogs(
+        Service.QueryResourceLogs(
             _knownSubscription,
             _knownResourceId,
             _knownQuery,
@@ -220,12 +207,14 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
-
-        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-id", _knownResourceId,
+            "--table", _knownTable,
+            "--query", _knownQuery);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -240,8 +229,8 @@ public sealed class ResourceLogQueryCommandTests
         var complexResourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm";
         var query = "| where Level == 'Error'";
         var table = "VMEvents";
-        var mockResults = new List<JsonNode> { JsonNode.Parse(@"{""result"": ""vm data""}") ?? new JsonObject() };
-        _monitorService.QueryResourceLogs(
+        var mockResults = new List<JsonNode> { new JsonObject([new("result", "vm data")]) };
+        Service.QueryResourceLogs(
             _knownSubscription,
             complexResourceId,
             query,
@@ -253,14 +242,16 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\"");
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--resource-id", complexResourceId,
+            "--table", table,
+            "--query", query);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _monitorService.Received(1).QueryResourceLogs(
+        await Service.Received(1).QueryResourceLogs(
             _knownSubscription,
             complexResourceId,
             query,

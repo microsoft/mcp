@@ -62,7 +62,7 @@ public class DiagramGenerateCommandTests
             ProjectName = "testProject",
             Services =
             [
-                new ServiceConfig
+                new()
                 {
                     Name = "website",
                     AzureComputeHost = "appservice",
@@ -70,10 +70,10 @@ public class DiagramGenerateCommandTests
                     Port = "80",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
+                        new() { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
                     ],
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "frontend",
                     Path = "testWorkspace/web",
@@ -82,10 +82,10 @@ public class DiagramGenerateCommandTests
                     Port = "8080",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
+                        new() { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "backend",
                     Path = "testWorkspace/api",
@@ -94,11 +94,11 @@ public class DiagramGenerateCommandTests
                     Port = "3000",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
-                        new DependencyConfig { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
+                        new() { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
+                        new() { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "frontendservice",
                     Path = "testWorkspace/web",
@@ -107,10 +107,10 @@ public class DiagramGenerateCommandTests
                     Port = "3001",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
+                        new() { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
                     ]
                 },
-                new ServiceConfig
+                new()
                 {
                     Name = "backendservice",
                     Path = "testWorkspace/api",
@@ -119,7 +119,7 @@ public class DiagramGenerateCommandTests
                     Port = "3000",
                     Dependencies =
                     [
-                        new DependencyConfig { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
+                        new() { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
                     ]
                 }
             ]

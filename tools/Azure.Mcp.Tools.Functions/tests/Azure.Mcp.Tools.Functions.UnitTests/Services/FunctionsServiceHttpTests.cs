@@ -45,11 +45,8 @@ public sealed class FunctionsServiceHttpTests
     private FunctionsService CreateService(IHttpClientFactory httpClientFactory) =>
         new(httpClientFactory, _languageMetadata, _manifestService, _cacheService, _logger);
 
-    private ManifestService CreateManifestService(IHttpClientFactory httpClientFactory)
-    {
-        var manifestLogger = Substitute.For<ILogger<ManifestService>>();
-        return new ManifestService(httpClientFactory, _cacheService, _functionsOptions, manifestLogger);
-    }
+    private ManifestService CreateManifestService(IHttpClientFactory httpClientFactory) =>
+        new(httpClientFactory, _cacheService, _functionsOptions, Substitute.For<ILogger<ManifestService>>());
 
     private static TemplateManifestEntry CreateTestEntry(string language = "python", string folderPath = "templates/python/HttpTrigger", string id = "HttpTrigger") =>
         new()
@@ -96,8 +93,7 @@ public sealed class FunctionsServiceHttpTests
         var service = CreateManifestService(httpClientFactory);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.FetchManifestAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.FetchManifestAsync(CancellationToken.None));
     }
 
     [Fact]
@@ -109,8 +105,7 @@ public sealed class FunctionsServiceHttpTests
         var service = CreateManifestService(httpClientFactory);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.FetchManifestAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.FetchManifestAsync(CancellationToken.None));
     }
 
     [Fact]
@@ -123,7 +118,7 @@ public sealed class FunctionsServiceHttpTests
             Templates = [CreateTestEntry("cached-lang")]
         };
         _cacheService.GetAsync<TemplateManifest>("functions", "manifest", Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult<TemplateManifest?>(cachedManifest));
+            .Returns(cachedManifest);
 
         var handler = new MockHttpMessageHandler("should not be called", HttpStatusCode.OK);
         var httpClientFactory = CreateHttpClientFactory(handler);
@@ -142,9 +137,8 @@ public sealed class FunctionsServiceHttpTests
     public async Task FetchManifestAsync_FetchesFresh_WhenCacheHasEmptyTemplates()
     {
         // Arrange - cache has manifest but with empty templates (corrupted)
-        var corruptedCache = new TemplateManifest { Version = "corrupted", Templates = [] };
         _cacheService.GetAsync<TemplateManifest>("functions", "manifest", Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult<TemplateManifest?>(corruptedCache));
+            .Returns(new TemplateManifest { Version = "corrupted", Templates = [] });
 
         var freshManifest = new TemplateManifest
         {
@@ -375,7 +369,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "1.0",
             Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
         };
-        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
 
         var service = CreateService(httpClientFactory);
 
@@ -398,7 +392,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "1.0",
             Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
         };
-        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
 
         var service = CreateService(httpClientFactory);
 
@@ -423,7 +417,7 @@ public sealed class FunctionsServiceHttpTests
             Version = "1.0",
             Templates = [CreateTestEntry("python", "templates/python/HttpTrigger")]
         };
-        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(manifest));
+        _manifestService.FetchManifestAsync(Arg.Any<CancellationToken>()).Returns(manifest);
 
         var service = CreateService(httpClientFactory);
 
@@ -505,14 +499,9 @@ public sealed class FunctionsServiceHttpTests
     /// <summary>
     /// Mock HTTP handler that returns different responses based on URL patterns.
     /// </summary>
-    private sealed class MultiResponseHttpMessageHandler : HttpMessageHandler
+    private sealed class MultiResponseHttpMessageHandler(Dictionary<string, (string Content, HttpStatusCode Status)> responses) : HttpMessageHandler
     {
-        private readonly Dictionary<string, (string Content, HttpStatusCode Status)> _responses;
-
-        public MultiResponseHttpMessageHandler(Dictionary<string, (string Content, HttpStatusCode Status)> responses)
-        {
-            _responses = responses;
-        }
+        private readonly Dictionary<string, (string Content, HttpStatusCode Status)> _responses = responses;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -540,18 +529,11 @@ public sealed class FunctionsServiceHttpTests
     /// <summary>
     /// Mock HTTP handler with custom response headers (for rate limit testing).
     /// </summary>
-    private sealed class MockHttpMessageHandlerWithHeaders : HttpMessageHandler
+    private sealed class MockHttpMessageHandlerWithHeaders(string content, HttpStatusCode statusCode, Dictionary<string, string> headers) : HttpMessageHandler
     {
-        private readonly string _content;
-        private readonly HttpStatusCode _statusCode;
-        private readonly Dictionary<string, string> _headers;
-
-        public MockHttpMessageHandlerWithHeaders(string content, HttpStatusCode statusCode, Dictionary<string, string> headers)
-        {
-            _content = content;
-            _statusCode = statusCode;
-            _headers = headers;
-        }
+        private readonly string _content = content;
+        private readonly HttpStatusCode _statusCode = statusCode;
+        private readonly Dictionary<string, string> _headers = headers;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -572,14 +554,9 @@ public sealed class FunctionsServiceHttpTests
     /// <summary>
     /// Mock HTTP handler that throws an exception (for network failure testing).
     /// </summary>
-    private sealed class ThrowingHttpMessageHandler : HttpMessageHandler
+    private sealed class ThrowingHttpMessageHandler(Exception exception) : HttpMessageHandler
     {
-        private readonly Exception _exception;
-
-        public ThrowingHttpMessageHandler(Exception exception)
-        {
-            _exception = exception;
-        }
+        private readonly Exception _exception = exception;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

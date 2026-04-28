@@ -1,0 +1,1 @@
+{"query":"requests | where customDimensions.ToolId contains 'azurebackup' | summarize cnt=count() by tostring(customDimensions.ToolId) | top 20 by cnt","timespan":"P30D"}

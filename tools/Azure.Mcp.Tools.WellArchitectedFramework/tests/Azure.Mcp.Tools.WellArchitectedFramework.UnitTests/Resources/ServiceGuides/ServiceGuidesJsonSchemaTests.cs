@@ -3,28 +3,31 @@
 
 using System.Reflection;
 using System.Text.Json;
+using Azure.Mcp.Tools.WellArchitectedFramework.Commands;
+using Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
+using Azure.Mcp.Tools.WellArchitectedFramework.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Xunit;
 
-namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests;
+namespace Azure.Mcp.Tools.WellArchitectedFramework.UnitTests.Resources.ServiceGuides;
 
 public class ServiceGuidesJsonSchemaTests
 {
     private const string ExpectedBaseUrl = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/";
-    private readonly Dictionary<string, ServiceGuideEntry> _serviceGuides;
+    private readonly Dictionary<string, ServiceGuide> _serviceGuides;
     private readonly string _jsonContent;
 
     public ServiceGuidesJsonSchemaTests()
     {
-        var assembly = Assembly.GetAssembly(typeof(Commands.ServiceGuide.ServiceGuideGetCommand));
+        var assembly = Assembly.GetAssembly(typeof(ServiceGuideGetCommand));
         Assert.NotNull(assembly);
 
-        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly!, "service-guides.json");
-        _jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly!, resourceName);
+        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, "service-guides.json");
+        _jsonContent = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
 
         _serviceGuides = JsonSerializer.Deserialize(
             _jsonContent,
-            TestServiceGuideJsonContext.Default.DictionaryStringServiceGuideEntry) ?? new Dictionary<string, ServiceGuideEntry>();
+            WellArchitectedFrameworkJsonContext.Default.DictionaryStringServiceGuide) ?? [];
     }
 
     [Fact]
@@ -89,7 +92,7 @@ public class ServiceGuidesJsonSchemaTests
 
             // Should be a valid URI
             Assert.True(Uri.TryCreate(url, UriKind.Absolute, out var uri));
-            Assert.Equal("https", uri!.Scheme);
+            Assert.Equal("https", uri.Scheme);
         }
     }
 
@@ -106,7 +109,7 @@ public class ServiceGuidesJsonSchemaTests
             {
                 if (!allVariations.ContainsKey(variation))
                 {
-                    allVariations[variation] = new List<string>();
+                    allVariations[variation] = [];
                 }
                 allVariations[variation].Add(kvp.Key);
             }
@@ -115,7 +118,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert - Check for duplicates
         var duplicates = allVariations.Where(kvp => kvp.Value.Count > 1).ToList();
 
-        if (duplicates.Any())
+        if (duplicates.Count != 0)
         {
             var duplicateInfo = string.Join("\n", duplicates.Select(d =>
                 $"Variation '{d.Key}' appears in multiple services: {string.Join(", ", d.Value)}"));
@@ -149,7 +152,7 @@ public class ServiceGuidesJsonSchemaTests
             // Assert - Has expected variations
             foreach (var expectedVariation in expectedVariations)
             {
-                Assert.True(service.ServiceNameVariationsNormalized!.Contains(expectedVariation),
+                Assert.True(service.ServiceNameVariationsNormalized.Contains(expectedVariation),
                     $"Service '{serviceKey}' should have variation '{expectedVariation}'");
             }
         }
@@ -177,9 +180,9 @@ public class ServiceGuidesJsonSchemaTests
         {
             foreach (var variation in kvp.Value.ServiceNameVariationsNormalized!)
             {
-                Assert.False(variation.Contains("-"),
+                Assert.False(variation.Contains('-'),
                     $"Variation '{variation}' in service '{kvp.Key}' should not contain hyphens");
-                Assert.False(variation.Contains(" "),
+                Assert.False(variation.Contains(' '),
                     $"Variation '{variation}' in service '{kvp.Key}' should not contain spaces");
             }
         }
@@ -219,8 +222,7 @@ public class ServiceGuidesJsonSchemaTests
         // Assert
         foreach (var kvp in _serviceGuides)
         {
-            Assert.True(kvp.Key == kvp.Key.ToLowerInvariant(),
-                $"Service key '{kvp.Key}' should be lowercase");
+            Assert.True(kvp.Key == kvp.Key.ToLowerInvariant(), $"Service key '{kvp.Key}' should be lowercase");
         }
     }
 
@@ -231,18 +233,4 @@ public class ServiceGuidesJsonSchemaTests
         Assert.True(_serviceGuides.Count >= 30,
             $"Expected at least 30 services, but found {_serviceGuides.Count}");
     }
-}
-
-// Test-specific models to avoid coupling with production code
-internal sealed class ServiceGuideEntry
-{
-    public string[]? ServiceNameVariationsNormalized { get; set; }
-    public string? ServiceGuideUrl { get; set; }
-}
-
-[System.Text.Json.Serialization.JsonSerializable(typeof(Dictionary<string, ServiceGuideEntry>))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(ServiceGuideEntry))]
-[System.Text.Json.Serialization.JsonSourceGenerationOptions(PropertyNamingPolicy = System.Text.Json.Serialization.JsonKnownNamingPolicy.CamelCase)]
-internal partial class TestServiceGuideJsonContext : System.Text.Json.Serialization.JsonSerializerContext
-{
 }

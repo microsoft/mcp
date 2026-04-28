@@ -2,6 +2,19 @@
 
 
 
+
+## 3.0.5 (2026-04-23) (pre-release)
+
+### Changed
+
+- **Breaking:** Changed default VM size for `vm create` and `vmss create` commands from `Standard_DS1_v2` (older generation) to `Standard_D2s_v5` (2 vCPU, 8 GB RAM, D-series v5) [[#2415](https://github.com/microsoft/mcp/pull/2415)]
+- **Breaking:** Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+- Added a `-Verify` flag to `Update-Solution.ps1` that checks whether `.slnx` solution files are up to date without overwriting them, and integrated this verification into `Analyze-Code.ps1` so stale solution files are caught before merge. [[#2430](https://github.com/microsoft/mcp/pull/2430)]
+
+### Fixed
+
+- Fixed App Service `diagnostic_list` returning detector display names instead of detector IDs, causing `diagnostic_diagnose` to fail with 404 Not Found errors. [[#2458](https://github.com/microsoft/mcp/pull/2458)]
+
 ## 3.0.4 (2026-04-21) (pre-release)
 
 ### Added
