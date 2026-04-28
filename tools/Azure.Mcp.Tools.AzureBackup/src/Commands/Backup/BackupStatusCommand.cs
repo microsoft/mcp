@@ -23,7 +23,13 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
 
     public override string Id => "f5612c55-054d-4fd8-964c-952e8e6b87f8";
     public override string Name => "status";
-    public override string Description => "Checks whether a datasource is protected and returns vault and policy details.";
+    public override string Description =>
+        """
+        Checks the backup status of an Azure resource and returns whether it is protected,
+        along with vault and policy details. Use this to verify if a VM, disk, storage account,
+        or other datasource is currently backed up. Requires the datasource ARM resource ID
+        and the Azure region (location) where the resource exists.
+        """;
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, LocalRequired = false, Secret = false };
 
@@ -50,6 +56,8 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         }
 
         var options = BindOptions(parseResult);
+
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
 
         try
         {

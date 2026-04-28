@@ -11,10 +11,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
 
-public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
+public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger, IMonitorService monitorService) : SubscriptionCommand<WorkspaceListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
+    private readonly IMonitorService _monitorService = monitorService;
 
     public override string Id => "0c76b74e-14bf-4e0c-ab10-4bbeeb53347b";
 
@@ -50,8 +51,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
 
         try
         {
-            var monitorService = context.GetService<IMonitorService>();
-            var workspaces = await monitorService.ListWorkspaces(
+            var workspaces = await _monitorService.ListWorkspaces(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

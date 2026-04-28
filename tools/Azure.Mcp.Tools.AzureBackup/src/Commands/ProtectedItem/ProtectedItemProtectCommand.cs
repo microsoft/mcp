@@ -24,11 +24,13 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     public override string Name => "protect";
     public override string Description =>
         """
-        Enables backup protection for a resource by creating a protected item or backup instance.
+        Enables or configures backup protection for an Azure resource by creating a
+        protected item or backup instance. Protects VMs, disks, file shares, SQL databases,
+        SAP HANA databases, and other supported datasources.
         For VMs: pass the VM ARM resource ID as --datasource-id.
-        For workloads (SQL/HANA): pass the protectable item name from 'protectableitem list' as --datasource-id
-        (e.g., 'SAPHanaDatabase;instance;dbname'), and specify --container.
-        Requires a backup policy name. The operation is asynchronous;
+        For workloads (SQL/HANA): pass the protectable item name from 'protectableitem list'
+        as --datasource-id (e.g., 'SAPHanaDatabase;instance;dbname'), and specify --container.
+        Requires a backup policy name via --policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
         """;
     public override string Title => CommandTitle;
@@ -69,6 +71,9 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         }
 
         var options = BindOptions(parseResult);
+
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.DatasourceType, AzureBackupTelemetryTags.NormalizeWorkloadType(options.DatasourceType));
 
         try
         {

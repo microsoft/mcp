@@ -64,7 +64,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings));
+        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings))
+        {
+            // DPP (Backup Vault) requires a Managed Identity to authenticate to protected
+            // datasources (storage accounts, disks, PG Flex, etc.). Without it every
+            // 'protecteditem protect' call would fail server-side with VaultMSIUnauthorized.
+            // Default to SystemAssigned so the vault is usable out of the box; callers can
+            // change this later via 'vault update --identity-type ...'.
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
+        };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
 
@@ -197,15 +206,55 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             Properties = instanceProperties
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, instanceName, instanceData, cancellationToken);
+        // DPP protection is asynchronous on the server side and is NOT surfaced as a
+        // backup job (only on-demand backup, restore, etc. are jobs). MCP must therefore
+        // wait for the underlying operationStatus to reach a terminal state and then read
+        // back the BackupInstance to confirm the protection actually configured. Using
+        // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
+        // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
+        // RequestFailedException, instead of silently returning "Accepted".
+        ArmOperation<DataProtectionBackupInstanceResource> operation;
+        try
+        {
+            operation = await collection.CreateOrUpdateAsync(
+                WaitUntil.Completed, instanceName, instanceData, cancellationToken);
+        }
+        catch (RequestFailedException ex)
+        {
+            return new ProtectResult(
+                "Failed",
+                instanceName,
+                JobId: null,
+                $"Protection failed for backup instance '{instanceName}': {ex.Message}",
+                ProtectionStatus: null,
+                ErrorMessage: ex.Message);
+        }
 
-        var jobId = ExtractJobIdFromOperation(result.GetRawResponse());
+        // Re-read the backup instance to capture the authoritative protection status.
+        // The LRO can complete while the BI is still in ConfiguringProtection; both
+        // outcomes are surfaced to the caller via ProtectionStatus. If the re-read
+        // fails with a transient error, report success (protection did complete) and
+        // let the caller verify with 'protecteditem get'.
+        string? protectionStatus = null;
+        try
+        {
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+        }
+        catch (RequestFailedException)
+        {
+            // Transient re-read failure; protection itself succeeded.
+        }
 
         return new ProtectResult(
-            "Accepted",
+            "Succeeded",
             instanceName,
-            jobId,
-            jobId != null ? $"Protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Protection initiated.");
+            JobId: null,
+            $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+            $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+            ProtectionStatus: protectionStatus,
+            ErrorMessage: null);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -326,6 +375,52 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         }
 
         return policies;
+    }
+
+    public async Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? tenant,
+        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(datasourceId), datasourceId));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // List soft-deleted backup instances and find the one matching the datasource ID
+        var deletedCollection = vaultResource.GetDeletedDataProtectionBackupInstances();
+
+        DeletedDataProtectionBackupInstanceResource? matchedInstance = null;
+        await foreach (var deletedInstance in deletedCollection.GetAllAsync(cancellationToken))
+        {
+            var deletedDatasourceId = deletedInstance.Data?.Properties?.DataSourceInfo?.ResourceId?.ToString();
+            if (string.Equals(deletedDatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+            {
+                matchedInstance = deletedInstance;
+                break;
+            }
+        }
+
+        if (matchedInstance is null)
+        {
+            throw new KeyNotFoundException(
+                $"No soft-deleted backup instance found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
+                "Verify the datasource ID is correct and the item is in a soft-deleted state.");
+        }
+
+        var undeleteOperation = await matchedInstance.UndeleteAsync(WaitUntil.Started, cancellationToken);
+        var jobId = ExtractJobIdFromOperation(undeleteOperation.GetRawResponse());
+        var monitorMessage = string.IsNullOrWhiteSpace(jobId)
+            ? $"Restore operation started, but no backup job ID was returned. Operation ID: '{undeleteOperation.Id}'."
+            : $"Use 'azurebackup job get --job {jobId}' to monitor progress.";
+
+        return new OperationResult("Accepted", jobId,
+            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. {monitorMessage}");
     }
 
     public async Task<BackupJobInfo> GetJobAsync(

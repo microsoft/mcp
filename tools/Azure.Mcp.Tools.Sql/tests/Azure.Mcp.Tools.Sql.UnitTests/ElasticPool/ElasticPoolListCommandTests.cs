@@ -1,53 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.ElasticPool;
 
-public class ElasticPoolListCommandTests
+public class ElasticPoolListCommandTests : CommandUnitTestsBase<ElasticPoolListCommand, ISqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISqlService _sqlService;
-    private readonly ILogger<ElasticPoolListCommand> _logger;
-    private readonly ElasticPoolListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ElasticPoolListCommandTests()
-    {
-        _sqlService = Substitute.For<ISqlService>();
-        _logger = Substitute.For<ILogger<ElasticPoolListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_sqlService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("elastic pools", command.Description);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("elastic pools", CommandDefinition.Description);
     }
 
     [Fact]
@@ -75,7 +50,7 @@ public class ElasticPoolListCommandTests
             )
         ], false);
 
-        _sqlService.GetElasticPoolsAsync(
+        Service.GetElasticPoolsAsync(
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
@@ -83,10 +58,11 @@ public class ElasticPoolListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.NotNull(response);
@@ -101,7 +77,7 @@ public class ElasticPoolListCommandTests
         // Arrange
         var mockElasticPools = new ResourceQueryResults<SqlElasticPool>([], false);
 
-        _sqlService.GetElasticPoolsAsync(
+        Service.GetElasticPoolsAsync(
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
@@ -109,10 +85,11 @@ public class ElasticPoolListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.NotNull(response);
@@ -125,18 +102,19 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _sqlService.GetElasticPoolsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.GetElasticPoolsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -149,18 +127,19 @@ public class ElasticPoolListCommandTests
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
-        _sqlService.GetElasticPoolsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.GetElasticPoolsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -172,18 +151,19 @@ public class ElasticPoolListCommandTests
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
-        _sqlService.GetElasticPoolsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.GetElasticPoolsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -201,7 +181,7 @@ public class ElasticPoolListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _sqlService.GetElasticPoolsAsync(
+            Service.GetElasticPoolsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -210,10 +190,8 @@ public class ElasticPoolListCommandTests
                 .Returns(new ResourceQueryResults<SqlElasticPool>([], false));
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)

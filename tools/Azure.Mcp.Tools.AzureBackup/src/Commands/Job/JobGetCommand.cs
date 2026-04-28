@@ -65,6 +65,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Job) ? "list" : "single");
+
         try
         {
             if (!string.IsNullOrEmpty(options.Job))

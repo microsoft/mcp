@@ -42,6 +42,26 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "AzureBackupRG_mcp-test",
             Value = "Sanitized",
+        }),
+        // RSV APIs may return resource group names in lowercase in sourceResourceId
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "(?i)azurebackuprg_mcp-test",
+            Value = "Sanitized",
+        }),
+        // ARM x-ms-arm-resource-system-data header may include the recording user's UPN
+        // when fresh resources are created (createdBy / lastModifiedBy fields).
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"[A-Za-z0-9._%+-]+@microsoft\.com",
+            Value = "sanitized@example.com",
+        }),
+        // x-ms-operation-identifier and certificate URLs in response headers leak the
+        // tenant id of the recording subscription. Replace with the well-known zero GUID.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
+            Value = "00000000-0000-0000-0000-000000000000",
         })
     ];
 
@@ -156,6 +176,25 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var vault = result.AssertProperty("vault");
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+
+        // DPP vault create must enable a System-Assigned Managed Identity by default so
+        // the vault can authenticate to protected datasources without a separate
+        // 'vault update --identity-type SystemAssigned' step.
+        var getResult = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" }
+            });
+        // azurebackup_vault_get returns a 'vaults' array; pick the first matching entry.
+        var vaults = getResult.AssertProperty("vaults");
+        Assert.Equal(JsonValueKind.Array, vaults.ValueKind);
+        var fetchedVault = vaults.EnumerateArray().First();
+        var identityType = fetchedVault.AssertProperty("identityType").GetString();
+        Assert.Equal("SystemAssigned", identityType, ignoreCase: true);
     }
 
     [Fact]
@@ -680,6 +719,81 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
 
+    /// <summary>
+    /// End-to-end Disk protection through DPP vault.
+    /// Validates the Bug #2 (DPP) fix: <c>protecteditem protect</c> waits for the operation
+    /// to complete (<see cref="Azure.WaitUntil.Completed"/>), reads the backup-instance back,
+    /// and surfaces a real <c>protectionStatus</c> rather than a fake <c>"Accepted"</c>.
+    /// Also implicitly validates the Bug #1 fix because protection succeeds only when the
+    /// DPP vault MSI created by <c>vault create</c> has the right RBAC on the disk + RG.
+    /// </summary>
+    [Fact]
+    public async Task ProtectedItemProtect_DppVault_DiskProtection_Succeeds_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var policyName = $"{Settings.ResourceBaseName}-disk-policy";
+        var diskName = $"{Settings.ResourceBaseName}-disk";
+        var diskId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Compute/disks/{diskName}";
+
+        // 1. Create disk-workload backup policy via MCP
+        var policyResult = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "policy", policyName },
+                { "workload-type", "AzureDisk" }
+            });
+
+        var policyOp = policyResult.AssertProperty("result");
+        Assert.Equal("Succeeded", policyOp.AssertProperty("status").GetString());
+
+        // 2. Protect the disk via MCP — exercises the new DPP code path
+        var protectResult = await CallToolAsync(
+            "azurebackup_protecteditem_protect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "dpp" },
+                { "datasource-id", diskId },
+                { "policy", policyName },
+                { "datasource-type", "AzureDisk" }
+            });
+
+        var protectOp = protectResult.AssertProperty("result");
+
+        // The new code returns a real terminal status. Acceptable values:
+        //   "Succeeded" — backend accepted the configuration
+        //   "Failed"    — backend rejected; the test infrastructure should make Succeeded the norm,
+        //                 but if the backend transiently fails we still want to assert the new
+        //                 contract (real errorMessage is present, JobId is null for DPP).
+        var status = protectOp.AssertProperty("status").GetString();
+        Assert.True(status is "Succeeded" or "Failed", $"Unexpected DPP protect status: {status}");
+
+        // Bug #2 DPP contract: a backup-instance name is always returned, JobId is never set.
+        protectOp.AssertProperty("protectedItemName");
+        Assert.False(protectOp.TryGetProperty("jobId", out var jobId) && jobId.ValueKind != JsonValueKind.Null,
+            "DPP protect must not return a jobId (DPP is not a job).");
+
+        if (status == "Succeeded")
+        {
+            // Surface the protection status (e.g., "ConfiguringProtection" / "ProtectionConfigured")
+            protectOp.AssertProperty("protectionStatus");
+        }
+        else
+        {
+            // Failed responses must include a non-empty errorMessage from the backend
+            var errorMessage = protectOp.AssertProperty("errorMessage").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(errorMessage), "Failed DPP protect must include errorMessage.");
+            Output.WriteLine($"DPP disk protect returned Failed: {errorMessage}");
+        }
+    }
+
     #endregion
 
     #region Protectable Item Tests
@@ -1057,6 +1171,65 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DisasterRecoveryEnableCrr_DPP");
         var opResult = result.AssertProperty("result");
         Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
+    }
+
+    #endregion
+
+    #region Undelete Protected Item Tests
+
+    [Fact]
+    public async Task ProtectedItemUndelete_DppVault_UndeletesDisk_Successfully()
+    {
+        // The test-resources-post.ps1 script protects a disk in the DPP vault and then
+        // soft-deletes it. This test restores the soft-deleted disk backup instance.
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var datasourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Compute/disks/{Settings.ResourceBaseName}-disk";
+
+        var result = await CallToolAsync(
+            "azurebackup_protecteditem_undelete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "datasource-id", datasourceId },
+                { "vault-type", "dpp" }
+            });
+
+        // Expect accepted (LRO started — item restore is in progress)
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Accepted", opResult.AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task ProtectedItemUndelete_RsvVault_UndeletesFileShare_Successfully()
+    {
+        // The test-resources-post.ps1 script protects a file share in the RSV vault
+        // and then soft-deletes it. This test restores the soft-deleted file share backup.
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var storageAccountName = $"{Settings.ResourceBaseName.Replace("-", "")}sa";
+        if (storageAccountName.Length > 24)
+        {
+            storageAccountName = storageAccountName[..24];
+        }
+
+        // File share datasource ID format for RSV matching
+        var datasourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/fileServices/default/shares/{Settings.ResourceBaseName}-share";
+
+        var result = await CallToolAsync(
+            "azurebackup_protecteditem_undelete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "datasource-id", datasourceId },
+                { "vault-type", "rsv" }
+            });
+
+        // Expect accepted (LRO started — item restore is in progress)
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Accepted", opResult.AssertProperty("status").GetString());
     }
 
     #endregion

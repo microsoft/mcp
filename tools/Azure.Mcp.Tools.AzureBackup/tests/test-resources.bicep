@@ -19,6 +19,9 @@ resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
     name: 'RS0'
     tier: 'Standard'
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     publicNetworkAccess: 'Enabled'
   }
@@ -76,3 +79,117 @@ resource appDppBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssi
     description: 'Backup Contributor for ${testApplicationOid}'
   }
 }
+
+// ─── Resources for Undelete Tests ───
+
+// Managed Disk for DPP backup + undelete testing
+resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
+  name: '${baseName}-disk'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 4
+  }
+}
+
+// Disk Snapshot Contributor role for DPP vault MSI on the resource group
+// Required for DPP to take disk snapshots
+resource diskSnapshotContributorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '7efff54f-a5b4-42b5-a1c5-5411624893ce' // Disk Snapshot Contributor
+}
+
+resource dppDiskSnapshotContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(diskSnapshotContributorRoleDef.id, dppVault.id, resourceGroup().id)
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: diskSnapshotContributorRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Disk Snapshot Contributor for DPP vault MSI'
+  }
+}
+
+// Disk Backup Reader role for DPP vault MSI on the disk
+resource diskBackupReaderRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24' // Disk Backup Reader
+}
+
+resource dppDiskBackupReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(diskBackupReaderRoleDef.id, dppVault.id, testDisk.id)
+  scope: testDisk
+  properties: {
+    principalId: dppVault.identity.principalId
+    roleDefinitionId: diskBackupReaderRoleDef.id
+    principalType: 'ServicePrincipal'
+    description: 'Disk Backup Reader for DPP vault MSI'
+  }
+}
+
+// Output the resource IDs for the post-deployment script
+output diskId string = testDisk.id
+output diskName string = testDisk.name
+
+// ─── RSV Undelete Test Resources (Storage Account + File Share) ───
+
+// Storage Account for RSV file share backup + undelete testing
+// allowSharedKeyAccess=true is required for RSV file share backup integration.
+// Policy requires Reason, ETA, and DisableLocalAuth tags when shared key is enabled.
+resource testStorageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: take('${replace(baseName, '-', '')}sa', 24)
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    allowSharedKeyAccess: true
+  }
+  tags: {
+    DisableLocalAuth: 'false'
+    Reason: 'RSV file share backup requires shared key auth'
+    ETA: '2027-01-01'
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource testFileService 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
+  parent: testStorageAccount
+  name: 'default'
+}
+
+resource testFileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-05-01' = {
+  parent: testFileService
+  name: '${baseName}-share'
+  properties: {
+    shareQuota: 1
+  }
+}
+
+// Storage Account Backup Contributor for the test app on the storage account
+resource storageBackupContributorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'e5e2a7ff-d759-4cd2-bb51-3152d37e2eb1' // Storage Account Backup Contributor
+}
+
+resource appStorageBackupContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageBackupContributorRoleDef.id, testApplicationOid, testStorageAccount.id)
+  scope: testStorageAccount
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: storageBackupContributorRoleDef.id
+    description: 'Storage Account Backup Contributor for ${testApplicationOid}'
+  }
+}
+
+output storageAccountId string = testStorageAccount.id
+output storageAccountName string = testStorageAccount.name
+output fileShareName string = testFileShare.name

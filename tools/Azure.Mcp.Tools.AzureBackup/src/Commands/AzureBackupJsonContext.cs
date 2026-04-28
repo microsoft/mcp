@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
 [JsonSerializable(typeof(ProtectedItemGetCommand.ProtectedItemGetCommandResult))]
 [JsonSerializable(typeof(ProtectedItemProtectCommand.ProtectedItemProtectCommandResult))]
+[JsonSerializable(typeof(ProtectedItemUndeleteCommand.ProtectedItemUndeleteCommandResult))]
 [JsonSerializable(typeof(ProtectableItemListCommand.ProtectableItemListCommandResult))]
 [JsonSerializable(typeof(BackupStatusCommand.BackupStatusCommandResult))]
 [JsonSerializable(typeof(JobGetCommand.JobGetCommandResult))]

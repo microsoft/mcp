@@ -1,68 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Commands.Project;
 using Azure.Mcp.Tools.Functions.Models;
 using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Functions.UnitTests.Project;
 
-public sealed class ProjectGetCommandTests
+public sealed class ProjectGetCommandTests : CommandUnitTestsBase<ProjectGetCommand, IFunctionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFunctionsService _service;
-    private readonly ILogger<ProjectGetCommand> _logger;
-    private readonly CommandContext _context;
-    private readonly ProjectGetCommand _command;
-    private readonly Command _commandDefinition;
-
-    public ProjectGetCommandTests()
-    {
-        _service = Substitute.For<IFunctionsService>();
-        _logger = Substitute.For<ILogger<ProjectGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.Equal("Get Project Template", _command.Title);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.Equal("Get Project Template", Command.Title);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.OpenWorld);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.False(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Fact]
     public void Command_HasLanguageOption()
     {
-        var options = _commandDefinition.Options.ToList();
+        var options = CommandDefinition.Options.ToList();
         var languageOption = options.FirstOrDefault(o => o.Name == $"--{FunctionsOptionDefinitions.LanguageName}");
 
         Assert.NotNull(languageOption);
@@ -80,22 +56,14 @@ public sealed class ProjectGetCommandTests
             ProjectStructure = ["function_app.py", "host.json", "requirements.txt", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<ProjectTemplateResult>>(
-            json, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
 
         var result = results[0];
@@ -115,22 +83,14 @@ public sealed class ProjectGetCommandTests
             ProjectStructure = ["src/functions/", "host.json", "package.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("typescript", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetProjectTemplateAsync("typescript", Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "typescript"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "typescript");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<ProjectTemplateResult>>(
-            json, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal("typescript", results[0].Language);
     }
@@ -138,11 +98,8 @@ public sealed class ProjectGetCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesInvalidLanguage()
     {
-        // Arrange - no mock setup needed, validator catches it
-
-        // Act
-        var args = _commandDefinition.Parse(["--language", "invalid"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act - no mock setup needed, validator catches it
+        var response = await ExecuteCommandAsync("--language", "invalid");
 
         // Assert - validator returns error before service is called
         Assert.NotNull(response);
@@ -154,12 +111,11 @@ public sealed class ProjectGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>())
-            .Returns<ProjectTemplateResult>(_ => throw new InvalidOperationException("Service error"));
+        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
         Assert.NotNull(response);
@@ -178,21 +134,14 @@ public sealed class ProjectGetCommandTests
             ProjectStructure = ["function_app.py", "host.json", "requirements.txt", "local.settings.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetProjectTemplateAsync("python", Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", "python"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", "python");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<ProjectTemplateResult>>(
-            json, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
 
         var result = results[0];
@@ -218,20 +167,14 @@ public sealed class ProjectGetCommandTests
             ProjectStructure = ["host.json", "local.settings.json", ".gitignore"]
         };
 
-        _service.GetProjectTemplateAsync(language, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
+        Service.GetProjectTemplateAsync(language, Arg.Any<CancellationToken>()).Returns(expectedResult);
 
         // Act
-        var args = _commandDefinition.Parse(["--language", language]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--language", language);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var results = ValidateAndDeserializeResponse(response, FunctionsJsonContext.Default.ListProjectTemplateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var results = JsonSerializer.Deserialize<List<ProjectTemplateResult>>(
-            json, FunctionsJsonContext.Default.ListProjectTemplateResult);
-
-        Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal(language, results[0].Language);
         Assert.True(results[0].ProjectStructure.Count > 0);
@@ -241,13 +184,13 @@ public sealed class ProjectGetCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange & Act
-        var args = _commandDefinition.Parse(["--language", "java"]);
+        var args = CommandDefinition.Parse(["--language", "java"]);
 
         // Use reflection to call BindOptions since it's protected
-        var method = typeof(ProjectGetCommand).GetMethod(
+        var method = Command.GetType().GetMethod(
             "BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var options = (ProjectGetOptions?)method?.Invoke(_command, [args]);
+        var options = (ProjectGetOptions?)method?.Invoke(Command, [args]);
 
         // Assert
         Assert.NotNull(options);

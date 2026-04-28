@@ -3,61 +3,39 @@
 
 using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 using Azure.Mcp.Tools.CloudArchitect.Options;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 
 namespace Azure.Mcp.Tools.CloudArchitect.UnitTests.Design;
 
-public class DesignCommandTests
+public class DesignCommandTests : CommandUnitTestsBase<DesignCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DesignCommand> _logger;
-    private readonly DesignCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DesignCommandTests()
-    {
-        _logger = Substitute.For<ILogger<DesignCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("design", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("design", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
 
         // Check that the description contains the expected content from the actual implementation
-        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", command.Description);
-        Assert.Contains("file storage, banking, video streaming, e-commerce, SaaS", command.Description);
-        Assert.Contains("Ask about user role, business goals, etc (1-2 questions at a time)", command.Description);
-        Assert.Contains("Track confidence returned by service and update requirements", command.Description);
-        Assert.Contains("confidence >= 0.7", command.Description);
-        Assert.Contains("Present architecture with table format, visual organization, ASCII diagrams", command.Description);
-        Assert.Contains("Follow Azure Well-Architected Framework principles", command.Description);
-        Assert.Contains("infrastructure, platform, application, data, security, operations", command.Description);
-        Assert.Contains("State tracks components, requirements by category, and confidence factors", command.Description);
-        Assert.Contains("Be conservative with suggestions", command.Description);
+        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", CommandDefinition.Description);
+        Assert.Contains("file storage, banking, video streaming, e-commerce, SaaS", CommandDefinition.Description);
+        Assert.Contains("Ask about user role, business goals, etc (1-2 questions at a time)", CommandDefinition.Description);
+        Assert.Contains("Track confidence returned by service and update requirements", CommandDefinition.Description);
+        Assert.Contains("confidence >= 0.7", CommandDefinition.Description);
+        Assert.Contains("Present architecture with table format, visual organization, ASCII diagrams", CommandDefinition.Description);
+        Assert.Contains("Follow Azure Well-Architected Framework principles", CommandDefinition.Description);
+        Assert.Contains("infrastructure, platform, application, data, security, operations", CommandDefinition.Description);
+        Assert.Contains("State tracks components, requirements by category, and confidence factors", CommandDefinition.Description);
+        Assert.Contains("Be conservative with suggestions", CommandDefinition.Description);
     }
 
     [Fact]
     public void Command_HasCorrectOptions()
     {
-        var command = _command.GetCommand();
-
         // Check that the command has the expected options
-        var optionNames = command.Options.Select(o => o.Name).ToList();
+        var optionNames = CommandDefinition.Options.Select(o => o.Name).ToList();
 
         Assert.Contains("--question", optionNames);
         Assert.Contains("--question-number", optionNames);
@@ -80,29 +58,12 @@ public class DesignCommandTests
     [InlineData("--question \"App type?\" --question-number 1 --total-questions 5")]
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        // Verify that results contain the architecture design response structure
-        using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
-        response.Results.Write(writer);
-        writer.Flush();
-
-        var serializedResult = Encoding.UTF8.GetString(stream.ToArray());
-
-
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-
-        Assert.NotNull(responseObject);
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
 
@@ -113,31 +74,18 @@ public class DesignCommandTests
     [Fact]
     public async Task ExecuteAsync_WithAllOptionsSet()
     {
-        // Arrange
-        var args = new[]
-        {
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--question", "What is your application type?",
             "--question-number", "1",
             "--total-questions", "5",
             "--answer", "Web application",
             "--next-question-needed", "true",
-            "--confidence-score", "0.8",
-        };
-
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--confidence-score", "0.8");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        // Verify the command executed successfully regardless of the input options
-        string serializedResult = SerializeResponseResult(response.Results);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
         Assert.Equal("What is your application type?", responseObject.ResponseObject.DisplayText);
@@ -152,22 +100,12 @@ public class DesignCommandTests
     [InlineData("Mixed \"quotes\" and 'apostrophes'", "Mixed \"quotes\" and 'apostrophes'")]
     public async Task ExecuteAsync_HandlesQuotesAndEscapingProperly(string questionWithQuotes, string expectedQuestion)
     {
-        // Arrange
-        var args = new[] { "--question", questionWithQuotes };
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("--question", questionWithQuotes);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        // Verify that the command executed successfully with the quoted input
-        string serializedResult = SerializeResponseResult(response.Results);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
 
@@ -189,13 +127,17 @@ public class DesignCommandTests
             "--question-number", "2",
             "--total-questions", "10"
         };
-        var parseResult = _commandDefinition.Parse(args);
+        var parseResult = CommandDefinition.Parse(args);
 
         // Ensure there were no parse/validation errors
-        Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+        Assert.False(parseResult.Errors.Any());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--question", complexQuestion,
+            "--answer", complexAnswer,
+            "--question-number", "2",
+            "--total-questions", "10");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -213,46 +155,28 @@ public class DesignCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        // Arrange & Act
-        var metadata = _command.Metadata;
-
-        // Assert
-        Assert.False(metadata.Destructive);
-        Assert.True(metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
     public void Properties_AreConfiguredCorrectly()
     {
-        // Arrange & Act
-        var name = _command.Name;
-        var title = _command.Title;
-        var description = _command.Description;
-
-        // Assert
-        Assert.Equal("design", name);
-        Assert.Equal("Design Azure cloud architectures through guided questions", title);
-        Assert.NotEmpty(description);
-        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", description);
+        Assert.Equal("design", Command.Name);
+        Assert.Equal("Design Azure cloud architectures through guided questions", Command.Title);
+        Assert.NotEmpty(Command.Description);
+        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", Command.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_LoadsEmbeddedResourceText()
     {
-        // Arrange
-        var args = new[] { "--question", "Test question" };
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("--question", "Test question");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        string serializedResult = SerializeResponseResult(response.Results!);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-
-        Assert.NotNull(responseObject);
         Assert.NotEmpty(responseObject.DesignArchitecture);
         // The embedded resource should contain Azure architecture guidance
         Assert.Contains("Azure", responseObject.DesignArchitecture);
@@ -263,21 +187,14 @@ public class DesignCommandTests
     {
         // Arrange - Create a simple JSON state object
         var stateJson = "{\"architectureComponents\":[],\"architectureTiers\":{\"infrastructure\":[],\"platform\":[],\"application\":[],\"data\":[],\"security\":[],\"operations\":[]},\"requirements\":{\"explicit\":[],\"implicit\":[],\"assumed\":[]},\"confidenceFactors\":{\"explicitRequirementsCoverage\":0.5,\"implicitRequirementsCertainty\":0.7,\"assumptionRisk\":0.3}}";
-        var args = new[] { "--state", stateJson };
-        var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--state", stateJson);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
-
         // Verify the command executed successfully with state option
-        string serializedResult = SerializeResponseResult(response.Results);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
         Assert.NotNull(responseObject.ResponseObject.State);
@@ -297,18 +214,14 @@ public class DesignCommandTests
             "--confidence-score", "0.9",
         };
 
-        var parseResult = _commandDefinition.Parse(args);
+        var parseResult = CommandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
-
         // Verify all options were parsed correctly
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         var questionValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "--question"));
         var questionNumberValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--question-number"));
         var totalQuestionsValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--total-questions"));
@@ -324,24 +237,14 @@ public class DesignCommandTests
         Assert.Equal(0.9, confidenceScoreValue);
 
         // Verify the response structure
-        string serializedResult = SerializeResponseResult(response.Results);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
+
         Assert.NotEmpty(responseObject.DesignArchitecture);
         Assert.NotNull(responseObject.ResponseObject);
         Assert.Equal(questionValue, responseObject.ResponseObject.DisplayText);
         Assert.Equal(questionNumberValue, responseObject.ResponseObject.QuestionNumber);
         Assert.Equal(totalQuestionsValue, responseObject.ResponseObject.TotalQuestions);
         Assert.Equal(nextQuestionNeededValue, responseObject.ResponseObject.NextQuestionNeeded);
-    }
-
-    private static string SerializeResponseResult(ResponseResult responseResult)
-    {
-        using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
-        responseResult.Write(writer);
-        writer.Flush();
-        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     #region Validation Tests
@@ -353,11 +256,8 @@ public class DesignCommandTests
     [InlineData(-1.0)]
     public void Parse_InvalidConfidenceScore_ReturnsError(double invalidScore)
     {
-        // Arrange
-        var args = new[] { "--confidence-score", invalidScore.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--confidence-score", invalidScore.ToString()]);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -372,11 +272,8 @@ public class DesignCommandTests
     [InlineData(0.9)]
     public void Parse_ValidConfidenceScore_NoErrors(double validScore)
     {
-        // Arrange
-        var args = new[] { "--confidence-score", validScore.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--confidence-score", validScore.ToString()]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -388,11 +285,8 @@ public class DesignCommandTests
     [InlineData(-100)]
     public void Parse_NegativeQuestionNumber_ReturnsError(int invalidQuestionNumber)
     {
-        // Arrange
-        var args = new[] { "--question-number", invalidQuestionNumber.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--question-number", invalidQuestionNumber.ToString()]);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -406,11 +300,8 @@ public class DesignCommandTests
     [InlineData(100)]
     public void Parse_ValidQuestionNumber_NoErrors(int validQuestionNumber)
     {
-        // Arrange
-        var args = new[] { "--question-number", validQuestionNumber.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--question-number", validQuestionNumber.ToString()]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -422,11 +313,8 @@ public class DesignCommandTests
     [InlineData(-100)]
     public void Parse_NegativeTotalQuestions_ReturnsError(int invalidTotalQuestions)
     {
-        // Arrange
-        var args = new[] { "--total-questions", invalidTotalQuestions.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--total-questions", invalidTotalQuestions.ToString()]);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -440,11 +328,8 @@ public class DesignCommandTests
     [InlineData(100)]
     public void Parse_ValidTotalQuestions_NoErrors(int validTotalQuestions)
     {
-        // Arrange
-        var args = new[] { "--total-questions", validTotalQuestions.ToString() };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse(["--total-questions", validTotalQuestions.ToString()]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -457,15 +342,11 @@ public class DesignCommandTests
     [InlineData(0, 5)] // Zero is valid for question number
     public void Parse_QuestionNumberWithinTotalQuestions_NoErrors(int questionNumber, int totalQuestions)
     {
-        // Arrange
-        var args = new[]
-        {
+        // Arrange & Act
+        var parseResult = CommandDefinition.Parse([
             "--question-number", questionNumber.ToString(),
             "--total-questions", totalQuestions.ToString()
-        };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        ]);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -474,15 +355,11 @@ public class DesignCommandTests
     [Fact]
     public void Parse_MultipleValidationErrors_ReturnsFirstError()
     {
-        // Arrange - Set both invalid confidence score and negative question number
-        var args = new[]
-        {
+        // Arrange & Act - Set both invalid confidence score and negative question number
+        var parseResult = CommandDefinition.Parse([
             "--confidence-score", "1.5",
             "--question-number", "-1"
-        };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
+        ]);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -549,25 +426,15 @@ public class DesignCommandTests
                         }
                         """;
 
-        var args = new[]
-        {
+        // Act
+        var response = await ExecuteCommandAsync(
             "--state", stateJson,
             "--question", "What is your primary business goal?",
-            "--confidence-score", "0.5"
-        };
-
-        // Act
-        var parseResult = _commandDefinition.Parse(args);
-        var result = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--confidence-score", "0.5");
 
         // Assert
-        Assert.Empty(parseResult.Errors);
-        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        // Verify that the state was parsed correctly by checking the response
-        string serializedResult = SerializeResponseResult(_context.Response.Results!);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
         Assert.NotNull(responseObject.ResponseObject.State);
         Assert.Empty(responseObject.ResponseObject.State.ArchitectureComponents);
         Assert.NotNull(responseObject.ResponseObject.State.Requirements);
@@ -596,19 +463,12 @@ public class DesignCommandTests
     [Fact]
     public async Task ExecuteAsync_WithEmptyState_CreatesDefaultState()
     {
-        // Arrange
-        var args = new[] { "--state", "" };
-        var parseResult = _commandDefinition.Parse(args);
-
-        // Act
-        var result = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("--state", "");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
+        var responseObject = ValidateAndDeserializeResponse(response, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
 
-        string serializedResult = SerializeResponseResult(_context.Response.Results!);
-        var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        Assert.NotNull(responseObject);
         Assert.NotNull(responseObject.ResponseObject.State);
         Assert.Empty(responseObject.ResponseObject.State.ArchitectureComponents);
         Assert.NotNull(responseObject.ResponseObject.State.Requirements);
@@ -619,17 +479,13 @@ public class DesignCommandTests
     public void BindOptions_WithInvalidStateJson_ThrowsException()
     {
         // Arrange
-        var invalidStateJson = "{ invalid json }";
-        var args = new[] { "--state", invalidStateJson };
-        var parseResult = _commandDefinition.Parse(args);
-
+        var parseResult = CommandDefinition.Parse(["--state", "{ invalid json }"]);
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
         {
             // Access the protected BindOptions method via reflection to test state deserialization
-            var command = _command.GetCommand();
-            var stateOption = command.Options.First(o => o.Name == "--state");
+            var stateOption = CommandDefinition.Options.First(o => o.Name == "--state");
             var stateValue = parseResult.GetValue((Option<string>)stateOption);
 
             // Manually call the state deserialization that happens in BindOptions

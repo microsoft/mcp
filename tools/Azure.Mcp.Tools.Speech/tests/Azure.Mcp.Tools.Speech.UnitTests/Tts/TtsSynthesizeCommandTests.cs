@@ -1,45 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Speech.Commands.Tts;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Tts;
 
-public class TtsSynthesizeCommandTests
+public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeCommand, ISpeechService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISpeechService _speechService;
-    private readonly ILogger<TtsSynthesizeCommand> _logger;
-    private readonly TtsSynthesizeCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
     private readonly string _knownSubscription = "sub123";
-
-    public TtsSynthesizeCommandTests()
-    {
-        _speechService = Substitute.For<ISpeechService>();
-        _logger = Substitute.For<ILogger<TtsSynthesizeCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_speechService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Theory]
     [InlineData("", false, "Missing Required options: --endpoint, --text, --outputAudio")]
@@ -50,8 +27,7 @@ public class TtsSynthesizeCommandTests
     [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.wav --language invalid", false, "Language must be in format 'xx-XX'")]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         if (shouldSucceed)
         {
@@ -80,7 +56,7 @@ public class TtsSynthesizeCommandTests
             Language = "en-US"
         };
 
-        _speechService.SynthesizeSpeechToFile(
+        Service.SynthesizeSpeechToFile(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -95,17 +71,15 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--text", text,
+                "--outputAudio", outputFile);
 
             // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-            Assert.NotNull(response.Results);
+            var result = ValidateAndDeserializeResponse(response, SpeechJsonContext.Default.TtsSynthesizeCommandResult);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.TtsSynthesizeCommandResult);
-            Assert.NotNull(result);
             Assert.Equal(outputFile, result.Result.FilePath);
             Assert.Equal(48000, result.Result.AudioSize);
         }
@@ -139,7 +113,7 @@ public class TtsSynthesizeCommandTests
             Language = language
         };
 
-        _speechService.SynthesizeSpeechToFile(
+        Service.SynthesizeSpeechToFile(
             Arg.Is(_knownEndpoint),
             Arg.Is(text),
             Arg.Is(outputFile),
@@ -154,14 +128,20 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile} --language {language} --voice {voice} --format {format} --endpointId {endpointId}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--text", text,
+                "--outputAudio", outputFile,
+                "--language", language,
+                "--voice", voice,
+                "--format", format,
+                "--endpointId", endpointId);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
 
-            await _speechService.Received(1).SynthesizeSpeechToFile(
+            await Service.Received(1).SynthesizeSpeechToFile(
                 _knownEndpoint,
                 text,
                 outputFile,
@@ -189,7 +169,7 @@ public class TtsSynthesizeCommandTests
         var text = "HelloWorld";
         var outputFile = "test-output-error.wav";
 
-        _speechService.SynthesizeSpeechToFile(
+        Service.SynthesizeSpeechToFile(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -204,9 +184,11 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--text", text,
+                "--outputAudio", outputFile);
 
             // Assert
             Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -229,7 +211,7 @@ public class TtsSynthesizeCommandTests
         var text = "HelloWorld";
         var outputFile = "test-output-unauth.wav";
 
-        _speechService.SynthesizeSpeechToFile(
+        Service.SynthesizeSpeechToFile(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -244,9 +226,11 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--text", text,
+                "--outputAudio", outputFile);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
@@ -266,9 +250,11 @@ public class TtsSynthesizeCommandTests
     [InlineData("//server/share/output.wav", "UNC")]
     public async Task ExecuteAsync_WithUncOutputPath_ShouldRejectPath(string outputPath, string expectedErrorFragment)
     {
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text HelloWorld --outputAudio {outputPath}";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--endpoint", _knownEndpoint,
+            "--text", "HelloWorld",
+            "--outputAudio", outputPath);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains(expectedErrorFragment, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -278,9 +264,11 @@ public class TtsSynthesizeCommandTests
     public async Task ExecuteAsync_WithPathTraversal_ShouldCanonicalizeOutputPath()
     {
         // A traversal path should be canonicalized; the command should not blindly pass it through.
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text HelloWorld --outputAudio ../../../tmp/evil.wav";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _knownSubscription,
+            "--endpoint", _knownEndpoint,
+            "--text", "HelloWorld",
+            "--outputAudio", "../../../tmp/evil.wav");
 
         // The path should be canonicalized - either it succeeds after canonicalization
         // or fails validation, but it should never pass the raw "../../../" path through.
@@ -288,7 +276,7 @@ public class TtsSynthesizeCommandTests
         // The key assertion is that the service receives a canonical path.
         if (response.Status == HttpStatusCode.OK)
         {
-            await _speechService.Received(1).SynthesizeSpeechToFile(
+            await Service.Received(1).SynthesizeSpeechToFile(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Is<string>(p => !p.Contains("..")),

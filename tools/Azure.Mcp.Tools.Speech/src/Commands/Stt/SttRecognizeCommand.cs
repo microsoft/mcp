@@ -13,12 +13,13 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : BaseSpeechCommand<SttRecognizeOptions>()
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService) : BaseSpeechCommand<SttRecognizeOptions>()
 {
     internal record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
     private const string CommandTitle = "Recognize Speech from Audio File";
     private readonly ILogger<SttRecognizeCommand> _logger = logger;
+    private readonly ISpeechService _speechService = speechService;
 
     public override string Id => "c725eb52-ca2c-4fe4-9422-935e7557b701";
 
@@ -155,8 +156,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
 
         try
         {
-            var speechService = context.GetService<ISpeechService>();
-            var result = await speechService.RecognizeSpeechFromFile(
+            var result = await _speechService.RecognizeSpeechFromFile(
                 options.Endpoint!,
                 options.File!,
                 options.Language,
