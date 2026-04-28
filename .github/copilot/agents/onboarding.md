@@ -109,7 +109,7 @@ Commands follow the naming pattern: `azmcp <service> <resource> <operation>`
    ```
    create [namespace] [resource] [operation] command using #new-command.md as a reference
    ```
-3. **Follow the implementation guide** in `docs/new-command.md`
+3. **Follow the implementation guide** in `servers/Azure.Mcp.Server/docs/new-command.md`
 4. **Update documentation**:
    - Add command to `servers/Azure.Mcp.Server/docs/azmcp-commands.md`
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1`
