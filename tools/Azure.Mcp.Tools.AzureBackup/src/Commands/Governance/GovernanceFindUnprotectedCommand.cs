@@ -14,29 +14,24 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
-public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
-{
-    private const string CommandTitle = "Find Unprotected Resources";
-    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "73b050ca-2e20-448c-a76c-08e8cd5bbe25";
-    public override string Name => "find-unprotected";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "73b050ca-2e20-448c-a76c-08e8cd5bbe25",
+    Name = "find-unprotected",
+    Title = "Find Unprotected Resources",
+    Description = """
         Scans the subscription to find Azure resources that are not currently protected by any
         backup policy. Optionally filter by resource type, resource group, or tags.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<GovernanceFindUnprotectedOptions>()
+{
+    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {

@@ -13,33 +13,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
+[CommandMetadata(
+    Id = "c1a8b3e5-4f2d-4a6e-8c7b-9d2e3f4a5b6c",
+    Name = "get",
+    Title = "Get Virtual Machine(s)",
+    Description = "List or get Azure Virtual Machine (VM) configuration and properties in a resource group. By default, returns VM details including name, location, size, provisioning state, and OS type. When retrieving a specific VM with --vm-name and --instance-view, the response also includes power state (running/stopped/deallocated). Use this tool to retrieve VM configuration details.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmGetOptions>(false)
 {
-    private const string CommandTitle = "Get Virtual Machine(s)";
     private readonly ILogger<VmGetCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
-
-    public override string Id => "c1a8b3e5-4f2d-4a6e-8c7b-9d2e3f4a5b6c";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        List or get Azure Virtual Machine (VM) configuration and properties in a resource group. By default, returns VM details including name, location, size, provisioning state, and OS type. When retrieving a specific VM with --vm-name and --instance-view, the response also includes power state (running/stopped/deallocated). Use this tool to retrieve VM configuration details.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

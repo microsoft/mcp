@@ -11,37 +11,32 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
+[CommandMetadata(
+    Id = "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5",
+    Name = "orchestrator-next",
+    Title = "Get Next Azure Monitor Instrumentation Action",
+    Description = """
+        Get the next instrumentation action after completing the current one.
+        Call this ONLY after you have executed the EXACT instruction from the previous response.
+        DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
+
+        Expected workflow:
+        1. You received an action from orchestrator-start or orchestrator-next
+        2. You executed EXACTLY what the 'instruction' field told you to do
+        3. Now call this tool to get the next action
+
+        Returns: The next action to execute, or 'complete' status when all steps are done.
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger)
     : BaseCommand<OrchestratorNextOptions>
 {
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
-
-    public override string Id => "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5";
-
-    public override string Name => "orchestrator-next";
-
-    public override string Description => @"Get the next instrumentation action after completing the current one.
-Call this ONLY after you have executed the EXACT instruction from the previous response.
-DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
-
-Expected workflow:
-1. You received an action from orchestrator-start or orchestrator-next
-2. You executed EXACTLY what the 'instruction' field told you to do
-3. Now call this tool to get the next action
-
-Returns: The next action to execute, or 'complete' status when all steps are done.";
-
-    public override string Title => "Get Next Azure Monitor Instrumentation Action";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

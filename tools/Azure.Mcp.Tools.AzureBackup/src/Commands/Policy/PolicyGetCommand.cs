@@ -18,30 +18,25 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 /// Consolidated policy command: when --policy is supplied returns a single policy's details;
 /// otherwise lists all policies in the vault.
 /// </summary>
-public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions>()
-{
-    private const string CommandTitle = "Get Backup Policy";
-    private readonly ILogger<PolicyGetCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "5f7ef3ae-72f3-4fe8-bd1e-ea56e4db86df";
-    public override string Name => "get";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "5f7ef3ae-72f3-4fe8-bd1e-ea56e4db86df",
+    Name = "get",
+    Title = "Get Backup Policy",
+    Description = """
         Retrieves backup policy information. When --policy is specified, returns detailed
         information about a single policy including datasource types and protected items count.
         When omitted, lists all backup policies configured in the vault.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class PolicyGetCommand(ILogger<PolicyGetCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyGetOptions>()
+{
+    private readonly ILogger<PolicyGetCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {

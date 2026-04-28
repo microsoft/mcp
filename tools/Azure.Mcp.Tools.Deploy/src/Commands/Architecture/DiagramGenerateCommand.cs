@@ -14,29 +14,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
 
+[CommandMetadata(
+    Id = "34d7ec6a-e229-4775-8af3-85f81ae3e6d3",
+    Name = "generate",
+    Title = "Generate Architecture Diagram",
+    Description = "Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include AppService, FunctionApp, ContainerApp, StaticWebApp, and AKS. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, KeyVault, and other supported Azure services.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
 {
-    private const string CommandTitle = "Generate Architecture Diagram";
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
-    public override string Id => "34d7ec6a-e229-4775-8af3-85f81ae3e6d3";
-
-    public override string Name => "generate";
-
-    public override string Description =>
-        """
-        Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include AppService, FunctionApp, ContainerApp, StaticWebApp, and AKS. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, KeyVault, and other supported Azure services.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -13,31 +13,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 
+[CommandMetadata(
+    Id = "a3f1b2c4-d5e6-47f8-9a0b-1c2d3e4f5a6b",
+    Name = "get",
+    Title = "Get Service Fabric Managed Cluster Nodes",
+    Description = "Get nodes for a Service Fabric managed cluster. Returns all nodes by default or a single node when a node name is specified. Includes name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCommand> logger, IServiceFabricService serviceFabricService)
     : BaseServiceFabricCommand<ManagedClusterNodeGetOptions>
 {
-    private const string CommandTitle = "Get Service Fabric Managed Cluster Nodes";
     private readonly ILogger<ManagedClusterNodeGetCommand> _logger = logger;
     private readonly IServiceFabricService _serviceFabricService = serviceFabricService;
-
-    public override string Id => "a3f1b2c4-d5e6-47f8-9a0b-1c2d3e4f5a6b";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get nodes for a Service Fabric managed cluster. Returns all nodes by default or a single node when a node name is specified. Includes name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

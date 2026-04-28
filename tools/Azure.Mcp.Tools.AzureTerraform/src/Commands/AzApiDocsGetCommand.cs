@@ -11,6 +11,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
+[CommandMetadata(
+    Id = "f6a7b8c9-d0e1-2345-bcde-678901234ef0",
+    Name = "get",
+    Title = "Get AzAPI Provider Documentation",
+    Description = """
+        Retrieves AzAPI Terraform provider documentation and schema for a specified Azure resource type.
+        Returns the resource schema in HCL format suitable for azapi_resource blocks, including property
+        definitions with types and requirements, parent resource information, and Terraform usage examples.
+        Use --resource-type to specify the Azure resource type in ARM format
+        (e.g., Microsoft.Compute/virtualMachines, Microsoft.Storage/storageAccounts).
+        Optionally specify --api-version to target a specific API version.
+        This tool reuses Azure Bicep type definitions to generate accurate AzAPI schemas.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AzApiDocsGetCommand(
     ILogger<AzApiDocsGetCommand> logger,
     IAzApiDocsService docsService,
@@ -19,33 +38,6 @@ public sealed class AzApiDocsGetCommand(
     private readonly ILogger<AzApiDocsGetCommand> _logger = logger;
     private readonly IAzApiDocsService _docsService = docsService;
     private readonly IAzApiExamplesService _examplesService = examplesService;
-
-    public override string Id => "f6a7b8c9-d0e1-2345-bcde-678901234ef0";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves AzAPI Terraform provider documentation and schema for a specified Azure resource type.
-        Returns the resource schema in HCL format suitable for azapi_resource blocks, including property
-        definitions with types and requirements, parent resource information, and Terraform usage examples.
-        Use --resource-type to specify the Azure resource type in ARM format
-        (e.g., Microsoft.Compute/virtualMachines, Microsoft.Storage/storageAccounts).
-        Optionally specify --api-version to target a specific API version.
-        This tool reuses Azure Bicep type definitions to generate accurate AzAPI schemas.
-        """;
-
-    public override string Title => "Get AzAPI Provider Documentation";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

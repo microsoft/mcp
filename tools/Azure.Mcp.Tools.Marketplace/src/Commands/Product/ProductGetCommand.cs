@@ -14,33 +14,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
 
+[CommandMetadata(
+    Id = "729a12ee-9c63-4a31-b1b8-4a81ad093564",
+    Name = "get",
+    Title = "Get Marketplace Product",
+    Description = """
+        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
+        including available plans, pricing, and product metadata.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger, IMarketplaceService marketplaceService) : SubscriptionCommand<ProductGetOptions>
 {
-    private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
-
-    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
-         including available plans, pricing, and product metadata.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -13,36 +13,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "Create OpenAI Completion";
-
-    public override string Id => "e5f6a7b8-5678-9abc-ef01-234567890123";
-
-    public override string Name => "create-completion";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "e5f6a7b8-5678-9abc-ef01-234567890123",
+    Name = "create-completion",
+    Title = "Create OpenAI Completion",
+    Description = """
         Create text completions using Azure OpenAI in Microsoft Foundry. Send a prompt or question to Azure OpenAI models
         deployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create
         completions, get AI-generated content, generate answers to questions, or produce text completions from Azure
         OpenAI based on any input prompt. Supports customization with temperature and max tokens.
         Requires resource-name, deployment-name, and prompt-text.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiCompletionsCreateOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {

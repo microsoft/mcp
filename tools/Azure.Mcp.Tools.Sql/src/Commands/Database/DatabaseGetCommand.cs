@@ -14,36 +14,27 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
-public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
-    : BaseSqlCommand<DatabaseGetOptions>(logger)
-{
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Get SQL Database";
-
-    public override string Id => "2c4e6a8b-1d3f-4e5a-b6c7-8d9e0f1a2b3c";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "2c4e6a8b-1d3f-4e5a-b6c7-8d9e0f1a2b3c",
+    Name = "get",
+    Title = "Get SQL Database",
+    Description = """
         Show, get, or list Azure SQL databases in a SQL Server. Shows details for a specific Azure SQL database
         by name, or lists all Azure SQL databases in the specified SQL Server. Use to show or retrieve Azure SQL
         database information. Equivalent to 'az sql db show' (show one Azure SQL database) or 'az sql db list'
         (list all Azure SQL databases in a server). Returns database information including configuration details
         and current status.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseGetCommand> logger)
+    : BaseSqlCommand<DatabaseGetOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     protected override void RegisterOptions(Command command)
     {

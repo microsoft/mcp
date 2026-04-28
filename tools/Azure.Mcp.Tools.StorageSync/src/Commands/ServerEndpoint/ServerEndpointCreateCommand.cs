@@ -13,29 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
 
+[CommandMetadata(
+    Id = "fcbdf461-6fde-4cfb-a944-4a56a2be90e4",
+    Name = "create",
+    Title = "Create Server Endpoint",
+    Description = "Add a server endpoint to a sync group by specifying a local server path to sync. Server endpoints represent the on-premises side of the sync relationship and include cloud tiering configuration.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerEndpointCreateCommand(ILogger<ServerEndpointCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<ServerEndpointCreateOptions>
 {
-    private const string CommandTitle = "Create Server Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<ServerEndpointCreateCommand> _logger = logger;
-
-    public override string Id => "fcbdf461-6fde-4cfb-a944-4a56a2be90e4";
-
-    public override string Name => "create";
-
-    public override string Description => "Add a server endpoint to a sync group by specifying a local server path to sync. Server endpoints represent the on-premises side of the sync relationship and include cloud tiering configuration.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

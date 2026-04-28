@@ -14,30 +14,22 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 /// <summary>
 /// Gets or lists availability status information for Azure resources.
 /// </summary>
+[CommandMetadata(
+    Id = "3b388cc7-4b16-4919-9e90-f592247d9891",
+    Name = "get",
+    Title = "Get/List Resource Availability Status",
+    Description = "Get the Azure Resource Health availability status for a specific resource or all resources in a subscription or resource group. Use this tool when asked about the availability status, health status, or Resource Health of an Azure resource (e.g. virtual machine, storage account). Reports whether a resource is Available, Unavailable, Degraded, or Unknown, including the reason and details. This is the correct tool for questions like 'What is the availability status of VM X?' or 'Is resource Y healthy?'.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCommand> logger, IResourceHealthService resourceHealthService)
     : BaseResourceHealthCommand<AvailabilityStatusGetOptions>()
 {
-    private const string CommandTitle = "Get/List Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
     private readonly IResourceHealthService _resourceHealthService = resourceHealthService;
-
-    public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get the Azure Resource Health availability status for a specific resource or all resources in a subscription or resource group. Use this tool when asked about the availability status, health status, or Resource Health of an Azure resource (e.g. virtual machine, storage account). Reports whether a resource is Available, Unavailable, Degraded, or Unknown, including the reason and details. This is the correct tool for questions like 'What is the availability status of VM X?' or 'Is resource Y healthy?'.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -16,32 +16,23 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// <summary>
 /// Command to get details of an Azure managed disk.
 /// </summary>
+[CommandMetadata(
+    Id = "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e",
+    Name = "get",
+    Title = "Get Disk Details",
+    Description = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DiskGetCommand(
     ILogger<DiskGetCommand> logger)
     : BaseComputeCommand<DiskGetOptions>(false)
 {
-    private const string CommandTitle = "Get Disk Details";
-    private const string CommandDescription = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
 
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override string Description => CommandDescription;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

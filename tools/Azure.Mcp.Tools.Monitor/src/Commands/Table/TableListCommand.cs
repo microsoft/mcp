@@ -10,33 +10,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
+[CommandMetadata(
+    Id = "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6",
+    Name = "list",
+    Title = "List Log Analytics Tables",
+    Description = """
+        List all tables in a Log Analytics workspace. Requires workspace.
+        Returns table names and schemas that can be used for constructing KQL queries.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableListOptions>()
 {
-    private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
-
-    public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List all tables in a Log Analytics workspace. Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName}.
-        Returns table names and schemas that can be used for constructing KQL queries.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
