@@ -72,6 +72,9 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         var options = BindOptions(parseResult);
 
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.DatasourceType, AzureBackupTelemetryTags.NormalizeWorkloadType(options.DatasourceType));
+
         try
         {
             var result = await _azureBackupService.ProtectItemAsync(

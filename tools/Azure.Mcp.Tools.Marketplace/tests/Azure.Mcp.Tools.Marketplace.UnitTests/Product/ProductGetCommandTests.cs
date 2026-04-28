@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -41,12 +42,10 @@ public class ProductGetCommandTests : CommandUnitTestsBase<ProductGetCommand, IM
             Arg.Is(subscriptionId),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
@@ -64,7 +63,10 @@ public class ProductGetCommandTests : CommandUnitTestsBase<ProductGetCommand, IM
     [Fact]
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
-        // Arrange & Act
+        // Arrange
+        TestEnvironment.ClearAzureSubscriptionId();
+
+        // Act
         var response = await ExecuteCommandAsync("--product-id", "test-product");
 
         // Assert
@@ -86,12 +88,10 @@ public class ProductGetCommandTests : CommandUnitTestsBase<ProductGetCommand, IM
             Arg.Is(subscriptionId),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
