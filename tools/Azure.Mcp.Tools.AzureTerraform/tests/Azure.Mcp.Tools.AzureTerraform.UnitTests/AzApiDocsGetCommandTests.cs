@@ -1,56 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
 
-public class AzApiDocsGetCommandTests
+public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand, IAzApiDocsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AzApiDocsGetCommand> _logger;
-    private readonly IAzApiDocsService _docsService;
     private readonly IAzApiExamplesService _examplesService;
-    private readonly CommandContext _context;
-    private readonly AzApiDocsGetCommand _command;
-    private readonly Command _commandDefinition;
 
     public AzApiDocsGetCommandTests()
     {
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _logger = Substitute.For<ILogger<AzApiDocsGetCommand>>();
-        _docsService = Substitute.For<IAzApiDocsService>();
         _examplesService = Substitute.For<IAzApiExamplesService>();
-        _command = new(_logger, _docsService, _examplesService);
-        _commandDefinition = _command.GetCommand();
+        Services.AddSingleton(_examplesService);
     }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.NotEmpty(_command.Id);
-        Assert.NotEmpty(_command.Title);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotEmpty(Command.Id);
+        Assert.NotEmpty(Command.Title);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 
     [Fact]
@@ -66,14 +50,13 @@ public class AzApiDocsGetCommandTests
             Summary = "AzAPI resource schema for Microsoft.Compute/virtualMachines@2024-03-01"
         };
 
-        _docsService.GetDocumentation("Microsoft.Compute/virtualMachines", null)
+        Service.GetDocumentation("Microsoft.Compute/virtualMachines", null)
             .Returns(expectedResult);
 
         _examplesService.GetExamplesAsync("Microsoft.Compute/virtualMachines", Arg.Any<CancellationToken>())
-            .Returns(new List<AzApiExample>());
+            .Returns([]);
 
-        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Compute/virtualMachines");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -90,20 +73,18 @@ public class AzApiDocsGetCommandTests
             Summary = "AzAPI resource schema"
         };
 
-        _docsService.GetDocumentation("Microsoft.Storage/storageAccounts", "2023-01-01")
+        Service.GetDocumentation("Microsoft.Storage/storageAccounts", "2023-01-01")
             .Returns(expectedResult);
 
         _examplesService.GetExamplesAsync("Microsoft.Storage/storageAccounts", Arg.Any<CancellationToken>())
-            .Returns(new List<AzApiExample>());
+            .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--resource-type", "Microsoft.Storage/storageAccounts",
-            "--api-version", "2023-01-01"
-        ]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--api-version", "2023-01-01");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        _docsService.Received(1).GetDocumentation("Microsoft.Storage/storageAccounts", "2023-01-01");
+        Service.Received(1).GetDocumentation("Microsoft.Storage/storageAccounts", "2023-01-01");
     }
 
     [Fact]
@@ -127,14 +108,13 @@ public class AzApiDocsGetCommandTests
             }
         };
 
-        _docsService.GetDocumentation("Microsoft.Compute/virtualMachines", null)
+        Service.GetDocumentation("Microsoft.Compute/virtualMachines", null)
             .Returns(expectedResult);
 
         _examplesService.GetExamplesAsync("Microsoft.Compute/virtualMachines", Arg.Any<CancellationToken>())
             .Returns(examples);
 
-        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Compute/virtualMachines");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -143,8 +123,7 @@ public class AzApiDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingResourceType_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -152,11 +131,10 @@ public class AzApiDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _docsService.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
+        Service.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
             .Throws(new InvalidDataException("Resource type not found."));
 
-        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Fake/nonexistent"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Fake/nonexistent");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -169,14 +147,13 @@ public class AzApiDocsGetCommandTests
     {
         if (shouldSucceed)
         {
-            _docsService.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
+            Service.GetDocumentation(Arg.Any<string>(), Arg.Any<string?>())
                 .Returns(new AzApiDocsResult { ResourceType = "Microsoft.Compute/virtualMachines", ApiVersion = "2024-03-01", Schema = "...", Summary = "..." });
             _examplesService.GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(new List<AzApiExample>());
+                .Returns([]);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -201,20 +178,15 @@ public class AzApiDocsGetCommandTests
             Summary = "AzAPI resource schema for Microsoft.Compute/virtualMachines@2024-03-01"
         };
 
-        _docsService.GetDocumentation("Microsoft.Compute/virtualMachines", null)
+        Service.GetDocumentation("Microsoft.Compute/virtualMachines", null)
             .Returns(expectedResult);
 
         _examplesService.GetExamplesAsync("Microsoft.Compute/virtualMachines", Arg.Any<CancellationToken>())
-            .Returns(new List<AzApiExample>());
+            .Returns([]);
 
-        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "Microsoft.Compute/virtualMachines");
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AzApiDocsResult);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzApiDocsResult);
 
         Assert.NotNull(result);
         Assert.Equal("Microsoft.Compute/virtualMachines", result.ResourceType);
@@ -225,13 +197,12 @@ public class AzApiDocsGetCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines", "--api-version", "2024-03-01"]);
+        var args = CommandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines", "--api-version", "2024-03-01"]);
 
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
 
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         Assert.Contains(options, o => o.Name == "--resource-type");
         Assert.Contains(options, o => o.Name == "--api-version");
