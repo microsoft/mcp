@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cspell:ignore protectable Protectable protectableitem recoverypoint disasterrecovery esan adls Adls ADLS protecteditem azurebackup Hana hana SAPHANA pgflex
-
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;

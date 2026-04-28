@@ -1,4 +1,3 @@
-// cspell:ignore backupconfig vaultconfig
 targetScope = 'resourceGroup'
 
 @minLength(3)

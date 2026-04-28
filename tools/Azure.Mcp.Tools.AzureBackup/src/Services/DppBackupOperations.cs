@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cspell:ignore USERASSIGNED SYSTEMASSIGNEDUSERASSIGNED SYSTEMASSIGNED Lifecycles azurebackup protecteditem protectable
-
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;

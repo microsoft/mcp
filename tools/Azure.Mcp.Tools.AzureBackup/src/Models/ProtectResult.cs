@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cspell:ignore azurebackup protecteditem
-
 namespace Azure.Mcp.Tools.AzureBackup.Models;
 
 /// <summary>

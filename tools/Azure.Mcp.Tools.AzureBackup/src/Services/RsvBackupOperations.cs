@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cspell:ignore SQLINSTANCE SAPHANADATABASE SQLDATABASE protectable hana iaasvmcontainerv azurebackup protectableitem dbname Fileshare protecteditem vmname ALWAYSON SYSTEMASSIGNED USERASSIGNED SYSTEMASSIGNEDUSERASSIGNED SAPHANA SAPHANASYSTEM SAPHANADBINSTANCE SAPHANADBI
-
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;

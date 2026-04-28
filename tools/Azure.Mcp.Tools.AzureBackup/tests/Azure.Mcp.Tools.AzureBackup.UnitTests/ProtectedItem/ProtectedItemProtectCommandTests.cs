@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// cspell:ignore mydisk myvm slowvm afsfileshare iaasvmcontainerv azurebackup protecteditem
-
 using System.Net;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
