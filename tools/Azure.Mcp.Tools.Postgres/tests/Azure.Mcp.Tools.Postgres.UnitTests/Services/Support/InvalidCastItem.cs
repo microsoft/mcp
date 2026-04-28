@@ -1,10 +1,12 @@
-﻿namespace Azure.Mcp.Tools.Postgres.UnitTests.Services.Support
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Postgres.UnitTests.Services.Support;
+
+internal class InvalidCastItem
 {
-    internal class InvalidCastItem
+    public override string ToString()
     {
-        public override string ToString()
-        {
-            throw new InvalidCastException("This is an invalid cast item.");
-        }
+        throw new InvalidCastException("This is an invalid cast item.");
     }
 }

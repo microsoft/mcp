@@ -12,14 +12,9 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.BicepSchema.UnitTests;
 
-public class GetSchemaTests
+public class GetSchemaTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-
-    public GetSchemaTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
+    private readonly ITestOutputHelper _output = output;
 
     private void SummarizeSchema(TypesDefinitionResult result, string response)
     {

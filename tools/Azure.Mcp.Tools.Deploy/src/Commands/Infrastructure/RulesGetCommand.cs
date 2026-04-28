@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     : BaseCommand<RulesGetOptions>
 {
-    private const string CommandTitle = "Get Iac(Infrastructure as Code) Rules";
+    private const string CommandTitle = "Get IaC (Infrastructure as Code) Rules";
     private readonly ILogger<RulesGetCommand> _logger = logger;
     public override string Id => "942b5c00-01dd-4ca0-9596-4cf650ff7934";
 
@@ -33,7 +33,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Description =>
         """
-        Retrieves rules and best practices for creating Bicep and Terraform Infrastructure as Code (IaC) files to deploy Azure applications. Use this tool when the user asks for rules, guidelines, or best practices for writing Bicep scripts or Terraform templates for Azure resources. The rules cover Azure resource configuration standards, compatibility with Azure Developer CLI (azd) and Azure CLI, and general IaC quality requirements. Use when user asks: show me the rules and best practices for writing Bicep and Terraform IaC for Azure.
+        Retrieves curated IaC rules and best practices for creating Bicep or Terraform files compatible with Azure Developer CLI (azd) or Azure CLI deployments. Covers Azure resource configuration standards, naming requirements, and deployment tool constraints that differ from generic IaC guidance. Returns a formatted rules document. Specify deployment tool (AzCli or AZD), IaC type (bicep or terraform), and target resource types.
         """;
 
     protected override void RegisterOptions(Command command)

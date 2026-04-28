@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Updated Marketplace tool to use API version 2025-05-01. Added new response model fields: offerId, mixProductId, offeringType, licenseManagementType, hasRIPlans, leadGeneration, and experienceConfig."
+  - section: "Breaking Changes"
+    description: "Marketplace product_get no longer accepts --market or --pricing-audience options, as these values are now fetched directly from the subscription. ProductsListResponse fields renamed (Items -> Value, NextPageLink -> NextLink). Badge, ProductType, and PricingAudience are now strings instead of enums."

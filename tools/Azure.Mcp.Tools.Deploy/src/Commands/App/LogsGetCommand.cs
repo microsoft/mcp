@@ -27,13 +27,13 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
-        LocalRequired = false,
+        LocalRequired = true,
         Secret = false
     };
 
     public override string Description =>
         """
-        Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.
+        Shows application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file. Automatically discovers the correct Log Analytics workspace and resources based on azd environment configuration. Returns console log entries for checking deployment status or troubleshooting post-deployment issues.
         """;
 
     protected override void RegisterOptions(Command command)

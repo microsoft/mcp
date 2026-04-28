@@ -1,45 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.FirewallRule;
 
-public class FirewallRuleListCommandTests
+public class FirewallRuleListCommandTests : CommandUnitTestsBase<FirewallRuleListCommand, ISqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISqlService _service;
-    private readonly ILogger<FirewallRuleListCommand> _logger;
-    private readonly FirewallRuleListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public FirewallRuleListCommandTests()
-    {
-        _service = Substitute.For<ISqlService>();
-        _logger = Substitute.For<ILogger<FirewallRuleListCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_service, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -56,7 +35,7 @@ public class FirewallRuleListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListFirewallRulesAsync(
+            Service.ListFirewallRulesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -65,11 +44,8 @@ public class FirewallRuleListCommandTests
                 .Returns([]);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -95,7 +71,7 @@ public class FirewallRuleListCommandTests
                 "Microsoft.Sql/servers/firewallRules", "192.168.1.1", "192.168.1.255")
         };
 
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             "testserver",
             "testrg",
             "testsub",
@@ -103,11 +79,11 @@ public class FirewallRuleListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -119,7 +95,7 @@ public class FirewallRuleListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyListWhenNoFirewallRules()
     {
         // Arrange
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -127,11 +103,11 @@ public class FirewallRuleListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -143,19 +119,19 @@ public class FirewallRuleListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<SqlServerFirewallRule>>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -168,19 +144,19 @@ public class FirewallRuleListCommandTests
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
+            .ThrowsAsync(requestException);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -192,19 +168,19 @@ public class FirewallRuleListCommandTests
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
+            .ThrowsAsync(requestException);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -219,7 +195,7 @@ public class FirewallRuleListCommandTests
         const string resourceGroup = "testrg";
         const string subscription = "testsub";
 
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -227,14 +203,14 @@ public class FirewallRuleListCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName}");
-
         // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--server", serverName);
 
         // Assert
-        await _service.Received(1).ListFirewallRulesAsync(
+        await Service.Received(1).ListFirewallRulesAsync(
             serverName,
             resourceGroup,
             subscription,
@@ -252,7 +228,7 @@ public class FirewallRuleListCommandTests
                 "Microsoft.Sql/servers/firewallRules", "10.0.0.1", "10.0.0.10")
         };
 
-        _service.ListFirewallRulesAsync(
+        Service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -260,18 +236,19 @@ public class FirewallRuleListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --retry-max-retries 3");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "testsub",
+            "--resource-group", "testrg",
+            "--server", "testserver",
+            "--retry-max-retries", "3");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the service was called with retry policy
-        await _service.Received(1).ListFirewallRulesAsync(
+        await Service.Received(1).ListFirewallRulesAsync(
             "testserver",
             "testrg",
             "testsub",

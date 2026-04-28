@@ -97,6 +97,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             if (crossSubscriptionSearch)
             {
                 // Iterate all subscriptions and aggregate
+                // TODO (alzimmer): Listing all subscriptions should be done in the IEventGridService implementation.
                 var allSubs = await _subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
