@@ -141,9 +141,36 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
-        var datasourceResourceId = new ResourceIdentifier(datasourceId);
+        ResourceIdentifier datasourceResourceId;
+        try
+        {
+            datasourceResourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/disks/{name}).", ex);
+        }
 
-        var resolvedDatasourceType = datasourceType ?? datasourceResourceId.ResourceType.ToString();
+        string resolvedDatasourceType;
+        if (!string.IsNullOrEmpty(datasourceType))
+        {
+            resolvedDatasourceType = datasourceType;
+        }
+        else
+        {
+            try
+            {
+                resolvedDatasourceType = datasourceResourceId.ResourceType.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(
+                    $"Could not determine datasource type from '{datasourceId}'. " +
+                    "The ARM resource ID may be malformed. Provide --datasource-type explicitly or fix the resource ID.", ex);
+            }
+        }
         var profile = ResolveProfile(resolvedDatasourceType);
 
         var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
@@ -286,7 +313,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         // Fall back to listing all items and searching by friendly name
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var found = items.FirstOrDefault(i =>
-            i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesDppFriendlyName(i, protectedItemName));
         return found ?? throw new KeyNotFoundException(
             $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +

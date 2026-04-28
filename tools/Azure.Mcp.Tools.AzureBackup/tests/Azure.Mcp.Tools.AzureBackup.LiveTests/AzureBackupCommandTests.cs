@@ -828,7 +828,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_ConfiguresSuccessfully()
     {
-        // Bug 1.9/9.7 fix validation: RSV soft-delete now uses BackupResourceVaultConfig API
+        // RSV soft-delete now uses Vault PATCH API with RecoveryServicesSoftDeleteSettings
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
         var result = await CallToolAsync(
@@ -1116,9 +1116,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     public async Task DisasterRecoveryEnableCrr_RsvVault_EnablesCrossRegionRestore_Successfully()
     {
         // CRR is an RSV-only feature — LRO can take 10-30 minutes
-        // Note: If the vault's redundancy was previously configured via the Vault API
-        // (ARM/portal), the Backup Config API will return 400 BMSUserErrorRedundancySettingsUseVaultApi.
-        // In that case, CRR may already be enabled. We treat both outcomes as success.
+        // CRR is enabled via the Vault PATCH API with RedundancySettings.CrossRegionRestore.
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: DisasterRecoveryEnableCrr_RSV");
 
@@ -1133,22 +1131,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: DisasterRecoveryEnableCrr_RSV");
 
-        // Success path: result.status == "Succeeded"
-        // Environment-specific path: error about Vault API — CRR already configured
-        if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
-        {
-            Assert.Equal("Succeeded", opResult.GetProperty("status").GetString());
-        }
-        else if (result.HasValue && result.Value.TryGetProperty("message", out var message))
-        {
-            var msg = message.GetString() ?? "";
-            Assert.Contains("RedundancySettings", msg, StringComparison.OrdinalIgnoreCase);
-            Output.WriteLine("CRR already configured via Vault API — environment-specific, treating as pass.");
-        }
-        else
-        {
-            Assert.Fail("Unexpected response from DisasterRecoveryEnableCrr");
-        }
+        var opResult = result.AssertProperty("result");
+        Assert.Equal("Succeeded", opResult.AssertProperty("status").GetString());
     }
 
     [Fact]
