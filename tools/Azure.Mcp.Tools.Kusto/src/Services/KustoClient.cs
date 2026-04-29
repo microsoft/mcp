@@ -181,8 +181,21 @@ public sealed class KustoClient(
     /// each call (no caching) so changes take effect for the next constructed client without
     /// requiring a process restart.
     /// </summary>
+    /// <remarks>
+    /// <c>localhost</c> and IP literals (e.g. <c>127.0.0.1</c>, <c>169.254.169.254</c>) are
+    /// always rejected, even if listed in the env var. The legitimate proxy use-case has a
+    /// DNS hostname, so requiring DNS names is a cheap defense-in-depth measure against
+    /// misconfiguration.
+    /// </remarks>
     private static bool IsAdditionalTrustedHost(string host)
     {
+        // Never allow loopback by name or IP literals, even if the user listed them.
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            IPAddress.TryParse(host, out _))
+        {
+            return false;
+        }
+
         var raw = Environment.GetEnvironmentVariable(AdditionalTrustedHostsEnvVarName);
         if (string.IsNullOrWhiteSpace(raw))
         {

@@ -9,6 +9,15 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
+/// <summary>
+/// Disables parallelization for tests that mutate the
+/// <c>AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS</c> environment variable, which is
+/// process-wide global state read by <see cref="KustoClient"/>.
+/// </summary>
+[CollectionDefinition("KustoClient EnvVar", DisableParallelization = true)]
+public class KustoClientEnvVarCollection;
+
+[Collection("KustoClient EnvVar")]
 public sealed class KustoClientTests
 {
     private readonly TokenCredential _tokenCredential;
@@ -258,6 +267,33 @@ public sealed class KustoClientTests
         // HTTPS scheme is enforced regardless of trusted-host opt-in.
         Assert.Throws<ArgumentException>(
             () => new KustoClient("http://kusto-proxy.example.com", _tokenCredential, "azmcp", _httpClientFactory));
+    }
+
+    [Fact]
+    public void Constructor_RejectsLocalhost_EvenWhenListedInEnvVar()
+    {
+        using var env = new EnvironmentScope(KustoClient.AdditionalTrustedHostsEnvVarName);
+        Environment.SetEnvironmentVariable(KustoClient.AdditionalTrustedHostsEnvVarName, "localhost");
+
+        Assert.Throws<ArgumentException>(
+            () => new KustoClient("https://localhost", _tokenCredential, "azmcp", _httpClientFactory));
+    }
+
+    [Theory]
+    [InlineData("127.0.0.1")]   // IPv4 loopback
+    [InlineData("[::1]")]       // IPv6 loopback (URI-bracketed)
+    [InlineData("169.254.169.254")] // Azure IMDS / link-local
+    [InlineData("10.0.0.1")]    // private range
+    [InlineData("8.8.8.8")]     // public IP literal
+    public void Constructor_RejectsIpLiteral_EvenWhenListedInEnvVar(string host)
+    {
+        using var env = new EnvironmentScope(KustoClient.AdditionalTrustedHostsEnvVarName);
+        // Strip URI brackets for env var entry (Uri.Host returns the bracketed form for IPv6).
+        var entry = host.Trim('[', ']');
+        Environment.SetEnvironmentVariable(KustoClient.AdditionalTrustedHostsEnvVarName, entry);
+
+        Assert.Throws<ArgumentException>(
+            () => new KustoClient($"https://{host}", _tokenCredential, "azmcp", _httpClientFactory));
     }
 
     #endregion
