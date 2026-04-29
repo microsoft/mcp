@@ -7,38 +7,28 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
+[CommandMetadata(
+    Id = "a0049f31-9a32-4b5e-91ec-e7b074fc7246",
+    Name = "list",
+    Title = "List Resource Groups",
+    Description = """
+        List all resource groups in a subscription. This command retrieves all resource groups available
+        in the specified subscription. Results include resource group names and IDs,
+        returned as a JSON array.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : SubscriptionCommand<BaseGroupOptions>()
 {
-    private const string CommandTitle = "List Resource Groups";
     private readonly ILogger<GroupListCommand> _logger = logger;
-
-    public override string Id => "a0049f31-9a32-4b5e-91ec-e7b074fc7246";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List all resource groups in a subscription. This command retrieves all resource groups available
-        in the specified {OptionDefinitions.Common.SubscriptionName}. Results include resource group names and IDs,
-        returned as a JSON array.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
