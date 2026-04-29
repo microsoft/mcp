@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed azurebackup policy create body shapes for DPP vault-tier copy, vaulted Blob/ADLS, SAP HANA snapshot, and RSV smart-tier to match Az CLI and service schemas. Removed unused DPP-only flags."

@@ -267,15 +267,15 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType, string? vaultType,
-        string? scheduleTime, string? dailyRetentionDays,
+        string? vaultType,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken)
-            : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
+            ? await rsvOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken)
+            : await dppOps.CreatePolicyAsync(request, vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
     }
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
@@ -671,12 +671,12 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
-            // RSV auth failure — try DPP before giving up
+            // RSV auth failure  -  try DPP before giving up
             rsvAuthFailed = true;
         }
         catch (RequestFailedException ex) when (ex.Status is 404)
         {
-            // RSV not found — try DPP
+            // RSV not found  -  try DPP
         }
 
         try

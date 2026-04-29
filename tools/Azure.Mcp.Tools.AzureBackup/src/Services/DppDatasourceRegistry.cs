@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// To add a new DPP datasource type:
 ///   1. Add a static DppDatasourceProfile instance below
 ///   2. Register it in the AllProfiles array
-///   — No other code changes needed in DppBackupOperations.
+///    -  No other code changes needed in DppBackupOperations.
 /// </summary>
 public static class DppDatasourceRegistry
 {
@@ -113,8 +113,9 @@ public static class DppDatasourceRegistry
     };
 
     /// <summary>
-    /// CosmosDB: Full backups only. Weekly schedule (P7D). Vault store.
-    /// Multi-tier retention is supported (e.g., retain weekly backups for N months).
+    /// CosmosDB: Full backups only. Weekly schedule (P1W). Vault store (no operational tier).
+    /// Multi-tier retention is supported (e.g., retain weekly backups for N months/years
+    /// via vault-tier copy rules), mirroring the PostgreSQL Flexible profile.
     /// </summary>
     public static readonly DppDatasourceProfile CosmosDb = new()
     {
@@ -123,12 +124,11 @@ public static class DppDatasourceRegistry
         Aliases = ["cosmosdb", "cosmos"],
         UsesOperationalStore = false,
         IsContinuousBackup = false,
-        ScheduleInterval = "PT4H",
-        BackupType = "Incremental",
-        BackupRuleName = "BackupHourly",
+        ScheduleInterval = "P1W",
+        BackupType = "Full",
+        BackupRuleName = "BackupWeekly",
         DefaultRetentionDays = 30,
         RequiresSnapshotResourceGroup = false,
-        DataSourceSetMode = DppDataSourceSetMode.Self,
         DefaultRestoreMode = DppRestoreMode.RecoveryPoint,
         SupportsPolicyUpdate = false,
     };
@@ -193,7 +193,7 @@ public static class DppDatasourceRegistry
     /// <summary>
     /// Tries to auto-detect a profile when the user supplies a base resource type
     /// (e.g. "Microsoft.Storage/storageAccounts") that needs re-mapping to a child type
-    /// (e.g. Blob → "Microsoft.Storage/storageAccounts/blobServices").
+    /// (e.g. Blob -> "Microsoft.Storage/storageAccounts/blobServices").
     /// </summary>
     public static DppDatasourceProfile? TryAutoDetect(string armResourceType)
     {
@@ -212,7 +212,7 @@ public static class DppDatasourceRegistry
     }
 
     /// <summary>
-    /// Derives the parent resource ID from a child resource ID (e.g. ESAN volume group → parent ESAN).
+    /// Derives the parent resource ID from a child resource ID (e.g. ESAN volume group -> parent ESAN).
     /// Generic logic that strips the last two path segments (/childType/childName).
     /// </summary>
     public static ResourceIdentifier GetParentResourceId(ResourceIdentifier childResourceId)
