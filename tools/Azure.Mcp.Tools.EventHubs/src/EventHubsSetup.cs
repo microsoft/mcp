@@ -38,38 +38,23 @@ public class EventHubsSetup : IAreaSetup
         var eventHubGroup = new CommandGroup("eventhub", "Event Hub operations");
         eventHubs.AddSubGroup(eventHubGroup);
 
-        var eventHubDeleteCommand = serviceProvider.GetRequiredService<EventHubDeleteCommand>();
-        eventHubGroup.AddCommand(eventHubDeleteCommand.Name, eventHubDeleteCommand);
-
-        var eventHubGetCommand = serviceProvider.GetRequiredService<EventHubGetCommand>();
-        eventHubGroup.AddCommand(eventHubGetCommand.Name, eventHubGetCommand);
-
-        var eventHubUpdateCommand = serviceProvider.GetRequiredService<EventHubUpdateCommand>();
-        eventHubGroup.AddCommand(eventHubUpdateCommand.Name, eventHubUpdateCommand);
+        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubDeleteCommand>());
+        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubGetCommand>());
+        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubUpdateCommand>());
 
         var namespaceGroup = new CommandGroup("namespace", "Event Hubs namespace operations");
         eventHubs.AddSubGroup(namespaceGroup);
 
-        var namespaceGetCommand = serviceProvider.GetRequiredService<NamespaceGetCommand>();
-        namespaceGroup.AddCommand(namespaceGetCommand.Name, namespaceGetCommand);
-
-        var namespaceUpdateCommand = serviceProvider.GetRequiredService<NamespaceUpdateCommand>();
-        namespaceGroup.AddCommand(namespaceUpdateCommand.Name, namespaceUpdateCommand);
-
-        var namespaceDeleteCommand = serviceProvider.GetRequiredService<NamespaceDeleteCommand>();
-        namespaceGroup.AddCommand(namespaceDeleteCommand.Name, namespaceDeleteCommand);
+        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceGetCommand>());
+        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceUpdateCommand>());
+        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceDeleteCommand>());
 
         var consumerGroupGroup = new CommandGroup("consumergroup", "Event Hubs consumer group operations");
         eventHubGroup.AddSubGroup(consumerGroupGroup);
 
-        var consumerGroupDeleteCommand = serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>();
-        consumerGroupGroup.AddCommand(consumerGroupDeleteCommand.Name, consumerGroupDeleteCommand);
-
-        var consumerGroupGetCommand = serviceProvider.GetRequiredService<ConsumerGroupGetCommand>();
-        consumerGroupGroup.AddCommand(consumerGroupGetCommand.Name, consumerGroupGetCommand);
-
-        var consumerGroupUpdateCommand = serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>();
-        consumerGroupGroup.AddCommand(consumerGroupUpdateCommand.Name, consumerGroupUpdateCommand);
+        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>());
+        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupGetCommand>());
+        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>());
 
         return eventHubs;
     }

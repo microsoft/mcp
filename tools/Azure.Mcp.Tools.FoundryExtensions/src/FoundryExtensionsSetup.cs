@@ -40,24 +40,21 @@ public class FoundryExtensionsSetup : IAreaSetup
         var index = new CommandGroup("index", "Foundry knowledge index operations - Commands for managing knowledge indexes in Microsoft Foundry.");
         knowledge.AddSubGroup(index);
 
-        var indexList = serviceProvider.GetRequiredService<KnowledgeIndexListCommand>();
-        index.AddCommand(indexList.Name, indexList);
-
-        var indexSchema = serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>();
-        index.AddCommand(indexSchema.Name, indexSchema);
+        index.AddCommand(serviceProvider.GetRequiredService<KnowledgeIndexListCommand>());
+        index.AddCommand(serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>());
 
         var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in Microsoft Foundry.");
         foundryExtensions.AddSubGroup(openai);
 
-        openai.AddCommand("create-completion", serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>());
-        openai.AddCommand("embeddings-create", serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>());
-        openai.AddCommand("models-list", serviceProvider.GetRequiredService<OpenAiModelsListCommand>());
-        openai.AddCommand("chat-completions-create", serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>());
+        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>());
+        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>());
+        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiModelsListCommand>());
+        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>());
 
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Microsoft Foundry resources.");
         foundryExtensions.AddSubGroup(resources);
 
-        resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
+        resources.AddCommand(serviceProvider.GetRequiredService<ResourceGetCommand>());
 
         return foundryExtensions;
     }

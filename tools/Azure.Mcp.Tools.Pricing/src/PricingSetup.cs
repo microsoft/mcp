@@ -32,8 +32,7 @@ public class PricingSetup : IAreaSetup
             "For Bicep/ARM template cost estimation, read the template file, extract resource SKUs, then call 'pricing get' for each resource to build a cost estimate.",
             Title);
 
-        var getCommand = serviceProvider.GetRequiredService<PricingGetCommand>();
-        pricing.AddCommand(getCommand.Name, getCommand);
+        pricing.AddCommand(serviceProvider.GetRequiredService<PricingGetCommand>());
 
         return pricing;
     }

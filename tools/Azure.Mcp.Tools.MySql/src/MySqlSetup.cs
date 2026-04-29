@@ -35,38 +35,32 @@ public class MySqlSetup : IAreaSetup
         var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         // Consolidated hierarchical list command
-        var mysqlList = serviceProvider.GetRequiredService<MySqlListCommand>();
-        mysql.AddCommand(mysqlList.Name, mysqlList);
+        mysql.AddCommand(serviceProvider.GetRequiredService<MySqlListCommand>());
 
         var database = new CommandGroup("database", "MySQL database operations");
         mysql.AddSubGroup(database);
 
-        var databaseQuery = serviceProvider.GetRequiredService<DatabaseQueryCommand>();
-        database.AddCommand(databaseQuery.Name, databaseQuery);
+        database.AddCommand(serviceProvider.GetRequiredService<DatabaseQueryCommand>());
 
         var table = new CommandGroup("table", "MySQL table operations");
         mysql.AddSubGroup(table);
 
         var schema = new CommandGroup("schema", "MySQL table schema operations");
         table.AddSubGroup(schema);
-        var tableSchemaGet = serviceProvider.GetRequiredService<TableSchemaGetCommand>();
-        schema.AddCommand(tableSchemaGet.Name, tableSchemaGet);
+        schema.AddCommand(serviceProvider.GetRequiredService<TableSchemaGetCommand>());
 
         var server = new CommandGroup("server", "MySQL server operations");
         mysql.AddSubGroup(server);
 
         var config = new CommandGroup("config", "MySQL server configuration operations");
         server.AddSubGroup(config);
-        var serverConfig = serviceProvider.GetRequiredService<ServerConfigGetCommand>();
-        config.AddCommand(serverConfig.Name, serverConfig);
+        config.AddCommand(serviceProvider.GetRequiredService<ServerConfigGetCommand>());
 
         var param = new CommandGroup("param", "MySQL server parameter operations");
         server.AddSubGroup(param);
 
-        var serverParamGet = serviceProvider.GetRequiredService<ServerParamGetCommand>();
-        param.AddCommand(serverParamGet.Name, serverParamGet);
-        var serverParamSet = serviceProvider.GetRequiredService<ServerParamSetCommand>();
-        param.AddCommand(serverParamSet.Name, serverParamSet);
+        param.AddCommand(serviceProvider.GetRequiredService<ServerParamGetCommand>());
+        param.AddCommand(serviceProvider.GetRequiredService<ServerParamSetCommand>());
 
         return mysql;
     }

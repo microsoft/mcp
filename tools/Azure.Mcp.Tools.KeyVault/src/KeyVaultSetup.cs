@@ -51,28 +51,20 @@ public class KeyVaultSetup : IAreaSetup
         var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
-        var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
-        keys.AddCommand(keyGet.Name, keyGet);
-        var keyCreate = serviceProvider.GetRequiredService<KeyCreateCommand>();
-        keys.AddCommand(keyCreate.Name, keyCreate);
+        keys.AddCommand(serviceProvider.GetRequiredService<KeyGetCommand>());
+        keys.AddCommand(serviceProvider.GetRequiredService<KeyCreateCommand>());
 
-        var secretCreate = serviceProvider.GetRequiredService<SecretCreateCommand>();
-        secret.AddCommand(secretCreate.Name, secretCreate);
-        var secretGet = serviceProvider.GetRequiredService<SecretGetCommand>();
-        secret.AddCommand(secretGet.Name, secretGet);
+        secret.AddCommand(serviceProvider.GetRequiredService<SecretCreateCommand>());
+        secret.AddCommand(serviceProvider.GetRequiredService<SecretGetCommand>());
 
-        var certificateGet = serviceProvider.GetRequiredService<CertificateGetCommand>();
-        certificate.AddCommand(certificateGet.Name, certificateGet);
-        var certificateCreate = serviceProvider.GetRequiredService<CertificateCreateCommand>();
-        certificate.AddCommand(certificateCreate.Name, certificateCreate);
-        var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
-        certificate.AddCommand(certificateImport.Name, certificateImport);
+        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateGetCommand>());
+        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateCreateCommand>());
+        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateImportCommand>());
 
         var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
         admin.AddSubGroup(settings);
 
-        var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();
-        settings.AddCommand(adminSettingsGet.Name, adminSettingsGet);
+        settings.AddCommand(serviceProvider.GetRequiredService<AdminSettingsGetCommand>());
 
         return keyVault;
     }
