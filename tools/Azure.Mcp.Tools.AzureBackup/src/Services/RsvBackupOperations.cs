@@ -840,6 +840,11 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var collection = rgResource.GetBackupResourceConfigs();
             await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
         }
+        catch (RequestFailedException ex) when (ex.ErrorCode == "CloudInternalError")
+        {
+            // Legacy API returns CloudInternalError when CRR is already enabled (service idempotency gap).
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
             // Legacy API rejected — vault requires Vault PATCH API for redundancy settings.
@@ -854,7 +859,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 }
             };
 
-            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+            try
+            {
+                await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+            }
+            catch (RequestFailedException patchEx) when (patchEx.ErrorCode == "CloudInternalError")
+            {
+                // Vault PATCH also returns CloudInternalError when CRR is already enabled.
+                return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+            }
         }
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");

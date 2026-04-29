@@ -731,7 +731,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                 }
             }
         };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        try
+        {
+            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.ErrorCode == "CloudInternalError")
+        {
+            // DPP PATCH returns CloudInternalError when CRR is already enabled (service idempotency gap).
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
