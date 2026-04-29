@@ -32,8 +32,7 @@ public sealed class AppLensSetup : IAreaSetup
         // Resource commands
         var resourceGroup = new CommandGroup("resource", "Resource operations - Commands for diagnosing specific Azure resources.");
 
-        var diagnose = serviceProvider.GetRequiredService<ResourceDiagnoseCommand>();
-        resourceGroup.AddCommand(diagnose.Name, diagnose);
+        resourceGroup.AddCommand(serviceProvider.GetRequiredService<ResourceDiagnoseCommand>());
 
         applens.AddSubGroup(resourceGroup);
 

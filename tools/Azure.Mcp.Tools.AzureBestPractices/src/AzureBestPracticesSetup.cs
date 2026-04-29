@@ -43,11 +43,8 @@ public class AzureBestPracticesSetup : IAreaSetup
             Title
         );
 
-        var bestPracticesCommand = serviceProvider.GetRequiredService<BestPracticesCommand>();
-        var aiAppBestPracticesCommand = serviceProvider.GetRequiredService<AIAppBestPracticesCommand>();
-
-        bestPractices.AddCommand(bestPracticesCommand.Name, bestPracticesCommand);
-        bestPractices.AddCommand(aiAppBestPracticesCommand.Name, aiAppBestPracticesCommand);
+        bestPractices.AddCommand(serviceProvider.GetRequiredService<BestPracticesCommand>());
+        bestPractices.AddCommand(serviceProvider.GetRequiredService<AIAppBestPracticesCommand>());
 
         return bestPractices;
     }

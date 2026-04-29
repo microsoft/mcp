@@ -34,8 +34,7 @@ public sealed class AuthorizationSetup : IAreaSetup
         authorization.AddSubGroup(roleAssignment);
 
         // Register role assignment commands
-        var command = serviceProvider.GetRequiredService<RoleAssignmentListCommand>();
-        roleAssignment.AddCommand(command.Name, command);
+        roleAssignment.AddCommand(serviceProvider.GetRequiredService<RoleAssignmentListCommand>());
 
         return authorization;
     }

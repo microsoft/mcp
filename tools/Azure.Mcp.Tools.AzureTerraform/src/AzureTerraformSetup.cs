@@ -52,8 +52,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AzureRM"
         );
 
-        var docsCommand = serviceProvider.GetRequiredService<AzureRMDocsGetCommand>();
-        azurermGroup.AddCommand(docsCommand.Name, docsCommand);
+        azurermGroup.AddCommand(serviceProvider.GetRequiredService<AzureRMDocsGetCommand>());
 
         group.AddSubGroup(azurermGroup);
 
@@ -63,8 +62,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AzAPI"
         );
 
-        var azapiDocsCommand = serviceProvider.GetRequiredService<AzApiDocsGetCommand>();
-        azapiGroup.AddCommand(azapiDocsCommand.Name, azapiDocsCommand);
+        azapiGroup.AddCommand(serviceProvider.GetRequiredService<AzApiDocsGetCommand>());
 
         group.AddSubGroup(azapiGroup);
 
@@ -74,14 +72,9 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AVM"
         );
 
-        var avmListCommand = serviceProvider.GetRequiredService<AvmModuleListCommand>();
-        avmGroup.AddCommand(avmListCommand.Name, avmListCommand);
-
-        var avmVersionsCommand = serviceProvider.GetRequiredService<AvmVersionListCommand>();
-        avmGroup.AddCommand(avmVersionsCommand.Name, avmVersionsCommand);
-
-        var avmDocsCommand = serviceProvider.GetRequiredService<AvmDocumentationGetCommand>();
-        avmGroup.AddCommand(avmDocsCommand.Name, avmDocsCommand);
+        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmModuleListCommand>());
+        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmVersionListCommand>());
+        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmDocumentationGetCommand>());
 
         group.AddSubGroup(avmGroup);
 
@@ -91,14 +84,9 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "aztfexport"
         );
 
-        var aztfexportResourceCommand = serviceProvider.GetRequiredService<AztfexportResourceCommand>();
-        aztfexportGroup.AddCommand(aztfexportResourceCommand.Name, aztfexportResourceCommand);
-
-        var aztfexportResourceGroupCommand = serviceProvider.GetRequiredService<AztfexportResourceGroupCommand>();
-        aztfexportGroup.AddCommand(aztfexportResourceGroupCommand.Name, aztfexportResourceGroupCommand);
-
-        var aztfexportQueryCommand = serviceProvider.GetRequiredService<AztfexportQueryCommand>();
-        aztfexportGroup.AddCommand(aztfexportQueryCommand.Name, aztfexportQueryCommand);
+        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportResourceCommand>());
+        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportResourceGroupCommand>());
+        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportQueryCommand>());
 
         group.AddSubGroup(aztfexportGroup);
 
@@ -108,11 +96,8 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "Conftest"
         );
 
-        var conftestWorkspaceCommand = serviceProvider.GetRequiredService<ConftestWorkspaceValidationCommand>();
-        conftestGroup.AddCommand(conftestWorkspaceCommand.Name, conftestWorkspaceCommand);
-
-        var conftestPlanCommand = serviceProvider.GetRequiredService<ConftestPlanValidationCommand>();
-        conftestGroup.AddCommand(conftestPlanCommand.Name, conftestPlanCommand);
+        conftestGroup.AddCommand(serviceProvider.GetRequiredService<ConftestWorkspaceValidationCommand>());
+        conftestGroup.AddCommand(serviceProvider.GetRequiredService<ConftestPlanValidationCommand>());
 
         group.AddSubGroup(conftestGroup);
 
