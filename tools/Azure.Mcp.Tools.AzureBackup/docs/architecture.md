@@ -348,8 +348,9 @@ All response types are registered in `AzureBackupJsonContext`:
 // ... all 15 command result types + 11 model types
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-internal sealed partial class AzureBackupJsonContext : JsonSerializerContext { }
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+  )]
+internal sealed partial class AzureBackupJsonContext : JsonSerializerContext;
 ```
 
 Each command defines a nested result record type (e.g., `VaultGetCommandResult`) that wraps the model data.

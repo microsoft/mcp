@@ -12,7 +12,8 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands;
 [JsonSerializable(typeof(SubscriptionPeekCommand.SubscriptionPeekCommandResult))]
 [JsonSerializable(typeof(SubscriptionDetailsCommand.SubscriptionDetailsCommandResult))]
 [JsonSerializable(typeof(TopicDetailsCommand.TopicDetailsCommandResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class ServiceBusJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class ServiceBusJsonContext : JsonSerializerContext;

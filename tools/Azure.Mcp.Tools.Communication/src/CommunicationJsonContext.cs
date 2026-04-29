@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.Communication;
 [JsonSerializable(typeof(EmailSendResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    GenerationMode = JsonSourceGenerationMode.Metadata)]
-internal partial class CommunicationJsonContext : JsonSerializerContext
-{
-}
+    GenerationMode = JsonSourceGenerationMode.Metadata,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class CommunicationJsonContext : JsonSerializerContext;

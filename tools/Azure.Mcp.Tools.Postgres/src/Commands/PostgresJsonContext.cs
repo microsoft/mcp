@@ -8,14 +8,14 @@ using Azure.Mcp.Tools.Postgres.Commands.Table;
 
 namespace Azure.Mcp.Tools.Postgres.Commands;
 
-[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(DatabaseQueryCommand.DatabaseQueryCommandResult))]
 [JsonSerializable(typeof(ServerConfigGetCommand.ServerConfigGetCommandResult))]
 [JsonSerializable(typeof(ServerParamGetCommand.ServerParamGetCommandResult))]
 [JsonSerializable(typeof(ServerParamSetCommand.ServerParamSetCommandResult))]
 [JsonSerializable(typeof(TableSchemaGetCommand.TableSchemaGetCommandResult))]
 [JsonSerializable(typeof(PostgresListCommand.PostgresListCommandResult))]
-
-internal sealed partial class PostgresJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class PostgresJsonContext : JsonSerializerContext;

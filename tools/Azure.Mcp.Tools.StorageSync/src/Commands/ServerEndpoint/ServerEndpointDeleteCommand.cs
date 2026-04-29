@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
@@ -90,7 +89,5 @@ public sealed class ServerEndpointDeleteCommand(ILogger<ServerEndpointDeleteComm
 
         return context.Response;
     }
-
-    [JsonSerializable(typeof(ServerEndpointDeleteCommandResult))]
     internal record ServerEndpointDeleteCommandResult(string Message);
 }

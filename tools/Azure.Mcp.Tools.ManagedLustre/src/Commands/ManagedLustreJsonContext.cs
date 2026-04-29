@@ -44,5 +44,8 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 [JsonSerializable(typeof(SkuGetCommand.SkuGetResult))]
 [JsonSerializable(typeof(SubnetSizeAskCommand.FileSystemSubnetSizeResult))]
 [JsonSerializable(typeof(SubnetSizeValidateCommand.FileSystemCheckSubnetResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class ManagedLustreJsonContext : JsonSerializerContext;

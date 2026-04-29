@@ -16,7 +16,8 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands;
 [JsonSerializable(typeof(UserSession))]
 [JsonSerializable(typeof(List<Models.SessionHost>))]
 [JsonSerializable(typeof(List<UserSession>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class VirtualDesktopJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class VirtualDesktopJsonContext : JsonSerializerContext;

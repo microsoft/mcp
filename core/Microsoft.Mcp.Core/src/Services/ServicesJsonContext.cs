@@ -8,8 +8,8 @@ namespace Microsoft.Mcp.Core.Services;
 
 [JsonSerializable(typeof(ExternalProcessService.ParseError))]
 [JsonSerializable(typeof(ExternalProcessService.ParseOutput))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class ServicesJsonContext : JsonSerializerContext
-{
-
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class ServicesJsonContext : JsonSerializerContext;

@@ -8,5 +8,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(GetLearningResourceCommand.GetLearningResourceCommandResult))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(List<string>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class MonitorInstrumentationJsonContext : JsonSerializerContext;

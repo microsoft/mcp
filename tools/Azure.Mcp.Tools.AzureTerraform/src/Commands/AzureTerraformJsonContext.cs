@@ -25,5 +25,8 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 [JsonSerializable(typeof(InstallationMethod))]
 [JsonSerializable(typeof(List<InstallationMethod>))]
 [JsonSerializable(typeof(ConftestCommandResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class AzureTerraformJsonContext : JsonSerializerContext;

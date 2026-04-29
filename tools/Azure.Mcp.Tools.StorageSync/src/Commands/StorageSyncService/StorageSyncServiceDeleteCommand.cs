@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
@@ -85,6 +84,5 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceDeleteCommandResult))]
     internal record StorageSyncServiceDeleteCommandResult(string Message);
 }

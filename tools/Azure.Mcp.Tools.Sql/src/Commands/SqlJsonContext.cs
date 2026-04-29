@@ -42,5 +42,6 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(SqlFirewallRuleData))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class SqlJsonContext : JsonSerializerContext;

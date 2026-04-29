@@ -18,5 +18,8 @@ namespace Azure.Mcp.Tools.ServiceFabric.Commands;
 [JsonSerializable(typeof(ListNodesResponse))]
 [JsonSerializable(typeof(RestartNodeRequest))]
 [JsonSerializable(typeof(RestartNodeResponse))]
-[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class ServiceFabricJsonContext : JsonSerializerContext;

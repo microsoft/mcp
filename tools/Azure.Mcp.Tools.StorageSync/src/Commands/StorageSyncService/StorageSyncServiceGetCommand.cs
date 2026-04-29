@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
@@ -119,6 +118,5 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceGetCommandResult))]
     internal record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
 }

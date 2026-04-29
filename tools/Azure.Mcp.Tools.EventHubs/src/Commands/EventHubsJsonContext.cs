@@ -25,5 +25,6 @@ namespace Azure.Mcp.Tools.EventHubs.Commands;
 [JsonSerializable(typeof(NamespaceUpdateCommand.NamespaceUpdateCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class EventHubsJsonContext : JsonSerializerContext;

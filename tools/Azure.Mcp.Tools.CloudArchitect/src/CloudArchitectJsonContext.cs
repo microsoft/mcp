@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.CloudArchitect;
 [JsonSerializable(typeof(RequirementImportance))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    PropertyNameCaseInsensitive = true)]
-public partial class CloudArchitectJsonContext : JsonSerializerContext
-{
-}
+    PropertyNameCaseInsensitive = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+public partial class CloudArchitectJsonContext : JsonSerializerContext;

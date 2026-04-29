@@ -78,7 +78,9 @@ namespace Azure.Mcp.Tools.Marketplace.Commands;
 [JsonSerializable(typeof(LeadGenerationInfo))]
 [JsonSerializable(typeof(ExperienceConfig))]
 [JsonSerializable(typeof(ExperienceConfig.AzurePortalConfig))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
- UseStringEnumConverter = true,
-  DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    UseStringEnumConverter = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class MarketplaceJsonContext : JsonSerializerContext;

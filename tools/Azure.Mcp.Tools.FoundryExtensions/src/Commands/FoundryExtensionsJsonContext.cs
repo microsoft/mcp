@@ -31,5 +31,8 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 [JsonSerializable(typeof(OpenAiModelsListResult))]
 [JsonSerializable(typeof(OpenAiModelDeployment))]
 [JsonSerializable(typeof(OpenAiModelCapabilities))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class FoundryExtensionsJsonContext : JsonSerializerContext;

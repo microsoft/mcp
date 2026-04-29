@@ -10,7 +10,6 @@ namespace Azure.Mcp.Tools.ContainerApps.Commands;
 [JsonSerializable(typeof(Models.ContainerAppInfo))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class ContainerAppsJsonContext : JsonSerializerContext
-{
-}
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class ContainerAppsJsonContext : JsonSerializerContext;

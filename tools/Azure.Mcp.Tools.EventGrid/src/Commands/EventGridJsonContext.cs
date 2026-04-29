@@ -19,7 +19,8 @@ namespace Azure.Mcp.Tools.EventGrid.Commands;
 [JsonSerializable(typeof(CloudEvent))] // For CloudEvent schema input deserialization
 [JsonSerializable(typeof(EventGridEventInput))] // For EventGrid schema input deserialization
 [JsonSerializable(typeof(CustomEvent))] // For custom event schema input deserialization
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class EventGridJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class EventGridJsonContext : JsonSerializerContext;

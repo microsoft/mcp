@@ -12,6 +12,8 @@ namespace Azure.Mcp.Tools.ConfidentialLedger;
 [JsonSerializable(typeof(AppendEntryResult))]
 [JsonSerializable(typeof(LedgerEntryGetResult))]
 [JsonSerializable(typeof(AppendEntryRequest))]
-public partial class ConfidentialLedgerJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+public partial class ConfidentialLedgerJsonContext : JsonSerializerContext;

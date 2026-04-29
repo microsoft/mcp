@@ -12,8 +12,8 @@ namespace Microsoft.Mcp.Core.Commands;
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSerializable(typeof(AzureCredentials))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class JsonSourceGenerationContext : JsonSerializerContext
-{
-
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class JsonSourceGenerationContext : JsonSerializerContext;

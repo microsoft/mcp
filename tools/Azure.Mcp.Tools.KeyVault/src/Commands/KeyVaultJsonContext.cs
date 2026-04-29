@@ -22,7 +22,6 @@ namespace Azure.Mcp.Tools.KeyVault.Commands;
 [JsonSerializable(typeof(AdminSettingsGetCommand.AdminSettingsGetCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class KeyVaultJsonContext : JsonSerializerContext
-{
-}
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class KeyVaultJsonContext : JsonSerializerContext;

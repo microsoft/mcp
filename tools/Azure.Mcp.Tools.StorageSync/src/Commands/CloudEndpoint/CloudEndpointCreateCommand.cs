@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
@@ -86,8 +85,7 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new CloudEndpointCreateCommandResult(endpoint);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -98,6 +96,5 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
         return context.Response;
     }
 
-    [JsonSerializable(typeof(CloudEndpointCreateCommandResult))]
     internal record CloudEndpointCreateCommandResult(CloudEndpointDataSchema Result);
 }

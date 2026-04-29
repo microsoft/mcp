@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
@@ -116,6 +115,5 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
         return context.Response;
     }
 
-    [JsonSerializable(typeof(SyncGroupGetCommandResult))]
     internal record SyncGroupGetCommandResult(List<SyncGroupDataSchema> Results);
 }

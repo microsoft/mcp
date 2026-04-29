@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
@@ -62,5 +61,8 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(List<Lakehouse>))]
 [JsonSerializable(typeof(List<OneLakeFileInfo>))]
 [JsonSerializable(typeof(List<FileSystemItem>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class OneLakeJsonContext : JsonSerializerContext;

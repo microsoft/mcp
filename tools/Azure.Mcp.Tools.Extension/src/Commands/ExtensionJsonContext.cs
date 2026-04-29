@@ -13,8 +13,8 @@ namespace Azure.Mcp;
 [JsonSerializable(typeof(CliInstallResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(List<string>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class ExtensionJsonContext : JsonSerializerContext
-{
-
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class ExtensionJsonContext : JsonSerializerContext;

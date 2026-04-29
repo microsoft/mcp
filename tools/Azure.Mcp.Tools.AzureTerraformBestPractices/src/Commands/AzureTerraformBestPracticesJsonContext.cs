@@ -6,8 +6,8 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
 [JsonSerializable(typeof(List<string>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class AzureTerraformBestPracticesJsonContext : JsonSerializerContext
-{
-
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class AzureTerraformBestPracticesJsonContext : JsonSerializerContext;

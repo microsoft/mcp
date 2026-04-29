@@ -9,5 +9,8 @@ namespace Azure.Mcp.Tools.FunctionApp.Commands;
 
 [JsonSerializable(typeof(FunctionAppGetCommand.FunctionAppGetCommandResult))]
 [JsonSerializable(typeof(FunctionAppInfo))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class FunctionAppJsonContext : JsonSerializerContext;

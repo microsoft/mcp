@@ -9,7 +9,6 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
 [JsonSerializable(typeof(ItemQueryCommand.ItemQueryCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-internal sealed partial class CosmosJsonContext : JsonSerializerContext
-{
-}
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class CosmosJsonContext : JsonSerializerContext;

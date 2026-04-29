@@ -8,8 +8,8 @@ namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 
 [JsonSerializable(typeof(SubscriptionListCommand.SubscriptionListCommandResult))]
 [JsonSerializable(typeof(SubscriptionInfo))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class SubscriptionJsonContext : JsonSerializerContext
-{
-
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class SubscriptionJsonContext : JsonSerializerContext;

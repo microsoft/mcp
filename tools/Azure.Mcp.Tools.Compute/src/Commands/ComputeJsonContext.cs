@@ -40,4 +40,8 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(List<VmInfo>))]
 [JsonSerializable(typeof(List<VmssInfo>))]
 [JsonSerializable(typeof(List<VmssVmInfo>))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal sealed partial class ComputeJsonContext : JsonSerializerContext;

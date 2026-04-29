@@ -13,21 +13,19 @@ using Azure.Mcp.Tools.Speech.Models.Realtime;
 [JsonSerializable(typeof(RealtimeRecognitionNBestResult))]
 [JsonSerializable(typeof(RealtimeRecognitionWordResult))]
 [JsonSerializable(typeof(RealtimeRecognitionResult))]
-
 [JsonSerializable(typeof(FastTranscriptionDiarization))]
 [JsonSerializable(typeof(FastTranscriptionPhrase))]
 [JsonSerializable(typeof(FastTranscriptionRequest))]
 [JsonSerializable(typeof(FastTranscriptionResult))]
 [JsonSerializable(typeof(FastTranscriptionWord))]
 [JsonSerializable(typeof(FastTranscriptionCombinedPhrase))]
-
 [JsonSerializable(typeof(RecognizerType))]
 [JsonSerializable(typeof(SpeechRecognitionResult))]
-
 [JsonSerializable(typeof(SttRecognizeCommand.SttRecognizeCommandResult))]
 [JsonSerializable(typeof(SynthesisResult))]
 [JsonSerializable(typeof(TtsSynthesizeCommand.TtsSynthesizeCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 internal partial class SpeechJsonContext : JsonSerializerContext;

@@ -11,7 +11,8 @@ namespace Azure.Mcp.Tools.AppLens.Models;
 [JsonSerializable(typeof(DiagnosticResult))]
 [JsonSerializable(typeof(ResourceDiagnoseCommandResult))]
 [JsonSerializable(typeof(JsonElement[]))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal sealed partial class AppLensJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal sealed partial class AppLensJsonContext : JsonSerializerContext;

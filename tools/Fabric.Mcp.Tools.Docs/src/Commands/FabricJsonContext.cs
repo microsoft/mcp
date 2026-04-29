@@ -14,6 +14,8 @@ namespace Fabric.Mcp.Tools.Docs.Commands;
 [JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(IEnumerable<string>))]
-public partial class FabricJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+public partial class FabricJsonContext : JsonSerializerContext;
