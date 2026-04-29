@@ -721,6 +721,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
+        // Pre-check current state. Re-enabling an already-enabled CRR returns a generic
+        // CloudInternalError on the DPP backend, which is indistinguishable from a real
+        // platform failure - so we avoid the call entirely when CRR is already enabled.
+        var vault = await vaultResource.GetAsync(cancellationToken);
+        if (vault.Value.Data.Properties?.FeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        {
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
+
         var patchData = new DataProtectionBackupVaultPatch
         {
             Properties = new DataProtectionBackupVaultPatchProperties
@@ -731,15 +740,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
                 }
             }
         };
-        try
-        {
-            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
-        }
-        catch (RequestFailedException ex) when (ex.ErrorCode == "CloudInternalError")
-        {
-            // DPP PATCH returns CloudInternalError when CRR is already enabled (service idempotency gap).
-            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
-        }
+        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
