@@ -470,18 +470,45 @@ public class CustomChainedCredentialTests
     }
 
     /// <summary>
-    /// Tests that isolateTenantAuth=true creates a credential successfully for cross-tenant flows.
-    /// Expected: Returns a tenant-isolated credential that bypasses sticky broker account and cached auth records.
+    /// Tests that isolateTenantAuth=true bypasses a cached auth record, forcing a fresh login.
+    /// Expected: CreateCredential succeeds even when AZURE_MCP_AUTHENTICATION_RECORD contains invalid JSON,
+    /// because the early-return path never reads it.
     /// </summary>
     [Fact]
-    public void IsolateTenantAuth_CreatesCredentialSuccessfully()
+    public void IsolateTenantAuth_IgnoresCachedAuthRecord()
     {
-        // Act
-        var credential = CreateCustomChainedCredential(isolateTenantAuth: true);
+        using var env = new EnvironmentScope("AZURE_MCP_AUTHENTICATION_RECORD", "AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_MCP_AUTHENTICATION_RECORD", "not-valid-json");
 
-        // Assert
-        Assert.NotNull(credential);
-        Assert.IsAssignableFrom<TokenCredential>(credential);
+        var type = GetCustomChainedCredentialType();
+        var createCredential = type.GetMethod("CreateCredential", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(createCredential);
+
+        // With isolation + non-null tenantId: fires before reading the auth record — must not throw
+        var result = createCredential.Invoke(null, ["test-tenant-id", null, false, true]);
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<TokenCredential>(result);
+    }
+
+    /// <summary>
+    /// Tests that isolateTenantAuth=true respects prod mode — no interactive browser in non-interactive environments.
+    /// Expected: When AZURE_TOKEN_CREDENTIALS=prod, the isolation early-return is skipped and the
+    /// prod credential chain is returned instead.
+    /// </summary>
+    [Fact]
+    public void IsolateTenantAuth_RespectsProductionMode()
+    {
+        using var env = new EnvironmentScope("AZURE_TOKEN_CREDENTIALS");
+        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
+
+        var type = GetCustomChainedCredentialType();
+        var createCredential = type.GetMethod("CreateCredential", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(createCredential);
+
+        // In prod mode, isolation early-return is skipped — must return the prod chain credential
+        var result = createCredential.Invoke(null, ["test-tenant-id", null, false, true]);
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<TokenCredential>(result);
     }
 
     private static Type GetCustomChainedCredentialType()

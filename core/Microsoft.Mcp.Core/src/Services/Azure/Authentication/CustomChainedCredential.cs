@@ -143,7 +143,8 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         }
 #endif
 
-        if (isolateTenantAuth && !string.IsNullOrEmpty(tenantId))
+        if (isolateTenantAuth && !string.IsNullOrEmpty(tenantId)
+            && !string.Equals(tokenCredentials, "prod", StringComparison.OrdinalIgnoreCase))
         {
             return CreateTenantIsolatedCredential(tenantId!);
         }
