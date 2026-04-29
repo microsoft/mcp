@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -728,6 +729,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     /// DPP vault MSI created by <c>vault create</c> has the right RBAC on the disk + RG.
     /// </summary>
     [Fact]
+    [LiveTestOnly]
     public async Task ProtectedItemProtect_DppVault_DiskProtection_Succeeds_E2E()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
@@ -1162,6 +1164,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     #region Undelete Protected Item Tests
 
     [Fact]
+    [LiveTestOnly]
     public async Task ProtectedItemUndelete_DppVault_UndeletesDisk_Successfully()
     {
         // The test-resources-post.ps1 script protects a disk in the DPP vault and then
