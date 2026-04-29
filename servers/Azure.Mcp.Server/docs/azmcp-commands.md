@@ -1165,7 +1165,7 @@ azmcp compute vm create --subscription "my-subscription" \
 
 **Image Aliases:**
 - Linux: `Ubuntu2404`, `Ubuntu2204`, `Ubuntu2004`, `Debian11`, `Debian12`, `RHEL9`, `CentOS8`
-- Windows: `Win2022Datacenter`, `Win2019Datacenter`, `Win11Pro`, `Win10Pro`
+- Windows: `Win2022Datacenter`, `Win2022Datacenter1P`, `Win11Pro`, `Win10Pro`
 
 **Parameters:**
 | Parameter | Required | Description |

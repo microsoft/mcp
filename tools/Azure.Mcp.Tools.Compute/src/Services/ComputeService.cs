@@ -29,19 +29,36 @@ public class ComputeService(
     // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
     private const string DefaultVmSize = "Standard_D2s_v5";
 
-    private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
+    private sealed record ImageSource
     {
-        ["Ubuntu2404"] = ("Canonical", "ubuntu-24_04-lts", "server", "latest"),
-        ["Ubuntu2204"] = ("Canonical", "0001-com-ubuntu-server-jammy", "22_04-lts-gen2", "latest"),
-        ["Ubuntu2004"] = ("Canonical", "0001-com-ubuntu-server-focal", "20_04-lts-gen2", "latest"),
-        ["Debian11"] = ("Debian", "debian-11", "11-gen2", "latest"),
-        ["Debian12"] = ("Debian", "debian-12", "12-gen2", "latest"),
-        ["RHEL9"] = ("RedHat", "RHEL", "9_0", "latest"),
-        ["CentOS8"] = ("OpenLogic", "CentOS", "8_5-gen2", "latest"),
-        ["Win2022Datacenter"] = ("MicrosoftWindowsServer", "WindowsServer", "2022-datacenter-g2", "latest"),
-        ["Win2019Datacenter"] = ("MicrosoftWindowsServer", "WindowsServer", "2019-datacenter-gensecond", "latest"),
-        ["Win11Pro"] = ("MicrosoftWindowsDesktop", "windows-11", "win11-22h2-pro", "latest"),
-        ["Win10Pro"] = ("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
+        public string? Publisher { get; init; }
+        public string? Offer { get; init; }
+        public string? Sku { get; init; }
+        public string? Version { get; init; }
+        public string? SharedGalleryImageUniqueId { get; init; }
+
+        public bool IsSharedGallery => SharedGalleryImageUniqueId != null;
+
+        public static ImageSource FromMarketplace(string publisher, string offer, string sku, string version) =>
+            new() { Publisher = publisher, Offer = offer, Sku = sku, Version = version };
+
+        public static ImageSource FromSharedGallery(string sharedGalleryImageUniqueId) =>
+            new() { SharedGalleryImageUniqueId = sharedGalleryImageUniqueId };
+    }
+
+    private static readonly Dictionary<string, ImageSource> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Ubuntu2404"] = ImageSource.FromMarketplace("Canonical", "ubuntu-24_04-lts", "server", "latest"),
+        ["Ubuntu2204"] = ImageSource.FromMarketplace("Canonical", "0001-com-ubuntu-server-jammy", "22_04-lts-gen2", "latest"),
+        ["Ubuntu2004"] = ImageSource.FromMarketplace("Canonical", "0001-com-ubuntu-server-focal", "20_04-lts-gen2", "latest"),
+        ["Debian11"] = ImageSource.FromMarketplace("Debian", "debian-11", "11-gen2", "latest"),
+        ["Debian12"] = ImageSource.FromMarketplace("Debian", "debian-12", "12-gen2", "latest"),
+        ["RHEL9"] = ImageSource.FromMarketplace("RedHat", "RHEL", "9_0", "latest"),
+        ["CentOS8"] = ImageSource.FromMarketplace("OpenLogic", "CentOS", "8_5-gen2", "latest"),
+        ["Win2022Datacenter"] = ImageSource.FromMarketplace("MicrosoftWindowsServer", "WindowsServer", "2022-datacenter-azure-edition", "latest"),
+        ["Win2022Datacenter1P"] = ImageSource.FromSharedGallery("/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"),
+        ["Win11Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "windows-11", "win11-22h2-pro", "latest"),
+        ["Win10Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
     };
 
     public async Task<VmCreateResult> CreateVmAsync(
@@ -87,7 +104,7 @@ public class ComputeService(
         var effectiveOsDiskSizeGb = osDiskSizeGb;
 
         // Parse image
-        var (publisher, offer, sku, version) = ParseImage(image);
+        var imageSource = ParseImage(image);
 
         // Create or get network resources
         var nicId = await CreateOrGetNetworkResourcesAsync(
@@ -119,13 +136,7 @@ public class ComputeService(
                     ManagedDisk = new(),
                     DiskSizeGB = effectiveOsDiskSizeGb
                 },
-                ImageReference = new()
-                {
-                    Publisher = publisher,
-                    Offer = offer,
-                    Sku = sku,
-                    Version = version
-                }
+                ImageReference = CreateImageReference(imageSource)
             },
             OSProfile = new()
             {
@@ -230,7 +241,7 @@ public class ComputeService(
             Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
-    private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
+    private static ImageSource ParseImage(string? image)
     {
         // Default to Ubuntu 24.04 LTS
         if (string.IsNullOrEmpty(image))
@@ -244,15 +255,37 @@ public class ComputeService(
             return aliasConfig;
         }
 
+        // Check if it's a shared gallery image URI
+        if (image.StartsWith("/sharedGalleries/", StringComparison.OrdinalIgnoreCase))
+        {
+            return ImageSource.FromSharedGallery(image);
+        }
+
         // Try to parse as URN (publisher:offer:sku:version)
         var parts = image.Split(':');
         if (parts.Length == 4)
         {
-            return (parts[0], parts[1], parts[2], parts[3]);
+            return ImageSource.FromMarketplace(parts[0], parts[1], parts[2], parts[3]);
         }
 
         // Default fallback
         return s_imageAliases["Ubuntu2404"];
+    }
+
+    private static ImageReference CreateImageReference(ImageSource source)
+    {
+        if (source.IsSharedGallery)
+        {
+            return new() { SharedGalleryImageUniqueId = source.SharedGalleryImageUniqueId };
+        }
+
+        return new()
+        {
+            Publisher = source.Publisher,
+            Offer = source.Offer,
+            Sku = source.Sku,
+            Version = source.Version
+        };
     }
 
     private async Task<ResourceIdentifier> CreateOrGetNetworkResourcesAsync(
@@ -726,7 +759,7 @@ public class ComputeService(
         var effectiveUpgradePolicy = ParseUpgradePolicy(upgradePolicy);
 
         // Parse image
-        var (publisher, offer, sku, version) = ParseImage(image);
+        var imageSource = ParseImage(image);
 
         // Create or get network resources for VMSS
         var subnetId = await CreateOrGetVmssNetworkResourcesAsync(
@@ -761,13 +794,7 @@ public class ComputeService(
                         ManagedDisk = new(),
                         DiskSizeGB = effectiveOsDiskSizeGb
                     },
-                    ImageReference = new()
-                    {
-                        Publisher = publisher,
-                        Offer = offer,
-                        Sku = sku,
-                        Version = version
-                    }
+                    ImageReference = CreateImageReference(imageSource)
                 },
                 OSProfile = new()
                 {
