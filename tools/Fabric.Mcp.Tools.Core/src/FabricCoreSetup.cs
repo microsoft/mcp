@@ -31,8 +31,7 @@ public class FabricCoreSetup : IAreaSetup
             This tool provides core operations for working with Fabric resources.
             """);
 
-        var createItem = serviceProvider.GetRequiredService<ItemCreateCommand>();
-        fabricCore.AddCommand(createItem.Name, createItem);
+        fabricCore.AddCommand(serviceProvider.GetRequiredService<ItemCreateCommand>());
 
         return fabricCore;
     }

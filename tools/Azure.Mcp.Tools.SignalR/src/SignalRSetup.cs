@@ -31,8 +31,7 @@ public class SignalRSetup : IAreaSetup
             "Runtime operations - Commands for managing Azure SignalR Service resources.");
         signalr.AddSubGroup(runtime);
 
-        var runtimeGet = serviceProvider.GetRequiredService<RuntimeGetCommand>();
-        runtime.AddCommand(runtimeGet.Name, runtimeGet);
+        runtime.AddCommand(serviceProvider.GetRequiredService<RuntimeGetCommand>());
 
         return signalr;
     }

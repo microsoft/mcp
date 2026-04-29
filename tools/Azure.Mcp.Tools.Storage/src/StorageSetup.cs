@@ -59,27 +59,20 @@ public class StorageSetup : IAreaSetup
         blobs.AddSubGroup(blobContainer);
 
         // Register Storage commands
-        var accountCreate = serviceProvider.GetRequiredService<AccountCreateCommand>();
-        storageAccount.AddCommand(accountCreate.Name, accountCreate);
-        var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
-        storageAccount.AddCommand(accountGet.Name, accountGet);
+        storageAccount.AddCommand(serviceProvider.GetRequiredService<AccountCreateCommand>());
+        storageAccount.AddCommand(serviceProvider.GetRequiredService<AccountGetCommand>());
 
-        var blobGet = serviceProvider.GetRequiredService<BlobGetCommand>();
-        blobs.AddCommand(blobGet.Name, blobGet);
-        var blobUpload = serviceProvider.GetRequiredService<BlobUploadCommand>();
-        blobs.AddCommand(blobUpload.Name, blobUpload);
+        blobs.AddCommand(serviceProvider.GetRequiredService<BlobGetCommand>());
+        blobs.AddCommand(serviceProvider.GetRequiredService<BlobUploadCommand>());
 
-        var containerCreate = serviceProvider.GetRequiredService<ContainerCreateCommand>();
-        blobContainer.AddCommand(containerCreate.Name, containerCreate);
-        var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
-        blobContainer.AddCommand(containerGet.Name, containerGet);
+        blobContainer.AddCommand(serviceProvider.GetRequiredService<ContainerCreateCommand>());
+        blobContainer.AddCommand(serviceProvider.GetRequiredService<ContainerGetCommand>());
 
         // Create Table subgroup under storage
         var tables = new CommandGroup("table", "Storage table operations - Commands for managing tables in your Azure Storage accounts.");
         storage.AddSubGroup(tables);
 
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        tables.AddCommand(tableList.Name, tableList);
+        tables.AddCommand(serviceProvider.GetRequiredService<TableListCommand>());
 
         return storage;
     }

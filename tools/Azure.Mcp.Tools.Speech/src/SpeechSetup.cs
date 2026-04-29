@@ -49,8 +49,7 @@ public class SpeechSetup : IAreaSetup
             name: "stt",
             description: "Speech-to-text operations - Commands for converting spoken audio to text using Azure AI Services Speech recognition.");
 
-        var sttRecognize = serviceProvider.GetRequiredService<SttRecognizeCommand>();
-        stt.AddCommand(sttRecognize.Name, sttRecognize);
+        stt.AddCommand(serviceProvider.GetRequiredService<SttRecognizeCommand>());
 
         speech.AddSubGroup(stt);
 
@@ -58,8 +57,7 @@ public class SpeechSetup : IAreaSetup
             name: "tts",
             description: "Text-to-speech operations - Commands for converting text to spoken audio using Azure AI Services Speech synthesis.");
 
-        var ttsSynthesize = serviceProvider.GetRequiredService<TtsSynthesizeCommand>();
-        tts.AddCommand(ttsSynthesize.Name, ttsSynthesize);
+        tts.AddCommand(serviceProvider.GetRequiredService<TtsSynthesizeCommand>());
 
         speech.AddSubGroup(tts);
 
