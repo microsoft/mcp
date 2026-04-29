@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed cross-tenant authentication so that MFA challenges specific to the target tenant are correctly triggered when switching tenants."
