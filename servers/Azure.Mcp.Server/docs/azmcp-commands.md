@@ -1003,6 +1003,19 @@ azmcp azurebackup disasterrecovery enable-crr --subscription <subscription> \
                                               [--vault-type <vault-type>]
 ```
 
+#### Security
+
+```bash
+# Configures Multi-User Authorization (MUA) on a vault by linking or unlinking a Resource Guard.
+# Provide --resource-guard-id to enable MUA. Omit to disable MUA (protected operation).
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup security configure-mua --subscription <subscription> \
+                                         --resource-group <resource-group> \
+                                         --vault <vault> \
+                                         [--vault-type <vault-type>] \
+                                         [--resource-guard-id <resource-guard-id>]
+```
+
 ### Azure CLI Operations
 
 #### Generate
