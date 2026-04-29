@@ -2,19 +2,39 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.6 (Unreleased)
+## 3.0.0-beta.6 (2026-04-28)
 
 ### Features Added
 
+- Added Azure Terraform toolset with 10 tools: AzureRM and AzAPI provider documentation, Azure Verified Modules listing/versions/documentation, aztfexport resource/resource group/query export, and conftest workspace/plan policy validation: [[#2382](https://github.com/microsoft/mcp/pull/2382)]
+  - `azureterraform_azurerm_get`
+  - `azureterraform_azapi_get`
+  - `azureterraform_avm_list`
+  - `azureterraform_avm_versions`
+  - `azureterraform_avm_get`
+  - `azureterraform_aztfexport_resource`
+  - `azureterraform_aztfexport_resourcegroup`
+  - `azureterraform_aztfexport_query`
+  - `azureterraform_conftest_workspace`
+  - `azureterraform_conftest_plan`
+- Updated Marketplace tool to use API version 2025-05-01 and added new response model fields: `offerId`, `mixProductId`, `offeringType`, `licenseManagementType`, `hasRIPlans`, `leadGeneration`, and `experienceConfig`. [[#2502](https://github.com/microsoft/mcp/pull/2502)]
+- Added learn-mode discovery for azmcp commands. AI agents can use the azmcp CLI `--learn` flag, and MCP tool flows surface the same command and parameter discovery behavior without executing Azure operations. [[#2455](https://github.com/microsoft/mcp/pull/2455)]
+
 ### Breaking Changes
+
+- Updated Marketplace `product_get` by removing `--market` and `--pricing-audience` (now fetched from the subscription), renaming `ProductsListResponse` fields (`Items` → `Value`, `NextPageLink` → `NextLink`), and changing `Badge`, `ProductType`, and `PricingAudience` from enums to strings. [[#2502](https://github.com/microsoft/mcp/pull/2502)]
 
 ### Bugs Fixed
 
-- Fixed `azurebackup vault create --vault-type dpp` to enable a System-Assigned Managed Identity by default. Without this, every subsequent `protecteditem protect` call against the new DPP vault would fail server-side with `VaultMSIUnauthorized`. Existing vaults are unaffected; use `azurebackup vault update --identity-type SystemAssigned` if needed.
-- Fixed `azurebackup protecteditem protect` to surface the real outcome of the protect operation instead of returning a synthetic "Accepted" with a base64 job id that callers could not resolve. RSV now polls the underlying `ConfigureBackup` job to a terminal state and returns its real status (`Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, or `InProgress` if polling exceeds the budget) along with any error details. DPP now waits for the protect operation to complete and reads back the backup instance, returning the actual `protectionStatus` (e.g. `ProtectionConfigured`); DPP responses no longer carry a misleading `jobId` because DPP protection is not surfaced as a job — use `azurebackup protecteditem get` or `list` to verify.
-- Fixed `azurebackup protecteditem protect` for IaaS VM (RSV) so it submits the protect request directly instead of doing a 180-second container-discovery pre-poll. Freshly created VMs no longer time out; container registration is performed by the Recovery Services backend as part of accepting the protect request, matching the behavior of `az backup protection enable-for-vm`.
+- Fixed `azurebackup vault create --vault-type dpp` to enable a system-assigned managed identity by default, preventing subsequent `protecteditem protect` failures with `VaultMSIUnauthorized` (existing vaults unaffected; use `azurebackup vault update --identity-type SystemAssigned` if needed). [[#2470](https://github.com/microsoft/mcp/pull/2470)]
+- Fixed `azurebackup protecteditem protect` to return the real protect outcome (instead of a synthetic `Accepted` + non-resolvable base64 job id): RSV now polls the underlying `ConfigureBackup` job to a terminal state and returns its actual status (`Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, or `InProgress` if polling exceeds the budget) plus error details; DPP now waits for completion, reads back the backup instance, returns the actual `protectionStatus` (e.g., `ProtectionConfigured`), and no longer includes a misleading `jobId` (use `azurebackup protecteditem get`/`list` to verify). [[#2470](https://github.com/microsoft/mcp/pull/2470)]
+- Fixed RSV IaaS VM protection in `azurebackup protecteditem protect` by submitting the protect request directly (removing the 180s container-discovery pre-poll), preventing timeouts for newly created VMs and matching `az backup protection enable-for-vm` behavior. [[#2470](https://github.com/microsoft/mcp/pull/2470)]
 
 ### Other Changes
+
+- Added an automated end-to-end (E2E) testing tool that uses the GitHub Copilot SDK to validate Azure MCP tool invocations from prompt fixtures. [[#1830](https://github.com/microsoft/mcp/pull/1830)]
+- Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
+- Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
 
 ## 3.0.0-beta.5 (2026-04-23)
 
