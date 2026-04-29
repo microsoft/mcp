@@ -46,6 +46,12 @@ public sealed class KustoClient(
         ".kustomfa.sovcloud-api.de"
     ];
 
+    /// <summary>
+    /// Comma-separated list of additional trusted Kusto cluster hostnames (exact, case-insensitive match).
+    /// Relaxes SSRF protection — use with care.
+    /// </summary>
+    internal const string AdditionalTrustedHostsEnvVarName = "AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS";
+
     // Exact hostnames that are valid Kusto endpoints
     private static readonly HashSet<string> s_validKustoHostnames = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -129,6 +135,12 @@ public sealed class KustoClient(
             return true;
         }
 
+        // Check user-provided additional trusted hosts (opt-in via env var)
+        if (IsAdditionalTrustedHost(host))
+        {
+            return true;
+        }
+
         // Check if host ends with one of the valid Kusto domain suffixes
         var matchedSuffix = Array.Find(s_validKustoDomainSuffixes,
             suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
@@ -161,6 +173,31 @@ public sealed class KustoClient(
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="host"/> matches one of the hostnames listed in the
+    /// <see cref="AdditionalTrustedHostsEnvVarName"/> environment variable. The env var is read
+    /// each call (no caching) so changes take effect for the next constructed client without
+    /// requiring a process restart.
+    /// </summary>
+    private static bool IsAdditionalTrustedHost(string host)
+    {
+        var raw = Environment.GetEnvironmentVariable(AdditionalTrustedHostsEnvVarName);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return false;
+        }
+
+        foreach (var entry in raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (string.Equals(entry, host, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

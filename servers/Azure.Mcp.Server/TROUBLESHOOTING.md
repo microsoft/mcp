@@ -1088,6 +1088,19 @@ In some environments, HTTPS redirection is not needed and may need to be disable
 export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
 ```
 
+### Kusto cluster URI rejected as invalid
+
+The Kusto tools validate cluster URIs against a built-in allowlist of Azure Data Explorer / Kusto endpoint suffixes (e.g., `*.kusto.windows.net`) to prevent SSRF. Requests against an internal Kusto-compatible proxy or gateway hosted on a different domain will fail with `Invalid Kusto cluster URI. ... Received host: '<host>'`.
+
+To allow additional trusted hostnames, set `AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS` to a comma-separated list of bare hostnames (exact, case-insensitive match). The HTTPS-scheme requirement still applies.
+
+```bash
+export AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS="my-kusto-proxy.example.com,other-host.contoso.com"
+```
+
+> [!WARNING]
+> Only add hosts you fully control and trust. Any host added here can receive the bearer token the server acquires for Kusto and may proxy queries to arbitrary backends.
+
 ### OAuth metadata discovery behind a reverse proxy
 
 A client (e.g., VS Code) that is not pre-configured with authorization details may fetch [OAuth Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728) from the Azure MCP Server to discover them.
