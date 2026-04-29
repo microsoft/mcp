@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -703,7 +703,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             rules);
         var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
 
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        try
+        {
+            await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
+        {
+            // DPP does not support updating an existing policy via CreateOrUpdate.
+            // If the policy already exists, treat it as success (idempotent create).
+            return new OperationResult("Succeeded", null, $"Policy '{policyName}' already exists in vault '{vaultName}'.");
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
