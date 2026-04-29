@@ -141,28 +141,23 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
+[CommandMetadata(
+    Id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    Name = "delete",
+    Title = "Delete Backup Vault",
+    Description = "Deletes a backup vault (RSV or DPP).",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class VaultDeleteCommand(
     ILogger<VaultDeleteCommand> logger,
     IAzureBackupService azureBackupService) : BaseAzureBackupCommand<VaultDeleteOptions>()
 {
-    private const string CommandTitle = "Delete Backup Vault";
     private readonly ILogger<VaultDeleteCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    // Generate a new GUID for the command ID
-    public override string Id => "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
-    public override string Name => "delete";
-    public override string Description => "Deletes a backup vault (RSV or DPP).";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
