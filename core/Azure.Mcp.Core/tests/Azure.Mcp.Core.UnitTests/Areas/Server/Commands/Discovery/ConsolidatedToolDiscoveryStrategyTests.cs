@@ -77,13 +77,34 @@ public class ConsolidatedToolDiscoveryStrategyTests
             ConsolidatedToolDiscoveryStrategy.IgnoredCommandGroups,
             StringComparer.OrdinalIgnoreCase);
 
-        var expectedCount = sourceFactory.AllCommands.Count(kvp =>
-        {
-            var area = sourceFactory.GetServiceArea(kvp.Key);
-            return area == null || !ignoredGroups.Contains(area);
-        });
+        var expectedCommands = sourceFactory.AllCommands
+            .Where(kvp =>
+            {
+                var area = sourceFactory.GetServiceArea(kvp.Key);
+                return area == null || !ignoredGroups.Contains(area);
+            })
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        Assert.Equal(expectedCount, consolidatedFactory.AllCommands.Count);
+        var consolidatedCommands = consolidatedFactory.AllCommands
+            .GroupBy(static kvp => kvp.Value, ReferenceEqualityComparer.Instance)
+            .ToDictionary(
+                static group => group.Key,
+                static group => group.Select(kvp => kvp.Key).ToArray(),
+                ReferenceEqualityComparer.Instance);
+
+        Assert.Equal(
+            expectedCommands.Values.Distinct(ReferenceEqualityComparer.Instance).Count(),
+            consolidatedCommands.Count);
+
+        var missingCommands = expectedCommands
+            .Where(kvp => !consolidatedCommands.ContainsKey(kvp.Value))
+            .Select(kvp => kvp.Key)
+            .OrderBy(static name => name)
+            .ToList();
+
+        Assert.True(
+            missingCommands.Count == 0,
+            $"Missing consolidated mappings for commands: {string.Join(", ", missingCommands)}");
     }
 
     [Fact]
