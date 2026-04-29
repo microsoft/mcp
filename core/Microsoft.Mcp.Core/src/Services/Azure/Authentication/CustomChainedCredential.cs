@@ -80,11 +80,16 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// (CI, Managed Identity, Workload Identity) where a browser popup must never appear.
 /// </para>
 /// <para>
+/// The <c>isolateTenantAuth</c> constructor parameter forces a fresh interactive login scoped to
+/// the specified tenant. When <c>true</c>, the sticky broker account and any cached authentication
+/// record are bypassed so that MFA challenges specific to the target tenant are correctly triggered.
+/// </para>
+/// <para>
 /// For User-Assigned Managed Identity, set the AZURE_CLIENT_ID environment variable to the client ID of the managed identity.
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
-internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false) : TokenCredential
+internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false, bool isolateTenantAuth = false) : TokenCredential
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;
@@ -102,13 +107,13 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback, isolateTenantAuth);
         return _credential.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback);
+        _credential ??= CreateCredential(tenantId, _logger, forceBrowserFallback, isolateTenantAuth);
         return _credential.GetTokenAsync(requestContext, cancellationToken);
     }
 
@@ -123,7 +128,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 
-    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
+    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false, bool isolateTenantAuth = false)
     {
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
@@ -137,6 +142,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             return new PlaybackTokenCredential();
         }
 #endif
+
+        if (isolateTenantAuth && !string.IsNullOrEmpty(tenantId))
+        {
+            return CreateTenantIsolatedCredential(tenantId!);
+        }
 
         string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
         AuthenticationRecord? authRecord = null;
@@ -258,6 +268,46 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             timeoutSeconds = parsedTimeout;
         }
         return new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds));
+    }
+
+    private static TokenCredential CreateTenantIsolatedCredential(string tenantId)
+    {
+        IntPtr handle = WindowHandleProvider.GetWindowHandle();
+        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+
+        InteractiveBrowserCredentialBrokerOptions brokerOptions = new(handle)
+        {
+            TenantId = tenantId,
+            UseDefaultBrokerAccount = false,
+            AuthenticationRecord = null,
+            TokenCachePersistenceOptions = new TokenCachePersistenceOptions()
+            {
+                Name = TokenCacheName,
+            }
+        };
+
+        if (CloudConfiguration != null)
+        {
+            brokerOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
+
+        if (clientId is not null)
+        {
+            brokerOptions.ClientId = clientId;
+        }
+
+        var browserCredential = new InteractiveBrowserCredential(brokerOptions);
+
+        string? timeoutValue = Environment.GetEnvironmentVariable(BrowserAuthenticationTimeoutEnvVarName);
+        int timeoutSeconds = 300;
+        if (!string.IsNullOrEmpty(timeoutValue) && int.TryParse(timeoutValue, out int parsedTimeout) && parsedTimeout > 0)
+        {
+            timeoutSeconds = parsedTimeout;
+        }
+
+        return new SafeTokenCredential(
+            new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds)),
+            "InteractiveBrowserCredential");
     }
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
