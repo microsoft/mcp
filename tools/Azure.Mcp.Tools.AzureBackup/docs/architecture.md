@@ -132,9 +132,9 @@ Each command is a **sealed** class that:
 Base command hierarchy:
 
 ```
-SubscriptionCommand<T>           ← from MCP Core (handles --subscription, --tenant)
-  └── BaseAzureBackupCommand<T>  ← adds --vault, --resource-group, --vault-type
-        └── BaseProtectedItemCommand<T>  ← adds --protected-item, --container
+SubscriptionCommand<T>           <- from MCP Core (handles --subscription, --tenant)
+  └── BaseAzureBackupCommand<T>  <- adds --vault, --resource-group, --vault-type
+        └── BaseProtectedItemCommand<T>  <- adds --protected-item, --container
 ```
 
 ### Layer 2: Unified Service Facade (`AzureBackupService`)
@@ -307,21 +307,21 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 ### `policy create`  -  Feature Support Matrix
 
 Coverage of `azmcp azurebackup policy create` flags by workload, validated by the live test suite.
-Legend: [x] supported & live-test covered · [!]️ shape emitted but blocked on a vault/subscription preview-feature flag (see test skip reasons) · 🔬 deeper investigation tracked as a follow-up ·  -  not applicable to this workload.
+Legend: [x] supported & live-test covered | [!] shape emitted but blocked on a vault/subscription preview-feature flag (see test skip reasons) | [~] deeper investigation tracked as a follow-up | - not applicable to this workload.
 
 #### Recovery Services Vault (RSV)
 
 | Feature / flag(s) | AzureVM (Standard) | AzureVM (Enhanced V2) | SQL | SAP HANA | AzureFileShare |
 |---|:--:|:--:|:--:|:--:|:--:|
 | Daily schedule + daily retention | [x] | [x] | [x] | [x] | [x] |
-| Weekly schedule + weekly retention | [x] | 🔬 |  -  |  -  | [x] |
-| Hourly schedule (`--policy-sub-type Enhanced`) |  -  | [x] |  -  |  -  | 🔬 |
-| Multi-tier retention (W + M + Y) | [x] | 🔬 | [x] | [x] | 🔬 |
-| Archive tier (`--archive-tier-mode TierAfter`) | [x] | 🔬 | 🔬 | [x] |  -  |
-| Smart-tier (`TieringMode = TierRecommended`) | [!]️ | [!]️ |  -  |  -  |  -  |
-| Snapshot backup (`--snapshot-instant-rp-retention-days`) |  -  |  -  |  -  | [x] |  -  |
-| Full + Log sub-policies |  -  |  -  | [x] | [x] |  -  |
-| Full + Differential + Log sub-policies |  -  |  -  | 🔬 |  -  |  -  |
+| Weekly schedule + weekly retention | [x] | [~] | - | - | [x] |
+| Hourly schedule (`--policy-sub-type Enhanced`) | - | [x] | - | - | [~] |
+| Multi-tier retention (W + M + Y) | [x] | [~] | [x] | [x] | [~] |
+| Archive tier (`--archive-tier-mode TierAfter`) | [x] | [~] | [~] | [x] | - |
+| Smart-tier (`TieringMode = TierRecommended`) | [!] | [!] | - | - | - |
+| Snapshot backup (`--snapshot-instant-rp-retention-days`) | - | - | - | [x] | - |
+| Full + Log sub-policies | - | - | [x] | [x] | - |
+| Full + Differential + Log sub-policies | - | - | [~] | - | - |
 | Policy tags (`--policy-tags`) | [x] | [x] | [x] | [x] | [x] |
 
 #### Backup Vault (DPP)
@@ -329,16 +329,16 @@ Legend: [x] supported & live-test covered · [!]️ shape emitted but blocked on
 | Feature / flag(s) | AzureDisk | AzureBlob | ADLS Gen2 | AKS | ElasticSAN | PostgreSQL Flex | CosmosDB |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | Default schedule + retention | [x] (PT4H) | [x] (continuous) | [x] (continuous) | [x] (PT4H) | [x] (P1D) | [x] (P1W) | [x] (P1W) |
-| Operational tier | [x] | [x] | [x] | [x] | [x] |  -  |  -  |
-| Vault tier (vaulted backup mode) | [x] (via `--enable-vault-tier-copy`) | [!]️ | [!]️ |  -  |  -  | [x] |  -  |
-| Vault-tier copy with multi-tier (W + M + Y) | 🔬 |  -  |  -  |  -  |  -  | [x] | [x] |
-| Continuous / PITR (`--backup-mode Continuous`) |  -  | [x] | [x] |  -  |  -  |  -  |  -  |
-| `--per-instance-snapshot` flag |  -  |  -  |  -  | [x] |  -  |  -  |  -  |
+| Operational tier | [x] | [x] | [x] | [x] | [x] | - | - |
+| Vault tier (vaulted backup mode) | [x] (via `--enable-vault-tier-copy`) | [!] | [!] | - | - | [x] | - |
+| Vault-tier copy with multi-tier (W + M + Y) | [~] | - | - | - | - | [x] | [x] |
+| Continuous / PITR (`--backup-mode Continuous`) | - | [x] | [x] | - | - | - | - |
+| `--per-instance-snapshot` flag | - | - | - | [x] | - | - | - |
 | Policy tags (`--policy-tags`) | rejected with guidance (DPP API does not accept tags on policies) |
 
-#### Notes on [!]️ preview-feature dependencies
+#### Notes on [!] preview-feature dependencies
 
-The three [!]️ cells emit the same JSON shape that `az backup` / `az dataprotection` CLI produce. They are blocked on per-subscription / per-vault preview-feature enablement, verified by issuing the same body via direct ARM REST PUT:
+The three [!] cells emit the same JSON shape that `az backup` / `az dataprotection` CLI produce. They are blocked on per-subscription / per-vault preview-feature enablement, verified by issuing the same body via direct ARM REST PUT:
 
 - **Vaulted Blob / ADLS Gen2 (DPP)** -> vault rejects with `BMSUserErrorInvalidInput`. Requires per-storage-account vaulted backup enablement.
 - **VM Smart-Tier (RSV)** -> vault rejects with `BMSUserErrorInvalidPolicyInput`. Requires the smart-tiering preview to be enabled on the vault.
