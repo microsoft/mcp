@@ -85,19 +85,17 @@ public class ConsolidatedToolDiscoveryStrategyTests
             })
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        var consolidatedCommands = consolidatedFactory.AllCommands
-            .GroupBy(static kvp => kvp.Value, ReferenceEqualityComparer.Instance)
-            .ToDictionary(
-                static group => group.Key,
-                static group => group.Select(kvp => kvp.Key).ToArray(),
-                ReferenceEqualityComparer.Instance);
+        var expectedCommandSet = expectedCommands.Values
+            .ToHashSet(ReferenceEqualityComparer.Instance);
+        var consolidatedCommandSet = consolidatedFactory.AllCommands.Values
+            .ToHashSet(ReferenceEqualityComparer.Instance);
 
         Assert.Equal(
-            expectedCommands.Values.Distinct(ReferenceEqualityComparer.Instance).Count(),
-            consolidatedCommands.Count);
+            expectedCommandSet.Count,
+            consolidatedCommandSet.Count);
 
         var missingCommands = expectedCommands
-            .Where(kvp => !consolidatedCommands.ContainsKey(kvp.Value))
+            .Where(kvp => !consolidatedCommandSet.Contains(kvp.Value))
             .Select(kvp => kvp.Key)
             .OrderBy(static name => name)
             .ToList();
