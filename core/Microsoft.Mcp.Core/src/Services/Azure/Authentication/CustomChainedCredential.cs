@@ -234,14 +234,38 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
     private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord)
     {
-        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
+        var browserCredential = CreateBrokerCredential(
+            tenantId,
+            !ShouldUseOnlyBrokerCredential() && authRecord is null,
+            authRecord);
 
+        return CreateTimeoutCredential(browserCredential);
+    }
+
+    private static TokenCredential CreateTenantIsolatedCredential(string tenantId)
+    {
+        var browserCredential = CreateBrokerCredential(
+            tenantId,
+            useDefaultBrokerAccount: false,
+            authRecord: null);
+
+        return new SafeTokenCredential(
+            CreateTimeoutCredential(browserCredential),
+            "InteractiveBrowserCredential");
+    }
+
+    private static InteractiveBrowserCredential CreateBrokerCredential(
+        string? tenantId,
+        bool useDefaultBrokerAccount,
+        AuthenticationRecord? authRecord)
+    {
         IntPtr handle = WindowHandleProvider.GetWindowHandle();
+        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
 
         InteractiveBrowserCredentialBrokerOptions brokerOptions = new(handle)
         {
-            UseDefaultBrokerAccount = !ShouldUseOnlyBrokerCredential() && authRecord is null,
             TenantId = string.IsNullOrEmpty(tenantId) ? null : tenantId,
+            UseDefaultBrokerAccount = useDefaultBrokerAccount,
             AuthenticationRecord = authRecord,
             TokenCachePersistenceOptions = new TokenCachePersistenceOptions()
             {
@@ -259,46 +283,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             brokerOptions.ClientId = clientId;
         }
 
-        var browserCredential = new InteractiveBrowserCredential(brokerOptions);
-
-        // Check for timeout value in the environment variable
-        string? timeoutValue = Environment.GetEnvironmentVariable(BrowserAuthenticationTimeoutEnvVarName);
-        int timeoutSeconds = 300; // Default to 300 seconds (5 minutes)
-        if (!string.IsNullOrEmpty(timeoutValue) && int.TryParse(timeoutValue, out int parsedTimeout) && parsedTimeout > 0)
-        {
-            timeoutSeconds = parsedTimeout;
-        }
-        return new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds));
+        return new InteractiveBrowserCredential(brokerOptions);
     }
 
-    private static TokenCredential CreateTenantIsolatedCredential(string tenantId)
+    private static TokenCredential CreateTimeoutCredential(TokenCredential credential)
     {
-        IntPtr handle = WindowHandleProvider.GetWindowHandle();
-        string? clientId = Environment.GetEnvironmentVariable(ClientIdEnvVarName);
-
-        InteractiveBrowserCredentialBrokerOptions brokerOptions = new(handle)
-        {
-            TenantId = tenantId,
-            UseDefaultBrokerAccount = false,
-            AuthenticationRecord = null,
-            TokenCachePersistenceOptions = new TokenCachePersistenceOptions()
-            {
-                Name = TokenCacheName,
-            }
-        };
-
-        if (CloudConfiguration != null)
-        {
-            brokerOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
-        }
-
-        if (clientId is not null)
-        {
-            brokerOptions.ClientId = clientId;
-        }
-
-        var browserCredential = new InteractiveBrowserCredential(brokerOptions);
-
         string? timeoutValue = Environment.GetEnvironmentVariable(BrowserAuthenticationTimeoutEnvVarName);
         int timeoutSeconds = 300;
         if (!string.IsNullOrEmpty(timeoutValue) && int.TryParse(timeoutValue, out int parsedTimeout) && parsedTimeout > 0)
@@ -306,9 +295,7 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
             timeoutSeconds = parsedTimeout;
         }
 
-        return new SafeTokenCredential(
-            new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds)),
-            "InteractiveBrowserCredential");
+        return new TimeoutTokenCredential(credential, TimeSpan.FromSeconds(timeoutSeconds));
     }
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
