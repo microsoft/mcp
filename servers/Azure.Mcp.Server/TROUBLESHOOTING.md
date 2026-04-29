@@ -1101,6 +1101,9 @@ export AZURE_MCP_DANGEROUSLY_ALLOW_ADDITIONAL_KUSTO_HOSTS="my-kusto-proxy.exampl
 > [!WARNING]
 > Only add hosts you fully control and trust. Any host added here can receive the bearer token the server acquires for Kusto and may proxy queries to arbitrary backends.
 
+> [!NOTE]
+> The token audience is selected from the cluster URI's domain suffix (e.g., `.chinacloudapi.cn` → China cloud, `.usgovcloudapi.net` → US Gov, otherwise public cloud). If a proxy hostname doesn't match a sovereign domain suffix, the token will be acquired for the public cloud Kusto audience. This is fine when the proxy routes to public-cloud clusters, but will produce an unauthorized token if the proxy routes to a sovereign cloud (China/US Gov) cluster.
+
 ### OAuth metadata discovery behind a reverse proxy
 
 A client (e.g., VS Code) that is not pre-configured with authorization details may fetch [OAuth Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728) from the Azure MCP Server to discover them.
