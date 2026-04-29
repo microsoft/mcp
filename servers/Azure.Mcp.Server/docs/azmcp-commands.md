@@ -36,6 +36,23 @@ azmcp storage account list --learn
 
 The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
 
+### CLI Logging
+
+In CLI mode, all `azmcp` commands write only JSON to **stdout**. Informational and diagnostic log messages are written to **stderr**. This means AI agents and tools consuming stdout receive clean JSON without log noise.
+
+To see logs while running a CLI command:
+
+```powershell
+# Show logs in terminal alongside JSON output (PowerShell / bash)
+azmcp storage account list --subscription <sub> 2>&1
+
+# Capture JSON silently, discard logs (PowerShell)
+$json = azmcp storage account list --subscription <sub> 2>$null
+
+# Write logs to a file while JSON goes to stdout
+azmcp storage account list --subscription <sub> 2>azmcp.log
+```
+
 ## Available Commands
 
 ### Server Operations
