@@ -443,7 +443,7 @@ public class CustomChainedCredentialTests
     /// <summary>
     /// Helper method to create CustomChainedCredential using reflection since it's an internal class.
     /// </summary>
-    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false)
+    private static TokenCredential CreateCustomChainedCredential(bool forceBrowserFallback = false, bool isolateTenantAuth = false)
     {
         var assembly = typeof(global::Microsoft.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
         var customChainedCredentialType = assembly.GetType("Microsoft.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
@@ -454,18 +454,34 @@ public class CustomChainedCredentialTests
             .FirstOrDefault(c =>
             {
                 var parameters = c.GetParameters();
-                return parameters.Length == 3 &&
+                return parameters.Length == 4 &&
                        parameters[0].ParameterType == typeof(string) &&
                        parameters[1].ParameterType == typeof(ILogger<>).MakeGenericType(customChainedCredentialType) &&
-                       parameters[2].ParameterType == typeof(bool);
+                       parameters[2].ParameterType == typeof(bool) &&
+                       parameters[3].ParameterType == typeof(bool);
             });
 
         Assert.NotNull(constructor);
 
-        var credential = constructor.Invoke([null, null, forceBrowserFallback]) as TokenCredential;
+        var credential = constructor.Invoke([null, null, forceBrowserFallback, isolateTenantAuth]) as TokenCredential;
         Assert.NotNull(credential);
 
         return credential;
+    }
+
+    /// <summary>
+    /// Tests that isolateTenantAuth=true creates a credential successfully for cross-tenant flows.
+    /// Expected: Returns a tenant-isolated credential that bypasses sticky broker account and cached auth records.
+    /// </summary>
+    [Fact]
+    public void IsolateTenantAuth_CreatesCredentialSuccessfully()
+    {
+        // Act
+        var credential = CreateCustomChainedCredential(isolateTenantAuth: true);
+
+        // Assert
+        Assert.NotNull(credential);
+        Assert.IsAssignableFrom<TokenCredential>(credential);
     }
 
     private static Type GetCustomChainedCredentialType()
