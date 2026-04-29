@@ -139,7 +139,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
     [Fact]
     public async Task ExecuteAsync_DppResult_SurfacesProtectionStatusAndOmitsJobId()
     {
-        // Arrange — DPP protection is not a job; result should expose ProtectionStatus
+        // Arrange  -  DPP protection is not a job; result should expose ProtectionStatus
         // (read back from the backup instance) and leave JobId null.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../disks/d1"), Arg.Is("policy-disk"),
@@ -170,7 +170,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
     [Fact]
     public async Task ExecuteAsync_DppResult_SurfacesFailureWithErrorMessage()
     {
-        // Arrange — when DPP backend rejects (e.g. VaultMSIUnauthorized) the result must
+        // Arrange  -  when DPP backend rejects (e.g. VaultMSIUnauthorized) the result must
         // carry Status="Failed" + ErrorMessage rather than a misleading "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa1"), Arg.Is("policy-blob"),
@@ -201,7 +201,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
     [Fact]
     public async Task ExecuteAsync_RsvResult_SurfacesTerminalJobStatus()
     {
-        // Arrange — RSV protection should report the polled ConfigureBackup job's
+        // Arrange  -  RSV protection should report the polled ConfigureBackup job's
         // terminal status (Completed, CompletedWithWarnings, Failed) along with the job id.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/myvm"), Arg.Is("policy-vm"),
@@ -229,7 +229,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
     [Fact]
     public async Task ExecuteAsync_RsvResult_SurfacesFailedJobWithErrorMessage()
     {
-        // Arrange — when ConfigureBackup ends in Failed, MCP must surface Status=Failed
+        // Arrange  -  when ConfigureBackup ends in Failed, MCP must surface Status=Failed
         // and ErrorMessage from the job rather than the previous "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa/fileServices/default/shares/share"), Arg.Is("policy-afs"),
@@ -259,7 +259,7 @@ public class ProtectedItemProtectCommandTests : CommandUnitTestsBase<ProtectedIt
     [Fact]
     public async Task ExecuteAsync_RsvResult_SurfacesInProgressWhenPollingBudgetExpires()
     {
-        // Arrange — long-running ConfigureBackup must not cause the tool to fail; it
+        // Arrange  -  long-running ConfigureBackup must not cause the tool to fail; it
         // should return InProgress with the job id so the caller can keep monitoring.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/slowvm"), Arg.Is("policy-vm"),

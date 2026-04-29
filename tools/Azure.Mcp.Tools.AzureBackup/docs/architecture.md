@@ -1,4 +1,4 @@
-# Azure Backup MCP Toolset — Architecture
+# Azure Backup MCP Toolset  -  Architecture
 
 ## Overview
 
@@ -9,7 +9,7 @@ The Azure Backup MCP toolset (`Azure.Mcp.Tools.AzureBackup`) provides AI agents 
 | **Recovery Services Vault (RSV)** | `Microsoft.RecoveryServices/vaults` | `Azure.ResourceManager.RecoveryServicesBackup` | `--vault-type rsv` |
 | **Data Protection / Backup Vault (DPP)** | `Microsoft.DataProtection/backupVaults` | `Azure.ResourceManager.DataProtectionBackup` | `--vault-type dpp` |
 
-Every command exposes a single, vault-agnostic entry point (e.g., `azmcp azurebackup vault get`). Under the hood, the service layer routes the call to the correct RSV or DPP implementation based on the `--vault-type` flag—or auto-detects the vault type when omitted.
+Every command exposes a single, vault-agnostic entry point (e.g., `azmcp azurebackup vault get`). Under the hood, the service layer routes the call to the correct RSV or DPP implementation based on the `--vault-type` flag - or auto-detects the vault type when omitted.
 
 ---
 
@@ -93,16 +93,16 @@ The toolset follows a strict three-layer architecture:
 ┌──────────────────────────────────────────────────────────────────┐
 │                        MCP Command Layer                         │
 │  (VaultGetCommand, PolicyCreateCommand, JobGetCommand, etc.)     │
-│  Sealed command classes → option binding → call service → return │
+│  Sealed command classes -> option binding -> call service -> return │
 └──────────────────────────┬───────────────────────────────────────┘
                            │
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                    Unified Service Facade                         │
 │                      AzureBackupService                          │
-│   • Routes to RSV or DPP based on --vault-type                   │
-│   • Auto-detects vault type when not specified                   │
-│   • Merges results from both platforms (e.g., ListVaults)        │
+│   - Routes to RSV or DPP based on --vault-type                   │
+│   - Auto-detects vault type when not specified                   │
+│   - Merges results from both platforms (e.g., ListVaults)        │
 └──────────┬───────────────────────────────────┬───────────────────┘
            │                                   │
            ▼                                   ▼
@@ -132,9 +132,9 @@ Each command is a **sealed** class that:
 Base command hierarchy:
 
 ```
-SubscriptionCommand<T>           ← from MCP Core (handles --subscription, --tenant)
-  └── BaseAzureBackupCommand<T>  ← adds --vault, --resource-group, --vault-type
-        └── BaseProtectedItemCommand<T>  ← adds --protected-item, --container
+SubscriptionCommand<T>           <- from MCP Core (handles --subscription, --tenant)
+  └── BaseAzureBackupCommand<T>  <- adds --vault, --resource-group, --vault-type
+        └── BaseProtectedItemCommand<T>  <- adds --protected-item, --container
 ```
 
 ### Layer 2: Unified Service Facade (`AzureBackupService`)
@@ -143,7 +143,7 @@ SubscriptionCommand<T>           ← from MCP Core (handles --subscription, --te
 
 - **Explicit vault type**: When `--vault-type` is `rsv` or `dpp`, the call is dispatched directly to the corresponding operations object.
 - **Auto-detection**: When `--vault-type` is omitted, the service first tries RSV, then DPP (catching 404s). For `ListVaults`, both platforms are queried in parallel and results are merged.
-- **Vault-type resolution** (`ResolveVaultTypeAsync`): Used by most methods — attempts RSV first, falls back to DPP, caches nothing (stateless for multi-user safety).
+- **Vault-type resolution** (`ResolveVaultTypeAsync`): Used by most methods  -  attempts RSV first, falls back to DPP, caches nothing (stateless for multi-user safety).
 
 Key methods:
 | Method | Behavior |
@@ -206,9 +206,9 @@ User omits --vault-type
        │
        ▼
 ResolveVaultTypeAsync()
-  ├── Try rsvOps.GetVaultAsync()  →  Success? Return "rsv"
+  ├── Try rsvOps.GetVaultAsync()  ->  Success? Return "rsv"
   │        └── 404? Continue
-  └── Try dppOps.GetVaultAsync()  →  Success? Return "dpp"
+  └── Try dppOps.GetVaultAsync()  ->  Success? Return "dpp"
            └── 404? Throw KeyNotFoundException
 ```
 
@@ -304,6 +304,47 @@ The toolset exposes **15 commands** organized in **9 command groups**:
 | Azure Data Lake Storage | `AzureDataLakeStorage` | adls, datalake | `.../storageAccounts/blobServices` | Operational | Continuous |
 | Azure Cosmos DB | `CosmosDB` | cosmosdb, cosmos | `Microsoft.DocumentDB/databaseAccounts` | Operational | Continuous |
 
+### `policy create`  -  Feature Support Matrix
+
+Coverage of `azmcp azurebackup policy create` flags by workload, validated by the live test suite.
+Legend: [x] supported & live-test covered | [!] shape emitted but blocked on a vault/subscription preview-feature flag (see test skip reasons) | [~] deeper investigation tracked as a follow-up | - not applicable to this workload.
+
+#### Recovery Services Vault (RSV)
+
+| Feature / flag(s) | AzureVM (Standard) | AzureVM (Enhanced V2) | SQL | SAP HANA | AzureFileShare |
+|---|:--:|:--:|:--:|:--:|:--:|
+| Daily schedule + daily retention | [x] | [x] | [x] | [x] | [x] |
+| Weekly schedule + weekly retention | [x] | [~] | - | - | [x] |
+| Hourly schedule (`--policy-sub-type Enhanced`) | - | [x] | - | - | [~] |
+| Multi-tier retention (W + M + Y) | [x] | [~] | [x] | [x] | [~] |
+| Archive tier (`--archive-tier-mode TierAfter`) | [x] | [~] | [~] | [x] | - |
+| Smart-tier (`TieringMode = TierRecommended`) | [!] | [!] | - | - | - |
+| Snapshot backup (`--snapshot-instant-rp-retention-days`) | - | - | - | [x] | - |
+| Full + Log sub-policies | - | - | [x] | [x] | - |
+| Full + Differential + Log sub-policies | - | - | [~] | - | - |
+| Policy tags (`--policy-tags`) | [x] | [x] | [x] | [x] | [x] |
+
+#### Backup Vault (DPP)
+
+| Feature / flag(s) | AzureDisk | AzureBlob | ADLS Gen2 | AKS | ElasticSAN | PostgreSQL Flex | CosmosDB |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| Default schedule + retention | [x] (PT4H) | [x] (continuous) | [x] (continuous) | [x] (PT4H) | [x] (P1D) | [x] (P1W) | [x] (P1W) |
+| Operational tier | [x] | [x] | [x] | [x] | [x] | - | - |
+| Vault tier (vaulted backup mode) | [x] (via `--enable-vault-tier-copy`) | [!] | [!] | - | - | [x] | - |
+| Vault-tier copy with multi-tier (W + M + Y) | [~] | - | - | - | - | [x] | [x] |
+| Continuous / PITR (`--backup-mode Continuous`) | - | [x] | [x] | - | - | - | - |
+| `--per-instance-snapshot` flag | - | - | - | [x] | - | - | - |
+| Policy tags (`--policy-tags`) | rejected with guidance (DPP API does not accept tags on policies) |
+
+#### Notes on [!] preview-feature dependencies
+
+The three [!] cells emit the same JSON shape that `az backup` / `az dataprotection` CLI produce. They are blocked on per-subscription / per-vault preview-feature enablement, verified by issuing the same body via direct ARM REST PUT:
+
+- **Vaulted Blob / ADLS Gen2 (DPP)** -> vault rejects with `BMSUserErrorInvalidInput`. Requires per-storage-account vaulted backup enablement.
+- **VM Smart-Tier (RSV)** -> vault rejects with `BMSUserErrorInvalidPolicyInput`. Requires the smart-tiering preview to be enabled on the vault.
+
+These tests are skipped with detailed root-cause comments and will pass once enabled on the test vault.
+
 ### Cross-Platform Protectable Resource Types
 
 The `FindUnprotectedResourcesAsync` governance tool scans for all of these ARM resource types:
@@ -386,12 +427,12 @@ All option names are centralized in `AzureBackupOptionDefinitions` as `const str
 - Reusable options via `.AsRequired()` / `.AsOptional()` extension methods
 
 Key shared options:
-- `--vault` — Vault name
-- `--vault-type` — `rsv` or `dpp` (optional with auto-detect)
-- `--resource-group` — Azure resource group
-- `--subscription` — Subscription (inherited from base)
-- `--protected-item` — Protected item / backup instance name
-- `--container` — RSV container name (RSV-only)
+- `--vault`  -  Vault name
+- `--vault-type`  -  `rsv` or `dpp` (optional with auto-detect)
+- `--resource-group`  -  Azure resource group
+- `--subscription`  -  Subscription (inherited from base)
+- `--protected-item`  -  Protected item / backup instance name
+- `--container`  -  RSV container name (RSV-only)
 
 ---
 
@@ -420,10 +461,10 @@ All catch blocks call `HandleException(context, ex)` which uses these overrides 
 
 Live tests use the **recorded test** pattern via `RecordedCommandTestsBase`. Test infrastructure is defined in:
 
-- **`test-resources.bicep`** — Deploys both an RSV vault (`{baseName}-rsv`) and a DPP vault (`{baseName}-dpp`) with:
+- **`test-resources.bicep`**  -  Deploys both an RSV vault (`{baseName}-rsv`) and a DPP vault (`{baseName}-dpp`) with:
   - Backup Contributor role assignments for the test application
   - Soft-delete disabled on DPP vault (for clean teardown)
-- **`test-resources-post.ps1`** — Generates test settings file
+- **`test-resources-post.ps1`**  -  Generates test settings file
 
 ### Test Coverage
 
@@ -469,7 +510,7 @@ Tests use custom matchers and sanitizers to handle non-deterministic values:
 ## Design Principles
 
 1. **Vault-agnostic commands**: Users work with a single command set; vault platform differences are abstracted away.
-2. **Data-driven workload support**: Datasource profiles are pure data records — adding a new workload requires only a profile instance, not code changes in operations classes.
+2. **Data-driven workload support**: Datasource profiles are pure data records  -  adding a new workload requires only a profile instance, not code changes in operations classes.
 3. **AOT safety**: All JSON serialization uses source-generated contexts; no reflection.
 4. **Stateless & thread-safe**: Commands store no per-request state; safe for multi-user remote HTTP mode.
 5. **Parallel execution**: List operations query both platforms concurrently via `Task.WhenAll`.

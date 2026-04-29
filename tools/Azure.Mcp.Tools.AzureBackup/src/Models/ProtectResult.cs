@@ -20,12 +20,12 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 /// </param>
 /// <param name="JobId">
 /// RSV ConfigureBackup job id (use with <c>azurebackup job get</c>). Always
-/// <c>null</c> for DPP — DPP protection is not surfaced as a job; verify with
+/// <c>null</c> for DPP  -  DPP protection is not surfaced as a job; verify with
 /// <c>azurebackup protecteditem get</c> or <c>list</c>.
 /// </param>
 /// <param name="Message">Human-readable summary of the outcome.</param>
 /// <param name="ProtectionStatus">
-/// DPP only — actual <c>protectionStatus.status</c> read back from the backup
+/// DPP only  -  actual <c>protectionStatus.status</c> read back from the backup
 /// instance after the operation (e.g. <c>ProtectionConfigured</c>,
 /// <c>ConfiguringProtection</c>, <c>ProtectionError</c>).
 /// </param>

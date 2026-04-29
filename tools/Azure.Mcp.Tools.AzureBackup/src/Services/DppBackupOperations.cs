@@ -19,8 +19,8 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
 
     /// <summary>
     /// Resolves the DPP datasource profile from a user-supplied or auto-detected type string.
-    /// Handles auto-detection (e.g. "Microsoft.Storage/storageAccounts" → Blob profile)
-    /// and friendly name mapping (e.g. "aks" → AKS profile).
+    /// Handles auto-detection (e.g. "Microsoft.Storage/storageAccounts" -> Blob profile)
+    /// and friendly name mapping (e.g. "aks" -> AKS profile).
     /// </summary>
     internal static DppDatasourceProfile ResolveProfile(string datasourceTypeOrArm)
     {
@@ -280,7 +280,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            // Direct lookup failed — search by friendly/datasource name
+            // Direct lookup failed  -  search by friendly/datasource name
         }
 
         // Fall back to listing all items and searching by friendly name
@@ -605,11 +605,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType,
-        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
+        var workloadType = request.WorkloadType;
+
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
@@ -622,58 +626,8 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupPolicies();
 
-        var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 0;
-        var scheduleTimeValue = scheduleTime ?? "02:00";
-        var now = DateTimeOffset.UtcNow;
-        var scheduleParts = scheduleTimeValue.Split(':');
-        var scheduleHour = int.TryParse(scheduleParts[0], out var sh) ? sh : 2;
-        var scheduleMinute = scheduleParts.Length > 1 && int.TryParse(scheduleParts[1], out var sm) ? sm : 0;
-        var scheduleStartTime = new DateTimeOffset(now.Year, now.Month, now.Day, scheduleHour, scheduleMinute, 0, TimeSpan.Zero);
-
         var profile = DppDatasourceRegistry.Resolve(workloadType);
-        var dataStoreType = profile.UsesOperationalStore ? DataStoreType.OperationalStore : DataStoreType.VaultStore;
-
-        var defaultRetention = retentionDays > 0 ? retentionDays : profile.DefaultRetentionDays;
-
-        var retentionDeleteSetting = new DataProtectionBackupAbsoluteDeleteSetting(TimeSpan.FromDays(defaultRetention));
-        var retentionDataStore = new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase");
-        var retentionLifeCycle = new SourceLifeCycle(retentionDeleteSetting, retentionDataStore);
-        var retentionRule = new DataProtectionRetentionRule("Default", [retentionLifeCycle])
-        {
-            IsDefault = true,
-        };
-
-        List<DataProtectionBasePolicyRule> rules = [retentionRule];
-
-        // Stage 2 TODO: Multi-tier retention
-        // When adding weekly/monthly/yearly retention support, add the parameters
-        // back to this method and create per-tier retention rules and tagging criteria.
-        // The weeklyRetentionWeeks/monthlyRetentionMonths/yearlyRetentionYears will be
-        // implemented with profile-driven templates.
-
-        if (!profile.IsContinuousBackup)
-        {
-            var repeatingInterval = $"R/{scheduleStartTime:yyyy-MM-ddTHH:mm:ss+00:00}/{profile.ScheduleInterval}";
-
-            var schedule = new DataProtectionBackupSchedule([repeatingInterval])
-            {
-                TimeZone = "UTC",
-            };
-            var defaultTag = new DataProtectionBackupRetentionTag("Default");
-            var taggingCriteria = new DataProtectionBackupTaggingCriteria(true, 99, defaultTag);
-            var triggerContext = new ScheduleBasedBackupTriggerContext(schedule, [taggingCriteria]);
-            var backupDataStore = new DataStoreInfoBase(dataStoreType, "DataStoreInfoBase");
-            var backupRule = new DataProtectionBackupRule(profile.BackupRuleName, backupDataStore, triggerContext)
-            {
-                BackupParameters = new DataProtectionBackupSettings(profile.BackupType),
-            };
-
-            rules.Add(backupRule);
-        }
-
-        var policyProperties = new RuleBasedBackupPolicy(
-            [profile.ArmResourceType],
-            rules);
+        var policyProperties = Policy.DppPolicyBuilder.Build(request, profile);
         var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
 
         await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);

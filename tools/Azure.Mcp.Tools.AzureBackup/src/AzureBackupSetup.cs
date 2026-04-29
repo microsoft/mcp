@@ -59,53 +59,53 @@ public sealed class AzureBackupSetup : IAreaSetup
     {
         var azureBackup = new CommandGroup(Name,
             """
-            Azure Backup operations – Unified commands to manage backup across Recovery Services vaults (RSV)
+            Azure Backup operations  -  Unified commands to manage backup across Recovery Services vaults (RSV)
             and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations,
             policy management, job monitoring, recovery point browsing, governance, and disaster recovery.
             Use --vault-type to specify vault type or let the system auto-detect.
             """,
             Title);
 
-        var vault = new CommandGroup("vault", "Backup vault operations – Get vault details or list all vaults, create, and update vaults.");
+        var vault = new CommandGroup("vault", "Backup vault operations  -  Get vault details or list all vaults, create, and update vaults.");
         azureBackup.AddSubGroup(vault);
         RegisterCommand<VaultGetCommand>(serviceProvider, vault);
         RegisterCommand<VaultCreateCommand>(serviceProvider, vault);
         RegisterCommand<VaultUpdateCommand>(serviceProvider, vault);
 
-        var policy = new CommandGroup("policy", "Backup policy operations – Get policy details or list all policies, and create policies.");
+        var policy = new CommandGroup("policy", "Backup policy operations  -  Get policy details or list all policies, and create policies.");
         azureBackup.AddSubGroup(policy);
         RegisterCommand<PolicyGetCommand>(serviceProvider, policy);
         RegisterCommand<PolicyCreateCommand>(serviceProvider, policy);
 
-        var protectedItem = new CommandGroup("protecteditem", "Protected item operations – Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
+        var protectedItem = new CommandGroup("protecteditem", "Protected item operations  -  Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
         azureBackup.AddSubGroup(protectedItem);
         RegisterCommand<ProtectedItemGetCommand>(serviceProvider, protectedItem);
         RegisterCommand<ProtectedItemProtectCommand>(serviceProvider, protectedItem);
         RegisterCommand<ProtectedItemUndeleteCommand>(serviceProvider, protectedItem);
 
-        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations – List discovered databases available for protection.");
+        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations  -  List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);
         RegisterCommand<ProtectableItemListCommand>(serviceProvider, protectableItem);
 
-        var backup = new CommandGroup("backup", "Backup operations – Check backup status for a datasource.");
+        var backup = new CommandGroup("backup", "Backup operations  -  Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);
         RegisterCommand<BackupStatusCommand>(serviceProvider, backup);
 
-        var job = new CommandGroup("job", "Backup job operations – Get job details or list all jobs in a vault.");
+        var job = new CommandGroup("job", "Backup job operations  -  Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);
         RegisterCommand<JobGetCommand>(serviceProvider, job);
 
-        var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations – Get recovery point details or list all for a protected item.");
+        var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations  -  Get recovery point details or list all for a protected item.");
         azureBackup.AddSubGroup(recoveryPoint);
         RegisterCommand<RecoveryPointGetCommand>(serviceProvider, recoveryPoint);
 
-        var governance = new CommandGroup("governance", "Governance operations – Find unprotected resources, configure immutability and soft delete.");
+        var governance = new CommandGroup("governance", "Governance operations  -  Find unprotected resources, configure immutability and soft delete.");
         azureBackup.AddSubGroup(governance);
         RegisterCommand<GovernanceFindUnprotectedCommand>(serviceProvider, governance);
         RegisterCommand<GovernanceImmutabilityCommand>(serviceProvider, governance);
         RegisterCommand<GovernanceSoftDeleteCommand>(serviceProvider, governance);
 
-        var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations – Enable Cross-Region Restore on a GRS vault.");
+        var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations  -  Enable Cross-Region Restore on a GRS vault.");
         azureBackup.AddSubGroup(disasterrecovery);
         RegisterCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider, disasterrecovery);
 
