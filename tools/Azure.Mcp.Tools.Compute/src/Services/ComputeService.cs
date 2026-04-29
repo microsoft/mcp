@@ -55,7 +55,7 @@ public class ComputeService(
         ["Debian12"] = ImageSource.FromMarketplace("Debian", "debian-12", "12-gen2", "latest"),
         ["RHEL9"] = ImageSource.FromMarketplace("RedHat", "RHEL", "9_0", "latest"),
         ["CentOS8"] = ImageSource.FromMarketplace("OpenLogic", "CentOS", "8_5-gen2", "latest"),
-        ["Win2022Datacenter"] = ImageSource.FromMarketplace("MicrosoftWindowsServer", "WindowsServer", "2022-datacenter-azure-edition", "latest"),
+        ["Win2022Datacenter"] = ImageSource.FromMarketplace("MicrosoftWindowsServer", "WindowsServer2022", "2022-datacenter-azure-edition", "latest"),
         ["Win2022Datacenter1P"] = ImageSource.FromSharedGallery("/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"),
         ["Win11Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "windows-11", "win11-22h2-pro", "latest"),
         ["Win10Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
