@@ -13,35 +13,26 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
-    : BaseSqlCommand<ServerCreateOptions>(logger)
-{
-    private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Create SQL Server";
-
-    public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "43f5f55d-2f21-47ac-b7f3-53f5d51b5218",
+    Name = "create",
+    Title = "Create SQL Server",
+    Description = """
         Creates a new Azure SQL server in the specified resource group and location.
         The server will be created with the specified administrator credentials and
         optional configuration settings. Returns the created server with its properties
         including the fully qualified domain name.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCreateCommand> logger)
+    : BaseSqlCommand<ServerCreateOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     protected override void RegisterOptions(Command command)
     {

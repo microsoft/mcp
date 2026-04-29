@@ -14,29 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 
+[CommandMetadata(
+    Id = "25dd8bb3-5ba3-4c0d-993d-54917f63d52e",
+    Name = "get",
+    Title = "Get Cloud Endpoint",
+    Description = "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<CloudEndpointGetOptions>
 {
-    private const string CommandTitle = "Get Cloud Endpoint";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointGetCommand> _logger = logger;
-
-    public override string Id => "25dd8bb3-5ba3-4c0d-993d-54917f63d52e";
-
-    public override string Name => "get";
-
-    public override string Description => "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

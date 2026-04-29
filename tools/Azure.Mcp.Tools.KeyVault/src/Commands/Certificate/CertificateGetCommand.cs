@@ -13,30 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 
+[CommandMetadata(
+    Id = "0e898126-0c5e-44b8-9eef-51ddeed6327f",
+    Name = "get",
+    Title = "Get Key Vault Certificate",
+    Description = "List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateGetOptions>
 {
-    private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
-
-    public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.""";
 
     protected override void RegisterOptions(Command command)
     {

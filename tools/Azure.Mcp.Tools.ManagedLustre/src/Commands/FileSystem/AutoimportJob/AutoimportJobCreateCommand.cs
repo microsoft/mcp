@@ -12,20 +12,11 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
-public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<AutoimportJobCreateOptions>(logger)
-{
-    private const string CommandTitle = "Create Azure Managed Lustre Autoimport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoimportJobCreateCommand> _logger = logger;
-
-    public override string Id => "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+    Name = "create",
+    Title = "Create Azure Managed Lustre Autoimport Job",
+    Description = """
         Creates an auto import job for an Azure Managed Lustre filesystem to continuously import new or modified files from the linked blob storage container. The auto import job syncs changes from the configured HSM blob container to the Lustre filesystem. Use this to keep the filesystem updated with changes in blob storage.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
@@ -38,19 +29,19 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
         - admin-status: Administrative status (Enable/Disable, default: Enable)
         - enable-deletions: Enable deletions during auto import (default: false)
         - maximum-errors: Max errors before failure (-1: infinite, 0: immediate exit, default: none)
-        """;
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoimportJobCreateCommand(IManagedLustreService service, ILogger<AutoimportJobCreateCommand> logger)
+    : BaseManagedLustreCommand<AutoimportJobCreateOptions>(logger)
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IManagedLustreService _service = service;
+    private new readonly ILogger<AutoimportJobCreateCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

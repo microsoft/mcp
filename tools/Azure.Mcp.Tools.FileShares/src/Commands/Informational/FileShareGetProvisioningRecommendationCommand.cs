@@ -12,25 +12,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
 
+[CommandMetadata(
+    Id = "3c5e1fb2-3a8d-4f8e-8b0a-1c2d3e4f5a6b",
+    Name = "rec",
+    Title = "Get File Share Provisioning Recommendation",
+    Description = "Get provisioning parameter recommendations for a file share based on desired storage size",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileShareGetProvisioningRecommendationCommand> logger, IFileSharesService service)
     : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions>()
 {
     private readonly ILogger<FileShareGetProvisioningRecommendationCommand> _logger = logger;
     private readonly IFileSharesService _service = service;
-
-    public override string Id => "3c5e1fb2-3a8d-4f8e-8b0a-1c2d3e4f5a6b";
-    public override string Name => "rec";
-    public override string Description => "Get provisioning parameter recommendations for a file share based on desired storage size";
-    public override string Title => "Get File Share Provisioning Recommendation";
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     /// <inheritdoc />
     protected override void RegisterOptions(Command command)

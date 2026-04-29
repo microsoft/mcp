@@ -13,33 +13,22 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
+[CommandMetadata(
+    Id = "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g",
+    Name = "get",
+    Title = "Get Virtual Machine Scale Set(s)",
+    Description = "List or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssGetOptions>(false)
 {
-    private const string CommandTitle = "Get Virtual Machine Scale Set(s)";
     private readonly ILogger<VmssGetCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
-
-    public override string Id => "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        List or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

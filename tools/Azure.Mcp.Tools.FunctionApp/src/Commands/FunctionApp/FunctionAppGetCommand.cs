@@ -14,35 +14,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
-public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
-    : BaseFunctionAppCommand<FunctionAppGetOptions>()
-{
-    private const string CommandTitle = "Get Azure Function App Details";
-    private readonly ILogger<FunctionAppGetCommand> _logger = logger;
-    private readonly IFunctionAppService _functionAppService = functionAppService;
-
-    public override string Id => "5249839c-a3c6-4f9e-b62b-afde801d95a6";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "5249839c-a3c6-4f9e-b62b-afde801d95a6",
+    Name = "get",
+    Title = "Get Azure Function App Details",
+    Description = """
         Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group
         is specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,
         location, status, and app service plan name.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
+    : BaseFunctionAppCommand<FunctionAppGetOptions>()
+{
+    private readonly ILogger<FunctionAppGetCommand> _logger = logger;
+    private readonly IFunctionAppService _functionAppService = functionAppService;
 
     protected override void RegisterOptions(Command command)
     {

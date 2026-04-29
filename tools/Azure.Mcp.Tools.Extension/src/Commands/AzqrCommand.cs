@@ -16,35 +16,25 @@ using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[CommandMetadata(
+    Id = "e7ef18a3-2730-4300-bad3-dc766f47dd2a",
+    Name = "azqr",
+    Title = "Azure Quick Review CLI Command",
+    Description = "Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AzqrCommand(ILogger<AzqrCommand> logger, ISubscriptionService subscriptionService, IDateTimeProvider dateTimeProvider, IExternalProcessService processService, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
 {
-    private const string CommandTitle = "Azure Quick Review CLI Command";
     private readonly ILogger<AzqrCommand> _logger = logger;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
     private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzqrPath;
-    public override string Id => "e7ef18a3-2730-4300-bad3-dc766f47dd2a";
-
-    public override string Name => "azqr";
-
-    public override string Description =>
-        """
-        Runs Azure Quick Review CLI (azqr) commands to generate compliance and security reports for Azure resources, identifying non-compliant configurations or areas for improvement. Requires a subscription id and optionally a resource group name. Returns the generated report file path. Note: azqr is different from Azure CLI (az).
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
