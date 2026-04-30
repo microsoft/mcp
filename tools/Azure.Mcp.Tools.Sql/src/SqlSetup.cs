@@ -49,34 +49,34 @@ public class SqlSetup : IAreaSetup
         var database = new CommandGroup("db", "SQL database operations");
         sql.AddSubGroup(database);
 
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseGetCommand>());
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseCreateCommand>());
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseRenameCommand>());
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseUpdateCommand>());
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseDeleteCommand>());
+        database.AddCommand<DatabaseGetCommand>(serviceProvider);
+        database.AddCommand<DatabaseCreateCommand>(serviceProvider);
+        database.AddCommand<DatabaseRenameCommand>(serviceProvider);
+        database.AddCommand<DatabaseUpdateCommand>(serviceProvider);
+        database.AddCommand<DatabaseDeleteCommand>(serviceProvider);
 
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);
 
-        server.AddCommand(serviceProvider.GetRequiredService<ServerGetCommand>());
-        server.AddCommand(serviceProvider.GetRequiredService<ServerCreateCommand>());
-        server.AddCommand(serviceProvider.GetRequiredService<ServerDeleteCommand>());
+        server.AddCommand<ServerGetCommand>(serviceProvider);
+        server.AddCommand<ServerCreateCommand>(serviceProvider);
+        server.AddCommand<ServerDeleteCommand>(serviceProvider);
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");
         sql.AddSubGroup(elasticPool);
-        elasticPool.AddCommand(serviceProvider.GetRequiredService<ElasticPoolListCommand>());
+        elasticPool.AddCommand<ElasticPoolListCommand>(serviceProvider);
 
         var entraAdmin = new CommandGroup("entra-admin", "SQL server Microsoft Entra ID administrator operations");
         server.AddSubGroup(entraAdmin);
 
-        entraAdmin.AddCommand(serviceProvider.GetRequiredService<EntraAdminListCommand>());
+        entraAdmin.AddCommand<EntraAdminListCommand>(serviceProvider);
 
         var firewallRule = new CommandGroup("firewall-rule", "SQL server firewall rule operations");
         server.AddSubGroup(firewallRule);
 
-        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleListCommand>());
-        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleCreateCommand>());
-        firewallRule.AddCommand(serviceProvider.GetRequiredService<FirewallRuleDeleteCommand>());
+        firewallRule.AddCommand<FirewallRuleListCommand>(serviceProvider);
+        firewallRule.AddCommand<FirewallRuleCreateCommand>(serviceProvider);
+        firewallRule.AddCommand<FirewallRuleDeleteCommand>(serviceProvider);
 
         return sql;
     }

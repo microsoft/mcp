@@ -37,9 +37,9 @@ public class VirtualDesktopSetup : IAreaSetup
         hostpool.AddSubGroup(sessionhost);
 
         // Register AVD commands
-        hostpool.AddCommand(serviceProvider.GetRequiredService<HostpoolListCommand>());
-        sessionhost.AddCommand(serviceProvider.GetRequiredService<SessionHostListCommand>());
-        sessionhost.AddCommand(serviceProvider.GetRequiredService<SessionHostUserSessionListCommand>());
+        hostpool.AddCommand<HostpoolListCommand>(serviceProvider);
+        sessionhost.AddCommand<SessionHostListCommand>(serviceProvider);
+        sessionhost.AddCommand<SessionHostUserSessionListCommand>(serviceProvider);
 
         return desktop;
     }

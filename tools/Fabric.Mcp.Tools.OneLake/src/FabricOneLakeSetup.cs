@@ -68,20 +68,20 @@ public class FabricOneLakeSetup : IAreaSetup
             """);
 
         // Register all commands at the onelake level (flat structure with verb_object naming)
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<OneLakeItemListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<OneLakeItemDataListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<PathListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<BlobGetCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<BlobPutCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<FileDeleteCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<DirectoryCreateCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<DirectoryDeleteCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<TableConfigGetCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<TableNamespaceListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<TableNamespaceGetCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<TableListCommand>());
-        fabricOneLake.AddCommand(serviceProvider.GetRequiredService<TableGetCommand>());
+        fabricOneLake.AddCommand<OneLakeWorkspaceListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<OneLakeItemListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<OneLakeItemDataListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<PathListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<BlobGetCommand>(serviceProvider);
+        fabricOneLake.AddCommand<BlobPutCommand>(serviceProvider);
+        fabricOneLake.AddCommand<FileDeleteCommand>(serviceProvider);
+        fabricOneLake.AddCommand<DirectoryCreateCommand>(serviceProvider);
+        fabricOneLake.AddCommand<DirectoryDeleteCommand>(serviceProvider);
+        fabricOneLake.AddCommand<TableConfigGetCommand>(serviceProvider);
+        fabricOneLake.AddCommand<TableNamespaceListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<TableNamespaceGetCommand>(serviceProvider);
+        fabricOneLake.AddCommand<TableListCommand>(serviceProvider);
+        fabricOneLake.AddCommand<TableGetCommand>(serviceProvider);
 
         return fabricOneLake;
     }

@@ -30,11 +30,11 @@ public class WorkbooksSetup : IAreaSetup
     {
         var workbooks = new CommandGroup(Name, "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.", Title);
 
-        workbooks.AddCommand(serviceProvider.GetRequiredService<ListWorkbooksCommand>());
-        workbooks.AddCommand(serviceProvider.GetRequiredService<ShowWorkbooksCommand>());
-        workbooks.AddCommand(serviceProvider.GetRequiredService<UpdateWorkbooksCommand>());
-        workbooks.AddCommand(serviceProvider.GetRequiredService<CreateWorkbooksCommand>());
-        workbooks.AddCommand(serviceProvider.GetRequiredService<DeleteWorkbooksCommand>());
+        workbooks.AddCommand<ListWorkbooksCommand>(serviceProvider);
+        workbooks.AddCommand<ShowWorkbooksCommand>(serviceProvider);
+        workbooks.AddCommand<UpdateWorkbooksCommand>(serviceProvider);
+        workbooks.AddCommand<CreateWorkbooksCommand>(serviceProvider);
+        workbooks.AddCommand<DeleteWorkbooksCommand>(serviceProvider);
 
         return workbooks;
     }

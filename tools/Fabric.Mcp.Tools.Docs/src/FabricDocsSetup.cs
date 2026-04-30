@@ -45,12 +45,12 @@ public class FabricDocsSetup : IAreaSetup
             """, Title);
 
         // Register all commands directly at the docs level (flat structure)
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<ListWorkloadsCommand>());
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<GetWorkloadApisCommand>());
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<GetPlatformApisCommand>());
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>());
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<GetBestPracticesCommand>());
-        fabricDocs.AddCommand(serviceProvider.GetRequiredService<GetExamplesCommand>());
+        fabricDocs.AddCommand<ListWorkloadsCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetWorkloadApisCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetPlatformApisCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetWorkloadDefinitionCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetBestPracticesCommand>(serviceProvider);
+        fabricDocs.AddCommand<GetExamplesCommand>(serviceProvider);
 
         return fabricDocs;
     }

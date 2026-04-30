@@ -39,14 +39,14 @@ public class ServiceFabricSetup : IAreaSetup
             "Node operations - Commands for getting and querying nodes in a Service Fabric managed cluster.");
         managedCluster.AddSubGroup(node);
 
-        node.AddCommand(serviceProvider.GetRequiredService<ManagedClusterNodeGetCommand>());
+        node.AddCommand<ManagedClusterNodeGetCommand>(serviceProvider);
 
         var nodetype = new CommandGroup(
             "nodetype",
             "Node type operations - Commands for managing node types in a Service Fabric managed cluster.");
         managedCluster.AddSubGroup(nodetype);
 
-        nodetype.AddCommand(serviceProvider.GetRequiredService<ManagedClusterNodeTypeRestartCommand>());
+        nodetype.AddCommand<ManagedClusterNodeTypeRestartCommand>(serviceProvider);
 
         return serviceFabric;
     }

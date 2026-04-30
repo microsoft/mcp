@@ -29,7 +29,7 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
         var serviceGuide = new CommandGroup("serviceguide", "Service guide operations - Commands for retrieving Azure Well-Architected Framework service-specific guidance and recommendations.");
         wellArchitectedCommandGroup.AddSubGroup(serviceGuide);
 
-        serviceGuide.AddCommand(serviceProvider.GetRequiredService<ServiceGuideGetCommand>());
+        serviceGuide.AddCommand<ServiceGuideGetCommand>(serviceProvider);
 
         return wellArchitectedCommandGroup;
     }
