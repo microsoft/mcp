@@ -122,7 +122,15 @@ function BuildServer($server) {
             if ($runtime -eq $currentRid) {
                 Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
                 try {
-                    & $exePath tools list
+                    $toolListResponse = & $exePath tools list
+                    $toolListJson = ConvertFrom-Json ($toolListResponse | Join-String)
+                    if ($toolListJson.status -ne 200)
+                    {
+                        # Only log the response if there was an error. tools list is unbounded on size and can be
+                        # difficult to read in the logs, so we want to avoid logging it on success.
+                        # For example, at the time of writing this, Azure MCP's tools list is >20k lines long.
+                        Write-Error $toolListResponse
+                    }
                 } catch {
                     LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
                     $script:exitCode = 1
