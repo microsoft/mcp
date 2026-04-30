@@ -3802,6 +3802,7 @@
       },
       "mappedToolList": [
         "azurebackup_vault_update",
+        "azurebackup_policy_update",
         "azurebackup_governance_immutability",
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",

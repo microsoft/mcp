@@ -35,6 +35,7 @@ public sealed class AzureBackupSetup : IAreaSetup
 
         services.AddSingleton<PolicyGetCommand>();
         services.AddSingleton<PolicyCreateCommand>();
+        services.AddSingleton<PolicyUpdateCommand>();
 
         services.AddSingleton<ProtectedItemGetCommand>();
         services.AddSingleton<ProtectedItemProtectCommand>();
@@ -72,10 +73,11 @@ public sealed class AzureBackupSetup : IAreaSetup
         vault.AddCommand<VaultCreateCommand>(serviceProvider);
         vault.AddCommand<VaultUpdateCommand>(serviceProvider);
 
-        var policy = new CommandGroup("policy", "Backup policy operations - Get policy details or list all policies, and create policies.");
+        var policy = new CommandGroup("policy", "Backup policy operations - Get policy details or list all policies, create, and update policies.");
         azureBackup.AddSubGroup(policy);
         policy.AddCommand<PolicyGetCommand>(serviceProvider);
         policy.AddCommand<PolicyCreateCommand>(serviceProvider);
+        policy.AddCommand<PolicyUpdateCommand>(serviceProvider);
 
         var protectedItem = new CommandGroup("protecteditem", "Protected item operations - Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
         azureBackup.AddSubGroup(protectedItem);

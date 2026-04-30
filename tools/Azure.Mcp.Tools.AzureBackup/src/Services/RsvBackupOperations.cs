@@ -721,6 +721,175 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
 
+    public async Task<OperationResult> UpdatePolicyAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string policyName,
+        string? scheduleTime, string? dailyRetentionDays,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(policyName), policyName));
+
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
+
+        var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
+        var policyData = existingPolicy.Value.Data;
+        var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
+            ?? throw new InvalidOperationException($"Policy '{policyName}' has an unsupported properties type.");
+
+        DateTimeOffset? newScheduleTime = null;
+        if (!string.IsNullOrWhiteSpace(scheduleTime))
+        {
+            if (!DateTimeOffset.TryParse(scheduleTime, out var st))
+            {
+                throw new ArgumentException($"Invalid schedule time '{scheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
+            }
+            newScheduleTime = st;
+        }
+
+        int? newRetentionDays = null;
+        if (!string.IsNullOrWhiteSpace(dailyRetentionDays))
+        {
+            if (!int.TryParse(dailyRetentionDays, out var dd) || dd <= 0)
+            {
+                throw new ArgumentException($"Invalid daily retention days '{dailyRetentionDays}'. Provide a positive integer.");
+            }
+            newRetentionDays = dd;
+        }
+
+        if (newScheduleTime is null && newRetentionDays is null)
+        {
+            return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
+        }
+
+        UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+
+        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
+    }
+
+    private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
+    {
+        bool scheduleApplied = newScheduleTime is null;
+        bool retentionApplied = newRetentionDays is null;
+
+        switch (policyProperties)
+        {
+            case VmWorkloadProtectionPolicy wlPolicy:
+                foreach (var subPolicy in wlPolicy.SubProtectionPolicy)
+                {
+                    if (subPolicy.PolicyType?.ToString() == "Full")
+                    {
+                        if (newScheduleTime is not null && subPolicy.SchedulePolicy is SimpleSchedulePolicy fullSchedule)
+                        {
+                            var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                            fullSchedule.ScheduleRunTimes.Clear();
+                            fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                            scheduleApplied = true;
+                        }
+
+                        if (newRetentionDays is not null && subPolicy.RetentionPolicy is LongTermRetentionPolicy fullRetention && fullRetention.DailySchedule is not null)
+                        {
+                            fullRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
+                            if (newScheduleTime is not null)
+                            {
+                                var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                                fullRetention.DailySchedule.RetentionTimes.Clear();
+                                fullRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
+                            }
+                            retentionApplied = true;
+                        }
+                    }
+                }
+                break;
+
+            case IaasVmProtectionPolicy vmPolicy:
+                if (newScheduleTime is not null && vmPolicy.SchedulePolicy is SimpleSchedulePolicy vmSchedule)
+                {
+                    var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                    vmSchedule.ScheduleRunTimes.Clear();
+                    vmSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                    scheduleApplied = true;
+                }
+
+                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy vmRetention && vmRetention.DailySchedule is not null)
+                {
+                    if (newRetentionDays is not null)
+                    {
+                        vmRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
+                        retentionApplied = true;
+                    }
+
+                    if (newScheduleTime is not null)
+                    {
+                        var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                        vmRetention.DailySchedule.RetentionTimes.Clear();
+                        vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
+                    }
+                }
+                else if (newRetentionDays is not null)
+                {
+                    // Retention policy type not supported for update
+                }
+                break;
+
+            case FileShareProtectionPolicy fsPolicy:
+                if (newScheduleTime is not null && fsPolicy.SchedulePolicy is SimpleSchedulePolicy fsSchedule)
+                {
+                    var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                    fsSchedule.ScheduleRunTimes.Clear();
+                    fsSchedule.ScheduleRunTimes.Add(scheduleRunTime);
+                    scheduleApplied = true;
+                }
+
+                if (fsPolicy.RetentionPolicy is LongTermRetentionPolicy fsRetention && fsRetention.DailySchedule is not null)
+                {
+                    if (newRetentionDays is not null)
+                    {
+                        fsRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
+                        retentionApplied = true;
+                    }
+
+                    if (newScheduleTime is not null)
+                    {
+                        var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
+                        fsRetention.DailySchedule.RetentionTimes.Clear();
+                        fsRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
+                    }
+                }
+                else if (newRetentionDays is not null)
+                {
+                    // Retention policy type not supported for update
+                }
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
+        }
+
+        if (!scheduleApplied)
+        {
+            throw new InvalidOperationException(
+                $"Schedule update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a schedule type that is not supported for update. Only SimpleSchedulePolicy is supported.");
+        }
+
+        if (!retentionApplied)
+        {
+            throw new InvalidOperationException(
+                $"Retention update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a retention type that is not supported for update. Only LongTermRetentionPolicy with a daily schedule is supported.");
+        }
+    }
+
+    private static DateTimeOffset NormalizeScheduleTime(DateTimeOffset input) =>
+        new(input.Year, input.Month, input.Day, input.Hour, input.Minute, 0, TimeSpan.Zero);
+
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
         string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
