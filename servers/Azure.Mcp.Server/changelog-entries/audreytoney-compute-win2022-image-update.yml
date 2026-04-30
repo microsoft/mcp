@@ -1,0 +1,7 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer (`MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest`) instead of the previous `WindowsServer` offer. The new image avoids the deprecated .NET 6 runtime bundled with the old SKU."
+  - section: "Breaking Changes"
+    description: "Removed the `Win2019Datacenter` image alias. Use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is still needed."
+  - section: "Features Added"
+    description: "Added `Win2022Datacenter1P` image alias for the first-party shared gallery Windows Server 2022 image (`/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`), which does not require a marketplace purchase plan."

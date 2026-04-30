@@ -1163,9 +1163,54 @@ azmcp compute vm create --subscription "my-subscription" \
                         --no-public-ip
 ```
 
+**Image Formats:**
+
+The `--image` option accepts three formats:
+
+1. **Alias** — a short name that maps to a predefined Marketplace image or shared gallery image (see table below).
+2. **Marketplace URN** — `publisher:offer:sku:version` (e.g., `MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest`).
+3. **Shared gallery image ID** — a path starting with `/sharedGalleries/` (e.g., `/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest`).
+
+If omitted, defaults to `Ubuntu2404`.
+
 **Image Aliases:**
-- Linux: `Ubuntu2404`, `Ubuntu2204`, `Ubuntu2004`, `Debian11`, `Debian12`, `RHEL9`, `CentOS8`
-- Windows: `Win2022Datacenter`, `Win2022Datacenter1P`, `Win11Pro`, `Win10Pro`
+
+| Alias | OS | Source | Image |
+|-------|------|--------|-------|
+| `Ubuntu2404` | Linux | Marketplace | Canonical ubuntu-24_04-lts |
+| `Ubuntu2204` | Linux | Marketplace | Canonical 0001-com-ubuntu-server-jammy |
+| `Ubuntu2004` | Linux | Marketplace | Canonical 0001-com-ubuntu-server-focal |
+| `Debian11` | Linux | Marketplace | Debian debian-11 |
+| `Debian12` | Linux | Marketplace | Debian debian-12 |
+| `RHEL9` | Linux | Marketplace | RedHat RHEL 9_0 |
+| `CentOS8` | Linux | Marketplace | OpenLogic CentOS 8_5-gen2 |
+| `Win2022Datacenter` | Windows | Marketplace | MicrosoftWindowsServer WindowsServer2022 2022-datacenter-azure-edition |
+| `Win2022Datacenter1P` | Windows | Shared Gallery | WINDOWSSERVER.1P 2022-DATACENTER-AZURE-EDITION (first-party gallery) |
+| `Win11Pro` | Windows | Marketplace | MicrosoftWindowsDesktop windows-11 win11-22h2-pro |
+| `Win10Pro` | Windows | Marketplace | MicrosoftWindowsDesktop Windows-10 win10-22h2-pro-g2 |
+
+> **Note:** `Win2022Datacenter1P` uses a first-party shared gallery image instead of Azure Marketplace.
+
+**Examples using different image formats:**
+
+```bash
+# Using an alias
+azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
+    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
+    --admin-password "P@ssw0rd!" --image "Win2022Datacenter"
+
+# Using a Marketplace URN
+azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
+    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
+    --admin-password "P@ssw0rd!" \
+    --image "MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest"
+
+# Using a shared gallery image ID
+azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
+    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
+    --admin-password "P@ssw0rd!" \
+    --image "/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"
+```
 
 **Parameters:**
 | Parameter | Required | Description |
@@ -1178,7 +1223,7 @@ azmcp compute vm create --subscription "my-subscription" \
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
-| `--image` | No | Image alias or URN (default: Ubuntu2404) |
+| `--image` | No | Image alias, Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). Default: `Ubuntu2404` |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |
