@@ -14,17 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
+[CommandMetadata(
+    Id = "a3f7d2c1-9e84-4b6a-8d3c-5f1e7a2b9c04",
+    Name = "update",
+    Title = "Update Backup Policy",
+    Description = "Modifies an existing RSV backup policy. Updates the backup schedule time and daily retention days for VM, SQL, SAP HANA, and file share workload policies. The named policy must already exist in the vault.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyUpdateOptions>()
 {
-    private const string CommandTitle = "Update Backup Policy";
     private readonly ILogger<PolicyUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "a3f7d2c1-9e84-4b6a-8d3c-5f1e7a2b9c04";
-    public override string Name => "update";
-    public override string Description => "Modifies an existing RSV backup policy. Updates the backup schedule time and daily retention days for VM, SQL, SAP HANA, and file share workload policies. The named policy must already exist in the vault.";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
 
     protected override void RegisterOptions(Command command)
     {
