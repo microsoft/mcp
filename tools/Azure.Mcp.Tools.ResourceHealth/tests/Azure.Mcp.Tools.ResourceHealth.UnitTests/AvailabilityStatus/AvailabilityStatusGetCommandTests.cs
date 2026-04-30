@@ -70,7 +70,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var expectedError = $"Resource Health availability status is not supported for resource type '{resourceType}'. Use a supported Azure resource type, or list availability statuses at the subscription or resource group scope. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ResourceHealthUnsupportedResourceException(resourceId, resourceType));
+            .ThrowsAsync(new ResourceHealthUnsupportedResourceTypeException(resourceId, resourceType));
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
 

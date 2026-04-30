@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public sealed class ResourceHealthUnsupportedResourceException(
+public sealed class ResourceHealthUnsupportedResourceTypeException(
     string resourceId,
     string resourceType,
     string? responseContent = null)

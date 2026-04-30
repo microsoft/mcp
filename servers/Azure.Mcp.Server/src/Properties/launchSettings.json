@@ -14,7 +14,7 @@
     },
     "local": {
       "commandName": "Project",
-      "commandLineArgs": "server start",
+      "commandLineArgs": "resourcehealth availability-status get --subscription a18897a6-7e44-457d-9260-f2854c0aca42 --resourceId /subscriptions/a18897a6-7e44-457d-9260-f2854c0aca42/resourceGroups/apiview/providers/Microsoft.Network/virtualNetworks/apiviewvnet\r\n",
       "environmentVariables": {
         "DONET_ENVIRONMENT": "Development"
       },

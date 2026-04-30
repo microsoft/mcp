@@ -105,16 +105,14 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        ResourceHealthUnsupportedResourceException unsupportedEx =>
-            $"Resource Health availability status is not supported for resource type '{unsupportedEx.ResourceType}'. Use a supported Azure resource type, or list availability statuses at the subscription or resource group scope",
-        HttpRequestException httpEx => httpEx.Message,
+        ResourceHealthUnsupportedResourceTypeException unsupportedEx =>
+            $"Resource Health availability status is not supported for resource type '{unsupportedEx.ResourceType}'. Use a supported Azure resource type, or list availability statuses at the subscription or resource group scope. { base.GetErrorMessage(ex) }",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ResourceHealthUnsupportedResourceException unsupportedEx => unsupportedEx.StatusCode,
-        HttpRequestException httpEx when httpEx.StatusCode.HasValue => httpEx.StatusCode.Value,
+        ResourceHealthUnsupportedResourceTypeException unsupportedEx => unsupportedEx.StatusCode,
         _ => base.GetStatusCode(ex)
     };
 

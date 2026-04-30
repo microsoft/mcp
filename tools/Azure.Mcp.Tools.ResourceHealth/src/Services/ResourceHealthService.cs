@@ -53,7 +53,17 @@ public class ResourceHealthService(
         if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
         {
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new ResourceHealthUnsupportedResourceException(resourceId, parsedResourceId.ResourceType.ToString(), responseContent);
+            try
+            {
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                if (jsonDoc.RootElement.TryGetProperty("code", out var codeProperty) && codeProperty.GetString() == "UnsupportedResourceType")
+                {
+                    throw new ResourceHealthUnsupportedResourceTypeException(resourceId, parsedResourceId.ResourceType.ToString(), responseContent);
+                }
+            }
+            catch (JsonException)
+            {
+            }
         }
 
         response.EnsureSuccessStatusCode();

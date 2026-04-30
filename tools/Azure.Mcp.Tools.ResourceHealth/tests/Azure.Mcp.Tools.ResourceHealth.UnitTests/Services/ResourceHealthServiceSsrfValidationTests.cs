@@ -192,7 +192,7 @@ public class ResourceHealthServiceSsrfValidationTests
         };
         SetupMocksForValidRequest(mockResponse);
 
-        var exception = await Assert.ThrowsAsync<ResourceHealthUnsupportedResourceException>(
+        var exception = await Assert.ThrowsAsync<ResourceHealthUnsupportedResourceTypeException>(
             () => _service.GetAvailabilityStatusAsync(resourceId, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(resourceId, exception.ResourceId);
