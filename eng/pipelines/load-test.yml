@@ -225,6 +225,19 @@ stages:
                   --yes || true
 
           - task: AzureCLI@2
+            displayName: Delete user-assigned managed identity
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Deleting user-assigned managed identity $(containerAppName)-uami..."
+                # Deleting the identity cascade-removes its role assignments (e.g. AcrPull on the ACR).
+                az identity delete \
+                  --name $(containerAppName)-uami \
+                  --resource-group $(AZURE_LOAD_TEST_RESOURCE_GROUP) || true
+
+          - task: AzureCLI@2
             displayName: Remove image tag from ACR
             inputs:
               azureSubscription: $(AZURE_SERVICE_CONNECTION)
