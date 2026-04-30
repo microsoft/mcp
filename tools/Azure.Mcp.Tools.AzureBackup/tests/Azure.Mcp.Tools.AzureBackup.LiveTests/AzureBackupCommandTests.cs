@@ -470,7 +470,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable("updateVmPolicyName", $"test-upd-vm-{Random.Shared.NextInt64()}");
 
-        // Create a VM policy first
+        // Create a VM policy with lower retention first
         await CallToolAsync(
             "azurebackup_policy_create",
             new()
@@ -480,10 +480,10 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureVM" },
-                { "daily-retention-days", "30" }
+                { "daily-retention-days", "14" }
             });
 
-        // Update retention to 14 days
+        // Increase retention to 30 days (immutable vaults block reduction)
         var result = await CallToolAsync(
             "azurebackup_policy_update",
             new()
@@ -492,7 +492,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "daily-retention-days", "14" }
+                { "daily-retention-days", "30" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -506,7 +506,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
         var policyName = RegisterOrRetrieveVariable("updateVmSchedulePolicyName", $"test-upd-vms-{Random.Shared.NextInt64()}");
 
-        // Create a VM policy first
+        // Create a VM policy with lower retention first
         await CallToolAsync(
             "azurebackup_policy_create",
             new()
