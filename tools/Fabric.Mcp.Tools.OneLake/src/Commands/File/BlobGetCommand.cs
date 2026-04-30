@@ -14,6 +14,17 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
+[CommandMetadata(
+    Id = "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9",
+    Name = "download_file",
+    Title = "Download OneLake File",
+    Description = "Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<BlobGetOptions>()
@@ -22,21 +33,6 @@ public sealed class BlobGetCommand(
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
-
-    public override string Id => "75d6cb4c-4e81-4e69-a4ec-eca53a7dacd9";
-    public override string Name => "download_file";
-    public override string Title => "Download OneLake File";
-    public override string Description => "Downloads a file from OneLake storage. Use this when the user needs to retrieve file content or metadata. Returns base64 content, metadata, and text when applicable.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -16,27 +16,23 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 /// <summary>
 /// Command to create a directory in OneLake storage.
 /// </summary>
+[CommandMetadata(
+    Id = "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe",
+    Name = "create_directory",
+    Title = "Create OneLake Directory",
+    Description = "Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class DirectoryCreateCommand(
     ILogger<DirectoryCreateCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<DirectoryCreateOptions>()
 {
     private readonly ILogger<DirectoryCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "0c4cf0f4-2ef4-4f1d-9f80-24fd7636d5fe";
-    public override string Name => "create_directory";
-    public override string Title => "Create OneLake Directory";
-    public override string Description => "Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
