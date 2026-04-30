@@ -1,17 +1,39 @@
 ---
+name: Documentation Updater
+description: |
+  Documentation gap detector for the Azure MCP repository
+  Triggered on every push to main, analyzes diff to identify documentation gaps
+  and files GitHub issues for copilot coding agent to implement.
+
 on:
   push:
     branches: [main]
-permissions:
-  contents: read
-  issues: read
-  pull-requests: read
+  workflow_dispatch:
+
+permissions: read-all
+
+network:
+  allowed:
+    - defaults
+    - github
+    - dotnet
+
 tools:
+  web-fetch:
   github:
     toolsets: [default]
+
+timeout-minutes: 15
+
 safe-outputs:
+  report-failure-as-issue: false
   create-issue:
-    max: 3
+    title-prefix: "[Docs]"
+    labels: ['documentation']
+    max: 1
+  noop:
+    report-as-issue: false
+
 ---
 
 # Documentation Gap Detector
