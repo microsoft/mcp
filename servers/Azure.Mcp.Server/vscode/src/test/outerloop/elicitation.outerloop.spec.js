@@ -58,8 +58,7 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         });
 
         try {
-            const window = await app.firstWindow();
-            await expect(window).toHaveTitle(/Visual Studio Code/i);
+            const window = await waitForWorkbenchWindow(app);
 
             await runCommand(window, 'MCP: Run Tool');
             await selectFromQuickInput(window, MCP_SERVER_NAME);
@@ -84,6 +83,27 @@ async function clearVsCodeDownloadCache() {
     await Promise.all(cacheCandidates.map(async cachePath => {
         await fs.rm(cachePath, { recursive: true, force: true });
     }));
+}
+
+async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+        const windows = app.windows();
+        for (const candidate of windows) {
+            try {
+                const workbench = candidate.locator('.monaco-workbench');
+                await workbench.waitFor({ state: 'visible', timeout: 2000 });
+                return candidate;
+            } catch {
+                // Not the workbench window yet (could be the shared/loader window).
+            }
+        }
+
+        await app.waitForEvent('window', { timeout: 2000 }).catch(() => undefined);
+    }
+
+    throw new Error(`Timed out waiting for VS Code workbench window after ${timeoutMs}ms`);
 }
 
 async function runCommand(window, commandName) {
