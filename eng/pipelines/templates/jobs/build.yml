@@ -48,12 +48,8 @@ jobs:
     displayName: 'Download build info artifact'
 
   - checkout: self
- 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: Powershell@2
     displayName: "Build code"
