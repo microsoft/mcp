@@ -22,6 +22,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         var expectedServices = new List<string> { "service1", "service2" };
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -42,6 +43,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         // Arrange
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -65,6 +67,7 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
 
         Service.ListServices(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())

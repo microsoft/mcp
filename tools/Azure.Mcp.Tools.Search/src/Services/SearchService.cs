@@ -41,11 +41,27 @@ public sealed partial class SearchService(
 
     public async Task<List<string>> ListServices(
         string subscription,
+        string? resourceGroup = null,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
+
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+            var rgResource = (await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
+            var rgServices = new List<string>();
+            await foreach (var service in rgResource.GetSearchServices().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                if (service?.Data?.Name != null)
+                {
+                    rgServices.Add(service.Data.Name);
+                }
+            }
+            return rgServices;
+        }
 
         var cacheKey = string.IsNullOrEmpty(tenantId)
             ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, _tenantService.CloudConfiguration.CloudType.ToString())
@@ -57,9 +73,9 @@ public sealed partial class SearchService(
             return cachedServices;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResourceSub = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var services = new List<string>();
-        await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
+        await foreach (var service in subscriptionResourceSub.GetSearchServicesAsync(cancellationToken: cancellationToken))
         {
             if (service?.Data?.Name != null)
             {

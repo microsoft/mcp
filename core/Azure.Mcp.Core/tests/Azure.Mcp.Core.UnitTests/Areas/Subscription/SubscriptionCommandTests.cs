@@ -45,6 +45,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -60,6 +61,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
         await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             subscription,
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
@@ -82,6 +84,7 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(expectedSubscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -97,12 +100,14 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
         await Service.Received(1).GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             expectedSubscription,
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());

@@ -61,7 +61,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
             )
         ], false);
 
-        Service.ListWorkspacesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
@@ -79,7 +79,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
     {
         // Arrange
-        Service.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
 
         // Act
@@ -112,7 +112,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
             )
         ], false);
 
-        Service.ListWorkspacesAsync("sub123", "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
@@ -130,7 +130,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         var subscriptionId = "sub123";
 
-        Service.ListWorkspacesAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act

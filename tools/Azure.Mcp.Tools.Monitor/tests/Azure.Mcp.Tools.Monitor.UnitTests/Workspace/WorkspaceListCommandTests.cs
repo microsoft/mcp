@@ -32,7 +32,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
                 new() { Name = "workspace1", CustomerId = "guid1" },
                 new() { Name = "workspace2", CustomerId = "guid2" }
             };
-            Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(testWorkspaces);
         }
 
@@ -62,7 +62,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
             new() { Name = "workspace2", CustomerId = "guid2" },
             new() { Name = "workspace3", CustomerId = "guid3" }
         };
-        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
@@ -70,7 +70,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
 
         // Assert
         // Verify the mock was called
-        await Service.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WorkspaceListCommandResult);
 
@@ -85,7 +85,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     public async Task ExecuteAsync_ReturnsEmptyWhenNoWorkspaces()
     {
         // Arrange
-        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -101,7 +101,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act

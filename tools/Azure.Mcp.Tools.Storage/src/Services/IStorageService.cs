@@ -12,6 +12,7 @@ public interface IStorageService
     Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

@@ -21,7 +21,7 @@ public sealed class ClusterListCommandTests : CommandUnitTestsBase<ClusterListCo
         // Arrange
         var expectedClusters = new ResourceQueryResults<string>(["clusterA", "clusterB"], false);
         Service.ListClustersAsync(
-            "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            "sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
         // Act
@@ -37,7 +37,7 @@ public sealed class ClusterListCommandTests : CommandUnitTestsBase<ClusterListCo
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
-        Service.ListClustersAsync("sub123", null, null, Arg.Any<CancellationToken>())
+        Service.ListClustersAsync("sub123", Arg.Any<string?>(), null, null, Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<string>([], false));
 
         // Act
@@ -57,7 +57,7 @@ public sealed class ClusterListCommandTests : CommandUnitTestsBase<ClusterListCo
         var subscriptionId = "sub123";
 
         // Arrange
-        Service.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListClustersAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act

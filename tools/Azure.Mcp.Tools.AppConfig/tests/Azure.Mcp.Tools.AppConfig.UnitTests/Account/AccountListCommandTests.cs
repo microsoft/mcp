@@ -29,6 +29,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         Service.GetAppConfigAccounts(
             "sub123",
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
@@ -50,6 +51,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         // Arrange
         Service.GetAppConfigAccounts(
             Arg.Any<string>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -68,11 +70,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        Service.GetAppConfigAccounts(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         // Act
@@ -98,7 +96,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
-        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         // Act
