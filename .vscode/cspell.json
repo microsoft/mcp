@@ -672,6 +672,11 @@
         "locallyredundant",
         "undelete",
         "undeletes",
-        "zoneredundant"
+        "zoneredundant",
+        "iaasvm",
+        "azurefileshare",
+        "sapase",
+        "sapasedatabase",
+        "sybase"
     ]
 }

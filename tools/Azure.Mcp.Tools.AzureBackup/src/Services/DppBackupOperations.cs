@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -141,9 +141,36 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
-        var datasourceResourceId = new ResourceIdentifier(datasourceId);
+        ResourceIdentifier datasourceResourceId;
+        try
+        {
+            datasourceResourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/disks/{name}).", ex);
+        }
 
-        var resolvedDatasourceType = datasourceType ?? datasourceResourceId.ResourceType.ToString();
+        string resolvedDatasourceType;
+        if (!string.IsNullOrEmpty(datasourceType))
+        {
+            resolvedDatasourceType = datasourceType;
+        }
+        else
+        {
+            try
+            {
+                resolvedDatasourceType = datasourceResourceId.ResourceType.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(
+                    $"Could not determine datasource type from '{datasourceId}'. " +
+                    "The ARM resource ID may be malformed. Provide --datasource-type explicitly or fix the resource ID.", ex);
+            }
+        }
         var profile = ResolveProfile(resolvedDatasourceType);
 
         var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
@@ -286,7 +313,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         // Fall back to listing all items and searching by friendly name
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var found = items.FirstOrDefault(i =>
-            i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesDppFriendlyName(i, protectedItemName));
         return found ?? throw new KeyNotFoundException(
             $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
@@ -676,7 +703,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             rules);
         var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
 
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        try
+        {
+            await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
+        {
+            // DPP does not support updating an existing policy via CreateOrUpdate.
+            // If the policy already exists, treat it as success (idempotent create).
+            return new OperationResult("Succeeded", null, $"Policy '{policyName}' already exists in vault '{vaultName}'.");
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
@@ -693,6 +729,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // Pre-check current state. Re-enabling an already-enabled CRR returns a generic
+        // CloudInternalError on the DPP backend, which is indistinguishable from a real
+        // platform failure - so we avoid the call entirely when CRR is already enabled.
+        var vault = await vaultResource.GetAsync(cancellationToken);
+        if (vault.Value.Data.Properties?.FeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        {
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
 
         var patchData = new DataProtectionBackupVaultPatch
         {
