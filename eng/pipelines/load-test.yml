@@ -188,7 +188,6 @@ stages:
               resourceGroup: $(AZURE_LOAD_TEST_RESOURCE_GROUP)
               env: |
                 [
-                  { "name": "MCP_SERVER_URL",    "value": "$(mcpServerEndpoint)" },
                   { "name": "MCP_SUBSCRIPTION",  "value": "$(MCP_SUBSCRIPTION)" }
                 ]
 
