@@ -1,42 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
+[CommandMetadata(
+    Id = "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+    Name = "create",
+    Title = "Create File Share",
+    Description = "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<FileShareCreateOrUpdateOptions>(logger, service)
 {
-    private const string CommandTitle = "Create File Share";
-
-    public override string Id => "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e";
-    public override string Name => "create";
-    public override string Description => "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -132,8 +121,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new FileShareCreateCommandResult(fileShare);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareCreateCommandResult);
 
             _logger.LogInformation("File share created successfully. FileShare: {FileShareName}", options.FileShareName);
         }
@@ -146,5 +134,5 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
         return context.Response;
     }
 
-    internal record FileShareCreateCommandResult([property: JsonPropertyName("fileShare")] FileShareInfo FileShare);
+    internal record FileShareCreateCommandResult(FileShareInfo FileShare);
 }

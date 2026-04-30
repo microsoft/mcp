@@ -4,7 +4,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 

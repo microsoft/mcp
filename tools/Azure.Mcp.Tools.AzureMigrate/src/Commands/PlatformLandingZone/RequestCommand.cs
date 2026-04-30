@@ -1,16 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -19,23 +17,11 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to generate and download platform landing zone configurations, update parameters, check existing platform landing zones, and view status.
 /// </summary>
-public sealed class RequestCommand(ILogger<RequestCommand> logger)
-    : SubscriptionCommand<RequestOptions>()
-{
-    private const string CommandTitle = "Platform Landing Zone Management";
-
-    /// <inheritdoc/>
-    public override string Id => "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b";
-
-    /// <inheritdoc/>
-    public override string Name => "request";
-
-    /// <inheritdoc/>
-    public override string Title => CommandTitle;
-
-    /// <inheritdoc/>
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b",
+    Name = "request",
+    Title = "Platform Landing Zone Management",
+    Description = """
         Generate and download platform landing zone configurations for Azure Migrate projects.
         Updates parameters, check existing landing zones, and view parameters status.
 
@@ -78,18 +64,28 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
 
         **IMPORTANT:** When using 'update', collect ALL parameters from the user in ONE call.
         Show them the defaults and ask which ones they want to change.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class RequestCommand(ILogger<RequestCommand> logger, IPlatformLandingZoneService platformLandingZoneService, AzureMigrateProjectHelper azureMigrateProjectHelper)
+    : SubscriptionCommand<RequestOptions>()
+{
+    private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
+    private readonly AzureMigrateProjectHelper _azureMigrateProjectHelper = azureMigrateProjectHelper;
 
     /// <inheritdoc/>
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        ReadOnly = false,
-        LocalRequired = true,
-        Idempotent = true,
-        OpenWorld = false,
-        Secret = false
-    };
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
+
+    /// <inheritdoc/>
 
     /// <inheritdoc/>
     protected override void RegisterOptions(Command command)
@@ -151,48 +147,29 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
 
         try
         {
-            if (string.IsNullOrEmpty(options.Subscription))
-            {
-                throw new ArgumentException("Subscription is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                throw new ArgumentException("Resource group is required.");
-            }
-
-            if (string.IsNullOrEmpty(options.MigrateProjectName))
-            {
-                throw new ArgumentException("Migrate project name is required.");
-            }
-
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.MigrateProjectName);
+                options.MigrateProjectName!);
 
             var action = options.Action?.ToLowerInvariant();
 
-            var platformLandingZoneService = context.GetService<IPlatformLandingZoneService>();
-
             var result = action switch
             {
-                "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(context, options, cancellationToken),
-                "update" => await HandleUpdateActionAsync(platformLandingZoneService, landingZoneContext, options, cancellationToken),
-                "check" => await HandleCheckActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "generate" => await HandleGenerateActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "download" => await HandleDownloadActionAsync(platformLandingZoneService, landingZoneContext, cancellationToken),
-                "status" => HandleStatusAction(platformLandingZoneService, landingZoneContext),
+                "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
+                "update" => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                "check" => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "generate" => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "status" => HandleStatusAction(_platformLandingZoneService, landingZoneContext),
                 _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
             };
 
-            context.Response.Results = ResponseResult.Create(
-                new RequestCommandResult(result),
-                AzureMigrateJsonContext.Default.RequestCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
+            logger.LogError(ex, "Error in {Operation}. Action: {Action}, ResourceGroup: {ResourceGroup}.", Name, options.Action, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -298,7 +275,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
     }
 
     private static async Task<string> HandleCreateMigrateProjectActionAsync(
-        CommandContext context,
+        AzureMigrateProjectHelper azureMigrateProjectHelper,
         RequestOptions options,
         CancellationToken cancellationToken)
     {
@@ -307,9 +284,7 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
             throw new ArgumentException("Location is required for creating an Azure Migrate project. Specify the Azure region (e.g., 'eastus', 'westus2').");
         }
 
-        var deploymentHelper = context.GetService<AzureMigrateProjectHelper>();
-
-        var result = await deploymentHelper.CreateAzureMigrateProjectAsync(
+        var result = await azureMigrateProjectHelper.CreateAzureMigrateProjectAsync(
             options.MigrateProjectName!,
             options.ResourceGroup!,
             options.Location,
@@ -332,5 +307,5 @@ public sealed class RequestCommand(ILogger<RequestCommand> logger)
     /// Result for the platform landing zone generate command.
     /// </summary>
     /// <param name="Message">The result message.</param>
-    internal sealed record RequestCommandResult([property: JsonPropertyName("message")] string Message);
+    internal sealed record RequestCommandResult(string Message);
 }

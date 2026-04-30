@@ -23,10 +23,10 @@ public static class TemplateService
     public static string LoadTemplate(string templateName)
     {
         string fileNamespace = TemplateNamespace;
-        if (templateName.Contains("/"))
+        if (templateName.Contains('/'))
         {
-            fileNamespace += "." + templateName.Split("/")[0];
-            templateName = templateName.Split("/")[1];
+            fileNamespace += "." + templateName.Split('/')[0];
+            templateName = templateName.Split('/')[1];
         }
         var resourceName = $"{fileNamespace}.{templateName}.md";
 

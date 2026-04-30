@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -178,6 +176,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
             .Where(kvp => _options.Value.ReadOnly == false || kvp.Value.Metadata.ReadOnly == true)
+            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
             .Where(kvp =>
             {
                 // Filter by namespace if specified
@@ -229,18 +228,12 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 /// Each instance creates a top-level namespace for one consolidated tool in the CommandFactory.
 /// This allows NamespaceToolLoader to see each consolidated tool as a separate top-level namespace.
 /// </summary>
-internal sealed class SingleConsolidatedToolAreaSetup : IAreaSetup
+internal sealed class SingleConsolidatedToolAreaSetup(
+    ConsolidatedToolDefinition consolidatedTool,
+    Dictionary<string, IBaseCommand> matchingCommands) : IAreaSetup
 {
-    private readonly ConsolidatedToolDefinition _consolidatedTool;
-    private readonly Dictionary<string, IBaseCommand> _matchingCommands;
-
-    public SingleConsolidatedToolAreaSetup(
-        ConsolidatedToolDefinition consolidatedTool,
-        Dictionary<string, IBaseCommand> matchingCommands)
-    {
-        _consolidatedTool = consolidatedTool;
-        _matchingCommands = matchingCommands;
-    }
+    private readonly ConsolidatedToolDefinition _consolidatedTool = consolidatedTool;
+    private readonly Dictionary<string, IBaseCommand> _matchingCommands = matchingCommands;
 
     public string Name => _consolidatedTool.Name ?? string.Empty;
     public string Title => Name;

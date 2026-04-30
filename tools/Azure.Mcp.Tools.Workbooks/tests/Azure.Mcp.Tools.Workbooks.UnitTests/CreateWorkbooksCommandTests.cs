@@ -1,66 +1,46 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.UnitTests;
 
-public class CreateWorkbooksCommandTests
+public class CreateWorkbooksCommandTests : CommandUnitTestsBase<CreateWorkbooksCommand, IWorkbooksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IWorkbooksService _service;
-    private readonly ILogger<CreateWorkbooksCommand> _logger;
-    private readonly CreateWorkbooksCommand _command;
-
-    public CreateWorkbooksCommandTests()
-    {
-        _service = Substitute.For<IWorkbooksService>();
-        _logger = Substitute.For<ILogger<CreateWorkbooksCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("workbook", command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("resource group", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("resource group", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("create", _command.Name);
+        Assert.Equal("create", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Create Workbook", _command.Title);
+        Assert.Equal("Create Workbook", Command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
-        var description = _command.Description;
+        var description = Command.Description;
         Assert.NotNull(description);
         Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("resource group", description, StringComparison.OrdinalIgnoreCase);
@@ -88,7 +68,7 @@ public class CreateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -99,21 +79,18 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        var result = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
-        // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.NotNull(result.Results);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -143,7 +120,7 @@ public class CreateWorkbooksCommandTests
             SourceId: null
         );
 
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -154,18 +131,16 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""",
             "--source-id", "custom-source");
 
-        // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -180,7 +155,7 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenServiceReturnsNull()
     {
         // Arrange
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -191,17 +166,14 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns((WorkbookInfo?)null);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        var result = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
-        // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
     }
 
@@ -209,7 +181,7 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -218,19 +190,16 @@ public class CreateWorkbooksCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookInfo?>(new InvalidOperationException("Service error")));
+            .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        var result = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
-        // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
     }
 
@@ -253,7 +222,7 @@ public class CreateWorkbooksCommandTests
             SourceId: null
         );
 
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -264,17 +233,15 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-subscription",
+        // Act
+        await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
             "--resource-group", "test-resource-group",
             "--display-name", "My Test Workbook",
             "--serialized-content", """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""");
 
-        // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-subscription",
             "test-resource-group",
             "My Test Workbook",
@@ -290,7 +257,7 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -301,17 +268,15 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[]}""");
 
-        // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -327,7 +292,7 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -338,19 +303,17 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[]}""",
             "--auth-method", "1",
             "--tenant", "test-tenant");
 
-        // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -368,7 +331,6 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_WithInvalidDisplayName_ReturnsValidationError(string? invalidDisplayName)
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var args = new List<string> { "--subscription", "test-sub", "--resource-group", "test-rg", "--serialized-content", """{"items":[]}""" };
 
         if (invalidDisplayName != null)
@@ -376,13 +338,10 @@ public class CreateWorkbooksCommandTests
             args.AddRange(["--display-name", invalidDisplayName]);
         }
 
-        var parseResult = CreateParseResult([.. args]);
-
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync([.. args]);
 
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
@@ -393,7 +352,6 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_WithInvalidSerializedContent_ReturnsValidationError(string? invalidSerializedContent)
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var args = new List<string> { "--subscription", "test-sub", "--resource-group", "test-rg", "--display-name", "Test Workbook" };
 
         if (invalidSerializedContent != null)
@@ -401,13 +359,10 @@ public class CreateWorkbooksCommandTests
             args.AddRange(["--serialized-content", invalidSerializedContent]);
         }
 
-        var parseResult = CreateParseResult([.. args]);
-
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var result = await ExecuteCommandAsync([.. args]);
 
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
@@ -452,7 +407,7 @@ public class CreateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -463,17 +418,14 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        var result = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Complex Test Workbook",
             "--serialized-content", complexSerializedData);
 
-        // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
     }
@@ -483,7 +435,7 @@ public class CreateWorkbooksCommandTests
     {
         // Arrange
         var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -494,8 +446,9 @@ public class CreateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(workbook);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[]}""",
@@ -504,11 +457,8 @@ public class CreateWorkbooksCommandTests
             "--retry-max-delay", "30",
             "--retry-mode", "1");
 
-        // Act
-        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        await _service.Received(1).CreateWorkbookAsync(
+        await Service.Received(1).CreateWorkbookAsync(
             "test-sub",
             "test-rg",
             "Test Workbook",
@@ -527,7 +477,7 @@ public class CreateWorkbooksCommandTests
     public async Task ExecuteAsync_HandlesExceptionCorrectly_WhenExceptionOccurs()
     {
         // Arrange
-        _service.CreateWorkbookAsync(
+        Service.CreateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -536,25 +486,16 @@ public class CreateWorkbooksCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookInfo?>(new ArgumentException("Invalid workbook data")));
+            .ThrowsAsync(new ArgumentException("Invalid workbook data"));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = CreateParseResult("--subscription", "test-sub",
+        // Act
+        var result = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--display-name", "Test Workbook",
             "--serialized-content", """{"items":[]}""");
 
-        // Act
-        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
-
         // Assert
-        Assert.Equal(context.Response, result);
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
-    }
-
-    private ParseResult CreateParseResult(params string[] args)
-    {
-        var command = _command.GetCommand();
-        return command.Parse(args);
     }
 }

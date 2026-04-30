@@ -1,51 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.UnitTests.Product;
 
-public class ProductGetCommandTests
+public class ProductGetCommandTests : CommandUnitTestsBase<ProductGetCommand, IMarketplaceService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMarketplaceService _marketplaceService;
-    private readonly ILogger<ProductGetCommand> _logger;
-    private readonly ProductGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ProductGetCommandTests()
-    {
-        _marketplaceService = Substitute.For<IMarketplaceService>();
-        _logger = Substitute.For<ILogger<ProductGetCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("marketplace product", command.Description.ToLower());
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("marketplace product", CommandDefinition.Description.ToLower());
     }
 
     [Fact]
@@ -60,26 +37,22 @@ public class ProductGetCommandTests
             DisplayName = "Test Product"
         };
 
-        _marketplaceService.GetProduct(
+        Service.GetProduct(
             Arg.Is(productId),
             Arg.Is(subscriptionId),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedProduct);
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--product-id", productId);
 
         // Assert
         Assert.NotNull(response);
@@ -91,10 +64,10 @@ public class ProductGetCommandTests
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
         // Arrange
-        var args = _commandDefinition.Parse(["--product-id", "test-product"]);
+        TestEnvironment.ClearAzureSubscriptionId();
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--product-id", "test-product");
 
         // Assert
         Assert.NotNull(response);
@@ -110,26 +83,22 @@ public class ProductGetCommandTests
         var subscriptionId = "test-sub";
         var productId = "test-product";
 
-        _marketplaceService.GetProduct(
+        Service.GetProduct(
             Arg.Is(productId),
             Arg.Is(subscriptionId),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--product-id", productId);
 
         // Assert
         Assert.NotNull(response);

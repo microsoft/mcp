@@ -1,16 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -18,28 +14,8 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Webapp.Settings;
 
 [Trait("Command", "AppSettingsUpdate")]
-public class AppSettingsUpdateCommandTests
+public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpdateCommand, IAppServiceService>
 {
-    private readonly IAppServiceService _appServiceService;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AppSettingsUpdateCommand> _logger;
-    private readonly AppSettingsUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public AppSettingsUpdateCommandTests()
-    {
-        _appServiceService = Substitute.For<IAppServiceService>();
-        _logger = Substitute.For<ILogger<AppSettingsUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_appServiceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Theory]
     [InlineData("add", "Setting1", "Value1", "Application setting 'Setting1' added successfully.")]
     [InlineData("add", "Setting1", "Value1", "Failed to add application setting 'Setting1' because it already exists.")]
@@ -54,7 +30,7 @@ public class AppSettingsUpdateCommandTests
     {
         // Arrange
         // Set up the mock to return success for any arguments
-        _appServiceService.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
+        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
             settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
@@ -69,24 +45,18 @@ public class AppSettingsUpdateCommandTests
         {
             unparsedArgs.AddRange(["--setting-value", settingValue]);
         }
-        var args = _commandDefinition.Parse(unparsedArgs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
         // Verify that the mock was called with the expected parameters
-        await _appServiceService.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
+        await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
             settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.AppSettingsUpdateResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppServiceJsonContext.Default.AppSettingsUpdateResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedValue, result.UpdateStatus);
     }
 
@@ -107,17 +77,14 @@ public class AppSettingsUpdateCommandTests
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--setting-update-type", "set", "--setting-name", "setting-name")] // Missing setting value
     public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
     {
-        // Arrange
-        var args = _commandDefinition.Parse(commandArgs);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(commandArgs);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().UpdateAppSettingsAsync(
+        await Service.DidNotReceive().UpdateAppSettingsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -166,7 +133,7 @@ public class AppSettingsUpdateCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string settingUpdateType, string settingName, string? settingValue)
     {
         // Arrange
-        _appServiceService.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
+        Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
             settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -181,16 +148,15 @@ public class AppSettingsUpdateCommandTests
         {
             unparsedArgs.AddRange(["--setting-value", settingValue]);
         }
-        var args = _commandDefinition.Parse(unparsedArgs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(unparsedArgs.ToArray());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
 
-        await _appServiceService.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
+        await Service.Received(1).UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName,
             settingUpdateType, settingValue, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }

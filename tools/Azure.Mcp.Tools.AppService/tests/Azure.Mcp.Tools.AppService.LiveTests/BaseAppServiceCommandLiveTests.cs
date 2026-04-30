@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests;
@@ -26,5 +26,16 @@ public abstract class BaseAppServiceCommandLiveTests(ITestOutputHelper output, T
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.outboundIpv6Addresses")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.possibleOutboundIpv6Addresses")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.homeStamp")),
+    ];
+
+    // Sanitize resource group name in response bodies (complements the URI sanitizer in base class)
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        ..base.BodyRegexSanitizers,
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody()
+        {
+            Regex = Settings.ResourceGroupName,
+            Value = "Sanitized"
+        }),
     ];
 }

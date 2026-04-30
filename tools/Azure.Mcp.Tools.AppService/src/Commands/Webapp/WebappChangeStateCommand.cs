@@ -41,7 +41,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,
-        Secret = true,
+        Secret = false,
         LocalRequired = false
     };
 

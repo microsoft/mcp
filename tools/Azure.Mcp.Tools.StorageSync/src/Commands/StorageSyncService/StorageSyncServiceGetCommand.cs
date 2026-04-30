@@ -3,42 +3,32 @@
 
 using System.Net;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
+[CommandMetadata(
+    Id = "77734a55-8290-4c16-8b37-cf37277f018f",
+    Name = "get",
+    Title = "Get Storage Sync Service",
+    Description = "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceGetOptions>
 {
-    private const string CommandTitle = "Get Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceGetCommand> _logger = logger;
-
-    public override string Id => "77734a55-8290-4c16-8b37-cf37277f018f";
-
-    public override string Name => "get";
-
-    public override string Description => "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -94,8 +84,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     return context.Response;
                 }
 
-                var singleResult = new StorageSyncServiceGetCommandResult([service]);
-                context.Response.Results = ResponseResult.Create(singleResult, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new([service]), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
             }
             else
             {
@@ -110,8 +99,7 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.RetryPolicy,
                     cancellationToken);
 
-                var results = new StorageSyncServiceGetCommandResult(services ?? []);
-                context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
             }
         }
         catch (Exception ex)

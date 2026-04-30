@@ -4,7 +4,7 @@
 .work/
 tests/test-cmds.txt
 .testsettings.json
-.temp.slnx
+.temp.*.slnx
 
 bin/
 obj/
@@ -31,3 +31,8 @@ eng/tools/ToolDescriptionEvaluator/prompts.json
 eng/tools/ToolDescriptionEvaluator/results.md
 eng/tools/ToolDescriptionEvaluator/tools.json
 deploy-log.txt
+
+eng/tools/CopilotCliTester/src/results/
+
+# VM-specific documentation (internal/personal notes)
+docs/vm-docs/

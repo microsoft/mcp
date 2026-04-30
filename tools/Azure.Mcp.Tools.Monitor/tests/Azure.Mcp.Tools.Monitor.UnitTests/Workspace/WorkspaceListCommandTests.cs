@@ -1,47 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Workspace;
 
-public sealed class WorkspaceListCommandTests
+public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceListCommand, IMonitorService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMonitorService _monitorService;
-    private readonly ILogger<WorkspaceListCommand> _logger;
-    private readonly WorkspaceListCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-
     private const string _knownSubscription = "knownSubscription";
-
-    public WorkspaceListCommandTests()
-    {
-        _monitorService = Substitute.For<IMonitorService>();
-        _logger = Substitute.For<ILogger<WorkspaceListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_monitorService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Theory]
     [InlineData($"--subscription {_knownSubscription}", true)]
@@ -57,12 +32,12 @@ public sealed class WorkspaceListCommandTests
                 new() { Name = "workspace1", CustomerId = "guid1" },
                 new() { Name = "workspace2", CustomerId = "guid2" }
             };
-            _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(testWorkspaces);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -87,23 +62,18 @@ public sealed class WorkspaceListCommandTests
             new() { Name = "workspace2", CustomerId = "guid2" },
             new() { Name = "workspace3", CustomerId = "guid3" }
         };
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--subscription {_knownSubscription}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
         // Verify the mock was called
-        await _monitorService.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WorkspaceListCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal(expectedWorkspaces.Count, result.Workspaces.Count);
         Assert.Equal(expectedWorkspaces[0].Name, result.Workspaces[0].Name);
         Assert.Equal(expectedWorkspaces[0].CustomerId, result.Workspaces[0].CustomerId);
@@ -115,20 +85,15 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoWorkspaces()
     {
         // Arrange
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--subscription {_knownSubscription}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WorkspaceListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Workspaces);
     }
 
@@ -136,11 +101,11 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<WorkspaceInfo>>(new Exception("Test error")));
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync($"--subscription {_knownSubscription}");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

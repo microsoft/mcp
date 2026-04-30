@@ -147,7 +147,7 @@ public class OptionTypeTests
 
         // Assert
         Assert.Equal("string", result.Type);
-        Assert.Equal(string.Empty, result.Description); // Should default to empty string
+        Assert.Null(result.Description); // Null descriptions stay null (omitted from JSON via WhenWritingNull)
         Assert.Null(result.Items);
     }
 
@@ -289,9 +289,12 @@ public class OptionTypeTests
         var result = TypeToJsonTypeMapper.CreatePropertySchema(enumType, description);
 
         // Assert
-        Assert.Equal("integer", result.Type);
+        Assert.Equal("string", result.Type); // Enums map to string for Codex/OpenAI compatibility
         Assert.Equal(description, result.Description);
         Assert.Null(result.Items);
+        Assert.NotNull(result.Enum);
+        Assert.Contains("Value1", result.Enum);
+        Assert.Contains("Value2", result.Enum);
     }
 
     [Fact]
@@ -425,9 +428,9 @@ public class OptionTypeTests
     }
 
     [Theory]
-    [InlineData(typeof(TestEnum?), "integer")]
-    [InlineData(typeof(ConsoleColor?), "integer")]
-    [InlineData(typeof(DayOfWeek?), "integer")]
+    [InlineData(typeof(TestEnum?), "string")]
+    [InlineData(typeof(ConsoleColor?), "string")]
+    [InlineData(typeof(DayOfWeek?), "string")]
     public void CreateOptionSchema_Should_Handle_Nullable_Enums(Type nullableEnumType, string expectedType)
     {
         // Arrange

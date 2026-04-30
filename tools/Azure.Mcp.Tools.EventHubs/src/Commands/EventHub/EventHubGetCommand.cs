@@ -3,50 +3,40 @@
 
 using System.Net;
 using Azure.Identity;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 
-public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<EventHubGetOptions>
-{
-    private const string CommandTitle = "Get Event Hubs from Namespace";
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<EventHubGetCommand> _logger = logger;
-
-    public override string Id => "ab774777-76ac-4e24-ba19-da67254441a9";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "ab774777-76ac-4e24-ba19-da67254441a9",
+    Name = "get",
+    Title = "Get Event Hubs from Namespace",
+    Description = """
         Get Event Hubs from Azure namespace. This command can either:
         1. List all Event Hubs in a namespace
         2. Get a single Event Hub by name
 
         When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
         partition count, settings, and metadata is returned for all Event Hubs.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<EventHubGetOptions>
+{
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<EventHubGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -110,14 +100,14 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
             if (!string.IsNullOrEmpty(options.EventHub))
             {
                 _logger.LogError(ex,
-                    "Error listing event hubs. Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.Namespace, options.ResourceGroup, options.Subscription, options);
+                    "Error listing event hubs. Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.Namespace, options.ResourceGroup, options.Subscription);
             }
             else
             {
                 _logger.LogError(ex,
-                    "Error getting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
+                    "Error getting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}.",
+                    options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription);
             }
             HandleException(context, ex);
         }

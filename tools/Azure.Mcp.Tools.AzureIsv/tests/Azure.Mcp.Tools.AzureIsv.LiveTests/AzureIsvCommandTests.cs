@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.LiveTests;
@@ -15,7 +16,7 @@ public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_datadog_monitored_resources()
     {
         // Skipping test if Tenant is not 'Customer LED Tenant'
-        if (Settings.TenantId != "888d76fa-54b2-4ced-8ee5-aac1585adee7" && Settings.TestMode != Tests.Helpers.TestMode.Playback)
+        if (Settings.TenantId != "888d76fa-54b2-4ced-8ee5-aac1585adee7" && Settings.TestMode != TestMode.Playback)
         {
             Assert.Skip("Test skipped because Tenant is not 'Customer LED Tenant'.");
         }

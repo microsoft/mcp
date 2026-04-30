@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
+
 namespace Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 
 /// <summary>
@@ -20,8 +22,8 @@ internal static class ResponseModelExtensions
             Summary = response.Properties?.Summary,
             DetailedStatus = response.Properties?.DetailedStatus,
             ReasonType = response.Properties?.ReasonType,
-            OccurredTime = response.Properties?.OccurredTime,
-            ReportedTime = response.Properties?.ReportedTime,
+            OccurredTime = ParseLenientDateTimeOffset(response.Properties?.OccurredTime),
+            ReportedTime = ParseLenientDateTimeOffset(response.Properties?.ReportedTime),
             CauseType = response.Properties?.ReasonChronicity,
             RootCauseAttributionTime = response.Properties?.RootCauseAttributionTime,
             Category = response.Properties?.HealthEventCategory,
@@ -76,10 +78,25 @@ internal static class ResponseModelExtensions
             AffectedServices = affectedServices.Count > 0 ? affectedServices : null,
             AffectedRegions = affectedRegions.Count > 0 ? affectedRegions : null,
             AffectedSubscriptions = !string.IsNullOrEmpty(subscriptionId) ? new List<string> { subscriptionId } : null,
-            StartTime = response.Properties?.ImpactStartTime,
-            EndTime = response.Properties?.ImpactMitigationTime,
-            LastModified = response.Properties?.LastUpdateTime,
+            StartTime = ParseLenientDateTimeOffset(response.Properties?.ImpactStartTime),
+            EndTime = ParseLenientDateTimeOffset(response.Properties?.ImpactMitigationTime),
+            LastModified = ParseLenientDateTimeOffset(response.Properties?.LastUpdateTime),
             Communication = response.Properties?.CommunicationId
         };
+    }
+
+    // The Azure Resource Health API can return datetime strings without timezone designators
+    // (e.g., "0001-01-01T00:00:00" for unmitigated events). DateTimeStyles.AssumeUniversal
+    // treats such values as UTC. Real timestamps always include the "Z" suffix.
+    private static DateTimeOffset? ParseLenientDateTimeOffset(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result)
+            ? result
+            : null;
     }
 }

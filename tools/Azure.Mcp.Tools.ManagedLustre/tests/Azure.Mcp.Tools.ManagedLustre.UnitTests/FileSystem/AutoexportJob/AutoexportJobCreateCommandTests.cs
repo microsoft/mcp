@@ -1,59 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.AutoexportJob;
 
-public class AutoexportJobCreateCommandTests
+public class AutoexportJobCreateCommandTests : CommandUnitTestsBase<AutoexportJobCreateCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _managedLustreService;
-    private readonly ILogger<AutoexportJobCreateCommand> _logger;
-    private readonly AutoexportJobCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
     private readonly string _subscription = "sub123";
     private readonly string _resourceGroup = "rg1";
     private readonly string _fileSystemName = "fs1";
 
-    public AutoexportJobCreateCommandTests()
-    {
-        _managedLustreService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<AutoexportJobCreateCommand>>();
-
-        var services = new ServiceCollection().AddSingleton(_managedLustreService);
-        _serviceProvider = services.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var cmd = _command.GetCommand();
-        Assert.Equal("create", cmd.Name);
-        Assert.False(string.IsNullOrWhiteSpace(cmd.Description));
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.False(string.IsNullOrWhiteSpace(CommandDefinition.Description));
     }
 
     [Fact]
     public async Task ExecuteAsync_Succeeds_WithRequiredParameters()
     {
         // Arrange
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -65,20 +40,17 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns("autoexport-20250107120000");
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--filesystem-name", _fileSystemName);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
@@ -96,11 +68,8 @@ public class AutoexportJobCreateCommandTests
     [InlineData("--subscription sub123 --resource-group rg1", false)] // missing filesystem-name
     public async Task ExecuteAsync_ValidationErrors_Return400(string argLine, bool shouldSucceed)
     {
-        // Arrange
-        var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         var expectedStatus = shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest;
@@ -115,7 +84,7 @@ public class AutoexportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_RequestFailed_UsesStatusCode()
     {
         // Arrange
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -125,16 +94,13 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
-
-        var args = _commandDefinition.Parse([
-            "--subscription", _subscription,
-            "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName
-        ]);
+            .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--subscription", _subscription,
+            "--resource-group", _resourceGroup,
+            "--filesystem-name", _fileSystemName);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -145,7 +111,7 @@ public class AutoexportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_GenericException_Returns500()
     {
         // Arrange
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -157,14 +123,11 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--filesystem-name", _fileSystemName);
 
         // Assert
         Assert.True((int)response.Status >= 500);
@@ -175,7 +138,7 @@ public class AutoexportJobCreateCommandTests
     public async Task BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -187,18 +150,15 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns("autoexport-20250107120000");
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--filesystem-name", _fileSystemName);
 
         // Assert - verify command executed successfully with expected parameters
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
@@ -215,7 +175,7 @@ public class AutoexportJobCreateCommandTests
     {
         // Arrange
         var jobName = "my-export-job";
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -227,19 +187,16 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--filesystem-name", _fileSystemName,
-            "--job-name", jobName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--job-name", jobName);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -256,7 +213,7 @@ public class AutoexportJobCreateCommandTests
     {
         // Arrange
         var prefix = "/data";
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -268,19 +225,16 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns("blob_autoexport");
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--filesystem-name", _fileSystemName,
-            "--autoexport-prefix", prefix
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--autoexport-prefix", prefix);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -298,7 +252,7 @@ public class AutoexportJobCreateCommandTests
     public async Task ExecuteAsync_Succeeds_WithAdminStatus(string adminStatus)
     {
         // Arrange
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -310,19 +264,16 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns("blob_autoexport");
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--filesystem-name", _fileSystemName,
-            "--admin-status", adminStatus
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--admin-status", adminStatus);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -342,7 +293,7 @@ public class AutoexportJobCreateCommandTests
         var prefix = "/export";
         var adminStatus = "Enable";
 
-        _managedLustreService.CreateAutoexportJobAsync(
+        Service.CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -354,21 +305,18 @@ public class AutoexportJobCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--filesystem-name", _fileSystemName,
             "--job-name", jobName,
             "--autoexport-prefix", prefix,
-            "--admin-status", adminStatus
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+            "--admin-status", adminStatus);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateAutoexportJobAsync(
+        await Service.Received(1).CreateAutoexportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

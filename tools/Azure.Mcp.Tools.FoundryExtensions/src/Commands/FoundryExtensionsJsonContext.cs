@@ -3,8 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options.Thread;
-using Microsoft.Extensions.AI;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
@@ -33,10 +31,5 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 [JsonSerializable(typeof(OpenAiModelsListResult))]
 [JsonSerializable(typeof(OpenAiModelDeployment))]
 [JsonSerializable(typeof(OpenAiModelCapabilities))]
-[JsonSerializable(typeof(AgentsGetSdkCodeSampleResult))]
-[JsonSerializable(typeof(ThreadCreateResult))]
-[JsonSerializable(typeof(ThreadListResult))]
-[JsonSerializable(typeof(ThreadGetMessagesResult))]
-[JsonSerializable(typeof(List<ChatMessage>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryExtensionsJsonContext : JsonSerializerContext;

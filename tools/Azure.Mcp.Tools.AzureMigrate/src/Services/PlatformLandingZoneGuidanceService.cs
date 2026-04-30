@@ -17,6 +17,7 @@ public sealed class PlatformLandingZoneGuidanceService(
     ILogger<PlatformLandingZoneGuidanceService> logger) : IPlatformLandingZoneGuidanceService
 {
     private static readonly ConcurrentDictionary<string, string> DocumentationCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string> ExpandedBaseUrlCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, List<PolicyLocation>> PolicyLocationCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Lock PolicyCacheLock = new();
     private static DateTime s_policyCacheLoadedAt = DateTime.MinValue;
@@ -113,7 +114,8 @@ public sealed class PlatformLandingZoneGuidanceService(
 
         try
         {
-            var url = $"{PlatformLandingZoneConstants.ScenarioDocsBaseUrl}/{info.FileName}";
+            var baseUrl = await GetExpandedBaseUrlAsync(PlatformLandingZoneConstants.ScenarioDocsBaseUrl, cancellationToken);
+            var url = BuildFileUrl(baseUrl, info.FileName);
             using var response = await httpClientFactory.CreateClient().GetAsync(new Uri(url), cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -140,10 +142,11 @@ public sealed class PlatformLandingZoneGuidanceService(
 
         var newData = new Dictionary<string, List<PolicyLocation>>(StringComparer.OrdinalIgnoreCase);
         var httpClient = httpClientFactory.CreateClient();
+        var archetypeBaseUrl = await GetExpandedBaseUrlAsync(PlatformLandingZoneConstants.ArchetypeDefinitionsBaseUrl, cancellationToken);
 
         foreach (var fileName in PlatformLandingZoneConstants.ArchetypeDefinitionFiles)
         {
-            var url = $"{PlatformLandingZoneConstants.ArchetypeDefinitionsBaseUrl}/{fileName}";
+            var url = BuildFileUrl(archetypeBaseUrl, fileName);
             using var response = await httpClient.GetAsync(new Uri(url), cancellationToken);
             if (!response.IsSuccessStatusCode)
                 continue;
@@ -179,6 +182,36 @@ public sealed class PlatformLandingZoneGuidanceService(
 
             s_policyCacheLoadedAt = DateTime.UtcNow;
         }
+    }
+
+    private async Task<string> GetExpandedBaseUrlAsync(string shortBaseUrl, CancellationToken cancellationToken)
+    {
+        if (ExpandedBaseUrlCache.TryGetValue(shortBaseUrl, out var cached))
+            return cached;
+
+        try
+        {
+            using var response = await httpClientFactory.CreateClient().GetAsync(new Uri(shortBaseUrl), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var resolvedUrl = response.RequestMessage?.RequestUri?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(resolvedUrl))
+            {
+                ExpandedBaseUrlCache.TryAdd(shortBaseUrl, resolvedUrl);
+                return resolvedUrl;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to resolve short base URL {ShortBaseUrl}", shortBaseUrl);
+        }
+
+        return shortBaseUrl;
+    }
+
+    private static string BuildFileUrl(string baseUrl, string fileName)
+    {
+        var normalizedBaseUrl = baseUrl.EndsWith('/') ? baseUrl : $"{baseUrl}/";
+        return new Uri(new Uri(normalizedBaseUrl, UriKind.Absolute), fileName).ToString();
     }
 
     private sealed record PolicyLocation(string ArchetypeName, string SourceFileName);

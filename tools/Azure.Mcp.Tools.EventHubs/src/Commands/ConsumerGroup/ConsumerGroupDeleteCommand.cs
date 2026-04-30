@@ -1,48 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 
-public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger)
-    : BaseEventHubsCommand<ConsumerGroupDeleteOptions>
-{
-    private const string CommandTitle = "Delete Event Hubs Consumer Group";
-
-    private readonly ILogger<ConsumerGroupDeleteCommand> _logger = logger;
-    public override string Id => "08980fd4-c7c2-41cd-a3c2-eda5303bd458";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "08980fd4-c7c2-41cd-a3c2-eda5303bd458",
+    Name = "delete",
+    Title = "Delete Event Hubs Consumer Group",
+    Description = """
         Delete a Consumer Group. This tool will delete a pre-existing Consumer Group from the specified 
         Event Hub. This tool will remove existing configurations, and is considered to be destructive.
 
         The tool requires specifying the resource group, Namespace name, Event Hub name, and Consumer
         Group name to identify the Consumer Group to delete.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<ConsumerGroupDeleteOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,     // Deletes resources
-        Idempotent = true,      // Same parameters produce same results
-        ReadOnly = false,       // Modifies resources
-        Secret = false,         // Returns non-sensitive information
-        LocalRequired = false   // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<ConsumerGroupDeleteCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -74,9 +66,7 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
 
         try
         {
-            var eventHubsService = context.GetService<IEventHubsService>();
-
-            var deleted = await eventHubsService.DeleteConsumerGroupAsync(
+            var deleted = await _service.DeleteConsumerGroupAsync(
                 options.ConsumerGroup!,
                 options.EventHub!,
                 options.Namespace!,

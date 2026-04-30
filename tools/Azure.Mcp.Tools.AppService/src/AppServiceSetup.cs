@@ -43,49 +43,38 @@ public class AppServiceSetup : IAreaSetup
 
         // Add database commands
         // Register the 'add' command for database connections, allowing users to configure a new database connection for an App Service web app.
-        var databaseAdd = serviceProvider.GetRequiredService<DatabaseAddCommand>();
-        database.AddCommand(databaseAdd.Name, databaseAdd);
+        database.AddCommand<DatabaseAddCommand>(serviceProvider);
 
         // Create webapp subgroup
         var webapp = new CommandGroup("webapp", "Operations for managing Azure App Service web apps");
         appService.AddSubGroup(webapp);
 
         // Add webapp commands
-        var webappGet = serviceProvider.GetRequiredService<WebappGetCommand>();
-        webapp.AddCommand(webappGet.Name, webappGet);
-
-        var webappChangeState = serviceProvider.GetRequiredService<WebappChangeStateCommand>();
-        webapp.AddCommand(webappChangeState.Name, webappChangeState);
+        webapp.AddCommand<WebappGetCommand>(serviceProvider);
+        webapp.AddCommand<WebappChangeStateCommand>(serviceProvider);
 
         // Add deployment subgroup
         var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
         webapp.AddSubGroup(deployment);
 
         // Add deployment commands
-        var deploymentGet = serviceProvider.GetRequiredService<DeploymentGetCommand>();
-        deployment.AddCommand(deploymentGet.Name, deploymentGet);
+        deployment.AddCommand<DeploymentGetCommand>(serviceProvider);
 
         // Add diagnostic subgroup under webapp
         var diagnostic = new CommandGroup("diagnostic", "Operations for diagnosing Azure App Service web apps");
         webapp.AddSubGroup(diagnostic);
 
         // Add diagnostic commands
-        var detectorDiagnose = serviceProvider.GetRequiredService<DetectorDiagnoseCommand>();
-        diagnostic.AddCommand(detectorDiagnose.Name, detectorDiagnose);
-
-        var detectorList = serviceProvider.GetRequiredService<DetectorListCommand>();
-        diagnostic.AddCommand(detectorList.Name, detectorList);
+        diagnostic.AddCommand<DetectorDiagnoseCommand>(serviceProvider);
+        diagnostic.AddCommand<DetectorListCommand>(serviceProvider);
 
         // Add settings subgroup under webapp
         var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");
         webapp.AddSubGroup(settings);
 
         // Add settings commands
-        var appSettingsGet = serviceProvider.GetRequiredService<AppSettingsGetCommand>();
-        settings.AddCommand(appSettingsGet.Name, appSettingsGet);
-
-        var appSettingsUpdate = serviceProvider.GetRequiredService<AppSettingsUpdateCommand>();
-        settings.AddCommand(appSettingsUpdate.Name, appSettingsUpdate);
+        settings.AddCommand<AppSettingsGetCommand>(serviceProvider);
+        settings.AddCommand<AppSettingsUpdateCommand>(serviceProvider);
 
         return appService;
     }

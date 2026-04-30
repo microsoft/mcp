@@ -34,7 +34,7 @@ dotnet clean servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
 dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
 
 # Verify resource files exist
-ls tools/Fabric.Mcp.Tools.PublicApi/src/Resources/
+ls tools/Fabric.Mcp.Tools.Docs/src/Resources/
 ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 ```
 

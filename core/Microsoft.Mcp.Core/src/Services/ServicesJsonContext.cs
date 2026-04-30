@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 
-namespace Azure.Mcp;
+namespace Microsoft.Mcp.Core.Services;
 
 [JsonSerializable(typeof(ExternalProcessService.ParseError))]
 [JsonSerializable(typeof(ExternalProcessService.ParseOutput))]

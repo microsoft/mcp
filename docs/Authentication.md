@@ -1,436 +1,148 @@
-# Authentication and Security for Azure MCP Server
+# Authentication in Azure MCP Server
 
-This document provides comprehensive guidance for Azure MCP Server authentication and related security considerations in enterprise environments. While the core focus is authentication, it also covers network and security configurations that commonly affect authentication in enterprise scenarios.
+Azure MCP Server runs in two transport modes — **stdio** (local) and **HTTP** (remote) — each with a different authentication model.
 
-## Overview
+| | Stdio (local) | HTTP (remote) |
+|---|---|---|
+| **Who authenticates to Azure?** | The server itself, using your developer credentials | Depends on the outgoing auth strategy (see below) |
+| **Inbound auth required?** | No — communication is over local process pipes | Yes — Entra ID bearer tokens protect every request |
+| **Typical use** | IDE extensions, CLI, local agents | Cloud-hosted server shared by multiple clients/agents |
 
-Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity library for .NET](https://learn.microsoft.com/dotnet/azure/sdk/authentication/).
+## Local Authentication (Stdio Transport)
 
-> [!TIP]
-> In VS Code, after installing the Azure MCP Server extension, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac), then run "Azure: Sign In" to authenticate quickly.
+When the server runs locally (the default), it authenticates directly to Azure services using credentials available on your machine.
 
-The server supports two authentication modes: **broker mode** (which uses your OS's native authentication system like Windows Web Account Manager for enhanced security) and **credential chain mode** (which tries multiple authentication methods in sequence). Here is an overview of how authentication works:
+### How credentials are resolved
+
+The server uses a chain of credential providers. The first one that succeeds is used:
 
 ```mermaid
 flowchart TD
-    C{"Broker mode?"} -- yes --> D["OS broker"]
-    C -- no --> E["EnvironmentCredential"]
-    E -- failed --> n8["VisualStudioCredential"]
-    E -- succeeded --> n17["Authenticated to Azure"]
-    n8 -- failed --> n12["AzureCliCredential"]
-    n8 -- succeeded --> n17
-    n12 -- failed --> n13["AzurePowerShellCredential"]
-    n12 -- succeeded --> n17
-    n13 -- failed --> n14["AzureDeveloperCliCredential"]
-    n13 -- succeeded --> n17
-    n14 -- failed --> n15["InteractiveBrowserCredential"]
-    n14 -- succeeded --> n17
-    n15 -- failed --> n16["Authentication failed"]
-    n15 -- succeeded --> n17
-    n17@{ shape: event }
-    n16@{ shape: event }
+    Start{"Broker mode?"} -- yes --> Broker["OS broker (WAM on Windows)"]
+    Start -- no --> Env["EnvironmentCredential"]
+    Env -- fail --> VS["VisualStudioCredential"]
+    VS -- fail --> VSCode["VisualStudioCodeCredential"]
+    VSCode -- fail --> CLI["AzureCliCredential"]
+    CLI -- fail --> PS["AzurePowerShellCredential"]
+    PS -- fail --> AZD["AzureDeveloperCliCredential"]
+    AZD -- fail --> Browser["InteractiveBrowserCredential"]
+    Browser -- fail --> Failed(["Authentication failed"])
+    Broker --> OK(["Authenticated"])
+    Env -- ok --> OK
+    VS -- ok --> OK
+    VSCode -- ok --> OK
+    CLI -- ok --> OK
+    PS -- ok --> OK
+    AZD -- ok --> OK
+    Browser -- ok --> OK
 ```
 
-## Authentication Fundamentals
+> [!NOTE]
+> You can skip the chain and pin a specific credential by setting the `AZURE_TOKEN_CREDENTIALS` environment variable to the credential name. For example, to use only Azure CLI: `AZURE_TOKEN_CREDENTIALS=AzureCliCredential`.
 
-If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
+> [!TIP]
+> In VS Code, run **Azure: Sign In** from the Command Palette (ctrl+shift+p) to authenticate quickly.
 
-- Set to `true`, a broker-enabled instance of `InteractiveBrowserCredential` is used to authenticate. On Windows, the broker is Web Account Manager. If a broker isn't supported on your operating system, the credential degrades gracefully to a browser-based login experience. For more information on this approach, see [Interactive brokered authentication](https://learn.microsoft.com/dotnet/azure/sdk/authentication/additional-methods#interactive-brokered-authentication).
-- Not set, a custom [chain of credentials](https://learn.microsoft.com/dotnet/azure/sdk/authentication/credential-chains?tabs=dac#how-a-chained-credential-works) is used to authenticate. The chain is designed to support many environments, along with the most common authentication flows and developer tools. When one credential fails to acquire a token, the chain attempts the next credential. In Azure MCP Server, the chain is configured as follows by default:
+### Broker mode
 
-    | Order | Credential | Description | Enabled? |
-    |-------|------------|-------------|----------|
-    | 1 | [EnvironmentCredential](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential?view=azure-dotnet) | Perfect for CI/CD pipelines | Yes |
-    | 2 | [WorkloadIdentityCredential](https://learn.microsoft.com/dotnet/api/azure.identity.workloadidentitycredential?view=azure-dotnet)| Uses Workload ID authentication on Kubernetes and other hosts supporting workload identity | **No** |
-    | 3 | [ManagedIdentityCredential](https://learn.microsoft.com/dotnet/api/azure.identity.managedidentitycredential?view=azure-dotnet)| Uses managed identity authentication | **No** |
-    | 4 | [VisualStudioCredential](https://learn.microsoft.com/dotnet/api/azure.identity.visualstudiocredential?view=azure-dotnet) | Uses your Visual Studio login | Yes |
-    | 5 | [AzureCliCredential](https://learn.microsoft.com/dotnet/api/azure.identity.azureclicredential?view=azure-dotnet) | Uses your Azure CLI login | Yes |
-    | 6 | [AzurePowerShellCredential](https://learn.microsoft.com/dotnet/api/azure.identity.azurepowershellcredential?view=azure-dotnet) | Uses your Azure PowerShell login | Yes |
-    | 7 | [AzureDeveloperCliCredential](https://learn.microsoft.com/dotnet/api/azure.identity.azuredeveloperclicredential?view=azure-dotnet) | Uses your Azure Developer CLI login | Yes |
-    | 8 | [InteractiveBrowserCredential](https://learn.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential?view=azure-dotnet) | Uses a broker and falls back to browser-based login if needed. The account picker dialog allows you to ensure you're selecting the correct account. | Yes |
+Set `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL=true` to skip the chain entirely and use the OS authentication broker (Web Account Manager on Windows). On unsupported operating systems it falls back to browser-based login.
 
-    **Note:** `InteractiveBrowserCredential` is included as a fallback only in default and "dev" credential chains. When using `AZURE_TOKEN_CREDENTIALS=prod` or specifying a specific credential, the interactive browser credential is not added, ensuring production scenarios fail fast if authentication is unavailable.
+### RBAC
 
-    If you're logged in through any of these mechanisms, the Azure MCP Server will automatically use those credentials. Ensure that you have the correct authorization permissions in Azure. For example, read access to your Storage account via Role-Based Access Control (RBAC). To learn more about Azure's RBAC authorization system, see [What is Azure RBAC?](https://learn.microsoft.com/azure/role-based-access-control/overview).
+Regardless of which credential is used, the authenticated identity must have the appropriate Azure RBAC roles on the target resources (for example, **Storage Blob Data Reader** for storage operations). See [What is Azure RBAC?](https://learn.microsoft.com/azure/role-based-access-control/overview) for details. For **User-Assigned Managed Identity**, also set `AZURE_CLIENT_ID` to the managed identity's client ID. If unset, System-Assigned Managed Identity is used.
 
-## Recommended Authentication Configuration by Environment
+### Choosing credentials by environment
 
-### Production Environments
+| Environment | Recommended setup |
+|---|---|
+| **Local development** | Sign in with `az login`, VS Code Azure extension, or Azure PowerShell. The chain picks it up automatically. |
+| **CI / CD pipelines** | Set `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` environment variables (service principal). |
+| **Production (hosted)** | HTTP transport is recommended for production hosting — see Remote [Authentication (HTTP Transport)](#remote-authentication-http-transport). If STDIO is required, set AZURE_TOKEN_CREDENTIALS=prod to restrict the chain to Environment, Workload Identity, and Managed Identity credentials only — no interactive browser fallback. |
 
-For Kubernetes workloads or Azure-hosted apps (Web Apps, Function Apps, Container Apps, AKS), set the following environment variable:
+---
 
-```bash
-export AZURE_TOKEN_CREDENTIALS=prod
+## Remote Authentication (HTTP Transport)
+
+When the Azure MCP Server is hosted remotely (for example, on Azure Container Apps) using HTTP transport, authentication operates in two layers:
+
+1. **Inbound authentication** — the client authenticates to the Azure MCP Server
+2. **Outbound authentication** — the Azure MCP Server authenticates to downstream Azure services
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AzureMCPServer as Azure MCP Server
+    participant Entra as Entra ID
+    participant Azure as Azure Services
+
+    Client->>Entra: 1. Obtain bearer token
+    Client->>AzureMCPServer: 2. Call MCP Server with bearer token
+    AzureMCPServer->>Entra: 3. Validate inbound token
+    AzureMCPServer->>Entra: 4. Obtain outbound token
+    AzureMCPServer->>Azure: 5. Call Azure service with outbound token
 ```
 
-This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order. The `InteractiveBrowserCredential` is NOT included, ensuring authentication fails fast if none of the production credentials are available.
+> [!TIP]
+> Want to get started quickly? The [`azd` templates](#deploy-with-azd-templates) below automate the entire setup illustrated above.
 
-**For User-Assigned Managed Identity**, also set:
-```bash
-export AZURE_CLIENT_ID=<your-managed-identity-client-id>
-```
+### Inbound Authentication
 
-If `AZURE_CLIENT_ID` is not set, System-Assigned Managed Identity will be used.
+Every incoming request must carry a valid Entra ID bearer token with the required claims in the `Authorization` header. The inbound token can be obtained in one of two ways depending on the OAuth flow the client uses:
 
-### Development Environments
+| OAuth Flow | Inbound Authentication | Required Claim |
+|---|---|---|
+| [Authorization Code](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-auth-code-flow) | **Delegated** — a user signs in and obtains a bearer token | `Mcp.Tools.ReadWrite` scope |
+| [Client Credentials](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-client-creds-grant-flow) | **Application** — an application obtains a bearer token (no user involved) | `Mcp.Tools.ReadWrite.All` role |
 
-For local development with minimal restrictions, authenticate using Visual Studio, Azure CLI, Azure PowerShell, or Azure Developer CLI. For example, run the following commands to authenticate via Azure CLI:
+> [!NOTE]
+> The inbound authentication is determined entirely by the OAuth flow the client uses — the Azure MCP Server validates the incoming token and required claim but does not control how it is obtained.
 
-```bash
-az login
-# Verify access
-az account show
-```
+### Outbound Authentication
 
-The default credential chain includes `InteractiveBrowserCredential` as a fallback for development convenience.
+The `--outgoing-auth-strategy` flag (`UseOnBehalfOf` or `UseHostingEnvironmentIdentity`) is passed when starting the Azure MCP Server and controls how it obtains outbound tokens to access downstream Azure services:
 
-### CI/CD Pipelines
+| Outbound Authentication | Behavior |
+|---|---|
+| **On-Behalf-Of** (`UseOnBehalfOf`) | Azure MCP Server exchanges the inbound user bearer token for a new token to access the downstream service |
+| **Hosting Environment Identity** (`UseHostingEnvironmentIdentity`) | Azure MCP Server uses the hosting environment identity (typically a Managed Identity) to obtain a token to access the downstream service |
 
-For automated builds and deployments, set the following environment variables:
+> [!NOTE]
+> If `--outgoing-auth-strategy` is not specified, the server defaults to **On-Behalf-Of** .
 
-```bash
-# Use service principal
-export AZURE_CLIENT_ID="<pipeline-sp-client-id>"
-export AZURE_CLIENT_SECRET="<pipeline-sp-secret>"
-export AZURE_TENANT_ID="<your-tenant-id>"
-```
+### Supported Authentication Combinations
 
-## Authentication Scenarios in Enterprise Environments
+Use the following to verify your chosen inbound and outbound combination is supported:
 
-### Authentication with Protected Resources (Local Auth Disabled)
+| Inbound Authentication | Outbound Authentication | Supported |
+|---|---|---|
+| Delegated | On-Behalf-Of | ✅ |
+| Delegated | Hosting Environment Identity | ✅ |
+| Application | Hosting Environment Identity | ✅ |
+| Application | On-Behalf-Of | ❌ Application bearer token carries no user identity, so there is nothing to exchange in an On-Behalf-Of flow |
 
-Many organizations disable local authentication methods (access keys, SAS tokens) on their Azure resources for security compliance. This affects resources like:
+### Choosing an Outbound Authentication Strategy
 
-- Azure Storage accounts
-- Azure Cosmos DB
-- Azure Key Vault (in some configurations)
-- Azure Service Bus
-- Azure Event Hubs
+The right strategy depends on your security, auditing, and deployment requirements:
 
-#### What You Need to Know
+| | On-Behalf-Of | Hosting Environment Identity |
+|---|---|---|
+| **Per-user RBAC** | Yes | No — shared identity |
+| **Audit trail** | Per-user | Server identity only |
+| **Inbound auth type** | Delegated only | Delegated or Application |
+| **Setup complexity** | Higher | Lower |
+| **Best for** | Multi-tenant / enterprise / compliance-sensitive scenarios | Single-team or single-client-application scenarios |
 
-When local authentication is disabled, Azure MCP Server must use Microsoft Entra authentication exclusively. This requires:
+### Deploy with azd Templates
 
-1. **Proper RBAC permissions** on the target resources
-2. **Network connectivity** to Microsoft Entra endpoints
-3. **Valid Microsoft Entra ID credentials** (not personal Microsoft accounts)
+Configuring Entra ID app registrations, scopes, roles, and hosting infrastructure manually is complex. The following Azure Developer CLI (`azd`) templates automate the entire setup including deploying Azure MCP Server to Azure Container Apps:
 
-#### Working with Your Resource Administrator
+| Template | Outbound Strategy | Client (Agent) |
+|---|---|---|
+| [**azmcp-obo-template**](https://github.com/Azure-Samples/azmcp-obo-template) | On-Behalf-Of | Foundry Agent, Copilot Studio, C# Client |
+| [**azmcp-foundry-aca-mi**](https://github.com/Azure-Samples/azmcp-copilot-studio-aca-mi) | Hosting Environment Identity | Foundry Agent |
 
-**Information to Provide to Your Admin:**
+Each `azd` template provisions:
 
-1. **Service Principal Requirements:**
-
-   ```
-   Application Name: Azure MCP Server Access
-   Required Permissions:
-   - Resource-specific data plane roles (e.g., Storage Blob Data Reader)
-   - Subscription/Resource Group reader permissions (for discovery)
-   ```
-
-2. **Network Requirements:**
-
-   ```
-   Required Endpoints:
-   - login.microsoftonline.com (Microsoft Entra authentication)
-   - management.azure.com (Azure Resource Manager)
-   - Resource-specific endpoints (e.g., *.blob.core.windows.net)
-   ```
-
-3. **RBAC Role Assignments Needed:**
-
-   ```
-   Scope: Subscription, Resource Group, or specific Resource
-   Principal: Your user account or service principal
-   Roles: Service-specific data plane roles
-   ```
-
-**Questions to Ask Your Admin:**
-
-- Is local authentication disabled on the target resources?
-- What RBAC roles are available for data plane access?
-- Are there any Conditional Access policies that might block authentication?
-- Is there a preferred authentication method (user vs. service principal)?
-- Are there network restrictions (private endpoints, firewall rules)?
-
-### Azure Cosmos DB (RBAC for SQL data plane)
-
-Azure Cosmos DB supports data plane access via Microsoft Entra ID (RBAC). If key-based authentication is disabled (recommended), grant a Microsoft Entra user or service principal a built-in data role at the Cosmos account scope.
-
-Prerequisites:
-- Azure CLI installed (`az version`)
-- Logged in to the correct tenant/subscription (`az login`)
-- Resource group and account name for the Cosmos DB account
-
-Role options (built-in):
-- Data Contributor: full read/write data access — role ID `00000000-0000-0000-0000-000000000002`
-- Data Reader: read-only data access — role ID `00000000-0000-0000-0000-000000000001`
-
-PowerShell example (assign Data Contributor to a user):
-
-```powershell
-$user = 'user@contoso.com'
-$resourceGroup = 'rg-name'
-$account = 'cosmos-account-name'
-
-# Account scope
-$resourceId = az cosmosdb show -g $resourceGroup -n $account --query "id" -o tsv
-
-# Built-in Data Contributor role
-$roleId = az cosmosdb sql role definition show -a $account -g $resourceGroup -i 00000000-0000-0000-0000-000000000002 --query id -o tsv
-
-# Principal object ID (user)
-$principalId = az ad user show --id $user --query 'id' -o tsv
-
-az cosmosdb sql role assignment create --resource-group $resourceGroup --account-name $account --principal-id $principalId --role-definition-id $roleId --scope $resourceId
-```
-
-Bash example (assign Data Reader to a service principal):
-
-```bash
-spAppId="00000000-0000-0000-0000-000000000000" # replace with your app (client) ID
-resourceGroup="rg-name"
-account="cosmos-account-name"
-
-# Account scope
-resourceId=$(az cosmosdb show -g "$resourceGroup" -n "$account" --query id -o tsv)
-
-# Built-in Data Reader role
-roleId=$(az cosmosdb sql role definition show -a "$account" -g "$resourceGroup" -i 00000000-0000-0000-0000-000000000001 --query id -o tsv)
-
-# Principal object ID (service principal)
-principalId=$(az ad sp show --id "$spAppId" --query id -o tsv)
-
-az cosmosdb sql role assignment create \
-  --resource-group "$resourceGroup" \
-  --account-name "$account" \
-  --principal-id "$principalId" \
-  --role-definition-id "$roleId" \
-  --scope "$resourceId"
-```
-
-Notes:
-- Scope can be set at the account level (as above) or narrowed to database/container scopes if needed.
-- RBAC propagation may take several minutes after assignment.
-- Use the Reader role for read-only scenarios and Contributor for read/write tooling.
-- Ensure you authenticate via one of the supported credentials (for example, Azure CLI — `az login`) before using Cosmos tools in Azure MCP.
-
-### Authentication Through Network Restrictions
-
-Organizations often implement network restrictions that can affect Azure MCP Server's ability to authenticate and access resources. While these are network security configurations, they directly impact authentication flows.
-
-#### Common Network Restrictions
-
-1. **Corporate Firewalls**
-   - Outbound HTTPS filtering
-   - Proxy server requirements
-   - Limited allowed domains
-
-2. **Azure Firewall Rules**
-   - IP address restrictions on Azure resources
-   - Virtual network integration requirements
-   - Private endpoint configurations
-
-3. **Conditional Access Policies**
-   - Device compliance requirements
-   - Location-based restrictions
-   - Multi-factor authentication requirements
-
-#### Firewall Configuration Requirements
-
-**Essential Endpoints for Authentication:**
-```
-login.microsoftonline.com:443
-login.windows.net:443
-management.azure.com:443
-graph.microsoft.com:443
-```
-
-**Resource-Specific Endpoints:**
-```
-Storage: *.blob.core.windows.net:443, *.table.core.windows.net:443
-Key Vault: *.vault.azure.net:443
-Cosmos DB: *.documents.azure.com:443
-Service Bus: *.servicebus.windows.net:443
-```
-
-**Working with Network Administrators:**
-
-1. **Request Firewall Rules:**
-   ```
-   Source: Your IP address or network range
-   Destination: Azure service endpoints (see above)
-   Protocol: HTTPS (TCP/443)
-   ```
-
-2. **Proxy Configuration:**
-   ```bash
-   # Set proxy environment variables if required
-   export HTTP_PROXY=http://proxy.company.com:8080
-   export HTTPS_PROXY=http://proxy.company.com:8080
-   export NO_PROXY=localhost,127.0.0.1
-   ```
-
-3. **Corporate Certificate Trust:**
-   - Ensure corporate CA certificates are trusted
-   - May require certificate bundle updates
-
-### Authentication with Private Endpoints
-
-When Azure resources are configured with private endpoints, authentication flows require additional network configuration to reach the authentication endpoints.
-
-#### DNS Configuration
-
-Private endpoints require proper DNS resolution:
-
-```bash
-# Verify DNS resolution for private endpoints
-nslookup mystorageaccount.blob.core.windows.net
-# Should resolve to private IP (10.x.x.x range)
-```
-
-#### Network Connectivity
-
-Ensure your development environment can reach the private endpoint:
-
-1. **VPN Connection** to the corporate network
-2. **ExpressRoute** connectivity
-3. **Point-to-site VPN** configuration
-4. **Bastion Host** or jump server access
-
-#### Working with Network Administrators
-
-**Information to Provide:**
-
-1. **Resource Details:**
-   ```
-   Resource Name: mystorageaccount
-   Private Endpoint Name: mystorageaccount-pe
-   Required DNS Zone: privatelink.blob.core.windows.net
-   ```
-
-2. **Network Requirements:**
-   ```
-   Source Network: Developer workstation network
-   Destination Network: Private endpoint subnet
-   Ports: TCP/443 for HTTPS
-   ```
-
-### Service Principal Authentication in Restricted Environments
-
-For automated scenarios or when interactive authentication isn't possible due to security policies:
-
-#### Creating Service Principal
-
-Work with your Azure administrator to create a service principal:
-
-```bash
-# Admin runs this command
-az ad sp create-for-rbac --name "azure-mcp-server" --role "Reader" --scopes "/subscriptions/{subscription-id}"
-```
-
-#### Configuration
-
-Set environment variables for service principal authentication:
-
-```bash
-export AZURE_CLIENT_ID="<your-client-id>"
-export AZURE_CLIENT_SECRET="<your-client-secret>"
-export AZURE_TENANT_ID="<your-tenant-id>"
-```
-
-#### Security Best Practices
-
-1. **Least Privilege:** Only assign necessary permissions
-2. **Secret Rotation:** Regularly rotate client secrets
-3. **Certificate Authentication:** Prefer certificates over secrets when possible
-4. **Monitoring:** Enable audit logging for service principal usage
-
-### Authentication with Conditional Access Policies
-
-Organizations may enforce Conditional Access policies that affect authentication flows:
-
-#### Common Policy Requirements
-
-1. **Device Compliance**
-   - Device must be Azure AD joined
-   - Device must meet compliance policies
-   - Intune enrollment may be required
-
-2. **Multi-Factor Authentication (MFA)**
-   - Additional authentication factors required
-   - May not work with non-interactive scenarios
-
-3. **Location Restrictions**
-   - Authentication only allowed from specific IP ranges
-   - VPN connection may be required
-
-#### Working with Identity Administrators
-
-**Questions to Ask:**
-
-- Are there Conditional Access policies affecting my authentication?
-- Is my device compliant with organizational policies?
-- Can I get an exception for development scenarios?
-- Are there specific authentication methods I should use?
-
-### Troubleshooting Authentication in Enterprise Environments
-
-#### Diagnostic Commands
-
-1. **Test Authentication:**
-
-   ```bash
-   az login --tenant your-tenant-id
-   az account show
-   ```
-
-2. **Test Resource Access:**
-
-   ```bash
-   # Test storage access
-   az storage blob list --account-name mystorageaccount --container-name mycontainer --auth-mode login
-   ```
-
-3. **Network Connectivity:**
-
-   ```bash
-   # Test endpoint connectivity
-   curl -I https://login.microsoftonline.com
-   telnet mystorageaccount.blob.core.windows.net 443
-   ```
-
-#### Common Error Patterns
-
-1. **DNS Resolution Failures:**
-
-   ```
-   Error: getaddrinfo ENOTFOUND mystorageaccount.privatelink.blob.core.windows.net
-   Solution: Configure DNS for private endpoints
-   ```
-
-2. **Certificate Trust Issues:**
-
-   ```
-   Error: UNABLE_TO_VERIFY_LEAF_SIGNATURE
-   Solution: Install corporate CA certificates
-   ```
-
-3. **Firewall Blocks:**
-
-   ```
-   Error: connect ETIMEDOUT
-   Solution: Configure firewall rules for Azure endpoints
-   ```
-
-## Getting Help
-
-When working with administrators, provide:
-
-1. **Specific Error Messages:** Include full error text and stack traces
-2. **Resource Details:** Names, regions, and configuration details
-3. **Network Context:** Where you're connecting from and network setup
-4. **Authentication Method:** Which credential type you're trying to use
-5. **Logs:** Relevant log entries showing the authentication attempt
-
-For additional support, see the [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md). For further assistance, [open a GitHub issue](https://github.com/microsoft/mcp/issues/new).
+- Entra ID app registration(s) with the correct scopes and roles
+- Managed identity with appropriate RBAC assignments
+- Azure Container App configured to run the Azure MCP Server with all required environment variables and server flags

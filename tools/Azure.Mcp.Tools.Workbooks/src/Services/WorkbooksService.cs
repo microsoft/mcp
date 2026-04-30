@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -12,6 +11,7 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
@@ -41,63 +41,52 @@ public class WorkbooksService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        try
+        // Get accessible tenants
+        var tenants = await TenantService.GetTenants(cancellationToken);
+        var currentTenant = tenants.FirstOrDefault()
+            ?? throw new InvalidOperationException("No accessible tenants found");
+
+        // Build the query with optional scope filtering
+        var queryText = BuildWorkbooksQuery(resourceGroups, filters, maxResults, outputFormat);
+        var query = new ResourceQueryContent(queryText);
+
+        // If subscriptions are specified, add them to the query scope
+        if (subscriptions?.Count > 0)
         {
-            // Get accessible tenants
-            var tenants = await TenantService.GetTenants(cancellationToken);
-            var currentTenant = tenants.FirstOrDefault()
-                ?? throw new InvalidOperationException("No accessible tenants found");
-
-            // Build the query with optional scope filtering
-            var queryText = BuildWorkbooksQuery(resourceGroups, filters, maxResults, outputFormat);
-            var query = new ResourceQueryContent(queryText);
-
-            // If subscriptions are specified, add them to the query scope
-            if (subscriptions?.Count > 0)
+            foreach (var sub in subscriptions)
             {
-                foreach (var sub in subscriptions)
+                // Resolve subscription name to ID if needed
+                var subscriptionResource = await _subscriptionService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
+                query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
+            }
+        }
+
+        ResourceQueryResult resources = await currentTenant.GetResourcesAsync(query, cancellationToken);
+
+        var workbooks = new List<WorkbookInfo>();
+
+        if (resources != null && resources.Count > 0 && resources.Data != null)
+        {
+            using JsonDocument document = JsonDocument.Parse(resources.Data);
+            JsonElement resourcesArray = document.RootElement;
+
+            if (resourcesArray.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement resource in resourcesArray.EnumerateArray())
                 {
-                    // Resolve subscription name to ID if needed
-                    var subscriptionResource = await _subscriptionService.GetSubscription(sub, tenant, retryPolicy, cancellationToken);
-                    query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
+                    workbooks.Add(ParseWorkbookFromResourceGraph(resource, outputFormat));
                 }
             }
-
-            ResourceQueryResult resources = await currentTenant.GetResourcesAsync(query, cancellationToken);
-
-            var workbooks = new List<WorkbookInfo>();
-
-            if (resources != null && resources.Count > 0 && resources.Data != null)
-            {
-                using JsonDocument document = JsonDocument.Parse(resources.Data);
-                JsonElement resourcesArray = document.RootElement;
-
-                if (resourcesArray.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (JsonElement resource in resourcesArray.EnumerateArray())
-                    {
-                        workbooks.Add(ParseWorkbookFromResourceGraph(resource, outputFormat));
-                    }
-                }
-            }
-
-            // Get total count if requested
-            int? totalCount = null;
-            if (includeTotalCount)
-            {
-                totalCount = await GetTotalCountAsync(subscriptions, resourceGroups, filters, tenant, retryPolicy, cancellationToken);
-            }
-
-            return new WorkbookListResult(
-                workbooks,
-                totalCount,
-                ContinuationToken: null);
         }
-        catch (Exception ex)
+
+        // Get total count if requested
+        int? totalCount = null;
+        if (includeTotalCount)
         {
-            _logger.LogError(ex, "Failed to list workbooks");
-            throw new InvalidOperationException($"Failed to list workbooks: {ex.Message}", ex);
+            totalCount = await GetTotalCountAsync(subscriptions, resourceGroups, filters, tenant, retryPolicy, cancellationToken);
         }
+
+        return new(workbooks, totalCount, ContinuationToken: null);
     }
 
     public async Task<WorkbookBatchResult> GetWorkbooksAsync(
@@ -150,7 +139,7 @@ public class WorkbooksService(
             }
         }
 
-        return new WorkbookBatchResult(succeeded, failed);
+        return new(succeeded, failed);
     }
 
     public async Task<WorkbookInfo?> CreateWorkbookAsync(
@@ -172,41 +161,34 @@ public class WorkbooksService(
 
         ValidateSerializedData(serializedData);
 
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+            ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
+
+        var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName, cancellationToken);
+        if (resourceGroupResource?.Value == null)
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
-                ?? throw new InvalidOperationException($"Subscription '{subscription}' not found");
-
-            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName, cancellationToken);
-            if (resourceGroupResource?.Value == null)
-            {
-                throw new InvalidOperationException($"Resource group '{resourceGroupName}' not found in subscription '{subscription}'");
-            }
-
-            var workbookData = new ApplicationInsightsWorkbookData(resourceGroupResource.Value.Data.Location)
-            {
-                DisplayName = displayName,
-                SerializedData = serializedData,
-                Category = "workbook",
-                Kind = "shared",
-                SourceId = new ResourceIdentifier(sourceId)
-            };
-
-            var workbookName = Guid.NewGuid().ToString();
-
-            var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
-            var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData, cancellationToken: cancellationToken);
-            var createdWorkbook = createOperation.Value;
-
-            _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
-
-            return CreateWorkbookInfo(createdWorkbook, displayName);
+            throw new InvalidOperationException($"Resource group '{resourceGroupName}' not found in subscription '{subscription}'");
         }
-        catch (Exception ex)
+
+        var workbookData = new ApplicationInsightsWorkbookData(resourceGroupResource.Value.Data.Location)
         {
-            _logger.LogError(ex, "Error creating workbook '{DisplayName}' in resource group '{ResourceGroup}'", displayName, resourceGroupName);
-            throw new InvalidOperationException($"Failed to create workbook: {ex.Message}", ex);
-        }
+            DisplayName = displayName,
+            SerializedData = serializedData,
+            Category = "workbook",
+            Kind = "shared",
+            SourceId = new(sourceId)
+        };
+
+        var workbookName = Guid.NewGuid().ToString();
+
+        var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
+        var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Started, workbookName, workbookData, cancellationToken: cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+        var createdWorkbook = createOperation.Value;
+
+        _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
+
+        return CreateWorkbookInfo(createdWorkbook, displayName);
     }
 
     public async Task<WorkbookInfo?> UpdateWorkbookAsync(
@@ -224,47 +206,39 @@ public class WorkbooksService(
             ValidateSerializedData(serializedContent);
         }
 
-        try
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+
+        var workbookResourceId = new ResourceIdentifier(workbookId);
+        var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
+            ?? throw new InvalidOperationException($"Workbook with ID '{workbookId}' not found");
+
+        var workbookResponse = await workbookResource.GetAsync(true, cancellationToken);
+        var workbook = workbookResponse.Value;
+
+        if (workbook?.Data == null)
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-
-            var workbookResourceId = new ResourceIdentifier(workbookId);
-            var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
-                ?? throw new InvalidOperationException($"Workbook with ID '{workbookId}' not found");
-
-            var workbookResponse = await workbookResource.GetAsync(true, cancellationToken);
-            var workbook = workbookResponse.Value;
-
-            if (workbook?.Data == null)
-            {
-                _logger.LogWarning("Workbook data is null for ID {WorkbookId}", workbookId);
-                return null;
-            }
-
-            var patchData = new ApplicationInsightsWorkbookPatch { Kind = "shared" };
-
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                patchData.DisplayName = displayName;
-            }
-
-            if (!string.IsNullOrEmpty(serializedContent))
-            {
-                patchData.SerializedData = serializedContent;
-            }
-
-            var updateResponse = await workbookResource.UpdateAsync(patchData, cancellationToken: cancellationToken);
-            var updatedWorkbook = updateResponse.Value;
-
-            _logger.LogInformation("Successfully updated workbook with ID: {WorkbookId}", workbookId);
-
-            return CreateWorkbookInfo(updatedWorkbook, workbookId);
+            _logger.LogWarning("Workbook data is null for ID {WorkbookId}", workbookId);
+            return null;
         }
-        catch (Exception ex)
+
+        var patchData = new ApplicationInsightsWorkbookPatch { Kind = "shared" };
+
+        if (!string.IsNullOrEmpty(displayName))
         {
-            _logger.LogError(ex, "Error updating workbook with ID: {WorkbookId}", workbookId);
-            throw new InvalidOperationException($"Failed to update workbook: {ex.Message}", ex);
+            patchData.DisplayName = displayName;
         }
+
+        if (!string.IsNullOrEmpty(serializedContent))
+        {
+            patchData.SerializedData = serializedContent;
+        }
+
+        var updateResponse = await workbookResource.UpdateAsync(patchData, cancellationToken: cancellationToken);
+        var updatedWorkbook = updateResponse.Value;
+
+        _logger.LogInformation("Successfully updated workbook with ID: {WorkbookId}", workbookId);
+
+        return CreateWorkbookInfo(updatedWorkbook, workbookId);
     }
 
     public async Task<WorkbookDeleteBatchResult> DeleteWorkbooksAsync(
@@ -291,7 +265,7 @@ public class WorkbooksService(
             }
             catch (Exception ex)
             {
-                var error = HandleWorkbookException(id, ex) as WorkbookError;
+                var error = HandleWorkbookException(id, ex);
                 return (Id: id, Error: error);
             }
             finally
@@ -314,7 +288,7 @@ public class WorkbooksService(
             }
         }
 
-        return new WorkbookDeleteBatchResult(succeeded, failed);
+        return new(succeeded, failed);
     }
 
     private async Task<WorkbookInfo?> GetSingleWorkbookAsync(
@@ -358,7 +332,8 @@ public class WorkbooksService(
         var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId)
             ?? throw new InvalidOperationException($"Workbook with ID '{workbookId}' not found");
 
-        await workbookResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var deleteOperation = await workbookResource.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
         _logger.LogInformation("Successfully deleted workbook with ID: {WorkbookId}", workbookId);
     }
 
@@ -532,7 +507,7 @@ public class WorkbooksService(
 
         if (outputFormat == OutputFormat.Summary)
         {
-            return new WorkbookInfo(
+            return new(
                 WorkbookId: resourceId,
                 DisplayName: resourceName,
                 Description: null,
@@ -552,7 +527,7 @@ public class WorkbooksService(
         var tags = resource.TryGetProperty("tags", out var tagsElement) ? tagsElement : default;
         var properties = resource.TryGetProperty("properties", out var props) ? props : default;
 
-        return new WorkbookInfo(
+        return new(
             WorkbookId: resourceId,
             DisplayName: properties.ValueKind != JsonValueKind.Undefined && properties.TryGetProperty("displayName", out var displayName)
                 ? displayName.GetString() : null,
@@ -578,7 +553,7 @@ public class WorkbooksService(
 
     private static WorkbookInfo CreateWorkbookInfo(ApplicationInsightsWorkbookResource workbook, string fallbackId)
     {
-        return new WorkbookInfo(
+        return new(
             WorkbookId: workbook.Id?.ToString() ?? fallbackId,
             DisplayName: workbook.Data.DisplayName,
             Description: workbook.Data.Description,
@@ -598,21 +573,21 @@ public class WorkbooksService(
         return ex switch
         {
             RequestFailedException { Status: 404 } =>
-                new WorkbookError(resourceId, 404, $"Workbook not found. Verify the ID exists and you have access: {resourceId}"),
+                new(resourceId, 404, $"Workbook not found. Verify the ID exists and you have access: {resourceId}"),
 
             RequestFailedException { Status: 403 } reqEx =>
-                new WorkbookError(resourceId, 403, $"Authorization denied. Required role: Workbook Contributor. Details: {reqEx.Message}"),
+                new(resourceId, 403, $"Authorization denied. Required role: Workbook Contributor. Details: {reqEx.Message}"),
 
             RequestFailedException { Status: 409 } =>
-                new WorkbookError(resourceId, 409, "Conflict: Workbook was modified by another process. Retry with updated etag."),
+                new(resourceId, 409, "Conflict: Workbook was modified by another process. Retry with updated etag."),
 
-            Azure.Identity.AuthenticationFailedException =>
-                new WorkbookError(resourceId, 401, "Authentication failed. Run 'az login' to authenticate."),
+            Identity.AuthenticationFailedException =>
+                new(resourceId, 401, "Authentication failed. Run 'az login' to authenticate."),
 
             ArgumentException argEx =>
-                new WorkbookError(resourceId, 400, $"Invalid parameter: {argEx.Message}"),
+                new(resourceId, 400, $"Invalid parameter: {argEx.Message}"),
 
-            _ => new WorkbookError(resourceId, 500, $"Unexpected error: {ex.Message}")
+            _ => new(resourceId, 500, $"Unexpected error: {ex.Message}")
         };
     }
 

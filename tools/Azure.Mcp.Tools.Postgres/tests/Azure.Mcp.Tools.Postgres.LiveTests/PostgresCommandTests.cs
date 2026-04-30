@@ -4,9 +4,9 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Postgres.Options;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
 using ModelContextProtocol.Protocol;
 using Npgsql;
 using Xunit;

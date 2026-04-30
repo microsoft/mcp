@@ -1,0 +1,26 @@
+{
+  "parameters": {
+    "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+    "sqlDatabaseId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+    "updateAuditSettingsRequest": {
+      "state": "Enabled",
+      "retentionDays": 10,
+      "predicateExpression": "statement not like '[select ]%'"
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "state": "Enabled",
+        "storageEndpoint": "https://onelake.blob.fabric.microsoft.com/f089354e-8366-4e18-aea3-4cb4a3a50b48/41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87/Audit/", 
+        "retentionDays": 10,
+        "auditActionsAndGroups": [ 
+            "BATCH_COMPLETED_GROUP", 
+            "FAILED_DATABASE_AUTHENTICATION_GROUP", 
+            "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP" 
+        ],
+        "predicateExpression": "statement not like '[select ]%'"
+      }
+    }
+  }
+}

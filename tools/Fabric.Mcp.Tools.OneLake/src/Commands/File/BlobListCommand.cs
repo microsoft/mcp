@@ -1,44 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a",
+    Name = "list",
+    Title = "List OneLake Blobs",
+    Description = "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class BlobListCommand(
     ILogger<BlobListCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<BlobListOptions>()
 {
     private readonly ILogger<BlobListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "3d7ce5ba-e365-4e5c-9542-c2550c0fd11a";
-    public override string Name => "list";
-    public override string Title => "List OneLake Blobs";
-    public override string Description => "List files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format. If no path is specified, intelligently discovers content by searching both Files and Tables folders automatically, providing comprehensive visibility across all top-level OneLake folders. Use --format=raw to get the unprocessed OneLake API response for debugging.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -50,6 +41,23 @@ public sealed class BlobListCommand(
         command.Options.Add(FabricOptionDefinitions.Path);
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(OneLakeOptionDefinitions.Format);
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override BlobListOptions BindOptions(ParseResult parseResult)
@@ -83,22 +91,12 @@ public sealed class BlobListCommand(
         var options = BindOptions(parseResult);
         try
         {
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
                 var rawResponse = await _oneLakeService.ListBlobsRawAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken);
@@ -114,16 +112,16 @@ public sealed class BlobListCommand(
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 files = (await _oneLakeService.ListBlobsIntelligentAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Recursive,
                     cancellationToken)).ToList();
             }
             else
             {
                 files = (await _oneLakeService.ListBlobsAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken)).ToList();
@@ -134,8 +132,8 @@ public sealed class BlobListCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}. Options: {@Options}",
-                options.WorkspaceId, options.ItemId, options.Path, options);
+            _logger.LogError(ex, "Error listing blobs in workspace {WorkspaceId}, item {ItemId}, path {Path}.",
+                options.WorkspaceId, options.ItemId, options.Path);
             HandleException(context, ex);
         }
 

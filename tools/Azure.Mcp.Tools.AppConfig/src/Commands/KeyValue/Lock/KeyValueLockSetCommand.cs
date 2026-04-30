@@ -1,47 +1,38 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 
-public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueLockSetOptions>()
-{
-    private const string CommandTitle = "Sets the lock state of an App Configuration Key-Value Setting";
-    private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
-    private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "b48fd781-d74a-4dfd-a29c-421ded9a6ce9";
-
-    public override string Name => "set";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b48fd781-d74a-4dfd-a29c-421ded9a6ce9",
+    Name = "set",
+    Title = "Sets the lock state of an App Configuration Key-Value Setting",
+    Description = """
         Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.
         Locking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the
         read-only mode from a key-value setting, allowing modifications to its value. You must specify an account name
         and key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.
         Default is unlocking the key-value.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService)
+    : BaseKeyValueCommand<KeyValueLockSetOptions>()
+{
+    private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     protected override void RegisterOptions(Command command)
     {

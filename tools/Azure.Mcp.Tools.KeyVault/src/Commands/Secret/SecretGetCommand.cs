@@ -2,40 +2,32 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : SubscriptionCommand<SecretGetOptions>
+[CommandMetadata(
+    Id = "933bcb29-87e6-4f78-94ad-8ad0c8c60002",
+    Name = "get",
+    Title = "Get Key Vault Secret",
+    Description = """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretGetOptions>
 {
-    private const string _commandTitle = "Get Key Vault Secret";
     private readonly ILogger<SecretGetCommand> _logger = logger;
-
-    public override string Id => "933bcb29-87e6-4f78-94ad-8ad0c8c60002";
-
-    public override string Name => "get";
-
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = true
-    };
-
-    public override string Description =>
-        """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""";
+    private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,24 +55,22 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
 
         try
         {
-            var keyVaultService = context.GetService<IKeyVaultService>();
-
             if (string.IsNullOrEmpty(options.SecretName))
             {
                 // List all secrets
-                var secrets = await keyVaultService.ListSecrets(
+                var secrets = await _keyVaultService.ListSecrets(
                     options.VaultName!,
                     options.Subscription!,
                     options.Tenant,
                     options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new SecretGetCommandResult(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
             }
             else
             {
                 // Get specific secret
-                var secret = await keyVaultService.GetSecret(
+                var secret = await _keyVaultService.GetSecret(
                     options.VaultName!,
                     options.SecretName,
                     options.Subscription!,
@@ -97,7 +87,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                     secret.Properties.CreatedOn,
                     secret.Properties.UpdatedOn);
 
-                context.Response.Results = ResponseResult.Create(new SecretGetCommandResult(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(Secrets: null, Secret: secretDetails), KeyVaultJsonContext.Default.SecretGetCommandResult);
             }
         }
         catch (Exception ex)

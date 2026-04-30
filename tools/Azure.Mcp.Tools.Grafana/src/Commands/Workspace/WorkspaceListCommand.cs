@@ -14,32 +14,24 @@ namespace Azure.Mcp.Tools.Grafana.Commands.Workspace;
 /// <summary>
 /// Lists Azure Managed Grafana workspaces in the specified subscription.
 /// </summary>
-public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
-{
-    private const string CommandTitle = "List Grafana Workspaces";
-    private readonly ILogger<WorkspaceListCommand> _logger = logger;
-
-    public override string Id => "7a47b562-f219-47de-80f6-12e19367b61d";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "7a47b562-f219-47de-80f6-12e19367b61d",
+    Name = "list",
+    Title = "List Grafana Workspaces",
+    Description = """
         List all Grafana workspace resources in a specified subscription. Returns an array of Grafana workspace details.
         Use this command to explore which Grafana workspace resources are available in your subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class WorkspaceListCommand(IGrafanaService grafanaService, ILogger<WorkspaceListCommand> logger) : SubscriptionCommand<WorkspaceListOptions>()
+{
+    private readonly IGrafanaService _grafanaService = grafanaService;
+    private readonly ILogger<WorkspaceListCommand> _logger = logger;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -52,8 +44,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
 
         try
         {
-            var grafanaService = context.GetService<IGrafanaService>() ?? throw new InvalidOperationException("Grafana service is not available.");
-            var workspaces = await grafanaService.ListWorkspacesAsync(
+            var workspaces = await _grafanaService.ListWorkspacesAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,

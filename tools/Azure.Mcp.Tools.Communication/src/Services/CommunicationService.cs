@@ -4,12 +4,12 @@
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -35,7 +35,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(from), from),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -71,7 +71,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
             {
-                results.Add(new SmsResult
+                results.Add(new()
                 {
                     MessageId = result.MessageId,
                     To = result.To,
@@ -116,7 +116,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             (nameof(subject), subject),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", TenantService.CloudConfiguration.ArmEnvironment);
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -138,7 +138,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), retryPolicy);
             emailClientOptions.Transport = new HttpClientTransport(TenantService.GetClient());
 
-            var emailClient = new EmailClient(new Uri(endpoint), credential, emailClientOptions);
+            var emailClient = new EmailClient(new(endpoint), credential, emailClientOptions);
 
             // Create the email content
             var emailContent = new EmailContent(subject);
@@ -160,14 +160,14 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var emailMessage = new EmailMessage(
                 senderAddress: from,
                 content: emailContent,
-                recipients: new EmailRecipients(recipientList, recipientCc, recipientBcc));
+                recipients: new(recipientList, recipientCc, recipientBcc));
 
             // Add reply-to addresses if provided
             if (replyTo != null && replyTo.Length > 0)
             {
                 foreach (var address in replyTo)
                 {
-                    emailMessage.ReplyTo.Add(new EmailAddress(address));
+                    emailMessage.ReplyTo.Add(new(address));
                 }
             }
 
@@ -175,20 +175,21 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
                 from, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
 
             // Send the email
-            var response = await emailClient.SendAsync(
-                WaitUntil.Completed,
+            var sendOperation = await emailClient.SendAsync(
+                WaitUntil.Started,
                 emailMessage,
                 cancellationToken);
+            await WaitForLroCompletionAsync(sendOperation, cancellationToken);
 
             // Get the operation result
-            var operationResult = response.Value;
+            var operationResult = sendOperation.Value;
 
             _logger.LogInformation("Email sent successfully. MessageId={MessageId}, Status={Status}",
-                response.Id, operationResult.Status);
+                sendOperation.Id, operationResult.Status);
 
-            return new Models.EmailSendResult
+            return new()
             {
-                MessageId = response.Id,
+                MessageId = sendOperation.Id,
                 Status = operationResult.Status.ToString()
             };
         }

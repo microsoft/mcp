@@ -1,42 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : GlobalCommand<IndexQueryOptions>()
+[CommandMetadata(
+    Id = "f1938a77-8d6c-49c7-b592-71b4f26508e7",
+    Name = "query",
+    Title = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index",
+    Description = """
+        Queries/searches documents in an Azure AI Search index with a given query, returning the results of the
+        query/search.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions>()
 {
-    private const string CommandTitle = "Query Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
     private readonly ILogger<IndexQueryCommand> _logger = logger;
-
-    public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
-
-    public override string Name => "query";
-
-    public override string Description =>
-        """
-        Queries an Azure AI Search index, returning the results of the query.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly ISearchService _searchService = searchService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -66,9 +58,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
         try
         {
-            var searchService = context.GetService<ISearchService>();
-
-            var results = await searchService.QueryIndex(
+            var results = await _searchService.QueryIndex(
                 options.Service!,
                 options.Index!,
                 options.Query!,

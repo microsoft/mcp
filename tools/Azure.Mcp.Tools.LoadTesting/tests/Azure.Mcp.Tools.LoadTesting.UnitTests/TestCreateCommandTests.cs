@@ -2,52 +2,33 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.UnitTests;
 
-public class TestCreateCommandTests
+public class TestCreateCommandTests : CommandUnitTestsBase<TestCreateCommand, ILoadTestingService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILoadTestingService _service;
-    private readonly ILogger<TestCreateCommand> _logger;
-    private readonly TestCreateCommand _command;
-    public TestCreateCommandTests()
-    {
-        _service = Substitute.For<ILoadTestingService>();
-        _logger = Substitute.For<ILogger<TestCreateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Fact]
     public async Task ExecuteAsync_CreateLoadTest_WhenExists()
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
-        _service.CreateTestAsync(
+        Service.CreateTestAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
@@ -55,8 +36,8 @@ public class TestCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var command = new TestCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
@@ -67,22 +48,11 @@ public class TestCreateCommandTests
             "--duration", "20",
             "--virtual-users", "50",
             "--ramp-up-time", "1",
-            "--endpoint", "https://example.com/api/test"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--endpoint", "https://example.com/api/test");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, LoadTestJsonContext.Default.TestCreateCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expected.TestId, result.Test.TestId);
         Assert.Equal(expected.DisplayName, result.Test.DisplayName);
         Assert.Equal(expected.Description, result.Test.Description);
@@ -91,39 +61,34 @@ public class TestCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesBadRequestErrors()
     {
-        var expected = new Test();
-        _service.CreateTestAsync(
+        Service.CreateTestAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is((string?)null),
             Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(expected);
+            .Returns(new Test());
 
-        var command = new TestCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
-            "--tenant", "tenant123"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
+
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.CreateTestAsync(
+        Service.CreateTestAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
             Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<Test>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
-        var command = new TestCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "resourceGroup123",
             "--test-resource-name", "testResourceName",
@@ -134,10 +99,8 @@ public class TestCreateCommandTests
             "--duration", "20",
             "--virtual-users", "50",
             "--ramp-up-time", "1",
-            "--endpoint", "https://example.com/api/test"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--endpoint", "https://example.com/api/test");
+
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

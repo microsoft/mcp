@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
@@ -16,6 +15,7 @@ using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -52,10 +52,10 @@ public class SttRecognizeCommandTests : IDisposable
         // Create real SpeechService with mocked dependencies
         _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
-        var collection = new ServiceCollection().AddSingleton(_speechService);
+        var collection = new ServiceCollection();
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
+        _command = new(_logger, _speechService);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
@@ -178,7 +178,7 @@ public class SttRecognizeCommandTests : IDisposable
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
     {
-        var command = new SttRecognizeCommand(_logger);
+        var command = new SttRecognizeCommand(_logger, _speechService);
         Assert.NotNull(command);
         Assert.Equal("recognize", command.Name);
     }
@@ -1192,6 +1192,30 @@ public class SttRecognizeCommandTests : IDisposable
                 File.Delete(largeFileName);
             }
         }
+    }
+
+    [Theory]
+    [InlineData(@"\\server\share\audio.wav", "UNC")]
+    [InlineData("//server/share/audio.wav", "UNC")]
+    public async Task ExecuteAsync_WithUncPath_ShouldRejectPath(string filePath, string expectedErrorFragment)
+    {
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {filePath}";
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains(expectedErrorFragment, response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithPathTraversal_ShouldCanonicalizeBeforeValidation()
+    {
+        // A traversal path to a nonexistent file should fail with "file not found" after canonicalization,
+        // rather than being passed through unchecked.
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file ../../../etc/passwd.wav";
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("Audio file not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
 

@@ -26,12 +26,21 @@ public class ComputeSetup : IAreaSetup
 
         // VM commands
         services.AddSingleton<VmGetCommand>();
+        services.AddSingleton<VmCreateCommand>();
+        services.AddSingleton<VmUpdateCommand>();
+        services.AddSingleton<VmDeleteCommand>();
 
         // VMSS commands
         services.AddSingleton<VmssGetCommand>();
+        services.AddSingleton<VmssCreateCommand>();
+        services.AddSingleton<VmssUpdateCommand>();
+        services.AddSingleton<VmssDeleteCommand>();
 
         // Disk commands
+        services.AddSingleton<DiskCreateCommand>();
+        services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
+        services.AddSingleton<DiskUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -40,7 +49,8 @@ public class ComputeSetup : IAreaSetup
             """
             Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.
             This tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.
-            Use this tool when you need to list, query, or monitor VMs and VMSS instances across subscriptions and resource groups.
+            Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.
+            Defaults to Standard_D2s_v5 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.
             This tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields
             inside the "parameters" object. To invoke a command, set "command" and wrap its arguments in "parameters".
             Set "learn=true" to discover available sub-commands for different Azure Compute operations.
@@ -49,20 +59,24 @@ public class ComputeSetup : IAreaSetup
             Title);
 
         // Create VM subgroup
-        var vm = new CommandGroup("vm", "Virtual Machine operations - Commands for managing and monitoring Azure Virtual Machines including lifecycle, status, and size information.");
+        var vm = new CommandGroup("vm", "Virtual Machine operations - Commands for managing and monitoring Azure Virtual Machines including lifecycle, status, creation, and size information.");
         compute.AddSubGroup(vm);
 
         // Register VM commands
-        var vmGet = serviceProvider.GetRequiredService<VmGetCommand>();
-        vm.AddCommand(vmGet.Name, vmGet);
+        vm.AddCommand<VmGetCommand>(serviceProvider);
+        vm.AddCommand<VmCreateCommand>(serviceProvider);
+        vm.AddCommand<VmUpdateCommand>(serviceProvider);
+        vm.AddCommand<VmDeleteCommand>(serviceProvider);
 
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
 
         // Register VMSS commands
-        var vmssGet = serviceProvider.GetRequiredService<VmssGetCommand>();
-        vmss.AddCommand(vmssGet.Name, vmssGet);
+        vmss.AddCommand<VmssGetCommand>(serviceProvider);
+        vmss.AddCommand<VmssCreateCommand>(serviceProvider);
+        vmss.AddCommand<VmssUpdateCommand>(serviceProvider);
+        vmss.AddCommand<VmssDeleteCommand>(serviceProvider);
 
         // Create Disk subgroup
         var disk = new CommandGroup(
@@ -71,8 +85,10 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(disk);
 
         // Register Disk commands
-        var diskGet = serviceProvider.GetRequiredService<DiskGetCommand>();
-        disk.AddCommand(diskGet.Name, diskGet);
+        disk.AddCommand<DiskCreateCommand>(serviceProvider);
+        disk.AddCommand<DiskDeleteCommand>(serviceProvider);
+        disk.AddCommand<DiskGetCommand>(serviceProvider);
+        disk.AddCommand<DiskUpdateCommand>(serviceProvider);
 
         return compute;
     }

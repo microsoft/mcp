@@ -1,45 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> logger)
+[CommandMetadata(
+    Id = "db1bdf99-ac8a-4920-ab2e-15048623b2dc",
+    Name = "update",
+    Title = "Update Azure Managed Lustre FileSystem",
+    Description = "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogger<FileSystemUpdateCommand> logger)
     : BaseManagedLustreCommand<FileSystemUpdateOptions>(logger)
 {
-    private const string CommandTitle = "Update Azure Managed Lustre FileSystem";
 
+    private readonly IManagedLustreService _service = service;
     private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
-
-    public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -83,8 +72,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
             }
             var options = BindOptions(parseResult);
 
-            var svc = context.GetService<IManagedLustreService>();
-            var fs = await svc.UpdateFileSystemAsync(
+            var fs = await _service.UpdateFileSystemAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Name!,
@@ -98,7 +86,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
                 options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemUpdateResult(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
+            context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
         }
         catch (Exception ex)
         {

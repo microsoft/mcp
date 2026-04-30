@@ -3,8 +3,8 @@
 
 using System.Text;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Extension.Models;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
@@ -41,7 +41,7 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
             RequestUri = new Uri(url),
             Content = content
         };
-        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
+        requestMessage.Headers.Authorization = new("Bearer", accessToken.Token);
         HttpResponseMessage responseMessage = await _httpClientFactory.CreateClient().SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }

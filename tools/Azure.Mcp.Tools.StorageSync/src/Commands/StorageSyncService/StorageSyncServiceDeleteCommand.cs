@@ -2,41 +2,31 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
+[CommandMetadata(
+    Id = "a7dcf4e2-fd1d-4d0a-acd3-f56ea5eceef6",
+    Name = "delete",
+    Title = "Delete Storage Sync Service",
+    Description = "Delete an Azure Storage Sync service and all its associated resources.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDeleteCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceDeleteOptions>
 {
-    private const string CommandTitle = "Delete Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceDeleteCommand> _logger = logger;
-
-    public override string Id => "a7dcf4e2-fd1d-4d0a-acd3-f56ea5eceef6";
-
-    public override string Name => "delete";
-
-    public override string Description => "Delete an Azure Storage Sync service and all its associated resources.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -76,8 +66,7 @@ public sealed class StorageSyncServiceDeleteCommand(ILogger<StorageSyncServiceDe
                 cancellationToken);
 
             context.Response.Message = "Storage sync service deleted successfully";
-            var results = new StorageSyncServiceDeleteCommandResult("Storage sync service deleted successfully");
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new("Storage sync service deleted successfully"), StorageSyncJsonContext.Default.StorageSyncServiceDeleteCommandResult);
         }
         catch (Exception ex)
         {

@@ -2,42 +2,32 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
+[CommandMetadata(
+    Id = "3572833c-4fc2-4bb9-9eed-52ae8b8899b8",
+    Name = "create",
+    Title = "Create Sync Group",
+    Description = "Create a sync group within an existing Storage Sync service. Sync groups define a sync topology and contain cloud endpoints (Azure File Shares) and server endpoints (local server paths) that sync together.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupCreateOptions>
 {
-    private const string CommandTitle = "Create Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupCreateCommand> _logger = logger;
-
-    public override string Id => "3572833c-4fc2-4bb9-9eed-52ae8b8899b8";
-
-    public override string Name => "create";
-
-    public override string Description => "Create a sync group within an existing Storage Sync service. Sync groups define a sync topology and contain cloud endpoints (Azure File Shares) and server endpoints (local server paths) that sync together.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -79,8 +69,7 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
                 options.RetryPolicy,
                 cancellationToken);
 
-            var results = new SyncGroupCreateCommandResult(syncGroup);
-            context.Response.Results = ResponseResult.Create(results, StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(syncGroup), StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);
         }
         catch (Exception ex)
         {
