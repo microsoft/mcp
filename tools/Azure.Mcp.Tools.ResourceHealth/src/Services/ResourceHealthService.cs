@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -49,6 +50,12 @@ public class ResourceHealthService(
         var requestUri = new Uri(managementEndpoint, relativePath);
 
         using var response = await client.GetAsync(requestUri, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new ResourceHealthUnsupportedResourceException(resourceId, parsedResourceId.ResourceType.ToString(), responseContent);
+        }
+
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
