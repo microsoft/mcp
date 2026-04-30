@@ -1383,7 +1383,7 @@ private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     var resource = new CommandGroup("{resource}", "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+    resource.AddCommand<{Resource}{Operation}Command>(serviceProvider);
 
     return service;
 }
