@@ -15,6 +15,8 @@ const TOOL_NAME = 'keyvault secret get';
 const SECURITY_WARNING_TEXT = 'may expose secrets or sensitive information';
 
 test.describe('VS Code MCP elicitation outerloop', () => {
+    test.describe.configure({ timeout: 10 * 60 * 1000 });
+
     test('installs latest Azure MCP server and shows elicitation UI for a real sensitive tool', async () => {
         await clearVsCodeDownloadCache();
         const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
