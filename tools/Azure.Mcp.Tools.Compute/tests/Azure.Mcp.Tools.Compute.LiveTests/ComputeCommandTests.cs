@@ -380,4 +380,51 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             Assert.NotNull(disk.GetProperty("Name").GetString()); // Name is sanitized during playback
         }
     }
+
+    [Fact]
+    public async Task SpotPlacement_GetMetadata_ReturnsSupportedResourceTypes()
+    {
+        var result = await CallToolAsync(
+            "compute_placementscore_spot_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "location", "eastus" }
+            });
+
+        Assert.NotNull(result);
+        var metadata = result.Value.AssertProperty("metadata");
+        Assert.Equal(JsonValueKind.Object, metadata.ValueKind);
+        var supported = metadata.GetProperty("supportedResourceTypes");
+        Assert.Equal(JsonValueKind.Array, supported.ValueKind);
+        Assert.NotEmpty(supported.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task SpotPlacement_GenerateScores_ReturnsScores()
+    {
+        var result = await CallToolAsync(
+            "compute_placementscore_spot_generate",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "location", "eastus" },
+                { "desired-locations", new[] { "eastus" } },
+                { "desired-sizes", new[] { "Standard_D2_v2" } },
+                { "desired-count", 1 },
+                { "availability-zones", true }
+            });
+
+        Assert.NotNull(result);
+        var scores = result.Value.AssertProperty("scores");
+        Assert.Equal(JsonValueKind.Array, scores.ValueKind);
+        // Response shape should include scored items; allow empty in edge cases but verify structure when present
+        foreach (var score in scores.EnumerateArray())
+        {
+            Assert.Equal(JsonValueKind.Object, score.ValueKind);
+            Assert.True(score.TryGetProperty("sku", out _));
+            Assert.True(score.TryGetProperty("region", out _));
+            Assert.True(score.TryGetProperty("score", out _));
+        }
+    }
 }

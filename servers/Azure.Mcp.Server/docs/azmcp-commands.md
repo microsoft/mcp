@@ -983,6 +983,38 @@ azmcp compute disk get --subscription <subscription> \
 -   `--resource-group`: The resource group to filter by (optional - if not provided, lists disks across all resource groups; required when specifying a disk name)
 -   `--subscription`: Azure subscription ID or name (optional - defaults to AZURE_SUBSCRIPTION_ID environment variable)
 
+#### Spot Placement Scores
+
+```bash
+# Get Spot Placement Scores metadata (supported resource types) for a location
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute placementscore spot get --subscription <subscription> \
+                                      --location <location>
+
+# Generate Spot VM placement scores across regions and availability zones
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute placementscore spot generate --subscription <subscription> \
+                                           --location <location> \
+                                           --desired-locations <region1> [<region2> ...] \
+                                           --desired-sizes <sku1> [<sku2> ...] \
+                                           [--desired-count <count>] \
+                                           [--availability-zones <true|false>]
+```
+
+**Returns:**
+- `spot get`: Metadata for the Spot Placement Scores resource in the specified location, including the list of supported resource types.
+- `spot generate`: A list of placement scores (High / Medium / Low) per SKU / region / availability zone, plus quota availability, indicating the likelihood that a Spot VM of the requested size can be allocated. Rate limited to 4 calls per 60 minutes per subscription.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name (requires at least Reader role) |
+| `--location` | Yes | ARM region used for API routing (e.g., `eastus`, `westus2`) |
+| `--desired-locations` | Yes (generate) | One or more ARM regions to evaluate (1–3 recommended) |
+| `--desired-sizes` | Yes (generate) | One or more VM SKU names (e.g., `Standard_D2_v2`, `Standard_D4s_v3`) |
+| `--desired-count` | No | Number of VMs to evaluate (1–1000). Defaults to `1` |
+| `--availability-zones` | No | Whether to include zone-level scores. Defaults to `true` |
+
 ### Azure Confidential Ledger Operations
 
 ```bash
