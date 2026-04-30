@@ -29,10 +29,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmUpdateOptions>(true)
 {
-    private readonly ILogger<VmUpdateCommand> _logger = logger;
+    private readonly ILogger<VmUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {

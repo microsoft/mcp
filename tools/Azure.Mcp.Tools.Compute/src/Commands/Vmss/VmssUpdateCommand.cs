@@ -29,10 +29,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger)
+public sealed class VmssUpdateCommand(ILogger<VmssUpdateCommand> logger, IComputeService computeService)
     : BaseComputeCommand<VmssUpdateOptions>(true)
 {
-    private readonly ILogger<VmssUpdateCommand> _logger = logger;
+    private readonly ILogger<VmssUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
     protected override void RegisterOptions(Command command)
     {
