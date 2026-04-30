@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Microsoft.Mcp.Core.Commands;
 
 public class CommandGroup(string name, string description, string? title = null)
@@ -12,6 +14,14 @@ public class CommandGroup(string name, string description, string? title = null)
     public Dictionary<string, IBaseCommand> Commands { get; } = [];
     public Command Command { get; } = new Command(name, description);
     public ToolMetadata? ToolMetadata { get; set; }
+
+    /// <summary>
+    /// Adds a command to this group by resolving it from the provided service provider.
+    /// </summary>
+    /// <typeparam name="TCommand">The command type to add.</typeparam>
+    /// <param name="serviceProvider">The service provider that resolves the command.</param>
+    public void AddCommand<TCommand>(IServiceProvider serviceProvider) where TCommand : IBaseCommand
+        => AddCommand(serviceProvider.GetRequiredService<TCommand>());
 
     /// <summary>
     /// Adds a command to this group.
