@@ -29,8 +29,12 @@ public class CommandResponse
     /// <c>CallToolResult</c>, enabling vision-capable LLM clients to consume charts or
     /// visualizations directly without parsing raw data.
     /// </summary>
-    [JsonPropertyName("images")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    /// <remarks>
+    /// This is a transport-level instruction to the MCP tool loader. Images are always delivered
+    /// via <c>ImageContentBlock</c> entries and must not appear in the serialized JSON envelope,
+    /// so this property is excluded from serialization.
+    /// </remarks>
+    [JsonIgnore]
     public IReadOnlyList<ResponseImage>? Images { get; set; }
 
     /// <summary>

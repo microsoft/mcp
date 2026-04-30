@@ -11,8 +11,8 @@ namespace Azure.Mcp.Tools.Kusto.Rendering;
 /// </summary>
 public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logger) : IKustoChartRenderer
 {
-    private const int ChartWidth = 960;
-    private const int ChartHeight = 480;
+    private const int ChartWidth = 640;
+    private const int ChartHeight = 320;
     private const string ImageMimeType = "image/png";
 
     private static readonly HashSet<string> s_numericKqlTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -281,7 +281,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
 
     private static ResponseImage ToPngImage(ScottPlot.Plot plot, string altText)
     {
-        var pngBytes = plot.GetImageBytes(ChartWidth, ChartHeight);
+        var pngBytes = plot.GetImage(ChartWidth, ChartHeight).GetImageBytes(ScottPlot.ImageFormat.Png);
         return new ResponseImage(pngBytes, ImageMimeType, altText);
     }
 
