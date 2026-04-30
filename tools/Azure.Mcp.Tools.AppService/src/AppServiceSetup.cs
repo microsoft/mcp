@@ -42,37 +42,37 @@ public class AppServiceSetup : IAreaSetup
 
         // Add database commands
         // Register the 'add' command for database connections, allowing users to configure a new database connection for an App Service web app.
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseAddCommand>());
+        database.AddCommand<DatabaseAddCommand>(serviceProvider);
 
         // Create webapp subgroup
         var webapp = new CommandGroup("webapp", "Operations for managing Azure App Service web apps");
         appService.AddSubGroup(webapp);
 
         // Add webapp commands
-        webapp.AddCommand(serviceProvider.GetRequiredService<WebappGetCommand>());
+        webapp.AddCommand<WebappGetCommand>(serviceProvider);
 
         // Add deployment subgroup
         var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
         webapp.AddSubGroup(deployment);
 
         // Add deployment commands
-        deployment.AddCommand(serviceProvider.GetRequiredService<DeploymentGetCommand>());
+        deployment.AddCommand<DeploymentGetCommand>(serviceProvider);
 
         // Add diagnostic subgroup under webapp
         var diagnostic = new CommandGroup("diagnostic", "Operations for diagnosing Azure App Service web apps");
         webapp.AddSubGroup(diagnostic);
 
         // Add diagnostic commands
-        diagnostic.AddCommand(serviceProvider.GetRequiredService<DetectorDiagnoseCommand>());
-        diagnostic.AddCommand(serviceProvider.GetRequiredService<DetectorListCommand>());
+        diagnostic.AddCommand<DetectorDiagnoseCommand>(serviceProvider);
+        diagnostic.AddCommand<DetectorListCommand>(serviceProvider);
 
         // Add settings subgroup under webapp
         var settings = new CommandGroup("settings", "Operations for managing Azure App Service web settings");
         webapp.AddSubGroup(settings);
 
         // Add settings commands
-        settings.AddCommand(serviceProvider.GetRequiredService<AppSettingsGetCommand>());
-        settings.AddCommand(serviceProvider.GetRequiredService<AppSettingsUpdateCommand>());
+        settings.AddCommand<AppSettingsGetCommand>(serviceProvider);
+        settings.AddCommand<AppSettingsUpdateCommand>(serviceProvider);
 
         return appService;
     }

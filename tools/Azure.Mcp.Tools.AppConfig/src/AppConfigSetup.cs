@@ -47,13 +47,13 @@ public class AppConfigSetup : IAreaSetup
         keyValue.AddSubGroup(lockGroup);
 
         // Register AppConfig commands
-        accounts.AddCommand(serviceProvider.GetRequiredService<AccountListCommand>());
+        accounts.AddCommand<AccountListCommand>(serviceProvider);
 
-        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueDeleteCommand>());
-        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueGetCommand>());
-        keyValue.AddCommand(serviceProvider.GetRequiredService<KeyValueSetCommand>());
+        keyValue.AddCommand<KeyValueDeleteCommand>(serviceProvider);
+        keyValue.AddCommand<KeyValueGetCommand>(serviceProvider);
+        keyValue.AddCommand<KeyValueSetCommand>(serviceProvider);
 
-        lockGroup.AddCommand(serviceProvider.GetRequiredService<KeyValueLockSetCommand>());
+        lockGroup.AddCommand<KeyValueLockSetCommand>(serviceProvider);
 
         return appConfig;
     }

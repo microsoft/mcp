@@ -32,11 +32,11 @@ public class CommunicationSetup : IAreaSetup
         var sms = new CommandGroup("sms", "SMS messaging operations - sending SMS messages to one or more recipients using Azure Communication Services.");
         communication.AddSubGroup(sms);
         // Register SMS commands
-        sms.AddCommand(serviceProvider.GetRequiredService<SmsSendCommand>());
+        sms.AddCommand<SmsSendCommand>(serviceProvider);
 
         var email = new CommandGroup("email", "Email messaging operations - sending email messages to one or more recipients using Azure Communication Services.");
         communication.AddSubGroup(email);
-        email.AddCommand(serviceProvider.GetRequiredService<EmailSendCommand>());
+        email.AddCommand<EmailSendCommand>(serviceProvider);
         return communication;
     }
 }

@@ -38,7 +38,7 @@ public class ApplicationInsightsSetup : IAreaSetup
         var recommendation = new CommandGroup("recommendation", "Application Insights recommendation operations - list recommendation targets (components).");
         group.AddSubGroup(recommendation);
 
-        recommendation.AddCommand(serviceProvider.GetRequiredService<RecommendationListCommand>());
+        recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
 
         return group;
     }

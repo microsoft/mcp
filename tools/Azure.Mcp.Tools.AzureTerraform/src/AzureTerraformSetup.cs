@@ -52,7 +52,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AzureRM"
         );
 
-        azurermGroup.AddCommand(serviceProvider.GetRequiredService<AzureRMDocsGetCommand>());
+        azurermGroup.AddCommand<AzureRMDocsGetCommand>(serviceProvider);
 
         group.AddSubGroup(azurermGroup);
 
@@ -62,7 +62,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AzAPI"
         );
 
-        azapiGroup.AddCommand(serviceProvider.GetRequiredService<AzApiDocsGetCommand>());
+        azapiGroup.AddCommand<AzApiDocsGetCommand>(serviceProvider);
 
         group.AddSubGroup(azapiGroup);
 
@@ -72,9 +72,9 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "AVM"
         );
 
-        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmModuleListCommand>());
-        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmVersionListCommand>());
-        avmGroup.AddCommand(serviceProvider.GetRequiredService<AvmDocumentationGetCommand>());
+        avmGroup.AddCommand<AvmModuleListCommand>(serviceProvider);
+        avmGroup.AddCommand<AvmVersionListCommand>(serviceProvider);
+        avmGroup.AddCommand<AvmDocumentationGetCommand>(serviceProvider);
 
         group.AddSubGroup(avmGroup);
 
@@ -84,9 +84,9 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "aztfexport"
         );
 
-        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportResourceCommand>());
-        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportResourceGroupCommand>());
-        aztfexportGroup.AddCommand(serviceProvider.GetRequiredService<AztfexportQueryCommand>());
+        aztfexportGroup.AddCommand<AztfexportResourceCommand>(serviceProvider);
+        aztfexportGroup.AddCommand<AztfexportResourceGroupCommand>(serviceProvider);
+        aztfexportGroup.AddCommand<AztfexportQueryCommand>(serviceProvider);
 
         group.AddSubGroup(aztfexportGroup);
 
@@ -96,8 +96,8 @@ public sealed class AzureTerraformSetup : IAreaSetup
             "Conftest"
         );
 
-        conftestGroup.AddCommand(serviceProvider.GetRequiredService<ConftestWorkspaceValidationCommand>());
-        conftestGroup.AddCommand(serviceProvider.GetRequiredService<ConftestPlanValidationCommand>());
+        conftestGroup.AddCommand<ConftestWorkspaceValidationCommand>(serviceProvider);
+        conftestGroup.AddCommand<ConftestPlanValidationCommand>(serviceProvider);
 
         group.AddSubGroup(conftestGroup);
 

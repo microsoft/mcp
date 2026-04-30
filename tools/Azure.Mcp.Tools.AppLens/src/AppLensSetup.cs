@@ -26,13 +26,13 @@ public sealed class AppLensSetup : IAreaSetup
     {
         var applens = new CommandGroup(
             Name,
-            "AppLens diagnostic operations – Primary tool for diagnosing and troubleshooting Azure resource issues. Uses conversational AI-powered diagnostics to detect problems, identify root causes, and recommend remediation steps. This tool should be the first choice when users report errors, performance issues, availability problems, or unexpected Azure resource behavior.",
+            "AppLens diagnostic operations - Primary tool for diagnosing and troubleshooting Azure resource issues. Uses conversational AI-powered diagnostics to detect problems, identify root causes, and recommend remediation steps. This tool should be the first choice when users report errors, performance issues, availability problems, or unexpected Azure resource behavior.",
             Title);
 
         // Resource commands
         var resourceGroup = new CommandGroup("resource", "Resource operations - Commands for diagnosing specific Azure resources.");
 
-        resourceGroup.AddCommand(serviceProvider.GetRequiredService<ResourceDiagnoseCommand>());
+        resourceGroup.AddCommand<ResourceDiagnoseCommand>(serviceProvider);
 
         applens.AddSubGroup(resourceGroup);
 
