@@ -6,6 +6,11 @@ namespace Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 public class TestRunGetOptions : BaseLoadTestingOptions
 {
     /// <summary>
+    /// The name of the test resource.
+    /// </summary>
+    public required string TestResourceName { get; set; }
+
+    /// <summary>
     /// The ID of the load test run resource. If provided, returns a single test run.
     /// </summary>
     public string? TestRunId { get; set; }

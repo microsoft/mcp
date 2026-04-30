@@ -11,7 +11,7 @@ namespace Microsoft.Mcp.Core.Commands;
 /// Interface for all commands
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
-public interface IBaseCommand
+public interface IBaseCommand<TContext, TOptions, TResult>
 {
     /// <summary>
     /// A unique identifier for the command. Identifier must be a constant value representing a GUID.
@@ -48,7 +48,5 @@ public interface IBaseCommand
     /// <summary>
     /// Executes the command
     /// </summary>
-    Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken);
-
-    ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null);
+    Task<TResult> ExecuteAsync(TContext context, TOptions options, CancellationToken cancellationToken);
 }

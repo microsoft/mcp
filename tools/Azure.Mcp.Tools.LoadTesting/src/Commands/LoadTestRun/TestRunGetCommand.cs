@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
@@ -29,52 +26,25 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
     Secret = false,
     LocalRequired = false)]
 public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunGetOptions>
+    : BaseLoadTestingCommand<TestRunGetOptions, CommandResponse>
 {
     private readonly ILogger<TestRunGetCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestRunGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
+        // options binding is implicit and convention based
+        // pre-parse validation is also convention based
+        // complex validation is moved to post-parse 👇
 
-        command.Validators.Add(commandResult =>
+        if (string.IsNullOrEmpty(options.TestRunId) && string.IsNullOrEmpty(options.TestId))
         {
-            var testRunId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.TestRun);
-            var testId = commandResult.GetValueWithoutDefault(LoadTestingOptionDefinitions.Test);
-
-            if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
-            {
-                commandResult.AddError("Either --testrun or --test must be provided.");
-                commandResult.AddError("Either --testrun or --test must be provided. Pass --testrun to get details about a specific run or pass --test to list all test runs for the test.");
-            }
-            else if (!string.IsNullOrEmpty(testRunId) && !string.IsNullOrEmpty(testId))
-            {
-                commandResult.AddError("Cannot specify both --testrun and --test. Use one or the other.");
-            }
-        });
-    }
-
-    protected override TestRunGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            throw new ArgumentException("Either --testrun or --test must be provided. Pass --testrun to get details about a specific run or pass --test to list all test runs for the test.");
         }
-
-        var options = BindOptions(parseResult);
+        else if (!string.IsNullOrEmpty(options.TestRunId) && !string.IsNullOrEmpty(options.TestId))
+        {
+            throw new ArgumentException("Cannot specify both --testrun and --test. Use one or the other.");
+        }
 
         try
         {
