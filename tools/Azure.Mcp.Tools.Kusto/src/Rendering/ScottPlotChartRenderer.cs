@@ -281,7 +281,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
 
     private static ResponseImage ToPngImage(ScottPlot.Plot plot, string altText)
     {
-        var pngBytes = plot.GetImage(ChartWidth, ChartHeight).GetImageBytes(ScottPlot.ImageFormat.Png);
+        var pngBytes = plot.GetImageBytes(ChartWidth, ChartHeight, ScottPlot.ImageFormat.Png);
         return new ResponseImage(pngBytes, ImageMimeType, altText);
     }
 
