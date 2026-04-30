@@ -28,7 +28,7 @@ public class SubscriptionSetup : IAreaSetup
         var subscription = new CommandGroup(Name, "Azure subscription operations - Commands for listing and managing Azure subscriptions accessible to your account.", Title);
 
         // Register Subscription commands
-        subscription.AddCommand(serviceProvider.GetRequiredService<SubscriptionListCommand>());
+        subscription.AddCommand<SubscriptionListCommand>(serviceProvider);
 
         return subscription;
     }

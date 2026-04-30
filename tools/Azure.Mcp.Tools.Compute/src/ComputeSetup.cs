@@ -63,20 +63,20 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(vm);
 
         // Register VM commands
-        vm.AddCommand(serviceProvider.GetRequiredService<VmGetCommand>());
-        vm.AddCommand(serviceProvider.GetRequiredService<VmCreateCommand>());
-        vm.AddCommand(serviceProvider.GetRequiredService<VmUpdateCommand>());
-        vm.AddCommand(serviceProvider.GetRequiredService<VmDeleteCommand>());
+        vm.AddCommand<VmGetCommand>(serviceProvider);
+        vm.AddCommand<VmCreateCommand>(serviceProvider);
+        vm.AddCommand<VmUpdateCommand>(serviceProvider);
+        vm.AddCommand<VmDeleteCommand>(serviceProvider);
 
         // Create VMSS subgroup
         var vmss = new CommandGroup("vmss", "Virtual Machine Scale Set operations - Commands for managing and monitoring Azure Virtual Machine Scale Sets including scale set details, instances, and rolling upgrades.");
         compute.AddSubGroup(vmss);
 
         // Register VMSS commands
-        vmss.AddCommand(serviceProvider.GetRequiredService<VmssGetCommand>());
-        vmss.AddCommand(serviceProvider.GetRequiredService<VmssCreateCommand>());
-        vmss.AddCommand(serviceProvider.GetRequiredService<VmssUpdateCommand>());
-        vmss.AddCommand(serviceProvider.GetRequiredService<VmssDeleteCommand>());
+        vmss.AddCommand<VmssGetCommand>(serviceProvider);
+        vmss.AddCommand<VmssCreateCommand>(serviceProvider);
+        vmss.AddCommand<VmssUpdateCommand>(serviceProvider);
+        vmss.AddCommand<VmssDeleteCommand>(serviceProvider);
 
         // Create Disk subgroup
         var disk = new CommandGroup(
@@ -85,10 +85,10 @@ public class ComputeSetup : IAreaSetup
         compute.AddSubGroup(disk);
 
         // Register Disk commands
-        disk.AddCommand(serviceProvider.GetRequiredService<DiskCreateCommand>());
-        disk.AddCommand(serviceProvider.GetRequiredService<DiskDeleteCommand>());
-        disk.AddCommand(serviceProvider.GetRequiredService<DiskGetCommand>());
-        disk.AddCommand(serviceProvider.GetRequiredService<DiskUpdateCommand>());
+        disk.AddCommand<DiskCreateCommand>(serviceProvider);
+        disk.AddCommand<DiskDeleteCommand>(serviceProvider);
+        disk.AddCommand<DiskGetCommand>(serviceProvider);
+        disk.AddCommand<DiskUpdateCommand>(serviceProvider);
 
         return compute;
     }
