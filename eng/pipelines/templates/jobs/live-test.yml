@@ -24,13 +24,6 @@ jobs:
     inputs:
       useGlobalJson: true
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
-
   - task: NodeTool@0
     displayName: "Install Node.js 22"
     inputs:

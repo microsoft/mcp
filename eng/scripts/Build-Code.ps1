@@ -3,7 +3,7 @@
 
 # When calling with BuildInfoPath or PlatformName, we build according to the platform definitions in build_info.json.
 # Otherwise, we build based on the custom build parameters.
-[CmdletBinding(DefaultParameterSetName='CustomPlatform')]
+[CmdletBinding(DefaultParameterSetName = 'CustomPlatform')]
 param (
     # Common Parameters
     [string] $OutputPath,
@@ -18,20 +18,20 @@ param (
     [switch] $CleanBuild,
 
     # build_info.json based parameters
-    [Parameter(ParameterSetName='BuildInfoPlatform')]
+    [Parameter(ParameterSetName = 'BuildInfoPlatform')]
     [string] $BuildInfoPath,
-    [Parameter(ParameterSetName='BuildInfoPlatform')]
+    [Parameter(ParameterSetName = 'BuildInfoPlatform')]
     [string] $PlatformName,
 
     # Custom build parameters
-    [Parameter(ParameterSetName='CustomPlatform')]
+    [Parameter(ParameterSetName = 'CustomPlatform')]
     [Alias('OS')]
     [string[]] $OperatingSystems,
-    [Parameter(ParameterSetName='CustomPlatform')]
+    [Parameter(ParameterSetName = 'CustomPlatform')]
     [string[]] $Architectures,
-    [Parameter(ParameterSetName='CustomPlatform')]
+    [Parameter(ParameterSetName = 'CustomPlatform')]
     [switch] $Trimmed,
-    [Parameter(ParameterSetName='CustomPlatform')]
+    [Parameter(ParameterSetName = 'CustomPlatform')]
     [switch] $Native
 )
 
@@ -67,7 +67,8 @@ function BuildServer($server) {
             $script:exitCode = 1
             return
         }
-    } else {
+    }
+    else {
         $platforms = $server.platforms
     }
 
@@ -118,17 +119,33 @@ function BuildServer($server) {
         
         # Even if we call the script with the SmokeTest switch, we can only run the test if the built platform is supported on the current OS
         $currentRid = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-        if($SmokeTest) {
+        if ($SmokeTest) {
             if ($runtime -eq $currentRid) {
                 Write-Host "Running smoke test for $exeName" -ForegroundColor Yellow
                 try {
-                    & $exePath tools list
-                } catch {
+                    $toolListResponse = & $exePath tools list
+                    if ($LASTEXITCODE -ne 0) {
+                        # Call returned a non-zero exit code, log response without attempting to parse as JSON as the
+                        # response may be an error message rather than the expected JSON tools list.
+                        Write-Error $toolListResponse
+                    }
+                    else {
+                        $toolListJson = ConvertFrom-Json ($toolListResponse | Join-String)
+                        if ($toolListJson.status -ne 200) {
+                            # Only log the response if there was an error. tools list is unbounded on size and can be
+                            # difficult to read in the logs, so we want to avoid logging it on success.
+                            # For example, at the time of writing this, Azure MCP's tools list is >20k lines long.
+                            Write-Error $toolListResponse
+                        }
+                    }
+                }
+                catch {
                     LogError "Smoke test failed for '$exeName'. Executable did not run successfully."
                     $script:exitCode = 1
                     return
                 }
-            } else { 
+            }
+            else { 
                 Write-Host "Skipping smoke test for cross platorm build (current platform: $currentRid, build platform: $runtime)" -ForegroundColor Yellow
             }
         }
@@ -141,11 +158,14 @@ function CreateServersWithPlatforms {
     if (!$OperatingSystems) {
         if ($IsWindows) {
             $OperatingSystems = @('windows')
-        } elseif ($IsLinux) {
+        }
+        elseif ($IsLinux) {
             $OperatingSystems = @('linux')
-        } elseif ($IsMacOS) {
+        }
+        elseif ($IsMacOS) {
             $OperatingSystems = @('macos')
-        } else {
+        }
+        else {
             LogError "Unsupported OS detected. Supported OS are Windows, Linux and macOS."
             exit 1
         }
@@ -176,30 +196,30 @@ function CreateServersWithPlatforms {
         $properties = . "$PSScriptRoot/Get-ProjectProperties.ps1" -Path $projectPath
 
         $platforms = @($OperatingSystems | ForEach-Object {
-            $os = $osDetails | Where-Object name -eq $_
+                $os = $osDetails | Where-Object name -eq $_
 
-            if (-not $os) {
-                LogError "Unsupported operating system specified: '$_'. Supported OS are: $($osDetails.name -join ', ')"
-                exit 1
-            }
-
-            $Architectures | ForEach-Object {
-                $platform = "$($os.name)-$_"
-                [ordered]@{
-                    name = $platform
-                    dotnetOs = $os.dotnetName
-                    architecture = $_
-                    artifactPath = "$serverName/$platform"
-                    native = $Native
-                    trimmed = $Trimmed
+                if (-not $os) {
+                    LogError "Unsupported operating system specified: '$_'. Supported OS are: $($osDetails.name -join ', ')"
+                    exit 1
                 }
-            }
-        })
+
+                $Architectures | ForEach-Object {
+                    $platform = "$($os.name)-$_"
+                    [ordered]@{
+                        name         = $platform
+                        dotnetOs     = $os.dotnetName
+                        architecture = $_
+                        artifactPath = "$serverName/$platform"
+                        native       = $Native
+                        trimmed      = $Trimmed
+                    }
+                }
+            })
 
         [ordered]@{
-            name = $serverName
-            path = $projectPath.Replace('\', '/')
-            version = $properties.Version
+            name      = $serverName
+            path      = $projectPath.Replace('\', '/')
+            version   = $properties.Version
             platforms = $platforms
         }
     }
@@ -213,7 +233,8 @@ function GetServersFromBuildInfo {
     if (!(Test-Path $BuildInfoPath)) {
         LogError "Build info file not found at path '$BuildInfoPath'. Please provide a valid path using -BuildInfoPath."
         exit 1
-    } else {
+    }
+    else {
         $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
         $servers = $buildInfo.servers
     }
@@ -233,7 +254,8 @@ $servers = @()
 
 if ($PSCmdlet.ParameterSetName -eq 'CustomPlatform') {
     $servers = CreateServersWithPlatforms
-} else {
+}
+else {
     $servers = GetServersFromBuildInfo
 }
 
