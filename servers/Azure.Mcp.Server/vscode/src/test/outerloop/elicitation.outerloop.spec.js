@@ -111,23 +111,24 @@ async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
 async function runCommand(window, commandName) {
     const commandPaletteShortcut = process.platform === 'darwin' ? 'Meta+Shift+P' : 'Control+Shift+P';
     await window.keyboard.press(commandPaletteShortcut);
-
-    const commandInput = window.locator('input[aria-label*="Type the name of a command"]');
-    await expect(commandInput).toBeVisible({ timeout: 30000 });
-    await commandInput.fill(commandName);
-    await window.keyboard.press('Enter');
+    await fillActiveQuickInput(window, commandName);
 }
 
 async function selectFromQuickInput(window, value) {
-    const quickInput = window.locator('input[aria-label*="Type to narrow down"]');
-    await expect(quickInput).toBeVisible({ timeout: 30000 });
-    await quickInput.fill(value);
-    await window.keyboard.press('Enter');
+    await fillActiveQuickInput(window, value);
 }
 
 async function fillCurrentQuickInput(window, value) {
-    const input = window.locator('.quick-input-widget input').last();
+    await fillActiveQuickInput(window, value);
+}
+
+async function fillActiveQuickInput(window, value) {
+    const widget = window.locator('.quick-input-widget:visible').first();
+    await widget.waitFor({ state: 'visible', timeout: 30000 });
+
+    const input = widget.locator('input.input, input').first();
     await expect(input).toBeVisible({ timeout: 30000 });
-    await input.fill(value);
+    await input.fill('');
+    await input.type(value, { delay: 10 });
     await window.keyboard.press('Enter');
 }
