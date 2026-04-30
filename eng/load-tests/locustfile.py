@@ -11,8 +11,11 @@ Simulates MCP clients that:
 
 Environment variables
 ---------------------
-MCP_SERVER_URL   : Base URL of the MCP server  (set by the pipeline)
 MCP_SUBSCRIPTION : Azure subscription ID or name to pass to the tool
+
+The MCP server base URL is supplied to Locust via the `host` field in
+config.yaml (or `--host` on the CLI); `self.client.post('/mcp', ...)` resolves
+against that host automatically.
 """
 
 from __future__ import annotations
@@ -48,12 +51,28 @@ class McpUser(HttpUser):
         self.subscription: str = os.environ.get("MCP_SUBSCRIPTION", "")
 
     def on_start(self) -> None:
-        """Perform the MCP session handshake before running tasks."""
-        self._initialize()
+        """Perform the MCP session handshake before running tasks.
+
+        If the handshake fails (no session id returned, non-200, etc.) the
+        user is stopped immediately. This keeps handshake regressions from
+        masquerading as `tools/call` failures, which would otherwise be the
+        only symptom — every subsequent call from this user would be sent
+        without `Mcp-Session-Id` and rejected by the server.
+        """
+        if not self._initialize():
+            # Stop this user so the failure surfaces as an `initialize`
+            # error rather than a cascade of `tools/call` errors. Locust
+            # will spawn a replacement to keep the user count steady.
+            self.stop(force=True)
+            return
         self._send_initialized()
 
-    def _initialize(self) -> None:
-        """Send the 'initialize' request and capture the session id."""
+    def _initialize(self) -> bool:
+        """Send the 'initialize' request and capture the session id.
+
+        Returns True on a successful handshake (200 + ``Mcp-Session-Id``
+        header populated), False otherwise.
+        """
         payload = _jsonrpc_request(
             "initialize",
             {
@@ -69,12 +88,14 @@ class McpUser(HttpUser):
             name="initialize",
             catch_response=True,
         ) as resp:
-            if resp.status_code == 200:
-                self.session_id = resp.headers.get("Mcp-Session-Id")
-                if not self.session_id:
-                    resp.failure("Missing Mcp-Session-Id header in initialize response")
-            else:
+            if resp.status_code != 200:
                 resp.failure(f"initialize returned {resp.status_code}")
+                return False
+            self.session_id = resp.headers.get("Mcp-Session-Id")
+            if not self.session_id:
+                resp.failure("Missing Mcp-Session-Id header in initialize response")
+                return False
+            return True
 
     def _send_initialized(self) -> None:
         """Send the 'notifications/initialized' notification."""

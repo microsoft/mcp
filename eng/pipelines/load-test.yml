@@ -59,7 +59,30 @@ stages:
         displayName: Build image and push to ACR
         pool:
           vmImage: ubuntu-latest
+        variables:
+          # Repo Dockerfile is alpine-based, so the binary must target linux-musl-x64.
+          publishRid: linux-musl-x64
+          publishDir: .work/build/$(publishRid)
+          executableName: azmcp
         steps:
+          - task: UseDotNet@2
+            displayName: Install .NET SDK from global.json
+            inputs:
+              useGlobalJson: true
+
+          - script: |
+              set -euo pipefail
+              dotnet publish servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj \
+                --configuration Release \
+                --runtime $(publishRid) \
+                --self-contained true \
+                -p:PublishSingleFile=false \
+                -p:PublishTrimmed=false \
+                --output $(publishDir)
+              ls -la $(publishDir)
+              test -f $(publishDir)/$(executableName)
+            displayName: Publish azmcp ($(publishRid))
+
           - task: AzureCLI@2
             displayName: ACR Build & Push
             inputs:
@@ -67,10 +90,13 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
+                set -euo pipefail
                 az acr build \
                   --registry $(AZURE_ACR_NAME) \
                   --image $(imageName):$(imageTag) \
-                  --file servers/Azure.Mcp.Server/src/Dockerfile \
+                  --file Dockerfile \
+                  --build-arg PUBLISH_DIR=$(publishDir) \
+                  --build-arg EXECUTABLE_NAME=$(executableName) \
                   .
 
   # =======================================================================
@@ -136,11 +162,28 @@ stages:
               exit 1
             displayName: Wait for server health check
 
+          - script: |
+              set -euo pipefail
+              export ENGINE_INSTANCES='${{ parameters.engineInstances }}'
+              export USERS='${{ parameters.users }}'
+              export SPAWN_RATE='${{ parameters.spawnRate }}'
+              export DURATION='${{ parameters.duration }}'
+              export MCP_SERVER_ENDPOINT='$(mcpServerEndpoint)'
+              export MCP_SUBSCRIPTION='$(MCP_SUBSCRIPTION)'
+              # Substitute only the variables we explicitly export so unrelated
+              # `$VAR` strings in the template are left intact.
+              envsubst '$ENGINE_INSTANCES $USERS $SPAWN_RATE $DURATION $MCP_SERVER_ENDPOINT $MCP_SUBSCRIPTION' \
+                < eng/load-tests/config.yaml \
+                > eng/load-tests/config.rendered.yaml
+              echo "----- rendered config.yaml -----"
+              cat eng/load-tests/config.rendered.yaml
+            displayName: Render load test config from queue-time parameters
+
           - task: AzureLoadTest@1
             displayName: Run Azure Load Test
             inputs:
               azureSubscription: $(AZURE_SERVICE_CONNECTION)
-              loadTestConfigFile: eng/load-tests/config.yaml
+              loadTestConfigFile: eng/load-tests/config.rendered.yaml
               loadTestResource: $(AZURE_LOAD_TEST_NAME)
               resourceGroup: $(AZURE_LOAD_TEST_RESOURCE_GROUP)
               env: |

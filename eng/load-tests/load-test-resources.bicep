@@ -50,12 +50,47 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+// ---------- ACR + AcrPull role assignment ----------
+// Reference the existing Container Registry so we can grant AcrPull to the
+// Container App's managed identity. A user-assigned identity is used (instead
+// of system-assigned) so the role assignment can be created BEFORE the
+// Container App attempts its first image pull.
+resource acrRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
+  name: acrName
+}
+
+resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${containerAppName}-uami'
+  location: location
+}
+
+// AcrPull built-in role:
+// https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpull
+resource acrPullRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+}
+
+resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acrRegistry.id, containerAppIdentity.id, acrPullRoleDefinition.id)
+  scope: acrRegistry
+  properties: {
+    principalId: containerAppIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: acrPullRoleDefinition.id
+    description: 'AcrPull for MCP load-test Container App user-assigned identity'
+  }
+}
+
 // ---------- Container App (MCP Server – auth disabled) ----------
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${containerAppIdentity.id}': {}
+    }
   }
   properties: {
     managedEnvironmentId: containerAppEnv.id
@@ -69,7 +104,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: '${acrName}.azurecr.io'
-          identity: 'system'
+          identity: containerAppIdentity.id
         }
       ]
     }
@@ -94,12 +129,26 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
           probes: [
             {
+              // Startup probe gives the .NET runtime time to JIT, initialize
+              // the MCP server, and start serving /health before readiness /
+              // liveness probes begin. failureThreshold * periodSeconds =
+              // 30 * 5s = 150s max startup window.
+              type: 'Startup'
+              httpGet: {
+                path: '/health'
+                port: 8080
+              }
+              periodSeconds: 5
+              failureThreshold: 30
+              timeoutSeconds: 3
+            }
+            {
               type: 'Readiness'
               httpGet: {
                 path: '/health'
                 port: 8080
               }
-              initialDelaySeconds: 5
+              initialDelaySeconds: 0
               periodSeconds: 10
             }
             {
@@ -108,7 +157,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 path: '/health'
                 port: 8080
               }
-              initialDelaySeconds: 10
+              initialDelaySeconds: 0
               periodSeconds: 30
             }
           ]
@@ -120,6 +169,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    acrPullRoleAssignment
+  ]
 }
 
 // ---------- Azure Load Testing ----------
