@@ -1121,6 +1121,56 @@ public class ComputeService(
         }
     }
 
+    public async Task<VmPowerStateResult> ChangeVmPowerStateAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string state,
+        bool noWait = false,
+        bool skipShutdown = false,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        var vmCollection = resourceGroupResource.GetVirtualMachines();
+        var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
+        var vmResource = vmResponse.Value;
+
+        var waitUntil = noWait ? WaitUntil.Started : WaitUntil.Completed;
+
+        switch (state.ToLowerInvariant())
+        {
+            case "start":
+                await vmResource.PowerOnAsync(waitUntil, cancellationToken);
+                break;
+            case "stop":
+                await vmResource.PowerOffAsync(waitUntil, skipShutdown, cancellationToken);
+                break;
+            case "deallocate":
+                await vmResource.DeallocateAsync(waitUntil, cancellationToken: cancellationToken);
+                break;
+            case "restart":
+                await vmResource.RestartAsync(waitUntil, cancellationToken);
+                break;
+            default:
+                throw new ArgumentException($"Invalid state '{state}'. Accepted values: start, stop, deallocate, restart.", nameof(state));
+        }
+
+        var completed = !noWait;
+        var message = completed
+            ? $"Virtual machine '{vmName}' {state} operation completed successfully."
+            : $"Virtual machine '{vmName}' {state} operation initiated. Use instance view to check status.";
+
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, state, message, completed);
+    }
+
     public async Task<bool> DeleteVmssAsync(
         string vmssName,
         string resourceGroup,

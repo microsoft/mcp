@@ -21,6 +21,14 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     // Disable default sanitizer additions to avoid conflicts (following SQL pattern)
     public override bool EnableDefaultSanitizerAdditions => false;
 
+    // Disable AZSDK2003 which sanitizes Location headers to https://example.com,
+    // breaking LRO playback for POST operations (restart, stop, start, deallocate)
+    public override List<string> DisabledDefaultSanitizers =>
+    [
+        ..base.DisabledDefaultSanitizers,
+        "AZSDK2003"
+    ];
+
     // Sanitize resource group in URIs
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [
@@ -31,6 +39,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
             GroupForReplace = "1"
         })
     ];
+
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        CompareBodies = false
+    };
 
     // Sanitize resource group name, base name, and subscription ID everywhere
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
@@ -591,6 +604,177 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var success = result.AssertProperty("Success");
         Assert.Equal(JsonValueKind.True, success.ValueKind);
     }
+
+    #endregion
+
+    #region VM Power State Tests
+
+    [Fact]
+    public async Task Should_stop_vm()
+    {
+        var result = await CallToolAsync(
+            "compute_vm_power-state",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vm-name", VmName },
+                { "state", "stop" }
+            });
+
+        var powerState = result.AssertProperty("PowerState");
+        Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+        var name = powerState.GetProperty("name");
+        Assert.NotNull(name.GetString());
+
+        var state = powerState.GetProperty("state");
+        Assert.Equal("stop", state.GetString());
+
+        var completed = powerState.GetProperty("completed");
+        Assert.True(completed.GetBoolean());
+    }
+
+    [Fact]
+public async Task Should_deallocate_vm()
+{
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", VmName },
+            { "state", "deallocate" }
+        });
+
+    var powerState = result.AssertProperty("PowerState");
+    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+    var state = powerState.GetProperty("state");
+    Assert.Equal("deallocate", state.GetString());
+
+    var completed = powerState.GetProperty("completed");
+    Assert.Equal(JsonValueKind.True, completed.ValueKind);
+}
+
+[Fact]
+public async Task Should_start_vm()
+{
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", VmName },
+            { "state", "start" }
+        });
+
+    var powerState = result.AssertProperty("PowerState");
+    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+    var state = powerState.GetProperty("state");
+    Assert.Equal("start", state.GetString());
+
+    var completed = powerState.GetProperty("completed");
+    Assert.Equal(JsonValueKind.True, completed.ValueKind);
+}
+
+[Fact]
+public async Task Should_restart_vm()
+{
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", VmName },
+            { "state", "restart" }
+        });
+
+    var powerState = result.AssertProperty("PowerState");
+    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+    var state = powerState.GetProperty("state");
+    Assert.Equal("restart", state.GetString());
+
+    var completed = powerState.GetProperty("completed");
+    Assert.Equal(JsonValueKind.True, completed.ValueKind);
+}
+
+[Fact]
+public async Task Should_stop_vm_with_skip_shutdown()
+{
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", VmName },
+            { "state", "stop" },
+            { "skip-shutdown", true }
+        });
+
+    var powerState = result.AssertProperty("PowerState");
+    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+    var state = powerState.GetProperty("state");
+    Assert.Equal("stop", state.GetString());
+
+    var completed = powerState.GetProperty("completed");
+    Assert.Equal(JsonValueKind.True, completed.ValueKind);
+}
+
+[Fact]
+public async Task Should_start_vm_with_no_wait()
+{
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", VmName },
+            { "state", "start" },
+            { "no-wait", true }
+        });
+
+    var powerState = result.AssertProperty("PowerState");
+    Assert.Equal(JsonValueKind.Object, powerState.ValueKind);
+
+    var state = powerState.GetProperty("state");
+    Assert.Equal("start", state.GetString());
+
+    // With no-wait, completed should be false
+    var completed = powerState.GetProperty("completed");
+    Assert.Equal(JsonValueKind.False, completed.ValueKind);
+
+    var message = powerState.GetProperty("message");
+    Assert.Contains("initiated", message.GetString());
+}
+
+[Fact]
+public async Task Should_fail_power_state_for_nonexistent_vm()
+{
+    var invalidVmName = RegisterOrRetrieveVariable("invalidPowerStateVm", "nonexistent-vm-" + Guid.NewGuid().ToString("N")[..8]);
+
+    var result = await CallToolAsync(
+        "compute_vm_power-state",
+        new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "vm-name", invalidVmName },
+            { "state", "start" }
+        },
+        resultProcessor: elem => elem);
+
+    Assert.NotNull(result);
+    Assert.True(result.Value.TryGetProperty("message", out _));
+}
 
     #endregion
 
