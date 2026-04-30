@@ -89,6 +89,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                 if (image is not null)
                 {
                     context.Response.Images = [image];
+                    context.Response.Results = null;
                 }
             }
         }

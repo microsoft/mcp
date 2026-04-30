@@ -93,6 +93,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger, IKustoService k
                 if (image is not null)
                 {
                     context.Response.Images = [image];
+                    context.Response.Results = null;
                 }
             }
         }

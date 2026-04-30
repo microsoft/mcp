@@ -131,6 +131,7 @@ public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKu
         Assert.NotNull(response.Images);
         Assert.Single(response.Images);
         Assert.Equal("image/png", response.Images[0].MimeType);
+        Assert.Null(response.Results);
         _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>());
     }
 }

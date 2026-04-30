@@ -163,6 +163,7 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
         Assert.NotNull(response.Images);
         Assert.Single(response.Images);
         Assert.Equal("image/png", response.Images[0].MimeType);
+        Assert.Null(response.Results);
         _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>());
     }
 

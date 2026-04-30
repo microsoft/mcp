@@ -225,10 +225,16 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            var content = new List<ContentBlock>
+            var content = new List<ContentBlock>();
+
+            // When images are present and the response is successful, suppress the JSON text
+            // block so vision-capable clients receive only the rendered image(s) and skip the
+            // raw data the image was meant to replace. Errors always include the JSON text.
+            var hasImages = commandResponse.Images != null && commandResponse.Images.Count > 0;
+            if (!hasImages || isError)
             {
-                new TextContentBlock { Text = jsonResponse }
-            };
+                content.Add(new TextContentBlock { Text = jsonResponse });
+            }
 
             if (commandResponse.Images != null)
             {
