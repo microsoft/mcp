@@ -166,7 +166,7 @@
         "lint": "eslint src --ext ts",
         "test": "npm run compile && node ./out/test/runAllTests.js",
         "unit-test": "npm run compile && node ./out/test/runUnitTests.js",
-        "outerloop-test": "npx --yes playwright@latest test src/test/outerloop/elicitation.outerloop.spec.js --reporter=line"
+        "outerloop-test": "npm install --no-save --no-package-lock @playwright/test@latest && node ./node_modules/@playwright/test/cli.js test src/test/outerloop/elicitation.outerloop.spec.js --reporter=line"
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4",
