@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
-using Azure.Mcp.Tests.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.LiveTests;
@@ -794,10 +794,10 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
 
         // Verify resource details match the request
         var returnedResourceName = resource.AssertProperty("resourceName");
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceName"], returnedResourceName.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : TestVariables["resourceName"], returnedResourceName.GetString());
 
         var returnedResourceGroup = resource.AssertProperty("resourceGroup");
-        Assert.Equal(TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : TestVariables["resourceGroup"], returnedResourceGroup.GetString());
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : TestVariables["resourceGroup"], returnedResourceGroup.GetString());
 
         var subscriptionName = resource.AssertProperty("subscriptionName");
         Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
@@ -864,86 +864,4 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
         }
     }
 
-    [Fact]
-    public async Task Should_create_thread()
-    {
-        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
-        var accounts = Settings.ResourceBaseName;
-        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
-        var userMessage = "Message from user";
-        var result = await CallToolAsync(
-            "foundryextensions_threads_create",
-            new()
-            {
-                { "endpoint", endpoint },
-                { "user-message", userMessage }
-            });
-        var threadIdResult = result.AssertProperty("threadId");
-        var projectEndpointResult = result.AssertProperty("projectEndpoint");
-        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
-        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_list_threads()
-    {
-        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
-        var accounts = Settings.ResourceBaseName;
-        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
-        var result = await CallToolAsync(
-            "foundryextensions_threads_list",
-            new()
-            {
-                { "endpoint", endpoint }
-            });
-        var threads = result.AssertProperty("threads");
-        Assert.Equal(JsonValueKind.Array, threads.ValueKind);
-    }
-
-    [Fact]
-    public async Task Should_get_messages()
-    {
-        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
-        var accounts = Settings.ResourceBaseName;
-        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
-
-        var createThreadResult = await CallToolAsync(
-            "foundryextensions_threads_create",
-            new()
-            {
-                { "endpoint", endpoint },
-                { "user-message", "Hello from user" }
-            });
-        var threadId = createThreadResult.AssertProperty("threadId").GetString()!;
-
-        var result = await CallToolAsync(
-            "foundryextensions_threads_get-messages",
-            new()
-            {
-                { "endpoint", endpoint },
-                { "thread-id", threadId }
-            });
-        var threadIdResult = result.AssertProperty("threadId");
-        var messagesResult = result.AssertProperty("messages");
-        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
-        Assert.Equal(JsonValueKind.Array, messagesResult.ValueKind);
-    }
-
-    [Theory]
-    [InlineData("python")]
-    [InlineData("csharp")]
-    [InlineData("typescript")]
-    public async Task Should_get_agents_sdk_sample(string programmingLanguage)
-    {
-        var result = await CallToolAsync(
-            "foundryextensions_agents_get-sdk-sample",
-            new()
-            {
-                { "programming-language", programmingLanguage }
-            });
-
-        var codeSample = result.AssertProperty("codeSampleText");
-        Assert.Equal(JsonValueKind.String, codeSample.ValueKind);
-        Assert.NotEmpty(codeSample.GetString()!);
-    }
 }

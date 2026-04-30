@@ -1,4 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure from 4.4.0-preview.1 to 4.4.0"
-    subsection: "Dependency Updates"

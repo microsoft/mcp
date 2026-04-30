@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Diagnostic;
@@ -17,7 +18,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
     public async Task ExecuteAsync_DetectorsDiagnose_ReturnsDiagnostics()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -27,7 +28,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-name", "Memoryusage"}
+                { "detector-id", "LinuxMemoryDrillDown"}
             });
 
         var detectorsResult = JsonSerializer.Deserialize(result.Value, AppServiceJsonContext.Default.DetectorDiagnoseResult);
@@ -40,7 +41,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
     public async Task ExecuteAsync_DetectorsDiagnoseWithOptionalParams_ReturnsDiagnostics()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -50,7 +51,7 @@ public class DetectorDiagnoseCommandLiveTests(ITestOutputHelper output, TestProx
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "app", webappName },
-                { "detector-name", "Memoryusage"},
+                { "detector-id", "LinuxMemoryDrillDown"},
                 { "start-time", DateTimeOffset.UtcNow.AddHours(-1).ToString("o") },
                 { "end-time", DateTimeOffset.UtcNow.ToString("o") },
                 { "time-grain", "PT10M" }

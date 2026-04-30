@@ -3,7 +3,7 @@
 
 using System.Reflection;
 using System.Reflection.Emit;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Helpers;

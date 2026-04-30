@@ -16,7 +16,7 @@
   "homepage": "https://github.com/microsoft/mcp/tree/main/servers/Template.Mcp.Server",
   "documentation": "https://github.com/microsoft/mcp/tree/main/servers/Template.Mcp.Server#readme",
   "support": "https://github.com/microsoft/mcp/issues",
-  "icon": "./icon.png",
+  "icon": "icon.png",
   "server": {
     "type": "binary",
     "entry_point": "server/mcptmp",

@@ -2,57 +2,29 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.File;
-using Microsoft.Extensions.Logging;
+using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Mcp.Tests.Client;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class PathListCommandTests
+public class PathListCommandTests : CommandUnitTestsBase<PathListCommand, IOneLakeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<PathListCommand>();
-
-        // Act
-        var command = new PathListCommand(logger);
-
-        // Assert
-        Assert.Equal("list", command.Name);
-        Assert.Equal("List OneLake Path Structure", command.Title);
-        Assert.Contains("List files and directories", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
+        Assert.Equal("list_files", Command.Name);
+        Assert.Equal("List OneLake Path Structure", Command.Title);
+        Assert.Contains("List files and directories", Command.Description);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<PathListCommand>();
-        var command = new PathListCommand(logger);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
-    }
-
-    [Fact]
-    public void CommandOptions_ContainsRequiredOptions()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<PathListCommand>();
-        var command = new PathListCommand(logger);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert - Just verify we have some options, specific names may vary
-        Assert.NotEmpty(systemCommand.Options);
+        Assert.Equal("list_files", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Options);
     }
 }

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 

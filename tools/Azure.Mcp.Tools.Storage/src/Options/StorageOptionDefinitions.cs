@@ -14,6 +14,7 @@ public static class StorageOptionDefinitions
     public const string SkuName = "sku";
     public const string AccessTierName = "access-tier";
     public const string EnableHierarchicalNamespaceName = "enable-hierarchical-namespace";
+    public const string PrefixName = "prefix";
 
     public static readonly Option<string> Account = new($"--{AccountName}")
     {
@@ -68,5 +69,17 @@ public static class StorageOptionDefinitions
     {
         Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.",
         Required = true
+    };
+
+    public static readonly Option<string> BlobPrefix = new($"--{PrefixName}")
+    {
+        Description = "The prefix to filter blobs when listing blobs in a container. Only blobs whose names start with the specified prefix will be listed.",
+        Required = false
+    };
+
+    public static readonly Option<string> ContainerPrefix = new($"--{PrefixName}")
+    {
+        Description = "The prefix to filter containers when listing containers in a storage account. Only containers whose names start with the specified prefix will be listed.",
+        Required = false
     };
 }

@@ -1,60 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
-public class KeyValueSetCommandTests
+public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, IAppConfigService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAppConfigService _appConfigService;
-    private readonly ILogger<KeyValueSetCommand> _logger;
-    private readonly KeyValueSetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public KeyValueSetCommandTests()
-    {
-        _appConfigService = Substitute.For<IAppConfigService>();
-        _logger = Substitute.For<ILogger<KeyValueSetCommand>>();
-
-        _command = new(_logger, _appConfigService);
-        _commandDefinition = _command.GetCommand();
-        _serviceProvider = new ServiceCollection()
-            .BuildServiceProvider();
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public async Task ExecuteAsync_SetsKeyValue_WhenValidParametersProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
-            "--value", "my-value"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--value", "my-value");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
+        await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
             "my-value",
@@ -66,10 +38,8 @@ public class KeyValueSetCommandTests
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
     }
@@ -77,21 +47,16 @@ public class KeyValueSetCommandTests
     [Fact]
     public async Task ExecuteAsync_SetsKeyValueWithLabel_WhenLabelProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
             "--value", "my-value",
-            "--label", "prod"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--label", "prod");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
+        await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
             "my-value",
@@ -103,10 +68,8 @@ public class KeyValueSetCommandTests
             Arg.Any<string[]>(),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
         Assert.Equal("prod", result.Label);
@@ -115,22 +78,17 @@ public class KeyValueSetCommandTests
     [Fact]
     public async Task ExecuteAsync_SetsKeyValueWithContentTypeAndTagsProvided()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
             "--value", "my-value",
             "--content-type", "application/json",
-            "--tags", "environment=prod", "team=backend"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--tags", "environment=prod", "team=backend");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
+        await Service.Received(1).SetKeyValue(
             "account1",
             "my-key",
             "my-value",
@@ -142,10 +100,8 @@ public class KeyValueSetCommandTests
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
             Arg.Any<CancellationToken>());
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
         Assert.Equal("my-value", result.Value);
         Assert.Equal("application/json", result.ContentType);
@@ -158,7 +114,7 @@ public class KeyValueSetCommandTests
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        _appConfigService.SetKeyValue(
+        Service.SetKeyValue(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -171,15 +127,12 @@ public class KeyValueSetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to set key-value"));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
-            "--value", "my-value"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--value", "my-value");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -193,11 +146,8 @@ public class KeyValueSetCommandTests
     [InlineData("--subscription sub123 --account account1 --key my-key")]
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
     {
-        // Arrange
-        var parsedArgs = _commandDefinition.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

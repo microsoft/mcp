@@ -2,45 +2,36 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsListOptions>
+[CommandMetadata(
+    Id = "a7b8c9d0-7890-bcde-0123-456789012345",
+    Name = "models-list",
+    Title = "List OpenAI Models",
+    Description = """
+        List Azure OpenAI model deployments in a Microsoft Foundry resource, including deployment names, model names,
+        versions, capabilities, and deployment status. Use this to show model deployments, check which OpenAI models
+        are deployed, or see available models in a specific Foundry resource. Requires resource-name and resource-group.
+        For Foundry resource-level details like endpoint URL, location, or SKU, use the resource get command instead.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
 {
-    private const string CommandTitle = "List OpenAI Models";
-
-    public override string Id => "a7b8c9d0-7890-bcde-0123-456789012345";
-
-    public override string Name => "models-list";
-
-    public override string Description =>
-        $"""
-        List all available Azure OpenAI models and deployments in a Microsoft Foundry resource. This tool retrieves information
-        about Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities,
-        and deployment status. Use this when you need to see what OpenAI models are available, check model deployments,
-        or list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -68,7 +59,7 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 
             var options = BindOptions(parseResult);
 
-            var foundryService = context.GetService<IFoundryExtensionsService>();
+            var foundryService = _foundryExtensionsService;
             var result = await foundryService.ListOpenAiModelsAsync(
                 options.ResourceName!,
                 options.Subscription!,
@@ -78,8 +69,8 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
                 options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
-            context.Response.Results = ResponseResult.Create<OpenAiModelsListCommandResult>(
-                new OpenAiModelsListCommandResult(result, options.ResourceName!),
+            context.Response.Results = ResponseResult.Create(
+                new(result, options.ResourceName!),
                 FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
         }
         catch (Exception ex)
@@ -90,7 +81,5 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
         return context.Response;
     }
 
-    internal record OpenAiModelsListCommandResult(
-        OpenAiModelsListResult ModelsListResult,
-        string ResourceName);
+    internal record OpenAiModelsListCommandResult(OpenAiModelsListResult ModelsListResult, string ResourceName);
 }

@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.AI.Agents.Persistent;
-using Azure.AI.Projects;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options.Thread;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 
@@ -100,32 +97,5 @@ public interface IFoundryExtensionsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
-    );
-
-    Task<ThreadListResult> ListThreads(
-        string projectEndpoint,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<ThreadCreateResult> CreateThread(
-        string projectEndpoint,
-        string userMessage,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<ThreadGetMessagesResult> GetMessages(
-        string projectEndpoint,
-        string threadId,
-        string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default
-    );
-
-    AgentsGetSdkCodeSampleResult GetSdkCodeSample(
-        string programmingLanguage
     );
 }

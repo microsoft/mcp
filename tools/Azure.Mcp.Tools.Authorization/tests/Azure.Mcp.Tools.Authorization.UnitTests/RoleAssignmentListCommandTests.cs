@@ -2,38 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Authorization.UnitTests;
 
-public class RoleAssignmentListCommandTests
+public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmentListCommand, IAuthorizationService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly ILogger<RoleAssignmentListCommand> _logger;
-
-    public RoleAssignmentListCommandTests()
-    {
-        _authorizationService = Substitute.For<IAuthorizationService>();
-        _logger = Substitute.For<ILogger<RoleAssignmentListCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_authorizationService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsRoleAssignments_WhenRoleAssignmentsExist()
     {
@@ -67,31 +49,20 @@ public class RoleAssignmentListCommandTests
                 Condition = "ActionMatches{'Microsoft.Authorization/roleAssignments/write'}"
             }
         ], false);
-        _authorizationService.ListRoleAssignmentsAsync(
-                Arg.Is(subscriptionId),
-                Arg.Is(scope),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.ListRoleAssignmentsAsync(
+            Arg.Is(subscriptionId),
+            Arg.Is(scope),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedRoleAssignments);
-        var command = new RoleAssignmentListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", subscriptionId,
-            "--scope", scope,
-        ]);
-        var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedRoleAssignments.Results, result.Assignments);
     }
 
@@ -101,27 +72,15 @@ public class RoleAssignmentListCommandTests
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
-        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
             .Returns(new ResourceQueryResults<RoleAssignment>([], false));
 
-        var command = new RoleAssignmentListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", subscriptionId,
-            "--scope", scope
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Assignments);
     }
 
@@ -133,18 +92,11 @@ public class RoleAssignmentListCommandTests
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
 
-        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new RoleAssignmentListCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", subscriptionId,
-            "--scope", scope
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
 
         // Assert
         Assert.NotNull(response);

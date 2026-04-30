@@ -1,101 +1,50 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
-using System.Threading;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class FileWriteCommandTests
+public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOneLakeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act
-        var command = new FileWriteCommand(logger, oneLakeService);
-
-        // Assert
-        Assert.Contains("Write content to a file in OneLake storage", command.Description);
-        Assert.False(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Destructive);
+        Assert.Contains("Write content to a file in OneLake storage", Command.Description);
+        Assert.False(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Destructive);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("write", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
-    }
-
-    [Fact]
-    public void CommandOptions_ContainsRequiredOptions()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert - Just verify we have some options
-        Assert.NotEmpty(systemCommand.Options);
+        Assert.Equal("write", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Options);
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        // Arrange
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(null!, oneLakeService));
+        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(null!, Service));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(Logger, null!));
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
+        var metadata = Command.Metadata;
 
-        // Act
-        var metadata = command.Metadata;
-
-        // Assert
         Assert.True(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.LocalRequired);
@@ -110,14 +59,10 @@ public class FileWriteCommandTests
     public async Task ExecuteAsync_WritesFileWithContentSuccessfully(string identifierArgs, string expectedWorkspace, string expectedItem)
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
         var filePath = "test/file.txt";
         var content = "Hello, OneLake!";
 
-        oneLakeService.WriteFileAsync(
+        Service.WriteFileAsync(
             expectedWorkspace,
             expectedItem,
             filePath,
@@ -126,18 +71,13 @@ public class FileWriteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"{identifierArgs} --file-path {filePath} --content \"{content}\"");
-        var context = new CommandContext(serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync($"{identifierArgs} --file-path {filePath} --content \"{content}\"");
 
         // Assert
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await oneLakeService.Received(1).WriteFileAsync(
+        await Service.Received(1).WriteFileAsync(
             expectedWorkspace,
             expectedItem,
             filePath,
@@ -150,16 +90,12 @@ public class FileWriteCommandTests
     public async Task ExecuteAsync_WritesFileWithOverwriteFlag()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
         var workspaceId = "test-workspace";
         var itemId = "test-item";
         var filePath = "test/file.txt";
         var content = "Hello, OneLake!";
 
-        oneLakeService.WriteFileAsync(
+        Service.WriteFileAsync(
             workspaceId,
             itemId,
             filePath,
@@ -168,18 +104,18 @@ public class FileWriteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath} --content \"{content}\" --overwrite");
-        var context = new CommandContext(serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", filePath,
+            "--content", content,
+            "--overwrite");
 
         // Assert
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await oneLakeService.Received(1).WriteFileAsync(
+        await Service.Received(1).WriteFileAsync(
             workspaceId,
             itemId,
             filePath,
@@ -192,16 +128,12 @@ public class FileWriteCommandTests
     public async Task ExecuteAsync_HandlesServiceException()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
         var workspaceId = "test-workspace";
         var itemId = "test-item";
         var filePath = "test/file.txt";
         var content = "Hello, OneLake!";
 
-        oneLakeService.WriteFileAsync(
+        Service.WriteFileAsync(
             workspaceId,
             itemId,
             filePath,
@@ -210,17 +142,16 @@ public class FileWriteCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath} --content \"{content}\"");
-        var context = new CommandContext(serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", filePath,
+            "--content", content);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-        await oneLakeService.Received(1).WriteFileAsync(
+        await Service.Received(1).WriteFileAsync(
             workspaceId,
             itemId,
             filePath,
@@ -233,30 +164,48 @@ public class FileWriteCommandTests
     public async Task ExecuteAsync_ThrowsArgumentException_WhenNoContentProvided()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileWriteCommand(logger, oneLakeService);
-
         var workspaceId = "test-workspace";
         var itemId = "test-item";
         var filePath = "test/file.txt";
 
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath}");
-        var context = new CommandContext(serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", filePath);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
-        await oneLakeService.DidNotReceive().WriteFileAsync(
+        await Service.DidNotReceive().WriteFileAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<Stream>(),
             Arg.Any<bool>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
+    {
+        Service.WriteFileAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+            Arg.Any<Stream>(),
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "filePath"));
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "workspace",
+            "--item-id", "item",
+            "--file-path", traversalPath,
+            "--content", "data");
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }

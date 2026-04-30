@@ -1,46 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.UnitTests.Certificate;
 
-public class CertificateCreateCommandTests
+public class CertificateCreateCommandTests : CommandUnitTestsBase<CertificateCreateCommand, IKeyVaultService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKeyVaultService _keyVaultService;
-    private readonly ILogger<CertificateCreateCommand> _logger;
-    private readonly CertificateCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownCertificateName = "knownCertificateName";
-
-    public CertificateCreateCommandTests()
-    {
-        _keyVaultService = Substitute.For<IKeyVaultService>();
-        _logger = Substitute.For<ILogger<CertificateCreateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_keyVaultService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public async Task ExecuteAsync_CallsServiceCorrectly()
@@ -50,35 +26,29 @@ public class CertificateCreateCommandTests
 
         // TODO (vcolin7): Find a way to mock CertificateOperation
         // We'll test that the service is called correctly, but let it fail since mocking the return is complex
-        _keyVaultService
-            .CreateCertificate(
-                Arg.Is(_knownVaultName),
-                Arg.Is(_knownCertificateName),
-                Arg.Is(_knownSubscriptionId),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateCertificate(
+            Arg.Is(_knownVaultName),
+            Arg.Is(_knownCertificateName),
+            Arg.Is(_knownSubscriptionId),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscriptionId);
 
         // Assert - Verify the service was called with correct parameters
-        await _keyVaultService
-            .Received(1)
-            .CreateCertificate(
-                _knownVaultName,
-                _knownCertificateName,
-                _knownSubscriptionId,
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateCertificate(
+            _knownVaultName,
+            _knownCertificateName,
+            _knownSubscriptionId,
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         // Should handle the exception
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -87,15 +57,11 @@ public class CertificateCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsInvalidObject_IfCertificateNameIsEmpty()
     {
-        // Arrange - No need to mock service since validation should fail before service is called
-        var args = _commandDefinition.Parse([
+        // Arrange & Act - No need to mock service since validation should fail before service is called
+        var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--certificate", "",
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscriptionId);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -109,24 +75,20 @@ public class CertificateCreateCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService
-            .CreateCertificate(
-                Arg.Is(_knownVaultName),
-                Arg.Is(_knownCertificateName),
-                Arg.Is(_knownSubscriptionId),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateCertificate(
+            Arg.Is(_knownVaultName),
+            Arg.Is(_knownCertificateName),
+            Arg.Is(_knownSubscriptionId),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription", _knownSubscriptionId);
 
         // Assert
         Assert.NotNull(response);

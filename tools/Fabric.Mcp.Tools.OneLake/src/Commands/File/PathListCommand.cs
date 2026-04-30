@@ -1,35 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
-using System.Threading;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
-public sealed class PathListCommand(ILogger<PathListCommand> logger)
-    : GlobalCommand<PathListOptions>()
-{
-    private const string CommandTitle = "List OneLake Path Structure";
-    private readonly ILogger<PathListCommand> _logger = logger;
-
-    public override string Id => "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3",
+    Name = "list_files",
+    Title = "List OneLake Path Structure",
+    Description = """
         List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. 
         Shows directory structure with paths, sizes, timestamps, and metadata. Use this to explore OneLake content in a filesystem format 
         rather than flat blob listing. Supports optional path filtering and recursive directory traversal.
@@ -38,19 +24,17 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         providing comprehensive visibility across all top-level OneLake folders.
         
         Use --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class PathListCommand(ILogger<PathListCommand> logger)
+    : GlobalCommand<PathListOptions>()
+{
+    private readonly ILogger<PathListCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -62,6 +46,23 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         command.Options.Add(FabricOptionDefinitions.Path.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive.AsOptional());
         command.Options.Add(OneLakeOptionDefinitions.Format.AsOptional());
+        command.Validators.Add(result =>
+        {
+            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+
+            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
+            {
+                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
+            }
+
+            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
+            {
+                result.AddError("Item identifier is required. Provide --item or --item-id.");
+            }
+        });
     }
 
     protected override PathListOptions BindOptions(ParseResult parseResult)
@@ -98,28 +99,18 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         {
             var oneLakeService = context.GetService<IOneLakeService>();
 
-            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
-            {
-                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.ItemId))
-            {
-                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
-            }
-
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
                 var rawResponse = await oneLakeService.ListPathRawAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new PathListResult { RawResponse = rawResponse },
+                    new() { RawResponse = rawResponse },
                     MinimalJsonContext.Default.PathListResult);
                 return context.Response;
             }
@@ -130,23 +121,23 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 fileSystemItems = await oneLakeService.ListPathIntelligentAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Recursive,
                     cancellationToken: cancellationToken);
             }
             else
             {
                 fileSystemItems = await oneLakeService.ListPathAsync(
-                    options.WorkspaceId,
-                    options.ItemId,
+                    options.WorkspaceId!,
+                    options.ItemId!,
                     options.Path,
                     options.Recursive,
                     cancellationToken: cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(
-                new PathListResult(fileSystemItems),
+                new(fileSystemItems),
                 MinimalJsonContext.Default.PathListResult);
         }
         catch (Exception ex)

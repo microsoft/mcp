@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,14 +32,14 @@ public class MonitorMetricsServiceTests
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new ResourceIdentifier(TestResourceId)));
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceIdentifier(TestResourceId));
     }
 
     #region Constructor Tests
@@ -48,16 +48,14 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new MonitorMetricsService(_resourceResolverService, _tenantService);
-        Assert.NotNull(service);
+        Assert.NotNull(_service);
     }
 
     [Fact]
     public void Constructor_WithNullResourceResolverService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(null!, _tenantService));
+        Assert.Throws<ArgumentNullException>(() => new MonitorMetricsService(null!, _tenantService));
     }
     #endregion
 
@@ -69,19 +67,14 @@ public class MonitorMetricsServiceTests
     [InlineData("not-a-date")]
     public async Task QueryMetricsAsync_WithInvalidStartTime_ThrowsException(string invalidStartTime)
     {
-        // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
-
-        // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.QueryMetricsAsync(
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
                 TestResourceName,
-                metricNamespace,
-                metricNames,
+                "Microsoft.Storage/storageAccounts",
+                ["Transactions"],
                 startTime: invalidStartTime,
                 cancellationToken: TestContext.Current.CancellationToken));
 
@@ -94,19 +87,14 @@ public class MonitorMetricsServiceTests
     [InlineData("not-a-date")]
     public async Task QueryMetricsAsync_WithInvalidEndTime_ThrowsArgumentException(string invalidEndTime)
     {
-        // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
-
-        // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.QueryMetricsAsync(
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
                 TestResourceName,
-                metricNamespace,
-                metricNames,
+                "Microsoft.Storage/storageAccounts",
+                ["Transactions"],
                 endTime: invalidEndTime,
                 cancellationToken: TestContext.Current.CancellationToken));
 
@@ -119,19 +107,14 @@ public class MonitorMetricsServiceTests
     [InlineData("1 hour")]
     public async Task QueryMetricsAsync_WithInvalidInterval_ThrowsException(string invalidInterval)
     {
-        // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
-
-        // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.QueryMetricsAsync(
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
                 TestResourceName,
-                metricNamespace,
-                metricNames,
+                "Microsoft.Storage/storageAccounts",
+                ["Transactions"],
                 interval: invalidInterval,
                 cancellationToken: TestContext.Current.CancellationToken));
 
@@ -143,19 +126,14 @@ public class MonitorMetricsServiceTests
     [InlineData("")]
     public async Task QueryMetricsAsync_WithNullOrEmptySubscription_ThrowsException(string? subscription)
     {
-        // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
-
-        // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
         _service.QueryMetricsAsync(
             subscription!,
             TestResourceGroup,
             TestResourceType,
             TestResourceName,
-            metricNamespace,
-            metricNames,
+            "Microsoft.Storage/storageAccounts",
+            ["Transactions"],
             cancellationToken: TestContext.Current.CancellationToken));
     }
 
@@ -164,21 +142,15 @@ public class MonitorMetricsServiceTests
     [InlineData("")]
     public async Task QueryMetricsAsync_WithNullOrEmptyResourceName_ThrowsArgumentException(string? resourceName)
     {
-        // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
-
-        // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.QueryMetricsAsync(
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
                 resourceName!,
-                metricNamespace,
-                metricNames,
-                cancellationToken: TestContext.Current.CancellationToken)
-            );
+                "Microsoft.Storage/storageAccounts",
+                ["Transactions"],
+                cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -215,8 +187,6 @@ public class MonitorMetricsServiceTests
     public async Task QueryMetricsAsync_WithResourceResolutionFailure_ThrowsException()
     {
         // Arrange
-        var metricNames = new[] { "Transactions" };
-        var metricNamespace = "Microsoft.Storage/storageAccounts";
         _resourceResolverService.ResolveResourceIdAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -234,8 +204,8 @@ public class MonitorMetricsServiceTests
                 TestResourceGroup,
                 TestResourceType,
                 TestResourceName,
-                metricNamespace,
-                metricNames,
+                "Microsoft.Storage/storageAccounts",
+                ["Transactions"],
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Resource not found", exception.Message);

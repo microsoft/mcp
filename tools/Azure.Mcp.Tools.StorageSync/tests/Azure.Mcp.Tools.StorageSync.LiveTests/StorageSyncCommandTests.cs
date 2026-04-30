@@ -2,54 +2,55 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.LiveTests;
 
-public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    public override List<UriRegexSanitizer> UriRegexSanitizers => new[]
-    {
-        new UriRegexSanitizer(new UriRegexSanitizerBody
+    public override List<UriRegexSanitizer> UriRegexSanitizers => [
+        .. base.UriRegexSanitizers,
+        new(new()
         {
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
         })
-    }.ToList();
+    ];
 
-    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new[]
-    {
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => [
+        .. base.GeneralRegexSanitizers,
+        new(new()
         {
             Regex = Settings.ResourceGroupName,
             Value = "Sanitized",
         }),
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = Settings.ResourceBaseName,
             Value = "Sanitized",
         }),
-        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        new(new()
         {
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000",
         })
-    }.ToList();
+    ];
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => [
+        .. base.BodyRegexSanitizers,
         // Sanitizes all URLs to remove actual service names
-        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+        new(new() {
           Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
           GroupForReplace = "host",
         }),
         // Sanitizes storageAccountTenantId in request bodies
-        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+        new(new() {
           Regex = Settings.TenantId,
           Value = "00000000-0000-0000-0000-000000000000",
         })
@@ -142,142 +143,113 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task Should_Crud_storage_sync_service()
     {
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_create",
-                new()
-                {
+        var result = await CallToolAsync(
+            "storagesync_service_create",
+            new()
+            {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "name", $"{Settings.ResourceBaseName}-test" },
+            { "location", "eastus" }
+            });
+
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
+
+        result = await CallToolAsync(
+            "storagesync_service_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("results").ValueKind);
+
+        result = await CallToolAsync(
+            "storagesync_service_update",
+            new()
+            {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "name", $"{Settings.ResourceBaseName}-test" },
-                { "location", "eastus" }
-                });
+                { "incoming-traffic-policy", "AllowVirtualNetworksOnly" },
+                { "tags", "{\"Environment\":\"Test\"}" },
+                { "identity-type", "SystemAssigned" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
 
-            var service = result.AssertProperty("result");
-            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
-        }
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test" }
-                });
-            var service = result.AssertProperty("results");
-            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
-        }
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_update",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test" },
-                    { "incomingTrafficPolicy", $"AllowVirtualNetworksOnly" },
-                    { "tags", "{\"Environment\":\"Test\"}" },
-                    { "identityType", $"SystemAssigned" }
-                });
-            var service = result.AssertProperty("result");
-            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
-        }
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test" }
-                });
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_service_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
     }
 
     [Fact]
     public async Task Should_Crud_sync_group()
     {
         // Create storage sync service
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_create",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test-service" },
-                    { "location", "eastus" }
-                });
-
-            var service = result.AssertProperty("result");
-            Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
-        }
+        var result = await CallToolAsync(
+            "storagesync_service_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test-service" },
+                { "location", "eastus" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
 
         // Create sync group
-        {
-            var result = await CallToolAsync(
-                "storagesync_syncgroup_create",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
-                });
-
-            var syncGroup = result.AssertProperty("result");
-            Assert.NotEqual(JsonValueKind.Null, syncGroup.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_syncgroup_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test-service" },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
 
         // Get sync group
-        {
-            var result = await CallToolAsync(
-                "storagesync_syncgroup_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
-                });
-
-            var syncGroup = result.AssertProperty("results");
-            Assert.NotEqual(JsonValueKind.Null, syncGroup.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_syncgroup_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test-service" },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("results").ValueKind);
 
         // Delete sync group
-        {
-            var result = await CallToolAsync(
-                "storagesync_syncgroup_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test-service" },
-                    { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
-                });
-
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_syncgroup_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test-service" },
+                { "sync-group-name", $"{Settings.ResourceBaseName}-crud-test" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
 
         // Delete storage sync service
-        {
-            var result = await CallToolAsync(
-                "storagesync_service_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", $"{Settings.ResourceBaseName}-test-service" }
-                });
-
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_service_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", $"{Settings.ResourceBaseName}-test-service" }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
     }
 
     [Fact]
@@ -286,58 +258,54 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         // Get existing cloud endpoint to retrieve storage account and file share details
         string storageAccountResourceId;
         string fileShareName;
+        var result = await CallToolAsync(
+            "storagesync_cloudendpoint_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName }
+            });
+
+        var cloudEndpoint = result.AssertProperty("results");
+        Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
+
+        if (cloudEndpoint.ValueKind == JsonValueKind.Array)
         {
-            var result = await CallToolAsync(
-                "storagesync_cloudendpoint_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", Settings.ResourceBaseName },
-                    { "cloud-endpoint-name", Settings.ResourceBaseName }
-                });
-
-            var cloudEndpoint = result.AssertProperty("results");
-            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
-
-            if (cloudEndpoint.ValueKind == JsonValueKind.Array)
-            {
-                var firstEndpoint = cloudEndpoint.EnumerateArray().First();
-                storageAccountResourceId = firstEndpoint.GetProperty("storageAccountResourceId").GetString()!;
-                fileShareName = firstEndpoint.GetProperty("azureFileShareName").GetString()!;
-            }
-            else
-            {
-                storageAccountResourceId = cloudEndpoint.GetProperty("storageAccountResourceId").GetString()!;
-                fileShareName = cloudEndpoint.GetProperty("azureFileShareName").GetString()!;
-            }
+            var firstEndpoint = cloudEndpoint.EnumerateArray().First();
+            storageAccountResourceId = firstEndpoint.GetProperty("storageAccountResourceId").GetString()!;
+            fileShareName = firstEndpoint.GetProperty("azureFileShareName").GetString()!;
+        }
+        else
+        {
+            storageAccountResourceId = cloudEndpoint.GetProperty("storageAccountResourceId").GetString()!;
+            fileShareName = cloudEndpoint.GetProperty("azureFileShareName").GetString()!;
         }
 
         // Get server endpoints to save details before deletion
         List<(string name, string serverResourceId, string serverLocalPath)>? serverEndpointDetails = null;
-        {
-            var result = await CallToolAsync(
-                "storagesync_serverendpoint_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", Settings.ResourceBaseName }
-                });
-
-            var serverEndpoints = result.AssertProperty("results");
-            if (serverEndpoints.ValueKind == JsonValueKind.Array)
+        result = await CallToolAsync(
+            "storagesync_serverendpoint_get",
+            new()
             {
-                serverEndpointDetails = serverEndpoints.EnumerateArray()
-                    .Select(se => (
-                        name: se.GetProperty("name").GetString()!,
-                        serverResourceId: se.GetProperty("serverResourceId").GetString()!,
-                        serverLocalPath: se.GetProperty("serverLocalPath").GetString()!
-                    ))
-                    .ToList();
-            }
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", Settings.ResourceBaseName }
+            });
+
+        var serverEndpoints = result.AssertProperty("results");
+        if (serverEndpoints.ValueKind == JsonValueKind.Array)
+        {
+            serverEndpointDetails = serverEndpoints.EnumerateArray()
+                .Select(se => (
+                    name: se.GetProperty("name").GetString()!,
+                    serverResourceId: se.GetProperty("serverResourceId").GetString()!,
+                    serverLocalPath: se.GetProperty("serverLocalPath").GetString()!
+                ))
+                .ToList();
         }
 
         // Delete all server endpoints first (required before deleting cloud endpoint)
@@ -345,7 +313,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             foreach (var endpoint in serverEndpointDetails)
             {
-                var result = await CallToolAsync(
+                result = await CallToolAsync(
                     "storagesync_serverendpoint_delete",
                     new()
                     {
@@ -355,72 +323,58 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "sync-group-name", Settings.ResourceBaseName },
                         { "server-endpoint-name", endpoint.name }
                     });
-
-                var deleteResult = result.AssertProperty("message");
-                Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+                Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
             }
         }
 
         // Delete existing cloud endpoint
-        {
-            var result = await CallToolAsync(
-                "storagesync_cloudendpoint_delete",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", Settings.ResourceBaseName },
-                    { "cloud-endpoint-name", Settings.ResourceBaseName }
-                });
-
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_cloudendpoint_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
 
         // Recreate cloud endpoint
-        {
-            var result = await CallToolAsync(
-                "storagesync_cloudendpoint_create",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", Settings.ResourceBaseName },
-                    { "cloud-endpoint-name", Settings.ResourceBaseName },
-                    { "storage-account-resource-id", storageAccountResourceId },
-                    { "azure-file-share-name", fileShareName }
-                });
-
-            var cloudEndpoint = result.AssertProperty("result");
-            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_cloudendpoint_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName },
+                { "storage-account-resource-id", storageAccountResourceId },
+                { "azure-file-share-name", fileShareName }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
 
         // Get cloud endpoint to verify it was recreated
-        {
-            var result = await CallToolAsync(
-                "storagesync_cloudendpoint_get",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "name", Settings.ResourceBaseName },
-                    { "sync-group-name", Settings.ResourceBaseName },
-                    { "cloud-endpoint-name", Settings.ResourceBaseName }
-                });
-
-            var cloudEndpoint = result.AssertProperty("results");
-            Assert.NotEqual(JsonValueKind.Null, cloudEndpoint.ValueKind);
-        }
+        result = await CallToolAsync(
+            "storagesync_cloudendpoint_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "sync-group-name", Settings.ResourceBaseName },
+                { "cloud-endpoint-name", Settings.ResourceBaseName }
+            });
+        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("results").ValueKind);
 
         // Recreate server endpoints to restore topology, or create a test endpoint if none existed
         if (serverEndpointDetails != null && serverEndpointDetails.Count > 0)
         {
             // Recreate existing endpoints
-            foreach (var endpoint in serverEndpointDetails)
+            foreach (var (name, serverResourceId, serverLocalPath) in serverEndpointDetails)
             {
-                var result = await CallToolAsync(
+                result = await CallToolAsync(
                     "storagesync_serverendpoint_create",
                     new()
                     {
@@ -428,13 +382,11 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "resource-group", Settings.ResourceGroupName },
                         { "name", Settings.ResourceBaseName },
                         { "sync-group-name", Settings.ResourceBaseName },
-                        { "server-endpoint-name", endpoint.name },
-                        { "server-resource-id", endpoint.serverResourceId },
-                        { "server-local-path", endpoint.serverLocalPath }
+                        { "server-endpoint-name", name },
+                        { "server-resource-id", serverResourceId },
+                        { "server-local-path", serverLocalPath }
                     });
-
-                var serverEndpoint = result.AssertProperty("result");
-                Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
+                Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
             }
         }
         else
@@ -458,7 +410,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 var firstServer = servers[0];
                 var serverId = firstServer.GetProperty("id").GetString();
 
-                var result = await CallToolAsync(
+                result = await CallToolAsync(
                     "storagesync_serverendpoint_create",
                     new()
                     {
@@ -470,9 +422,7 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                         { "server-resource-id", serverId! },
                         { "server-local-path", $"D:\\{$"{Settings.ResourceBaseName}-test"}" }
                     });
-
-                var serverEndpoint = result.AssertProperty("result");
-                Assert.NotEqual(JsonValueKind.Null, serverEndpoint.ValueKind);
+                Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
             }
             else
             {

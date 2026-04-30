@@ -2,47 +2,28 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.UnitTests.Product;
 
-public class ProductListCommandTests
+public class ProductListCommandTests : CommandUnitTestsBase<ProductListCommand, IMarketplaceService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMarketplaceService _marketplaceService;
-    private readonly ILogger<ProductListCommand> _logger;
-    private readonly ProductListCommand _command;
-    private readonly CommandContext _context;
-    public ProductListCommandTests()
-    {
-        _marketplaceService = Substitute.For<IMarketplaceService>();
-        _logger = Substitute.For<ILogger<ProductListCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("marketplace products", command.Description.ToLower());
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
     }
 
     [Fact]
@@ -64,7 +45,7 @@ public class ProductListCommandTests
             }
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -78,10 +59,8 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
-        var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(response);
@@ -105,7 +84,7 @@ public class ProductListCommandTests
             }
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Is(language),
             Arg.Is(search),
@@ -119,14 +98,11 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--search", search,
-            "--language", language
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--language", language);
 
         // Assert
         Assert.NotNull(response);
@@ -138,10 +114,10 @@ public class ProductListCommandTests
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
         // Arrange
-        var args = _command.GetCommand().Parse(["--search", "test"]);
+        TestEnvironment.ClearAzureSubscriptionId();
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--search", "test");
 
         // Assert
         Assert.NotNull(response);
@@ -155,7 +131,7 @@ public class ProductListCommandTests
         // Arrange
         var subscriptionId = "test-sub";
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -169,10 +145,8 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = [] });
 
-        var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(response);
@@ -187,7 +161,7 @@ public class ProductListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "test-sub";
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -201,10 +175,8 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
         Assert.NotNull(response);
@@ -229,7 +201,7 @@ public class ProductListCommandTests
             }
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -243,15 +215,12 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--filter", filter,
             "--orderby", orderBy,
-            "--select", select
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--select", select);
 
         // Assert
         Assert.NotNull(response);
@@ -285,7 +254,7 @@ public class ProductListCommandTests
             NextCursor = expectedNextCursor
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -299,21 +268,15 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(productsListResult);
 
-        var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
-        // Verify the response contains the NextCursor by checking the serialized result
-        var resultJson = JsonSerializer.Serialize(response.Results);
-        Assert.Contains(expectedNextCursor, resultJson);
-        Assert.Contains("test-product-1", resultJson);
-        Assert.Contains("test-product-2", resultJson);
+        Assert.Equal(expectedNextCursor, result.NextCursor);
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-1");
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-2");
     }
 
     [Fact]
@@ -336,7 +299,7 @@ public class ProductListCommandTests
             NextCursor = null // No next cursor
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -350,21 +313,14 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(productsListResult);
 
-        var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
-        // Verify the response contains null NextCursor
-        var resultJson = JsonSerializer.Serialize(response.Results);
-        Assert.Contains("test-product", resultJson);
-        // The NextCursor should be null and serialized as such
-        Assert.DoesNotContain("\"nextCursor\"", resultJson);
+        Assert.Null(result.NextCursor);
+        Assert.Contains(result.Products, p => p.UniqueProductId == "test-product");
     }
 
     [Fact]
@@ -382,7 +338,7 @@ public class ProductListCommandTests
             }
         };
 
-        _marketplaceService.ListProducts(
+        Service.ListProducts(
             Arg.Is(subscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -396,13 +352,8 @@ public class ProductListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", subscriptionId,
-            "--expand", expand
-        ]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--expand", expand);
 
         // Assert
         Assert.NotNull(response);

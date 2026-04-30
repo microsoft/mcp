@@ -2,12 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.UnitTests.Services.Support;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Npgsql;
 using NSubstitute;
@@ -18,6 +22,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
     public class PostgresServiceTests
     {
         private readonly IResourceGroupService _resourceGroupService;
+        private readonly ISubscriptionService _subscriptionService;
         private readonly ITenantService _tenantService;
         private readonly IEntraTokenProvider _entraTokenAuth;
         private readonly IDbProvider _dbProvider;
@@ -34,6 +39,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
         public PostgresServiceTests()
         {
             _resourceGroupService = Substitute.For<IResourceGroupService>();
+            _subscriptionService = Substitute.For<ISubscriptionService>();
 
             _tenantService = Substitute.For<ITenantService>();
 
@@ -49,7 +55,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Substitute.For<DbDataReader>());
 
-            _postgresService = new PostgresService(_resourceGroupService, _tenantService, _entraTokenAuth, _dbProvider);
+            _postgresService = new PostgresService(_resourceGroupService, _subscriptionService, _tenantService, _entraTokenAuth, _dbProvider);
 
             this.subscriptionId = "test-sub";
             this.resourceGroup = "test-rg";
@@ -132,6 +138,103 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // Assert
             Assert.Single(rows);
             Assert.Contains("string, integer", rows.ElementAt(0));
+        }
+
+        [Fact]
+        public async Task ListServersAsync_SubscriptionScope_ReturnsAllServers()
+        {
+            // Arrange — no resource group → subscription-wide path
+            var expected = new List<string> { "server-a", "server-b" };
+            var sut = new TestablePostgresService(
+                _resourceGroupService, _subscriptionService, _tenantService,
+                _entraTokenAuth, _dbProvider,
+                subscriptionServers: expected,
+                resourceGroupServers: []);
+
+            // Act
+            var result = await sut.ListServersAsync(subscriptionId, null, TestContext.Current.CancellationToken);
+
+            // Assert — subscription service was called, RG service was not
+            Assert.Equal(expected, result);
+            await _subscriptionService.Received(1).GetSubscription(subscriptionId, cancellationToken: Arg.Any<CancellationToken>());
+            await _resourceGroupService.DidNotReceive().GetResourceGroupResource(Arg.Any<string>(), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task ListServersAsync_ResourceGroupScope_ReturnsFilteredServers()
+        {
+            // Arrange — resource group provided → RG-scoped path
+            var expected = new List<string> { "server-rg1" };
+            _resourceGroupService
+                .GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: Arg.Any<CancellationToken>())
+                .Returns(Substitute.For<ResourceGroupResource>());
+
+            var sut = new TestablePostgresService(
+                _resourceGroupService, _subscriptionService, _tenantService,
+                _entraTokenAuth, _dbProvider,
+                subscriptionServers: [],
+                resourceGroupServers: expected);
+
+            // Act
+            var result = await sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken);
+
+            // Assert — RG service was called, subscription service was not
+            Assert.Equal(expected, result);
+            await _resourceGroupService.Received(1).GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: Arg.Any<CancellationToken>());
+            await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task ListServersAsync_ResourceGroupScope_ThrowsWhenRgNotFound()
+        {
+            // Arrange — RG service returns null (group does not exist)
+            _resourceGroupService
+                .GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: Arg.Any<CancellationToken>())
+                .Returns((ResourceGroupResource?)null);
+
+            var sut = new TestablePostgresService(
+                _resourceGroupService, _subscriptionService, _tenantService,
+                _entraTokenAuth, _dbProvider,
+                subscriptionServers: [],
+                resourceGroupServers: []);
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<Exception>(
+                () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
+            Assert.Contains(resourceGroup, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Subclass that replaces the un-mockable ARM SDK extension-method calls with
+    /// in-memory sequences, isolating <see cref="PostgresService.ListServersAsync"/> logic.
+    /// </summary>
+    internal sealed class TestablePostgresService(
+        IResourceGroupService resourceGroupService,
+        ISubscriptionService subscriptionService,
+        ITenantService tenantService,
+        IEntraTokenProvider entraTokenAuth,
+        IDbProvider dbProvider,
+        IEnumerable<string> subscriptionServers,
+        IEnumerable<string> resourceGroupServers)
+        : PostgresService(resourceGroupService, subscriptionService, tenantService, entraTokenAuth, dbProvider)
+    {
+        protected override async IAsyncEnumerable<string> ListSubscriptionServerNamesAsync(
+            SubscriptionResource subscription,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+            foreach (var name in subscriptionServers)
+                yield return name;
+        }
+
+        protected override async IAsyncEnumerable<string> ListResourceGroupServerNamesAsync(
+            ResourceGroupResource resourceGroup,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+            foreach (var name in resourceGroupServers)
+                yield return name;
         }
     }
 }

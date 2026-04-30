@@ -18,9 +18,7 @@ public static class GenerateMermaidChart
 
     public static string GenerateChart(string workspaceFolder, AppTopology appTopology)
     {
-        var chartComponents = new List<string>();
-
-        chartComponents.Add("graph TD");
+        List<string> chartComponents = ["graph TD"];
 
         if (appTopology.Services.Any(s => s.AzureComputeHost == "aks"))
         {

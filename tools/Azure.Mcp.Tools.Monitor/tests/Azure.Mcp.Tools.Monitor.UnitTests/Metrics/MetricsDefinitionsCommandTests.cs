@@ -2,68 +2,48 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Metrics;
 
-public class MetricsDefinitionsCommandTests
+public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefinitionsCommand, IMonitorMetricsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMonitorMetricsService _service;
-    private readonly ILogger<MetricsDefinitionsCommand> _logger;
-    private readonly MetricsDefinitionsCommand _command;
-
-    public MetricsDefinitionsCommandTests()
-    {
-        _service = Substitute.For<IMonitorMetricsService>();
-        _logger = Substitute.For<ILogger<MetricsDefinitionsCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     #region Constructor and Command Setup Tests
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("definitions", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("List available metric definitions", command.Description);
+        Assert.Equal("definitions", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("List available metric definitions", CommandDefinition.Description);
     }
 
     [Fact]
     public void Name_ReturnsDefinitions()
     {
-        Assert.Equal("definitions", _command.Name);
+        Assert.Equal("definitions", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectTitle()
     {
-        Assert.Equal("List Azure Monitor Metric Definitions", _command.Title);
+        Assert.Equal("List Azure Monitor Metric Definitions", Command.Title);
     }
 
     [Fact]
     public void GetCommand_RegistersAllRequiredOptions()
     {
-        var command = _command.GetCommand();
-
         // Check that all required options are present
-        var optionNames = command.Options.Select(o => o.Name).ToList();
+        var optionNames = CommandDefinition.Options.Select(o => o.Name).ToList();
 
         Assert.Contains("--subscription", optionNames);
         Assert.Contains("--resource-type", optionNames);
@@ -89,7 +69,7 @@ public class MetricsDefinitionsCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListMetricDefinitionsAsync(
+            Service.ListMetricDefinitionsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
@@ -114,11 +94,8 @@ public class MetricsDefinitionsCommandTests
                 ]);
         }
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -154,7 +131,7 @@ public class MetricsDefinitionsCommandTests
             }
         };
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             "sub1",
             null, // resource-group may be null if not provided or not parsed from resource-id
             "Microsoft.Storage/storageAccounts",
@@ -166,18 +143,19 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(
-            "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --tenant tenant1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--resource", "test",
+            "--subscription", "sub1",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--metric-namespace", "Microsoft.Storage/storageAccounts",
+            "--tenant", "tenant1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
-        await _service.Received(1).ListMetricDefinitionsAsync(
+        await Service.Received(1).ListMetricDefinitionsAsync(
             "sub1",
             null,
             "Microsoft.Storage/storageAccounts",
@@ -193,7 +171,7 @@ public class MetricsDefinitionsCommandTests
     public async Task ExecuteAsync_WithSearchString_CallsServiceWithSearchParameter()
     {
         // Arrange
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -214,18 +192,18 @@ public class MetricsDefinitionsCommandTests
                 }
             ]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --search-string cpu");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--resource", "test",
+            "--subscription", "sub1",
+            "--search-string", "cpu");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the service was called with the search string
-        await _service.Received(1).ListMetricDefinitionsAsync(
+        await Service.Received(1).ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -252,7 +230,7 @@ public class MetricsDefinitionsCommandTests
             }
         };
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             "sub1",
             null, // resource-group may be null if not provided or not parsed from resource-id
             "Microsoft.Storage/storageAccounts",
@@ -264,18 +242,21 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(
-            "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --search-string memory --tenant tenant1 --limit 20");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--resource", "test",
+            "--subscription", "sub1",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--metric-namespace", "Microsoft.Storage/storageAccounts",
+            "--search-string", "memory",
+            "--tenant", "tenant1",
+            "--limit", "20");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
-        await _service.Received(1).ListMetricDefinitionsAsync(
+        await Service.Received(1).ListMetricDefinitionsAsync(
             "sub1",
             null,
             "Microsoft.Storage/storageAccounts",
@@ -295,7 +276,7 @@ public class MetricsDefinitionsCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -305,13 +286,10 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<MetricDefinition>>(new Exception("Test error")));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -324,7 +302,7 @@ public class MetricsDefinitionsCommandTests
     {
         // Arrange
         var exception = new Exception("Service unavailable");
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -334,17 +312,17 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<MetricDefinition>>(exception));
-
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --resource-group rg1");
+            .ThrowsAsync(exception);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--resource", "test",
+            "--subscription", "sub1",
+            "--resource-group", "rg1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        _logger.Received(1).Log(
+        Logger.Received(1).Log(
             LogLevel.Error,
             Arg.Any<EventId>(),
             Arg.Is<object>(o => o.ToString()!.Contains("Error listing metric definitions")),
@@ -384,7 +362,7 @@ public class MetricsDefinitionsCommandTests
             }
         };
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -396,11 +374,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -412,7 +387,7 @@ public class MetricsDefinitionsCommandTests
     public async Task ExecuteAsync_WithNoResults_ReturnsNullResults()
     {
         // Arrange
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -424,11 +399,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -439,7 +411,7 @@ public class MetricsDefinitionsCommandTests
     public async Task ExecuteAsync_WithNullResults_ReturnsNullResults()
     {
         // Arrange
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -451,11 +423,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<List<MetricDefinition>>(null!));
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -472,7 +441,7 @@ public class MetricsDefinitionsCommandTests
         // Arrange
         var metricDefinitions = GenerateMetricDefinitions(15); // More than default limit of 10
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -484,11 +453,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -497,7 +463,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 10 of 15", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service receives all data but command applies limit internally
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -506,7 +472,7 @@ public class MetricsDefinitionsCommandTests
         // Arrange
         var metricDefinitions = GenerateMetricDefinitions(20);
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -518,11 +484,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 5");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1", "--limit", "5");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -531,7 +494,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 5 of 20", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service is called correctly
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -540,7 +503,7 @@ public class MetricsDefinitionsCommandTests
         // Arrange - Create more results than the limit
         var metricDefinitions = GenerateMetricDefinitions(25);
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -552,11 +515,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 8");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1", "--limit", "8");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -565,7 +525,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("Results truncated to 8 of 25", response.Message);
         Assert.Contains("Use --search-string to filter results", response.Message);
         // Verify the service was called
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -574,7 +534,7 @@ public class MetricsDefinitionsCommandTests
         // Arrange - Create fewer results than the limit
         var metricDefinitions = GenerateMetricDefinitions(3);
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -586,11 +546,8 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 10");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource", "test", "--subscription", "sub1", "--limit", "10");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -598,7 +555,7 @@ public class MetricsDefinitionsCommandTests
         // Verify that all results are returned without truncation
         Assert.Equal("All 3 metric definitions returned.", response.Message);
         // Verify the service was called
-        await _service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -620,7 +577,7 @@ public class MetricsDefinitionsCommandTests
             }
         };
 
-        _service.ListMetricDefinitionsAsync(
+        Service.ListMetricDefinitionsAsync(
             "test-subscription",
             null, // resource-group may be null if not provided or not parsed from resource-id
             "Microsoft.Compute/virtualMachines",
@@ -632,18 +589,21 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(
-            "--subscription test-subscription --resource-type Microsoft.Compute/virtualMachines --resource test-vm --metric-namespace Microsoft.Compute/virtualMachines --search-string performance --tenant test-tenant --limit 25");
-
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-type", "Microsoft.Compute/virtualMachines",
+            "--resource", "test-vm",
+            "--metric-namespace", "Microsoft.Compute/virtualMachines",
+            "--search-string", "performance",
+            "--tenant", "test-tenant",
+            "--limit", "25");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
-        await _service.Received(1).ListMetricDefinitionsAsync(
+        await Service.Received(1).ListMetricDefinitionsAsync(
             "test-subscription",
             null,
             "Microsoft.Compute/virtualMachines",
@@ -664,7 +624,7 @@ public class MetricsDefinitionsCommandTests
         var definitions = new List<MetricDefinition>();
         for (int i = 0; i < count; i++)
         {
-            definitions.Add(new MetricDefinition
+            definitions.Add(new()
             {
                 Name = $"Metric{i}",
                 Description = $"Description for metric {i}",

@@ -3,81 +3,40 @@
 
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class OneLakeItemListCommandTests
+public class OneLakeItemListCommandTests : CommandUnitTestsBase<OneLakeItemListCommand, IOneLakeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act
-        var command = new OneLakeItemListCommand(logger, oneLakeService);
-
-        // Assert
-        Assert.Equal("list", command.Name);
-        Assert.Equal("List OneLake Items", command.Title);
-        Assert.Contains("List OneLake items in a workspace", command.Description);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
+        Assert.Equal("list_items", Command.Name);
+        Assert.Equal("List OneLake Items", Command.Title);
+        Assert.Contains("Lists OneLake items in a Fabric workspace", Command.Description);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemListCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
-    }
-
-    [Fact]
-    public void CommandOptions_ContainsRequiredOptions()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemListCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert - Just verify we have some options
-        Assert.NotEmpty(systemCommand.Options);
+        Assert.Equal("list_items", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Options);
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        // Arrange
-        var oneLakeService = Substitute.For<IOneLakeService>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListCommand(null!, oneLakeService));
+        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListCommand(null!, Service));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListCommand>();
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListCommand(logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListCommand(Logger, null!));
     }
 }

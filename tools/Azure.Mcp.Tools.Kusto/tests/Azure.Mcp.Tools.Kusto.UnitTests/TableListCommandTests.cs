@@ -2,34 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
-public sealed class TableListCommandTests
+public sealed class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IKustoService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IKustoService _kusto;
-    private readonly ILogger<TableListCommand> _logger;
-
-    public TableListCommandTests()
-    {
-        _kusto = Substitute.For<IKustoService>();
-        _logger = Substitute.For<ILogger<TableListCommand>>();
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_kusto);
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     public static IEnumerable<object[]> TableListArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1", false };
@@ -43,7 +28,7 @@ public sealed class TableListCommandTests
         var expectedTables = new List<string> { "table1", "table2" };
         if (useClusterUri)
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -51,26 +36,17 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedTables);
         }
-        var command = new TableListCommand(_logger);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(cliArgs);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.TableListCommandResult);
 
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Equal(2, result?.Tables?.Count);
+        Assert.Equal(2, result.Tables?.Count);
     }
 
     [Theory]
@@ -79,7 +55,7 @@ public sealed class TableListCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
@@ -87,25 +63,16 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
-        var command = new TableListCommand(_logger);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
+        var response = await ExecuteCommandAsync(cliArgs);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Empty(result.Tables!);
+        var result = ValidateAndDeserializeResponse(response, KustoJsonContext.Default.TableListCommandResult);
+        Assert.Empty(result.Tables);
     }
 
     [Theory]
@@ -115,25 +82,21 @@ public sealed class TableListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<List<string>>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
-            _kusto.ListTablesAsync(
+            Service.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                .Returns(Task.FromException<List<string>>(new Exception("Test error")));
+                .ThrowsAsync(new Exception("Test error"));
         }
-        var command = new TableListCommand(_logger);
 
-        var args = command.GetCommand().Parse(cliArgs);
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(cliArgs);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
@@ -142,12 +105,7 @@ public sealed class TableListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
-        var command = new TableListCommand(_logger);
-
-        var args = command.GetCommand().Parse("");
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("");
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
@@ -16,7 +17,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixt
     public async Task ExecuteAsync_WithValidParameters_ReturnsSuccessResult()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
             new()
@@ -86,7 +87,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output, TestProxyFixt
     public async Task ExecuteAsync_WithInvalidDatabaseTypes_ReturnsValidationError(string invalidDatabaseType)
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "appservice_database_add",
             new()

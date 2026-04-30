@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Kusto.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -25,13 +24,14 @@ public abstract class BaseClusterCommand<
         command.Options.Add(KustoOptionDefinitions.Cluster);
         command.Validators.Add(commandResult =>
         {
-            if (commandResult.TryGetValue(KustoOptionDefinitions.ClusterUri, out string? clusterUri) && !string.IsNullOrEmpty(clusterUri))
+            var clusterUri = commandResult.GetValueOrDefault<string>(KustoOptionDefinitions.ClusterUri.Name);
+            if (!string.IsNullOrEmpty(clusterUri))
             {
                 // If clusterUri is provided, subscription becomes optional
                 return;
             }
 
-            commandResult.TryGetValue(KustoOptionDefinitions.Cluster, out string? clusterName);
+            var clusterName = commandResult.GetValueOrDefault<string>(KustoOptionDefinitions.Cluster.Name);
 
             // clusterUri not provided, require both subscription and clusterName
             if (string.IsNullOrEmpty(clusterName) || !CommandHelper.HasSubscriptionAvailable(commandResult))

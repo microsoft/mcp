@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http;
 using System.Text.Json.Nodes;
 using Azure.Core;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -71,7 +71,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         string healthModelUrl = $"{GetManagementEndpoint()}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new("Bearer", token);
 
         var client = _httpClientFactory.CreateClient();
         HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
@@ -104,19 +104,14 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<string> GetControlPlaneTokenAsync(CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential(cancellationToken);
-        AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([_tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]),
-            cancellationToken);
-
-        return accessToken.Token;
+        return (await GetArmAccessTokenAsync(null, cancellationToken)).Token;
     }
 
     private async Task<string> GetDataplaneTokenAsync(CancellationToken cancellationToken)
     {
         TokenCredential credential = await GetCredential(cancellationToken);
         AccessToken accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([GetHealthModelsDataApiScope()]),
+            new([GetHealthModelsDataApiScope()]),
             cancellationToken);
 
         return accessToken.Token;

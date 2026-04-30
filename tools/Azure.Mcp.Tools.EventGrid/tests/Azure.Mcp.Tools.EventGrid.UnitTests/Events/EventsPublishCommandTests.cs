@@ -1,58 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Net.Http;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Events;
 
-public class EventsPublishCommandTests
+public class EventsPublishCommandTests : CommandUnitTestsBase<EventGridPublishCommand, IEventGridService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventGridService _eventGridService;
-    private readonly ILogger<EventGridPublishCommand> _logger;
-    private readonly EventGridPublishCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public EventsPublishCommandTests()
-    {
-        _eventGridService = Substitute.For<IEventGridService>();
-        _logger = Substitute.For<ILogger<EventGridPublishCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_eventGridService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Command_Properties_AreCorrect()
     {
-        Assert.Equal("publish", _command.Name);
-        Assert.Contains("Publish custom events to Event Grid topics", _command.Description);
-        Assert.Equal("Publish Events to Event Grid Topic", _command.Title);
+        Assert.Equal("publish", Command.Name);
+        Assert.Contains("Publish custom events to Event Grid topics", Command.Description);
+        Assert.Equal("Publish Events to Event Grid Topic", Command.Title);
     }
 
     [Fact]
     public void Command_Metadata_IsCorrect()
     {
-        var metadata = _command.Metadata;
+        var metadata = Command.Metadata;
         Assert.False(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.OpenWorld);
@@ -83,7 +59,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -92,20 +68,18 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
     }
@@ -142,7 +116,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -151,20 +125,18 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(2, result.Result.PublishedEventCount);
     }
@@ -178,7 +150,7 @@ public class EventsPublishCommandTests
         var topicName = "test-topic";
         var invalidEventData = "invalid-json";
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -187,12 +159,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new System.Text.Json.JsonException("Invalid JSON format"));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", invalidEventData]);
+            .ThrowsAsync(new JsonException("Invalid JSON format"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", invalidEventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -214,7 +188,7 @@ public class EventsPublishCommandTests
             data = new { message = "Hello World" }
         });
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -225,10 +199,12 @@ public class EventsPublishCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // The base command returns InternalServerError for general exceptions by default
@@ -255,7 +231,7 @@ public class EventsPublishCommandTests
                 OperationId: Guid.NewGuid().ToString(),
                 PublishedAt: DateTime.UtcNow);
 
-            _eventGridService.PublishEventAsync(
+            Service.PublishEventAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -263,14 +239,12 @@ public class EventsPublishCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
-                    Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(expectedResult));
+                Arg.Any<CancellationToken>())
+                .Returns(expectedResult);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -307,7 +281,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is<string?>(resourceGroup => resourceGroup == null), // Resource group should be null
             Arg.Is(topicName),
@@ -316,20 +290,17 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--topic", topicName, "--data", eventData]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
     }
@@ -358,7 +329,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -367,20 +338,19 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "CloudEvents");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
     }
@@ -408,7 +378,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -417,20 +387,19 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "Custom");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
     }
@@ -475,7 +444,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -484,12 +453,15 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", schema);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -516,7 +488,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -525,12 +497,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -550,7 +524,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -559,12 +533,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Azure.RequestFailedException(403, "Access denied to Event Grid topic"));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .ThrowsAsync(new RequestFailedException(403, "Access denied to Event Grid topic"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -585,7 +561,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -596,10 +572,13 @@ public class EventsPublishCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "InvalidSchema"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "InvalidSchema");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -620,7 +599,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -629,12 +608,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Azure.RequestFailedException(400, "Invalid event data or schema format"));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .ThrowsAsync(new RequestFailedException(400, "Invalid event data or schema format"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -681,7 +662,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -690,12 +671,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -725,7 +708,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -734,12 +717,15 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "CloudEvents");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -772,7 +758,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -781,12 +767,15 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "CloudEvents");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -817,7 +806,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -826,12 +815,15 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "Custom");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -869,7 +861,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -878,12 +870,15 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", schema);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -925,7 +920,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventAsync(
+        Service.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -934,18 +929,19 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expectedResult));
-
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
+            .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--topic", topicName,
+            "--data", eventData,
+            "--schema", "Custom");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        var json = JsonSerializer.Serialize(response.Results!);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
-        Assert.Equal(2, result!.Result.PublishedEventCount);
+        var result = ValidateAndDeserializeResponse(response, EventGridJsonContext.Default.EventGridPublishCommandResult);
+        Assert.Equal(2, result.Result.PublishedEventCount);
     }
 }
 

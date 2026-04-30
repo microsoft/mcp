@@ -3,6 +3,8 @@
 
 using System.Text.Json.Serialization;
 
+namespace Azure.Mcp.Tools.Storage.Models;
+
 // Lightweight projection of BlobProperties with commonly useful metadata.
 // Keep property names stable; only add new nullable properties to extend.
 public sealed record BlobInfo(

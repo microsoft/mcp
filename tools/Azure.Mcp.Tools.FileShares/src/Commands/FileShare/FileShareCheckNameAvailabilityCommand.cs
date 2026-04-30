@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.FileShares.Options;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
@@ -17,23 +14,20 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 /// <summary>
 /// Checks if a file share name is available.
 /// </summary>
+[CommandMetadata(
+    Id = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    Name = "check-name-availability",
+    Title = "Check File Share Name Availability",
+    Description = "Check if a file share name is available",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService)
     : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions>(logger, fileSharesService)
 {
-    public override string Id => "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-    public override string Name => "check-name-availability";
-    public override string Description => "Check if a file share name is available";
-    public override string Title => "Check File Share Name Availability";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -69,8 +63,9 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
                 options.RetryPolicy,
                 cancellationToken);
 
-            var result = new FileShareCheckNameAvailabilityCommandResult(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message);
-            context.Response.Results = ResponseResult.Create(result, FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new(availabilityResult.IsAvailable, availabilityResult.Reason, availabilityResult.Message),
+                FileSharesJsonContext.Default.FileShareCheckNameAvailabilityCommandResult);
 
             _logger.LogInformation(
                 "Name availability check completed. File share name {FileShareName} is {Status}",
@@ -79,7 +74,7 @@ public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheck
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking file share name availability. Options: {@Options}", options);
+            _logger.LogError(ex, "Error checking file share name availability. FileShareName: {FileShareName}, Location: {Location}.", options.FileShareName, options.Location);
             HandleException(context, ex);
         }
 

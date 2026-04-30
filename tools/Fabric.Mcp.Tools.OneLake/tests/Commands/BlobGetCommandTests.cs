@@ -3,36 +3,40 @@
 
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.TestUtilities;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class BlobGetCommandTests
+public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLakeService>
 {
+    private readonly IOptions<ServiceStartOptions> _serviceStartOptions = Substitute.For<IOptions<ServiceStartOptions>>();
+
+    public BlobGetCommandTests()
+    {
+        _serviceStartOptions.Value.Returns(new ServiceStartOptions { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_serviceStartOptions);
+    }
+
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
-
-        Assert.Equal("file", command.Name);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.Destructive);
+        Assert.Equal("download_file", Command.Name);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.Destructive);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsBlobAndMetadata()
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
         var workspaceId = "workspace";
         var itemId = "lakehouse";
         var blobPath = "Files/sample.txt";
@@ -64,75 +68,56 @@ public class BlobGetCommandTests
             "client-request-id",
             "root-activity-id");
 
-        service.GetBlobAsync(
-                workspaceId,
-                itemId,
-                blobPath,
-                Arg.Do<BlobDownloadOptions>(options =>
-                {
-                    Assert.NotNull(options);
-                    Assert.True(options.IncludeInlineContent);
-                    Assert.True(options.InlineContentLimit.HasValue);
-                    Assert.Equal(1024 * 1024L, options.InlineContentLimit);
-                    Assert.Null(options.DestinationStream);
-                    Assert.Null(options.LocalFilePath);
-                }),
-                Arg.Any<CancellationToken>())
+        Service.GetBlobAsync(
+            workspaceId,
+            itemId,
+            blobPath,
+            Arg.Do<BlobDownloadOptions>(options =>
+            {
+                Assert.NotNull(options);
+                Assert.True(options.IncludeInlineContent);
+                Assert.True(options.InlineContentLimit.HasValue);
+                Assert.Equal(1024 * 1024L, options.InlineContentLimit);
+                Assert.Null(options.DestinationStream);
+                Assert.Null(options.LocalFilePath);
+            }),
+            Arg.Any<CancellationToken>())
             .Returns(result);
 
-        var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath}");
-        var context = CreateContext();
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", blobPath);
 
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        await Service.Received(1).GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await service.Received(1).GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
+        var commandResult = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.BlobGetCommandResult);
 
-        using var document = JsonDocument.Parse(SerializeResult(context.Response.Results));
-        var root = document.RootElement;
-        Assert.Equal("File retrieved successfully.", root.GetProperty("message").GetString());
-        var blob = root.GetProperty("blob");
-        Assert.Equal(encodedContent, blob.GetProperty("contentBase64").GetString());
-        Assert.Equal("hello", blob.GetProperty("contentText").GetString());
-        Assert.Equal("md5", blob.GetProperty("contentMd5").GetString());
-        Assert.Equal("crc64", blob.GetProperty("contentCrc64").GetString());
+        Assert.Equal("File retrieved successfully.", commandResult.Message);
+        Assert.Equal(encodedContent, commandResult.Blob.ContentBase64);
+        Assert.Equal("hello", commandResult.Blob.ContentText);
+        Assert.Equal("md5", commandResult.Blob.ContentMd5);
+        Assert.Equal("crc64", commandResult.Blob.ContentCrc64);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenWorkspaceMissing()
+    [Theory]
+    [InlineData("--workspace-id")]
+    [InlineData("--item-id")]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenOptionMissing(string missingOption)
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
-
-        var parseResult = command.GetCommand().Parse("--item-id lakehouse --file-path Files/sample.txt");
-        var context = CreateContext();
-
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingOption,
+            ("--workspace-id", "workspace"),
+            ("--item-id", "lakehouse"),
+            ("--file-path", "Files/sample.txt")
+        ));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenItemMissing()
-    {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
-
-        var parseResult = command.GetCommand().Parse("--workspace-id workspace --file-path Files/sample.txt");
-        var context = CreateContext();
-
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_AdvisesDownload_WhenInlineContentTruncated()
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
         var workspaceId = "workspace";
         var itemId = "lakehouse";
         var blobPath = "Files/large.bin";
@@ -165,12 +150,12 @@ public class BlobGetCommandTests
             InlineContentTruncated = true
         };
 
-        service.GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>()).Returns(result);
+        Service.GetBlobAsync(workspaceId, itemId, blobPath, Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>()).Returns(result);
 
-        var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath}");
-        var context = CreateContext();
-
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", workspaceId,
+            "--item-id", itemId,
+            "--file-path", blobPath);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("inline limit", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -179,8 +164,6 @@ public class BlobGetCommandTests
     [Fact]
     public async Task ExecuteAsync_WritesToFile_WhenDownloadPathProvided()
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
         var workspaceId = "workspace";
         var itemId = "lakehouse";
         var blobPath = "Files/sample.txt";
@@ -215,8 +198,7 @@ public class BlobGetCommandTests
             ContentFilePath = tempFilePath
         };
 
-        service
-            .GetBlobAsync(workspaceId, itemId, blobPath, Arg.Do<BlobDownloadOptions>(opts =>
+        Service.GetBlobAsync(workspaceId, itemId, blobPath, Arg.Do<BlobDownloadOptions>(opts =>
             {
                 Assert.NotNull(opts.DestinationStream);
                 Assert.False(opts.IncludeInlineContent);
@@ -225,10 +207,11 @@ public class BlobGetCommandTests
             .Returns(result);
         try
         {
-            var parseResult = command.GetCommand().Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {blobPath} --download-file-path {tempFilePath}");
-            var context = CreateContext();
-
-            var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+            var response = await ExecuteCommandAsync(
+                "--workspace-id", workspaceId,
+                "--item-id", itemId,
+                "--file-path", blobPath,
+                "--download-file-path", tempFilePath);
 
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.Contains(tempFilePath, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -245,43 +228,38 @@ public class BlobGetCommandTests
     [Fact]
     public async Task ExecuteAsync_RejectsDownloadPath_WhenTransportIsHttp()
     {
-        var service = Substitute.For<IOneLakeService>();
-        var command = new BlobGetCommand(NullLogger<BlobGetCommand>.Instance, service);
+        _serviceStartOptions.Value.Returns(new ServiceStartOptions { Transport = TransportTypes.Http });
 
-        var parseResult = command.GetCommand().Parse("--workspace-id workspace --item-id lakehouse --file-path Files/sample.txt --download-file-path c:/temp/file.bin");
-        var context = CreateContext("http");
-
-        var response = await command.ExecuteAsync(context, parseResult, CancellationToken.None);
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "workspace",
+            "--item-id", "lakehouse",
+            "--file-path", "Files/sample.txt",
+            "--download-file-path", "c:/temp/file.bin");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetBlobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<BlobDownloadOptions>(), Arg.Any<CancellationToken>());
     }
 
-    private static string SerializeResult(ResponseResult? result)
+    [Theory]
+    [InlineData("../../secret.txt")]
+    [InlineData("Files/../../other-item/data")]
+    [InlineData("../credentials.env")]
+    public async Task ExecuteAsync_RejectsTraversalPath_ReturnsErrorResponse(string traversalPath)
     {
-        if (result is null)
-        {
-            return string.Empty;
-        }
+        Service.GetBlobAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string>(p => p.Contains("..", StringComparison.Ordinal)),
+            Arg.Any<BlobDownloadOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Path cannot contain directory traversal sequences.", "blobPath"));
 
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream))
-        {
-            result.Write(writer);
-        }
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "workspace",
+            "--item-id", "item",
+            "--file-path", traversalPath);
 
-        return Encoding.UTF8.GetString(stream.ToArray());
-    }
-
-    private static CommandContext CreateContext(string transport = "stdio")
-    {
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions
-        {
-            Transport = transport
-        });
-
-        serviceProvider.GetService(typeof(IOptions<ServiceStartOptions>)).Returns(serviceOptions);
-        return new CommandContext(serviceProvider);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
 }
+

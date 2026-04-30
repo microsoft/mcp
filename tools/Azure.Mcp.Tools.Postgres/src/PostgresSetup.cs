@@ -39,37 +39,31 @@ public class PostgresSetup : IAreaSetup
         var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         // Consolidated hierarchical list command
-        var postgresList = serviceProvider.GetRequiredService<PostgresListCommand>();
-        pg.AddCommand(postgresList.Name, postgresList);
+        pg.AddCommand<PostgresListCommand>(serviceProvider);
 
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);
 
-        var databaseQuery = serviceProvider.GetRequiredService<DatabaseQueryCommand>();
-        database.AddCommand(databaseQuery.Name, databaseQuery);
+        database.AddCommand<DatabaseQueryCommand>(serviceProvider);
 
         var table = new CommandGroup("table", "PostgreSQL table operations");
         pg.AddSubGroup(table);
 
         var schema = new CommandGroup("schema", "PostgreSQL table schema operations");
         table.AddSubGroup(schema);
-        var tableSchemaGet = serviceProvider.GetRequiredService<TableSchemaGetCommand>();
-        schema.AddCommand(tableSchemaGet.Name, tableSchemaGet);
+        schema.AddCommand<TableSchemaGetCommand>(serviceProvider);
 
         var server = new CommandGroup("server", "PostgreSQL server operations");
         pg.AddSubGroup(server);
 
         var config = new CommandGroup("config", "PostgreSQL server configuration operations");
         server.AddSubGroup(config);
-        var serverConfigGet = serviceProvider.GetRequiredService<ServerConfigGetCommand>();
-        config.AddCommand(serverConfigGet.Name, serverConfigGet);
+        config.AddCommand<ServerConfigGetCommand>(serviceProvider);
 
         var param = new CommandGroup("param", "PostgreSQL server parameter operations");
         server.AddSubGroup(param);
-        var serverParamGet = serviceProvider.GetRequiredService<ServerParamGetCommand>();
-        param.AddCommand(serverParamGet.Name, serverParamGet);
-        var serverParamSet = serviceProvider.GetRequiredService<ServerParamSetCommand>();
-        param.AddCommand(serverParamSet.Name, serverParamSet);
+        param.AddCommand<ServerParamGetCommand>(serviceProvider);
+        param.AddCommand<ServerParamSetCommand>(serviceProvider);
 
         return pg;
     }

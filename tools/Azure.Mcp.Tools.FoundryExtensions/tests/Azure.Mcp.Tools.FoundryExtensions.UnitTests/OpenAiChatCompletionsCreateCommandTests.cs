@@ -2,57 +2,43 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
+using Azure.Mcp.Tools.FoundryExtensions.Services;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class OpenAiChatCompletionsCreateCommandTests
+public class OpenAiChatCompletionsCreateCommandTests : CommandUnitTestsBase<OpenAiChatCompletionsCreateCommand, IFoundryExtensionsService>
 {
     [Fact]
     public void Name_ReturnsCorrectCommandName()
     {
-        // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
-
-        // Act & Assert
-        Assert.Equal("chat-completions-create", command.Name);
+        Assert.Equal("chat-completions-create", Command.Name);
     }
 
     [Fact]
     public void Description_ContainsExpectedContent()
     {
-        // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
-
-        // Act & Assert
-        Assert.Contains("Create chat completions", command.Description);
-        Assert.Contains("Azure OpenAI", command.Description);
-        Assert.Contains("Microsoft Foundry", command.Description);
-        Assert.Contains("message-array", command.Description);
+        Assert.Contains("Create chat completions", Command.Description);
+        Assert.Contains("Azure OpenAI", Command.Description);
+        Assert.Contains("Microsoft Foundry", Command.Description);
+        Assert.Contains("message-array", Command.Description);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
-
-        // Act & Assert
-        Assert.Equal("Create OpenAI Chat Completions", command.Title);
+        Assert.Equal("Create OpenAI Chat Completions", Command.Title);
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
-        // Arrange
-        var command = new OpenAiChatCompletionsCreateCommand();
-
-        // Act & Assert
-        Assert.False(command.Metadata.Destructive);
-        Assert.False(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.OpenWorld);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.LocalRequired);
-        Assert.False(command.Metadata.Secret);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.False(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.OpenWorld);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.LocalRequired);
+        Assert.False(Command.Metadata.Secret);
     }
 }

@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Core.Services.ProcessExecution;
-using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,10 +13,18 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Server;
 
@@ -44,13 +47,16 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
+            PluginTelemetryCommand.ConfigureServices = ConfigureServices;
+            PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
+
             ServiceCollection services = new();
 
             ConfigureServices(services);
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
@@ -58,6 +64,22 @@ internal class Program
             await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+
+            // Short-circuit for --learn: return command metadata without executing.
+            // This MUST happen before Parse/InvokeAsync so that System.CommandLine's
+            // required-option validation cannot block the discovery response, and to
+            // avoid wastefully parsing 250+ commands and options only to discard the result.
+            if (args.Any(a => string.Equals(a, ICommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            {
+                var learnJson = commandFactory.GetLearnResponse(args);
+                Console.WriteLine(learnJson);
+                using var learnDoc = JsonDocument.Parse(learnJson);
+                var learnStatus = learnDoc.RootElement.TryGetProperty("status", out var statusEl)
+                    ? statusEl.GetInt32()
+                    : (int)HttpStatusCode.InternalServerError;
+                return (learnStatus >= (int)HttpStatusCode.OK && learnStatus < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
+            }
+
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -91,18 +113,21 @@ internal class Program
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Microsoft.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
             new Azure.Mcp.Tools.AppService.AppServiceSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
+            new Azure.Mcp.Tools.AzureBackup.AzureBackupSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
+            new Azure.Mcp.Tools.AzureTerraform.AzureTerraformSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.Advisor.AdvisorSetup(),
@@ -112,10 +137,12 @@ internal class Program
             new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.Compute.ComputeSetup(),
             new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
+            new Azure.Mcp.Tools.ContainerApps.ContainerAppsSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.FileShares.FileSharesSetup(),
             new Azure.Mcp.Tools.FoundryExtensions.FoundryExtensionsSetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
+            new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
@@ -139,6 +166,7 @@ internal class Program
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
+            new Azure.Mcp.Tools.WellArchitectedFramework.WellArchitectedFrameworkSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
 #if !BUILD_NATIVE
             // IMPORTANT: DO NOT MODIFY OR ADD EXCLUSIONS IN THIS SECTION
@@ -227,7 +255,7 @@ internal class Program
         // within ServiceStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
         services.AddAzureTenantService();
-        services.AddSingleUserCliCacheService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
@@ -242,6 +270,12 @@ internal class Program
 
         services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
             ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
+
+        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+
+        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
@@ -253,6 +287,11 @@ internal class Program
             // Update the UserAgentPolicy for all Azure service calls to include the transport type.
             var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
             BaseAzureService.InitializeUserAgentPolicy(transport);
+
+            if (options.DangerouslyDisableRetryLimits)
+            {
+                BaseAzureService.DisableRetryLimits();
+            }
         }
 
         // Perform any initialization before starting the service.

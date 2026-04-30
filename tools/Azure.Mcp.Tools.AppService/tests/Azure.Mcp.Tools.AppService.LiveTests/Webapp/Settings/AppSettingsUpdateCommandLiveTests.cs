@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.AppService.Commands;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Webapp.Settings;
@@ -17,7 +18,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     public async Task ExecuteAsync_AddSetting_AddingNewSettingWorks()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var settingName = RegisterOrRetrieveVariable("settingName", RandomString());
 
@@ -43,7 +44,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     public async Task ExecuteAsync_AddSettings_AddingExistingSettingDoesNotWork()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var settingName = RegisterOrRetrieveVariable("settingName", RandomString());
 
@@ -86,7 +87,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     public async Task ExecuteAsync_SetSettings_SettingAlwaysUpdates()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var settingName = RegisterOrRetrieveVariable("settingName", RandomString());
 
@@ -129,7 +130,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     public async Task ExecuteAsync_DeleteSettings_DeletingAnExistingSettingWorks()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var settingName = RegisterOrRetrieveVariable("settingName", RandomString());
 
@@ -171,7 +172,7 @@ public class AppSettingsUpdateCommandLiveTests(ITestOutputHelper output, TestPro
     public async Task ExecuteAsync_DeleteSettings_DeletingDoesNotWorkOnNonExistentSetting()
     {
         var webappName = RegisterOrRetrieveDeploymentOutputVariable("webappName", "WEBAPPNAME");
-        webappName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized-webapp" : webappName;
+        webappName = TestMode == TestMode.Playback ? "Sanitized-webapp" : webappName;
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
         var settingName = RegisterOrRetrieveVariable("settingName", RandomString());
 

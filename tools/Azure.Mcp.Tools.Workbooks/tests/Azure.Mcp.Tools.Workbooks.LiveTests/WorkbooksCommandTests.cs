@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Attributes;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.LiveTests;
@@ -442,11 +442,11 @@ public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fi
 
     private string RetrieveSanitizedVariable(string name, string value)
     {
-        if (this.TestMode == Azure.Mcp.Tests.Helpers.TestMode.Live)
+        if (this.TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Live)
         {
             return value;
         }
-        else if (this.TestMode == Azure.Mcp.Tests.Helpers.TestMode.Record)
+        else if (this.TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Record)
         {
             RegisterVariable(name, value.Replace(Settings.SubscriptionId, EmptyGuid).Replace(Settings.ResourceGroupName.ToLower(), "Sanitized"));
             return value;

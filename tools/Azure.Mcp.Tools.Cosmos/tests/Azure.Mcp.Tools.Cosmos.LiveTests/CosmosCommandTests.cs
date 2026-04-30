@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tests;
-using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.LiveTests;
@@ -87,7 +88,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     [Fact]
     public async Task Should_query_cosmos_database_container_items()
     {
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var result = await CallToolAsync(
             "cosmos_database_container_item_query",
             new()
@@ -121,7 +122,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     [Fact]
     public async Task Should_show_single_item_from_cosmos_account()
     {
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var dbResult = await CallToolAsync(
             "cosmos_list",
             new()
@@ -175,7 +176,7 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     [Fact]
     public async Task Should_list_and_query_multiple_databases_and_containers()
     {
-        var resourceBaseName = TestMode == Tests.Helpers.TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
+        var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
         var dbResult = await CallToolAsync(
             "cosmos_list",
             new()
