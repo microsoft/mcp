@@ -63,7 +63,6 @@ using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.WellArchitectedFramework;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;

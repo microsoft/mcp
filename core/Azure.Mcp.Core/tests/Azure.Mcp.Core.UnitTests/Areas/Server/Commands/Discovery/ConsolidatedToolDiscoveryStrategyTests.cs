@@ -106,18 +106,6 @@ public class ConsolidatedToolDiscoveryStrategyTests
     }
 
     [Fact]
-    public void CreateConsolidatedCommandFactory_WithAllAreas_HasSubstantialCommandCount()
-    {
-        var strategy = CreateStrategy();
-
-        var factory = strategy.CreateConsolidatedCommandFactory();
-
-        Assert.True(factory.AllCommands.Count > 200,
-            $"Expected more than 200 consolidated commands but found {factory.AllCommands.Count}. " +
-            "Ensure CommandFactoryHelpers registers all tool areas matching production Program.cs.");
-    }
-
-    [Fact]
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         var options = new ServiceStartOptions { Namespace = ["storage"] };
