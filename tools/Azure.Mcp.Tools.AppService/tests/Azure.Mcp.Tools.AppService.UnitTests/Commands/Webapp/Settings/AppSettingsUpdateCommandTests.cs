@@ -99,22 +99,18 @@ public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpd
     [Fact]
     public async Task ExecuteAsync_InvalidUpdateType_ReturnsErrorResponse()
     {
-        // Arrange
-        var args = _commandDefinition.Parse([
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--app", "test-app",
-            "--setting-update-type", "invalid-update-type"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--setting-update-type", "invalid-update-type");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
-        await _appServiceService.DidNotReceive().UpdateAppSettingsAsync(
+        await Service.DidNotReceive().UpdateAppSettingsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
