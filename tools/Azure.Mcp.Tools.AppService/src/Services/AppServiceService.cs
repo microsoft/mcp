@@ -414,6 +414,7 @@ public class AppServiceService(
 
     private static DetectorDetails MapToDetectorDetails(JsonElement metadata)
     {
+        var id = metadata.GetProperty("id").GetString()!;
         var name = metadata.GetProperty("name").GetString()!;
         var type = metadata.GetProperty("type").GetString()!;
         var description = metadata.GetProperty("description").GetString();
@@ -422,7 +423,7 @@ public class AppServiceService(
             ? analysisTypesElement.EnumerateArray().Select(at => at.GetString() ?? string.Empty).Where(at => !string.IsNullOrEmpty(at)).ToList()
             : null;
 
-        return new(name, type, description, category, categories);
+        return new(id, name, type, description, category, categories);
     }
 
     public async Task<DiagnosisResults> DiagnoseDetectorAsync(

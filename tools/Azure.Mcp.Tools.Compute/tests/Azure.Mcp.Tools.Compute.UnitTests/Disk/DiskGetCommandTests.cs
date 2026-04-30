@@ -1,16 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
@@ -19,48 +15,15 @@ namespace Azure.Mcp.Tools.Compute.UnitTests.Disk;
 /// <summary>
 /// Unit tests for the DiskGetCommand.
 /// </summary>
-public class DiskGetCommandTests
+public class DiskGetCommandTests : CommandUnitTestsBase<DiskGetCommand, IComputeService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IComputeService _computeService;
-    private readonly ILogger<DiskGetCommand> _logger;
-    private readonly DiskGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DiskGetCommandTests()
-    {
-        _computeService = Substitute.For<IComputeService>();
-        _logger = Substitute.For<ILogger<DiskGetCommand>>();
-
-        // Set up default empty returns to avoid null reference issues
-        _computeService.ListDisksAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(new List<Models.DiskInfo>());
-
-        var collection = new ServiceCollection().AddSingleton(_computeService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        // Command already created in constructor
-
-        // Assert
-        Assert.NotNull(_command);
-        Assert.Equal("get", _command.Name);
-        Assert.Contains("disk", _command.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.NotEqual(Guid.Empty.ToString(), _command.Id.ToString());
+        Assert.NotNull(Command);
+        Assert.Equal("get", Command.Name);
+        Assert.Contains("disk", Command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEqual(Guid.Empty.ToString(), Command.Id.ToString());
     }
 
     [Fact]
@@ -93,28 +56,20 @@ public class DiskGetCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisks);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+            .Returns(mockDisks);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "disk1");
@@ -142,28 +97,20 @@ public class DiskGetCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisks);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup]);
+            .Returns(mockDisks);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal("disk1", result.Disks[0].Name);
@@ -190,36 +137,29 @@ public class DiskGetCommandTests
             TimeCreated = DateTimeOffset.UtcNow
         };
 
-        _computeService.GetDiskAsync(
+        Service.GetDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisk);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName, "--resource-group", resourceGroup]);
+            .Returns(mockDisk);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--disk-name", diskName,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal(diskName, result.Disks[0].Name);
         Assert.Equal(resourceGroup, result.Disks[0].ResourceGroup);
     }
-
-
 
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
@@ -239,28 +179,24 @@ public class DiskGetCommandTests
             DiskSizeGB = 64
         };
 
-        _computeService.GetDiskAsync(
+        Service.GetDiskAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisk);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName, "--resource-group", resourceGroup]);
+            .Returns(mockDisk);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--disk-name", diskName,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal(mockDisk.Name, result.Disks[0].Name);
@@ -307,28 +243,20 @@ public class DiskGetCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisks);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskPattern]);
+            .Returns(mockDisks);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--disk-name", diskPattern);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "win_OsDisk1");
@@ -375,28 +303,23 @@ public class DiskGetCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisks);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskPattern, "--resource-group", resourceGroup]);
+            .Returns(mockDisks);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--disk-name", diskPattern,
+            "--resource-group", resourceGroup);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Equal(2, result.Disks.Count);
         Assert.Contains(result.Disks, d => d.Name == "datadisk1");
@@ -433,28 +356,20 @@ public class DiskGetCommandTests
             }
         };
 
-        _computeService.ListDisksAsync(
+        Service.ListDisksAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ReturnsForAnyArgs(mockDisks);
-
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--disk-name", diskName]);
+            .Returns(mockDisks);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--disk-name", diskName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ComputeJsonContext.Default.DiskGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Disks);
         Assert.Single(result.Disks);
         Assert.Equal("exactdisk", result.Disks[0].Name);

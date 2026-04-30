@@ -1,51 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ServiceBus.Commands;
 using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Topic;
 
-public class SubscriptionDetailsCommandTests
+public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<SubscriptionDetailsCommand, IServiceBusService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IServiceBusService _serviceBusService;
-    private readonly ILogger<SubscriptionDetailsCommand> _logger;
-    private readonly SubscriptionDetailsCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     // Test constants
     private const string SubscriptionId = "sub123";
     private const string TopicName = "testTopic";
     private const string SubscriptionName = "testSubscription";
     private const string NamespaceName = "test.servicebus.windows.net";
-
-    public SubscriptionDetailsCommandTests()
-    {
-        _serviceBusService = Substitute.For<IServiceBusService>();
-        _logger = Substitute.For<ILogger<SubscriptionDetailsCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_serviceBusService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsSubscriptionDetails()
@@ -63,33 +39,25 @@ public class SubscriptionDetailsCommandTests
             TransferDeadLetterMessageCount = 0
         };
 
-        _serviceBusService.GetSubscriptionDetails(
+        Service.GetSubscriptionDetails(
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).Returns(expectedDetails);
+            Arg.Any<CancellationToken>())
+            .Returns(expectedDetails);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
-            "--subscription-name", SubscriptionName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription-name", SubscriptionName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(SubscriptionName, result.SubscriptionDetails.SubscriptionName);
         Assert.Equal(TopicName, result.SubscriptionDetails.TopicName);
         Assert.Equal(expectedDetails.ActiveMessageCount, result.SubscriptionDetails.ActiveMessageCount);
@@ -101,24 +69,21 @@ public class SubscriptionDetailsCommandTests
         // Arrange
         var serviceBusException = new ServiceBusException("Subscription not found", ServiceBusFailureReason.MessagingEntityNotFound);
 
-        _serviceBusService.GetSubscriptionDetails(
+        Service.GetSubscriptionDetails(
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(serviceBusException);
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(serviceBusException);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
-            "--subscription-name", SubscriptionName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription-name", SubscriptionName);
 
         // Assert
         Assert.NotNull(response);
@@ -132,24 +97,21 @@ public class SubscriptionDetailsCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _serviceBusService.GetSubscriptionDetails(
+        Service.GetSubscriptionDetails(
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>()
-        ).ThrowsAsync(new Exception(expectedError));
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
-            "--subscription-name", SubscriptionName
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--subscription-name", SubscriptionName);
 
         // Assert
         Assert.NotNull(response);
@@ -176,7 +138,7 @@ public class SubscriptionDetailsCommandTests
                 ActiveMessageCount = 5
             };
 
-            _serviceBusService.GetSubscriptionDetails(
+            Service.GetSubscriptionDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -186,10 +148,8 @@ public class SubscriptionDetailsCommandTests
                 .Returns(expectedDetails);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)

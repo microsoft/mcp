@@ -10,30 +10,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
+[CommandMetadata(
+    Id = "2cff1548-40c9-48ea-8548-6bfa91f2ea85",
+    Name = "list",
+    Title = "List Kusto Clusters",
+    Description = "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger, IKustoService kustoService) : SubscriptionCommand<ClusterListOptions>()
 {
-    private const string CommandTitle = "List Kusto Clusters";
     private readonly ILogger<ClusterListCommand> _logger = logger;
     private readonly IKustoService _kustoService = kustoService;
-
-    public override string Id => "2cff1548-40c9-48ea-8548-6bfa91f2ea85";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

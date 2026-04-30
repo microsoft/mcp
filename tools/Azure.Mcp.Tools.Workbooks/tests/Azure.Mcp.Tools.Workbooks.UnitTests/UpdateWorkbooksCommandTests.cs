@@ -2,66 +2,46 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.UnitTests;
 
-public class UpdateWorkbooksCommandTests
+public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksCommand, IWorkbooksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IWorkbooksService _service;
-    private readonly ILogger<UpdateWorkbooksCommand> _logger;
-    private readonly UpdateWorkbooksCommand _command;
-
-    public UpdateWorkbooksCommandTests()
-    {
-        _service = Substitute.For<IWorkbooksService>();
-        _logger = Substitute.For<ILogger<UpdateWorkbooksCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("update", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("Updates properties", command.Description);
-        Assert.Contains("workbook", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("update", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("Updates properties", CommandDefinition.Description);
+        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("update", _command.Name);
+        Assert.Equal("update", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Update Workbook", _command.Title);
+        Assert.Equal("Update Workbook", Command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
-        var description = _command.Description;
+        var description = Command.Description;
         Assert.NotNull(description);
         Assert.Contains("Updates properties", description);
         Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
@@ -89,7 +69,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("Updated Test Workbook"),
             Arg.Is("{\"version\":\"Notebook/1.0\",\"updated\":true}"),
@@ -98,26 +78,15 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", "Updated Test Workbook",
-            "--serialized-content", "{\"version\":\"Notebook/1.0\",\"updated\":true}"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--serialized-content", "{\"version\":\"Notebook/1.0\",\"updated\":true}");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("Updated Test Workbook", result.Workbook.DisplayName);
         Assert.Equal("2.0", result.Workbook.Version);
         Assert.Contains("updated", result.Workbook.SerializedData);
@@ -143,7 +112,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("New Display Name Only"),
             Arg.Is((string?)null),
@@ -152,25 +121,14 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
-            "--display-name", "New Display Name Only"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--workbook-id", workbookId,
+            "--display-name", "New Display Name Only");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("New Display Name Only", result.Workbook.DisplayName);
     }
 
@@ -195,7 +153,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is((string?)null),
             Arg.Is(newSerializedContent),
@@ -204,25 +162,14 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
-            "--serialized-content", newSerializedContent
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--workbook-id", workbookId,
+            "--serialized-content", newSerializedContent);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Contains("Notebook/2.0", result.Workbook.SerializedData);
         Assert.Contains("new", result.Workbook.SerializedData);
     }
@@ -250,7 +197,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -259,19 +206,14 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", displayName,
-            "--serialized-content", serializedContent
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--serialized-content", serializedContent);
 
         // Assert
-        await _service.Received(1).UpdateWorkbookAsync(
+        await Service.Received(1).UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is(displayName),
             Arg.Is(serializedContent),
@@ -286,7 +228,7 @@ public class UpdateWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -295,15 +237,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkbookInfo?>(null));
 
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
-            "--display-name", "Test Name"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-id", workbookId, "--display-name", "Test Name");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -316,24 +251,17 @@ public class UpdateWorkbooksCommandTests
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookInfo?>(new Exception("Service error")));
-
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
-            "--display-name", "Test Name"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
+            .ThrowsAsync(new Exception("Service error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--workbook-id", workbookId, "--display-name", "Test Name");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -348,17 +276,12 @@ public class UpdateWorkbooksCommandTests
     public async Task ExecuteAsync_WithInvalidWorkbookId_ReturnsValidationError(string? invalidWorkbookId)
     {
         // Arrange
-        var args = invalidWorkbookId == null
-            ? _command.GetCommand().Parse(["--display-name", "Test Name"])
-            : _command.GetCommand().Parse([
-                "--workbook-id", invalidWorkbookId,
-                "--display-name", "Test Name"
-            ]);
-
-        var context = new CommandContext(_serviceProvider);
+        string[] args = invalidWorkbookId == null
+            ? ["--display-name", "Test Name"]
+            : ["--workbook-id", invalidWorkbookId, "--display-name", "Test Name"];
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -408,7 +331,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("Updated Complex Workbook"),
             Arg.Is(complexSerializedData),
@@ -417,26 +340,15 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", "Updated Complex Workbook",
-            "--serialized-content", complexSerializedData
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--serialized-content", complexSerializedData);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("Updated Complex Workbook", result.Workbook.DisplayName);
         Assert.Equal("3.0", result.Workbook.Version);
         Assert.Contains("Updated Complex Workbook", result.Workbook.SerializedData);
@@ -466,7 +378,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -475,19 +387,14 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", "Test Workbook",
-            "--tenant", tenantId
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", tenantId);
 
         // Assert
-        await _service.Received(1).UpdateWorkbookAsync(
+        await Service.Received(1).UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
@@ -517,7 +424,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -526,19 +433,14 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", "Test Workbook",
-            "--auth-method", "1"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--auth-method", "1");
 
         // Assert
-        await _service.Received(1).UpdateWorkbookAsync(
+        await Service.Received(1).UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
@@ -568,7 +470,7 @@ public class UpdateWorkbooksCommandTests
             SourceId: "azure monitor"
         );
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -577,20 +479,15 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--workbook-id", workbookId,
             "--display-name", "Test Workbook",
             "--retry-max-retries", "5",
-            "--retry-delay", "2.5"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--retry-delay", "2.5");
 
         // Assert
-        await _service.Received(1).UpdateWorkbookAsync(
+        await Service.Received(1).UpdateWorkbookAsync(
             Arg.Is(workbookId),
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
@@ -606,24 +503,19 @@ public class UpdateWorkbooksCommandTests
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
         var exception = new Exception("Test exception");
 
-        _service.UpdateWorkbookAsync(
+        Service.UpdateWorkbookAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookInfo?>(exception));
-
-        var args = _command.GetCommand().Parse([
-            "--workbook-id", workbookId,
-            "--display-name", "Test Name"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
+            .ThrowsAsync(exception);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--workbook-id", workbookId,
+            "--display-name", "Test Name");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

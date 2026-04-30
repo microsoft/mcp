@@ -4,7 +4,7 @@
 using Azure.Mcp.Tools.Monitor.Tools;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Monitor.UnitTests.Tools;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Instrumentation.Tools;
 
 public sealed class GetLearningResourceToolTests
 {

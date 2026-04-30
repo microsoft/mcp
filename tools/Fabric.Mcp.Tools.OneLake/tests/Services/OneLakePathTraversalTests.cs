@@ -23,11 +23,8 @@ public class OneLakePathTraversalTests
             => throw new InvalidOperationException("HTTP call should not be reached: path validation must throw first.");
     }
 
-    private static OneLakeService CreateService()
-    {
-        var credential = Substitute.For<TokenCredential>();
-        return new OneLakeService(new HttpClient(new UnexpectedCallHandler()), credential);
-    }
+    private static OneLakeService CreateService() =>
+        new(new(new UnexpectedCallHandler()), Substitute.For<TokenCredential>());
 
     // ---- GetFileInfoAsync ----
 

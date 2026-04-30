@@ -13,35 +13,31 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
+[CommandMetadata(
+    Id = "a8aa0966-4c0c-4e22-8854-cced583f0fb2",
+    Name = "diagnose",
+    Title = "Diagnose an App Service Web App",
+    Description = """
+        Runs a specific diagnostic detector on an App Service Web App to troubleshoot issues with performance, availability,
+        configuration, or errors. Returns detailed analysis results including insights and recommendations. Use this to investigate
+        why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
+        Supports optional time range filtering for historical analysis.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
     : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
 {
-    private const string CommandTitle = "Diagnose an App Service Web App";
     private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
-    public override string Id => "a8aa0966-4c0c-4e22-8854-cced583f0fb2";
-    public override string Name => "diagnose";
-
-    public override string Description =>
-        """
-        Diagnoses an App Service Web App with the specified detector, returning the diagnostic results of the detector.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.DetectorName.AsRequired());
+        command.Options.Add(AppServiceOptionDefinitions.DetectorId.AsRequired());
         command.Options.Add(AppServiceOptionDefinitions.StartTime);
         command.Options.Add(AppServiceOptionDefinitions.EndTime);
         command.Options.Add(AppServiceOptionDefinitions.Interval);
@@ -76,7 +72,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
     protected override DetectorDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DetectorName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorName.Name);
+        options.DetectorId = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.DetectorId.Name);
         if (DateTimeOffset.TryParse(parseResult.GetValueOrDefault<string?>(AppServiceOptionDefinitions.StartTime.Name), out var startTime))
         {
             options.StartTime = startTime.ToUniversalTime();
@@ -108,7 +104,7 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.AppName!,
-                options.DetectorName!,
+                options.DetectorId!,
                 options.StartTime,
                 options.EndTime,
                 options.Interval,

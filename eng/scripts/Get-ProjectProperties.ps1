@@ -62,7 +62,9 @@ $propertyList = @(
 
     'McpRepositoryName',
 
-    'McpbPlatforms'
+    'McpbPlatforms',
+
+    'AzureSupportedClouds'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1

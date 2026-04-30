@@ -209,7 +209,7 @@ public static class ComputeOptionDefinitions
 
     public static readonly Option<string> VmSize = new($"--{VmSizeName}", "--size")
     {
-        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_DS1_v2 if not specified",
+        Description = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified",
         Required = false
     };
 
@@ -307,7 +307,7 @@ public static class ComputeOptionDefinitions
 
     public const string CapacityName = "capacity";
 
-    public static readonly Option<int> Capacity = new($"--{CapacityName}")
+    public static readonly Option<int?> Capacity = new($"--{CapacityName}")
     {
         Description = "Number of VM instances (capacity) in the scale set",
         Required = false
@@ -317,13 +317,13 @@ public static class ComputeOptionDefinitions
     public const string OverprovisionName = "overprovision";
     public const string EnableAutoOsUpgradeName = "enable-auto-os-upgrade";
     public const string ScaleInPolicyName = "scale-in-policy";
-    public static readonly Option<bool> Overprovision = new($"--{OverprovisionName}")
+    public static readonly Option<bool?> Overprovision = new($"--{OverprovisionName}")
     {
         Description = "Enable or disable overprovisioning. When enabled, Azure provisions more VMs than requested and deletes extra VMs after deployment",
         Required = false
     };
 
-    public static readonly Option<bool> EnableAutoOsUpgrade = new($"--{EnableAutoOsUpgradeName}")
+    public static readonly Option<bool?> EnableAutoOsUpgrade = new($"--{EnableAutoOsUpgradeName}")
     {
         Description = "Enable automatic OS image upgrades. Requires health probes or Application Health extension",
         Required = false

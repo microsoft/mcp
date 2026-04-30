@@ -14,30 +14,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
+[CommandMetadata(
+    Id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    Name = "list",
+    Title = "List Cosmos DB Resources",
+    Description = "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. Specify --account to list databases in that account, or --account and --database to list containers in a specific database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger) : SubscriptionCommand<CosmosListOptions>()
 {
-    private const string CommandTitle = "List Cosmos DB Resources";
     private readonly ILogger<CosmosListCommand> _logger = logger;
-
-    public override string Id => "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. " +
-        "Specify --account to list databases in that account, or --account and --database to list containers in a specific database.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

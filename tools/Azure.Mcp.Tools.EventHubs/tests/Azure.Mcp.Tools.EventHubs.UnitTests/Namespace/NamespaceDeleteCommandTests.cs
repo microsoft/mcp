@@ -5,50 +5,24 @@ using System.Net;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.Namespace;
 
-public class NamespaceDeleteCommandTests
+public class NamespaceDeleteCommandTests : CommandUnitTestsBase<NamespaceDeleteCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<NamespaceDeleteCommand> _logger;
-    private readonly NamespaceDeleteCommand _command;
-    private readonly CommandContext _context;
-
-    public NamespaceDeleteCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<NamespaceDeleteCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _eventHubsService);
-        _context = new(_serviceProvider);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new NamespaceDeleteCommand(_logger, _eventHubsService);
-
-        // Assert
-        Assert.NotNull(command);
-        Assert.Equal("delete", command.Name);
-        Assert.Equal("Delete Event Hubs Namespace", command.Title);
-        Assert.True(command.Metadata.Destructive);
-        Assert.True(command.Metadata.Idempotent);
-        Assert.False(command.Metadata.ReadOnly);
+        Assert.Equal("delete", Command.Name);
+        Assert.Equal("Delete Event Hubs Namespace", Command.Title);
+        Assert.True(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.ReadOnly);
     }
 
     [Theory]
@@ -59,11 +33,9 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorFragment)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         if (shouldSucceed)
         {
-            _eventHubsService.DeleteNamespaceAsync(
+            Service.DeleteNamespaceAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -74,7 +46,7 @@ public class NamespaceDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -97,13 +69,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_DeletesNamespaceSuccessfully()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -113,12 +79,15 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).DeleteNamespaceAsync(
+        await Service.Received(1).DeleteNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -131,14 +100,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_DeletesNamespaceWithTenant()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace",
-            "--tenant", "test-tenant-123"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -148,12 +110,16 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--tenant", "test-tenant-123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).DeleteNamespaceAsync(
+        await Service.Received(1).DeleteNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -166,13 +132,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesNamespaceNotFound()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "nonexistent-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -182,7 +142,10 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "nonexistent-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -193,13 +156,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesAccessDenied()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "protected-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -209,7 +166,10 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "protected-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -220,24 +180,20 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesConflictError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "conflicted-namespace"
-        ]);
-
-        var conflictException = new RequestFailedException(409, "Conflict: The namespace cannot be deleted in its current state");
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(conflictException);
+            .ThrowsAsync(new RequestFailedException(409, "Conflict: The namespace cannot be deleted in its current state"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "conflicted-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -249,13 +205,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesAuthenticationFailure()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -265,7 +215,10 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new Identity.AuthenticationFailedException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -277,24 +230,20 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesResourceNotFoundError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "nonexistent-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        var notFoundException = new RequestFailedException(404, "Resource group not found");
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(notFoundException);
+            .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "nonexistent-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -305,13 +254,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_HandlesGenericServiceError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -321,7 +264,10 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Unexpected error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -332,13 +278,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_ReturnsSuccessMessage()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -348,7 +288,10 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -362,7 +305,7 @@ public class NamespaceDeleteCommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
+        var parseResult = CommandDefinition.Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
             "--namespace", "test-namespace",
@@ -370,9 +313,9 @@ public class NamespaceDeleteCommandTests
         ]);
 
         // Act
-        var options = _command.GetType()
+        var options = Command.GetType()
             .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(_command, [parseResult]) as NamespaceDeleteOptions;
+            ?.Invoke(Command, [parseResult]) as NamespaceDeleteOptions;
 
         // Assert
         Assert.NotNull(options);
@@ -391,14 +334,7 @@ public class NamespaceDeleteCommandTests
         var subscription = "my-subscription";
         var tenant = "my-tenant";
 
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--namespace", namespaceName,
-            "--tenant", tenant
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -408,11 +344,15 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--resource-group", resourceGroup,
+            "--namespace", namespaceName,
+            "--tenant", tenant);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _eventHubsService.Received(1).DeleteNamespaceAsync(
+        await Service.Received(1).DeleteNamespaceAsync(
             namespaceName,
             resourceGroup,
             subscription,
@@ -425,13 +365,7 @@ public class NamespaceDeleteCommandTests
     public async Task ExecuteAsync_WithoutTenant_PassesNullTenant()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse([
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--namespace", "test-namespace"
-        ]);
-
-        _eventHubsService.DeleteNamespaceAsync(
+        Service.DeleteNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -441,11 +375,14 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _eventHubsService.Received(1).DeleteNamespaceAsync(
+        await Service.Received(1).DeleteNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",

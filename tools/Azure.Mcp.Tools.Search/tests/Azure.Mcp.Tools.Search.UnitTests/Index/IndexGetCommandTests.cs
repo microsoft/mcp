@@ -2,35 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Index;
 
-public class IndexGetCommandTests
+public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearchService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISearchService _searchService = Substitute.For<ISearchService>();
-    private readonly ILogger<IndexGetCommand> _logger = Substitute.For<ILogger<IndexGetCommand>>();
-
-    public IndexGetCommandTests()
-    {
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsIndexes_WhenIndexesExist()
     {
@@ -39,54 +24,34 @@ public class IndexGetCommandTests
             new("index2", "This is the second index", null)
         };
 
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Is("service123"),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
-        var command = new IndexGetCommand(_logger);
+        var response = await ExecuteCommandAsync("--service", "service123");
 
-        var args = command.GetCommand().Parse("--service service123");
-        var context = new CommandContext(_serviceProvider);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.IndexGetCommandResult);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedIndexes, result.Indexes);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoIndexes()
     {
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new IndexGetCommand(_logger);
+        var response = await ExecuteCommandAsync("--service", "service123");
 
-        var args = command.GetCommand().Parse("--service service123");
-        var context = new CommandContext(_serviceProvider);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.IndexGetCommandResult);
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Indexes);
     }
 
@@ -96,19 +61,14 @@ public class IndexGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexGetCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName}");
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -124,31 +84,20 @@ public class IndexGetCommandTests
         var expectedDefinition = CreateMockIndexDefinition();
 
         // When using ThrowsAsync or Returns with NSubstitute, we need to match the exact parameter signature
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
 
-        var command = new IndexGetCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName, "--index", indexName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.IndexGetCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result?.Indexes);
+        Assert.NotNull(result.Indexes);
         Assert.Single(result.Indexes);
         Assert.Equal(expectedDefinition.Name, result.Indexes[0].Name);
         Assert.Equal(expectedDefinition.Fields?.Count, result.Indexes[0].Fields?.Count);
@@ -161,27 +110,19 @@ public class IndexGetCommandTests
         var serviceName = "service123";
         var indexName = "index1";
 
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new IndexGetCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName, "--index", indexName);
 
         // Assert
-        Assert.NotNull(response);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
+        var result = ValidateAndDeserializeResponse(response, SearchJsonContext.Default.IndexGetCommandResult);
 
-        Assert.NotNull(result);
         Assert.Empty(result.Indexes);
     }
 
@@ -193,20 +134,15 @@ public class IndexGetCommandTests
         var serviceName = "service123";
         var indexName = "index1";
 
-        _searchService.GetIndexDetails(
+        Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexGetCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName, "--index", indexName);
 
         // Assert
         Assert.NotNull(response);
@@ -217,14 +153,8 @@ public class IndexGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ValidatesRequiredOptions()
     {
-        // Arrange
-        var command = new IndexGetCommand(_logger);
-
-        var args = command.GetCommand().Parse(""); // Missing required options
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
         Assert.NotNull(response);
@@ -236,21 +166,13 @@ public class IndexGetCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new IndexGetCommand(_logger);
-        var cmd = command.GetCommand();
-
-        // Assert
-        Assert.Equal("get", cmd.Name);
-        Assert.NotNull(cmd.Description!);
-        Assert.NotEmpty(cmd.Description!);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
 
         // Verify options
-        var serviceOption = cmd.Options.FirstOrDefault(o => o.Name == "--service");
-        var indexOption = cmd.Options.FirstOrDefault(o => o.Name == "--index");
-
-        Assert.NotNull(serviceOption);
-        Assert.NotNull(indexOption);
+        Assert.Contains(CommandDefinition.Options, o => o.Name == "--service");
+        Assert.Contains(CommandDefinition.Options, o => o.Name == "--index");
     }
 
     private static IndexInfo CreateMockIndexDefinition()

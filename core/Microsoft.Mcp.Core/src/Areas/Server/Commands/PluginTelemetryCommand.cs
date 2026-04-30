@@ -24,39 +24,30 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
+[CommandMetadata(
+    Id = "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94",
+    Name = "plugin-telemetry",
+    Title = "Plugin Telemetry",
+    Description = """
+        Publish plugin-related telemetry events from agent hooks.
+        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
+        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
+        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class PluginTelemetryCommand(
     IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
     IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
     IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
 {
-    private const string CommandTitle = "Plugin Telemetry";
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
-
-    public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
-
-    public override string Name => "plugin-telemetry";
-
-    public override string Description =>
-        """
-        Publish plugin-related telemetry events from agent hooks.
-        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
-        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
-        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     /// <summary>
     /// Gets or sets the service configuration action.
@@ -197,17 +188,17 @@ public sealed class PluginTelemetryCommand(
     {
         return new PluginTelemetryOptions
         {
-            Timestamp = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.Timestamp.Name),
-            EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
-            SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
-            ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
-            ClientName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientName.Name),
-            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
-            PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
-            SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
-            SkillVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillVersion.Name),
-            ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
-            FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
+            Timestamp = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.Timestamp),
+            EventType = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.EventType),
+            SessionId = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SessionId),
+            ClientType = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ClientType),
+            ClientName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ClientName),
+            PluginName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.PluginName),
+            PluginVersion = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.PluginVersion),
+            SkillName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SkillName),
+            SkillVersion = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.SkillVersion),
+            ToolName = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.ToolName),
+            FileReference = parseResult.GetValueOrDefault(PluginTelemetryOptionDefinitions.FileReference)
         };
     }
 

@@ -17,44 +17,23 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 /// <summary>
 /// Command to create an Azure managed disk.
 /// </summary>
+[CommandMetadata(
+    Id = "3f8a1b2c-5d6e-4a7b-8c9d-0e1f2a3b4c5d",
+    Name = "create",
+    Title = "Create Managed Disk",
+    Description = "Creates a new Azure managed disk in the specified resource group. Supports creating empty disks (specify --size-gb), disks from a source such as a snapshot, another managed disk, or a blob URI (specify --source), disks from a Shared Image Gallery image version (specify --gallery-image-reference), or disks ready for upload (specify --upload-type and --upload-size-bytes). If location is not specified, defaults to the resource group's location. Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, on-demand bursting, and IOPS/throughput limits for UltraSSD disks. Create a disk with network access policy DenyAll, AllowAll, or AllowPrivate and associate a disk access resource during creation.",
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DiskCreateCommand(
     ILogger<DiskCreateCommand> logger)
     : BaseComputeCommand<DiskCreateOptions>(true)
 {
-    private const string CommandTitle = "Create Managed Disk";
-    private const string CommandDescription =
-        "Creates a new Azure managed disk in the specified resource group. "
-        + "Supports creating empty disks (specify --size-gb), disks from a source such as a snapshot, "
-        + "another managed disk, or a blob URI (specify --source), disks from a Shared Image Gallery "
-        + "image version (specify --gallery-image-reference), or disks ready for upload "
-        + "(specify --upload-type and --upload-size-bytes). "
-        + "If location is not specified, defaults to the resource group's location. "
-        + "Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), "
-        + "OS type, availability zone, hypervisor generation, tags, encryption settings, "
-        + "performance tier, shared disk, on-demand bursting, "
-        + "and IOPS/throughput limits for UltraSSD disks. "
-        + "Create a disk with network access policy DenyAll, AllowAll, or AllowPrivate "
-        + "and associate a disk access resource during creation.";
 
     private readonly ILogger<DiskCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public override string Id => "3f8a1b2c-5d6e-4a7b-8c9d-0e1f2a3b4c5d";
-
-    public override string Name => "create";
-
-    public override string Title => CommandTitle;
-
-    public override string Description => CommandDescription;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,
-        Idempotent = false,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

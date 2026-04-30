@@ -5,33 +5,16 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Index;
 
-public class IndexQueryCommandTests
+public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, ISearchService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISearchService _searchService;
-    private readonly ILogger<IndexQueryCommand> _logger;
-
-    public IndexQueryCommandTests()
-    {
-        _searchService = Substitute.For<ISearchService>();
-        _logger = Substitute.For<ILogger<IndexQueryCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_searchService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsResults_WhenSearchSucceeds()
     {
@@ -56,7 +39,7 @@ public class IndexQueryCommandTests
             ).RootElement
         ];
 
-        _searchService.QueryIndex(
+        Service.QueryIndex(
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
@@ -64,13 +47,8 @@ public class IndexQueryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var command = new IndexQueryCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName, "--index", indexName, "--query", queryText);
 
         // Assert
         Assert.NotNull(response);
@@ -91,7 +69,7 @@ public class IndexQueryCommandTests
         var indexName = "index1";
         var queryText = "test query";
 
-        _searchService.QueryIndex(
+        Service.QueryIndex(
             Arg.Is(serviceName),
             Arg.Is(indexName),
             Arg.Is(queryText),
@@ -99,13 +77,8 @@ public class IndexQueryCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new IndexQueryCommand(_logger);
-
-        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--service", serviceName, "--index", indexName, "--query", queryText);
 
         // Assert
         Assert.NotNull(response);
@@ -116,14 +89,8 @@ public class IndexQueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ValidatesRequiredOptions()
     {
-        // Arrange
-        var command = new IndexQueryCommand(_logger);
-
-        var args = command.GetCommand().Parse(""); // Missing required options
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync("");
 
         // Assert
         Assert.NotNull(response);
@@ -137,12 +104,7 @@ public class IndexQueryCommandTests
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        // Arrange & Act
-        var command = new IndexQueryCommand(_logger);
-
-        // Assert
-        var cmd = command.GetCommand();
-        Assert.Equal("query", cmd.Name);
-        Assert.NotEmpty(cmd.Description ?? string.Empty);
+        Assert.Equal("query", CommandDefinition.Name);
+        Assert.NotEmpty(CommandDefinition.Description ?? string.Empty);
     }
 }

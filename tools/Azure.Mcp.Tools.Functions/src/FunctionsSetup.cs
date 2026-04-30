@@ -42,24 +42,21 @@ public sealed class FunctionsSetup : IAreaSetup
             "Commands for exploring Azure Functions language support and runtime versions.",
             "Language");
 
-        var listCommand = serviceProvider.GetRequiredService<LanguageListCommand>();
-        languageGroup.AddCommand(listCommand.Name, listCommand);
+        languageGroup.AddCommand<LanguageListCommand>(serviceProvider);
 
         var projectGroup = new CommandGroup(
             "project",
             "Commands for retrieving Azure Functions project initialization templates.",
             "Project");
 
-        var projectGetCommand = serviceProvider.GetRequiredService<ProjectGetCommand>();
-        projectGroup.AddCommand(projectGetCommand.Name, projectGetCommand);
+        projectGroup.AddCommand<ProjectGetCommand>(serviceProvider);
 
         var templateGroup = new CommandGroup(
             "template",
             "Commands for listing and retrieving Azure Functions function code templates.",
             "Template");
 
-        var templateGetCommand = serviceProvider.GetRequiredService<TemplateGetCommand>();
-        templateGroup.AddCommand(templateGetCommand.Name, templateGetCommand);
+        templateGroup.AddCommand<TemplateGetCommand>(serviceProvider);
 
         functions.AddSubGroup(languageGroup);
         functions.AddSubGroup(projectGroup);

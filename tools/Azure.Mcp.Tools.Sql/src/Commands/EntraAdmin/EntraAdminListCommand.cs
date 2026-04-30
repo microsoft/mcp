@@ -11,33 +11,25 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 
-public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
-    : BaseSqlCommand<EntraAdminListOptions>(logger)
-{
-    private const string CommandTitle = "List SQL Server Entra ID Administrators";
-
-    public override string Id => "240aac03-0eb0-4cd3-91f8-475577289186";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "240aac03-0eb0-4cd3-91f8-475577289186",
+    Name = "list",
+    Title = "List SQL Server Entra ID Administrators",
+    Description = """
         Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all
         Entra ID administrators configured for the specified SQL server, including their display names, object IDs,
         and tenant information. Returns an array of Entra ID administrator objects with their properties.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class EntraAdminListCommand(ISqlService sqlService, ILogger<EntraAdminListCommand> logger)
+    : BaseSqlCommand<EntraAdminListOptions>(logger)
+{
+    private readonly ISqlService _sqlService = sqlService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -50,9 +42,7 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
-            var administrators = await sqlService.GetEntraAdministratorsAsync(
+            var administrators = await _sqlService.GetEntraAdministratorsAsync(
                 options.Server!,
                 options.ResourceGroup!,
                 options.Subscription!,

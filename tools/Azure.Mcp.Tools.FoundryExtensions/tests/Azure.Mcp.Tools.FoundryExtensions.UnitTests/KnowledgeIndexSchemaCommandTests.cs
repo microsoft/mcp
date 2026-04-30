@@ -1,44 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class KnowledgeIndexSchemaCommandTests
+public class KnowledgeIndexSchemaCommandTests : CommandUnitTestsBase<KnowledgeIndexSchemaCommand, IFoundryExtensionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFoundryExtensionsService _service;
-    private readonly KnowledgeIndexSchemaCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public KnowledgeIndexSchemaCommandTests()
-    {
-        _service = Substitute.For<IFoundryExtensionsService>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_service);
-        _context = new CommandContext(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("schema", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("schema", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -59,14 +40,12 @@ public class KnowledgeIndexSchemaCommandTests
                 Description = "desc",
                 Tags = new Dictionary<string, string?> { { "env", "test" } }
             };
-            _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(mockSchema);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -85,13 +64,13 @@ public class KnowledgeIndexSchemaCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<Models.KnowledgeIndexSchema>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project", "--index", "test-index"]);
+        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project",
+            "--index", "test-index");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -110,13 +89,13 @@ public class KnowledgeIndexSchemaCommandTests
             Version = "1.0"
         };
 
-        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSchema);
 
-        var parseResult = _commandDefinition.Parse(["--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project", "--index", "test-index"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--endpoint", "https://my-foundry.services.ai.azure.com/api/projects/my-project",
+            "--index", "test-index");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

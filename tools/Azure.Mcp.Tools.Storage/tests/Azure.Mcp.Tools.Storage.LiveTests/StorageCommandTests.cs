@@ -210,6 +210,25 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
 
         [Fact]
+        public async Task Should_list_blobs_in_container_with_prefix()
+        {
+            var result = await CallToolAsync(
+                "storage_blob_get",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "REA" }
+                });
+
+            var actual = result.AssertProperty("blobs");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
+
+        [Fact]
         public async Task Should_get_blob_details()
         {
             var result = await CallToolAsync(
@@ -299,6 +318,25 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "subscription", Settings.SubscriptionName },
                 { "tenant", Settings.TenantId },
                 { "account", Settings.ResourceBaseName },
+                { "retry-max-retries", 0 }
+                });
+
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.NotEmpty(actual.EnumerateArray());
+        }
+
+        [Fact]
+        public async Task Should_list_containers_with_prefix()
+        {
+            var result = await CallToolAsync(
+                "storage_blob_container_get",
+                new()
+                {
+                { "subscription", Settings.SubscriptionName },
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "prefix", "ba" },
                 { "retry-max-retries", 0 }
                 });
 

@@ -1,43 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Usage;
 
-public sealed class CheckCommandTests
+public sealed class CheckCommandTests : CommandUnitTestsBase<CheckCommand, IQuotaService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IQuotaService _quotaService;
-    private readonly ILogger<CheckCommand> _logger;
-    private readonly CheckCommand _command;
-    private readonly Command _commandDefinition;
-
-    public CheckCommandTests()
-    {
-        _quotaService = Substitute.For<IQuotaService>();
-        _logger = Substitute.For<ILogger<CheckCommand>>();
-
-        var services = new ServiceCollection();
-        services.AddSingleton(_quotaService);
-        _serviceProvider = services.BuildServiceProvider();
-
-        _command = new CheckCommand(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task Should_check_azure_quota_success()
     {
@@ -66,34 +43,25 @@ public sealed class CheckCommandTests
             }
         };
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list =>
-                    list.Count == 2 &&
-                    list.Contains("Microsoft.App") &&
-                    list.Contains("Microsoft.Storage/storageAccounts")),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list =>
+                list.Count == 2 &&
+                list.Contains("Microsoft.App") &&
+                list.Contains("Microsoft.Storage/storageAccounts")),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with the correct parameters
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list =>
                 list.Count == 2 &&
                 list.Contains("Microsoft.App") &&
@@ -103,10 +71,8 @@ public sealed class CheckCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.Equal(2, response.UsageInfo.Count);
 
@@ -133,23 +99,18 @@ public sealed class CheckCommandTests
         var region = "eastus";
         var resourceTypes = "";
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Any<List<string>>(),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Any<List<string>>(),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -165,23 +126,18 @@ public sealed class CheckCommandTests
         var resourceTypes = "Microsoft.App";
         var expectedException = new Exception("Service error occurred");
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Any<List<string>>(),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Any<List<string>>(),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -204,34 +160,29 @@ public sealed class CheckCommandTests
             { "Microsoft.Compute/virtualMachines", new List<UsageInfo> { new("VMs", 50, 10, "Count") } }
         };
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list =>
-                    list.Count == 3 &&
-                    list.Contains("Microsoft.Web/sites") &&
-                    list.Contains("Microsoft.Storage/storageAccounts") &&
-                    list.Contains("Microsoft.Compute/virtualMachines")),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list =>
+                list.Count == 3 &&
+                list.Contains("Microsoft.Web/sites") &&
+                list.Contains("Microsoft.Storage/storageAccounts") &&
+                list.Contains("Microsoft.Compute/virtualMachines")),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with correctly parsed resource types
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list =>
                 list.Count == 3 &&
                 list.Contains("Microsoft.Web/sites") &&
@@ -250,33 +201,21 @@ public sealed class CheckCommandTests
         var region = "eastus";
         var resourceTypes = "Microsoft.App";
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Any<List<string>>(),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Any<List<string>>(),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results); // Should be empty when no quotas are found
-
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
-
-        Assert.NotNull(response);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.UsageCheckCommandResult);
         Assert.Empty(response.UsageInfo);
     }
 
@@ -288,16 +227,11 @@ public sealed class CheckCommandTests
         var region = "eastus";
         var resourceTypes = "     ";
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -319,27 +253,22 @@ public sealed class CheckCommandTests
             { "Microsoft.Compute/VirtualMachines", new List<UsageInfo> { new("VMs", 50, 10, "Count") } }
         };
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list =>
-                    list.Count == 3 &&
-                    list.Contains("MICROSOFT.APP") &&
-                    list.Contains("microsoft.storage/storageaccounts") &&
-                    list.Contains("Microsoft.Compute/VirtualMachines")),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list =>
+                list.Count == 3 &&
+                list.Contains("MICROSOFT.APP") &&
+                list.Contains("microsoft.storage/storageaccounts") &&
+                list.Contains("Microsoft.Compute/VirtualMachines")),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
         Assert.NotNull(result);
@@ -347,7 +276,7 @@ public sealed class CheckCommandTests
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct casing preserved
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list =>
                 list.Count == 3 &&
                 list.Contains("MICROSOFT.APP") &&
@@ -377,33 +306,24 @@ public sealed class CheckCommandTests
             }
         };
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list =>
-                    list.Count == 1 &&
-                    list.Contains("Microsoft.UnsupportedProvider/resourceType")),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list =>
+                list.Count == 1 &&
+                list.Contains("Microsoft.UnsupportedProvider/resourceType")),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with the correct parameters
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list =>
                 list.Count == 1 &&
                 list.Contains("Microsoft.UnsupportedProvider/resourceType")),
@@ -412,10 +332,8 @@ public sealed class CheckCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.True(response.UsageInfo.ContainsKey("Microsoft.UnsupportedProvider/resourceType"));
 
@@ -450,41 +368,30 @@ public sealed class CheckCommandTests
             ]);
         }
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list => list.Count == 50),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list => list.Count == 50),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with all 50 resource types
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list => list.Count == 50),
             subscriptionId,
             region,
             Arg.Any<CancellationToken>());
 
         // Verify the response contains all expected resource types
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.Equal(50, response.UsageInfo.Count);
     }
@@ -508,33 +415,24 @@ public sealed class CheckCommandTests
             }
         };
 
-        _quotaService.GetAzureQuotaAsync(
-                Arg.Is<List<string>>(list =>
-                    list.Count == 1 &&
-                    list.Contains("Microsoft.Storage/storageAccounts")),
-                subscriptionId,
-                region,
-                Arg.Any<CancellationToken>())
+        Service.GetAzureQuotaAsync(
+            Arg.Is<List<string>>(list =>
+                list.Count == 1 &&
+                list.Contains("Microsoft.Storage/storageAccounts")),
+            subscriptionId,
+            region,
+            Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
-        var args = _commandDefinition.Parse([
+        // Act
+        var result = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--region", region,
-            "--resource-types", resourceTypes
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-types", resourceTypes);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
-
         // Verify the service was called with the correct parameters
-        await _quotaService.Received(1).GetAzureQuotaAsync(
+        await Service.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list =>
                 list.Count == 1 &&
                 list.Contains("Microsoft.Storage/storageAccounts")),
@@ -543,10 +441,8 @@ public sealed class CheckCommandTests
             Arg.Any<CancellationToken>());
 
         // Verify the response structure contains descriptive error in Description
-        var json = JsonSerializer.Serialize(result.Results);
-        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
+        var response = ValidateAndDeserializeResponse(result, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.True(response.UsageInfo.ContainsKey("Microsoft.Storage/storageAccounts"));
 

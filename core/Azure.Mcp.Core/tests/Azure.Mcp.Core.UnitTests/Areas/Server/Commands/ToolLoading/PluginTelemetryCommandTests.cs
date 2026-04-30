@@ -49,7 +49,7 @@ public class PluginTelemetryCommandTests
             DisplayName = "Azure MCP Server (Test)",
             Version = "1.0.0-test"
         }));
-        services.AddSingleton<ITelemetryService>(Substitute.For<ITelemetryService>());
+        services.AddSingleton(Substitute.For<ITelemetryService>());
         services.AddSingleton<ILogger<CommandFactory>>(NullLogger<CommandFactory>.Instance);
         services.AddSingleton<ILogger<ServiceInfoCommand>>(NullLogger<ServiceInfoCommand>.Instance);
         services.AddSingleton(_fileReferenceProvider);

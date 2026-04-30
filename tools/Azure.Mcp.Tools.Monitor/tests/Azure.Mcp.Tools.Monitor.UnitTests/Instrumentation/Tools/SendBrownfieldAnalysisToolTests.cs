@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Text.Json;
 using Azure.Mcp.Tools.Monitor.Detectors;
 using Azure.Mcp.Tools.Monitor.Generators;
@@ -7,7 +10,7 @@ using Azure.Mcp.Tools.Monitor.Tools;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Monitor.UnitTests.Tools;
+namespace Azure.Mcp.Tools.Monitor.UnitTests.Instrumentation.Tools;
 
 public sealed class SendBrownfieldAnalysisToolTests
 {

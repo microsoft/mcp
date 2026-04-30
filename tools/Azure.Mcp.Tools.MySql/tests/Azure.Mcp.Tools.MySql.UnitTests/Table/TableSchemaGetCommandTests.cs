@@ -2,82 +2,48 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Table;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.MySql.UnitTests.Table;
 
-public class TableSchemaGetCommandTests
+public class TableSchemaGetCommandTests : CommandUnitTestsBase<TableSchemaGetCommand, IMySqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMySqlService _mysqlService;
-    private readonly ILogger<TableSchemaGetCommand> _logger;
-
-    public TableSchemaGetCommandTests()
-    {
-        _mysqlService = Substitute.For<IMySqlService>();
-        _logger = Substitute.For<ILogger<TableSchemaGetCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_mysqlService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful()
     {
         var expectedSchema = new List<string> { "id INT PRIMARY KEY", "name VARCHAR(100) NOT NULL", "email VARCHAR(255)" };
-        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<CancellationToken>()).Returns(expectedSchema);
+        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users", Arg.Any<CancellationToken>()).Returns(expectedSchema);
 
-        var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1",
             "--database", "db1",
-            "--table", "users"
-        ]);
-        var context = new CommandContext(_serviceProvider);
+            "--table", "users");
 
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.TableSchemaGetCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, MySqlJsonContext.Default.TableSchemaGetCommandResult);
         Assert.Equal(expectedSchema, result.Schema);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenTableNotFound()
     {
-        _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
+        Service.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent", Arg.Any<CancellationToken>()).ThrowsAsync(new ArgumentException("Table not found"));
 
-        var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server1",
             "--database", "db1",
-            "--table", "nonexistent"
-        ]);
-        var context = new CommandContext(_serviceProvider);
-
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--table", "nonexistent");
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -87,9 +53,7 @@ public class TableSchemaGetCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var command = new TableSchemaGetCommand(_logger);
-
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 }

@@ -84,7 +84,7 @@
 /tools/Azure.Mcp.Tools.Aks/            @anuchandy @feiskyer @gossion @jongio @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Aks
-# ServiceOwners:                       @anuchandy @feiskyer @gossion @jongio 
+# ServiceOwners:                       @anuchandy @feiskyer @gossion @jongio
 
 # PRLabel: %tools-AppConfig
 /tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
@@ -122,6 +122,12 @@
 # ServiceLabel: %tools-Authorization
 # ServiceOwners:                       @vurhanau @xiangyan99
 
+# PRLabel: %tools-AzureBackup
+/tools/Azure.Mcp.Tools.AzureBackup/        @shrja @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AzureBackup
+# ServiceOwners:                           @shrja
+
 # ServiceLabel: %tools-AzCLI
 # ServiceOwners:                       @JasonYeMSFT @microsoft/azure-mcp
 
@@ -142,6 +148,12 @@
 
 # ServiceLabel: %tools-BestPractices
 # ServiceOwners:                                @conniey @fanyang-mono @g2vinay @XiaofuHuang
+
+# PRLabel: %tools-Terraform
+/tools/Azure.Mcp.Tools.AzureTerraform/          @yunliu1 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Terraform
+# ServiceOwners:                                @yunliu1
 
 # PRLabel: %tools-Bicep
 /tools/Azure.Mcp.Tools.BicepSchema/             @msalaman @saikoumudi @microsoft/azure-mcp
@@ -270,10 +282,10 @@
 # ServiceOwners:                       @rebecca-makar @wolfgang-desalvador
 
 # PRLabel: %tools-Marketplace
-/tools/Azure.Mcp.Tools.Marketplace/    @meirloichter @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Marketplace/    @meirloichter @shaharsandak @obit91 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Marketplace
-# ServiceOwners:                       @meirloichter
+# ServiceOwners:                       @meirloichter @shaharsandak @obit91
 
 # ServiceLabel: %tools-McpRegistry
 # ServiceOwners:                       @conniey @hallipr @microsoft/azure-mcp
@@ -345,10 +357,10 @@
 # ServiceOwners:                       @linmeng08 @jkochhar
 
 # PRLabel: %tools-SignalR
-/tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @kenchennt @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.SignalR/        @HaofanLiao @JialinXin @chenkennt @microsoft/azure-mcp
 
 # ServiceLabel: %tools-SignalR
-# ServiceOwners:                       @HaofanLiao @JialinXin @kenchennt 
+# ServiceOwners:                       @HaofanLiao @JialinXin @chenkennt
 
 # PRLabel: %tools-Speech
 /tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
@@ -391,10 +403,10 @@
 /tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Telemetry
-# ServiceOwners:                       @alzimmermsft @conniey @microsoft/azure-mcp    
+# ServiceOwners:                       @alzimmermsft @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ToolSelection
-# ServiceOwners:                       @anannya03 @vcolin7 @microsoft/azure-mcp 
+# ServiceOwners:                       @anannya03 @vcolin7 @microsoft/azure-mcp
 
 # PRLabel: %tools-VirtualDesktop
 /tools/Azure.Mcp.Tools.VirtualDesktop/ @vladimisms @microsoft/azure-mcp

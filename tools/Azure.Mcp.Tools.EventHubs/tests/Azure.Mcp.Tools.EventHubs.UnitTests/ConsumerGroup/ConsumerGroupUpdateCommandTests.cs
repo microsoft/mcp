@@ -3,37 +3,16 @@
 
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.ConsumerGroup;
 
-public class ConsumerGroupUpdateCommandTests
+public class ConsumerGroupUpdateCommandTests : CommandUnitTestsBase<ConsumerGroupUpdateCommand, IEventHubsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<ConsumerGroupUpdateCommand> _logger;
-    private readonly ConsumerGroupUpdateCommand _command;
-    private readonly CommandContext _context;
-
-    public ConsumerGroupUpdateCommandTests()
-    {
-        _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<ConsumerGroupUpdateCommand>>();
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventHubsService);
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _eventHubsService);
-        _context = new(_serviceProvider);
-    }
-
     [Theory]
     [InlineData("", false)]
     [InlineData("--subscription test-subscription", false)]
@@ -45,7 +24,6 @@ public class ConsumerGroupUpdateCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse(args);
         if (shouldSucceed)
         {
             var consumerGroup = new Models.ConsumerGroup(
@@ -59,7 +37,7 @@ public class ConsumerGroupUpdateCommandTests
                 DateTimeOffset.UtcNow.AddDays(-1),
                 DateTimeOffset.UtcNow);
 
-            _eventHubsService.CreateOrUpdateConsumerGroupAsync(
+            Service.CreateOrUpdateConsumerGroupAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -73,7 +51,7 @@ public class ConsumerGroupUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -92,8 +70,6 @@ public class ConsumerGroupUpdateCommandTests
     public async Task ExecuteAsync_CreatesConsumerGroupWithUserMetadata()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group --user-metadata custom-metadata");
-
         var expectedConsumerGroup = new Models.ConsumerGroup(
             "test-consumer-group",
             "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/test-eventhub/consumergroups/test-consumer-group",
@@ -105,7 +81,7 @@ public class ConsumerGroupUpdateCommandTests
             DateTimeOffset.UtcNow.AddDays(-1),
             DateTimeOffset.UtcNow);
 
-        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
+        Service.CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -118,13 +94,19 @@ public class ConsumerGroupUpdateCommandTests
             .Returns(expectedConsumerGroup);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group",
+            "--user-metadata", "custom-metadata");
 
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
 
-        await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
+        await Service.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -140,8 +122,6 @@ public class ConsumerGroupUpdateCommandTests
     public async Task ExecuteAsync_CreatesConsumerGroupWithoutUserMetadata()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
         var expectedConsumerGroup = new Models.ConsumerGroup(
             "test-consumer-group",
             "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/test-eventhub/consumergroups/test-consumer-group",
@@ -153,7 +133,7 @@ public class ConsumerGroupUpdateCommandTests
             DateTimeOffset.UtcNow.AddDays(-1),
             DateTimeOffset.UtcNow);
 
-        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
+        Service.CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -166,13 +146,18 @@ public class ConsumerGroupUpdateCommandTests
             .Returns(expectedConsumerGroup);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
 
-        await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
+        await Service.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -188,9 +173,7 @@ public class ConsumerGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
-        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
+        Service.CreateOrUpdateConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -203,7 +186,12 @@ public class ConsumerGroupUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Event Hub 'test-eventhub' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -214,9 +202,7 @@ public class ConsumerGroupUpdateCommandTests
     public async Task ExecuteAsync_HandlesAuthenticationError()
     {
         // Arrange
-        var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-
-        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
+        Service.CreateOrUpdateConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -229,7 +215,12 @@ public class ConsumerGroupUpdateCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "unauthorized-sub",
+            "--resource-group", "test-rg",
+            "--namespace", "test-namespace",
+            "--eventhub", "test-eventhub",
+            "--consumer-group", "test-consumer-group");
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);

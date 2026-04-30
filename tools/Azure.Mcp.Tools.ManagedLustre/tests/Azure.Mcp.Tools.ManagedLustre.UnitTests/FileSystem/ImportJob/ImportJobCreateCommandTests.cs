@@ -1,53 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.ImportJob;
 
-public class ImportJobCreateCommandTests
+public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateCommand, IManagedLustreService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IManagedLustreService _managedLustreService;
-    private readonly ILogger<ImportJobCreateCommand> _logger;
-    private readonly ImportJobCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
     private const string Sub = "sub123";
     private const string Rg = "rg1";
     private const string Name = "amlfs-01";
     private const string JobName = "import-job-01";
 
-    public ImportJobCreateCommandTests()
-    {
-        _managedLustreService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<ImportJobCreateCommand>>();
-        var services = new ServiceCollection().AddSingleton(_managedLustreService);
-        _serviceProvider = services.BuildServiceProvider();
-        _command = new(_managedLustreService, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -60,7 +37,7 @@ public class ImportJobCreateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _managedLustreService.CreateImportJobAsync(
+            Service.CreateImportJobAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -74,20 +51,15 @@ public class ImportJobCreateCommandTests
                 .Returns(JobName);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.ImportJobCreateResult);
-            Assert.NotNull(result);
-            Assert.Equal(JobName, result!.JobName);
+            var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCreateResult);
+            Assert.Equal(JobName, result.JobName);
         }
         else
         {
@@ -104,7 +76,7 @@ public class ImportJobCreateCommandTests
         const string prefixes = "folder1/,folder2/";
         const long maxErrors = 10;
 
-        _managedLustreService.CreateImportJobAsync(
+        Service.CreateImportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -118,14 +90,13 @@ public class ImportJobCreateCommandTests
             .Returns(jobName);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {jobName} --conflict-resolution-mode {conflictMode} --import-prefixes {prefixes} --maximum-errors {maxErrors}";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _managedLustreService.Received(1).CreateImportJobAsync(
+        await Service.Received(1).CreateImportJobAsync(
             Sub, Rg, Name, jobName, conflictMode,
             Arg.Any<string[]>(),
             Arg.Any<long?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
@@ -135,16 +106,15 @@ public class ImportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
     {
         // Arrange
-        _managedLustreService.CreateImportJobAsync(
+        Service.CreateImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<long?>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -155,25 +125,20 @@ public class ImportJobCreateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _managedLustreService.CreateImportJobAsync(
+        Service.CreateImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<long?>(), Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(JobName);
 
-        var parseResult = _commandDefinition.Parse([
-            "--subscription", Sub, "--resource-group", Rg, "--filesystem-name", Name]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--resource-group", Rg,
+            "--filesystem-name", Name);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.ImportJobCreateResult);
-        Assert.NotNull(result);
-        Assert.Equal(JobName, result!.JobName);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobCreateResult);
+        Assert.Equal(JobName, result.JobName);
     }
 }

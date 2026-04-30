@@ -197,7 +197,11 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+        var effectiveOptions = realCommand.Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -283,11 +287,13 @@ public sealed class CommandFactoryToolLoader(
         }
         tool.Meta = meta;
 
-        var options = command.GetCommand().Options;
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
 
         var schema = new ToolInputSchema();
 
-        if (options != null && options.Count > 0)
+        if (options.Count > 0)
         {
             if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {

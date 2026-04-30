@@ -11,29 +11,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
+[CommandMetadata(
+    Id = "2c9f3785-4b97-4dd6-8489-af515638f0d5",
+    Name = "get-learning-resource",
+    Title = "Get Azure Monitor Learning Resource",
+    Description = "List all available learning resources for Azure Monitor instrumentation or get the content of a specific resource by path. Returns all resource paths by default, or retrieves the full content when a path is specified. Note: For instrumenting an application, use orchestrator-start instead.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
 public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger)
     : BaseCommand<GetLearningResourceOptions>
 {
     private readonly ILogger<GetLearningResourceCommand> _logger = logger;
-
-    public override string Id => "2c9f3785-4b97-4dd6-8489-af515638f0d5";
-
-    public override string Name => "get-learning-resource";
-
-    public override string Description =>
-        "List all available learning resources for Azure Monitor instrumentation or get the content of a specific resource by path. Returns all resource paths by default, or retrieves the full content when a path is specified. Note: For instrumenting an application, use orchestrator-start instead.";
-
-    public override string Title => "Get Azure Monitor Learning Resource";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

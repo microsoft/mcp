@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Azure.Mcp.Core.csproj" />
     <ProjectReference Include="..\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
     <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
   </ItemGroup>

@@ -3,82 +3,57 @@
 
 using System.Diagnostics;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.TestUtilities;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Database;
 
 [DebuggerStepThrough]
-public class DatabaseQueryCommandTests
+public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryCommand, IPostgresService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IPostgresService _postgresService;
-    private readonly ILogger<DatabaseQueryCommand> _logger;
-    private readonly ITestOutputHelper _output;
-
-    public DatabaseQueryCommandTests(ITestOutputHelper output)
-    {
-        _logger = Substitute.For<ILogger<DatabaseQueryCommand>>();
-        _postgresService = Substitute.For<IPostgresService>();
-        _output = output;
-
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_postgresService);
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsQueryResults_WhenQueryIsValid()
     {
         var expectedResults = new List<string> { "result1", "result2" };
 
-        _postgresService.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
+        Service.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
-        var command = new DatabaseQueryCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", "SELECT * FROM test;");
 
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.Equal(expectedResults, result.QueryResult);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails()
     {
-        _postgresService.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
+        Service.ExecuteQueryAsync("sub123", "rg1", AuthTypes.MicrosoftEntra, "user1", null, "server1", "db123", "SELECT * FROM test;", Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var command = new DatabaseQueryCommand(_logger);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", "SELECT * FROM test;");
 
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
-        Assert.NotNull(result);
+        var result = ValidateAndDeserializeResponse(response, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.Empty(result.QueryResult);
     }
 
@@ -91,8 +66,7 @@ public class DatabaseQueryCommandTests
     [InlineData("--query")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
-        var command = new DatabaseQueryCommand(_logger);
-        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+        var response = await ExecuteCommandAsync(ArgBuilder.BuildArgs(missingParameter,
             ("--subscription", "sub123"),
             ("--resource-group", "rg1"),
             ($"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra),
@@ -101,9 +75,6 @@ public class DatabaseQueryCommandTests
             ("--database", "db123"),
             ("--query", "SELECT * FROM test;")
         ));
-
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -154,46 +125,36 @@ public class DatabaseQueryCommandTests
     [InlineData("SELECT * FROM pg_user_mappings")] // FDW credential exposure
     public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
-        var command = new DatabaseQueryCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
             "--database", "db123",
-            "--query", badQuery
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--query", badQuery);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
         // Service should never be called for invalid queries.
-        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_LongQuery_ValidationError()
     {
         var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
-        var command = new DatabaseQueryCommand(_logger);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
             "--user", "user1",
             "--server", "server1",
             "--database", "db123",
-            "--query", longSelect
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--query", longSelect);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

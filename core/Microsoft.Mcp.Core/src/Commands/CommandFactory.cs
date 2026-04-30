@@ -5,6 +5,7 @@ using System.CommandLine.Help;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -14,8 +15,10 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -28,6 +31,73 @@ public class CommandFactory : ICommandFactory
     private readonly ILogger<CommandFactory> _logger;
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
+
+    private const string LearnOptionDescription =
+        "Discover available sub-commands and their parameters without executing any Azure operation. " +
+        "Use on a command group (e.g. 'azmcp storage --learn') to list all commands in that group, " +
+        "or on a specific command (e.g. 'azmcp storage account list --learn') to see its options.";
+
+    /// <summary>
+    /// Creates a fresh <see cref="Option{T}"/> for <c>--learn</c> each time it is called.
+    /// A new instance is required per command because System.CommandLine v2 tracks option
+    /// ownership by object identity; sharing a single static instance causes
+    /// <see cref="ParseResult.GetValue{T}"/> to return the default value on every command
+    /// except the last one the option was added to.
+    /// </summary>
+    private static Option<bool> CreateLearnOption()
+    {
+        var opt = new Option<bool>(ICommandFactory.LearnOptionName)
+        {
+            Description = LearnOptionDescription,
+            Required = false
+        };
+        _factoryInjectedLearnOptions.Add(opt, null);
+        return opt;
+    }
+
+    /// <summary>
+    /// Pre-computed normalized form of <see cref="ICommandFactory.LearnOptionName"/> (i.e. <c>"learn"</c>).
+    /// Cached to avoid recomputing on every option comparison.
+    /// </summary>
+    private static readonly string _normalizedLearnName =
+        NameNormalization.NormalizeOptionName(ICommandFactory.LearnOptionName);
+
+    /// <summary>
+    /// Weak-keyed set of <see cref="Option"/> instances created and injected by <see cref="CommandFactory"/>.
+    /// Allows any factory instance to distinguish its own injected <c>--learn</c> options from
+    /// options added by command authors — without requiring the same factory instance to be reused.
+    /// </summary>
+    private static readonly ConditionalWeakTable<Option, object?> _factoryInjectedLearnOptions = new();
+
+    private static bool HasFactoryInjectedLearnOption(Command command)
+        => command.Options.Any(o => _factoryInjectedLearnOptions.TryGetValue(o, out _));
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="option"/> is the reserved <c>--learn</c>
+    /// discovery option, matched by primary name or any alias, ignoring prefix and case.
+    /// </summary>
+    internal static bool IsLearnOption(Option option)
+        => IsReservedLearnOptionIdentifier(option.Name) || option.Aliases.Any(IsReservedLearnOptionIdentifier);
+
+    private static bool IsReservedLearnOptionIdentifier(string? identifier)
+        => string.Equals(NameNormalization.NormalizeOptionName(identifier), _normalizedLearnName, StringComparison.OrdinalIgnoreCase);
+
+    private void ValidateNoReservedLearnOption(Command command, string commandPath)
+    {
+        foreach (var option in command.Options)
+        {
+            if (IsLearnOption(option))
+            {
+                var message = $"Command '{commandPath}' defines the reserved option '{ICommandFactory.LearnOptionName}'. This option name is reserved for discovery and cannot be used by commands.";
+                var error = new ArgumentException(message);
+                _logger.LogError(error,
+                    "Command {CommandPath} defines the reserved discovery option {OptionName}.",
+                    commandPath,
+                    ICommandFactory.LearnOptionName);
+                throw error;
+            }
+        }
+    }
     private readonly ModelsJsonContext _srcGenWithOptions;
 
     /// <summary>
@@ -164,27 +234,83 @@ public class CommandFactory : ICommandFactory
         }
     }
 
-    private void ConfigureCommands(CommandGroup group)
+    private void ConfigureCommands(CommandGroup group, string parentTokenizedPrefix = "")
     {
+        var groupTokenizedPath = GetPrefix(parentTokenizedPrefix, group.Name);
+
+        // Guard against the same Command object being processed by a second CommandFactory instance
+        // (e.g. ConsolidatedToolDiscoveryStrategy reuses the same IAreaSetup/CommandGroup objects).
+        // HasFactoryInjectedLearnOption checks whether the --learn on this command was created by
+        // us (via _factoryInjectedLearnOptions) rather than by a command author, so we skip
+        // re-validation and re-injection only when we own the existing option.
+        if (!HasFactoryInjectedLearnOption(group.Command))
+        {
+            ValidateNoReservedLearnOption(group.Command, groupTokenizedPath.Replace(Separator, ' '));
+            group.Command.Options.Add(CreateLearnOption());
+        }
+
         // Configure direct commands in this group
         foreach (var command in group.Commands.Values)
         {
             var cmd = command.GetCommand();
 
+            // Build the full tokenized key for this leaf command (e.g. "storage_account_list").
+            var fullTokenizedKey = GetPrefix(groupTokenizedPath, command.Name);
+            if (!HasFactoryInjectedLearnOption(cmd))
+            {
+                ValidateNoReservedLearnOption(cmd, fullTokenizedKey.Replace(Separator, ' '));
+            }
             ConfigureCommandHandler(cmd, command);
 
             group.Command.Subcommands.Add(cmd);
         }
 
-        // Recursively configure subgroup commands
+        // Recursively configure subgroup commands, passing the accumulated prefix.
         foreach (var subGroup in group.SubGroup)
         {
-            ConfigureCommands(subGroup);
+            ConfigureCommands(subGroup, groupTokenizedPath);
         }
+    }
+
+    /// <summary>
+    /// Builds a <see cref="CommandInfo"/> suitable for <c>--learn</c> output, converting the
+    /// underscore-separated <paramref name="tokenizedName"/> to a space-separated CLI path.
+    /// </summary>
+    private static CommandInfo BuildLearnCommandInfo(string tokenizedName, IBaseCommand command)
+    {
+        var commandDetails = command.GetCommand();
+
+        // Command.Options is never null in System.CommandLine — the null-conditional is not needed.
+        var optionInfos = commandDetails.Options
+            .Where(opt => opt is not HelpOption && !IsLearnOption(opt))
+            .Select(opt => new OptionInfo(
+                name: opt.Name,
+                description: opt.Description ?? string.Empty,
+                required: opt.Required))
+            .ToList();
+
+        return new CommandInfo
+        {
+            Id = command.Id,
+            Name = commandDetails.Name,
+            Description = commandDetails.Description ?? string.Empty,
+            Command = tokenizedName.Replace(Separator, ' '),
+            Options = optionInfos,
+            Metadata = command.Metadata
+        };
     }
 
     private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
     {
+        // Add --learn as a recognized option on this command (for autocomplete/help display).
+        // The actual --learn response is handled in GetLearnResponse() before InvokeAsync is called,
+        // which bypasses System.CommandLine's required-option validation that would otherwise block the action.
+        // Guard: skip if already injected by a prior factory run on the same Command instance.
+        if (!HasFactoryInjectedLearnOption(command))
+        {
+            command.Options.Add(CreateLearnOption());
+        }
+
         command.SetAction(async (parseResult, ct) =>
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
@@ -278,6 +404,70 @@ public class CommandFactory : ICommandFactory
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// Handles a <c>--learn</c> request by examining the raw CLI <paramref name="args"/> to determine
+    /// the intended command path and returns a serialized JSON <see cref="CommandResponse"/> describing
+    /// the available commands or the specific command's parameters.
+    /// </summary>
+    /// <remarks>
+    /// This method is intentionally called BEFORE <see cref="ParseResult.InvokeAsync"/> so that
+    /// System.CommandLine's required-option validation cannot block the discovery response.
+    /// </remarks>
+    /// <param name="args">The raw command-line arguments array received by the process.</param>
+    /// <returns>A JSON string ready to write to stdout.</returns>
+    public string GetLearnResponse(string[] args)
+    {
+        ArgumentNullException.ThrowIfNull(args);
+
+        // Extract the command path: consume non-option tokens from the start.
+        // Stop at the first token that begins with '-' (an option flag).
+        var commandParts = new List<string>();
+        foreach (var token in args)
+        {
+            if (token.StartsWith("-", StringComparison.Ordinal))
+                break;
+            commandParts.Add(token);
+        }
+
+        var tokenizedKey = string.Join(Separator, commandParts);
+
+        // Case 1: Exact match in AllCommands → this is a leaf command.
+        if (!string.IsNullOrEmpty(tokenizedKey) && _commandMap.TryGetValue(tokenizedKey, out var leafCommand))
+        {
+            var info = BuildLearnCommandInfo(tokenizedKey, leafCommand);
+            var leafResponse = new CommandResponse
+            {
+                Status = HttpStatusCode.OK,
+                Results = ResponseResult.Create([info], ModelsJsonContext.Default.ListCommandInfo),
+                Duration = 0
+            };
+            return JsonSerializer.Serialize(leafResponse, _srcGenWithOptions.CommandResponse);
+        }
+
+        // Case 2: No exact match → treat as a group prefix and list all commands under it.
+        var prefix = string.IsNullOrEmpty(tokenizedKey) ? "" : tokenizedKey + Separator;
+        var commandsInGroup = _commandMap
+            .Where(kvp => string.IsNullOrEmpty(prefix) || kvp.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var commandInfos = GetVisibleCommands(commandsInGroup)
+            .Select(kvp => BuildLearnCommandInfo(kvp.Key, kvp.Value))
+            .ToList();
+
+        var groupResponse = new CommandResponse
+        {
+            Status = commandInfos.Count > 0 ? HttpStatusCode.OK : HttpStatusCode.NotFound,
+            Results = commandInfos.Count > 0
+                ? ResponseResult.Create(commandInfos, ModelsJsonContext.Default.ListCommandInfo)
+                : null,
+            Message = commandInfos.Count == 0
+                ? $"No commands found for '{string.Join(" ", commandParts)}'. Run 'azmcp --learn' to list all available commands."
+                : string.Empty,
+            Duration = 0
+        };
+        return JsonSerializer.Serialize(groupResponse, _srcGenWithOptions.CommandResponse);
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)

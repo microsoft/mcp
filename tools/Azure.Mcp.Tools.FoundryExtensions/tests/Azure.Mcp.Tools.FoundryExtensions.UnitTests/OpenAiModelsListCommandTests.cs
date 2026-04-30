@@ -1,35 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class OpenAiModelsListCommandTests
+public class OpenAiModelsListCommandTests : CommandUnitTestsBase<OpenAiModelsListCommand, IFoundryExtensionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFoundryExtensionsService _foundryService;
-
-    public OpenAiModelsListCommandTests()
-    {
-        _foundryService = Substitute.For<IFoundryExtensionsService>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_ListsModels_WhenValidOptionsProvided()
     {
@@ -40,7 +25,7 @@ public class OpenAiModelsListCommandTests
 
         var expectedModels = new List<OpenAiModelDeployment>
         {
-            new OpenAiModelDeployment(
+            new(
                 DeploymentName: "gpt-4o",
                 ModelName: "gpt-4o",
                 ModelVersion: "2024-05-13",
@@ -49,9 +34,8 @@ public class OpenAiModelsListCommandTests
                 ProvisioningState: "Succeeded",
                 CreatedAt: DateTime.UtcNow.AddDays(-1),
                 UpdatedAt: DateTime.UtcNow,
-                Capabilities: new OpenAiModelCapabilities(true, false, true, false)
-            ),
-            new OpenAiModelDeployment(
+                Capabilities: new(true, false, true, false)),
+            new(
                 DeploymentName: "text-embedding-ada-002",
                 ModelName: "text-embedding-ada-002",
                 ModelVersion: "2",
@@ -60,39 +44,28 @@ public class OpenAiModelsListCommandTests
                 ProvisioningState: "Succeeded",
                 CreatedAt: DateTime.UtcNow.AddDays(-2),
                 UpdatedAt: DateTime.UtcNow.AddHours(-1),
-                Capabilities: new OpenAiModelCapabilities(false, true, false, false)
-            )
+                Capabilities: new(false, true, false, false))
         };
 
-        var expectedResult = new OpenAiModelsListResult(expectedModels, resourceName);
-
-        _foundryService.ListOpenAiModelsAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+        Service.ListOpenAiModelsAsync(
+            Arg.Is(resourceName),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new OpenAiModelsListResult(expectedModels, resourceName));
 
         // Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
-            "--resource-name", resourceName
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", resourceName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<OpenAiModelsListCommandResult>(json);
-        Assert.NotNull(result);
         Assert.Equal(resourceName, result.ResourceName);
         Assert.Equal(resourceName, result.ModelsListResult.ResourceName);
         Assert.Equal(2, result.ModelsListResult.Models.Count);
@@ -120,35 +93,25 @@ public class OpenAiModelsListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceGroup = "test-resource-group";
 
-        var expectedResult = new OpenAiModelsListResult(new List<OpenAiModelDeployment>(), resourceName);
-
-        _foundryService.ListOpenAiModelsAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+        Service.ListOpenAiModelsAsync(
+            Arg.Is(resourceName),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new OpenAiModelsListResult([], resourceName));
 
         // Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
-            "--resource-name", resourceName
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", resourceName);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.OpenAiModelsListCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<OpenAiModelsListCommandResult>(json);
-        Assert.NotNull(result);
         Assert.Equal(resourceName, result.ResourceName);
         Assert.Empty(result.ModelsListResult.Models);
     }
@@ -162,25 +125,21 @@ public class OpenAiModelsListCommandTests
         var resourceGroup = "test-resource-group";
         var expectedError = "Test models list error";
 
-        _foundryService.ListOpenAiModelsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.ListOpenAiModelsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
-            "--resource-name", resourceName
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", resourceName);
 
         // Assert
         Assert.NotNull(response);
@@ -191,23 +150,15 @@ public class OpenAiModelsListCommandTests
     [Fact]
     public void Command_HasCorrectName()
     {
-        // Arrange & Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-
-        // Assert
-        Assert.Equal("models-list", command.Name);
+        Assert.Equal("models-list", Command.Name);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        // Arrange & Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-
-        // Assert
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Theory]
@@ -218,27 +169,21 @@ public class OpenAiModelsListCommandTests
     public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
     {
         // Arrange
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var context = new CommandContext(_serviceProvider);
-
-        var expectedResult = new OpenAiModelsListResult(new List<OpenAiModelDeployment>(), "myresource");
         if (shouldSucceed)
         {
-            _foundryService.ListOpenAiModelsAsync(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string?>(),
-                    Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                    Arg.Any<RetryPolicyOptions?>(),
-                    Arg.Any<CancellationToken>())
-                .Returns(expectedResult);
+            Service.ListOpenAiModelsAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Is(AuthMethod.Credential),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(new OpenAiModelsListResult([], "myresource"));
         }
 
-        var parseResult = command.GetCommand().Parse(args.Split(' '));
-
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         if (shouldSucceed)
@@ -260,30 +205,24 @@ public class OpenAiModelsListCommandTests
         var subscriptionId = "test-sub";
         var resourceGroup = "test-rg";
 
-        var expectedResult = new OpenAiModelsListResult(new List<OpenAiModelDeployment>(), resourceName);
-        _foundryService.ListOpenAiModelsAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
-
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var args = command.GetCommand().Parse([
-            "--subscription", subscriptionId,
-            "--resource-group", resourceGroup,
-            "--resource-name", resourceName
-        ]);
-        var context = new CommandContext(_serviceProvider);
+        Service.ListOpenAiModelsAsync(
+            Arg.Is(resourceName),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new OpenAiModelsListResult([], resourceName));
 
         // Act
-        await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", subscriptionId,
+            "--resource-group", resourceGroup,
+            "--resource-name", resourceName);
 
         // Assert - Verify the service was called with exact parameters
-        await _foundryService.Received(1).ListOpenAiModelsAsync(
+        await Service.Received(1).ListOpenAiModelsAsync(
             resourceName,
             subscriptionId,
             resourceGroup,
@@ -301,38 +240,25 @@ public class OpenAiModelsListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceGroup = "test-resource-group";
 
-        _foundryService.ListOpenAiModelsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.ListOpenAiModelsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var command = new OpenAiModelsListCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
-            "--resource-name", resourceName
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--resource-name", resourceName);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotEqual(200, (int)response.Status);
         Assert.Contains("Authentication failed", response.Message);
-    }
-
-    private class OpenAiModelsListCommandResult
-    {
-        [JsonPropertyName("modelsListResult")]
-        public OpenAiModelsListResult ModelsListResult { get; set; } = new OpenAiModelsListResult(new List<OpenAiModelDeployment>(), "");
-
-        [JsonPropertyName("resourceName")]
-        public string ResourceName { get; set; } = string.Empty;
     }
 }

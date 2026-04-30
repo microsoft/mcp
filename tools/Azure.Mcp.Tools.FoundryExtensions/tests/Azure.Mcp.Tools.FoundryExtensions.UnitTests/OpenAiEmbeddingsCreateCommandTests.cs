@@ -1,35 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.UnitTests;
 
-public class OpenAiEmbeddingsCreateCommandTests
+public class OpenAiEmbeddingsCreateCommandTests : CommandUnitTestsBase<OpenAiEmbeddingsCreateCommand, IFoundryExtensionsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IFoundryExtensionsService _foundryService;
-
-    public OpenAiEmbeddingsCreateCommandTests()
-    {
-        _foundryService = Substitute.For<IFoundryExtensionsService>();
-
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
-    }
-
     [Fact]
     public async Task ExecuteAsync_CreatesEmbeddings_WhenValidOptionsProvided()
     {
@@ -40,55 +25,41 @@ public class OpenAiEmbeddingsCreateCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceGroup = "test-resource-group";
 
-        var expectedEmbedding = new float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f };
-        var expectedUsage = new EmbeddingUsageInfo(2, 2);
-        var expectedData = new List<EmbeddingData>
-        {
-            new EmbeddingData("embedding", 0, expectedEmbedding)
-        };
-        var expectedResult = new EmbeddingResult("list", expectedData, deploymentName, expectedUsage);
+        var expectedResult = new EmbeddingResult("list", [new("embedding", 0, [0.1f, 0.2f, 0.3f, 0.4f, 0.5f])], deploymentName, new(2, 2));
 
-        _foundryService.CreateEmbeddingsAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == inputText),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Any<string?>(),
-                Arg.Is<string>(s => s == "float"),
-                Arg.Any<int?>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateEmbeddingsAsync(
+            Arg.Is(resourceName),
+            Arg.Is(deploymentName),
+            Arg.Is(inputText),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Any<string?>(),
+            Arg.Is("float"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
-            "--input-text", inputText
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--input-text", inputText);
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, FoundryExtensionsJsonContext.Default.OpenAiEmbeddingsCreateCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<OpenAiEmbeddingsCreateCommandResult>(json);
-        Assert.NotNull(result);
         Assert.Equal(expectedResult.Object, result.EmbeddingResult.Object);
         Assert.Equal(expectedResult.Model, result.EmbeddingResult.Model);
         Assert.Equal(resourceName, result.ResourceName);
         Assert.Equal(deploymentName, result.DeploymentName);
         Assert.Equal(inputText, result.InputText);
         Assert.Single(result.EmbeddingResult.Data);
-        Assert.Equal(expectedEmbedding.Length, result.EmbeddingResult.Data[0].Embedding.Length);
+        Assert.Equal(expectedResult.Data[0].Embedding.Length, result.EmbeddingResult.Data[0].Embedding.Length);
     }
 
     [Fact]
@@ -109,48 +80,39 @@ public class OpenAiEmbeddingsCreateCommandTests
             expectedEmbedding[i] = 0.1f;
         }
 
-        var expectedUsage = new EmbeddingUsageInfo(4, 4);
-        var expectedData = new List<EmbeddingData>
-        {
-            new EmbeddingData("embedding", 0, expectedEmbedding)
-        };
-        var expectedResult = new EmbeddingResult("list", expectedData, deploymentName, expectedUsage);
+        var expectedResult = new EmbeddingResult("list", [new("embedding", 0, expectedEmbedding)], deploymentName, new(4, 4));
 
-        _foundryService.CreateEmbeddingsAsync(
-                Arg.Is<string>(s => s == resourceName),
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == inputText),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Is<string>(s => s == user),
-                Arg.Is<string>(s => s == "float"),
-                Arg.Is<int?>(i => i == dimensions),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateEmbeddingsAsync(
+            Arg.Is(resourceName),
+            Arg.Is(deploymentName),
+            Arg.Is(inputText),
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Is(user),
+            Arg.Is("float"),
+            Arg.Is(dimensions),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
             "--input-text", inputText,
             "--user", user,
-            "--dimensions", dimensions.ToString()
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--dimensions", dimensions.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
         // Verify the service was called at least once with the core parameters
-        await _foundryService.Received(1).CreateEmbeddingsAsync(
+        await Service.Received(1).CreateEmbeddingsAsync(
             resourceName,
             deploymentName,
             inputText,
@@ -160,7 +122,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
+            Arg.Is(AuthMethod.Credential),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
@@ -176,32 +138,28 @@ public class OpenAiEmbeddingsCreateCommandTests
         var resourceGroup = "test-resource-group";
         var expectedError = "Test embedding error";
 
-        _foundryService.CreateEmbeddingsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<string?>(),
-                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+        Service.CreateEmbeddingsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Is(AuthMethod.Credential),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
-        var args = command.GetCommand().Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
             "--deployment", deploymentName,
-            "--input-text", inputText
-        ]);
-        var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--input-text", inputText);
 
         // Assert
         Assert.NotNull(response);
@@ -212,23 +170,15 @@ public class OpenAiEmbeddingsCreateCommandTests
     [Fact]
     public void Command_HasCorrectName()
     {
-        // Arrange & Act
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
-
-        // Assert
-        Assert.Equal("embeddings-create", command.Name);
+        Assert.Equal("embeddings-create", Command.Name);
     }
 
     [Fact]
     public void Command_HasCorrectMetadata()
     {
-        // Arrange & Act
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
-
-        // Assert
-        Assert.False(command.Metadata.Destructive);
-        Assert.True(command.Metadata.ReadOnly);
-        Assert.False(command.Metadata.Idempotent);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Idempotent);
     }
 
     [Theory]
@@ -242,7 +192,6 @@ public class OpenAiEmbeddingsCreateCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceGroup = "test-resource-group";
 
-        var command = new OpenAiEmbeddingsCreateCommand(_foundryService);
         var parseArgs = new List<string>
         {
             "--subscription", subscriptionId,
@@ -256,11 +205,8 @@ public class OpenAiEmbeddingsCreateCommandTests
             parseArgs.AddRange(["--input-text", inputText]);
         }
 
-        var args = command.GetCommand().Parse(parseArgs.ToArray());
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(parseArgs.ToArray());
 
         // Assert
         Assert.NotNull(response);
@@ -269,20 +215,5 @@ public class OpenAiEmbeddingsCreateCommandTests
         {
             Assert.NotEqual(200, (int)response.Status);
         }
-    }
-
-    private class OpenAiEmbeddingsCreateCommandResult
-    {
-        [JsonPropertyName("embeddingResult")]
-        public EmbeddingResult EmbeddingResult { get; set; } = new EmbeddingResult("", new List<EmbeddingData>(), "", new EmbeddingUsageInfo(0, 0));
-
-        [JsonPropertyName("resourceName")]
-        public string ResourceName { get; set; } = string.Empty;
-
-        [JsonPropertyName("deploymentName")]
-        public string DeploymentName { get; set; } = string.Empty;
-
-        [JsonPropertyName("inputText")]
-        public string InputText { get; set; } = string.Empty;
     }
 }

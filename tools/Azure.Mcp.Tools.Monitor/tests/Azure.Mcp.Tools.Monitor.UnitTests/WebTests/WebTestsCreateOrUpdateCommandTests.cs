@@ -1,71 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.WebTests;
 
-public class WebTestsCreateOrUpdateCommandTests
+public class WebTestsCreateOrUpdateCommandTests : CommandUnitTestsBase<WebTestsCreateOrUpdateCommand, IMonitorWebTestService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMonitorWebTestService _service;
-    private readonly ILogger<WebTestsCreateOrUpdateCommand> _logger;
-    private readonly WebTestsCreateOrUpdateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public WebTestsCreateOrUpdateCommandTests()
-    {
-        _service = Substitute.For<IMonitorWebTestService>();
-        _logger = Substitute.For<ILogger<WebTestsCreateOrUpdateCommand>>();
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     #region Constructor and Properties Tests
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("createorupdate", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("Create or update", command.Description);
+        Assert.Equal("createorupdate", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("Create or update", CommandDefinition.Description);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("createorupdate", _command.Name);
+        Assert.Equal("createorupdate", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("Create or update a web test in Azure Monitor", _command.Title);
+        Assert.Equal("Create or update a web test in Azure Monitor", Command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
-        var description = _command.Description;
+        var description = Command.Description;
         Assert.Contains("Create or update", description);
         Assert.Contains("standard web test", description);
     }
@@ -73,7 +50,7 @@ public class WebTestsCreateOrUpdateCommandTests
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        var metadata = _command.Metadata;
+        var metadata = Command.Metadata;
         Assert.True(metadata.Destructive);
         Assert.True(metadata.Idempotent);
         Assert.False(metadata.ReadOnly);
@@ -89,8 +66,7 @@ public class WebTestsCreateOrUpdateCommandTests
     [Fact]
     public void RegisterOptions_AddsAllExpectedOptions()
     {
-        var command = _command.GetCommand();
-        var options = command.Options.Select(o => o.Name).ToList();
+        var options = CommandDefinition.Options.Select(o => o.Name).ToList();
 
         // Required base options
         Assert.Contains("--subscription", options);
@@ -109,7 +85,7 @@ public class WebTestsCreateOrUpdateCommandTests
         Assert.Contains("--timeout", options);
 
         // Verify required options are marked as required
-        var requiredOptions = command.Options.Where(o => o.Required).Select(o => o.Name).ToList();
+        var requiredOptions = CommandDefinition.Options.Where(o => o.Required).Select(o => o.Name).ToList();
         Assert.Contains("--resource-group", requiredOptions);
         Assert.Contains("--webtest-resource", requiredOptions);
     }
@@ -143,10 +119,10 @@ public class WebTestsCreateOrUpdateCommandTests
         };
 
         // Setup GetWebTest to throw (resource doesn't exist - CREATE scenario)
-        _service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 
-        _service.CreateWebTest(
+        Service.CreateWebTest(
             "sub1",
             "rg1",
             "newwebtest",
@@ -174,20 +150,15 @@ public class WebTestsCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Equal("Success", response.Message);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult);
 
-        var result = GetResult(response.Results);
-        Assert.NotNull(result);
-        Assert.Equal("newwebtest", result.ResourceName);
-        Assert.Equal("eastus", result.Location);
+        Assert.NotNull(result.WebTest);
+        Assert.Equal("newwebtest", result.WebTest.ResourceName);
+        Assert.Equal("eastus", result.WebTest.Location);
     }
 
     [Fact]
@@ -202,13 +173,11 @@ public class WebTestsCreateOrUpdateCommandTests
         };
 
         // Setup GetWebTest to throw (resource doesn't exist - CREATE scenario)
-        _service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert - Command catches validation errors and returns InternalServerError
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -253,10 +222,10 @@ public class WebTestsCreateOrUpdateCommandTests
         };
 
         // Setup GetWebTest to return existing resource (UPDATE scenario)
-        _service.GetWebTest("sub1", "rg1", "existingwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "existingwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(existingWebTest);
 
-        _service.UpdateWebTest(
+        Service.UpdateWebTest(
             "sub1",
             "rg1",
             "existingwebtest",
@@ -284,20 +253,16 @@ public class WebTestsCreateOrUpdateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(updatedWebTest);
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.WebTestsCreateOrUpdateCommandResult);
 
-        var result = GetResult(response.Results);
-        Assert.NotNull(result);
-        Assert.Equal("existingwebtest", result.ResourceName);
-        Assert.False(result.IsEnabled);
-        Assert.Equal(600, result.FrequencyInSeconds);
+        Assert.NotNull(result.WebTest);
+        Assert.Equal("existingwebtest", result.WebTest.ResourceName);
+        Assert.False(result.WebTest.IsEnabled);
+        Assert.Equal(600, result.WebTest.FrequencyInSeconds);
     }
 
     #endregion
@@ -311,12 +276,8 @@ public class WebTestsCreateOrUpdateCommandTests
     [InlineData("--resource-group rg1 --webtest-resource test1")]         // Missing subscription
     public async Task ExecuteAsync_MissingRequiredParameters_ReturnsBadRequest(string args)
     {
-        // Arrange
-        var argArray = string.IsNullOrEmpty(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var parseResult = _commandDefinition.Parse(argArray);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -326,22 +287,6 @@ public class WebTestsCreateOrUpdateCommandTests
     #endregion
 
     #region ExecuteAsync Tests - Error Handling
-
-    #endregion
-
-    #region Helper Methods
-
-    private WebTestDetailedInfo? GetResult(ResponseResult? result)
-    {
-        if (result == null)
-        {
-            return null;
-        }
-        var json = JsonSerializer.Serialize(result);
-        return JsonSerializer.Deserialize<WebTestsCreateOrUpdateCommandResult>(json)?.webTest;
-    }
-
-    private record WebTestsCreateOrUpdateCommandResult(WebTestDetailedInfo webTest);
 
     #endregion
 }

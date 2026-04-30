@@ -1,49 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
-using NSubstitute;
+using Microsoft.Mcp.Tests.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.UnitTests.Commands.Infrastructure;
 
 
-public class RulesGetCommandTests
+public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<RulesGetCommand> _logger;
-    private readonly Command _commandDefinition;
-    private readonly CommandContext _context;
-    private readonly RulesGetCommand _command;
-
-    public RulesGetCommandTests()
-    {
-        _logger = Substitute.For<ILogger<RulesGetCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _command = new(_logger);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
-            "--resource-types", "appservice, azurestorage"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "appservice, azurestorage");
 
         // assert
         Assert.NotNull(result);
@@ -55,15 +30,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_get_infrastructure_rules_for_terraform()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "terraform",
-            "--resource-types", "containerapp, azurecosmosdb"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "containerapp, azurecosmosdb");
 
         // assert
         Assert.NotNull(result);
@@ -75,15 +46,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_get_infrastructure_rules_for_function_app()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
-            "--resource-types", "function"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "function");
 
         // assert
         Assert.NotNull(result);
@@ -96,15 +63,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_get_infrastructure_rules_for_container_app()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
-            "--resource-types", "containerapp"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "containerapp");
 
         // assert
         Assert.NotNull(result);
@@ -117,15 +80,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_get_infrastructure_rules_for_azcli_deployment_tool()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "AzCli",
             "--iac-type", "",
-            "--resource-types", "aks"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "aks");
 
         // assert
         Assert.NotNull(result);
@@ -137,15 +96,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_default_to_bicep_for_azd_when_iac_type_is_empty()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "",
-            "--resource-types", "appservice"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "appservice");
 
         // assert
         Assert.NotNull(result);
@@ -160,15 +115,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_include_necessary_tools_in_response()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "terraform",
-            "--resource-types", "containerapp"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "containerapp");
 
         // assert
         Assert.NotNull(result);
@@ -183,15 +134,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_handle_multiple_resource_types()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
-            "--resource-types", "appservice,containerapp,function"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "appservice,containerapp,function");
 
         // assert
         Assert.NotNull(result);
@@ -206,15 +153,11 @@ public class RulesGetCommandTests
     [Fact]
     public async Task Should_handle_azcli_terraform_all_resource_types()
     {
-        // arrange
-        var args = _commandDefinition.Parse([
+        // arrange & act
+        var result = await ExecuteCommandAsync(
             "--deployment-tool", "AzCli",
             "--iac-type", "terraform",
-            "--resource-types", "appservice,containerapp,function,aks,azuredatabaseforpostgresql,azuredatabaseformysql,azuresqldatabase,azurecosmosdb,azurestorageaccount,azurekeyvault"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+            "--resource-types", "appservice,containerapp,function,aks,azuredatabaseforpostgresql,azuredatabaseformysql,azuresqldatabase,azurecosmosdb,azurestorageaccount,azurekeyvault");
 
         // assert
         Assert.NotNull(result);
