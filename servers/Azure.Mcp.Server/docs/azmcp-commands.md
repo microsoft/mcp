@@ -1837,7 +1837,8 @@ azmcp kusto database list [--cluster-uri <cluster-uri> | --subscription <subscri
 azmcp kusto sample [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>]
                    --database <database> \
                    --table <table> \
-                   [--limit <limit>]
+                   [--limit <limit>] \
+                   [--chart-type <TimeSeries|Bar|Scatter|Pie>]
 
 # List tables in a Azure Data Explorer database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1854,7 +1855,8 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
-                  --query <kql-query>
+                  --query <kql-query> \
+                  [--chart-type <TimeSeries|Bar|Scatter|Pie>]
 
 ```
 

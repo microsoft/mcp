@@ -91,7 +91,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
-    <PackageVersion Include="System.ClientModel" Version="1.9.0" />
+    <PackageVersion Include="ScottPlot" Version="5.1.58" />
     <PackageVersion Include="System.CommandLine" Version="2.0.6" />
     <PackageVersion Include="System.Formats.Asn1" Version="10.0.6" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />

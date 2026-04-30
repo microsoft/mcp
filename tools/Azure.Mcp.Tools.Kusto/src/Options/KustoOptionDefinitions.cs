@@ -11,6 +11,7 @@ public static class KustoOptionDefinitions
     public const string TableName = "table";
     public const string LimitName = "limit";
     public const string QueryText = "query";
+    public const string ChartTypeName = "chart-type";
 
 
     public static readonly Option<string> Cluster = new(
@@ -60,5 +61,18 @@ public static class KustoOptionDefinitions
     {
         Description = "Kusto query to execute. Uses KQL syntax.",
         Required = true
+    };
+
+    public static readonly Option<string?> ChartType = new(
+        $"--{ChartTypeName}"
+    )
+    {
+        Description = "When specified, renders the query results as a chart image and includes it as an image content block in the MCP response, enabling LLMs with vision capability to analyze the data visually. " +
+                      "Valid values: TimeSeries (requires a datetime column and at least one numeric column), " +
+                      "Bar (requires a string/label column and a numeric column), " +
+                      "Scatter (requires two numeric columns), " +
+                      "Pie (requires a string/label column and a numeric column). " +
+                      "If the data shape does not match the requested chart type the image is omitted and only the JSON results are returned.",
+        Required = false
     };
 }

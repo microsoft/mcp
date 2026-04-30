@@ -22,7 +22,28 @@ public class CommandResponse
 
     [JsonPropertyName("duration")]
     public long Duration { get; set; }
+
+    /// <summary>
+    /// Optional images to include as MCP image content blocks alongside the JSON response.
+    /// When populated, each image is emitted as an <c>ImageContentBlock</c> in the MCP
+    /// <c>CallToolResult</c>, enabling vision-capable LLM clients to consume charts or
+    /// visualizations directly without parsing raw data.
+    /// </summary>
+    [JsonPropertyName("images")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ResponseImage>? Images { get; set; }
 }
+
+/// <summary>
+/// Represents an image to be included in an MCP tool response as an image content block.
+/// </summary>
+/// <param name="Data">The raw image bytes.</param>
+/// <param name="MimeType">The MIME type of the image (e.g. <c>image/png</c>).</param>
+/// <param name="AltText">Optional human-readable description of the image for accessibility and fallback.</param>
+public sealed record ResponseImage(
+    [property: JsonPropertyName("data")] byte[] Data,
+    [property: JsonPropertyName("mimeType")] string MimeType,
+    [property: JsonPropertyName("altText")] string? AltText = null);
 
 [JsonConverter(typeof(ResultConverter))]
 public sealed class ResponseResult

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added --chart-type parameter to kusto query and kusto sample commands. When specified with a valid chart type (TimeSeries, Bar, Scatter, or Pie), query results are rendered as a PNG chart image using ScottPlot and returned alongside the JSON results as an MCP image content block, enabling vision-capable LLM clients to analyze data visually."

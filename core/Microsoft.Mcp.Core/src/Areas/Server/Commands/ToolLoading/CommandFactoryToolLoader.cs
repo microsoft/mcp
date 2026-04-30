@@ -225,13 +225,22 @@ public sealed class CommandFactoryToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
+            var content = new List<ContentBlock>
+            {
+                new TextContentBlock { Text = jsonResponse }
+            };
+
+            if (commandResponse.Images != null)
+            {
+                foreach (var image in commandResponse.Images)
+                {
+                    content.Add(ImageContentBlock.FromBytes(image.Data, image.MimeType));
+                }
+            }
+
             return new CallToolResult
             {
-                Content = [
-                    new TextContentBlock {
-                        Text = jsonResponse
-                    }
-                ],
+                Content = content,
                 IsError = isError
             };
         }

@@ -4,8 +4,11 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Kusto.Commands;
+using Azure.Mcp.Tools.Kusto.Rendering;
 using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -16,6 +19,14 @@ namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
 public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKustoService>
 {
+    private readonly IKustoChartRenderer _chartRenderer;
+
+    public QueryCommandTests()
+    {
+        _chartRenderer = Substitute.For<IKustoChartRenderer>();
+        Services.AddSingleton(_chartRenderer);
+    }
+
     public static IEnumerable<object[]> QueryArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --query \"StormEvents | take 1\"", false };
@@ -123,4 +134,83 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_IncludesChartImage_WhenChartTypeSpecifiedAndRendererSucceeds()
+    {
+        // Arrange
+        var headerRow = JsonDocument.Parse("{\"Timestamp\":\"datetime\",\"Count\":\"long\"}").RootElement.Clone();
+        var dataRow = JsonDocument.Parse("[\"2024-01-01T00:00:00Z\",42]").RootElement.Clone();
+        var results = new List<JsonElement> { headerRow, dataRow };
+        var pngBytes = new byte[] { 1, 2, 3 };
+        var fakeImage = new ResponseImage(pngBytes, "image/png", "chart");
+
+        Service.QueryItemsAsync(
+            "https://mycluster.kusto.windows.net",
+            "db1",
+            "T",
+            Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(results);
+
+        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>())
+            .Returns(fakeImage);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"T\" --chart-type TimeSeries");
+
+        // Assert
+        Assert.NotNull(response.Images);
+        Assert.Single(response.Images);
+        Assert.Equal("image/png", response.Images[0].MimeType);
+        _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DoesNotIncludeImage_WhenChartTypeNotSpecified()
+    {
+        // Arrange
+        var results = new List<JsonElement>();
+        Service.QueryItemsAsync(
+            "https://mycluster.kusto.windows.net",
+            "db1",
+            "T",
+            Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(results);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"T\"");
+
+        // Assert
+        Assert.Null(response.Images);
+        _chartRenderer.DidNotReceiveWithAnyArgs().TryRender(default!, default, default);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DoesNotIncludeImage_WhenRendererReturnsNull()
+    {
+        // Arrange
+        var headerRow = JsonDocument.Parse("{\"Timestamp\":\"datetime\",\"Count\":\"long\"}").RootElement.Clone();
+        var dataRow = JsonDocument.Parse("[\"2024-01-01T00:00:00Z\",42]").RootElement.Clone();
+        var results = new List<JsonElement> { headerRow, dataRow };
+
+        Service.QueryItemsAsync(
+            "https://mycluster.kusto.windows.net",
+            "db1",
+            "T",
+            Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(results);
+
+        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), Arg.Any<ChartType>(), Arg.Any<string>())
+            .Returns((ResponseImage?)null);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"T\" --chart-type Bar");
+
+        // Assert
+        Assert.Null(response.Images);
+    }
 }
+

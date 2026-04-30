@@ -4,8 +4,11 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Kusto.Commands;
+using Azure.Mcp.Tools.Kusto.Rendering;
 using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -15,6 +18,14 @@ namespace Azure.Mcp.Tools.Kusto.UnitTests;
 
 public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKustoService>
 {
+    private readonly IKustoChartRenderer _chartRenderer;
+
+    public SampleCommandTests()
+    {
+        _chartRenderer = Substitute.For<IKustoChartRenderer>();
+        Services.AddSingleton(_chartRenderer);
+    }
+
     public static IEnumerable<object[]> SampleArgumentMatrix()
     {
         yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --table table1", false };
@@ -84,39 +95,6 @@ public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKu
         Assert.Empty(result.Results);
     }
 
-    // TODO: jongio - Talk to author about why they expect 500 here
-    // [Theory]
-    // [MemberData(nameof(SampleArgumentMatrix))]
-    // public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri)
-    // {
-    //     var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-    //     if (useClusterUri)
-    //     {
-    //         _kusto.QueryItems(
-    //             "https://mycluster.kusto.windows.net",
-    //             "db1",
-    //             "table1 | sample 10",
-    //             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-    //             .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
-    //     }
-    //     else
-    //     {
-    //         _kusto.QueryItems(
-    //             "sub1", "mycluster", "db1", "table1 | sample 10",
-    //             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-    //             .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
-    //     }
-    //     var command = new SampleCommand(_logger, _kusto);
-
-    //     var args = command.GetCommand().Parse(cliArgs);
-    //     var context = new CommandContext(_serviceProvider);
-
-    //     var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
-    //     Assert.NotNull(response);
-    //     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-    //     Assert.Equal(expectedError, response.Message);
-    // }
-
     [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
@@ -124,4 +102,36 @@ public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKu
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_IncludesChartImage_WhenChartTypeSpecifiedAndRendererSucceeds()
+    {
+        // Arrange
+        var headerRow = JsonDocument.Parse("{\"Category\":\"string\",\"Count\":\"long\"}").RootElement.Clone();
+        var dataRow = JsonDocument.Parse("[\"A\",42]").RootElement.Clone();
+        var results = new List<JsonElement> { headerRow, dataRow };
+        var pngBytes = new byte[] { 1, 2, 3 };
+        var fakeImage = new ResponseImage(pngBytes, "image/png", "chart");
+
+        Service.QueryItemsAsync(
+            "https://mycluster.kusto.windows.net",
+            "db1",
+            "['table1'] | sample 10",
+            Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(results);
+
+        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>())
+            .Returns(fakeImage);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table table1 --chart-type Bar");
+
+        // Assert
+        Assert.NotNull(response.Images);
+        Assert.Single(response.Images);
+        Assert.Equal("image/png", response.Images[0].MimeType);
+        _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>());
+    }
 }
+
