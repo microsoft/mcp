@@ -32,6 +32,21 @@ public class CommandResponse
     [JsonPropertyName("images")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<ResponseImage>? Images { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/> and the response is successful, the MCP loader will
+    /// suppress the JSON <c>TextContentBlock</c> and emit only the <see cref="Images"/>
+    /// content blocks. Use this when the rendered image is intended to fully replace
+    /// the raw data (e.g. a chart that summarizes a large query result), so vision-capable
+    /// clients consume the visualization rather than re-parsing the underlying data.
+    /// Errors always include the JSON envelope regardless of this flag.
+    /// </summary>
+    /// <remarks>
+    /// This is a transport-level instruction to the MCP tool loader and is intentionally
+    /// excluded from the serialized response payload.
+    /// </remarks>
+    [JsonIgnore]
+    public bool OmitTextContent { get; set; }
 }
 
 /// <summary>

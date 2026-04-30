@@ -227,11 +227,10 @@ public sealed class CommandFactoryToolLoader(
 
             var content = new List<ContentBlock>();
 
-            // When images are present and the response is successful, suppress the JSON text
-            // block so vision-capable clients receive only the rendered image(s) and skip the
-            // raw data the image was meant to replace. Errors always include the JSON text.
-            var hasImages = commandResponse.Images != null && commandResponse.Images.Count > 0;
-            if (!hasImages || isError)
+            // The text JSON envelope is suppressed only when the command explicitly opted in via
+            // CommandResponse.OmitTextContent (e.g. an image is intended to fully replace raw data).
+            // Errors always include the JSON envelope so the caller can read status/message.
+            if (!commandResponse.OmitTextContent || isError)
             {
                 content.Add(new TextContentBlock { Text = jsonResponse });
             }

@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Id = "d1e22074-53ce-4eef-8596-0ea134a9e317",
     Name = "query",
     Title = "Query Kusto Database",
-    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query. Optionally specify --chart-type to receive a rendered chart image alongside the raw JSON results.",
+    Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query. Optionally specify --chart-type to receive a rendered chart image instead of the raw JSON results (the JSON is omitted when an image is returned).",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -33,14 +33,19 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
         base.RegisterOptions(command);
         command.Options.Add(KustoOptionDefinitions.Query);
         command.Options.Add(KustoOptionDefinitions.ChartType);
+        KustoOptionDefinitions.AddChartTypeValidator(command);
     }
 
     protected override QueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
+        // The option-level validator on KustoOptionDefinitions.ChartType guarantees the value
+        // is either absent or a valid ChartType, so Enum.Parse cannot fail here.
         var chartTypeStr = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.ChartType.Name);
-        options.ChartType = Enum.TryParse<ChartType>(chartTypeStr, ignoreCase: true, out var ct) ? ct : (ChartType?)null;
+        options.ChartType = string.IsNullOrWhiteSpace(chartTypeStr)
+            ? null
+            : Enum.Parse<ChartType>(chartTypeStr, ignoreCase: true);
         return options;
     }
 
@@ -81,16 +86,22 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                     cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
-
-            if (options.ChartType.HasValue && results is { Count: > 1 })
+            if (options.ChartType.HasValue)
             {
-                var image = _chartRenderer.TryRender(results, options.ChartType.Value, title: $"Chart of Kusto query results ({options.ChartType.Value})");
-                if (image is not null)
-                {
-                    context.Response.Images = [image];
-                    context.Response.Results = null;
-                }
+                // The user explicitly opted in to chart rendering; the renderer throws a
+                // ChartRenderingException with a descriptive message if the data shape doesn't
+                // match the requested chart type, which HandleException turns into a tool-call
+                // error so the caller knows exactly why and can adjust their query.
+                var image = _chartRenderer.Render(
+                    results ?? [],
+                    options.ChartType.Value,
+                    title: $"Chart of Kusto query results ({options.ChartType.Value})");
+                context.Response.Images = [image];
+                context.Response.OmitTextContent = true;
+            }
+            else
+            {
+                context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
             }
         }
         catch (Exception ex)

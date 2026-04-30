@@ -152,7 +152,7 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(results);
 
-        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>())
+        _chartRenderer.Render(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>())
             .Returns(fakeImage);
 
         // Act
@@ -164,7 +164,8 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
         Assert.Single(response.Images);
         Assert.Equal("image/png", response.Images[0].MimeType);
         Assert.Null(response.Results);
-        _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>());
+        Assert.True(response.OmitTextContent);
+        _chartRenderer.Received(1).Render(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.TimeSeries, Arg.Any<string>());
     }
 
     [Fact]
@@ -185,15 +186,16 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
 
         // Assert
         Assert.Null(response.Images);
-        _chartRenderer.DidNotReceiveWithAnyArgs().TryRender(default!, default, default);
+        Assert.False(response.OmitTextContent);
+        _chartRenderer.DidNotReceiveWithAnyArgs().Render(default!, default, default);
     }
 
     [Fact]
-    public async Task ExecuteAsync_DoesNotIncludeImage_WhenRendererReturnsNull()
+    public async Task ExecuteAsync_FailsWithBadRequest_WhenRendererThrowsChartRenderingException()
     {
         // Arrange
-        var headerRow = JsonDocument.Parse("{\"Timestamp\":\"datetime\",\"Count\":\"long\"}").RootElement.Clone();
-        var dataRow = JsonDocument.Parse("[\"2024-01-01T00:00:00Z\",42]").RootElement.Clone();
+        var headerRow = JsonDocument.Parse("{\"Name\":\"string\"}").RootElement.Clone();
+        var dataRow = JsonDocument.Parse("[\"abc\"]").RootElement.Clone();
         var results = new List<JsonElement> { headerRow, dataRow };
 
         Service.QueryItemsAsync(
@@ -203,8 +205,8 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(results);
 
-        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), Arg.Any<ChartType>(), Arg.Any<string>())
-            .Returns((ResponseImage?)null);
+        _chartRenderer.Render(Arg.Any<IReadOnlyList<JsonElement>>(), Arg.Any<ChartType>(), Arg.Any<string>())
+            .Returns(_ => throw new ChartRenderingException("requires a datetime column"));
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -212,6 +214,21 @@ public sealed class QueryCommandTests : CommandUnitTestsBase<QueryCommand, IKust
 
         // Assert
         Assert.Null(response.Images);
+        Assert.Contains("requires a datetime column", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_FailsWithValidationError_WhenChartTypeValueIsInvalid()
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"T\" --chart-type Bogus");
+
+        // Assert: option-level validator rejected the value before service was hit
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("chart-type", response.Message, StringComparison.OrdinalIgnoreCase);
+        _ = Service.DidNotReceiveWithAnyArgs().QueryItemsAsync(
+            default!, default!, default!, default, default, default, Arg.Any<CancellationToken>());
     }
 }
 

@@ -120,7 +120,7 @@ public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKu
             Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(results);
 
-        _chartRenderer.TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>())
+        _chartRenderer.Render(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>())
             .Returns(fakeImage);
 
         // Act
@@ -132,7 +132,8 @@ public sealed class SampleCommandTests : CommandUnitTestsBase<SampleCommand, IKu
         Assert.Single(response.Images);
         Assert.Equal("image/png", response.Images[0].MimeType);
         Assert.Null(response.Results);
-        _chartRenderer.Received(1).TryRender(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>());
+        Assert.True(response.OmitTextContent);
+        _chartRenderer.Received(1).Render(Arg.Any<IReadOnlyList<JsonElement>>(), ChartType.Bar, Arg.Any<string>());
     }
 }
 

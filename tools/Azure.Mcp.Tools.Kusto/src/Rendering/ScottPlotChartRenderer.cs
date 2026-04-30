@@ -21,14 +21,20 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
     };
 
     /// <inheritdoc />
-    public ResponseImage? TryRender(IReadOnlyList<JsonElement> results, ChartType chartType, string? title = null)
+    public ResponseImage Render(IReadOnlyList<JsonElement> results, ChartType chartType, string? title = null)
     {
         if (results.Count < 2)
-            return null;
+        {
+            throw new ChartRenderingException(
+                $"Cannot render {chartType} chart: query returned no rows (only the schema header). Adjust the query so it returns at least one data row.");
+        }
 
         // results[0] is the column→type header dictionary
         if (results[0].ValueKind != JsonValueKind.Object)
-            return null;
+        {
+            throw new ChartRenderingException(
+                $"Cannot render {chartType} chart: query result is missing the expected column-type header.");
+        }
 
         var columns = results[0]
             .EnumerateObject()
@@ -36,9 +42,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
 
         if (!DataShapeValidator.Validate(columns, chartType, out var errorMessage))
         {
-            logger.LogWarning("Chart rendering skipped — data shape validation failed for {ChartType}: {Error}",
-                chartType, errorMessage);
-            return null;
+            throw new ChartRenderingException(errorMessage!);
         }
 
         // Data rows are JSON arrays (one element per column in column order)
@@ -48,7 +52,10 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
             .ToList();
 
         if (rows.Count == 0)
-            return null;
+        {
+            throw new ChartRenderingException(
+                $"Cannot render {chartType} chart: query returned no data rows.");
+        }
 
         try
         {
@@ -58,17 +65,22 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
                 ChartType.Bar => RenderBar(columnNames, columns, rows, title),
                 ChartType.Scatter => RenderScatter(columnNames, columns, rows, title),
                 ChartType.Pie => RenderPie(columnNames, columns, rows, title),
-                _ => null
+                _ => throw new ChartRenderingException($"Unsupported chart type: {chartType}.")
             };
+        }
+        catch (ChartRenderingException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Chart rendering failed for {ChartType}", chartType);
-            return null;
+            throw new ChartRenderingException(
+                $"Failed to render {chartType} chart: {ex.Message}", ex);
         }
     }
 
-    private ResponseImage? RenderTimeSeries(
+    private ResponseImage RenderTimeSeries(
         IList<string> columnNames,
         IReadOnlyDictionary<string, string> columns,
         IList<JsonElement> rows,
@@ -102,7 +114,11 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
             }
         }
 
-        if (timestamps.Count == 0) return null;
+        if (timestamps.Count == 0)
+        {
+            throw new ChartRenderingException(
+                "TimeSeries chart could not be rendered: none of the rows contained a parseable datetime value.");
+        }
 
         var xs = timestamps.ToArray();
         var plot = new ScottPlot.Plot();
@@ -121,7 +137,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
         return ToPngImage(plot, $"Time series chart with {timestamps.Count} data points");
     }
 
-    private ResponseImage? RenderBar(
+    private ResponseImage RenderBar(
         IList<string> columnNames,
         IReadOnlyDictionary<string, string> columns,
         IList<JsonElement> rows,
@@ -149,7 +165,11 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
             values.Add(ToDouble(arr[valueIdx]));
         }
 
-        if (values.Count == 0) return null;
+        if (values.Count == 0)
+        {
+            throw new ChartRenderingException(
+                "Bar chart could not be rendered: rows did not contain valid label/value pairs.");
+        }
 
         var plot = new ScottPlot.Plot();
         plot.Title(title ?? columnNames[valueIdx]);
@@ -169,7 +189,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
         return ToPngImage(plot, $"Bar chart with {values.Count} categories");
     }
 
-    private ResponseImage? RenderScatter(
+    private ResponseImage RenderScatter(
         IList<string> columnNames,
         IReadOnlyDictionary<string, string> columns,
         IList<JsonElement> rows,
@@ -195,7 +215,11 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
             ys.Add(ToDouble(arr[yIdx]));
         }
 
-        if (xs.Count == 0) return null;
+        if (xs.Count == 0)
+        {
+            throw new ChartRenderingException(
+                "Scatter chart could not be rendered: rows did not contain valid X/Y numeric pairs.");
+        }
 
         var plot = new ScottPlot.Plot();
         plot.Title(title ?? $"{columnNames[xIdx]} vs {columnNames[yIdx]}");
@@ -206,7 +230,7 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
         return ToPngImage(plot, $"Scatter plot with {xs.Count} data points");
     }
 
-    private ResponseImage? RenderPie(
+    private ResponseImage RenderPie(
         IList<string> columnNames,
         IReadOnlyDictionary<string, string> columns,
         IList<JsonElement> rows,
@@ -237,7 +261,11 @@ public sealed class ScottPlotChartRenderer(ILogger<ScottPlotChartRenderer> logge
             });
         }
 
-        if (slices.Count == 0) return null;
+        if (slices.Count == 0)
+        {
+            throw new ChartRenderingException(
+                "Pie chart could not be rendered: no rows contained a positive numeric value to chart.");
+        }
 
         var plot = new ScottPlot.Plot();
         plot.Title(title ?? columnNames[valueIdx]);
