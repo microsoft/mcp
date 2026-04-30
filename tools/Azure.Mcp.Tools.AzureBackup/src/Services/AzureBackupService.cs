@@ -278,6 +278,21 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.CreatePolicyAsync(vaultName, resourceGroup, subscription, policyName, workloadType, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
     }
 
+    public async Task<OperationResult> UpdatePolicyAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string policyName, string? vaultType,
+        string? scheduleTime, string? dailyRetentionDays,
+        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
+        if (!VaultTypeResolver.IsRsv(resolved))
+        {
+            throw new InvalidOperationException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.");
+        }
+
+        return await rsvOps.UpdatePolicyAsync(vaultName, resourceGroup, subscription, policyName, scheduleTime, dailyRetentionDays, tenant, retryPolicy, cancellationToken);
+    }
+
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
         string? workloadType, string? containerName, string? vaultType, string? tenant,
@@ -307,9 +322,31 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string datasourceId, string subscription, string location,
         string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var resourceId = new ResourceIdentifier(datasourceId);
-        var armResourceType = resourceId.ResourceType.ToString().ToLowerInvariant();
-        var datasourceType = MapArmResourceTypeToBackupDataSourceType(armResourceType);
+        ResourceIdentifier resourceId;
+        try
+        {
+            resourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{name}).", ex);
+        }
+
+        string? armResourceType = null;
+        try
+        {
+            armResourceType = resourceId.ResourceType.ToString().ToLowerInvariant();
+        }
+        catch (Exception)
+        {
+            // ResourceType can throw for malformed IDs
+        }
+
+        var datasourceType = string.IsNullOrEmpty(armResourceType)
+            ? null
+            : MapArmResourceTypeToBackupDataSourceType(armResourceType);
 
         if (datasourceType != null)
         {
@@ -573,6 +610,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string immutabilityState, string? vaultType, string? tenant,
         RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(immutabilityState, nameof(immutabilityState));
+
         var normalizedState = NormalizeImmutabilityState(immutabilityState);
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, retryPolicy, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)

@@ -13,33 +13,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 
-public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
-    : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Diagnose an App Service Web App";
-    private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
-    public override string Id => "a8aa0966-4c0c-4e22-8854-cced583f0fb2";
-    public override string Name => "diagnose";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a8aa0966-4c0c-4e22-8854-cced583f0fb2",
+    Name = "diagnose",
+    Title = "Diagnose an App Service Web App",
+    Description = """
         Runs a specific diagnostic detector on an App Service Web App to troubleshoot issues with performance, availability,
         configuration, or errors. Returns detailed analysis results including insights and recommendations. Use this to investigate
         why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
         Supports optional time range filtering for historical analysis.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> logger)
+    : BaseAppServiceCommand<DetectorDiagnoseOptions>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<DetectorDiagnoseCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

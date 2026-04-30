@@ -11,27 +11,23 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
+[CommandMetadata(
+    Id = "19bb5a6a-2a09-410c-bfa0-312986c6acc6",
+    Name = "get_table",
+    Title = "Get OneLake Table",
+    Description = "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.",
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class TableGetCommand(
     ILogger<TableGetCommand> logger,
     IOneLakeService oneLakeService) : GlobalCommand<TableGetOptions>()
 {
     private readonly ILogger<TableGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
-
-    public override string Id => "19bb5a6a-2a09-410c-bfa0-312986c6acc6";
-    public override string Name => "get_table";
-    public override string Title => "Get OneLake Table";
-    public override string Description => "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

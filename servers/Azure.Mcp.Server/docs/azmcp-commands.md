@@ -17,6 +17,41 @@ The following options are available for all commands:
 | `--retry-max-delay` | No | 10 | Maximum delay between retries (seconds) |
 | `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
+| `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
+
+### Discovery with `--learn`
+
+The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
+
+```bash
+# List all commands available under the 'storage' namespace
+azmcp storage --learn
+
+# List all commands under 'storage account'
+azmcp storage account --learn
+
+# Show the options for a specific command without executing it
+azmcp storage account list --learn
+```
+
+The output is a JSON `CommandResponse` containing a list of `CommandInfo` objects with the command name, description, full CLI path, and all supported options. This is equivalent to the `learn` parameter supported by the Azure MCP server tools in namespace mode.
+
+### CLI Logging
+
+In CLI mode, all `azmcp` commands write only JSON to **stdout**. Informational and diagnostic log messages are written to **stderr**. This means AI agents and tools consuming stdout receive clean JSON without log noise.
+
+To see logs while running a CLI command:
+
+```powershell
+# Show logs in terminal alongside JSON output (PowerShell / bash)
+azmcp storage account list --subscription <sub> 2>&1
+
+# Capture JSON silently, discard logs (PowerShell)
+$json = azmcp storage account list --subscription <sub> 2>$null
+
+# Write logs to a file while JSON goes to stdout
+azmcp storage account list --subscription <sub> 2>azmcp.log
+```
 
 ## Available Commands
 
@@ -739,7 +774,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). Returns the created vault details.
+# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -784,6 +819,16 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--schedule-time <schedule-time>] \
                                 [--daily-retention-days <daily-retention-days>]
 
+# Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup policy update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                --policy <policy> \
+                                [--vault-type <vault-type>] \
+                                [--schedule-time <schedule-time>] \
+                                [--daily-retention-days <daily-retention-days>]
+
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy get --subscription <subscription> \
@@ -805,7 +850,7 @@ azmcp azurebackup protecteditem get --subscription <subscription> \
                                     [--protected-item <protected-item>] \
                                     [--container <container>]
 
-# Enables backup protection for a resource by creating a protected item or backup instance.
+# Enables backup protection for a resource by creating a protected item or backup instance. For RSV the tool waits for the underlying ConfigureBackup job to reach a terminal state and returns the final job status; for DPP the tool waits for the protect operation to complete and reads back the backup instance, returning ProtectionStatus (DPP protection is not a job - use 'azurebackup protecteditem get' or 'list' to verify).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         --resource-group <resource-group> \
@@ -1941,7 +1986,7 @@ azmcp postgres server param set --subscription <subscription> \
 
 ```bash
 # Get the application service log for a specific azd environment
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
@@ -2501,12 +2546,10 @@ azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
                               [--include-stop-sold-plans <true/false>] \
                               [--language <language-code>] \
-                              [--market <market-code>] \
                               [--lookup-offer-in-tenant-level <true/false>] \
                               [--plan-id <plan-id>] \
                               [--sku-id <sku-id>] \
-                              [--include-service-instruction-templates <true/false>] \
-                              [--pricing-audience <pricing-audience>]
+                              [--include-service-instruction-templates <true/false>]
 ```
 
 ### Azure MCP Best Practices

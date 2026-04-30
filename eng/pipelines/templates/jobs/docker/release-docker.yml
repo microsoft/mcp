@@ -64,9 +64,32 @@ jobs:
             $cliName = $server.cliName
             $dockerImageName = $server.dockerImageName
 
+            # Derive minor version (e.g. '1.2' from '1.2.3')
+            $minorVersion = ($version -split '\.')[0..1] -join '.'
+
+            $baseRepo = '${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/' + $dockerImageName
+
+            # Always tag by full version; only tag by minor version for stable versions
+            $amd64Tags = @()
+            $amd64Tags += "${baseRepo}:${version}-amd64"
+            if ($version -notmatch '[-+]') {
+              $amd64Tags += "${baseRepo}:${minorVersion}-amd64"
+            }
+            $amd64RemoteImages = $amd64Tags -join ','
+
+            $arm64Tags = @()
+            $arm64Tags += "${baseRepo}:${version}-arm64"
+            if ($version -notmatch '[-+]') {
+              $arm64Tags += "${baseRepo}:${minorVersion}-arm64"
+            }
+            $arm64RemoteImages = $arm64Tags -join ','
+
             Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
             Write-Host "##vso[task.setvariable variable=CliName;isOutput=true]$cliName"
             Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
+            Write-Host "##vso[task.setvariable variable=Amd64RemoteImages;isOutput=true]$amd64RemoteImages"
+            Write-Host "##vso[task.setvariable variable=Arm64RemoteImages;isOutput=true]$arm64RemoteImages"
+          displayName: Set release variables
           name: SetReleaseVariables
 
         - task: PowerShell@2
@@ -83,13 +106,13 @@ jobs:
           displayName: Push Docker image (amd64)
           inputs:
             image: $(SetReleaseVariables.DockerImageName):amd64
-            remoteImage: ${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName):$(SetReleaseVariables.DockerImageVersion)-amd64
+            remoteImage: $(SetReleaseVariables.Amd64RemoteImages)
 
         - task: 1ES.PushContainerImage@1
           displayName: Push Docker image (arm64)
           inputs:
             image: $(SetReleaseVariables.DockerImageName):arm64
-            remoteImage: ${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName):$(SetReleaseVariables.DockerImageVersion)-arm64
+            remoteImage: $(SetReleaseVariables.Arm64RemoteImages)
 
         - task: PowerShell@2
           displayName: Create and push multi-arch manifests

@@ -14,29 +14,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
 
+[CommandMetadata(
+    Id = "95ce2336-19e6-40fb-a3ea-e2a76772036b",
+    Name = "get",
+    Title = "Get Sync Group",
+    Description = "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<SyncGroupGetOptions>
 {
-    private const string CommandTitle = "Get Sync Group";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<SyncGroupGetCommand> _logger = logger;
-
-    public override string Id => "95ce2336-19e6-40fb-a3ea-e2a76772036b";
-
-    public override string Name => "get";
-
-    public override string Description => "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

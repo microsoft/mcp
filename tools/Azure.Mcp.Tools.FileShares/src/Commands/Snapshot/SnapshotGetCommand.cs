@@ -11,25 +11,20 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
 
+[CommandMetadata(
+    Id = "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+    Name = "get",
+    Title = "Get File Share Snapshot",
+    Description = "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService service)
     : BaseFileSharesCommand<SnapshotGetOptions>(logger, service)
 {
-    private const string CommandTitle = "Get File Share Snapshot";
-
-    public override string Id => "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d";
-    public override string Name => "get";
-    public override string Description => "Get details of a specific file share snapshot or list all snapshots. If --snapshot-name is provided, returns a specific snapshot; otherwise, lists all snapshots for the file share.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -11,33 +11,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
+[CommandMetadata(
+    Id = "723d9b34-9022-486e-83a7-f72d83bdafd2",
+    Name = "list",
+    Title = "List Azure Managed Lustre File Systems",
+    Description = "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class FileSystemListCommand(IManagedLustreService service, ILogger<FileSystemListCommand> logger)
     : BaseManagedLustreCommand<FileSystemListOptions>(logger)
 {
     private readonly IManagedLustreService _service = service;
-    private const string CommandTitle = "List Azure Managed Lustre File Systems";
-
-    public override string Id => "723d9b34-9022-486e-83a7-f72d83bdafd2";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
 
     protected override void RegisterOptions(Command command)
     {

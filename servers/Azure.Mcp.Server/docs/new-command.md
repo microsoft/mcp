@@ -730,35 +730,26 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
-    : Base{Toolset}Command<{Resource}{Operation}Options>
-{
-    private const string CommandTitle = "Human Readable Title";
-    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
-
-    public override string Id => "<GUID>"
-
-    public override string Name => "operation";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "<GUID>",
+    Name = "operation",
+    Title = "Human Readable Title",
+    Description = """
         Detailed description of what the command does.
         Returns description of return format.
           Required options:
         - list required options
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,    // Set to true for tools that modify resources
-        OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
-        Idempotent = true,      // Set to false for tools that are not idempotent
-        ReadOnly = true,        // Set to false for tools that modify resources
-        Secret = false,         // Set to true for tools that may return sensitive information
-        LocalRequired = false   // Set to true for tools requiring local execution/resources
-    };
+        """,
+    Destructive = false,    // Set to true for tools that modify resources
+    OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
+    Idempotent = true,      // Set to false for tools that are not idempotent
+    ReadOnly = true,        // Set to false for tools that modify resources
+    Secret = false,         // Set to true for tools that may return sensitive information
+    LocalRequired = false)] // Set to true for tools requiring local execution/resources
+public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
+    : Base{Toolset}Command<{Resource}{Operation}Options>
+{
+    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
@@ -1392,7 +1383,7 @@ private CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     var resource = new CommandGroup("{resource}", "{Resource} operations description");
     service.AddSubGroup(resource);
 
-    resource.AddCommand(serviceProvider.GetRequiredService<{Resource}{Operation}Command>());
+    resource.AddCommand<{Resource}{Operation}Command>(serviceProvider);
 
     return service;
 }

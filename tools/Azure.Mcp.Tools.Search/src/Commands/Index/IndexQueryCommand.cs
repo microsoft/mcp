@@ -11,33 +11,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions>()
-{
-    private const string CommandTitle = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
-    private readonly ILogger<IndexQueryCommand> _logger = logger;
-    private readonly ISearchService _searchService = searchService;
-
-    public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
-
-    public override string Name => "query";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f1938a77-8d6c-49c7-b592-71b4f26508e7",
+    Name = "query",
+    Title = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index",
+    Description = """
         Queries/searches documents in an Azure AI Search index with a given query, returning the results of the
         query/search.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService) : GlobalCommand<IndexQueryOptions>()
+{
+    private readonly ILogger<IndexQueryCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
     protected override void RegisterOptions(Command command)
     {

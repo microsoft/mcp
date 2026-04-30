@@ -13,42 +13,33 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
-    : BaseEventHubsCommand<NamespaceDeleteOptions>
-{
-    private const string CommandTitle = "Delete Event Hubs Namespace";
-
-    private readonly IEventHubsService _service = service;
-    private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
-
-    public override string Id => "187ffc25-1e32-4e39-a7d4-94859852ac50";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "187ffc25-1e32-4e39-a7d4-94859852ac50",
+    Name = "delete",
+    Title = "Delete Event Hubs Namespace",
+    Description = """
         Delete Event Hubs namespace. This tool will delete a pre-existing Namespace from the 
         specified resource group. This tool will remove existing configurations, and is 
         considered to be destructive.
 
         WARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and
         configurations within the namespace will be permanently deleted.
-        
+
         The namespace must exist in the specified resource group. If the namespace is not found,
         an error will be returned.
-        """;
+        """,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logger, IEventHubsService service)
+    : BaseEventHubsCommand<NamespaceDeleteOptions>
+{
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        OpenWorld = false,
-        Destructive = true,    // Permanently deletes resources
-        Idempotent = true,     // Deleting same resource multiple times has same effect
-        ReadOnly = false,      // Modifies cloud state
-        Secret = false,        // Returns non-sensitive information
-        LocalRequired = false  // Pure cloud API calls
-    };
+    private readonly IEventHubsService _service = service;
+    private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {

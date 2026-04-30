@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 using NSubstitute;
 using Xunit;

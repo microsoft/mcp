@@ -12,30 +12,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
+[CommandMetadata(
+    Id = "eb44ef6c-93dc-4fa1-949c-a5e8939d5052",
+    Name = "list",
+    Title = "Test Resource List",
+    Description = """
+        Lists all Azure Load Testing resources available in the selected subscription and resource group.
+        Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger, ILoadTestingService loadTestingService)
     : BaseLoadTestingCommand<TestResourceListOptions>
 {
-    private const string _commandTitle = "Test Resource List";
     private readonly ILogger<TestResourceListCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "eb44ef6c-93dc-4fa1-949c-a5e8939d5052";
-    public override string Name => "list";
-    public override string Description =>
-        $"""
-        Lists all Azure Load Testing resources available in the selected subscription and resource group.
-        Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

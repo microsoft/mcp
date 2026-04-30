@@ -13,29 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
+[CommandMetadata(
+    Id = "15db4769-1941-4b1e-9514-867b0f68eb2c",
+    Name = "update",
+    Title = "Update Storage Sync Service",
+    Description = "Update properties of an existing Azure Storage Sync service.",
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUpdateCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceUpdateOptions>
 {
-    private const string CommandTitle = "Update Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceUpdateCommand> _logger = logger;
-
-    public override string Id => "15db4769-1941-4b1e-9514-867b0f68eb2c";
-
-    public override string Name => "update";
-
-    public override string Description => "Update properties of an existing Azure Storage Sync service.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

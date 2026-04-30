@@ -14,18 +14,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions>
-{
-    private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
-    private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
-    private readonly IServiceBusService _serviceBusService = serviceBusService;
-
-    public override string Id => "61d32f07-fad6-4e43-9f1e-f0937ce773b3";
-
-    public override string Name => "peek";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "61d32f07-fad6-4e43-9f1e-f0937ce773b3",
+    Name = "peek",
+    Title = "Peek Messages from Service Bus Topic Subscription",
+    Description = """
         Peek messages from a Service Bus subscription without removing them.  Message browsing, or peeking, enables a
         Service Bus client to enumerate all messages in a subscription, for diagnostic and debugging purposes.
         The peek operation returns active, locked, and deferred messages in the subscription.
@@ -36,19 +29,17 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - topic: Topic name containing the subscription
         - subscription-name: Subscription name to peek messages from
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionPeekOptions>
+{
+    private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override void RegisterOptions(Command command)
     {

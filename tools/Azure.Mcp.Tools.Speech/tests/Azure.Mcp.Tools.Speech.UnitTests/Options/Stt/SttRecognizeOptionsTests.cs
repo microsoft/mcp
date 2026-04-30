@@ -17,7 +17,7 @@ public class SttRecognizeOptionsTests
         var options = new SttRecognizeOptions();
 
         // Assert
-        Assert.IsAssignableFrom<BaseSpeechOptions>(options);
+        Assert.IsType<BaseSpeechOptions>(options, exactMatch: false);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class SttRecognizeOptionsTests
         {
             File = "test-audio.wav",
             Language = "en-US",
-            Phrases = new[] { "Azure", "speech" },
+            Phrases = ["Azure", "speech"],
             Format = "detailed",
             Profanity = "masked",
             Endpoint = "https://test.cognitiveservices.azure.com/",
@@ -288,13 +288,10 @@ public class SttRecognizeOptionsTests
     [Fact]
     public void Phrases_ShouldAcceptSinglePhrase()
     {
-        // Arrange
-        var singlePhrase = new[] { "Azure" };
-
-        // Act
+        // Arrange & Act
         var options = new SttRecognizeOptions
         {
-            Phrases = singlePhrase
+            Phrases = ["Azure"]
         };
 
         // Assert
@@ -329,7 +326,7 @@ public class SttRecognizeOptionsTests
         {
             File = "test.wav",
             Language = "en-US",
-            Phrases = new[] { "test" },
+            Phrases = ["test"],
             Format = "simple",
             Profanity = "masked"
         };
@@ -353,7 +350,7 @@ public class SttRecognizeOptionsTests
         {
             File = "/path/to/complex-audio-file.wav",
             Language = "en-US",
-            Phrases = new[] { "Microsoft Azure", "artificial intelligence", "cognitive services", "speech-to-text" },
+            Phrases = ["Microsoft Azure", "artificial intelligence", "cognitive services", "speech-to-text"],
             Format = "detailed",
             Profanity = "removed",
             Endpoint = "https://eastus.api.cognitive.microsoft.com/",

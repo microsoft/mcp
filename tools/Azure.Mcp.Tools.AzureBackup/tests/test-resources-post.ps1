@@ -23,10 +23,12 @@ Write-Host "Azure Backup test resources deployed successfully for vault: $BaseNa
 $subscriptionId = (Get-AzContext).Subscription.Id
 $rsvVaultName = "$BaseName-rsv"
 $dppVaultName = "$BaseName-dpp"
-$diskId = $DeploymentOutputs["diskId"]
-$storageAccountName = $DeploymentOutputs["storageAccountName"]
-$fileShareName = $DeploymentOutputs["fileShareName"]
-$storageAccountId = $DeploymentOutputs["storageAccountId"]
+# DeploymentOutputs is a case-sensitive OrderedDictionary (from ConvertFrom-Json -AsHashtable)
+# and the test resources framework upper-cases all output keys before serializing.
+$diskId = $DeploymentOutputs["DISKID"]
+$storageAccountName = $DeploymentOutputs["STORAGEACCOUNTNAME"]
+$fileShareName = $DeploymentOutputs["FILESHARENAME"]
+$storageAccountId = $DeploymentOutputs["STORAGEACCOUNTID"]
 
 Write-Host "Setting up undelete test infrastructure..." -ForegroundColor Cyan
 

@@ -11,29 +11,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
+[CommandMetadata(
+    Id = "af3a581d-ab64-4939-9765-974815d9c7be",
+    Name = "get",
+    Title = "Get PostgreSQL Server Parameter",
+    Description = "Retrieves a specific parameter of a PostgreSQL server.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamGetCommand(IPostgresService postgresService, ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Get PostgreSQL Server Parameter";
-
-    public override string Id => "af3a581d-ab64-4939-9765-974815d9c7be";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Retrieves a specific parameter of a PostgreSQL server.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

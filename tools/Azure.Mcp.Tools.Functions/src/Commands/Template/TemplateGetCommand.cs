@@ -15,33 +15,20 @@ namespace Azure.Mcp.Tools.Functions.Commands.Template;
 
 internal record TemplateGetCommandResult(TemplateListResult? TemplateList, FunctionTemplateResult? FunctionTemplate);
 
+[CommandMetadata(
+    Id = "c3d4e5f6-a7b8-9012-cdef-234567890123",
+    Name = "get",
+    Title = "Get Function Template",
+    Description = "List available Azure Functions templates or generate function code. Shows triggers (HTTP, Timer, Blob, EventHub, Durable, MCP triggers, and more), bindings, and serverless function options. Create durable functions, orchestrations, activity functions, or MCP server functions. Supports azd infrastructure with Bicep, Terraform, ARM templates. Without --template, lists all templates. With --template, generates code files. Select one trigger (required) and zero or more bindings.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : BaseCommand<TemplateGetOptions>
 {
     private readonly ILogger<TemplateGetCommand> _logger = logger;
-
-    public override string Id => "c3d4e5f6-a7b8-9012-cdef-234567890123";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List available Azure Functions templates or generate function code. " +
-        "Shows triggers (HTTP, Timer, Blob, EventHub, Durable, MCP triggers, and more), bindings, and serverless function options. " +
-        "Create durable functions, orchestrations, activity functions, or MCP server functions. " +
-        "Supports azd infrastructure with Bicep, Terraform, ARM templates. " +
-        "Without --template, lists all templates. With --template, generates code files. " +
-        "Select one trigger (required) and zero or more bindings.";
-
-    public override string Title => "Get Function Template";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -133,6 +133,7 @@ resource dppDiskBackupReaderRoleAssignment 'Microsoft.Authorization/roleAssignme
 
 // Output the resource IDs for the post-deployment script
 output diskId string = testDisk.id
+output diskName string = testDisk.name
 
 // ─── RSV Undelete Test Resources (Storage Account + File Share) ───
 

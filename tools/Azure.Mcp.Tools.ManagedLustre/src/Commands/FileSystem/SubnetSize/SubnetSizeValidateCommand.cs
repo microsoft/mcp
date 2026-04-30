@@ -11,31 +11,22 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
+[CommandMetadata(
+    Id = "b6317bba-e28c-445b-9133-9cfbfe677698",
+    Name = "validate",
+    Title = "Validate AMLFS subnet against SKU and size",
+    Description = "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILogger<SubnetSizeValidateCommand> logger)
     : BaseManagedLustreCommand<SubnetSizeValidateOptions>(logger)
 {
-    private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
     private readonly IManagedLustreService _service = service;
-
-    public override string Id => "b6317bba-e28c-445b-9133-9cfbfe677698";
-
-    public override string Name => "validate";
-
-    public override string Description =>
-        "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",

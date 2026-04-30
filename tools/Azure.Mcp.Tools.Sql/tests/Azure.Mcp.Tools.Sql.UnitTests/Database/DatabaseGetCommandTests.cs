@@ -1,51 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.Database;
 
-public class DatabaseGetCommandTests
+public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, ISqlService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISqlService _sqlService;
-    private readonly ILogger<DatabaseGetCommand> _logger;
-    private readonly DatabaseGetCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public DatabaseGetCommandTests()
-    {
-        _sqlService = Substitute.For<ISqlService>();
-        _logger = Substitute.For<ILogger<DatabaseGetCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-
-        _command = new(_sqlService, _logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("get", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("Azure SQL database", command.Description);
+        Assert.Equal("get", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("Azure SQL database", CommandDefinition.Description);
     }
 
     [Fact]
@@ -54,7 +31,7 @@ public class DatabaseGetCommandTests
         // Arrange
         var mockDatabase = CreateMockDatabase("testdb");
 
-        _sqlService.GetDatabaseAsync(
+        Service.GetDatabaseAsync(
             Arg.Is("server1"),
             Arg.Is("testdb"),
             Arg.Is("rg"),
@@ -63,18 +40,20 @@ public class DatabaseGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await _sqlService.Received(1).GetDatabaseAsync("server1", "testdb", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await _sqlService.DidNotReceive().ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetDatabaseAsync("server1", "testdb", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -83,7 +62,7 @@ public class DatabaseGetCommandTests
         // Arrange
         var mockDatabases = new ResourceQueryResults<SqlDatabase>([CreateMockDatabase("db1"), CreateMockDatabase("db2")], false);
 
-        _sqlService.ListDatabasesAsync(
+        Service.ListDatabasesAsync(
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
@@ -91,37 +70,38 @@ public class DatabaseGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockDatabases);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await _sqlService.Received(1).ListDatabasesAsync("server1", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await _sqlService.DidNotReceive().GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListDatabasesAsync("server1", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _sqlService
-            .ListDatabasesAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.ListDatabasesAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -134,20 +114,21 @@ public class DatabaseGetCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
-        _sqlService
-            .GetDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.GetDatabaseAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "nonexistent"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "nonexistent");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -159,19 +140,19 @@ public class DatabaseGetCommandTests
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
-        _sqlService
-            .ListDatabasesAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.ListDatabasesAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
-        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -189,18 +170,16 @@ public class DatabaseGetCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _sqlService
+            Service
                 .ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<SqlDatabase>([], false));
-            _sqlService
+            Service
                 .GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(CreateMockDatabase("db1"));
         }
 
-        var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Assert
         if (shouldSucceed)

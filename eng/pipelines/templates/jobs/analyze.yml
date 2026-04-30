@@ -8,8 +8,6 @@ jobs:
     fetchDepth: 0
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
-    parameters:
-      AdditionalVersions: ['9.0.x']
   
   - task: Powershell@2
     displayName: "Run source analysis"

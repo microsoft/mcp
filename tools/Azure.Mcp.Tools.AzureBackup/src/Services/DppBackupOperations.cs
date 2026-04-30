@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -64,7 +64,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings));
+        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings))
+        {
+            // DPP (Backup Vault) requires a Managed Identity to authenticate to protected
+            // datasources (storage accounts, disks, PG Flex, etc.). Without it every
+            // 'protecteditem protect' call would fail server-side with VaultMSIUnauthorized.
+            // Default to SystemAssigned so the vault is usable out of the box; callers can
+            // change this later via 'vault update --identity-type ...'.
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
+        };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
 
@@ -132,9 +141,36 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
-        var datasourceResourceId = new ResourceIdentifier(datasourceId);
+        ResourceIdentifier datasourceResourceId;
+        try
+        {
+            datasourceResourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/disks/{name}).", ex);
+        }
 
-        var resolvedDatasourceType = datasourceType ?? datasourceResourceId.ResourceType.ToString();
+        string resolvedDatasourceType;
+        if (!string.IsNullOrEmpty(datasourceType))
+        {
+            resolvedDatasourceType = datasourceType;
+        }
+        else
+        {
+            try
+            {
+                resolvedDatasourceType = datasourceResourceId.ResourceType.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(
+                    $"Could not determine datasource type from '{datasourceId}'. " +
+                    "The ARM resource ID may be malformed. Provide --datasource-type explicitly or fix the resource ID.", ex);
+            }
+        }
         var profile = ResolveProfile(resolvedDatasourceType);
 
         var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
@@ -197,15 +233,55 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             Properties = instanceProperties
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, instanceName, instanceData, cancellationToken);
+        // DPP protection is asynchronous on the server side and is NOT surfaced as a
+        // backup job (only on-demand backup, restore, etc. are jobs). MCP must therefore
+        // wait for the underlying operationStatus to reach a terminal state and then read
+        // back the BackupInstance to confirm the protection actually configured. Using
+        // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
+        // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
+        // RequestFailedException, instead of silently returning "Accepted".
+        ArmOperation<DataProtectionBackupInstanceResource> operation;
+        try
+        {
+            operation = await collection.CreateOrUpdateAsync(
+                WaitUntil.Completed, instanceName, instanceData, cancellationToken);
+        }
+        catch (RequestFailedException ex)
+        {
+            return new ProtectResult(
+                "Failed",
+                instanceName,
+                JobId: null,
+                $"Protection failed for backup instance '{instanceName}': {ex.Message}",
+                ProtectionStatus: null,
+                ErrorMessage: ex.Message);
+        }
 
-        var jobId = ExtractJobIdFromOperation(result.GetRawResponse());
+        // Re-read the backup instance to capture the authoritative protection status.
+        // The LRO can complete while the BI is still in ConfiguringProtection; both
+        // outcomes are surfaced to the caller via ProtectionStatus. If the re-read
+        // fails with a transient error, report success (protection did complete) and
+        // let the caller verify with 'protecteditem get'.
+        string? protectionStatus = null;
+        try
+        {
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+        }
+        catch (RequestFailedException)
+        {
+            // Transient re-read failure; protection itself succeeded.
+        }
 
         return new ProtectResult(
-            "Accepted",
+            "Succeeded",
             instanceName,
-            jobId,
-            jobId != null ? $"Protection initiated. Use 'azurebackup job get --job {jobId}' to monitor progress." : "Protection initiated.");
+            JobId: null,
+            $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+            $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+            ProtectionStatus: protectionStatus,
+            ErrorMessage: null);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -237,7 +313,7 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         // Fall back to listing all items and searching by friendly name
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
         var found = items.FirstOrDefault(i =>
-            i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesDppFriendlyName(i, protectedItemName));
         return found ?? throw new KeyNotFoundException(
             $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
@@ -627,7 +703,16 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
             rules);
         var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
 
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        try
+        {
+            await collection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
+        {
+            // DPP does not support updating an existing policy via CreateOrUpdate.
+            // If the policy already exists, treat it as success (idempotent create).
+            return new OperationResult("Succeeded", null, $"Policy '{policyName}' already exists in vault '{vaultName}'.");
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
@@ -644,6 +729,15 @@ public sealed class DppBackupOperations(ITenantService tenantService) : BaseAzur
         var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // Pre-check current state. Re-enabling an already-enabled CRR returns a generic
+        // CloudInternalError on the DPP backend, which is indistinguishable from a real
+        // platform failure - so we avoid the call entirely when CRR is already enabled.
+        var vault = await vaultResource.GetAsync(cancellationToken);
+        if (vault.Value.Data.Properties?.FeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        {
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
 
         var patchData = new DataProtectionBackupVaultPatch
         {

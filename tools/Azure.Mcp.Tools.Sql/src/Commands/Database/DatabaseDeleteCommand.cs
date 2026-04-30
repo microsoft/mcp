@@ -10,32 +10,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Database;
 
+[CommandMetadata(
+    Id = "c4ef0375-0df9-445c-b8ae-2542e9612425",
+    Name = "delete",
+    Title = "Delete SQL Database",
+    Description = "Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DatabaseDeleteCommand(ISqlService sqlService, ILogger<DatabaseDeleteCommand> logger)
     : BaseDatabaseCommand<DatabaseDeleteOptions>(logger)
 {
     private readonly ISqlService _sqlService = sqlService;
-    private const string CommandTitle = "Delete SQL Database";
-
-    public override string Id => "c4ef0375-0df9-445c-b8ae-2542e9612425";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
-		Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.
-		""";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

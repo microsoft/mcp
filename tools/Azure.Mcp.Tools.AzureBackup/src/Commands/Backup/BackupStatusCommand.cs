@@ -15,23 +15,26 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 
-public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions>()
-{
-    private const string CommandTitle = "Check Backup Status";
-    private readonly ILogger<BackupStatusCommand> _logger = logger;
-    private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "f5612c55-054d-4fd8-964c-952e8e6b87f8";
-    public override string Name => "status";
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f5612c55-054d-4fd8-964c-952e8e6b87f8",
+    Name = "status",
+    Title = "Check Backup Status",
+    Description = """
         Checks the backup status of an Azure resource and returns whether it is protected,
         along with vault and policy details. Use this to verify if a VM, disk, storage account,
         or other datasource is currently backed up. Requires the datasource ARM resource ID
         and the Azure region (location) where the resource exists.
-        """;
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true, LocalRequired = false, Secret = false };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BackupStatusOptions>()
+{
+    private readonly ILogger<BackupStatusCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
     protected override void RegisterOptions(Command command)
     {
@@ -56,6 +59,8 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         }
 
         var options = BindOptions(parseResult);
+
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "status-check");
 
         try
         {

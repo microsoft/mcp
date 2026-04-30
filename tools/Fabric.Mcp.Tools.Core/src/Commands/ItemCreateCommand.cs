@@ -14,27 +14,23 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
+[CommandMetadata(
+    Id = "bfdfd3c0-4551-4454-a930-5bf5b1ad5690",
+    Name = "create-item",
+    Title = "Create Fabric Item",
+    Description = "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.",
+    Destructive = false,
+    Idempotent = false,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false)]
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
     IFabricCoreService fabricCoreService) : GlobalCommand<ItemCreateOptions>()
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
-
-    public override string Id => "bfdfd3c0-4551-4454-a930-5bf5b1ad5690";
-    public override string Name => "create-item";
-    public override string Title => "Create Fabric Item";
-    public override string Description => "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
