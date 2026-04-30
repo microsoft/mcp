@@ -556,8 +556,10 @@ public class AppServiceService(
         }
         else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
         {
-            await webAppResource.RestartAsync(softRestart, waitForCompletion, cancellationToken: cancellationToken);
-            return $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}, wait for completion: {waitForCompletion}).";
+            await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
+            return waitForCompletion
+                ? $"Web app '{appName}' restart completed successfully (Soft restart: {softRestart})."
+                : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
         }
 
         // Should never reach this.

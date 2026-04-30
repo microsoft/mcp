@@ -11,16 +11,11 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
-public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> logger)
-    : BaseAppServiceCommand<WebappChangeStateOptions>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Change an Azure App Service Web App Running State";
-    private readonly ILogger<WebappChangeStateCommand> _logger = logger;
-    public override string Id => "8d9cd2af-cd79-4101-968b-501d9f0b217c";
-    public override string Name => "change-state";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Title = "Change an Azure App Service Web App Running State",
+    Id = "8d9cd2af-cd79-4101-968b-501d9f0b217c",
+    Name = "change-state",
+    Description = """
         Updates the running state of an Azure App Service web app using one of the following states:
         
         - "start": Starts a stopped web app.
@@ -31,19 +26,18 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         for the restart to complete before returning.
 
         Returns a message indicating the result of the operation.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false
+)]
+public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> logger, IAppServiceService appServiceService)
+    : BaseAppServiceCommand<WebappChangeStateOptions>(resourceGroupRequired: true, appRequired: true)
+{
+    private readonly ILogger<WebappChangeStateCommand> _logger = logger;
 
     private static readonly HashSet<string> ValidStateChanges = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -65,6 +59,20 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
             {
                 result.AddError(errorMessage);
             }
+            else
+            {
+                if (!"restart".Equals(stateChange, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (result.HasOptionResult(AppServiceOptionDefinitions.SoftRestart))
+                    {
+                        result.AddError("soft-restart only applies for change-state 'restart'.");
+                    }
+                    if (result.HasOptionResult(AppServiceOptionDefinitions.WaitForCompletion))
+                    {
+                        result.AddError("wait-for-completion only applies for change-state 'restart'.");
+                    }
+                }
+            }
         });
     }
 
@@ -72,7 +80,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
     {
         if (string.IsNullOrEmpty(stateChange) || !ValidStateChanges.Contains(stateChange))
         {
-            errorMessage = $"Invalid value for state change. Valid values are: {string.Join(", ", ValidStateChanges)}.";
+            errorMessage = $"Invalid value '{stateChange}' for state change. Valid values are: start, stop, restart.";
             return false;
         }
 
@@ -103,7 +111,6 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var appServiceService = context.GetService<IAppServiceService>();
             var stateChange = await appServiceService.ChangeWebAppStateAsync(
                 options.Subscription!,
                 options.ResourceGroup!,

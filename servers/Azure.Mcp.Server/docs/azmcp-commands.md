@@ -644,7 +644,7 @@ azmcp appservice webapp get --subscription "my-subscription" \
 
 ```bash
 # Change the running state of an App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp change-state --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --app <app> \
@@ -654,28 +654,28 @@ azmcp appservice webapp change-state --subscription <subscription> \
 
 # Examples:
 # Start the App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp change-state --subscription "my-subscription" \
                                      --resource-group "my-resource-group" \
                                      --app "my-app" \
                                      --state-change "start"
 
 # Stop the App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp change-state --subscription "my-subscription" \
                                      --resource-group "my-resource-group" \
                                      --app "my-app" \
                                      --state-change "stop"
 
 # Restart the App Service Web App
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp change-state --subscription "my-subscription" \
                                      --resource-group "my-resource-group" \
                                      --app "my-app" \
                                      --state-change "restart"
 
 # Soft restart the App Service Web App waiting for restart to complete
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice webapp change-state --subscription "my-subscription" \
                                      --resource-group "my-resource-group" \
                                      --app "my-app" \
