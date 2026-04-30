@@ -39,31 +39,31 @@ public class PostgresSetup : IAreaSetup
         var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         // Consolidated hierarchical list command
-        pg.AddCommand(serviceProvider.GetRequiredService<PostgresListCommand>());
+        pg.AddCommand<PostgresListCommand>(serviceProvider);
 
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);
 
-        database.AddCommand(serviceProvider.GetRequiredService<DatabaseQueryCommand>());
+        database.AddCommand<DatabaseQueryCommand>(serviceProvider);
 
         var table = new CommandGroup("table", "PostgreSQL table operations");
         pg.AddSubGroup(table);
 
         var schema = new CommandGroup("schema", "PostgreSQL table schema operations");
         table.AddSubGroup(schema);
-        schema.AddCommand(serviceProvider.GetRequiredService<TableSchemaGetCommand>());
+        schema.AddCommand<TableSchemaGetCommand>(serviceProvider);
 
         var server = new CommandGroup("server", "PostgreSQL server operations");
         pg.AddSubGroup(server);
 
         var config = new CommandGroup("config", "PostgreSQL server configuration operations");
         server.AddSubGroup(config);
-        config.AddCommand(serviceProvider.GetRequiredService<ServerConfigGetCommand>());
+        config.AddCommand<ServerConfigGetCommand>(serviceProvider);
 
         var param = new CommandGroup("param", "PostgreSQL server parameter operations");
         server.AddSubGroup(param);
-        param.AddCommand(serviceProvider.GetRequiredService<ServerParamGetCommand>());
-        param.AddCommand(serviceProvider.GetRequiredService<ServerParamSetCommand>());
+        param.AddCommand<ServerParamGetCommand>(serviceProvider);
+        param.AddCommand<ServerParamSetCommand>(serviceProvider);
 
         return pg;
     }

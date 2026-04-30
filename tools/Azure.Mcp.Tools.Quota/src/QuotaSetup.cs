@@ -29,13 +29,13 @@ public sealed class QuotaSetup : IAreaSetup
                     + " or checking Azure resource quota and usage", Title);
 
         var usageGroup = new CommandGroup("usage", "Resource usage and quota operations");
-        usageGroup.AddCommand(serviceProvider.GetRequiredService<CheckCommand>());
+        usageGroup.AddCommand<CheckCommand>(serviceProvider);
         quota.AddSubGroup(usageGroup);
 
         var regionGroup = new CommandGroup("region", "Region availability operations");
         var availabilityGroup = new CommandGroup("availability", "Region availability information");
 
-        availabilityGroup.AddCommand(serviceProvider.GetRequiredService<AvailabilityListCommand>());
+        availabilityGroup.AddCommand<AvailabilityListCommand>(serviceProvider);
         regionGroup.AddSubGroup(availabilityGroup);
         quota.AddSubGroup(regionGroup);
 

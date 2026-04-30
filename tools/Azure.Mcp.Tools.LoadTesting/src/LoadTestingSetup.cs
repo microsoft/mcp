@@ -57,17 +57,16 @@ public class LoadTestingSetup : IAreaSetup
         service.AddSubGroup(testRun);
 
         // Register commands for Load Test Resource
-
-        testResource.AddCommand(serviceProvider.GetRequiredService<TestResourceListCommand>());
-        testResource.AddCommand(serviceProvider.GetRequiredService<TestResourceCreateCommand>());
+        testResource.AddCommand<TestResourceListCommand>(serviceProvider);
+        testResource.AddCommand<TestResourceCreateCommand>(serviceProvider);
 
         // Register commands for Load Test
-        test.AddCommand(serviceProvider.GetRequiredService<TestGetCommand>());
-        test.AddCommand(serviceProvider.GetRequiredService<TestCreateCommand>());
+        test.AddCommand<TestGetCommand>(serviceProvider);
+        test.AddCommand<TestCreateCommand>(serviceProvider);
 
         // Register commands for Load Test Run
-        testRun.AddCommand(serviceProvider.GetRequiredService<TestRunGetCommand>());
-        testRun.AddCommand(serviceProvider.GetRequiredService<TestRunCreateOrUpdateCommand>());
+        testRun.AddCommand<TestRunGetCommand>(serviceProvider);
+        testRun.AddCommand<TestRunCreateOrUpdateCommand>(serviceProvider);
 
         return service;
     }

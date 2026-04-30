@@ -38,23 +38,23 @@ public class EventHubsSetup : IAreaSetup
         var eventHubGroup = new CommandGroup("eventhub", "Event Hub operations");
         eventHubs.AddSubGroup(eventHubGroup);
 
-        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubDeleteCommand>());
-        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubGetCommand>());
-        eventHubGroup.AddCommand(serviceProvider.GetRequiredService<EventHubUpdateCommand>());
+        eventHubGroup.AddCommand<EventHubDeleteCommand>(serviceProvider);
+        eventHubGroup.AddCommand<EventHubGetCommand>(serviceProvider);
+        eventHubGroup.AddCommand<EventHubUpdateCommand>(serviceProvider);
 
         var namespaceGroup = new CommandGroup("namespace", "Event Hubs namespace operations");
         eventHubs.AddSubGroup(namespaceGroup);
 
-        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceGetCommand>());
-        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceUpdateCommand>());
-        namespaceGroup.AddCommand(serviceProvider.GetRequiredService<NamespaceDeleteCommand>());
+        namespaceGroup.AddCommand<NamespaceGetCommand>(serviceProvider);
+        namespaceGroup.AddCommand<NamespaceUpdateCommand>(serviceProvider);
+        namespaceGroup.AddCommand<NamespaceDeleteCommand>(serviceProvider);
 
         var consumerGroupGroup = new CommandGroup("consumergroup", "Event Hubs consumer group operations");
         eventHubGroup.AddSubGroup(consumerGroupGroup);
 
-        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>());
-        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupGetCommand>());
-        consumerGroupGroup.AddCommand(serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>());
+        consumerGroupGroup.AddCommand<ConsumerGroupDeleteCommand>(serviceProvider);
+        consumerGroupGroup.AddCommand<ConsumerGroupGetCommand>(serviceProvider);
+        consumerGroupGroup.AddCommand<ConsumerGroupUpdateCommand>(serviceProvider);
 
         return eventHubs;
     }

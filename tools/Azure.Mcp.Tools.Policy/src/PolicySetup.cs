@@ -35,7 +35,7 @@ public sealed class PolicySetup : IAreaSetup
         policy.AddSubGroup(assignment);
 
         // Register assignment commands
-        assignment.AddCommand(serviceProvider.GetRequiredService<PolicyAssignmentListCommand>());
+        assignment.AddCommand<PolicyAssignmentListCommand>(serviceProvider);
 
         return policy;
     }

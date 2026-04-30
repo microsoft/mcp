@@ -33,8 +33,8 @@ public class MarketplaceSetup : IAreaSetup
         marketplace.AddSubGroup(product);
 
         // Register Product commands
-        product.AddCommand(serviceProvider.GetRequiredService<ProductGetCommand>());
-        product.AddCommand(serviceProvider.GetRequiredService<ProductListCommand>());
+        product.AddCommand<ProductGetCommand>(serviceProvider);
+        product.AddCommand<ProductListCommand>(serviceProvider);
 
         return marketplace;
     }

@@ -51,20 +51,20 @@ public class KeyVaultSetup : IAreaSetup
         var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
-        keys.AddCommand(serviceProvider.GetRequiredService<KeyGetCommand>());
-        keys.AddCommand(serviceProvider.GetRequiredService<KeyCreateCommand>());
+        keys.AddCommand<KeyGetCommand>(serviceProvider);
+        keys.AddCommand<KeyCreateCommand>(serviceProvider);
 
-        secret.AddCommand(serviceProvider.GetRequiredService<SecretCreateCommand>());
-        secret.AddCommand(serviceProvider.GetRequiredService<SecretGetCommand>());
+        secret.AddCommand<SecretCreateCommand>(serviceProvider);
+        secret.AddCommand<SecretGetCommand>(serviceProvider);
 
-        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateGetCommand>());
-        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateCreateCommand>());
-        certificate.AddCommand(serviceProvider.GetRequiredService<CertificateImportCommand>());
+        certificate.AddCommand<CertificateGetCommand>(serviceProvider);
+        certificate.AddCommand<CertificateCreateCommand>(serviceProvider);
+        certificate.AddCommand<CertificateImportCommand>(serviceProvider);
 
         var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
         admin.AddSubGroup(settings);
 
-        settings.AddCommand(serviceProvider.GetRequiredService<AdminSettingsGetCommand>());
+        settings.AddCommand<AdminSettingsGetCommand>(serviceProvider);
 
         return keyVault;
     }

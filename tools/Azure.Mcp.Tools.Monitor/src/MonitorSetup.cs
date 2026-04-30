@@ -130,15 +130,15 @@ public class MonitorSetup : IAreaSetup
         resources.AddSubGroup(resourceLogs);
 
         // Register Monitor commands
-        workspaceLogs.AddCommand(serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>());
+        workspaceLogs.AddCommand<WorkspaceLogQueryCommand>(serviceProvider);
 
-        resourceLogs.AddCommand(serviceProvider.GetRequiredService<ResourceLogQueryCommand>());
+        resourceLogs.AddCommand<ResourceLogQueryCommand>(serviceProvider);
 
-        workspaces.AddCommand(serviceProvider.GetRequiredService<WorkspaceListCommand>());
+        workspaces.AddCommand<WorkspaceListCommand>(serviceProvider);
 
-        monitorTable.AddCommand(serviceProvider.GetRequiredService<TableListCommand>());
+        monitorTable.AddCommand<TableListCommand>(serviceProvider);
 
-        monitorTableType.AddCommand(serviceProvider.GetRequiredService<TableTypeListCommand>());
+        monitorTableType.AddCommand<TableTypeListCommand>(serviceProvider);
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
@@ -146,35 +146,35 @@ public class MonitorSetup : IAreaSetup
         var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
         health.AddSubGroup(entity);
 
-        entity.AddCommand(serviceProvider.GetRequiredService<EntityGetHealthCommand>());
+        entity.AddCommand<EntityGetHealthCommand>(serviceProvider);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
-        metrics.AddCommand(serviceProvider.GetRequiredService<MetricsQueryCommand>());
-        metrics.AddCommand(serviceProvider.GetRequiredService<MetricsDefinitionsCommand>());
+        metrics.AddCommand<MetricsQueryCommand>(serviceProvider);
+        metrics.AddCommand<MetricsDefinitionsCommand>(serviceProvider);
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
         monitor.AddSubGroup(activityLog);
 
-        activityLog.AddCommand(serviceProvider.GetRequiredService<ActivityLogListCommand>());
+        activityLog.AddCommand<ActivityLogListCommand>(serviceProvider);
 
         // Register Monitor.WebTest sub-group commands
         var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
         monitor.AddSubGroup(webTests);
 
-        webTests.AddCommand(serviceProvider.GetRequiredService<WebTestsGetCommand>());
-        webTests.AddCommand(serviceProvider.GetRequiredService<WebTestsCreateOrUpdateCommand>());
+        webTests.AddCommand<WebTestsGetCommand>(serviceProvider);
+        webTests.AddCommand<WebTestsCreateOrUpdateCommand>(serviceProvider);
 
         var instrumentation = new CommandGroup("instrumentation", "Azure Monitor instrumentation operations - Commands for orchestrated onboarding and migration steps.");
         monitor.AddSubGroup(instrumentation);
 
-        instrumentation.AddCommand(serviceProvider.GetRequiredService<GetLearningResourceCommand>());
-        instrumentation.AddCommand(serviceProvider.GetRequiredService<OrchestratorStartCommand>());
-        instrumentation.AddCommand(serviceProvider.GetRequiredService<OrchestratorNextCommand>());
-        instrumentation.AddCommand(serviceProvider.GetRequiredService<SendBrownfieldAnalysisCommand>());
-        instrumentation.AddCommand(serviceProvider.GetRequiredService<SendEnhancementSelectCommand>());
+        instrumentation.AddCommand<GetLearningResourceCommand>(serviceProvider);
+        instrumentation.AddCommand<OrchestratorStartCommand>(serviceProvider);
+        instrumentation.AddCommand<OrchestratorNextCommand>(serviceProvider);
+        instrumentation.AddCommand<SendBrownfieldAnalysisCommand>(serviceProvider);
+        instrumentation.AddCommand<SendEnhancementSelectCommand>(serviceProvider);
 
         return monitor;
     }

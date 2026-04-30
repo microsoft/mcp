@@ -40,21 +40,21 @@ public class FoundryExtensionsSetup : IAreaSetup
         var index = new CommandGroup("index", "Foundry knowledge index operations - Commands for managing knowledge indexes in Microsoft Foundry.");
         knowledge.AddSubGroup(index);
 
-        index.AddCommand(serviceProvider.GetRequiredService<KnowledgeIndexListCommand>());
-        index.AddCommand(serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>());
+        index.AddCommand<KnowledgeIndexListCommand>(serviceProvider);
+        index.AddCommand<KnowledgeIndexSchemaCommand>(serviceProvider);
 
         var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in Microsoft Foundry.");
         foundryExtensions.AddSubGroup(openai);
 
-        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiCompletionsCreateCommand>());
-        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiEmbeddingsCreateCommand>());
-        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiModelsListCommand>());
-        openai.AddCommand(serviceProvider.GetRequiredService<OpenAiChatCompletionsCreateCommand>());
+        openai.AddCommand<OpenAiCompletionsCreateCommand>(serviceProvider);
+        openai.AddCommand<OpenAiEmbeddingsCreateCommand>(serviceProvider);
+        openai.AddCommand<OpenAiModelsListCommand>(serviceProvider);
+        openai.AddCommand<OpenAiChatCompletionsCreateCommand>(serviceProvider);
 
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Microsoft Foundry resources.");
         foundryExtensions.AddSubGroup(resources);
 
-        resources.AddCommand(serviceProvider.GetRequiredService<ResourceGetCommand>());
+        resources.AddCommand<ResourceGetCommand>(serviceProvider);
 
         return foundryExtensions;
     }

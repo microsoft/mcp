@@ -46,16 +46,16 @@ public class KustoSetup : IAreaSetup
         var tables = new CommandGroup("table", "Kusto table operations - Commands for listing tables in a database.");
         kusto.AddSubGroup(tables);
 
-        kusto.AddCommand(serviceProvider.GetRequiredService<SampleCommand>());
-        kusto.AddCommand(serviceProvider.GetRequiredService<QueryCommand>());
+        kusto.AddCommand<SampleCommand>(serviceProvider);
+        kusto.AddCommand<QueryCommand>(serviceProvider);
 
-        clusters.AddCommand(serviceProvider.GetRequiredService<ClusterListCommand>());
-        clusters.AddCommand(serviceProvider.GetRequiredService<ClusterGetCommand>());
+        clusters.AddCommand<ClusterListCommand>(serviceProvider);
+        clusters.AddCommand<ClusterGetCommand>(serviceProvider);
 
-        databases.AddCommand(serviceProvider.GetRequiredService<DatabaseListCommand>());
+        databases.AddCommand<DatabaseListCommand>(serviceProvider);
 
-        tables.AddCommand(serviceProvider.GetRequiredService<TableListCommand>());
-        tables.AddCommand(serviceProvider.GetRequiredService<TableSchemaCommand>());
+        tables.AddCommand<TableListCommand>(serviceProvider);
+        tables.AddCommand<TableSchemaCommand>(serviceProvider);
 
         return kusto;
     }
