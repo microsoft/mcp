@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
 using Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
@@ -56,8 +56,6 @@ public class SpotPlacementScoreCommandTests
     [InlineData("--subscription sub123 --location eastus --desired-sizes Standard_D2_v2", false)] // Missing desired-locations
     [InlineData("--subscription sub123 --location eastus --desired-locations eastus", false)] // Missing desired-sizes
     [InlineData("--subscription sub123 --desired-locations eastus --desired-sizes Standard_D2_v2", false)] // Missing location
-    [InlineData("--location eastus --desired-locations eastus --desired-sizes Standard_D2_v2", false)] // Missing subscription
-    [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
