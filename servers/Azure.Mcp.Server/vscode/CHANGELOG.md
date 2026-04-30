@@ -47,7 +47,7 @@
 
 ## 2.0.2 (2026-04-24)
 
-### Changes
+### Changed
 
 - **Breaking:** Renamed `--detector-name` parameter to `--detector-id` in `appservice_webapp_diagnostic_diagnose` command to accurately reflect that the parameter expects a detector ID, not a display name. [[#2469](https://github.com/microsoft/mcp/pull/2469)]
 
