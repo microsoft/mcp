@@ -73,6 +73,12 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - template: /eng/common/TestResources/remove-test-resources.yml
+    parameters:
+      ServiceConnection: azure-sdk-tests-public
+      EnvVars:
+        Pool: $(Pool)
+
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
