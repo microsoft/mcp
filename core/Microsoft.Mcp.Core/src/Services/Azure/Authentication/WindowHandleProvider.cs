@@ -26,7 +26,10 @@ public static partial class WindowHandleProvider
             try
             {
                 IntPtr display = XOpenDisplay(":1");
-                Console.WriteLine(display == IntPtr.Zero
+
+                // Do not write to standard output because it is interpreted as a JSON RPC response
+                // from the MCP server. Instead, write to standard error for diagnostics.
+                Console.Error.WriteLine(display == IntPtr.Zero
                     ? "No X display available. Running in headless mode."
                     : "X display is available.");
                 return display;
@@ -35,9 +38,7 @@ public static partial class WindowHandleProvider
             {
                 // X11 display detection failed; running in headless mode.
                 // Avoid logging exception details to console to prevent information disclosure.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {typeof(Exception).FullName}");
-                Console.ResetColor();
+                Console.Error.WriteLine($"Failed to detect X display. Running in headless mode. Exception type: {typeof(Exception).FullName}");
             }
         }
 
