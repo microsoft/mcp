@@ -1,0 +1,22 @@
+{
+  "name": "mcp-elicitation-trigger",
+  "displayName": "MCP Elicitation Trigger (test only)",
+  "description": "Test-only extension that invokes a sensitive MCP tool to trigger VS Code's elicitation UI.",
+  "version": "0.0.1",
+  "publisher": "azure-mcp-tests",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "mcpElicitationTrigger.run",
+        "title": "MCP Elicitation Trigger: Run"
+      }
+    ]
+  }
+}

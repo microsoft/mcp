@@ -11,8 +11,8 @@ const { test, expect, _electron } = require('@playwright/test');
 const { downloadAndUnzipVSCode } = require('@vscode/test-electron');
 
 const MCP_SERVER_NAME = 'azure-mcp-latest';
-const TOOL_NAME = 'keyvault secret get';
 const SECURITY_WARNING_TEXT = 'may expose secrets or sensitive information';
+const TRIGGER_EXTENSION_SOURCE = path.join(__dirname, 'fixtures', 'trigger-extension');
 
 test.describe('VS Code MCP elicitation outerloop', () => {
     test.describe.configure({ timeout: 10 * 60 * 1000 });
@@ -32,6 +32,10 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         await fs.mkdir(userDataDir, { recursive: true });
         await fs.mkdir(extensionsDir, { recursive: true });
         await fs.mkdir(artifactsDir, { recursive: true });
+
+        // Install the test-only trigger extension that programmatically calls
+        // a sensitive MCP tool, which causes VS Code to show the elicitation UI.
+        await installTriggerExtension(extensionsDir);
 
         const mcpSettings = {
             servers: {
@@ -70,19 +74,11 @@ test.describe('VS Code MCP elicitation outerloop', () => {
 
             await window.context().tracing.start({ screenshots: true, snapshots: true, sources: true });
 
-            // Give VS Code a moment to discover the MCP server config and start npx download.
-            await window.waitForTimeout(5000);
-
-            await runCommand(window, 'MCP: Run Tool');
-            await selectFromQuickInput(window, MCP_SERVER_NAME);
-            await selectFromQuickInput(window, TOOL_NAME);
-            await fillCurrentQuickInput(window, 'test-subscription');
-            await fillCurrentQuickInput(window, 'test-vault');
-
-            // The elicitation card is rendered inside a webview iframe (see screenshot in PR).
-            // Search across the main frame and every iframe (including nested) until the
-            // SECURITY WARNING text appears.
-            await waitForElicitationText(window, SECURITY_WARNING_TEXT, 180000);
+            // The trigger extension activates on startup and repeatedly tries to
+            // invoke a sensitive MCP tool. As soon as VS Code finishes registering
+            // the keyvault_secret_get tool, the invocation surfaces the elicitation
+            // SECURITY WARNING card. Just wait for that text in any frame.
+            await waitForElicitationText(window, SECURITY_WARNING_TEXT, 360000);
         } catch (err) {
             if (window) {
                 try {
@@ -134,29 +130,26 @@ async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
     throw new Error(`Timed out waiting for VS Code workbench window after ${timeoutMs}ms`);
 }
 
-async function runCommand(window, commandName) {
-    const commandPaletteShortcut = process.platform === 'darwin' ? 'Meta+Shift+P' : 'Control+Shift+P';
-    await window.keyboard.press(commandPaletteShortcut);
-    await fillActiveQuickInput(window, commandName);
+// Copies our test-only trigger extension into the VS Code extensions dir so it
+// is loaded on startup. The extension calls vscode.lm.invokeTool() against a
+// sensitive MCP tool, which causes VS Code to render the elicitation UI.
+async function installTriggerExtension(extensionsDir) {
+    const targetDir = path.join(extensionsDir, 'azure-mcp-tests.mcp-elicitation-trigger-0.0.1');
+    await copyDir(TRIGGER_EXTENSION_SOURCE, targetDir);
 }
 
-async function selectFromQuickInput(window, value) {
-    await fillActiveQuickInput(window, value);
-}
-
-async function fillCurrentQuickInput(window, value) {
-    await fillActiveQuickInput(window, value);
-}
-
-async function fillActiveQuickInput(window, value) {
-    const widget = window.locator('.quick-input-widget:visible').first();
-    await widget.waitFor({ state: 'visible', timeout: 30000 });
-
-    const input = widget.locator('input.input, input').first();
-    await expect(input).toBeVisible({ timeout: 30000 });
-    await input.fill('');
-    await input.type(value, { delay: 10 });
-    await window.keyboard.press('Enter');
+async function copyDir(src, dest) {
+    await fs.mkdir(dest, { recursive: true });
+    const entries = await fs.readdir(src, { withFileTypes: true });
+    for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+            await copyDir(srcPath, destPath);
+        } else if (entry.isFile()) {
+            await fs.copyFile(srcPath, destPath);
+        }
+    }
 }
 
 // Polls the main frame and every (potentially nested) iframe for the elicitation
