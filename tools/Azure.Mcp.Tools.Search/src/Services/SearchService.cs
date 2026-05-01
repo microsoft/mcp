@@ -50,6 +50,16 @@ public sealed partial class SearchService(
 
         if (!string.IsNullOrEmpty(resourceGroup))
         {
+            var rgCacheKey = string.IsNullOrEmpty(tenantId)
+                ? CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, _tenantService.CloudConfiguration.CloudType.ToString())
+                : CacheKeyBuilder.Build(SearchServicesCacheKey, subscription, resourceGroup, tenantId, _tenantService.CloudConfiguration.CloudType.ToString());
+
+            var cachedRgServices = await _cacheService.GetAsync<List<string>>(CacheGroup, rgCacheKey, s_cacheDurationServices, cancellationToken);
+            if (cachedRgServices != null)
+            {
+                return cachedRgServices;
+            }
+
             var subForRg = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
             var rgResource = (await subForRg.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
             var rgServices = new List<string>();
@@ -60,6 +70,8 @@ public sealed partial class SearchService(
                     rgServices.Add(service.Data.Name);
                 }
             }
+
+            await _cacheService.SetAsync(CacheGroup, rgCacheKey, rgServices, s_cacheDurationServices, cancellationToken);
             return rgServices;
         }
 
