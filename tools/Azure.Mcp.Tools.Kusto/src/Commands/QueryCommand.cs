@@ -97,6 +97,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger, IKustoService kus
                     options.ChartType.Value,
                     title: $"Chart of Kusto query results ({options.ChartType.Value})");
                 context.Response.Images = [image];
+                context.Response.Message = "Query results rendered as a chart image — see the attached image.";
                 context.Response.OmitTextContent = true;
             }
             else

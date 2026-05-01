@@ -490,6 +490,12 @@ public sealed class NamespaceToolLoader(
             {
                 successContent.Add(new TextContentBlock { Text = jsonResponse });
             }
+            else if (commandResponse.Images is { Count: > 0 } && !string.IsNullOrEmpty(commandResponse.Message))
+            {
+                // Emit the message as a lightweight text hint so the model knows to look at
+                // the attached image(s) without receiving the full JSON data envelope.
+                successContent.Add(new TextContentBlock { Text = commandResponse.Message });
+            }
 
             if (commandResponse.Images != null)
             {
