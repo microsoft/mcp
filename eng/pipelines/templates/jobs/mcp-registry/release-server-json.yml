@@ -81,11 +81,11 @@ jobs:
       KeyVaultName: 'kv-azuresdk-codesign'
       SignCertName: 'azure-sdk-esrp-release-certificate'
       Intent: 'PackageDistribution'
-      ContentType: 'mcpregistry'
+      ContentType: 'MCPRegistry'
+      McpRegistryType: 'Official'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)/server-json'
       Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
       MainPublisher: 'ESRPRELPACMANTEST'
-      ProductState: latest
