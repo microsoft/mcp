@@ -1,0 +1,14 @@
+{
+  "name": "mcp-startup-trigger",
+  "displayName": "MCP Startup Trigger (test only)",
+  "description": "Test-only extension that invokes workbench.mcp.startServer to force VS Code to spawn configured MCP servers in headless CI.",
+  "version": "0.0.1",
+  "publisher": "azure-mcp-tests",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ]
+}

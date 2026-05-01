@@ -33,6 +33,7 @@ const { downloadAndUnzipVSCode } = require('@vscode/test-electron');
 const MCP_SERVER_NAME = 'azure-mcp-latest';
 const SECURITY_WARNING_TEXT = 'may expose secrets or sensitive information';
 const PROXY_SCRIPT = path.join(__dirname, 'mcpProxy.js');
+const STARTUP_TRIGGER_SOURCE = path.join(__dirname, 'fixtures', 'startup-trigger');
 
 test.describe('VS Code MCP elicitation outerloop', () => {
     test.describe.configure({ timeout: 10 * 60 * 1000 });
@@ -54,6 +55,24 @@ test.describe('VS Code MCP elicitation outerloop', () => {
         await fs.mkdir(extensionsDir, { recursive: true });
         await fs.mkdir(artifactsDir, { recursive: true });
         await fs.writeFile(proxyLogPath, '', 'utf8');
+
+        // Install the test-only startup-trigger extension so workbench.mcp.startServer
+        // is invoked from the Extension Host (CI has no Copilot Chat to lazily start it).
+        await installFixtureExtension(STARTUP_TRIGGER_SOURCE, extensionsDir, 'mcp-startup-trigger-0.0.1');
+
+        // Some VS Code builds gate MCP discovery behind settings; flip every plausible
+        // toggle on, in user settings, so the workspace mcp.json is honored.
+        const userSettingsDir = path.join(userDataDir, 'User');
+        await fs.mkdir(userSettingsDir, { recursive: true });
+        await fs.writeFile(
+            path.join(userSettingsDir, 'settings.json'),
+            JSON.stringify({
+                'chat.mcp.enabled': true,
+                'chat.mcp.discovery.enabled': true,
+                'chat.mcp.autostart': 'all'
+            }, null, 2),
+            'utf8'
+        );
 
         const mcpSettings = {
             servers: {
@@ -92,10 +111,9 @@ test.describe('VS Code MCP elicitation outerloop', () => {
 
             await window.context().tracing.start({ screenshots: true, snapshots: true, sources: true });
 
-            // Give VS Code a moment to discover mcp.json then explicitly start the server.
-            await window.waitForTimeout(3000);
-            await runCommandPaletteAction(window, 'MCP: Start Server');
-
+            // The startup-trigger extension fires workbench.mcp.startServer from
+            // onStartupFinished; just wait for the proxy to surface the elicitation
+            // protocol message in its log.
             await waitForLogContains(proxyLogPath, SECURITY_WARNING_TEXT, 6 * 60 * 1000);
         } catch (err) {
             if (window) {
@@ -153,20 +171,23 @@ async function waitForWorkbenchWindow(app, timeoutMs = 120000) {
     throw new Error(`Timed out waiting for VS Code workbench window after ${timeoutMs}ms`);
 }
 
-async function runCommandPaletteAction(window, commandTitle) {
-    const shortcut = process.platform === 'darwin' ? 'Meta+Shift+P' : 'Control+Shift+P';
-    await window.keyboard.press(shortcut);
+async function installFixtureExtension(sourceDir, extensionsDir, targetName) {
+    const targetDir = path.join(extensionsDir, `azure-mcp-tests.${targetName}`);
+    await copyDir(sourceDir, targetDir);
+}
 
-    const widget = window.locator('.quick-input-widget:visible').first();
-    await widget.waitFor({ state: 'visible', timeout: 30000 });
-    const input = widget.locator('input').first();
-    await expect(input).toBeVisible({ timeout: 30000 });
-    await input.fill('');
-    await input.type(`>${commandTitle}`, { delay: 10 });
-    // Best-effort: if the command isn't registered (e.g. VS Code build doesn't
-    // expose it), nothing happens after Enter and we fall through. The proxy
-    // log will reveal whether VS Code spawned the server regardless.
-    await window.keyboard.press('Enter');
+async function copyDir(src, dest) {
+    await fs.mkdir(dest, { recursive: true });
+    const entries = await fs.readdir(src, { withFileTypes: true });
+    for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+            await copyDir(srcPath, destPath);
+        } else if (entry.isFile()) {
+            await fs.copyFile(srcPath, destPath);
+        }
+    }
 }
 
 async function waitForLogContains(logPath, needle, timeoutMs) {
