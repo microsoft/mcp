@@ -1196,9 +1196,13 @@ If omitted, defaults to `Ubuntu2404`.
 ```bash
 # Using an alias
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
-    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
-    --admin-password "P@ssw0rd!" --image "Win2022Datacenter"
+azmcp compute vm create --subscription "my-sub" \
+                                            --resource-group "my-rg" \
+                                            --vm-name "my-vm" \
+                                            --location "eastus" \
+                                            --admin-username "azureuser" \
+                                            --admin-password "P@ssw0rd!" \
+                                            --image "Win2022Datacenter"
 
 # Using a Marketplace URN
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
