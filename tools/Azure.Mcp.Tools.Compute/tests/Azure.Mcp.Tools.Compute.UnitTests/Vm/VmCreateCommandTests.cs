@@ -34,14 +34,15 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
     }
 
     [Theory]
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", true)] // All required + password
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --ssh-public-key ssh-rsa-key", true)] // All required + ssh key
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser", false)] // Missing auth - Linux requires SSH key or password
-    [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing vm-name
-    [InlineData("--vm-name test-vm --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing resource-group
-    [InlineData("--vm-name test-vm --resource-group test-rg --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing subscription
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --admin-username azureuser --admin-password TestPassword123!", false)] // Missing location
-    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-password TestPassword123!", false)] // Missing admin-username
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", true)] // All required + password
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --ssh-public-key ssh-rsa-key", true)] // All required + ssh key
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404", false)] // Missing auth - Linux requires SSH key or password
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing image
+    [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing vm-name
+    [InlineData("--vm-name test-vm --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing resource-group
+    [InlineData("--vm-name test-vm --resource-group test-rg --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing subscription
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing location
+    [InlineData("--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing admin-username
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -149,6 +150,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--ssh-public-key", _knownSshKey);
 
         // Assert
@@ -214,6 +216,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--admin-password", _knownPassword);
 
         // Assert
@@ -259,6 +262,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--admin-password", _knownPassword);
 
         // Assert
@@ -314,6 +318,7 @@ public class VmCreateCommandTests : CommandUnitTestsBase<VmCreateCommand, ICompu
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--admin-password", _knownPassword);
 
         // Assert

@@ -1113,10 +1113,10 @@ azmcp compute vm create --subscription <subscription> \
                         --vm-name <vm-name> \
                         --location <location> \
                         --admin-username <admin-username> \
+                        --image <image> \
                         [--admin-password <admin-password>] \
                         [--ssh-public-key <ssh-public-key>] \
                         [--vm-size <vm-size>] \
-                        [--image <image>] \
                         [--os-type <os-type>] \
                         [--virtual-network <virtual-network>] \
                         [--subnet <subnet>] \
@@ -1128,7 +1128,7 @@ azmcp compute vm create --subscription <subscription> \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size and the Ubuntu2404 image when not specified. When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
 
 # Examples:
 
@@ -1139,6 +1139,7 @@ azmcp compute vm create --subscription "my-subscription" \
                         --vm-name "my-linux-vm" \
                         --location "eastus" \
                         --admin-username "azureuser" \
+                        --image "Ubuntu2404" \
                         --ssh-public-key "ssh-ed25519 AAAAC3..."
 
 # Create Windows VM with password
@@ -1158,6 +1159,7 @@ azmcp compute vm create --subscription "my-subscription" \
                         --vm-name "my-private-vm" \
                         --location "eastus" \
                         --admin-username "azureuser" \
+                        --image "Ubuntu2404" \
                         --ssh-public-key "ssh-ed25519 AAAAC3..." \
                         --vm-size "Standard_D4s_v3" \
                         --no-public-ip
@@ -1182,8 +1184,8 @@ Marketplace aliases map to a `publisher:offer:sku:version` URN:
 | `Ubuntu2604` | Linux | Canonical | ubuntu-26_04-lts | server | latest |
 | `Ubuntu2404` | Linux | Canonical | ubuntu-24_04-lts | server | latest |
 | `Ubuntu2204` | Linux | Canonical | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2 | latest |
-| `Debian11` | Linux | Debian | debian-11 | 11-gen2 | latest |
 | `Debian12` | Linux | Debian | debian-12 | 12-gen2 | latest |
+| `Debian11` | Linux | Debian | debian-11 | 11-gen2 | latest |
 | `RHEL9` | Linux | RedHat | RHEL | 9_0 | latest |
 | `CentOS8` | Linux | OpenLogic | CentOS | 8_5-gen2 | latest |
 | `Win2022Datacenter` | Windows | MicrosoftWindowsServer | WindowsServer2022 | 2022-datacenter-azure-edition | latest |
@@ -1238,10 +1240,10 @@ azmcp compute vm create --subscription "my-sub" \
 | `--vm-name` | Yes | Name of the virtual machine |
 | `--location` | Yes | Azure region |
 | `--admin-username` | Yes | Admin username |
+| `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
-| `--image` | No | Image alias, Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). Default: `Ubuntu2404` |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |
@@ -1398,10 +1400,10 @@ azmcp compute vmss create --subscription <subscription> \
                           --vmss-name <vmss-name> \
                           --location <location> \
                           --admin-username <admin-username> \
+                          --image <image> \
                           [--admin-password <admin-password>] \
                           [--ssh-public-key <ssh-public-key>] \
                           [--vm-size <vm-size>] \
-                          [--image <image>] \
                           [--os-type <os-type>] \
                           [--virtual-network <virtual-network>] \
                           [--subnet <subnet>] \
@@ -1411,7 +1413,7 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
 
-Defaults to two Standard_D2s_v5 instances running Ubuntu2404 when size or image are not provided.
+Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`).
 
 # Examples:
 
@@ -1422,6 +1424,7 @@ azmcp compute vmss create --subscription "my-subscription" \
                           --vmss-name "my-vmss" \
                           --location "eastus" \
                           --admin-username "azureuser" \
+                          --image "Ubuntu2404" \
                           --ssh-public-key "ssh-ed25519 AAAAC3..." \
                           --instance-count 3
 
@@ -1445,10 +1448,10 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--vmss-name` | Yes | Name of the VMSS (max 9 chars for Windows) |
 | `--location` | Yes | Azure region |
 | `--admin-username` | Yes | Admin username |
+| `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows) |
 | `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
-| `--image` | No | Image alias or URN (default: Ubuntu2404) |
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |

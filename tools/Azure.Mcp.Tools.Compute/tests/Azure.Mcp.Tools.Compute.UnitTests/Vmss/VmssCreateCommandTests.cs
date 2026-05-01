@@ -34,14 +34,15 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
     }
 
     [Theory]
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", true)]
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --ssh-public-key ssh-rsa-key", true)]
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123! --instance-count 3", true)]
-    [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing vmss-name
-    [InlineData("--vmss-name test-vmss --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing resource-group
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing subscription
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --admin-username azureuser --admin-password TestPassword123!", false)] // Missing location
-    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-password TestPassword123!", false)] // Missing admin-username
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --ssh-public-key ssh-rsa-key", true)]
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123! --instance-count 3", true)]
+    [InlineData("--resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing vmss-name
+    [InlineData("--vmss-name test-vmss --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing resource-group
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing subscription
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing location
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --image Ubuntu2404 --admin-password TestPassword123!", false)] // Missing admin-username
+    [InlineData("--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --admin-password TestPassword123!", false)] // Missing image
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -145,6 +146,7 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--ssh-public-key", _knownSshKey,
             "--instance-count", "3");
 
@@ -209,6 +211,7 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--admin-password", _knownPassword);
 
         // Assert
@@ -262,6 +265,7 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--subscription", _knownSubscription,
             "--location", _knownLocation,
             "--admin-username", _knownAdminUsername,
+            "--image", "Ubuntu2404",
             "--admin-password", _knownPassword);
 
         // Assert

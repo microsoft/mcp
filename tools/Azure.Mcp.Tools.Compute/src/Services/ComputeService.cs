@@ -103,8 +103,8 @@ public class ComputeService(
         // Only use explicit disk size if provided; otherwise let Azure use image's default size
         var effectiveOsDiskSizeGb = osDiskSizeGb;
 
-        // Parse image
-        var imageSource = ParseImage(image);
+        // Parse image (required for VM create)
+        var imageSource = ParseImage(image!);
 
         // Create or get network resources
         var nicId = await CreateOrGetNetworkResourcesAsync(
@@ -241,12 +241,11 @@ public class ComputeService(
             Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
-    private static ImageSource ParseImage(string? image)
+    private static ImageSource ParseImage(string image)
     {
-        // Default to Ubuntu 24.04 LTS
         if (string.IsNullOrEmpty(image))
         {
-            return s_imageAliases["Ubuntu2404"];
+            throw new ArgumentException("An image must be specified. Provide an alias (e.g., 'Ubuntu2404', 'Win2022Datacenter'), a Marketplace URN ('publisher:offer:sku:version'), or a shared gallery image ID (starting with '/sharedGalleries/').", nameof(image));
         }
 
         // Check if it's an alias
@@ -268,8 +267,7 @@ public class ComputeService(
             return ImageSource.FromMarketplace(parts[0], parts[1], parts[2], parts[3]);
         }
 
-        // Default fallback
-        return s_imageAliases["Ubuntu2404"];
+        throw new ArgumentException($"Unrecognized image '{image}'. Provide a known alias, a Marketplace URN ('publisher:offer:sku:version'), or a shared gallery image ID (starting with '/sharedGalleries/').", nameof(image));
     }
 
     private static ImageReference CreateImageReference(ImageSource source)
@@ -758,8 +756,8 @@ public class ComputeService(
         var effectiveInstanceCount = instanceCount ?? 2;
         var effectiveUpgradePolicy = ParseUpgradePolicy(upgradePolicy);
 
-        // Parse image
-        var imageSource = ParseImage(image);
+        // Parse image - required, no default
+        var imageSource = ParseImage(image!);
 
         // Create or get network resources for VMSS
         var subnetId = await CreateOrGetVmssNetworkResourcesAsync(

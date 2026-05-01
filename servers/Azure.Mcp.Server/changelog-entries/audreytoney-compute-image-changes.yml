@@ -1,5 +1,7 @@
 changes:
   - section: "Breaking Changes"
+    description: "`azmcp compute vm create` and `azmcp compute vmss create` now require `--image` and no longer default to Ubuntu 24.04 LTS when an image is omitted. Specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`)."
+  - section: "Breaking Changes"
     description: "Changed `Win2022Datacenter` image alias to use the `WindowsServer2022` marketplace offer (`MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest`) instead of the previous `WindowsServer` offer. The new image avoids the deprecated .NET 6 runtime bundled with the old SKU."
   - section: "Breaking Changes"
     description: "Removed the `Win2019Datacenter` image alias. Use the marketplace URN format (`MicrosoftWindowsServer:WindowsServer:2019-datacenter-gensecond:latest`) directly if Windows Server 2019 is still needed."
