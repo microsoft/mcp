@@ -22,7 +22,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Create, deploy, or provision a single Azure Virtual Machine (VM).
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
         Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
-        Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 size and Ubuntu 24.04 LTS if not specified.
+        Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
+        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
+        or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMs with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating Virtual Machine Scale Sets with multiple identical instances (use VMSS create instead).
         """,
@@ -50,9 +53,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger)
         command.Options.Add(ComputeOptionDefinitions.AdminPassword);
         command.Options.Add(ComputeOptionDefinitions.SshPublicKey);
 
+        // Image is required and has no default
+        command.Options.Add(ComputeOptionDefinitions.Image.AsRequired());
+
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Image);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // Network options

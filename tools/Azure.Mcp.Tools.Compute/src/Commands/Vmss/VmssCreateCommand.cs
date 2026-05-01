@@ -21,7 +21,10 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Description = """
         Create, deploy, or provision an Azure Virtual Machine Scale Set (VMSS) for running multiple identical VM instances.
         Use this to deploy workloads that need horizontal scaling, load balancing, or high availability across instances.
-        Equivalent to 'az vmss create'. Defaults to 2 instances, Standard_D2s_v5 size, and Ubuntu 24.04 LTS.
+        Equivalent to 'az vmss create'. Defaults to 2 instances and Standard_D2s_v5 size when not specified.
+        The --image option is required and has no default; if the user does not specify an image, ask them which image to use
+        (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
+        or a shared gallery image ID starting with '/sharedGalleries/').
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating a single standalone VM (use VM create instead).
         """,
@@ -50,9 +53,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
         command.Options.Add(ComputeOptionDefinitions.AdminPassword);
         command.Options.Add(ComputeOptionDefinitions.SshPublicKey);
 
+        // Image is required and has no default
+        command.Options.Add(ComputeOptionDefinitions.Image.AsRequired());
+
         // Optional configuration
         command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Image);
         command.Options.Add(ComputeOptionDefinitions.OsType);
 
         // VMSS-specific options
