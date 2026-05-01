@@ -48,9 +48,9 @@ public class ComputeService(
 
     private static readonly Dictionary<string, ImageSource> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["Ubuntu2604"] = ImageSource.FromMarketplace("Canonical", "ubuntu-26_04-lts", "server", "latest"),
         ["Ubuntu2404"] = ImageSource.FromMarketplace("Canonical", "ubuntu-24_04-lts", "server", "latest"),
         ["Ubuntu2204"] = ImageSource.FromMarketplace("Canonical", "0001-com-ubuntu-server-jammy", "22_04-lts-gen2", "latest"),
-        ["Ubuntu2004"] = ImageSource.FromMarketplace("Canonical", "0001-com-ubuntu-server-focal", "20_04-lts-gen2", "latest"),
         ["Debian11"] = ImageSource.FromMarketplace("Debian", "debian-11", "11-gen2", "latest"),
         ["Debian12"] = ImageSource.FromMarketplace("Debian", "debian-12", "12-gen2", "latest"),
         ["RHEL9"] = ImageSource.FromMarketplace("RedHat", "RHEL", "9_0", "latest"),

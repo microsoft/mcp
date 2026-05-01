@@ -1175,21 +1175,26 @@ If omitted, defaults to `Ubuntu2404`.
 
 **Image Aliases:**
 
-| Alias | OS | Source | Image |
-|-------|------|--------|-------|
-| `Ubuntu2404` | Linux | Marketplace | Canonical ubuntu-24_04-lts |
-| `Ubuntu2204` | Linux | Marketplace | Canonical 0001-com-ubuntu-server-jammy |
-| `Ubuntu2004` | Linux | Marketplace | Canonical 0001-com-ubuntu-server-focal |
-| `Debian11` | Linux | Marketplace | Debian debian-11 |
-| `Debian12` | Linux | Marketplace | Debian debian-12 |
-| `RHEL9` | Linux | Marketplace | RedHat RHEL 9_0 |
-| `CentOS8` | Linux | Marketplace | OpenLogic CentOS 8_5-gen2 |
-| `Win2022Datacenter` | Windows | Marketplace | MicrosoftWindowsServer WindowsServer2022 2022-datacenter-azure-edition |
-| `Win2022Datacenter1P` | Windows | Shared Gallery | WINDOWSSERVER.1P 2022-DATACENTER-AZURE-EDITION (first-party gallery) |
-| `Win11Pro` | Windows | Marketplace | MicrosoftWindowsDesktop windows-11 win11-22h2-pro |
-| `Win10Pro` | Windows | Marketplace | MicrosoftWindowsDesktop Windows-10 win10-22h2-pro-g2 |
+Marketplace aliases map to a `publisher:offer:sku:version` URN:
 
-> **Note:** `Win2022Datacenter1P` uses a first-party shared gallery image instead of Azure Marketplace.
+| Alias | OS | Publisher | Offer | SKU | Version |
+|-------|------|-----------|-------|-----|---------|
+| `Ubuntu2604` | Linux | Canonical | ubuntu-26_04-lts | server | latest |
+| `Ubuntu2404` | Linux | Canonical | ubuntu-24_04-lts | server | latest |
+| `Ubuntu2204` | Linux | Canonical | 0001-com-ubuntu-server-jammy | 22_04-lts-gen2 | latest |
+| `Debian11` | Linux | Debian | debian-11 | 11-gen2 | latest |
+| `Debian12` | Linux | Debian | debian-12 | 12-gen2 | latest |
+| `RHEL9` | Linux | RedHat | RHEL | 9_0 | latest |
+| `CentOS8` | Linux | OpenLogic | CentOS | 8_5-gen2 | latest |
+| `Win2022Datacenter` | Windows | MicrosoftWindowsServer | WindowsServer2022 | 2022-datacenter-azure-edition | latest |
+| `Win11Pro` | Windows | MicrosoftWindowsDesktop | windows-11 | win11-22h2-pro | latest |
+| `Win10Pro` | Windows | MicrosoftWindowsDesktop | Windows-10 | win10-22h2-pro-g2 | latest |
+
+Shared gallery aliases map to a shared gallery image ID:
+
+| Alias | OS | Shared Gallery Image ID |
+|-------|------|-------------------------|
+| `Win2022Datacenter1P` | Windows | `/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest` |
 
 **Examples using different image formats:**
 
@@ -1197,26 +1202,32 @@ If omitted, defaults to `Ubuntu2404`.
 # Using an alias
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp compute vm create --subscription "my-sub" \
-                                            --resource-group "my-rg" \
-                                            --vm-name "my-vm" \
-                                            --location "eastus" \
-                                            --admin-username "azureuser" \
-                                            --admin-password "P@ssw0rd!" \
-                                            --image "Win2022Datacenter"
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --admin-password "P@ssw0rd!" \
+                        --image "Win2022Datacenter"
 
 # Using a Marketplace URN
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
-    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
-    --admin-password "P@ssw0rd!" \
-    --image "MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest"
+azmcp compute vm create --subscription "my-sub" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --admin-password "P@ssw0rd!" \
+                        --image "MicrosoftWindowsServer:WindowsServer2022:2022-datacenter-azure-edition:latest"
 
 # Using a shared gallery image ID
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp compute vm create --subscription "my-sub" --resource-group "my-rg" \
-    --vm-name "my-vm" --location "eastus" --admin-username "azureuser" \
-    --admin-password "P@ssw0rd!" \
-    --image "/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"
+azmcp compute vm create --subscription "my-sub" \
+                        --resource-group "my-rg" \
+                        --vm-name "my-vm" \
+                        --location "eastus" \
+                        --admin-username "azureuser" \
+                        --admin-password "P@ssw0rd!" \
+                        --image "/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"
 ```
 
 **Parameters:**
