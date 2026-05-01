@@ -26,4 +26,5 @@ namespace Azure.Mcp.Tools.AppService.Commands;
 [JsonSerializable(typeof(IList<DiagnosticDataset>))]
 [JsonSerializable(typeof(WebappDetails))]
 [JsonSerializable(typeof(WebappGetCommand.WebappGetResult))]
+[JsonSerializable(typeof(WebappChangeStateCommand.WebappChangeStateResult))]
 public partial class AppServiceJsonContext : JsonSerializerContext;

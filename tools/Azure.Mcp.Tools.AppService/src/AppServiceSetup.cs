@@ -24,6 +24,7 @@ public class AppServiceSetup : IAreaSetup
         services.AddSingleton<IAppServiceService, AppServiceService>();
         services.AddSingleton<DatabaseAddCommand>();
         services.AddSingleton<WebappGetCommand>();
+        services.AddSingleton<WebappChangeStateCommand>();
         services.AddSingleton<DetectorDiagnoseCommand>();
         services.AddSingleton<DetectorListCommand>();
         services.AddSingleton<AppSettingsGetCommand>();
@@ -50,6 +51,7 @@ public class AppServiceSetup : IAreaSetup
 
         // Add webapp commands
         webapp.AddCommand<WebappGetCommand>(serviceProvider);
+        webapp.AddCommand<WebappChangeStateCommand>(serviceProvider);
 
         // Add deployment subgroup
         var deployment = new CommandGroup("deployment", "Operations for managing Azure App Service web app deployments");
