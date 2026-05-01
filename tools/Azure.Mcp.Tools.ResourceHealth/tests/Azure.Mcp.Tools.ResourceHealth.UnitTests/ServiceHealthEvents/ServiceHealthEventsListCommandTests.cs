@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -25,6 +26,16 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
     [InlineData("--subscription sub123 --filter startTime ge 2023-01-01", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
+        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
+        // For the empty-args (missing subscription) cases, skip when a CLI
+        // profile default is present so we only assert when validation actually fails.
+        if (!shouldSucceed && string.IsNullOrWhiteSpace(args))
+        {
+            Assert.SkipWhen(
+                !string.IsNullOrEmpty(CommandHelper.GetDefaultSubscription()),
+                "An Azure CLI default subscription is configured; cannot validate missing --subscription.");
+        }
+
         // Arrange
         if (shouldSucceed)
         {
