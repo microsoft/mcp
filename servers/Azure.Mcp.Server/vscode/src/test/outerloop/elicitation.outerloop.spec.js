@@ -112,9 +112,15 @@ test.describe('VS Code MCP elicitation outerloop', () => {
             await window.context().tracing.start({ screenshots: true, snapshots: true, sources: true });
 
             // The startup-trigger extension fires workbench.mcp.startServer from
-            // onStartupFinished; just wait for the proxy to surface the elicitation
-            // protocol message in its log.
-            await waitForLogContains(proxyLogPath, SECURITY_WARNING_TEXT, 6 * 60 * 1000);
+            // onStartupFinished. VS Code prompts the user to trust the MCP server
+            // before spawning it; in CI nobody is there to click "Allow", so we
+            // run a background loop that auto-accepts any such prompt.
+            const dismissTrustPrompts = autoAcceptTrustPrompts(window, artifactsDir);
+            try {
+                await waitForLogContains(proxyLogPath, SECURITY_WARNING_TEXT, 6 * 60 * 1000);
+            } finally {
+                dismissTrustPrompts.stop();
+            }
         } catch (err) {
             if (window) {
                 try {
@@ -220,4 +226,100 @@ async function readTail(filePath, maxBytes) {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// VS Code prompts the user to trust an MCP server before spawning it. In headless
+// CI we can't click "Allow", so this helper polls the workbench every second for
+// any quick-pick whose entries include a permissive option (Allow / Trust / Yes /
+// Continue) or any modal dialog with the same, and clicks/enters it. We also
+// snapshot screenshots periodically so we can see what the workbench looked like
+// when we attempted to dismiss prompts.
+function autoAcceptTrustPrompts(window, artifactsDir) {
+    let stopped = false;
+    let snapshotCounter = 0;
+
+    const matchers = [
+        /\ballow\b/i,
+        /\btrust\b/i,
+        /\byes\b/i,
+        /\bcontinue\b/i,
+        /\bproceed\b/i,
+        /\bstart\b/i
+    ];
+
+    const loop = (async () => {
+        while (!stopped) {
+            try {
+                // Periodic screenshots: every 10s.
+                if (snapshotCounter % 10 === 0) {
+                    try {
+                        await window.screenshot({
+                            path: path.join(artifactsDir, `state-${String(snapshotCounter).padStart(3, '0')}s.png`),
+                            fullPage: true
+                        });
+                    } catch { /* ignore */ }
+                }
+                snapshotCounter += 1;
+
+                // 1) Quick-pick / quick-input widget.
+                const quickInput = window.locator('.quick-input-widget:visible').first();
+                if (await quickInput.count() > 0 && await quickInput.isVisible().catch(() => false)) {
+                    const rows = quickInput.locator('.quick-input-list .monaco-list-row');
+                    const count = await rows.count().catch(() => 0);
+                    let clicked = false;
+                    for (let i = 0; i < count; i++) {
+                        const text = (await rows.nth(i).innerText().catch(() => '')) || '';
+                        if (matchers.some(re => re.test(text))) {
+                            console.log(`[outerloop] auto-accept quick-pick option: ${text.replace(/\s+/g, ' ').trim()}`);
+                            await rows.nth(i).click({ timeout: 5000 }).catch(() => undefined);
+                            clicked = true;
+                            break;
+                        }
+                    }
+                    if (!clicked) {
+                        // Press Enter on the default highlighted option as a fallback.
+                        await window.keyboard.press('Enter').catch(() => undefined);
+                    }
+                }
+
+                // 2) Modal dialog (dialog-shadow).
+                const dialog = window.locator('.monaco-dialog-box, .dialog-shadow .dialog-modal-block').first();
+                if (await dialog.count() > 0 && await dialog.isVisible().catch(() => false)) {
+                    const buttons = dialog.locator('button, .monaco-button');
+                    const bcount = await buttons.count().catch(() => 0);
+                    for (let i = 0; i < bcount; i++) {
+                        const text = (await buttons.nth(i).innerText().catch(() => '')) || '';
+                        if (matchers.some(re => re.test(text))) {
+                            console.log(`[outerloop] auto-accept dialog button: ${text.replace(/\s+/g, ' ').trim()}`);
+                            await buttons.nth(i).click({ timeout: 5000 }).catch(() => undefined);
+                            break;
+                        }
+                    }
+                }
+
+                // 3) Toast notification with action buttons.
+                const toastButtons = window.locator('.notification-toast-container button.monaco-button');
+                const tcount = await toastButtons.count().catch(() => 0);
+                for (let i = 0; i < tcount; i++) {
+                    const text = (await toastButtons.nth(i).innerText().catch(() => '')) || '';
+                    if (matchers.some(re => re.test(text))) {
+                        console.log(`[outerloop] auto-accept notification button: ${text.replace(/\s+/g, ' ').trim()}`);
+                        await toastButtons.nth(i).click({ timeout: 5000 }).catch(() => undefined);
+                        break;
+                    }
+                }
+            } catch (err) {
+                console.log(`[outerloop] autoAcceptTrustPrompts iteration error: ${err && err.message}`);
+            }
+
+            await sleep(1000);
+        }
+    })();
+
+    return {
+        stop() {
+            stopped = true;
+            return loop;
+        }
+    };
 }
