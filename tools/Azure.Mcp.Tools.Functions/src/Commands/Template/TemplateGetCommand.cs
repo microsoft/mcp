@@ -19,7 +19,7 @@ internal record TemplateGetCommandResult(TemplateListResult? TemplateList, Funct
     Id = "c3d4e5f6-a7b8-9012-cdef-234567890123",
     Name = "get",
     Title = "Get Function Template",
-    Description = "Lists available Azure Functions templates or generate function code for Timer (cron schedules), HTTP, Blob, Queue, Event Hub, Cosmos DB, Service Bus, Durable, event-driven, and MCP tool triggers with input and output bindings, orchestrations, and serverless infrastructure. " +
+    Description = "Lists available Azure Functions templates or generates function code for Timer (cron schedules), HTTP, Blob, Queue, Event Hub, Cosmos DB, Service Bus, Durable, event-driven, and MCP tool triggers with input and output bindings, orchestrations, and serverless infrastructure. " +
         "Create trigger functions, activity functions, or MCP server functions in C#, Python, JavaScript, TypeScript, Java, or PowerShell. " +
         "Without --template, lists all available triggers, bindings, and templates for the selected language. With --template, generates function code files with azd infrastructure support (Bicep, Terraform, ARM). " +
         "Select one trigger (required) and zero or more input or output bindings.",

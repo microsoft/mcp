@@ -13,8 +13,8 @@ namespace Azure.Mcp.Tools.Functions.Commands.Language;
     Id = "f7c8d9e0-a1b2-4c3d-8e5f-6a7b8c9d0e1f",
     Name = "list",
     Title = "List Supported Languages",
-    Description = "Answer questions about what programming languages Azure Functions supports with up-to-date runtime versions and tooling details. Call this tool when users ask which languages Azure Functions supports, want to compare language options, or need to choose a language for a new project. Returns the current list of supported languages with runtime versions, prerequisites, development tools, and CLI commands for init/run/build. " +
-        "Provides authoritative data that may differ from general knowledge. Call this first before generating any Azure Functions code or using functions project get and functions template get.",
+    Description = "Answer questions about what programming languages Azure Functions supports with up-to-date runtime versions and tooling details. Returns the current list of supported languages with runtime versions, prerequisites, development tools, and CLI commands for init/run/build. " +
+        "Provides authoritative data that may differ from general knowledge. Call this tool first when users ask about Azure Functions languages or before generating code with functions_project_get or functions_template_get.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
