@@ -31,6 +31,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -56,6 +57,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -80,6 +82,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             null,
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -119,6 +122,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
             Service.GetAccountDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
@@ -154,6 +158,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Service.GetAccountDetails(
             Arg.Is(account),
             Arg.Is(subscription),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
@@ -179,7 +184,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -199,7 +204,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         // Act
@@ -218,7 +223,7 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         // Act
@@ -227,5 +232,22 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        const string subscription = "sub123";
+        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 }

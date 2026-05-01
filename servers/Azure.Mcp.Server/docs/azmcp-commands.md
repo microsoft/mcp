@@ -366,7 +366,8 @@ azmcp search knowledge source get --service <service>
 
 # List AI Search accounts in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search service list --subscription <subscription>
+azmcp search service list --subscription <subscription> \
+                         [--resource-group <resource-group>]
 ```
 
 ### Azure AI Services Speech Operations
@@ -479,7 +480,8 @@ azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure
 ```bash
 # List App Configuration stores in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig account list --subscription <subscription>
+azmcp appconfig account list --subscription <subscription> \
+                            [--resource-group <resource-group>]
 
 # Delete a key-value setting
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1878,7 +1880,8 @@ azmcp kusto cluster get --subscription <subscription> \
 
 # List Azure Data Explorer clusters in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp kusto cluster list --subscription <subscription>
+azmcp kusto cluster list --subscription <subscription> \
+                        [--resource-group <resource-group>]
 
 # List databases in a Azure Data Explorer cluster
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2565,7 +2568,8 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 ```bash
 # List Azure Managed Grafana
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp grafana list --subscription <subscription>
+azmcp grafana list --subscription <subscription> \
+                  [--resource-group <resource-group>]
 ```
 
 ### Azure Marketplace Operations
@@ -2688,7 +2692,8 @@ azmcp monitor table list --subscription <subscription> \
 
 # List Log Analytics workspaces in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor workspace list --subscription <subscription>
+azmcp monitor workspace list --subscription <subscription> \
+                            [--resource-group <resource-group>]
 
 # Query logs from Azure Monitor using KQL
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3507,6 +3512,7 @@ azmcp storage account create --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \
                           [--account <account>] \
+                          [--resource-group <resource-group>] \
                           [--tenant <tenant>]
 ```
 

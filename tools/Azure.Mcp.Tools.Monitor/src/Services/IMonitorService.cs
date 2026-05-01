@@ -40,6 +40,7 @@ public interface IMonitorService
 
     Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

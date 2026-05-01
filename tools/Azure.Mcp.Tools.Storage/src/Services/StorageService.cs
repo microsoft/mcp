@@ -41,6 +41,7 @@ public class StorageService(
     public async Task<ResourceQueryResults<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
+        string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
@@ -54,7 +55,7 @@ public class StorageService(
             // List all accounts
             return await ExecuteResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToAccountInfoModel,
@@ -65,7 +66,7 @@ public class StorageService(
         {
             var storageAccount = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
-                resourceGroup: null,
+                resourceGroup: resourceGroup,
                 subscription: subscription,
                 retryPolicy: retryPolicy,
                 converter: ConvertToAccountInfoModel,
