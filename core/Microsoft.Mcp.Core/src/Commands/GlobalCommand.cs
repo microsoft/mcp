@@ -120,6 +120,7 @@ public abstract class GlobalCommand<
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
+        ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
