@@ -79,71 +79,72 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
 internal class CommandFactoryHelpers
 {
+    private static IAreaSetup[] CreateAreaSetups() =>
+    [
+        // Core areas
+        new SubscriptionSetup(),
+        new GroupSetup(),
+
+        // Tool areas
+        new AcrSetup(),
+        new AdvisorSetup(),
+        new AksSetup(),
+        new AppConfigSetup(),
+        new AppLensSetup(),
+        new ApplicationInsightsSetup(),
+        new AppServiceSetup(),
+        new AuthorizationSetup(),
+        new AzureBackupSetup(),
+        new AzureBestPracticesSetup(),
+        new AzureIsvSetup(),
+        new ManagedLustreSetup(),
+        new AzureMigrateSetup(),
+        new AzureTerraformSetup(),
+        new AzureTerraformBestPracticesSetup(),
+        new BicepSchemaSetup(),
+        new CloudArchitectSetup(),
+        new CommunicationSetup(),
+        new ComputeSetup(),
+        new ConfidentialLedgerSetup(),
+        new ContainerAppsSetup(),
+        new CosmosSetup(),
+        new DeploySetup(),
+        new DeviceRegistrySetup(),
+        new EventGridSetup(),
+        new EventHubsSetup(),
+        new ExtensionSetup(),
+        new FileSharesSetup(),
+        new FoundryExtensionsSetup(),
+        new FunctionAppSetup(),
+        new FunctionsSetup(),
+        new GrafanaSetup(),
+        new KeyVaultSetup(),
+        new KustoSetup(),
+        new LoadTestingSetup(),
+        new MarketplaceSetup(),
+        new MonitorSetup(),
+        new MySqlSetup(),
+        new PolicySetup(),
+        new PostgresSetup(),
+        new PricingSetup(),
+        new QuotaSetup(),
+        new RedisSetup(),
+        new ResourceHealthSetup(),
+        new SearchSetup(),
+        new ServiceBusSetup(),
+        new ServiceFabricSetup(),
+        new SignalRSetup(),
+        new SpeechSetup(),
+        new SqlSetup(),
+        new StorageSetup(),
+        new StorageSyncSetup(),
+        new VirtualDesktopSetup(),
+        new WellArchitectedFrameworkSetup(),
+        new WorkbooksSetup(),
+    ];
+
     public static ICommandFactory CreateCommandFactory(IServiceProvider? serviceProvider = default)
     {
-        IAreaSetup[] areaSetups = [
-            // Core areas
-            new SubscriptionSetup(),
-            new GroupSetup(),
-
-            // Tool areas
-            new AcrSetup(),
-            new AdvisorSetup(),
-            new AksSetup(),
-            new AppConfigSetup(),
-            new AppLensSetup(),
-            new ApplicationInsightsSetup(),
-            new AppServiceSetup(),
-            new AuthorizationSetup(),
-            new AzureBackupSetup(),
-            new AzureBestPracticesSetup(),
-            new AzureIsvSetup(),
-            new ManagedLustreSetup(),
-            new AzureMigrateSetup(),
-            new AzureTerraformSetup(),
-            new AzureTerraformBestPracticesSetup(),
-            new BicepSchemaSetup(),
-            new CloudArchitectSetup(),
-            new CommunicationSetup(),
-            new ComputeSetup(),
-            new ConfidentialLedgerSetup(),
-            new ContainerAppsSetup(),
-            new CosmosSetup(),
-            new DeploySetup(),
-            new DeviceRegistrySetup(),
-            new EventGridSetup(),
-            new EventHubsSetup(),
-            new ExtensionSetup(),
-            new FileSharesSetup(),
-            new FoundryExtensionsSetup(),
-            new FunctionAppSetup(),
-            new FunctionsSetup(),
-            new GrafanaSetup(),
-            new KeyVaultSetup(),
-            new KustoSetup(),
-            new LoadTestingSetup(),
-            new MarketplaceSetup(),
-            new MonitorSetup(),
-            new MySqlSetup(),
-            new PolicySetup(),
-            new PostgresSetup(),
-            new PricingSetup(),
-            new QuotaSetup(),
-            new RedisSetup(),
-            new ResourceHealthSetup(),
-            new SearchSetup(),
-            new ServiceBusSetup(),
-            new ServiceFabricSetup(),
-            new SignalRSetup(),
-            new SpeechSetup(),
-            new SqlSetup(),
-            new StorageSetup(),
-            new StorageSyncSetup(),
-            new VirtualDesktopSetup(),
-            new WellArchitectedFrameworkSetup(),
-            new WorkbooksSetup(),
-        ];
-
         var services = serviceProvider ?? CreateDefaultServiceProvider();
         var logger = services.GetRequiredService<ILogger<CommandFactory>>();
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
@@ -154,7 +155,7 @@ internal class CommandFactoryHelpers
             RootCommandGroupName = "azmcp"
         });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
-        var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);
+        var commandFactory = new CommandFactory(services, CreateAreaSetups(), telemetryService, configurationOptions, logger);
 
         return commandFactory;
     }
@@ -166,69 +167,6 @@ internal class CommandFactoryHelpers
 
     public static IServiceCollection SetupCommonServices()
     {
-        IAreaSetup[] areaSetups = [
-            // Core areas
-            new SubscriptionSetup(),
-            new GroupSetup(),
-
-            // Tool areas
-            new AcrSetup(),
-            new AdvisorSetup(),
-            new AksSetup(),
-            new AppConfigSetup(),
-            new AppLensSetup(),
-            new ApplicationInsightsSetup(),
-            new AppServiceSetup(),
-            new AuthorizationSetup(),
-            new AzureBackupSetup(),
-            new AzureBestPracticesSetup(),
-            new AzureIsvSetup(),
-            new ManagedLustreSetup(),
-            new AzureMigrateSetup(),
-            new AzureTerraformSetup(),
-            new AzureTerraformBestPracticesSetup(),
-            new BicepSchemaSetup(),
-            new CloudArchitectSetup(),
-            new CommunicationSetup(),
-            new ComputeSetup(),
-            new ConfidentialLedgerSetup(),
-            new ContainerAppsSetup(),
-            new CosmosSetup(),
-            new DeploySetup(),
-            new DeviceRegistrySetup(),
-            new EventGridSetup(),
-            new EventHubsSetup(),
-            new ExtensionSetup(),
-            new FileSharesSetup(),
-            new FoundryExtensionsSetup(),
-            new FunctionAppSetup(),
-            new FunctionsSetup(),
-            new GrafanaSetup(),
-            new KeyVaultSetup(),
-            new KustoSetup(),
-            new LoadTestingSetup(),
-            new MarketplaceSetup(),
-            new MonitorSetup(),
-            new MySqlSetup(),
-            new PolicySetup(),
-            new PostgresSetup(),
-            new PricingSetup(),
-            new QuotaSetup(),
-            new RedisSetup(),
-            new ResourceHealthSetup(),
-            new SearchSetup(),
-            new ServiceBusSetup(),
-            new ServiceFabricSetup(),
-            new SignalRSetup(),
-            new SpeechSetup(),
-            new SqlSetup(),
-            new StorageSetup(),
-            new StorageSyncSetup(),
-            new VirtualDesktopSetup(),
-            new WellArchitectedFrameworkSetup(),
-            new WorkbooksSetup(),
-        ];
-
         var builder = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ITelemetryService, NoOpTelemetryService>()
@@ -242,7 +180,7 @@ internal class CommandFactoryHelpers
             .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
             .AddSingleton(Substitute.For<IAzureCloudConfiguration>());
 
-        foreach (var area in areaSetups)
+        foreach (var area in CreateAreaSetups())
         {
             area.ConfigureServices(builder);
         }
