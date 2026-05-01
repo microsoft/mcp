@@ -15,37 +15,28 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions>
-{
-    private const string CommandTitle = "Get Service Bus Topic Subscription Details";
-    private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
-    private readonly IServiceBusService _serviceBusService = serviceBusService;
-
-    public override string Id => "578edf30-01f3-45da-b451-3932dcce7cc5";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "578edf30-01f3-45da-b451-3932dcce7cc5",
+    Name = "details",
+    Title = "Get Service Bus Topic Subscription Details",
+    Description = """
         Get details about a Service Bus subscription. Returns subscription runtime properties including message counts, delivery settings, and other metadata.
 
         Required arguments:
         - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
         - topic: Topic name containing the subscription
         - subscription-name: Name of the subscription to get details for
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger, IServiceBusService serviceBusService) : SubscriptionCommand<SubscriptionDetailsOptions>
+{
+    private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
     protected override void RegisterOptions(Command command)
     {

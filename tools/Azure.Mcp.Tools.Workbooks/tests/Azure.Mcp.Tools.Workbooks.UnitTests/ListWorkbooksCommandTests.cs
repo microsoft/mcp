@@ -2,64 +2,45 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.UnitTests;
 
-public class ListWorkbooksCommandTests
+public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksCommand, IWorkbooksService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IWorkbooksService _service;
-    private readonly ILogger<ListWorkbooksCommand> _logger;
-    private readonly ListWorkbooksCommand _command;
-
-    public ListWorkbooksCommandTests()
-    {
-        _service = Substitute.For<IWorkbooksService>();
-        _logger = Substitute.For<ILogger<ListWorkbooksCommand>>();
-
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _command = new(_logger, _service);
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("list", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
-        Assert.Contains("workbook", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("list", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
+        Assert.Contains("workbook", CommandDefinition.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Name_ReturnsCorrectValue()
     {
-        Assert.Equal("list", _command.Name);
+        Assert.Equal("list", Command.Name);
     }
 
     [Fact]
     public void Title_ReturnsCorrectValue()
     {
-        Assert.Equal("List Workbooks", _command.Title);
+        Assert.Equal("List Workbooks", Command.Title);
     }
 
     [Fact]
     public void Description_ContainsRequiredInformation()
     {
-        var description = _command.Description;
+        var description = Command.Description;
         Assert.NotNull(description);
         Assert.Contains("workbook", description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("subscription", description, StringComparison.OrdinalIgnoreCase);
@@ -103,7 +84,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, expectedWorkbooks.Count, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -115,26 +96,15 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--tenant", "tenant123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal(expectedWorkbooks.Count, result.Workbooks.Count);
         Assert.Collection(result.Workbooks,
             workbook =>
@@ -155,7 +125,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -167,26 +137,15 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--tenant", "tenant123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "tenant123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Workbooks);
     }
 
@@ -194,7 +153,7 @@ public class ListWorkbooksCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -204,18 +163,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<WorkbookListResult>(new Exception("Service error")));
-
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "rg123",
-            "--tenant", "tenant123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
+            .ThrowsAsync(new Exception("Service error"));
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg123",
+            "--tenant", "tenant123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -228,7 +182,7 @@ public class ListWorkbooksCommandTests
     {
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -240,19 +194,14 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--subscription", "test-subscription",
             "--resource-group", "test-resource-group",
-            "--tenant", "test-tenant"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--tenant", "test-tenant");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>?>(s => s != null && s.Contains("test-subscription")),
             Arg.Is<IReadOnlyList<string>?>(rg => rg != null && rg.Contains("test-resource-group")),
             Arg.Any<WorkbookFilters?>(),
@@ -269,7 +218,7 @@ public class ListWorkbooksCommandTests
     {
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -281,18 +230,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "test-subscription",
-            "--resource-group", "test-resource-group"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "test-resource-group");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>?>(s => s != null && s.Contains("test-subscription")),
             Arg.Is<IReadOnlyList<string>?>(rg => rg != null && rg.Contains("test-resource-group")),
             Arg.Any<WorkbookFilters?>(),
@@ -309,7 +253,7 @@ public class ListWorkbooksCommandTests
     {
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -321,19 +265,14 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        await ExecuteCommandAsync(
             "--subscription", "test-subscription",
             "--resource-group", "test-resource-group",
-            "--auth-method", "1"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--auth-method", "1");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Is<IReadOnlyList<string>?>(s => s != null && s.Contains("test-subscription")),
             Arg.Is<IReadOnlyList<string>?>(rg => rg != null && rg.Contains("test-resource-group")),
             Arg.Any<WorkbookFilters?>(),
@@ -348,12 +287,8 @@ public class ListWorkbooksCommandTests
     [Fact]
     public async Task ExecuteAsync_WithoutSubscription_ReturnsValidationError()
     {
-        // Arrange - subscription is required
-        var args = _command.GetCommand().Parse([]);
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        // Arrange & Act - subscription is required
+        var response = await ExecuteCommandAsync([]);
 
         // Assert - should fail validation without subscription
         Assert.NotNull(response);
@@ -396,7 +331,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -408,24 +343,14 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "rg123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Single(result.Workbooks);
 
         var workbook = result.Workbooks.First();
@@ -459,7 +384,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared"),
@@ -471,22 +396,18 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--kind", "shared"
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--kind", "shared");
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared"),
@@ -522,7 +443,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == "sentinel"),
@@ -534,22 +455,18 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--category", "sentinel"
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--category", "sentinel");
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == "sentinel"),
@@ -586,7 +503,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.SourceId == sourceId),
@@ -598,22 +515,18 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--source-id", sourceId
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--source-id", sourceId);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.SourceId == sourceId),
@@ -650,7 +563,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
@@ -662,24 +575,20 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
             "--kind", "shared",
             "--category", "sentinel",
-            "--source-id", sourceId
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--source-id", sourceId);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
@@ -715,7 +624,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && !f.HasFilters),
@@ -727,21 +636,17 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "rg123"
-        ]);
-
         // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg123");
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && !f.HasFilters),
@@ -760,7 +665,7 @@ public class ListWorkbooksCommandTests
     {
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == kind),
@@ -772,21 +677,17 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--kind", kind
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--kind", kind);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == kind),
@@ -807,7 +708,7 @@ public class ListWorkbooksCommandTests
     {
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
@@ -819,21 +720,17 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
-            "--category", category
-        ]);
-
-        // Act
-        var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--category", category);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
@@ -869,7 +766,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 100, null); // TotalCount=100
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -881,21 +778,12 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
-        Assert.NotNull(result);
         Assert.Equal(100, result.TotalCount);
         Assert.Equal(1, result.Returned);
     }
@@ -906,7 +794,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -918,18 +806,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--max-results", "25"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--max-results", "25");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -950,7 +833,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -962,18 +845,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--output-format", formatStr
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--output-format", formatStr);
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -991,7 +869,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.NameContains == "my-workbook"),
@@ -1003,18 +881,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--name-contains", "my-workbook"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--name-contains", "my-workbook");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.NameContains == "my-workbook"),
@@ -1033,7 +906,7 @@ public class ListWorkbooksCommandTests
         var modifiedAfterDate = new DateTimeOffset(2024, 6, 15, 0, 0, 0, TimeSpan.Zero);
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.ModifiedAfter.HasValue && f.ModifiedAfter.Value.Date == modifiedAfterDate.Date),
@@ -1045,18 +918,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--modified-after", "2024-06-15"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--modified-after", "2024-06-15");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.ModifiedAfter.HasValue),
@@ -1077,7 +945,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Testing various ISO 8601 date formats
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.ModifiedAfter.HasValue),
@@ -1089,19 +957,14 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--modified-after", dateString
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--modified-after", dateString);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.ModifiedAfter.HasValue),
@@ -1119,7 +982,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Invalid date should be ignored, not cause an error
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && !f.ModifiedAfter.HasValue),
@@ -1131,19 +994,14 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--modified-after", "invalid-date"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--modified-after", "invalid-date");
 
         // Assert - Should succeed but with no modified-after filter applied
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null && !f.ModifiedAfter.HasValue),
@@ -1164,7 +1022,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Per optimization plan, max-results is capped at 1000
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1176,18 +1034,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--max-results", requestedMaxResults.ToString()
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--max-results", requestedMaxResults.ToString());
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1207,7 +1060,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Zero or negative should default to 50
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1219,18 +1072,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--max-results", requestedMaxResults.ToString()
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--max-results", requestedMaxResults.ToString());
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1249,7 +1097,7 @@ public class ListWorkbooksCommandTests
         var listResult = new WorkbookListResult([], 100, null);
 
         // Set up mock to accept any call and return our result
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1261,20 +1109,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123"
-            // Note: --include-total-count not specified, should default to true
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         // Verify the service was called with includeTotalCount = true (default behavior)
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1312,7 +1153,7 @@ public class ListWorkbooksCommandTests
 
         var listResult = new WorkbookListResult(expectedWorkbooks, 1, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null &&
@@ -1329,24 +1170,19 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg123",
             "--kind", "shared",
             "--category", "sentinel",
             "--source-id", sourceId,
             "--name-contains", "dashboard",
-            "--modified-after", "2024-01-01"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+            "--modified-after", "2024-01-01");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Is<WorkbookFilters?>(f => f != null &&
@@ -1375,7 +1211,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Output format should be case-insensitive
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1387,18 +1223,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--output-format", formatStr
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--output-format", formatStr);
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1416,7 +1247,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Unknown format should default to standard
         var listResult = new WorkbookListResult([], 0, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1428,18 +1259,13 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--output-format", "unknown-format"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--output-format", "unknown-format");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1457,7 +1283,7 @@ public class ListWorkbooksCommandTests
         // Arrange - Per optimization plan, includeTotalCount defaults to true
         var listResult = new WorkbookListResult([], 100, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1469,17 +1295,11 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        await _service.Received(1).ListWorkbooksAsync(
+        await Service.Received(1).ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1499,7 +1319,7 @@ public class ListWorkbooksCommandTests
         // instead of throwing "The requested operation requires an element of type 'Object'"
         var listResult = new WorkbookListResult([], null, null);
 
-        _service.ListWorkbooksAsync(
+        Service.ListWorkbooksAsync(
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<WorkbookFilters?>(),
@@ -1511,23 +1331,12 @@ public class ListWorkbooksCommandTests
             Arg.Any<CancellationToken>())
             .Returns(listResult);
 
-        var args = _command.GetCommand().Parse([
-            "--subscription", "sub123"
-        ]);
-
-        var context = new CommandContext(_serviceProvider);
-
         // Act
-        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert - Should return OK with empty results, not throw
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var result = ValidateAndDeserializeResponse(response, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Workbooks);
         Assert.Null(result.TotalCount);
     }

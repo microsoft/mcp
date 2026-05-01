@@ -59,27 +59,20 @@ public class StorageSetup : IAreaSetup
         blobs.AddSubGroup(blobContainer);
 
         // Register Storage commands
-        var accountCreate = serviceProvider.GetRequiredService<AccountCreateCommand>();
-        storageAccount.AddCommand(accountCreate.Name, accountCreate);
-        var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
-        storageAccount.AddCommand(accountGet.Name, accountGet);
+        storageAccount.AddCommand<AccountCreateCommand>(serviceProvider);
+        storageAccount.AddCommand<AccountGetCommand>(serviceProvider);
 
-        var blobGet = serviceProvider.GetRequiredService<BlobGetCommand>();
-        blobs.AddCommand(blobGet.Name, blobGet);
-        var blobUpload = serviceProvider.GetRequiredService<BlobUploadCommand>();
-        blobs.AddCommand(blobUpload.Name, blobUpload);
+        blobs.AddCommand<BlobGetCommand>(serviceProvider);
+        blobs.AddCommand<BlobUploadCommand>(serviceProvider);
 
-        var containerCreate = serviceProvider.GetRequiredService<ContainerCreateCommand>();
-        blobContainer.AddCommand(containerCreate.Name, containerCreate);
-        var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
-        blobContainer.AddCommand(containerGet.Name, containerGet);
+        blobContainer.AddCommand<ContainerCreateCommand>(serviceProvider);
+        blobContainer.AddCommand<ContainerGetCommand>(serviceProvider);
 
         // Create Table subgroup under storage
         var tables = new CommandGroup("table", "Storage table operations - Commands for managing tables in your Azure Storage accounts.");
         storage.AddSubGroup(tables);
 
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        tables.AddCommand(tableList.Name, tableList);
+        tables.AddCommand<TableListCommand>(serviceProvider);
 
         return storage;
     }

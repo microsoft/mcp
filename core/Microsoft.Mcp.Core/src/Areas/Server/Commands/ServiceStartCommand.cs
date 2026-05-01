@@ -41,9 +41,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main command list.
 /// </summary>
 [HiddenCommand]
+[CommandMetadata(
+    Id = "9953ff62-e3d7-4bdf-9b70-d569e54e3df1",
+    Name = "start",
+    Title = "Start MCP Server",
+    Description = "Starts Azure MCP Server.",
+    Destructive = false,
+    ReadOnly = true)]
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
-    private const string CommandTitle = "Start MCP Server";
     private static readonly string[] StdioHostBuilderArgs =
     [
         $"--contentRoot={AppContext.BaseDirectory}",
@@ -55,31 +61,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ContentRootPath = AppContext.BaseDirectory
     };
 
-    /// <summary>
-    /// Gets the name of the command.
-    /// </summary>
-    public override string Name => "start";
-
-    /// <summary>
-    /// Gets the description of the command.
-    /// </summary>
-    public override string Description => "Starts Azure MCP Server.";
-
-    /// <summary>
-    /// Gets the title of the command.
-    /// </summary>
-    public override string Title => CommandTitle;
-
-    /// <summary>
-    /// Gets the metadata for this command.
-    /// </summary>
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
-
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
-
-    public override string Id => "9953ff62-e3d7-4bdf-9b70-d569e54e3df1";
 
     /// <summary>
     /// Registers command options for the service start command.

@@ -24,39 +24,30 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
+[CommandMetadata(
+    Id = "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94",
+    Name = "plugin-telemetry",
+    Title = "Plugin Telemetry",
+    Description = """
+        Publish plugin-related telemetry events from agent hooks.
+        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
+        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
+        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
+        """,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false)]
 public sealed class PluginTelemetryCommand(
     IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
     IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
     IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
 {
-    private const string CommandTitle = "Plugin Telemetry";
     private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
     private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
-
-    public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
-
-    public override string Name => "plugin-telemetry";
-
-    public override string Description =>
-        """
-        Publish plugin-related telemetry events from agent hooks.
-        Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
-        '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
-        Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     /// <summary>
     /// Gets or sets the service configuration action.

@@ -13,35 +13,25 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
 
-public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
-{
-    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
-
-    private const string CommandTitle = "List OpenAI Models";
-
-    public override string Id => "a7b8c9d0-7890-bcde-0123-456789012345";
-
-    public override string Name => "models-list";
-
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "a7b8c9d0-7890-bcde-0123-456789012345",
+    Name = "models-list",
+    Title = "List OpenAI Models",
+    Description = """
         List Azure OpenAI model deployments in a Microsoft Foundry resource, including deployment names, model names,
         versions, capabilities, and deployment status. Use this to show model deployments, check which OpenAI models
         are deployed, or see available models in a specific Foundry resource. Requires resource-name and resource-group.
         For Foundry resource-level details like endpoint URL, location, or SKU, use the resource get command instead.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExtensionsService) : SubscriptionCommand<OpenAiModelsListOptions>
+{
+    private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
     protected override void RegisterOptions(Command command)
     {

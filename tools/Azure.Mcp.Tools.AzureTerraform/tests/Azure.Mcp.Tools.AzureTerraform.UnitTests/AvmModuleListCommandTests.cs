@@ -1,51 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
 
-public class AvmModuleListCommandTests
+public class AvmModuleListCommandTests : CommandUnitTestsBase<AvmModuleListCommand, IAvmDocsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AvmModuleListCommand> _logger;
-    private readonly IAvmDocsService _avmDocsService;
-    private readonly CommandContext _context;
-    private readonly AvmModuleListCommand _command;
-    private readonly Command _commandDefinition;
-
-    public AvmModuleListCommandTests()
-    {
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _logger = Substitute.For<ILogger<AvmModuleListCommand>>();
-        _avmDocsService = Substitute.For<IAvmDocsService>();
-        _command = new(_logger, _avmDocsService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.NotEmpty(_command.Id);
-        Assert.NotEmpty(_command.Title);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.Idempotent);
+        Assert.Equal("list", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotEmpty(Command.Id);
+        Assert.NotEmpty(Command.Title);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -69,11 +47,10 @@ public class AvmModuleListCommandTests
             }
         };
 
-        _avmDocsService.ListModulesAsync(Arg.Any<CancellationToken>())
+        Service.ListModulesAsync(Arg.Any<CancellationToken>())
             .Returns(expectedModules);
 
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -82,11 +59,10 @@ public class AvmModuleListCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _avmDocsService.ListModulesAsync(Arg.Any<CancellationToken>())
+        Service.ListModulesAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Network error"));
 
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -97,12 +73,11 @@ public class AvmModuleListCommandTests
     {
         if (shouldSucceed)
         {
-            _avmDocsService.ListModulesAsync(Arg.Any<CancellationToken>())
+            Service.ListModulesAsync(Arg.Any<CancellationToken>())
                 .Returns(new List<AvmModule>());
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -128,19 +103,13 @@ public class AvmModuleListCommandTests
             }
         };
 
-        _avmDocsService.ListModulesAsync(Arg.Any<CancellationToken>())
+        Service.ListModulesAsync(Arg.Any<CancellationToken>())
             .Returns(expectedModules);
 
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmModuleListResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AvmModuleListResult);
-
-        Assert.NotNull(result);
         Assert.NotNull(result.Modules);
         Assert.Single(result.Modules);
         Assert.Equal("avm-res-storage-storageaccount", result.Modules[0].ModuleName);
@@ -149,7 +118,7 @@ public class AvmModuleListCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse([]);
+        var args = CommandDefinition.Parse([]);
 
         Assert.NotNull(args);
         Assert.Empty(args.Errors);

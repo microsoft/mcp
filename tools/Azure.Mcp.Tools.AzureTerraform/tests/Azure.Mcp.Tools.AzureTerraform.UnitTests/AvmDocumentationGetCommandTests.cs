@@ -1,60 +1,38 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
-using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
 
-public class AvmDocumentationGetCommandTests
+public class AvmDocumentationGetCommandTests : CommandUnitTestsBase<AvmDocumentationGetCommand, IAvmDocsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AvmDocumentationGetCommand> _logger;
-    private readonly IAvmDocsService _avmDocsService;
-    private readonly CommandContext _context;
-    private readonly AvmDocumentationGetCommand _command;
-    private readonly Command _commandDefinition;
-
-    public AvmDocumentationGetCommandTests()
-    {
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-        _context = new(_serviceProvider);
-        _logger = Substitute.For<ILogger<AvmDocumentationGetCommand>>();
-        _avmDocsService = Substitute.For<IAvmDocsService>();
-        _command = new(_logger, _avmDocsService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.NotEmpty(_command.Id);
-        Assert.NotEmpty(_command.Title);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.ReadOnly);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotEmpty(Command.Id);
+        Assert.NotEmpty(Command.Title);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
     }
 
     [Fact]
     public async Task ExecuteAsync_ValidInput_ReturnsDocumentation()
     {
-        _avmDocsService.GetDocumentationAsync("avm-res-storage-storageaccount", "0.4.0", Arg.Any<CancellationToken>())
+        Service.GetDocumentationAsync("avm-res-storage-storageaccount", "0.4.0", Arg.Any<CancellationToken>())
             .Returns("# Azure Storage Account Module\n\nThis module creates a storage account.");
 
-        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--module-name", "avm-res-storage-storageaccount",
+            "--module-version", "0.4.0");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -63,8 +41,7 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingModuleName_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse(["--module-version", "0.4.0"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--module-version", "0.4.0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -72,8 +49,7 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingModuleVersion_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--module-name", "avm-res-storage-storageaccount");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -81,11 +57,10 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _avmDocsService.GetDocumentationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetDocumentationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Module not found"));
 
-        var args = _commandDefinition.Parse(["--module-name", "nonexistent", "--module-version", "1.0.0"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--module-name", "nonexistent", "--module-version", "1.0.0");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -93,13 +68,12 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public async Task ExecuteAsync_VerifiesServiceCalled()
     {
-        _avmDocsService.GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>())
+        Service.GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>())
             .Returns("# Test Module");
 
-        var args = _commandDefinition.Parse(["--module-name", "test-module", "--module-version", "1.0.0"]);
-        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        await ExecuteCommandAsync("--module-name", "test-module", "--module-version", "1.0.0");
 
-        await _avmDocsService.Received(1).GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>());
+        await Service.Received(1).GetDocumentationAsync("test-module", "1.0.0", Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -111,12 +85,11 @@ public class AvmDocumentationGetCommandTests
     {
         if (shouldSucceed)
         {
-            _avmDocsService.GetDocumentationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Service.GetDocumentationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns("# Module docs");
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -131,19 +104,15 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public async Task ExecuteAsync_DeserializationValidation()
     {
-        _avmDocsService.GetDocumentationAsync("avm-res-storage-storageaccount", "0.4.0", Arg.Any<CancellationToken>())
+        Service.GetDocumentationAsync("avm-res-storage-storageaccount", "0.4.0", Arg.Any<CancellationToken>())
             .Returns("# Azure Storage Account Module\n\nThis module creates a storage account.");
 
-        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--module-name", "avm-res-storage-storageaccount",
+            "--module-version", "0.4.0");
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AvmDocumentationResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AvmDocumentationResult);
-
-        Assert.NotNull(result);
         Assert.Equal("avm-res-storage-storageaccount", result.ModuleName);
         Assert.Equal("0.4.0", result.ModuleVersion);
         Assert.Contains("Azure Storage Account Module", result.Documentation);
@@ -152,12 +121,12 @@ public class AvmDocumentationGetCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
+        var args = CommandDefinition.Parse(["--module-name", "avm-res-storage-storageaccount", "--module-version", "0.4.0"]);
 
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
 
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         var options = command.Options;
 
         Assert.Contains(options, o => o.Name == "--module-name");

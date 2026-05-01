@@ -12,29 +12,21 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 
+[CommandMetadata(
+    Id = "942b5c00-01dd-4ca0-9596-4cf650ff7934",
+    Name = "get",
+    Title = "Get IaC (Infrastructure as Code) Rules",
+    Description = "Retrieves curated IaC rules and best practices for creating Bicep or Terraform files compatible with Azure Developer CLI (azd) or Azure CLI deployments. Covers Azure resource configuration standards, naming requirements, and deployment tool constraints that differ from generic IaC guidance. Returns a formatted rules document. Specify deployment tool (AzCli or AZD), IaC type (bicep or terraform), and target resource types.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     : BaseCommand<RulesGetOptions>
 {
-    private const string CommandTitle = "Get IaC (Infrastructure as Code) Rules";
     private readonly ILogger<RulesGetCommand> _logger = logger;
-    public override string Id => "942b5c00-01dd-4ca0-9596-4cf650ff7934";
-
-    public override string Name => "get";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """
-        Retrieves curated IaC rules and best practices for creating Bicep or Terraform files compatible with Azure Developer CLI (azd) or Azure CLI deployments. Covers Azure resource configuration standards, naming requirements, and deployment tool constraints that differ from generic IaC guidance. Returns a formatted rules document. Specify deployment tool (AzCli or AZD), IaC type (bicep or terraform), and target resource types.
-        """;
 
     protected override void RegisterOptions(Command command)
     {

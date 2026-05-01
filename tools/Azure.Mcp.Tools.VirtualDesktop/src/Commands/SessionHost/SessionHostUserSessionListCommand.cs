@@ -10,34 +10,26 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
+[CommandMetadata(
+    Id = "1653a208-ac9f-4e51-996f-fe2d29a79b2b",
+    Name = "user-list",
+    Title = "List User Sessions on Session Host",
+    Description = """
+        List all user sessions on a specific session host in a host pool. This command retrieves all Azure Virtual Desktop
+        user session objects available on the specified session host. Results include user session details such as
+        user principal name, session state, application type, and creation time.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger, IVirtualDesktopService virtualDesktopService)
     : BaseSessionHostCommand
 {
-    private const string CommandTitle = "List User Sessions on Session Host";
     private readonly ILogger<SessionHostUserSessionListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
-    public override string Id => "1653a208-ac9f-4e51-996f-fe2d29a79b2b";
-
-    public override string Name => "user-list";
-
-    public override string Description =>
-        """
-		List all user sessions on a specific session host in a host pool. This command retrieves all Azure Virtual Desktop
-		user session objects available on the specified session host. Results include user session details such as
-		user principal name, session state, application type, and creation time.
-		""";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

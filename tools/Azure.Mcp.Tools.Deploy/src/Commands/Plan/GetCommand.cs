@@ -16,30 +16,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Plan;
 
+[CommandMetadata(
+    Id = "92ca95b2-cde6-407c-ac67-9743db40dfc4",
+    Name = "get",
+    Title = "Generate Azure Deployment Plan",
+    Description = "Retrieves an Azure-specific deployment plan template for deploying an application to Azure using deployment options provided by the caller. Use this tool when the user wants a formatted, step-by-step deployment plan, including suggested Azure resources, infrastructure as code (IaC) templates, and deployment instructions, for a target Azure hosting service such as Container Apps, App Service, or AKS and a chosen provisioning tool such as Azure Developer CLI (azd) or Azure CLI with Bicep or Terraform. Before calling, determine the services, frameworks, and dependencies to deploy, select the appropriate Azure hosting service, provisioning tool, IaC type, and deployment option, and then pass those chosen values into this tool to generate the deployment plan.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GetCommand(ILogger<GetCommand> logger)
     : BaseCommand<GetOptions>
 {
-    private const string CommandTitle = "Generate Azure Deployment Plan";
     private readonly ILogger<GetCommand> _logger = logger;
-    public override string Id => "92ca95b2-cde6-407c-ac67-9743db40dfc4";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves an Azure-specific deployment plan template for deploying an application to Azure using deployment options provided by the caller. Use this tool when the user wants a formatted, step-by-step deployment plan, including suggested Azure resources, infrastructure as code (IaC) templates, and deployment instructions, for a target Azure hosting service such as Container Apps, App Service, or AKS and a chosen provisioning tool such as Azure Developer CLI (azd) or Azure CLI with Bicep or Terraform. Before calling, determine the services, frameworks, and dependencies to deploy, select the appropriate Azure hosting service, provisioning tool, IaC type, and deployment option, and then pass those chosen values into this tool to generate the deployment plan.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

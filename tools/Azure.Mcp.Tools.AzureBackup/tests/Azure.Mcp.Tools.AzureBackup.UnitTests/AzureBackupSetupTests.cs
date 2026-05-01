@@ -111,6 +111,20 @@ public class AzureBackupSetupTests
     }
 
     [Fact]
+    public void RegisterCommands_PolicyGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var policy = root.SubGroup.First(g => g.Name == "policy");
+
+        Assert.Contains(policy.Commands, c => c.Key == "get");
+        Assert.Contains(policy.Commands, c => c.Key == "create");
+        Assert.Contains(policy.Commands, c => c.Key == "update");
+    }
+
+    [Fact]
     public void RegisterCommands_WithNullServiceProvider_ShouldThrow()
     {
         var setup = new AzureBackupSetup();

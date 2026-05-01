@@ -11,35 +11,27 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
+[CommandMetadata(
+    Id = "c3d4e5f6-a7b8-9012-cdef-234567890abc",
+    Name = "list",
+    Title = "List AVM Modules",
+    Description = """
+        Retrieves all available Azure Verified Modules (AVM) for Terraform.
+        Returns a list of modules with their name, description, source reference, and repository URL.
+        The source field can be used directly in Terraform module blocks.
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AvmModuleListCommand(
     ILogger<AvmModuleListCommand> logger,
     IAvmDocsService avmDocsService) : BaseCommand<AvmModuleListOptions>
 {
     private readonly ILogger<AvmModuleListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
-
-    public override string Id => "c3d4e5f6-a7b8-9012-cdef-234567890abc";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
-        Retrieves all available Azure Verified Modules (AVM) for Terraform.
-        Returns a list of modules with their name, description, source reference, and repository URL.
-        The source field can be used directly in Terraform module blocks.
-        """;
-
-    public override string Title => "List AVM Modules";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override AvmModuleListOptions BindOptions(ParseResult parseResult) => new();
 

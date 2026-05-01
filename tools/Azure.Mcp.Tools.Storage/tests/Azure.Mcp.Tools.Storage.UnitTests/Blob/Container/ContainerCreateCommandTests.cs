@@ -1,50 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Blob.Container;
 
-public class ContainerCreateCommandTests
+public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateCommand, IStorageService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IStorageService _storageService;
-    private readonly ILogger<ContainerCreateCommand> _logger;
-    private readonly ContainerCreateCommand _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public ContainerCreateCommandTests()
-    {
-        _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<ContainerCreateCommand>>();
-
-        _serviceProvider = new ServiceCollection().BuildServiceProvider();
-        _command = new(_logger, _storageService);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
-        Assert.Equal("create", command.Name);
-        Assert.NotNull(command.Description);
-        Assert.NotEmpty(command.Description);
+        Assert.Equal("create", CommandDefinition.Name);
+        Assert.NotNull(CommandDefinition.Description);
+        Assert.NotEmpty(CommandDefinition.Description);
     }
 
     [Theory]
@@ -65,7 +42,7 @@ public class ContainerCreateCommandTests
             var expected = new ContainerInfo("container123", DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
                 "unlocked", "available", null, "private", false, false, null, null, false);
 
-            _storageService.CreateContainer(
+            Service.CreateContainer(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -75,21 +52,15 @@ public class ContainerCreateCommandTests
                 .Returns(expected);
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
-            Assert.NotNull(response.Results);
-            Assert.Equal("Success", response.Message);
+            var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerCreateCommandResult);
 
-            var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerCreateCommandResult);
-            Assert.NotNull(result);
             Assert.NotNull(result.Container);
             Assert.Equal("container123", result.Container.Name);
         }
@@ -103,7 +74,7 @@ public class ContainerCreateCommandTests
     public async Task ExecuteAsync_HandlesContainerAlreadyExists()
     {
         // Arrange
-        _storageService.CreateContainer(
+        Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -112,10 +83,11 @@ public class ContainerCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Container already exists"));
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--subscription", "sub123", "--container", "existingcontainer"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--subscription", "sub123",
+             "--container", "existingcontainer");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -126,7 +98,7 @@ public class ContainerCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        _storageService.CreateContainer(
+        Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -135,10 +107,11 @@ public class ContainerCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--subscription", "sub123", "--container", "invalidaccess"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--subscription", "sub123",
+            "--container", "invalidaccess");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -149,7 +122,7 @@ public class ContainerCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _storageService.CreateContainer(
+        Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -158,10 +131,11 @@ public class ContainerCreateCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--subscription", "sub123", "--container", "container123"]);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount",
+            "--subscription", "sub123",
+            "--container", "container123");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -180,7 +154,7 @@ public class ContainerCreateCommandTests
         var expected = new ContainerInfo(container, DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
             "unlocked", "available", null, "private", false, false, null, null, false);
 
-        _storageService.CreateContainer(
+        Service.CreateContainer(
             account,
             container,
             subscription,
@@ -189,18 +163,15 @@ public class ContainerCreateCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var parseResult = _commandDefinition.Parse([
+        // Act
+        var response = await ExecuteCommandAsync(
             "--account", account,
             "--subscription", subscription,
-            "--container", container
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            "--container", container);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _storageService.Received(1).CreateContainer(
+        await Service.Received(1).CreateContainer(
             account,
             container,
             subscription,

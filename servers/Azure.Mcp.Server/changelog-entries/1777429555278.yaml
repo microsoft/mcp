@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Improved Azure Functions tool descriptions and prompts for better AI agent tool selection and invocation."

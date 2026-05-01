@@ -11,36 +11,28 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 
+[CommandMetadata(
+    Id = "d4e5f6a7-b8c9-0123-def0-345678901bcd",
+    Name = "versions",
+    Title = "List AVM Module Versions",
+    Description = """
+        Retrieves all available versions of a specified Azure Verified Module (AVM).
+        Returns version tags with creation dates, sorted from newest to oldest.
+        The first version in the list is the latest. Use --module-name to specify
+        the module (e.g., avm-res-storage-storageaccount).
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class AvmVersionListCommand(
     ILogger<AvmVersionListCommand> logger,
     IAvmDocsService avmDocsService) : BaseCommand<AvmVersionOptions>
 {
     private readonly ILogger<AvmVersionListCommand> _logger = logger;
     private readonly IAvmDocsService _avmDocsService = avmDocsService;
-
-    public override string Id => "d4e5f6a7-b8c9-0123-def0-345678901bcd";
-
-    public override string Name => "versions";
-
-    public override string Description =>
-        """
-        Retrieves all available versions of a specified Azure Verified Module (AVM).
-        Returns version tags with creation dates, sorted from newest to oldest.
-        The first version in the list is the latest. Use --module-name to specify
-        the module (e.g., avm-res-storage-storageaccount).
-        """;
-
-    public override string Title => "List AVM Module Versions";
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

@@ -13,17 +13,21 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 
+[CommandMetadata(
+    Id = "917b66e5-483f-43ac-9620-9403e1689dbe",
+    Name = "enable-crr",
+    Title = "Enable Cross-Region Restore",
+    Description = "Enables Cross-Region Restore on a GRS-enabled vault.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEnableCrrCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<BaseAzureBackupOptions>()
 {
-    private const string CommandTitle = "Enable Cross-Region Restore";
     private readonly ILogger<DisasterRecoveryEnableCrrCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-
-    public override string Id => "917b66e5-483f-43ac-9620-9403e1689dbe";
-    public override string Name => "enable-crr";
-    public override string Description => "Enables Cross-Region Restore on a GRS-enabled vault.";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, LocalRequired = false, Secret = false };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -33,6 +37,8 @@ public sealed class DisasterRecoveryEnableCrrCommand(ILogger<DisasterRecoveryEna
         }
 
         var options = BindOptions(parseResult);
+
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
         {

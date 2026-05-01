@@ -96,6 +96,32 @@ public class AppSettingsUpdateCommandTests : CommandUnitTestsBase<AppSettingsUpd
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_InvalidUpdateType_ReturnsErrorResponse()
+    {
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--app", "test-app",
+            "--setting-update-type", "invalid-update-type");
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+
+        await Service.DidNotReceive().UpdateAppSettingsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("add", "Setting1", "Value1")]
     [InlineData("set", "Setting1", "Value1")]

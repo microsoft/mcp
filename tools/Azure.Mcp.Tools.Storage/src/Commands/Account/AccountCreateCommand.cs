@@ -15,33 +15,24 @@ using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Account;
 
-public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions>()
-{
-    private const string CommandTitle = "Create Storage Account";
-    private readonly ILogger<AccountCreateCommand> _logger = logger;
-    private readonly IStorageService _storageService = storageService;
-
-    public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
-
-    public override string Name => "create";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a2cf843a-57f2-45ea-8078-59b0be0805e6",
+    Name = "create",
+    Title = "Create Storage Account",
+    Description = """
         Creates an Azure Storage account in the specified resource group and location and returns the created storage account
         information including name, location, SKU, access settings, and configuration details.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, IStorageService storageService) : SubscriptionCommand<AccountCreateOptions>()
+{
+    private readonly ILogger<AccountCreateCommand> _logger = logger;
+    private readonly IStorageService _storageService = storageService;
 
     protected override void RegisterOptions(Command command)
     {

@@ -12,29 +12,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 
+[CommandMetadata(
+    Id = "2134621b-518f-48ac-a66a-82c40fcb58bb",
+    Name = "set",
+    Title = "Set PostgreSQL Server Parameter",
+    Description = "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Set PostgreSQL Server Parameter";
-
-    public override string Id => "2134621b-518f-48ac-a66a-82c40fcb58bb";
-
-    public override string Name => "set";
-
-    public override string Description =>
-        "Configures PostgreSQL server settings including replication, connection limits, and other parameters.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {

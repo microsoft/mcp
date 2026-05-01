@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
+namespace Fabric.Mcp.Tools.Docs.UnitTests.Commands;
 
 /// <summary>
 /// Shared fixture for combined workflow tests. Creates the service provider

@@ -11,33 +11,24 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
-public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions>()
-{
-    private const string CommandTitle = "List App Configuration Stores";
-    private readonly ILogger<AccountListCommand> _logger = logger;
-    private readonly IAppConfigService _appConfigService = appConfigService;
-
-    public override string Id => "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a",
+    Name = "list",
+    Title = "List App Configuration Stores",
+    Description = """
         List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration
         stores available in the specified subscription. Results include store names returned as a JSON array.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions>()
+{
+    private readonly ILogger<AccountListCommand> _logger = logger;
+    private readonly IAppConfigService _appConfigService = appConfigService;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {

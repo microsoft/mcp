@@ -34,11 +34,7 @@ jobs:
   - download: current
     displayName: Download artifacts
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"

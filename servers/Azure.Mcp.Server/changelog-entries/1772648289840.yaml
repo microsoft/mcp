@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added tool to change the running state of an App Service web app"

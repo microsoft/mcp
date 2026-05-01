@@ -76,6 +76,17 @@ public interface IRsvBackupOperations
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
+    Task<OperationResult> UpdatePolicyAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string policyName,
+        string? scheduleTime,
+        string? dailyRetentionDays,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
     Task<ProtectResult> ProtectItemAsync(
         string vaultName,
         string resourceGroup,

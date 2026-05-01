@@ -1,52 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Commands;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureTerraform.UnitTests;
 
-public class AzureRMDocsGetCommandTests
+public class AzureRMDocsGetCommandTests : CommandUnitTestsBase<AzureRMDocsGetCommand, IAzureRMDocsService>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AzureRMDocsGetCommand> _logger;
-    private readonly IAzureRMDocsService _docsService;
-    private readonly CommandContext _context;
-    private readonly AzureRMDocsGetCommand _command;
-    private readonly Command _commandDefinition;
-
-    public AzureRMDocsGetCommandTests()
-    {
-        var collection = new ServiceCollection();
-        _serviceProvider = collection.BuildServiceProvider();
-
-        _context = new(_serviceProvider);
-        _logger = Substitute.For<ILogger<AzureRMDocsGetCommand>>();
-        _docsService = Substitute.For<IAzureRMDocsService>();
-        _command = new(_logger, _docsService);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get", _command.Name);
-        Assert.NotEmpty(_command.Description);
-        Assert.NotEmpty(_command.Id);
-        Assert.NotEmpty(_command.Title);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.Idempotent);
+        Assert.Equal("get", Command.Name);
+        Assert.NotEmpty(Command.Description);
+        Assert.NotEmpty(Command.Id);
+        Assert.NotEmpty(Command.Title);
+        Assert.False(Command.Metadata.Destructive);
+        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -69,7 +46,7 @@ public class AzureRMDocsGetCommandTests
             Notes = ["Some note"]
         };
 
-        _docsService.GetDocumentationAsync(
+        Service.GetDocumentationAsync(
             "azurerm_resource_group",
             "resource",
             null,
@@ -77,8 +54,7 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -87,8 +63,7 @@ public class AzureRMDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingResourceType_ReturnsValidationError()
     {
-        var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync([]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
@@ -96,7 +71,7 @@ public class AzureRMDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ServiceThrows_HandlesException()
     {
-        _docsService.GetDocumentationAsync(
+        Service.GetDocumentationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -104,8 +79,7 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Network error"));
 
-        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
     }
@@ -113,7 +87,7 @@ public class AzureRMDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_WithDocType_PassesDocType()
     {
-        _docsService.GetDocumentationAsync(
+        Service.GetDocumentationAsync(
             "azurerm_resource_group",
             "data-source",
             null,
@@ -121,11 +95,10 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
 
-        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group", "--doc-type", "data-source"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group", "--doc-type", "data-source");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _docsService.Received(1).GetDocumentationAsync(
+        await Service.Received(1).GetDocumentationAsync(
             "azurerm_resource_group",
             "data-source",
             null,
@@ -136,7 +109,7 @@ public class AzureRMDocsGetCommandTests
     [Fact]
     public async Task ExecuteAsync_WithArgumentFilter_PassesArgumentName()
     {
-        _docsService.GetDocumentationAsync(
+        Service.GetDocumentationAsync(
             "azurerm_resource_group",
             "resource",
             "name",
@@ -144,11 +117,10 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
 
-        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group", "--argument", "name"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group", "--argument", "name");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _docsService.Received(1).GetDocumentationAsync(
+        await Service.Received(1).GetDocumentationAsync(
             "azurerm_resource_group",
             "resource",
             "name",
@@ -164,13 +136,12 @@ public class AzureRMDocsGetCommandTests
     {
         if (shouldSucceed)
         {
-            _docsService.GetDocumentationAsync(
+            Service.GetDocumentationAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new AzureRMDocsResult { ResourceType = "azurerm_resource_group" });
         }
 
-        var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         if (shouldSucceed)
         {
@@ -202,7 +173,7 @@ public class AzureRMDocsGetCommandTests
             Notes = ["Some note"]
         };
 
-        _docsService.GetDocumentationAsync(
+        Service.GetDocumentationAsync(
             "azurerm_resource_group",
             "resource",
             null,
@@ -210,16 +181,10 @@ public class AzureRMDocsGetCommandTests
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
-        var args = _commandDefinition.Parse(["--resource-type", "azurerm_resource_group"]);
-        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync("--resource-type", "azurerm_resource_group");
 
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, AzureTerraformJsonContext.Default.AzureRMDocsResult);
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AzureTerraformJsonContext.Default.AzureRMDocsResult);
-
-        Assert.NotNull(result);
         Assert.Equal("azurerm_resource_group", result.ResourceType);
         Assert.Equal("Manages a Resource Group.", result.Summary);
         Assert.NotNull(result.Arguments);
@@ -230,7 +195,7 @@ public class AzureRMDocsGetCommandTests
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        var args = _commandDefinition.Parse([
+        var args = CommandDefinition.Parse([
             "--resource-type", "azurerm_resource_group",
             "--doc-type", "data-source",
             "--argument", "name",
@@ -240,8 +205,7 @@ public class AzureRMDocsGetCommandTests
         Assert.NotNull(args);
         Assert.Empty(args.Errors);
 
-        var command = _command.GetCommand();
-        var options = command.Options;
+        var options = CommandDefinition.Options;
 
         Assert.Contains(options, o => o.Name == "--resource-type");
         Assert.Contains(options, o => o.Name == "--doc-type");

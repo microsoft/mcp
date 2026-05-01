@@ -11,25 +11,20 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 
+[CommandMetadata(
+    Id = "643a3497-44e1-4727-b3d6-c2e5dba6cab2",
+    Name = "get",
+    Title = "Get PostgreSQL Table Schema",
+    Description = "Retrieves the schema of a specified table in a PostgreSQL database.",
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
     private readonly IPostgresService _postgresService = postgresService;
-    private const string CommandTitle = "Get PostgreSQL Table Schema";
-
-    public override string Id => "643a3497-44e1-4727-b3d6-c2e5dba6cab2";
-    public override string Name => "get";
-    public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -55,7 +50,6 @@ public sealed class TableSchemaGetCommand(IPostgresService postgresService, ILog
 
         try
         {
-
 
             List<string> schema = await _postgresService.GetTableSchemaAsync(
                 options.Subscription!,
