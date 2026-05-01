@@ -11,6 +11,9 @@ parameters:
   - name: Access
     type: string
     default: 'public'
+  - name: IgnoreDuplicates
+    type: boolean
+    default: true
 
 steps:
   - template: /eng/common/pipelines/templates/steps/set-default-branch.yml
@@ -22,6 +25,7 @@ steps:
       ServiceConnection: ${{parameters.ServiceConnection}}
 
   - pwsh: |
+      $ignoreDuplicates = $${{parameters.IgnoreDuplicates}}
       $tgzFiles = Get-ChildItem -Path . -Filter *.tgz -Recurse
       | Sort-Object FullName
 
@@ -50,9 +54,14 @@ steps:
         }
 
         Write-Host "> $command"
-        Invoke-Expression $command
+        Invoke-Expression $command | Tee-Object -Variable publishOutput
         if (!$?) {
-          exit 1
+          if ($ignoreDuplicates -and $publishOutput -match 'The feed .* already contains file') {
+            Write-Host "Package $($file.FullName) has already been published with the same version. Skipping."
+          } else {
+            Write-Host "Failed to publish $($file.FullName). Error: $publishOutput"
+            exit 1
+          }
         }
       }
     displayName: Publish packages to dev feed
