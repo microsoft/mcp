@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved Resource Health availability status errors for unsupported resource types."
