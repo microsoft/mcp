@@ -11,8 +11,8 @@ All new Azure services and their commands should use the Toolset pattern:
 
 - **Toolset code** goes in `tools/Azure.Mcp.Tools.{Toolset}/src` (e.g., `tools/Azure.Mcp.Tools.Storage/src`)
 - **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests`)
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.LiveTests`)
+  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/LivetTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/LiveTests`)
+  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/UnitTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/UnitTests`)
 
 This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
@@ -27,7 +27,7 @@ If your command interacts with Azure resources (storage accounts, databases, VMs
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 - ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
-- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}.LiveTests`
+- ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}.Tests/LiveTests`
 - ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
@@ -116,8 +116,8 @@ Every new command (whether purely computational or Azure-resource backed) requir
 4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
     - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
-6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
-7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
+6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
+7. Live test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
 9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
@@ -1046,17 +1046,16 @@ await foreach (var resourceGroup in subscription.GetResourceGroups())
 Example:
 ```csharp
 // Mock setup in unit tests
-_mockervice
-    .GetResourceAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<RetryPolicyOptions>(),
-        Arg.Any<CancellationToken>())
+Service.GetResourceAsync(
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<RetryPolicyOptions>(),
+    Arg.Any<CancellationToken>())
     .Returns(mockResource);
 
 // Invoking product code in unit tests
-var result = await _service.GetResourceAsync(
+var result = await Service.GetResourceAsync(
     "test-resource",
     "test-subscription",
     "test-rg",
@@ -1159,31 +1158,12 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 Unit tests follow a standardized pattern that tests initialization, validation, and execution:
 
 ```csharp
-public class {Resource}{Operation}CommandTests
+public class {Resource}{Operation}CommandTests : CommandUnitTestsBase<{Resource}{Operation}Command, I{Toolset}Service>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly I{Toolset}Service _service;
-    private readonly ILogger<{Resource}{Operation}Command> _logger;
-    private readonly {Resource}{Operation}Command _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public {Resource}{Operation}CommandTests()
-    {
-        _service = Substitute.For<I{Toolset}Service>();
-        _logger = Substitute.For<ILogger<{Resource}{Operation}Command>>();
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("operation", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -1198,20 +1178,16 @@ public class {Resource}{Operation}CommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service
-                .{Operation}(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>(),
-                    Arg.Any<CancellationToken>())
+            Service.{Operation}(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
-        // Build args from a single string in tests using the test-only splitter
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -1230,27 +1206,24 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse({argsArray});
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync({argsArray});
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response,
+            {Toolset}JsonContext.Default.{Operation}CommandResult, 
+            expectedStatus: HttpStatusCode.OK); // HttpStatusCode.OK is the default, can be omitted if checking for that.
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Items);
     }
 
@@ -1258,18 +1231,15 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<ResultType>>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse(["--required", "value"]);
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync("--required", "value");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1281,10 +1251,10 @@ public class {Resource}{Operation}CommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _parser.Parse(["--subscription", "test-sub", "--required", "value"]);
+        var parseResult = CommandDefinition.Parse(["--subscription", "test-sub", "--required", "value"]);
 
         // Act
-        var options = _command.BindOptions(parseResult);
+        var options = Command.BindOptions(parseResult);
 
         // Assert
         Assert.Equal("test-sub", options.Subscription);
@@ -1569,7 +1539,7 @@ Core test cases for every command:
 public async Task ExecuteAsync_ValidatesInput(
     string args, bool shouldSucceed, string expectedError)
 {
-    var response = await ExecuteCommand(args);
+    var response = await ExecuteCommandAync(args);
     Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     if (!shouldSucceed)
         Assert.Contains(expectedError, response.Message);
@@ -1579,11 +1549,10 @@ public async Task ExecuteAsync_ValidatesInput(
 public async Task ExecuteAsync_HandlesServiceError()
 {
     // Arrange
-    _service.Operation()
-        .Returns(Task.FromException(new ServiceException("Test error")));
+    Service.Operation().ThrowsAsync(new ServiceException("Test error"));
 
     // Act
-    var response = await ExecuteCommand("--param value");
+    var response = await ExecuteCommandAsync("--param", "value");
 
     // Assert
     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1596,7 +1565,7 @@ public async Task ExecuteAsync_HandlesServiceError()
 When developing new commands, run only your specific tests to save time:
 ```bash
 # Run all tests from the test project directory:
-pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.UnitTests  #or .LiveTests
+pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.Tests
 
 # Run only tests for your specific command class
 dotnet test --filter "FullyQualifiedName~YourCommandNameTests" --verbosity normal
@@ -1748,7 +1717,7 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-public class {Toolset}CommandTests( ITestOutputHelper output)
+public class {Toolset}CommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {
     [Fact]
@@ -1808,8 +1777,8 @@ Use the deployment script with your toolset:
 ./eng/scripts/Deploy-TestResources.ps1 -Tools "{Toolset}"
 
 # Run live tests
-pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests'
-dotnet test
+pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests'
+dotnet test --filter "Category=Live"
 ```
 
 Live test scenarios should include:
@@ -2335,7 +2304,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 ### Live Test Project Configuration Issues
 
 **Issue: Live tests fail with "MCP server process exited unexpectedly" and "azmcp.exe not found"**
-- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.LiveTests.csproj`
+- **Cause**: Incorrect project configuration in `Azure.Mcp.Tools.{Toolset}.Tests.csproj`
 - **Common Problem**: Referencing the toolset project (`Azure.Mcp.Tools.{Toolset}`) instead of the CLI project
 - **Solution**: Live test projects must reference `Azure.Mcp.Server.csproj` and include specific project properties
 - **Required Configuration**:
