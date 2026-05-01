@@ -438,28 +438,21 @@ resource testVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 Create a test class in `tests/Azure.Mcp.Tools.AzureBackup.UnitTests/{Group}/`:
 
 ```csharp
-public class VaultDeleteCommandTests
+public class VaultDeleteCommandTests : CommandUnitTestsBase<VaultDeleteCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var logger = Substitute.For<ILogger<VaultDeleteCommand>>();
-        var service = Substitute.For<IAzureBackupService>();
-        var command = new VaultDeleteCommand(logger, service);
-
-        Assert.Equal("delete", command.Name);
-        Assert.True(command.Metadata.Destructive);
+        Assert.Equal("delete", Command.Name);
+        Assert.True(Command.Metadata.Destructive);
     }
 
     [Fact]
     public async Task ExecuteAsync_DeletesVault_Successfully()
     {
-        var logger = Substitute.For<ILogger<VaultDeleteCommand>>();
-        var service = Substitute.For<IAzureBackupService>();
-        service.DeleteVaultAsync(Arg.Any<string>(), /* ... */)
+        Service.DeleteVaultAsync(Arg.Any<string>(), /* ... */)
             .Returns(new OperationResult("Succeeded", null, "Deleted."));
 
-        var command = new VaultDeleteCommand(logger, service);
         // ... invoke and assert
     }
 

@@ -428,10 +428,12 @@ try
 }
 catch (Exception ex)
 {
-    _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
-    HandleException(context, ex);  // Always call base handler
+    _logger.LogError(ex, "Error in {Operation}. Resource: {Resource}", Name, resourceId, options);
+    HandleException(context, ex);
 }
 ```
+
+**DO NOT** log `{@Options}` as this may log sensitive information. Only log parameters that are known to be safe.
 
 ## Service Implementation Patterns
 

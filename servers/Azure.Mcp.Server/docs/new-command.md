@@ -472,14 +472,14 @@ public class MyService(
 ```csharp
 // ❌ Hardcoded public-cloud endpoint
 var client = new BlobServiceClient(
-    new Uri($"https://{account}.blob.core.windows.net"), credential, options);
+    new($"https://{account}.blob.core.windows.net"), credential, options);
 
 // ❌ Hardcoded connection string
 var connectionString = $"AccountEndpoint=https://{server}.documents.azure.com:443/;...";
 
 // ✅ Cloud-aware endpoint via switch expression
 var endpoint = GetBlobEndpoint(account);  // private helper using CloudType switch
-var client = new BlobServiceClient(new Uri(endpoint), credential, options);
+var client = new BlobServiceClient(new(endpoint), credential, options);
 ```
 
 ### 3. Options Class
@@ -746,10 +746,11 @@ using Microsoft.Mcp.Core.Models.Command;
     ReadOnly = true,        // Set to false for tools that modify resources
     Secret = false,         // Set to true for tools that may return sensitive information
     LocalRequired = false)] // Set to true for tools requiring local execution/resources
-public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
+public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger, I{Toolset}Service service)
     : Base{Toolset}Command<{Resource}{Operation}Options>
 {
     private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
+    private readonly I{Toolset}Service _service = service;
 
     protected override void RegisterOptions(Command command)
     {
@@ -785,11 +786,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         {
             context.Activity?.WithSubscriptionTag(options);
 
-            // Get the appropriate service from DI
-            var service = context.GetService<I{Toolset}Service>();
-
             // Call service operation(s) with required parameters
-            var results = await service.{Operation}(
+            var results = await _service.{Operation}(
                 options.RequiredParam!,  // Required parameters end with !
                 options.OptionalParam,   // Optional parameters are nullable
                 options.Subscription!,   // From SubscriptionCommand
@@ -803,9 +801,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         catch (Exception ex)
         {
             // Log error with all relevant context
-            _logger.LogError(ex,
-                "Error in {Operation}. Required: {Required}, Optional: {Optional}, Options: {@Options}",
-                Name, options.RequiredParam, options.OptionalParam, options);
+            _logger.LogError(ex, "Error in {Operation}. Required: {Required}, Optional: {Optional}",
+                Name, options.RequiredParam, options.OptionalParam);
             HandleException(context, ex);
         }
 
@@ -1046,17 +1043,16 @@ await foreach (var resourceGroup in subscription.GetResourceGroups())
 Example:
 ```csharp
 // Mock setup in unit tests
-_mockervice
-    .GetResourceAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<RetryPolicyOptions>(),
-        Arg.Any<CancellationToken>())
+Service.GetResourceAsync(
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<string>(),
+    Arg.Any<RetryPolicyOptions>(),
+    Arg.Any<CancellationToken>())
     .Returns(mockResource);
 
 // Invoking product code in unit tests
-var result = await _service.GetResourceAsync(
+var result = await Service.GetResourceAsync(
     "test-resource",
     "test-subscription",
     "test-rg",
@@ -1159,31 +1155,12 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 Unit tests follow a standardized pattern that tests initialization, validation, and execution:
 
 ```csharp
-public class {Resource}{Operation}CommandTests
+public class {Resource}{Operation}CommandTests : CommandUnitTestsBase<{Resource}{Operation}Command, I{Toolset}Service>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly I{Toolset}Service _service;
-    private readonly ILogger<{Resource}{Operation}Command> _logger;
-    private readonly {Resource}{Operation}Command _command;
-    private readonly CommandContext _context;
-    private readonly Command _commandDefinition;
-
-    public {Resource}{Operation}CommandTests()
-    {
-        _service = Substitute.For<I{Toolset}Service>();
-        _logger = Substitute.For<ILogger<{Resource}{Operation}Command>>();
-
-        var collection = new ServiceCollection().AddSingleton(_service);
-        _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _commandDefinition = _command.GetCommand();
-    }
-
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        var command = _command.GetCommand();
+        var command = Command.GetCommand();
         Assert.Equal("operation", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
@@ -1198,20 +1175,16 @@ public class {Resource}{Operation}CommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service
-                .{Operation}(
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>(),
-                    Arg.Any<CancellationToken>())
+            Service.{Operation}(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
-        // Build args from a single string in tests using the test-only splitter
-        var parseResult = _commandDefinition.Parse(args);
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync(args);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -1230,27 +1203,22 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
-        var parseResult = _commandDefinition.Parse({argsArray});
-
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync({argsArray});
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response
+            {Toolset}JsonContext.Default.{Operation}CommandResult,
+            expectedStatus: HttpStatusCode.OK); // expectedStatus defaults to OK, omit if expecting OK.
 
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Items);
     }
 
@@ -1258,18 +1226,15 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service
-            .{Operation}(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<List<ResultType>>(new Exception("Test error")));
-
-        var parseResult = _commandDefinition.Parse(["--required", "value"]);
+        Service.{Operation}(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync("--required", "value");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1281,10 +1246,10 @@ public class {Resource}{Operation}CommandTests
     public void BindOptions_BindsOptionsCorrectly()
     {
         // Arrange
-        var parseResult = _parser.Parse(["--subscription", "test-sub", "--required", "value"]);
+        var parseResult = CommandDefinition.Parse(["--subscription", "test-sub", "--required", "value"]);
 
         // Act
-        var options = _command.BindOptions(parseResult);
+        var options = Command.BindOptions(parseResult);
 
         // Assert
         Assert.Equal("test-sub", options.Subscription);
@@ -1523,12 +1488,13 @@ Always log errors with relevant context information:
 ```csharp
 catch (Exception ex)
 {
-    _logger.LogError(ex,
-        "Error in {Operation}. Resource: {Resource}, Options: {@Options}",
+    _logger.LogError(ex, "Error in {Operation}. Resource: {Resource}",
         Name, resourceId, options);
     HandleException(context, ex);
 }
 ```
+
+**DO NOT** log `{@Options}` as this may log sensitive information. Only log parameters that are known to be safe.
 
 ### 6. Common Error Scenarios to Handle
 
@@ -1569,7 +1535,7 @@ Core test cases for every command:
 public async Task ExecuteAsync_ValidatesInput(
     string args, bool shouldSucceed, string expectedError)
 {
-    var response = await ExecuteCommand(args);
+    var response = await ExecuteCommandAsync(args);
     Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     if (!shouldSucceed)
         Assert.Contains(expectedError, response.Message);
@@ -1579,11 +1545,10 @@ public async Task ExecuteAsync_ValidatesInput(
 public async Task ExecuteAsync_HandlesServiceError()
 {
     // Arrange
-    _service.Operation()
-        .Returns(Task.FromException(new ServiceException("Test error")));
+    Service.Operation().ThrowsAsync(new ServiceException("Test error"));
 
     // Act
-    var response = await ExecuteCommand("--param value");
+    var response = await ExecuteCommandAsync("--param value");
 
     // Assert
     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -1748,7 +1713,7 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-public class {Toolset}CommandTests( ITestOutputHelper output)
+public class {Toolset}CommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {
     [Fact]
