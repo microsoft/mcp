@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.PlacementScore;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -23,6 +24,11 @@ public class ComputeSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IComputeService, ComputeService>();
+
+        services.AddSingleton<IComputePlacementService, ComputePlacementService>();
+
+        services.AddSingleton<SpotPlacementMetadataCommand>();
+        services.AddSingleton<SpotPlacementScoreCommand>();
 
         // VM commands
         services.AddSingleton<VmGetCommand>();
@@ -47,9 +53,11 @@ public class ComputeSetup : IAreaSetup
     {
         var compute = new CommandGroup(Name,
             """
-            Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and Managed Disks.
-            This tool provides comprehensive access to VM lifecycle management, instance monitoring, size discovery, and scale set operations.
-            Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups.
+            Compute operations - Commands for managing and monitoring Azure Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), Managed Disks,
+            and Spot VM placement recommendations. This tool provides comprehensive access to VM lifecycle management, instance monitoring, size
+            discovery, scale set operations, and capacity-aware Spot VM placement scores across regions and availability zones.
+            Use this tool when you need to list, query, create, or monitor VMs and VMSS instances across subscriptions and resource groups, or when
+            you need to evaluate Spot VM placement likelihood and quota availability to choose optimal regions and SKUs.
             Defaults to Standard_D2s_v5 VM size and Ubuntu 24.04 LTS image for VM creation when not specified.
             This tool is a hierarchical MCP command router where sub-commands are routed to MCP servers that require specific fields
             inside the "parameters" object. To invoke a command, set "command" and wrap its arguments in "parameters".
@@ -89,6 +97,22 @@ public class ComputeSetup : IAreaSetup
         disk.AddCommand<DiskDeleteCommand>(serviceProvider);
         disk.AddCommand<DiskGetCommand>(serviceProvider);
         disk.AddCommand<DiskUpdateCommand>(serviceProvider);
+
+        // Create placement score subgroup
+        var placementScore = new CommandGroup(
+            "placementscore",
+            "Placement score operations - Commands for evaluating VM placement scores across Azure regions and availability zones.");
+        compute.AddSubGroup(placementScore);
+
+        // Create spot subgroup under placement scores
+        var spot = new CommandGroup(
+            "spot",
+            "Spot VM placement score operations - Commands for evaluating Spot VM allocation likelihood and discovering supported resource types.");
+        placementScore.AddSubGroup(spot);
+
+        // Register Spot placement commands
+        spot.AddCommand<SpotPlacementMetadataCommand>(serviceProvider);
+        spot.AddCommand<SpotPlacementScoreCommand>(serviceProvider);
 
         return compute;
     }

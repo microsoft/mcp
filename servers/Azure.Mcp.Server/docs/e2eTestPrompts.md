@@ -230,6 +230,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| compute_placementscore_spot_generate | Generate spot VM placement scores for Standard_D2_v2 in eastus and westus2 |
+| compute_placementscore_spot_generate | What is the likelihood of getting a Standard_D4s_v3 spot VM in eastus? |
+| compute_placementscore_spot_generate | Evaluate spot placement scores for 5 Standard_D2_v2 VMs across eastus, westus2, and northeurope |
+| compute_placementscore_spot_generate | Show me spot VM availability for Standard_D2_v2 across availability zones in eastus |
+| compute_placementscore_spot_generate | Which region has the best spot placement score for Standard_E4s_v5? |
+| compute_placementscore_spot_get | Get spot placement metadata for eastus |
+| compute_placementscore_spot_get | What resource types are supported for spot placement scores in westus2? |
+| compute_placementscore_spot_get | Show me supported spot placement resource types in <region> |
 | compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> |
 | compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> |
 | compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> |
