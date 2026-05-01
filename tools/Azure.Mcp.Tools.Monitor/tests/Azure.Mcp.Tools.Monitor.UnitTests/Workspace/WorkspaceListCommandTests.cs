@@ -112,4 +112,20 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.ListWorkspaces(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync($"--subscription {_knownSubscription} --resource-group {resourceGroup}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }

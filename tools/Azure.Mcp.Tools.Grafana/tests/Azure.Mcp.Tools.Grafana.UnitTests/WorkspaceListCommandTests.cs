@@ -141,4 +141,20 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }

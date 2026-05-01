@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `azmcp grafana list`, `azmcp kusto cluster list`, `azmcp appconfig account list`, `azmcp storage account get`, `azmcp monitor workspace list`, and `azmcp search service list` to honor the optional `--resource-group` parameter, which was previously registered but not passed through to the service layer, causing subscription-wide results to always be returned regardless of the specified resource group."

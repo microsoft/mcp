@@ -233,4 +233,21 @@ public class AccountGetCommandTests : CommandUnitTestsBase<AccountGetCommand, IS
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        const string subscription = "sub123";
+        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }

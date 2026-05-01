@@ -106,4 +106,20 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }

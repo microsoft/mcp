@@ -50,8 +50,8 @@ public sealed partial class SearchService(
 
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
-            var rgResource = (await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
+            var subForRg = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+            var rgResource = (await subForRg.GetResourceGroupAsync(resourceGroup, cancellationToken)).Value;
             var rgServices = new List<string>();
             await foreach (var service in rgResource.GetSearchServices().GetAllAsync(cancellationToken: cancellationToken))
             {
@@ -73,9 +73,9 @@ public sealed partial class SearchService(
             return cachedServices;
         }
 
-        var subscriptionResourceSub = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
         var services = new List<string>();
-        await foreach (var service in subscriptionResourceSub.GetSearchServicesAsync(cancellationToken: cancellationToken))
+        await foreach (var service in subscriptionResource.GetSearchServicesAsync(cancellationToken: cancellationToken))
         {
             if (service?.Data?.Name != null)
             {

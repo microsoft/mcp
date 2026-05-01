@@ -81,4 +81,20 @@ public class ServiceListCommandTests : CommandUnitTestsBase<ServiceListCommand, 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithResourceGroup_ForwardsResourceGroupToService()
+    {
+        // Arrange
+        const string resourceGroup = "test-rg";
+        Service.ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", resourceGroup);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+    }
 }
